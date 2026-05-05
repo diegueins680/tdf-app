@@ -24,6 +24,7 @@ import           TDF.Auth
   , moduleName
   , modulesForRoles
   )
+import           TDF.Models (RoleEnum(Admin, Customer, Fan))
 
 -- | Shared helper to quickly craft stub responses.
 stub
@@ -143,11 +144,18 @@ validateFutureAdminAccess user
   | length (auRoles user) /= length (nub (auRoles user)) =
       Left err403 { errBody = "Admin role grants must be unique" }
   | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | any (not . isFutureAdminRoleScope) (auRoles user) =
+      Left err403
+        { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }
   | not (hasModuleAccess ModuleAdmin user) =
       Left err403 { errBody = "Admin module access required" }
   | auModules user /= modulesForRoles (auRoles user) =
       Left err403 { errBody = "Admin module grants must match roles" }
   | otherwise = Right ()
+
+isFutureAdminRoleScope :: RoleEnum -> Bool
+isFutureAdminRoleScope role =
+  role `elem` [Admin, Fan, Customer]
 
 requireFutureAdminAccess :: MonadError ServerError m => AuthedUser -> m ()
 requireFutureAdminAccess user =

@@ -8583,6 +8583,21 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected duplicated Admin roles to be rejected, got: " <> show value)
 
+        it "accepts default Admin role scope but rejects mixed staff roles before discovery" $ do
+            validateFutureAdminAccess (mkUser [Admin, Fan, Customer])
+                `shouldBe` Right ()
+
+            let mixedAdmin = mkUser [Admin, Webmaster]
+            case validateFutureAdminAccess mixedAdmin of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "Admin fallback discovery cannot be combined with non-baseline roles"
+                Right value ->
+                    expectationFailure
+                        ("Expected mixed Admin role scope to be rejected, got: " <> show value)
+
         it "rejects Admin-shaped sessions with impossible party ids" $ do
             forM_ [0, -7] $ \rawPartyId -> do
                 let malformedAdmin =
