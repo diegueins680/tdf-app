@@ -6772,9 +6772,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(`Todos subidos: ${sharedReceiptCreatedLabel}`);
       expect(countOccurrences(document.body, `Subido: ${sharedReceiptCreatedLabel}`)).toBe(0);
       expect(countOccurrences(document.body, sharedReceiptCreatedLabel)).toBe(1);
-      expect(document.body.textContent).toContain(`Todos registrados: ${sharedFollowUpCreatedLabel}`);
+      expect(document.body.textContent).toContain(`Resumen: Llamada · registrados ${sharedFollowUpCreatedLabel}`);
+      expect(document.body.textContent).not.toContain('Todos registrados:');
+      expect(document.body.textContent).not.toContain('Tipo de seguimiento:');
       expect(countOccurrences(document.body, sharedFollowUpCreatedLabel)).toBe(1);
-      expect(document.body.textContent).toContain('Tipo de seguimiento: Llamada');
       expect(countOccurrences(document.body, 'Llamada')).toBe(1);
       expect(document.body.textContent).toContain('receipt.pdf');
       expect(document.body.textContent).toContain('receipt-2.pdf');
@@ -6788,6 +6789,7 @@ describe('CourseRegistrationsAdminPage', () => {
   it('summarizes repeated follow-up due dates once instead of repeating reminder chips', async () => {
     const sharedNextFollowUpAt = '2030-03-05T12:00:00.000Z';
     const sharedNextFollowUpLabel = formatTimestampForDisplay(sharedNextFollowUpAt, '-');
+    const sharedFollowUpCreatedLabel = formatTimestampForDisplay('2030-01-04T03:04:05.000Z', '-');
 
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
@@ -6818,9 +6820,15 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(`Próximo seguimiento: ${sharedNextFollowUpLabel}`);
+      expect(document.body.textContent).toContain(
+        `Resumen: Llamada · próximo ${sharedNextFollowUpLabel} · registrados ${sharedFollowUpCreatedLabel}`,
+      );
+      expect(document.body.textContent).not.toContain('Próximo seguimiento:');
+      expect(document.body.textContent).not.toContain('Tipo de seguimiento:');
+      expect(document.body.textContent).not.toContain('Todos registrados:');
       expect(countOccurrences(document.body, sharedNextFollowUpLabel)).toBe(1);
       expect(countOccurrences(document.body, 'Próximo:')).toBe(0);
+      expect(countOccurrences(document.body, 'Llamada')).toBe(1);
       expect(document.body.textContent).toContain('Confirmó transferencia');
       expect(document.body.textContent).toContain('Confirmar cupo');
     });

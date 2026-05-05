@@ -3484,6 +3484,17 @@ export default function CourseRegistrationsAdminPage() {
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
   const sharedFollowUpNextLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfNextFollowUpAt));
+  const sharedFollowUpSummaryParts = [
+    sharedFollowUpTypeLabel,
+    sharedFollowUpNextLabel ? `próximo ${sharedFollowUpNextLabel}` : '',
+    sharedFollowUpCreatedLabel ? `registrados ${sharedFollowUpCreatedLabel}` : '',
+  ].filter(Boolean);
+  const sharedFollowUpSummary = sharedFollowUpSummaryParts.length > 1
+    ? `Resumen: ${sharedFollowUpSummaryParts.join(' · ')}`
+    : '';
+  const sharedFollowUpCreatedIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpCreatedLabel);
+  const sharedFollowUpTypeIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpTypeLabel);
+  const sharedFollowUpNextIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpNextLabel);
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
   const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
   const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
@@ -5415,20 +5426,28 @@ export default function CourseRegistrationsAdminPage() {
                         </Button>
                       )}
                     </Stack>
-                    {sharedFollowUpCreatedLabel && (
+                    {sharedFollowUpSummary ? (
                       <Typography variant="body2" color="text.secondary">
-                        Todos registrados: {sharedFollowUpCreatedLabel}
+                        {sharedFollowUpSummary}
                       </Typography>
-                    )}
-                    {sharedFollowUpTypeLabel && (
-                      <Typography variant="body2" color="text.secondary">
-                        Tipo de seguimiento: {sharedFollowUpTypeLabel}
-                      </Typography>
-                    )}
-                    {sharedFollowUpNextLabel && (
-                      <Typography variant="body2" color="text.secondary">
-                        Próximo seguimiento: {sharedFollowUpNextLabel}
-                      </Typography>
+                    ) : (
+                      <>
+                        {sharedFollowUpCreatedLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Todos registrados: {sharedFollowUpCreatedLabel}
+                          </Typography>
+                        )}
+                        {sharedFollowUpTypeLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Tipo de seguimiento: {sharedFollowUpTypeLabel}
+                          </Typography>
+                        )}
+                        {sharedFollowUpNextLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Próximo seguimiento: {sharedFollowUpNextLabel}
+                          </Typography>
+                        )}
+                      </>
                     )}
 
                     <Grid container spacing={2}>
@@ -5609,13 +5628,19 @@ export default function CourseRegistrationsAdminPage() {
                                 followUpIdsRequiringActionDisambiguator.has(entry.crfId),
                               );
                               const followUpSubject = followUpSubjectLabel(entry);
-                              const followUpCreatedLabel = sharedFollowUpCreatedLabel
+                              const followUpCreatedLabel = sharedFollowUpCreatedIsInSummary
+                                || sharedFollowUpCreatedLabel
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
-                              const showFollowUpTypeChip = !sharedFollowUpTypeLabel;
+                              const showFollowUpTypeChip = !sharedFollowUpTypeIsInSummary && !sharedFollowUpTypeLabel;
+                              const showFollowUpNextChip = Boolean(
+                                entry.crfNextFollowUpAt
+                                && !sharedFollowUpNextIsInSummary
+                                && !sharedFollowUpNextLabel,
+                              );
                               const showFollowUpMetadata = showFollowUpTypeChip
                                 || Boolean(followUpCreatedLabel)
-                                || Boolean(entry.crfNextFollowUpAt);
+                                || showFollowUpNextChip;
                               const trimmedFollowUpAttachmentName = entry.crfAttachmentName?.trim() ?? '';
                               const followUpAttachmentLabel = trimmedFollowUpAttachmentName
                                 ? trimmedFollowUpAttachmentName
@@ -5642,7 +5667,7 @@ export default function CourseRegistrationsAdminPage() {
                                               {followUpCreatedLabel}
                                             </Typography>
                                           )}
-                                          {entry.crfNextFollowUpAt && !sharedFollowUpNextLabel && (
+                                          {showFollowUpNextChip && (
                                             <Chip
                                               size="small"
                                               color="warning"
