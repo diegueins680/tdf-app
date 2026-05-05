@@ -3736,6 +3736,9 @@ spec = describe "TDF.Server helpers" $ do
                 baseInquiry { aiName = Just ("Ada" <> T.singleton '\NUL') }
                 "name must not contain control characters"
             assertInvalid
+                baseInquiry { aiName = Just ("Ada" <> T.singleton '\x202E' <> "Lovelace") }
+                "hidden formatting characters"
+            assertInvalid
                 baseInquiry { aiName = Just (T.replicate 161 "A") }
                 "name must be 160 characters or fewer"
             assertInvalid

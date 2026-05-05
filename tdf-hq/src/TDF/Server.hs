@@ -5069,13 +5069,17 @@ validateOptionalCourseTextField fieldName maxLength (Just rawValue) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
             }
-      | T.any isControl value ->
+      | T.any isUnsafeCourseTextChar value ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " must not contain control characters"
+                  fieldName <> " must not contain control characters or hidden formatting characters"
             }
       | otherwise -> Right (Just value)
+
+isUnsafeCourseTextChar :: Char -> Bool
+isUnsafeCourseTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateOptionalCourseRegistrationTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalCourseRegistrationTextField = validateOptionalCourseTextField
