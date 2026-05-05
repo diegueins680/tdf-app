@@ -11825,6 +11825,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Paperform',
       'SurveyMonkey form - Beatmaking 101',
       'Beatmaking 101 - SurveyMonkey',
+      'Fillout form - Beatmaking 101',
+      'Formulario de Fillout para Beatmaking 101',
+      'Beatmaking 101 - Cognito Forms',
       'Wufoo form for Beatmaking 101',
       'Formstack - Beatmaking 101',
       'Zoho Forms for Beatmaking 101',
@@ -11859,6 +11862,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Mailchimp');
         expect(emptyState?.textContent).not.toContain('Paperform');
         expect(emptyState?.textContent).not.toContain('SurveyMonkey');
+        expect(emptyState?.textContent).not.toContain('Fillout');
+        expect(emptyState?.textContent).not.toContain('Cognito');
         expect(emptyState?.textContent).not.toContain('Wufoo');
         expect(emptyState?.textContent).not.toContain('Formstack');
         expect(emptyState?.textContent).not.toContain('Zoho');
