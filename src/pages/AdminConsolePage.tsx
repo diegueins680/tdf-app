@@ -555,6 +555,10 @@ function normalizeBuiltInAdminConsoleSectionKey(value: string) {
     .trim();
 }
 
+function normalizeAdditionalAdminConsoleModuleKey(value: string) {
+  return normalizeBuiltInAdminConsoleSectionKey(value) || normalizeAdminConsoleSectionKey(value);
+}
+
 function normalizeAdminConsoleParagraphKey(value: string) {
   return normalizeAdminConsoleSectionKey(value);
 }
@@ -660,8 +664,8 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   const titleKeyByCardId = new Map<string, string>();
 
   cards.forEach((card) => {
-    const titleKey = normalizeAdminConsoleSectionKey(card.title);
-    const cardIdKey = normalizeAdminConsoleSectionKey(card.cardId);
+    const titleKey = normalizeAdditionalAdminConsoleModuleKey(card.title);
+    const cardIdKey = normalizeAdditionalAdminConsoleModuleKey(card.cardId);
     const bodyKey = getAdminConsoleCardBodyKey(card);
     const existingTitleKey = cardsByTitle.has(titleKey)
       ? titleKey
