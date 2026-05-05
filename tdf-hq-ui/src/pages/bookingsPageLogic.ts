@@ -28,6 +28,7 @@ interface BookingServiceFallbackEntryState {
   showManualEntryField: boolean;
   showManualEntryToggle: boolean;
   showTemplateField: boolean;
+  templatePlaceholderLabel?: string;
   templateReturnActionLabel?: string;
   templateHelperText: string;
 }
@@ -271,6 +272,7 @@ export const getBookingServiceFallbackEntryState = ({
     showManualEntryField: false,
     showManualEntryToggle: true,
     showTemplateField: true,
+    templatePlaceholderLabel: 'Elige una plantilla',
     templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
   };
 };

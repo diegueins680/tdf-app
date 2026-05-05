@@ -179,6 +179,7 @@ describe('bookingsPageLogic', () => {
       showManualEntryField: false,
       showManualEntryToggle: true,
       showTemplateField: true,
+      templatePlaceholderLabel: 'Elige una plantilla',
       templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
     });
 

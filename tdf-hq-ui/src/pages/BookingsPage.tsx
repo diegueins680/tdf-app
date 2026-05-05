@@ -1212,7 +1212,6 @@ const openDialogForRange = (start: Date, end: Date) => {
                   setTemplate(val);
                   if (val === '') {
                     setAutoAssignMessage('');
-                    setManualServiceFallbackOpen(true);
                     return;
                   }
                   setManualServiceFallbackOpen(false);
@@ -1239,7 +1238,9 @@ const openDialogForRange = (start: Date, end: Date) => {
                 helperText={serviceFallbackEntryState.templateHelperText}
                 fullWidth
               >
-                <MenuItem value="">Sin plantilla</MenuItem>
+                <MenuItem value="" disabled>
+                  {serviceFallbackEntryState.templatePlaceholderLabel}
+                </MenuItem>
                 <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
                 <MenuItem value="recording">Recording (cabina + control)</MenuItem>
                 <MenuItem value="mix">Mix/Master (control room)</MenuItem>
