@@ -191,11 +191,14 @@ validateFutureStubCatalogEntry (area, endpoint) = do
     else pure (areaClean, endpointClean)
 
 validateFutureStubCatalogAreaOrder :: [(Text, Text)] -> Either ServerError [Text]
-validateFutureStubCatalogAreaOrder catalog =
-  let areaRuns = map head (group (map fst catalog))
-  in if areaRuns == allowedFutureStubAreas && length areaRuns == length (nub areaRuns)
-       then Right areaRuns
-       else invalidFutureStubCatalog
+validateFutureStubCatalogAreaOrder catalog = do
+  validatedCatalog <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubCatalogEntry catalog
+  let areaRuns = map head (group (map fst validatedCatalog))
+  if areaRuns == allowedFutureStubAreas && length areaRuns == length (nub areaRuns)
+    then Right areaRuns
+    else invalidFutureStubCatalog
 
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =

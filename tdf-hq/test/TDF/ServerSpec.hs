@@ -8706,6 +8706,16 @@ spec = describe "TDF.Server helpers" $ do
                 _ ->
                     expectationFailure "Expected fallback discovery area fixtures to include access and crm entries"
 
+            let driftedEndpoint =
+                    map
+                        (\entry ->
+                            if entry == ("crm", "parties/list-columns")
+                                then ("crm", "parties/export")
+                                else entry
+                        )
+                        allowedFutureStubMetadata
+            assertInvalid driftedEndpoint
+
     describe "validateFutureStubCatalogResponses" $ do
         it "rejects missing, duplicated, or reordered fallback discovery responses" $ do
             let mkResponse area endpoint =
