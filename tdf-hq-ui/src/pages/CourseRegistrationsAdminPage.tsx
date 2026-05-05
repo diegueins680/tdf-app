@@ -2779,7 +2779,7 @@ export default function CourseRegistrationsAdminPage() {
   const customStatusFilterGuidance = customStatusFilterUnavailableMessage;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-    : 'Vista única por ahora: una cohorte y un estado.';
+    : '';
   const emailEvents = dedupeCourseEmailEvents(emailEventsQuery.data ?? []);
   const canReviewSystemEmails = selectedDossier?.intent !== 'markPaid';
   const hasSystemEmailHistory = canReviewSystemEmails && emailEvents.length > 0;

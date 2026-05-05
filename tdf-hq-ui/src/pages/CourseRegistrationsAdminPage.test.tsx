@@ -1051,7 +1051,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(currentViewSummary?.textContent).toContain('Vista actual');
       expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Pendiente de pago');
       expect(contextSummary?.textContent).toContain(paymentWorkflowDossierScopeHint);
-      expect(currentViewSummary?.textContent).toContain(
+      expect(currentViewSummary?.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
@@ -3600,7 +3600,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(currentViewSummary?.textContent).toContain('Vista actual');
       expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Needs Review');
       expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
-      expect(currentViewSummary?.textContent).toContain('Vista única por ahora: una cohorte y un estado.');
+      expect(currentViewSummary?.textContent).not.toContain('Vista única por ahora: una cohorte y un estado.');
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
