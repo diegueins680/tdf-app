@@ -4651,7 +4651,7 @@ describe('CourseRegistrationsAdminPage', () => {
       buildDossier({
         crdFollowUps: [
           buildFollowUp({
-            crfEntryType: 'status_change',
+            crfEntryType: 'status-change',
             crfSubject: null,
           }),
         ],
@@ -4659,7 +4659,7 @@ describe('CourseRegistrationsAdminPage', () => {
     );
     listRegistrationEmailsMock.mockResolvedValue([
       buildEmailEvent({
-        ceEventType: 'registration_confirmation',
+        ceEventType: 'registration-confirmation',
         ceStatus: 'skipped',
         ceMessage: 'No se envío el correo porque ya existía un envío reciente.',
       }),
@@ -4682,6 +4682,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Cambio de estado');
       expect(document.body.textContent).not.toContain('Status Change');
+      expect(document.body.textContent).not.toContain('Status-change');
       expect(document.body.querySelector('button[aria-label^="Abrir acciones para seguimiento Cambio de estado del "]')).not.toBeNull();
     });
 
@@ -4695,6 +4696,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain('Confirmación de inscripción');
       expect(document.body.textContent).toContain('Omitido');
       expect(document.body.textContent).not.toContain('Registration Confirmation');
+      expect(document.body.textContent).not.toContain('Registration-confirmation');
       expect(document.body.textContent).not.toContain('skipped');
     });
 

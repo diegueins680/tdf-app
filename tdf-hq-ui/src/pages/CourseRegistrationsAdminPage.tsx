@@ -589,11 +589,11 @@ const eventTypeLabels: Record<string, string> = {
 };
 
 const eventTypeLabel = (eventType: string) =>
-  eventTypeLabels[eventType.trim().toLowerCase()]
+  eventTypeLabels[normalizeBackendStatusToken(eventType)]
   ?? eventType
     .trim()
     .toLowerCase()
-    .replace(/_/g, ' ')
+    .replace(/[\s._/-]+/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
 
 const followUpTypeLabel = (entryType: string) => eventTypeLabel(entryType) || 'Seguimiento';
