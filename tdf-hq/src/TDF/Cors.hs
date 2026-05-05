@@ -103,7 +103,15 @@ isTrustedPreviewOrigin origin =
         ]
   where
     matchesTrustedPagesHost host root =
-      host == root || ("." <> root) `BS.isSuffixOf` host
+      host == root || hasSinglePreviewLabel host root
+
+    hasSinglePreviewLabel host root =
+      let suffix = "." <> root
+          prefixLength = BS.length host - BS.length suffix
+          prefix = BS.take prefixLength host
+      in suffix `BS.isSuffixOf` host
+           && not (BS.null prefix)
+           && not (BS.any (== '.') prefix)
 
 parseHttpsOriginHost :: BS.ByteString -> Maybe BS.ByteString
 parseHttpsOriginHost origin = do

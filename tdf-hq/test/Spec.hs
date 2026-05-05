@@ -3446,6 +3446,7 @@ main = hspec $ do
 
         it "rejects arbitrary shared preview hosts instead of granting credentialed CORS broadly" $ do
             isTrustedPreviewOrigin "https://attacker.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://nested.branch.tdf-app.pages.dev" `shouldBe` False
             isTrustedPreviewOrigin "https://tdf-app.pages.dev.evil.example" `shouldBe` False
             isTrustedPreviewOrigin "http://preview.tdf-app.pages.dev" `shouldBe` False
             isTrustedPreviewOrigin "https://attacker.vercel.app" `shouldBe` False
