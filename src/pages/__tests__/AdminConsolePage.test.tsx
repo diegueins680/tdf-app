@@ -2178,6 +2178,54 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps admin-labeled built-in fallback titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-admin-service-health',
+          title: 'Admin service health',
+          body: ['Review uptime before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-administracion-usuarios-roles',
+          title: 'Administración: usuarios y roles',
+          body: ['Revisa accesos del equipo antes de ajustar permisos.'],
+        },
+        {
+          cardId: 'fallback-admin-recent-audit',
+          title: 'Admin recent audit',
+          body: ['Review admin events before repeating a change.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin service health')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administración: usuarios y roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin recent audit')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Review uptime before changing permissions\./i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa accesos del equipo antes de ajustar permisos\./i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Review admin events before repeating a change\./i)).not.toBeInTheDocument();
+  });
+
   it('keeps terse fallback titles for built-in admin sections out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
