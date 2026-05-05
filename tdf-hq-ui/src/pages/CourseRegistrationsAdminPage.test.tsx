@@ -12117,6 +12117,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Wix form',
       'Squarespace form for Beatmaking 101',
       'Beatmaking 101 - Notion form',
+      'CRM lead form - Beatmaking 101',
+      'CRM registration page for Beatmaking 101',
+      'Beatmaking 101 - CRM intake form',
+      'Formulario CRM de leads - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -12153,6 +12157,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Wix');
         expect(emptyState?.textContent).not.toContain('Squarespace');
         expect(emptyState?.textContent).not.toContain('Notion form');
+        expect(emptyState?.textContent).not.toContain('CRM');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
