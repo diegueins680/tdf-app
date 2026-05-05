@@ -1246,6 +1246,56 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps readiness fallback cards from duplicating service health', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-check',
+          title: 'Service readiness',
+          body: ['Confirm API and database readiness before updating admin roles.'],
+        },
+        {
+          cardId: 'database-readiness',
+          title: 'Database readiness',
+          body: ['Check database availability before loading sample admin data.'],
+        },
+        {
+          cardId: 'fallback-disponibilidad',
+          title: 'Disponibilidad del sistema',
+          body: ['Valida disponibilidad de API y base de datos antes del recorrido inicial.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Estado del servicio')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service readiness')).not.toBeInTheDocument();
+    expect(screen.queryByText('Database readiness')).not.toBeInTheDocument();
+    expect(screen.queryByText('Disponibilidad del sistema')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm API and database readiness before updating admin roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Check database availability before loading sample admin data\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Valida disponibilidad de API y base de datos antes del recorrido inicial\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps connector-formatted built-in access titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
