@@ -9339,6 +9339,33 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected anonymous musician row to be rejected, got: " <> show payload)
 
+        it "rejects unsafe musician names before intake rows can persist display text" $ do
+            let assertInvalid rawName expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\""
+                                    <> rawName
+                                    <> "\",\"lsmIsExisting\":false}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician name to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "Keys\\nLead"
+                "musician name must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "Keys\\u202ELead"
+                "musician name must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "musician name must be 160 characters or fewer"
+
         it "rejects blank setlist titles instead of silently dropping songs from the intake" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

@@ -17,7 +17,17 @@ import           Data.Aeson               (FromJSON(..), Object, Value(..), eith
 import qualified Data.Aeson.Key           as AesonKey
 import qualified Data.Aeson.KeyMap        as AesonKeyMap
 import           Data.Aeson.Types         (Parser)
-import           Data.Char                (isAsciiLower, isDigit, isSpace)
+import           Data.Char                ( GeneralCategory
+                                            ( Format
+                                            , LineSeparator
+                                            , ParagraphSeparator
+                                            )
+                                          , generalCategory
+                                          , isAsciiLower
+                                          , isControl
+                                          , isDigit
+                                          , isSpace
+                                          )
 import           Control.Monad            (unless)
 import           Data.Maybe               (fromMaybe)
 import qualified Data.Set                 as Set
@@ -227,9 +237,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             (Right Nothing)
             (validateOptionalEmailText "musician email")
             (lsmEmail musician)
+        normalizedName <- validateMusicianName (lsmName musician)
         let normalizedMusician =
               musician
-                { lsmName = T.strip (lsmName musician)
+                { lsmName = normalizedName
                 , lsmEmail = normalizedEmail
                 , lsmInstrument = lsmInstrument musician >>= normalizeOptionalText
                 , lsmRole = lsmRole musician >>= normalizeOptionalText
@@ -243,12 +254,24 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         if maybe False (<= 0) (lsmPartyId musician)
           then Left "musician partyId must be a positive integer"
           else if lsmIsExisting normalizedMusician && not hasPartyReference
-          then Left "existing musicians must include a positive partyId"
+            then Left "existing musicians must include a positive partyId"
           else if hasPartyReference && not (lsmIsExisting normalizedMusician)
             then Left "musician partyId requires isExisting=true"
           else if noReferenceProvided
             then Left "each musician must include a non-blank name, email, or partyId"
-            else Right normalizedMusician
+          else Right normalizedMusician
+
+      validateMusicianName rawName =
+        let name = T.strip rawName
+        in if T.length name > 160
+             then Left "musician name must be 160 characters or fewer"
+             else if T.any isUnsafeIntakeTextChar name
+               then Left "musician name must not contain control characters or hidden formatting characters"
+               else Right name
+
+      isUnsafeIntakeTextChar ch =
+        isControl ch
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
       validateSetlistSong song =
         let normalizedTitle = T.strip (lssTitle song)
