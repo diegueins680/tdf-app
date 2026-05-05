@@ -4248,6 +4248,8 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 400 "Invalid model response format"
                 `shouldBe` False
+            shouldRetryWithFallbackModel 400 "not a valid model response format"
+                `shouldBe` False
             shouldRetryWithFallbackModel 500 "invalid model response format"
                 `shouldBe` False
             shouldRetryWithFallbackModel

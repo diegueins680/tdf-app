@@ -9532,6 +9532,8 @@ shouldRetryWithFallbackModel status rawMessage =
       , "dns"
       , "tls"
       , "certificate"
+      , "model response"
+      , "response format"
       , "authentication_error"
       , "invalid_api_key"
       , "invalid api key"
