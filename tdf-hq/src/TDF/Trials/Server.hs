@@ -821,6 +821,7 @@ isValidHttpUrl rawUrl
           let port = T.drop 1 suffix
           in not (T.null port)
                && T.all isDigit port
+               && not (T.length port > 1 && T.head port == '0')
                && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
                     (readMaybe (T.unpack port))
       | otherwise = False
