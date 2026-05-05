@@ -8430,6 +8430,33 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds all-missing-contact busy-list context into the search helper without reopening row placeholders', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crEmail: null,
+        crPhoneE164: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Contacto pendiente en todas las inscripciones visibles. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countOccurrences(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(1);
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('names the exact contact field in busy-list local search prompts', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
