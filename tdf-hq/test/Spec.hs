@@ -1121,6 +1121,15 @@ main = hspec $ do
                     "FACEBOOK_MESSAGING_PAGE_ID and FACEBOOK_PAGE_ID must not be set to different values"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects Facebook token fallback alias conflicts before bearer requests are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_TOKEN", Just "token_primary")
+                , ("FACEBOOK_PAGE_ACCESS_TOKEN", Just "token_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_MESSAGING_TOKEN and FACEBOOK_PAGE_ACCESS_TOKEN must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed Graph messaging node ids before token-bearing requests are built" $ do
             let graphIdKeys =
                     [ "FACEBOOK_MESSAGING_PAGE_ID"

@@ -494,7 +494,7 @@ loadConfig = do
   fbAppIdEnv <- lookupFirstEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
   fbAppSecretEnv <- lookupFirstEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
-  fbMsgTokenEnv <- lookupFirstEnv
+  fbMsgTokenEnv <- lookupUniqueNamedEnv
     ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
   fbMsgPageIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
   fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
@@ -647,7 +647,7 @@ loadConfig = do
     , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
     , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
     , facebookGraphBase = fbGraphBase
-    , facebookMessagingToken = fmap (T.strip . T.pack) fbMsgTokenEnv >>= nonEmpty
+    , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
     , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
