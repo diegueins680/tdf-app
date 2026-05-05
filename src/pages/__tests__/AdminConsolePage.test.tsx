@@ -1111,6 +1111,60 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps event-log fallback titles from duplicating recent audit', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-activity-feed',
+          title: 'Activity feed',
+          body: ['Review system events before repeating admin changes.'],
+        },
+        {
+          cardId: 'fallback-event-log',
+          title: 'Event log',
+          body: ['Review event history before repeating admin changes.'],
+        },
+        {
+          cardId: 'fallback-system-log',
+          title: 'System log',
+          body: ['Review workspace logs before changing access.'],
+        },
+        {
+          cardId: 'fallback-bitacora-sistema',
+          title: 'Bitacora del sistema',
+          body: ['Revisa eventos del sistema antes de repetir acciones administrativas.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Activity feed')).not.toBeInTheDocument();
+    expect(screen.queryByText('Event log')).not.toBeInTheDocument();
+    expect(screen.queryByText('System log')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitacora del sistema')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review system events before repeating admin changes\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa eventos del sistema antes de repetir acciones administrativas\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps audit-trail fallback titles from duplicating recent audit', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
