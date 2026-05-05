@@ -1588,6 +1588,20 @@ spec = do
                 "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects malformed ticket purchase tier ids before handler lookup fallback" $ do
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"   \",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"0\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"+42\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"../42\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+
         it "rejects blank, pending, or unknown ticket order status updates before handler fallback" $ do
             decodeTicketOrderStatus
                 "{\"ticketOrderStatus\":\"   \"}"

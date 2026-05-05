@@ -41,10 +41,12 @@ import           Data.Aeson (FromJSON, ToJSON, Value(..), defaultOptions, generi
 import           Data.Aeson.Types (Object, Parser)
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Int   (Int64)
 import           Data.Text  (Text)
 import qualified Data.Text  as T
 import           Data.Time  (UTCTime)
 import           GHC.Generics (Generic)
+import           Text.Read  (readMaybe)
 
 data NullableFieldUpdate a
   = FieldMissing
@@ -582,7 +584,9 @@ instance FromJSON TicketPurchaseRequestDTO where
       , "ticketPurchaseBuyerEmail"
       ]
       o
-    tierId <- o .: "ticketPurchaseTierId"
+    tierId <-
+      o .: "ticketPurchaseTierId"
+        >>= normalizePositiveIdText "ticketPurchaseTierId"
     quantity <- o .: "ticketPurchaseQuantity"
     if quantity <= (0 :: Int)
       then fail "ticketPurchaseQuantity must be greater than 0"
@@ -594,6 +598,20 @@ instance FromJSON TicketPurchaseRequestDTO where
               <$> o .:? "ticketPurchaseBuyerPartyId"
               <*> o .:? "ticketPurchaseBuyerName"
               <*> o .:? "ticketPurchaseBuyerEmail"
+
+normalizePositiveIdText :: String -> Text -> Parser Text
+normalizePositiveIdText fieldName rawValue =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed || not (T.all isAsciiDigitText trimmed)
+       then fail (fieldName <> " must be a positive integer")
+       else
+         case readMaybe (T.unpack trimmed) :: Maybe Int64 of
+           Just value | value > 0 -> pure (T.pack (show value))
+           _ -> fail (fieldName <> " must be a positive integer")
+
+isAsciiDigitText :: Char -> Bool
+isAsciiDigitText ch =
+  ch >= '0' && ch <= '9'
 
 data TicketOrderStatusUpdateDTO = TicketOrderStatusUpdateDTO
   { ticketOrderStatus :: Text
