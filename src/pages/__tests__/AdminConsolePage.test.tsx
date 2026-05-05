@@ -252,11 +252,15 @@ describe('AdminConsolePage', () => {
           /Atención: base de datos requiere revisión antes de cambiar permisos o seguir con otras acciones administrativas\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
-      expect(screen.getAllByTestId('admin-service-health-chip')).toHaveLength(1);
+      const statusChips = screen.getAllByTestId('admin-service-health-chip');
+      expect(statusChips).toHaveLength(1);
+      expect(statusChips[0]).toHaveTextContent('Base de datos: requiere revisión');
+      expect(statusChips[0]).toHaveAttribute('title', 'Base de datos: degraded');
     });
 
+    expect(screen.queryByText('Base de datos: degraded')).not.toBeInTheDocument();
     expect(screen.queryByText('API: ok')).not.toBeInTheDocument();
+    expect(screen.queryByText('API: listo')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Todo listo: API y base de datos responden correctamente\./i),
     ).not.toBeInTheDocument();
@@ -295,7 +299,7 @@ describe('AdminConsolePage', () => {
           /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: requiere revisión')).toBeInTheDocument();
     });
 
     expect(
@@ -374,7 +378,7 @@ describe('AdminConsolePage', () => {
           /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText('Base de datos: degraded')).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: requiere revisión')).toBeInTheDocument();
     });
 
     expect(

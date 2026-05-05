@@ -1173,9 +1173,35 @@ function shouldShowServiceHealthChip(value?: string | null) {
 }
 
 function formatHealthStatusChipValue(value?: string | null) {
+  const normalizedValue = normalizeHealthIndicator(value);
+
+  if (normalizedValue === '') {
+    return 'sin dato';
+  }
+
+  if (ERROR_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'sin respuesta';
+  }
+
+  if (normalizedValue === 'starting') {
+    return 'iniciando';
+  }
+
+  if (WARNING_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'requiere revisión';
+  }
+
+  if (HEALTHY_HEALTH_INDICATORS.has(normalizedValue)) {
+    return 'listo';
+  }
+
+  return 'requiere revisión';
+}
+
+function getHealthStatusChipTitle(label: string, value?: string | null) {
   const trimmedValue = value?.trim();
 
-  return trimmedValue ? trimmedValue : '—';
+  return trimmedValue ? `${label}: ${trimmedValue}` : undefined;
 }
 
 function normalizeRoleSelection(roles?: readonly RoleKey[] | null) {
@@ -1667,11 +1693,13 @@ export default function AdminConsolePage() {
       {
         key: 'api',
         label: `API: ${formatHealthStatusChipValue(healthQuery.data.status)}`,
+        title: getHealthStatusChipTitle('API', healthQuery.data.status),
         value: healthQuery.data.status,
       },
       {
         key: 'db',
         label: `Base de datos: ${formatHealthStatusChipValue(healthQuery.data.db)}`,
+        title: getHealthStatusChipTitle('Base de datos', healthQuery.data.db),
         value: healthQuery.data.db,
       },
     ].filter((chip) => shouldShowServiceHealthChip(chip.value))
@@ -2094,6 +2122,7 @@ export default function AdminConsolePage() {
                       key={chip.key}
                       data-testid="admin-service-health-chip"
                       label={chip.label}
+                      title={chip.title}
                       color={getHealthStatusChipColor(chip.value)}
                       size="small"
                       variant="filled"
