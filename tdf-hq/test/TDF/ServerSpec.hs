@@ -3789,6 +3789,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Mensaje no debe contener caracteres de control"
                 baseRequest { aarMessage = "Necesito responder" <> T.singleton '\0' }
+            assertInvalid
+                "Mensaje no debe contener caracteres de control o formato oculto"
+                baseRequest { aarMessage = "Necesito responder" <> T.singleton '\x200B' }
 
         it "rejects non-positive ad and campaign ids before scoped example lookup silently misses" $ do
             let baseRequest =

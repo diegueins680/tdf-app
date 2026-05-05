@@ -8894,11 +8894,12 @@ validateAdsAssistRequest
              if T.length body > 2000
                then Left err400 { errBody = "Mensaje demasiado largo (max 2000 caracteres)" }
                else
-                 if T.any isUnsafeAdsAssistControl body
-                   then Left err400 { errBody = "Mensaje no debe contener caracteres de control" }
+                 if T.any isUnsupportedAdsAssistMessageChar body
+                   then Left err400 { errBody = "Mensaje no debe contener caracteres de control o formato oculto" }
                    else Right body
-    isUnsafeAdsAssistControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+    isUnsupportedAdsAssistMessageChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validatePublicAdsAssistPartyId :: Maybe Int64 -> Either ServerError ()
 validatePublicAdsAssistPartyId Nothing = Right ()
