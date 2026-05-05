@@ -205,7 +205,7 @@ const getUserContactReadinessSearchValues = (
     return ['pendiente de WhatsApp', 'pendiente WhatsApp', 'WhatsApp pendiente', 'sin WhatsApp'];
   }
 
-  return ['pendiente de contacto', 'pendiente contacto', 'contacto pendiente', 'sin contacto'];
+  return ['pendiente de contacto', 'pendiente contacto', 'contacto pendiente', 'sin contacto', 'sin WhatsApp'];
 };
 
 const joinSpanishSummaryParts = (parts: readonly string[]) => {

@@ -595,6 +595,20 @@ describe('AdminUsersPage', () => {
         expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
         expect(getRowByUserId(container, 102).textContent).not.toContain('Contacto pendiente');
       });
+
+      await changeInputValue(searchInput, 'sin WhatsApp');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'Mostrando 2 de 3 usuarios. 1 pendiente de WhatsApp y 1 pendiente de contacto.',
+        );
+        expect(getRowByUserId(container, 102).textContent).toContain('email@example.com');
+        expect(getRowByUserId(container, 102).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('Contacto pendiente');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
+      });
     } finally {
       await cleanup();
     }
