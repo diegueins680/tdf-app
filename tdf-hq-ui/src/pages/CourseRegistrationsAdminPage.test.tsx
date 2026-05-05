@@ -244,7 +244,7 @@ const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const initialEmptyStateMultiCohortMessage =
-  'Todavía no hay inscripciones. Hay 2 formularios públicos listos.';
+  'Hay 2 formularios públicos listos para recibir la primera inscripción.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Abre la página pública cuando estés listo para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
@@ -13312,6 +13312,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
       expect(emptyState?.textContent).not.toContain(initialEmptyStateConfigMessage);
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones. Hay');
       expect(emptyState?.textContent).not.toContain('elige cuál compartir primero');
       expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
       expect(emptyState?.textContent).not.toContain('Beatmaking 101');

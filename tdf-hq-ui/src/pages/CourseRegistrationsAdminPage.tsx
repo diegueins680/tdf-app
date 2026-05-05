@@ -61,7 +61,7 @@ const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambio
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
 const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
-  `Todavía no hay inscripciones. Hay ${count} formularios públicos listos.`;
+  `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir cuál compartir';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
