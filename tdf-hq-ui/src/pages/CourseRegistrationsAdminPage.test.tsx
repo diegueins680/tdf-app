@@ -8585,7 +8585,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, registro u otros datos');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto u otros datos');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('registro');
       expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
       expect(searchInput.getAttribute('placeholder')).not.toContain('estado');
       expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
@@ -8597,6 +8598,20 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await act(async () => {
       setInputValue(getInputByLabel(container, localSearchLabel), 'manual review');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #102')).toBeTruthy();
+      expect(container.textContent).toContain('Registro #102');
+      expect(container.textContent).not.toContain('Ada Lovelace');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'registro 102');
       await flushPromises();
       await flushPromises();
     });

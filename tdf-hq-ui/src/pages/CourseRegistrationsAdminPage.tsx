@@ -1507,8 +1507,8 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     }
   });
 
-  const terms: string[] = [];
-  if (hasNameIdentity) terms.push('Nombre');
+  const identityTerms: string[] = [];
+  if (hasNameIdentity) identityTerms.push('Nombre');
   if (hasEmailIdentity || hasPhoneIdentity) {
     const contactTerm = hasEmailIdentity && hasPhoneIdentity
       ? 'contacto'
@@ -1516,20 +1516,33 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
         ? 'correo'
         : 'teléfono';
     const capitalizedContactTerm = `${contactTerm.charAt(0).toLocaleUpperCase('es')}${contactTerm.slice(1)}`;
-    terms.push(hasNameIdentity ? contactTerm : capitalizedContactTerm);
+    identityTerms.push(hasNameIdentity ? contactTerm : capitalizedContactTerm);
   }
-  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
-  if (noteKeys.size > 1 || (noteKeys.size === 1 && hasRowsWithoutNotes)) terms.push('nota');
+
+  const contextTerms: string[] = [];
+  if (noteKeys.size > 1 || (noteKeys.size === 1 && hasRowsWithoutNotes)) contextTerms.push('nota');
   const hasVariableAcquisitionContext =
     acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext);
   const hasVariableSource =
     sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource);
   if (hasVariableAcquisitionContext) {
-    terms.push(terms.length === 0 ? 'Origen' : 'origen');
+    contextTerms.push(identityTerms.length === 0 && !hasGeneratedRegistrationIdentity ? 'Origen' : 'origen');
   }
-  if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
-  if (hasVariableSource && !hasVariableAcquisitionContext) terms.push('fuente');
-  if (cohortKeys.size > 1) terms.push('curso');
+  if (hasSearchableCustomRegistrationStatus(registrations)) contextTerms.push('estado');
+  if (hasVariableSource && !hasVariableAcquisitionContext) contextTerms.push('fuente');
+  if (cohortKeys.size > 1) contextTerms.push('curso');
+
+  if (
+    hasGeneratedRegistrationIdentity
+    && identityTerms.length > 0
+    && identityTerms.length + 1 + contextTerms.length > MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS
+  ) {
+    return formatLocalSearchPlaceholder([...identityTerms, 'otros datos']);
+  }
+
+  const terms = [...identityTerms];
+  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
+  terms.push(...contextTerms);
 
   return formatLocalSearchPlaceholder(terms);
 };
