@@ -4,6 +4,7 @@
 module TDF.ServerFuture where
 
 import           Control.Monad.Except (MonadError)
+import qualified Data.ByteString.Lazy as BL
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
@@ -12,6 +13,7 @@ import           Data.Char
 import           Data.List            (group, nub)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
+import qualified Data.Text.Encoding   as TE
 import           Database.Persist.Sql (fromSqlKey)
 import           Servant
 
@@ -24,7 +26,7 @@ import           TDF.Auth
   , moduleName
   , modulesForRoles
   )
-import           TDF.Models (RoleEnum(Admin, Customer, Fan))
+import           TDF.Models (RoleEnum(Admin, Customer, Fan), roleToText)
 
 -- | Shared helper to quickly craft stub responses.
 stub
@@ -149,13 +151,25 @@ validateFutureAdminAccess user
   | any (not . isFutureAdminRoleScope) (auRoles user) =
       Left err403
         { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }
-  | not (all (`elem` auRoles user) requiredFutureAdminBaselineRoles) =
-      Left err403 { errBody = "Admin fallback discovery requires baseline roles" }
+  | not (null missingBaselineRoles) =
+      Left err403
+        { errBody =
+            textBody $
+              "Admin fallback discovery requires baseline roles; missing: "
+                <> T.intercalate ", " (map roleToText missingBaselineRoles)
+        }
   | not (hasModuleAccess ModuleAdmin user) =
       Left err403 { errBody = "Admin module access required" }
   | auModules user /= modulesForRoles (auRoles user) =
       Left err403 { errBody = "Admin module grants must match roles" }
   | otherwise = Right ()
+  where
+    missingBaselineRoles =
+      filter (`notElem` auRoles user) requiredFutureAdminBaselineRoles
+
+textBody :: Text -> BL.ByteString
+textBody =
+  BL.fromStrict . TE.encodeUtf8
 
 isFutureAdminRoleScope :: RoleEnum -> Bool
 isFutureAdminRoleScope role =

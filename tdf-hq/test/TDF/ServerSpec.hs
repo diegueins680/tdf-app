@@ -8842,18 +8842,24 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected mixed Admin role scope to be rejected, got: " <> show value)
 
-        it "rejects Admin sessions missing baseline roles before fallback discovery" $
-            forM_ [[Admin], [Admin, Fan], [Admin, Customer]] $ \roles ->
-                case validateFutureAdminAccess (mkUser roles) of
-                    Left serverErr -> do
-                        errHTTPCode serverErr `shouldBe` 403
-                        BL8.unpack (errBody serverErr)
-                            `shouldContain` "Admin fallback discovery requires baseline roles"
-                    Right value ->
-                        expectationFailure
-                            ( "Expected Admin session without baseline roles to be rejected, got: "
-                                <> show value
-                            )
+        it "reports which baseline roles are missing before fallback discovery" $
+            forM_
+                [ ([Admin], "missing: Fan, Customer")
+                , ([Admin, Fan], "missing: Customer")
+                , ([Admin, Customer], "missing: Fan")
+                ]
+                $ \(roles, missingMessage) ->
+                    case validateFutureAdminAccess (mkUser roles) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Admin fallback discovery requires baseline roles"
+                            BL8.unpack (errBody serverErr) `shouldContain` missingMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected Admin session without baseline roles to be rejected, got: "
+                                    <> show value
+                                )
 
         it "rejects Admin-shaped sessions with impossible party ids" $ do
             forM_ [0, -7] $ \rawPartyId -> do
