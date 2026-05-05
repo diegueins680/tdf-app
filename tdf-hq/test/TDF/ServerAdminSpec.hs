@@ -311,6 +311,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Label must not contain control characters"
                 (validateDropdownOptionLabel (Just "Open\nnow"))
+            assertInvalid
+                "Value must not contain hidden format characters"
+                (validateDropdownOptionValue ("open" <> "\x200B" <> "now"))
+            assertInvalid
+                "Label must not contain hidden format characters"
+                (validateDropdownOptionLabel (Just ("Open" <> "\x202E" <> "now")))
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $

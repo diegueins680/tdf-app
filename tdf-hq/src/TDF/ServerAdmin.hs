@@ -1065,6 +1065,8 @@ validateDropdownOptionValue rawValue
       Left err400 { errBody = "Value is required" }
   | T.any isControl value =
       Left err400 { errBody = "Value must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar value =
+      Left err400 { errBody = "Value must not contain hidden format characters" }
   | otherwise =
       Right value
   where
@@ -1077,6 +1079,8 @@ validateDropdownOptionLabel (Just rawLabel)
       Right Nothing
   | T.any isControl label =
       Left err400 { errBody = "Label must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar label =
+      Left err400 { errBody = "Label must not contain hidden format characters" }
   | otherwise =
       Right (Just label)
   where
