@@ -1019,7 +1019,7 @@ export default function AdminUsersPage() {
       ? INACTIVE_FILTER_ACTIVE_LABEL
       : INCLUDE_INACTIVE_FILTER_LABEL;
   const inactiveScopeSummary = showNoInactiveScopeSummary
-    ? 'No hay usuarios inactivos en esta vista.'
+    ? 'No hay usuarios inactivos.'
     : '';
   const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary && !showSingleUserGuidance
     ? 'Vista actual: solo usuarios inactivos.'
@@ -1043,7 +1043,7 @@ export default function AdminUsersPage() {
 
     const parts: string[] = [];
     const countLabel =
-      shouldCollapseInactiveUsers && !showInactiveUsersList
+      (shouldCollapseInactiveUsers && !showInactiveUsersList) || showNoInactiveScopeSummary
         ? formatActiveUserCountLabel(usersInCurrentSummary.length)
         : formatUserCountLabel(usersInCurrentSummary.length);
 
@@ -1080,6 +1080,7 @@ export default function AdminUsersPage() {
     showSharedPendingProfileGuidance,
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
+    showNoInactiveScopeSummary,
     shouldCollapseInactiveUsers,
     showInactiveUsersList,
     totalUsersCount,

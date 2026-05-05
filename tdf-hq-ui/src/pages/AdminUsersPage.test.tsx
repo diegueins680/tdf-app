@@ -2334,9 +2334,10 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getPageGuidance(container)).toBe(
-          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. No hay usuarios inactivos en esta vista.',
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios activos en esta vista. No hay usuarios inactivos.',
         );
         expect(container.textContent).not.toContain('Vista actual: solo usuarios activos.');
+        expect(container.textContent).not.toContain('No hay usuarios inactivos en esta vista.');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(countExactText(container, 'Inactivo')).toBe(0);
       });
@@ -2888,11 +2889,12 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. No hay usuarios inactivos en esta vista.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. No hay usuarios inactivos.',
         );
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
+        expect(container.textContent).not.toContain('No hay usuarios inactivos en esta vista.');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).not.toBeNull();
       });
