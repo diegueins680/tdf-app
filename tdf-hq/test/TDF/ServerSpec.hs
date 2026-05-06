@@ -4748,6 +4748,22 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "google\nsecret")
                 )
                 "GOOGLE_CLIENT_SECRET must not contain control characters or whitespace"
+            assertInvalid
+                ( resolveDriveClientCreds
+                    (Just "drive-client")
+                    (Just ("drive" <> "\x202E\&secret"))
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_SECRET must not contain hidden formatting characters"
+            assertInvalid
+                ( resolveDriveClientCreds
+                    Nothing
+                    Nothing
+                    (Just "google-client")
+                    (Just (T.replicate 4097 "a"))
+                )
+                "GOOGLE_CLIENT_SECRET must be 4096 characters or fewer"
 
     describe "DriveApiResp FromJSON" $ do
         it "normalizes valid Google Drive file ids and resource keys from upload responses" $ do

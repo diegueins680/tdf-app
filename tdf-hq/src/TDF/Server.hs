@@ -2450,6 +2450,18 @@ validateOptionalDriveClientCredential envName rawCredential =
                 BL.fromStrict . TE.encodeUtf8 $
                   envName <> " must not contain control characters or whitespace"
             }
+      | T.any isHiddenDriveOAuthTokenChar credential ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must not contain hidden formatting characters"
+            }
+      | T.length credential > maxDriveOAuthTokenChars ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must be 4096 characters or fewer"
+            }
       | otherwise -> Right (Just credential)
 
 refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
