@@ -5586,6 +5586,40 @@ describe('AdminConsolePage', () => {
     expect(rolesSelect).not.toHaveTextContent('Engineer, Teacher, Reception');
   });
 
+  it('keeps pending long role selections compact while the helper explains the change', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        roles: ['Admin', 'Manager', 'Engineer', 'Teacher', 'Reception'],
+      }),
+    ]);
+
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Editar roles de Ada Lovelace' }));
+
+    const rolesSelect = document.body.querySelector('[role="combobox"]');
+    if (!(rolesSelect instanceof HTMLElement)) {
+      throw new Error('Roles select not found');
+    }
+
+    await user.click(rolesSelect);
+    await user.click(getMenuItemByText('ReadOnly'));
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(rolesSelect).toHaveTextContent('Admin, Manager +4 roles');
+      expect(rolesSelect).toHaveAttribute('title', 'Admin, Manager, Engineer, Teacher, Reception, ReadOnly');
+      expect(
+        screen.getByText(
+          /Cambio pendiente: agregar ReadOnly\. Al guardar, usuarios y auditoría se actualizarán automáticamente\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(rolesSelect).not.toHaveTextContent('Engineer, Teacher, Reception, ReadOnly');
+  });
+
   it('keeps long single-user role summaries compact while preserving the full role detail', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser({

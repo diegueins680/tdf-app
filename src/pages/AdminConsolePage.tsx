@@ -1847,9 +1847,7 @@ export default function AdminConsolePage() {
     editingUser ? hasRoleSelectionChanged(editingUser.roles, selectedRoles) : false
   ), [editingUser, selectedRoles]);
   const selectedRoleFullSummary = formatEditableRoleList(selectedRoles);
-  const selectedRoleControlSummary = hasPendingRoleChanges
-    ? selectedRoleFullSummary
-    : formatInlineEditableRoleList(selectedRoles);
+  const selectedRoleControlSummary = formatInlineEditableRoleList(selectedRoles);
   const selectedRoleControlTitle = selectedRoleControlSummary === selectedRoleFullSummary
     ? undefined
     : selectedRoleFullSummary;
