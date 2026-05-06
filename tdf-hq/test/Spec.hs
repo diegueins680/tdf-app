@@ -9879,6 +9879,50 @@ main = hspec $ do
                 (Data.Text.replicate 161 "A")
                 "setlist song title must be 160 characters or fewer"
 
+        it "normalizes safe setlist lyrics but rejects hidden or malformed lyric text" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"lyrics\":\"  line one\\nline two\\t  \"}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected multiline setlist lyrics to parse, got: " <> err)
+                Right payload ->
+                    case lsiSetlist payload of
+                        [song] ->
+                            lssLyrics song `shouldBe` Just "line one\nline two"
+                        songs ->
+                            expectationFailure ("Expected one setlist song, got: " <> show songs)
+
+            let assertInvalid rawLyrics expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\"Intro Jam\",\"lyrics\":\""
+                                    <> rawLyrics
+                                    <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe setlist lyrics to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "verse\\u202Echorus"
+                "setlist song lyrics must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "verse\\u0000chorus"
+                "setlist song lyrics must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 4001 "A")
+                "setlist song lyrics must be 4000 characters or fewer"
+
         it "rejects non-positive setlist bpm values instead of persisting impossible tempo metadata" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

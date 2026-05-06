@@ -284,6 +284,8 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
              else do
                normalizedSongKey <-
                  validateOptionalSetlistSongKey (lssSongKey song >>= normalizeOptionalText)
+               normalizedLyrics <-
+                 validateOptionalSetlistLyrics (lssLyrics song >>= normalizeOptionalText)
                case lssBpm song of
                  Just bpm | bpm <= 0 ->
                    Left "setlist song bpm must be a positive integer"
@@ -291,7 +293,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
                    Right song
                      { lssTitle = normalizedTitle
                      , lssSongKey = normalizedSongKey
-                     , lssLyrics = lssLyrics song >>= normalizeOptionalText
+                     , lssLyrics = normalizedLyrics
                      }
 
       validateOptionalSetlistSongKey :: Maybe Text -> Either String (Maybe Text)
@@ -303,6 +305,20 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             Left "setlist song songKey must not contain control characters or hidden formatting characters"
         | otherwise =
             Right (Just songKey)
+
+      validateOptionalSetlistLyrics :: Maybe Text -> Either String (Maybe Text)
+      validateOptionalSetlistLyrics Nothing = Right Nothing
+      validateOptionalSetlistLyrics (Just lyrics)
+        | T.length lyrics > 4000 =
+            Left "setlist song lyrics must be 4000 characters or fewer"
+        | T.any isUnsafeLyricsTextChar lyrics =
+            Left "setlist song lyrics must not contain control characters or hidden formatting characters"
+        | otherwise =
+            Right (Just lyrics)
+
+      isUnsafeLyricsTextChar ch =
+        isControl ch && ch `notElem` ("\n\r\t" :: String)
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =
