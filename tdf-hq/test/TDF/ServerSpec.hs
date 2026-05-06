@@ -7829,7 +7829,7 @@ spec = describe "TDF.Server helpers" $ do
             validatePublicBookingNotes (Just "  Linea uno\nLinea dos  ")
                 `shouldBe` Right (Just "Linea uno\nLinea dos")
 
-        it "rejects oversized or unsafe-control public-booking notes before persistence" $ do
+        it "rejects oversized or unsafe public-booking notes before persistence" $ do
             let assertInvalid rawNotes expected =
                     case validatePublicBookingNotes (Just rawNotes) of
                         Left serverErr -> do
@@ -7842,6 +7842,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("Needs synth" <> T.singleton '\0')
                 "notes must not contain control characters"
+            assertInvalid
+                ("Needs synth" <> T.singleton '\x202E')
+                "hidden formatting characters"
 
     describe "PublicBookingReq FromJSON" $ do
         it "accepts canonical public booking payloads used by the public booking form" $

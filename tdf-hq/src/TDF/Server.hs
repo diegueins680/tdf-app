@@ -4769,17 +4769,18 @@ validateBookingNotes (Just rawNotes) =
     Just notesVal
       | T.length notesVal > publicBookingNotesMaxLength ->
           Left err400 { errBody = "notes must be 1000 characters or fewer" }
-      | T.any isUnsafeNoteControl notesVal ->
+      | T.any isUnsafeNoteChar notesVal ->
           Left err400
             { errBody =
                 "notes must not contain control characters "
-                  <> "other than tabs or line breaks"
+                  <> "other than tabs or line breaks, or hidden formatting characters"
             }
       | otherwise ->
           Right (Just notesVal)
   where
-    isUnsafeNoteControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+    isUnsafeNoteChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validatePublicBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validatePublicBookingNotes = validateBookingNotes
