@@ -4369,6 +4369,15 @@ spec = describe "TDF.Server helpers" $ do
                     )
             extractChatKitSession (object ["client_secret" .= ("   " :: Text)])
                 `shouldBe` Nothing
+            extractChatKitSession (object ["client_secret" .= ("session secret" :: Text)])
+                `shouldBe` Nothing
+            extractChatKitSession (object ["client_secret" .= ("session\nsecret" :: Text)])
+                `shouldBe` Nothing
+            extractChatKitSession (object ["client_secret" .= ("session\8203secret" :: Text)])
+                `shouldBe` Nothing
+            extractChatKitSession
+                (object ["client_secret" .= (T.replicate 4097 "a" :: Text)])
+                `shouldBe` Nothing
             extractChatKitSession (object [])
                 `shouldBe` Nothing
 

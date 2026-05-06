@@ -9721,9 +9721,26 @@ extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
 extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
   rawSecret <- o .: "client_secret"
   secret <-
-    maybe (fail "client_secret is required") pure (nonEmptyText rawSecret)
+    maybe (fail "client_secret is malformed") pure (validateChatKitClientSecret rawSecret)
   expiresAfter <- o .:? "expires_after"
   pure (secret, expiresAfter)
+
+validateChatKitClientSecret :: Text -> Maybe Text
+validateChatKitClientSecret rawSecret = do
+  secret <- nonEmptyText rawSecret
+  if T.length secret <= maxChatKitClientSecretChars
+      && not (T.any invalidChatKitClientSecretChar secret)
+    then Just secret
+    else Nothing
+
+maxChatKitClientSecretChars :: Int
+maxChatKitClientSecretChars = 4096
+
+invalidChatKitClientSecretChar :: Char -> Bool
+invalidChatKitClientSecretChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 extractApiErrorMessage :: Value -> Maybe Text
 extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
