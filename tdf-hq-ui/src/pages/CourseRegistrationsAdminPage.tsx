@@ -59,7 +59,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público y las inscripciones aparecerán aquí.';
 const normalizeInitialCohortPreviewKey = (label: string) =>
   label
     .normalize('NFD')
@@ -118,7 +118,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   }
   return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 };
-const initialEmptyStateConfigActionLabel = 'Configurar formulario';
+const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
