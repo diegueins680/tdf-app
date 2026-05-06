@@ -49,7 +49,7 @@ normalizeUploadName Nothing = Right Nothing
 normalizeUploadName (Just rawValue) =
   let trimmed = T.strip rawValue
   in if T.null trimmed
-       then Right Nothing
+       then Left "Asset upload name must not be blank"
        else validateUploadName trimmed
 
 validateUploadName :: Text -> Either Text (Maybe Text)

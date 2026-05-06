@@ -329,7 +329,7 @@ spec = do
         `shouldSatisfy` isLeft
 
   describe "inventory asset upload multipart parsing" $ do
-    it "normalizes optional upload names so blank values keep filename fallbacks" $ do
+    it "trims explicit upload names and keeps omitted-name filename fallbacks" $ do
       case fromMultipart
         (mkAssetUploadMultipart [("name", "  Front Room.jpg  ")] [mkAssetUploadFile "camera.jpg"])
           :: Either String AssetUploadForm of
@@ -340,16 +340,28 @@ spec = do
           aufName payload `shouldBe` Just "Front Room.jpg"
 
       case fromMultipart
-        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "fallback.jpg"])
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "fallback.jpg"])
           :: Either String AssetUploadForm of
         Left err ->
-          expectationFailure ("Expected blank asset upload name to parse, got: " <> err)
+          expectationFailure ("Expected omitted asset upload name to parse, got: " <> err)
         Right payload ->
           aufName payload `shouldBe` Nothing
 
+    it "rejects explicit blank upload names instead of silently using browser filename fallbacks" $
+      case fromMultipart
+        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "fallback.jpg"])
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Asset upload name must not be blank"
+        Right payload ->
+          expectationFailure
+            ( "Expected blank asset upload name to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
     it "rejects uploads with no usable form name or browser filename" $
       case fromMultipart
-        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "   "])
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "   "])
           :: Either String AssetUploadForm of
         Left err ->
           err `shouldContain` "Either field name or uploaded file name must be provided"
