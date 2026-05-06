@@ -308,6 +308,26 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('routes stale draft history through the editor instead of offering direct publish', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain(
+        'Las versiones anteriores a la versión en vivo se revisan en el formulario antes de publicarlas.',
+      );
+      expect(history?.querySelector('[data-testid="cms-admin-stale-version-publish-guidance"]')).not.toBeNull();
+      expect(countActionsByText(history!, 'Publicar')).toBe(0);
+      expect(countActionsByText(history!, 'Editar en formulario')).toBe(1);
+      expect(countActionsByText(history!, 'Borrar')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a current-live draft row passive instead of offering a duplicate publish action', async () => {
     listMock.mockResolvedValue([
       buildContent({

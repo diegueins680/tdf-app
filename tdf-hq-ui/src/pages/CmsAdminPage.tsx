@@ -629,6 +629,13 @@ export default function CmsAdminPage() {
     filteredVersions.length === 1 &&
     liveContent?.ccdId === versions[0]?.ccdId;
   const visibleVersionRows = showSingleLiveVersionSummary ? [] : filteredVersions;
+  const hasStaleVersionPublishCandidate = visibleVersionRows.some((version) => (
+    liveVersion !== null
+    && version.ccdVersion < liveVersion
+    && normalizeCmsStatus(version.ccdStatus) !== 'published'
+    && liveContent?.ccdId !== version.ccdId
+    && editingFromId !== version.ccdId
+  ));
   const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
   const showHistoryStatusFilter = (versions.length > 2 && historyStatuses.length > 1) || statusFilter !== 'all';
   const showHistoryMinVersionFilter = versions.length > 2 || minVersionFilter != null;
@@ -1188,6 +1195,15 @@ export default function CmsAdminPage() {
                   {versionToolbarHint}
                 </Typography>
               )}
+              {hasStaleVersionPublishCandidate && (
+                <Typography
+                  data-testid="cms-admin-stale-version-publish-guidance"
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Las versiones anteriores a la versión en vivo se revisan en el formulario antes de publicarlas.
+                </Typography>
+              )}
             </Stack>
             {showVersionToolbarControls && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
@@ -1251,6 +1267,7 @@ export default function CmsAdminPage() {
               const isCurrentLiveVersion = liveContent?.ccdId === v.ccdId;
               const rowStatus = normalizeCmsStatus(v.ccdStatus);
               const rowHasPublishedTimestamp = Boolean(v.ccdPublishedAt);
+              const rowNeedsPublishReview = liveVersion !== null && v.ccdVersion < liveVersion;
               const showRowStatusChip =
                 !sharedVersionStatus
                 && !isCurrentLiveVersion
@@ -1291,7 +1308,7 @@ export default function CmsAdminPage() {
                       </Stack>
                     </Box>
                     <Stack direction="row" spacing={1}>
-                      {rowActions.showPublish && (
+                      {rowActions.showPublish && !rowNeedsPublishReview && (
                         <Button
                           size="small"
                           variant="outlined"
