@@ -312,6 +312,7 @@ import TDF.Server
     , extractApiErrorMessage
     , extractModelReplyText
     , extractChatKitSession
+    , validateChatKitSessionPayload
     , resolveDriveUploadFolderId
     , resolveDriveUploadName
     , resolveDriveUploadMimeType
@@ -4504,6 +4505,24 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Nothing
             extractChatKitSession (object [])
                 `shouldBe` Nothing
+
+        it "rejects malformed ChatKit expiry metadata before returning sessions" $ do
+            let malformedExpiry =
+                    object
+                        [ "client_secret" .= ("session-secret" :: Text)
+                        , "expires_after" .= ("soon" :: Text)
+                        ]
+
+            extractChatKitSession malformedExpiry `shouldBe` Nothing
+            case validateChatKitSessionPayload malformedExpiry of
+                Left msg ->
+                    msg `shouldSatisfy`
+                        T.isInfixOf "ChatKit response expires_after must be an object"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed ChatKit expires_after to be rejected, got: "
+                            <> show value
+                        )
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do

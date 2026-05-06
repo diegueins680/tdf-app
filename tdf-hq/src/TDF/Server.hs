@@ -9805,14 +9805,14 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
       Left err ->
         throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack err)) }
       Right payload ->
-        case extractChatKitSession payload of
-          Just (secret, expiresAfter) ->
+        case validateChatKitSessionPayload payload of
+          Right (secret, expiresAfter) ->
             pure ChatKitSessionResponse
               { ckrClientSecret = secret
               , ckrExpiresAfter = expiresAfter
               }
-          Nothing ->
-            throwError err502 { errBody = "ChatKit respondió sin client_secret" }
+          Left msg ->
+            throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     else do
       let msg = chatKitSessionErrorMessage status raw
       throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
@@ -9852,12 +9852,30 @@ nonEmptyText txt =
   in if T.null trimmed then Nothing else Just trimmed
 
 extractChatKitSession :: Value -> Maybe (Text, Maybe Value)
-extractChatKitSession = parseMaybe $ withObject "ChatKitSession" $ \o -> do
-  rawSecret <- o .: "client_secret"
-  secret <-
-    maybe (fail "client_secret is malformed") pure (validateChatKitClientSecret rawSecret)
-  expiresAfter <- o .:? "expires_after"
-  pure (secret, expiresAfter)
+extractChatKitSession =
+  either (const Nothing) Just . validateChatKitSessionPayload
+
+validateChatKitSessionPayload :: Value -> Either Text (Text, Maybe Value)
+validateChatKitSessionPayload payload =
+  case parseEither parsePayload payload of
+    Left err -> Left (T.pack err)
+    Right session -> Right session
+  where
+    parsePayload = withObject "ChatKitSession" $ \o -> do
+      rawSecret <- o .:? "client_secret"
+      secret <-
+        maybe
+          (fail "ChatKit response client_secret is required or malformed")
+          pure
+          (rawSecret >>= validateChatKitClientSecret)
+      expiresAfter <- o .:? "expires_after"
+      validatedExpiresAfter <- traverse validateExpiresAfter expiresAfter
+      pure (secret, validatedExpiresAfter)
+
+    validateExpiresAfter value =
+      case value of
+        Object _ -> pure value
+        _ -> fail "ChatKit response expires_after must be an object"
 
 validateChatKitClientSecret :: Text -> Maybe Text
 validateChatKitClientSecret rawSecret = do
