@@ -8890,6 +8890,10 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
             (eitherDecode "{\"phone\":\"call me maybe\"}" :: Either String PreviewReq)
                 `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"+025550123\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"(02) 555-0123\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
 
     describe "validateLeadCompletionRequest" $ do
         it "accepts canonical lead-completion request bodies and rejects unexpected keys" $ do

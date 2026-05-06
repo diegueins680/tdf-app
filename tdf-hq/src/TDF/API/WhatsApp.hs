@@ -172,14 +172,23 @@ leadsCompleteServer conn lid rawReq = do
 isValidE164 :: Text -> Bool
 isValidE164 t =
   case T.uncons t of
-    Just ('+', rest) -> not (T.null rest) && T.all isDigit rest && T.length rest >= 7 && T.length rest <= 15
+    Just ('+', rest) ->
+      case T.uncons rest of
+        Just (countryCodeStart, _) ->
+          countryCodeStart >= '1'
+            && countryCodeStart <= '9'
+            && T.all isDigit rest
+            && T.length rest >= 7
+            && T.length rest <= 15
+        Nothing -> False
     _ -> False
 
 normalizePreviewPhone :: Text -> Parser Text
 normalizePreviewPhone rawPhone =
   case normalizeWhatsAppPhone rawPhone of
-    Just phoneValue -> pure phoneValue
-    Nothing -> fail "phone must be a valid phone number"
+    Just phoneValue
+      | isValidE164 phoneValue -> pure phoneValue
+    _ -> fail "phone must be a valid E.164 phone number"
 
 isValidEmail :: Text -> Bool
 isValidEmail candidate =
