@@ -10,7 +10,7 @@ module TDF.Services.InstagramSync
 
 import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl, isSpace)
+import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -72,12 +72,18 @@ validateInstagramMediaUrl fieldName rawUrl
       fail (T.unpack fieldName <> " must be 2048 characters or fewer")
   | T.any (\ch -> isSpace ch || isControl ch) url =
       fail (T.unpack fieldName <> " must not contain whitespace or control characters")
+  | T.any isHiddenInstagramFormattingChar url =
+      fail (T.unpack fieldName <> " must not contain hidden formatting characters")
   | not (isPublicHttpsUrl fieldName url) =
       fail (T.unpack fieldName <> " must be an absolute public https URL")
   | otherwise =
       pure url
   where
     url = T.strip rawUrl
+
+isHiddenInstagramFormattingChar :: Char -> Bool
+isHiddenInstagramFormattingChar ch =
+  generalCategory ch == Format
 
 isPublicHttpsUrl :: Text -> Text -> Bool
 isPublicHttpsUrl fieldName url =

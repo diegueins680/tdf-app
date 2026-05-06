@@ -8777,8 +8777,14 @@ spec = describe "TDF.Server helpers" $ do
                 "media_url must be an absolute public https URL"
                 "{\"id\":\"ig-media-42\",\"media_url\":\"https://cdn.example.com:70000/post.jpg\"}"
             assertInvalid
+                "media_url must not contain hidden formatting characters"
+                "{\"id\":\"ig-media-42\",\"media_url\":\"https://cdn.example.com/post\\u202e.jpg\"}"
+            assertInvalid
                 "permalink must not contain whitespace"
                 "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com/p/post 42/\"}"
+            assertInvalid
+                "permalink must not contain hidden formatting characters"
+                "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com/p/post42/\\u202e\"}"
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
