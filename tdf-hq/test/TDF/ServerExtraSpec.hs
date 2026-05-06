@@ -4797,6 +4797,14 @@ spec = do
       assertInvalid (validatePaymentAttachmentUrl (Just "https://2130706433/proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://256.256.256.256/proof.pdf"))
 
+    it "rejects payment attachment fragments instead of storing browser-only proof references" $
+      case validatePaymentAttachmentUrl (Just "https://files.example.com/proof.pdf#page=2") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "without a fragment"
+        Right value ->
+          expectationFailure ("Expected fragmented payment attachment URL error, got " <> show value)
+
   describe "validatePaymentConcept" $ do
     it "trims meaningful concepts before storing manual payment rows" $ do
       validatePaymentConcept "  Honorarios abril  " `shouldBe` Right "Honorarios abril"

@@ -3234,10 +3234,13 @@ validatePaymentAttachmentUrl (Just rawUrl) =
     Nothing -> Right Nothing
     Just attachmentUrl
       | "https://" `T.isPrefixOf` T.toLower attachmentUrl
-          && TrialsServer.isValidHttpUrl attachmentUrl ->
+          && TrialsServer.isValidHttpUrl attachmentUrl
+          && not ("#" `T.isInfixOf` attachmentUrl) ->
           Right (Just attachmentUrl)
       | otherwise ->
-          Left err400 { errBody = "attachmentUrl must be an absolute https URL" }
+          Left err400
+            { errBody = "attachmentUrl must be an absolute https URL without a fragment"
+            }
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
