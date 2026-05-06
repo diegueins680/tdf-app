@@ -969,7 +969,8 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
-  const showReviewInactiveSearchEmptyAction = showSearchEmptyState && !includeInactive;
+  const showReviewInactiveSearchEmptyAction =
+    showSearchEmptyState && !includeInactive && !isActiveStatusSearchQuery(searchQuery);
   const hasConfirmedNoInactiveUsers =
     includeInactive
     && hasUsers

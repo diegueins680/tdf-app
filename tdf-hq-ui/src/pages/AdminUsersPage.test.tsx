@@ -4485,6 +4485,56 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('does not offer inactive search when an active-status query has no active matches', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'grace-archived',
+        partyName: 'Grace Archived',
+        active: false,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'linus-disabled',
+        partyName: 'Linus Disabled',
+        active: false,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'ada-suspended',
+        partyName: 'Ada Suspended',
+        active: false,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'activo');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "activo" entre los usuarios activos.',
+        );
+        expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Buscar también en inactivos')).toHaveLength(0);
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps status search exact so active queries do not pull inactive accounts', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
