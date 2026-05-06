@@ -131,7 +131,7 @@ const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
-  `Todavía no hay inscripciones para ${cohortLabel}. Abre la página pública cuando estés listo para recibir la primera.`;
+  `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Estado muestra acciones.`;

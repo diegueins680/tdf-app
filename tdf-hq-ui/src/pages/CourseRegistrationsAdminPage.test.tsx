@@ -244,7 +244,7 @@ const initialEmptyStateConfigMessage =
 const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
-  'Todavía no hay inscripciones para Beatmaking 101. Abre la página pública cuando estés listo para recibir la primera.';
+  'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -11840,6 +11840,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Abre el formulario público y comparte el enlace');
+      expect(emptyState?.textContent).not.toContain('Abre la página pública');
+      expect(countOccurrences(emptyState!, initialEmptyStateFormActionLabel)).toBe(1);
       const formAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
       expect(
         formAction?.textContent?.trim(),
@@ -12623,7 +12625,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Todavía no hay inscripciones para Meetup Music Production. Abre la página pública cuando estés listo para recibir la primera.',
+        'Todavía no hay inscripciones para Meetup Music Production. La página pública ya está lista para recibir la primera.',
       );
       expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Music Production.');
       expect(
@@ -13340,7 +13342,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Todavía no hay inscripciones para Ingreso a la programación. Abre la página pública cuando estés listo para recibir la primera.',
+        'Todavía no hay inscripciones para Ingreso a la programación. La página pública ya está lista para recibir la primera.',
       );
       expect(emptyState?.textContent).not.toContain('ingreso-programacion');
     });
@@ -13397,7 +13399,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Todavía no hay inscripciones para Student Applications in Music Production. Abre la página pública cuando estés listo para recibir la primera.',
+        'Todavía no hay inscripciones para Student Applications in Music Production. La página pública ya está lista para recibir la primera.',
       );
       expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Music Production.');
     });
