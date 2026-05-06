@@ -3835,6 +3835,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("Quiero info" <> T.singleton '\0')
                 "message must not contain control characters"
+            assertInvalid
+                ("Quiero info" <> T.singleton '\x200B')
+                "hidden formatting characters"
 
         it "rejects malformed channels before storing them as lead sources" $ do
             let baseInquiry =

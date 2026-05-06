@@ -4672,17 +4672,18 @@ validateAdsInquiryMessage (Just rawMessage) =
     Just message
       | T.length message > adsInquiryMessageMaxLength ->
           Left err400 { errBody = "message must be 2000 characters or fewer" }
-      | T.any isUnsafeAdsInquiryMessageControl message ->
+      | T.any isUnsafeAdsInquiryMessageChar message ->
           Left err400
             { errBody =
                 "message must not contain control characters "
-                  <> "other than tabs or line breaks"
+                  <> "other than tabs or line breaks, or hidden formatting characters"
             }
       | otherwise ->
           Right (Just message)
   where
-    isUnsafeAdsInquiryMessageControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+    isUnsafeAdsInquiryMessageChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 adsInquiryMessageMaxLength :: Int
 adsInquiryMessageMaxLength = 2000
