@@ -12230,6 +12230,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips course-platform checkout wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Kajabi enrollment page - Beatmaking 101',
+      'Teachable course signup form for Beatmaking 101',
+      'Beatmaking 101 - Thinkific registration portal',
+      'Hotmart checkout for Beatmaking 101',
+      'Beatmaking 101 - Podia checkout',
+      'LearnWorlds course page - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup/i);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips event-platform wrappers from first-run cohort copy', async () => {
     const titles = [
       'Eventbrite - Beatmaking 101',

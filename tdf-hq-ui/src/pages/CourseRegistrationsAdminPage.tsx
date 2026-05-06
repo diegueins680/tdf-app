@@ -853,6 +853,17 @@ const firstRunProviderFormDescriptorPrefixPattern =
 const firstRunProviderFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform|tally(?:\s+forms?)?|jot\s*forms?|airtable|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|notion|fillout|cognito\s+forms?)(?:\s+forms?)?)|typeform|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?)\s*$/i;
 
+const firstRunCoursePlatformPattern = String.raw`(?:kajabi|teachable|thinkific|hotmart|podia|learn\s*worlds?)`;
+const firstRunCoursePlatformDescriptorPattern = String.raw`(?:(?:course\s+)?(?:checkout|payment|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)(?:\s+(?:forms?|pages?|portals?|links?|urls?|checkouts?))?|(?:course\s+)?(?:forms?|pages?|portals?|links?|urls?|checkouts?))`;
+const firstRunCoursePlatformDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCoursePlatformPattern}(?:\s+${firstRunCoursePlatformDescriptorPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCoursePlatformDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCoursePlatformPattern}(?:\s+${firstRunCoursePlatformDescriptorPattern})?)\s*$`,
+  'i',
+);
+
 const firstRunCrmFormDescriptorPrefixPattern =
   /^(?:(?:crm|customer\s+relationship\s+management)\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+crm\s+(?:de\s+)?(?:leads?|prospectos?|contactos?|consultas?|(?:pre)?inscripci[oó]n(?:es)?|registro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -965,6 +976,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
@@ -1009,6 +1021,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunInfoSessionDescriptorSuffixPattern, '')
