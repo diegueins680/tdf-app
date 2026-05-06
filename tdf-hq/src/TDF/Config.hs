@@ -463,18 +463,18 @@ loadConfig = do
       then pure Nothing
       else lookupUniqueConnUrlEnv
         ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
-  rawHost    <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
-  rawPort    <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
-  rawUser    <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
-  rawPass    <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
-  rawName    <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
   let usingKeywordConn = isNothing connUrl
+  rawHost    <- getWithFallback usingKeywordConn ["DB_HOST", "PGHOST"] "127.0.0.1"
+  rawPort    <- getWithFallback usingKeywordConn ["DB_PORT", "PGPORT"] "5432"
+  rawUser    <- getWithFallback usingKeywordConn ["DB_USER", "PGUSER"] "postgres"
+  rawPass    <- getWithFallback usingKeywordConn ["DB_PASS", "PGPASSWORD"] "postgres"
+  rawName    <- getWithFallback usingKeywordConn ["DB_NAME", "PGDATABASE"] "tdf_hq"
   h          <- validateKeywordDbConnField usingKeywordConn "DB_HOST/PGHOST" rawHost
   p          <- validateKeywordDbPort usingKeywordConn "DB_PORT/PGPORT" rawPort
   u          <- validateKeywordDbConnField usingKeywordConn "DB_USER/PGUSER" rawUser
   w          <- validateKeywordDbConnField usingKeywordConn "DB_PASS/PGPASSWORD" rawPass
   d          <- validateKeywordDbConnField usingKeywordConn "DB_NAME/PGDATABASE" rawName
-  sslModeEnvRaw <- lookupFirstNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
+  sslModeEnvRaw <- lookupUniqueNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
   sslModeEnv <-
     case sslModeEnvRaw of
       Nothing -> pure Nothing
@@ -669,7 +669,11 @@ loadConfig = do
     , sessionCookieMaxAgeSeconds = cookieMaxAge
     }
   where
-    getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
+    getWithFallback requireUnique keys def =
+      fmap (fromMaybe def) $
+        if requireUnique
+          then lookupUniqueEnv keys
+          else lookupFirstEnv keys
     allEnvPresent [] = pure True
     allEnvPresent (keys:rest) = do
       value <- lookupFirstEnv keys
@@ -682,12 +686,6 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just normalized)
         Nothing -> lookupFirstEnv rest
-    lookupFirstNamedEnv [] = pure Nothing
-    lookupFirstNamedEnv (key:rest) = do
-      value <- lookupEnv key
-      case value >>= normalizeEnvString of
-        Just normalized -> pure (Just (key, normalized))
-        Nothing -> lookupFirstNamedEnv rest
     lookupUniqueNamedEnv keys = do
       values <- lookupNamedEnvValues keys
       case values of
@@ -702,6 +700,7 @@ loadConfig = do
                     <> fst conflict
                     <> " must not be set to different values"
                 )
+    lookupUniqueEnv keys = fmap (fmap snd) (lookupUniqueNamedEnv keys)
     lookupNamedEnvValues [] = pure []
     lookupNamedEnvValues (key:rest) = do
       value <- lookupEnv key

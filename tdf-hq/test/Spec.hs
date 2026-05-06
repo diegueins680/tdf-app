@@ -2082,6 +2082,45 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write"
 
+        it "rejects conflicting keyword DB aliases instead of silently choosing a fallback" $ do
+            let completeKeywordDb =
+                    [ ("DATABASE_URL", Nothing)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Just "db-primary.internal")
+                    , ("PGHOST", Nothing)
+                    , ("DB_PORT", Just "5432")
+                    , ("PGPORT", Nothing)
+                    , ("DB_USER", Just "tdf_hq")
+                    , ("PGUSER", Nothing)
+                    , ("DB_PASS", Just "secret")
+                    , ("PGPASSWORD", Nothing)
+                    , ("DB_NAME", Just "tdf_hq")
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                setOverrides overrides =
+                    map
+                        (\pair@(envKey, _) ->
+                            case lookup envKey overrides of
+                                Just value -> (envKey, Just value)
+                                Nothing -> pair)
+                        completeKeywordDb
+
+            withEnvOverrides
+                (setOverrides [("PGHOST", "db-replica.internal")])
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_HOST and PGHOST must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (setOverrides [("DB_SSLMODE", "require"), ("PGSSLMODE", "disable")])
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_SSLMODE and PGSSLMODE must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
         it "preserves an explicit read-write target_session_attrs setting on DATABASE_URL" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write")
