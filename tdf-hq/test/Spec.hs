@@ -289,6 +289,7 @@ import TDF.Server.SocialEventsHandlers (
     storedTicketOrderSummaryFields,
     ticketOrderAccountingEntriesEither,
     findTicketForCheckIn,
+    validateEventTitleInput,
     validateOptionalTicketBuyerPartyId,
     validateTicketPurchaseBuyerName,
     validateTicketPurchaseBuyerEmail,
@@ -5928,6 +5929,31 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
                 Right value ->
                     expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
+
+    describe "validateEventTitleInput" $ do
+        it "trims event titles before create/update persistence" $
+            validateEventTitleInput "  Noche TDF  "
+                `shouldBe` Right "Noche TDF"
+
+        it "rejects malformed event titles before public event rows are written" $ do
+            let assertInvalid expectedMessage rawTitle =
+                    case validateEventTitleInput rawTitle of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid event title to be rejected, got " <> show value)
+            assertInvalid "title is required" "   "
+            assertInvalid
+                "title must be 160 characters or fewer"
+                (Data.Text.replicate 161 "a")
+            assertInvalid
+                "title must not contain control characters"
+                ("Noche" <> Data.Text.singleton '\NUL' <> "TDF")
+            assertInvalid
+                "hidden formatting characters"
+                ("Noche" <> Data.Text.singleton '\x202E' <> "TDF")
 
     describe "validateEventCreateUpdateDimensions" $ do
         it "accepts omitted, free, and finite non-negative event pricing dimensions" $ do

@@ -61,6 +61,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketTierCurrencyInput
   , isImageUpload
   , validateEventImageUploadSize
+  , validateEventTitleInput
   , validateArtistName
   ) where
 
@@ -558,7 +559,7 @@ socialEventsServer user = eventsServer
     createEvent dto = do
       Env{..} <- ask
       now <- liftIO getCurrentTime
-      when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
+      titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       either throwError pure $
         validateEventCreateUpdateDimensions
@@ -589,7 +590,7 @@ socialEventsServer user = eventsServer
         Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
       key <- liftIO $ runSqlPool (insert SocialEvent
         { socialEventOrganizerPartyId = Just currentPartyId
-        , socialEventTitle = eventTitle dto
+        , socialEventTitle = titleVal
         , socialEventDescription = eventDescription dto
         , socialEventVenueId = mVenueKey
         , socialEventStartTime = eventStart dto
@@ -607,6 +608,7 @@ socialEventsServer user = eventsServer
         envPool
       pure dto
         { eventId = Just (renderKeyText key)
+        , eventTitle = titleVal
         , eventOrganizerPartyId = Just currentPartyId
         , eventTicketUrl = emTicketUrl createdMetadata
         , eventImageUrl = emImageUrl createdMetadata
@@ -638,7 +640,7 @@ socialEventsServer user = eventsServer
       mExisting <- liftIO $ runSqlPool (get eventKey) envPool
       existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
       let dto = eudEvent
-      when (T.null (T.strip (eventTitle dto))) $ throwError err400 { errBody = "title is required" }
+      titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
       either throwError pure $
         validateEventCreateUpdateDimensions
@@ -653,7 +655,7 @@ socialEventsServer user = eventsServer
         Nothing -> pure Nothing
         Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
       liftIO $ runSqlPool (update eventKey
-        [ SocialEventTitle =. eventTitle dto
+        [ SocialEventTitle =. titleVal
         , SocialEventDescription =. eventDescription dto
         , SocialEventVenueId =. mVenueKey
         , SocialEventStartTime =. eventStart dto
@@ -671,6 +673,7 @@ socialEventsServer user = eventsServer
         envPool
       pure (dto
         { eventId = Just rawId
+        , eventTitle = titleVal
         , eventOrganizerPartyId = socialEventOrganizerPartyId existing
         , eventTicketUrl = emTicketUrl mergedMetadata
         , eventImageUrl = emImageUrl mergedMetadata
@@ -2590,6 +2593,30 @@ normalizeBudgetCentsMaybe mBudget =
   case mBudget of
     Just n | n >= 0 -> Just n
     _ -> Nothing
+
+validateEventTitleInput :: T.Text -> Either ServerError T.Text
+validateEventTitleInput rawTitle
+  | T.null titleVal =
+      Left err400 { errBody = "title is required" }
+  | T.length titleVal > maxEventTitleChars =
+      Left err400 { errBody = "title must be 160 characters or fewer" }
+  | T.any isUnsafeEventTitleChar titleVal =
+      Left err400
+        { errBody =
+            "title must not contain control characters or hidden formatting characters"
+        }
+  | otherwise =
+      Right titleVal
+  where
+    titleVal = T.strip rawTitle
+
+maxEventTitleChars :: Int
+maxEventTitleChars = 160
+
+isUnsafeEventTitleChar :: Char -> Bool
+isUnsafeEventTitleChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateEventCreateUpdateDimensions :: Maybe Int -> Maybe Int -> Maybe Int -> Either ServerError ()
 validateEventCreateUpdateDimensions mPriceCents mCapacity mBudgetCents
