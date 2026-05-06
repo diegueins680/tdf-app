@@ -798,9 +798,14 @@ validateOptionalDriveLink (Just rawDriveLink) =
   case cleanOptional (Just rawDriveLink) of
     Nothing -> Right Nothing
     Just driveLinkVal ->
-      if "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
-        then Right (Just driveLinkVal)
-        else Left err400 { errBody = "driveLink must be an absolute https URL" }
+      if T.length driveLinkVal > maxPublicDriveLinkChars
+        then Left err400 { errBody = "driveLink must be 2048 characters or fewer" }
+        else if "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
+          then Right (Just driveLinkVal)
+          else Left err400 { errBody = "driveLink must be an absolute https URL" }
+
+maxPublicDriveLinkChars :: Int
+maxPublicDriveLinkChars = 2048
 
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl

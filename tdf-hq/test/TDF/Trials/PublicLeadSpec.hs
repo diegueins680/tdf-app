@@ -778,6 +778,20 @@ spec = do
       assertRejected "https://[::1]/folder"
       assertRejected "https://example.com:70000/folder"
 
+    it "rejects oversized drive links before storing public lead metadata" $
+      case validatePublicInterestInput
+        ( InterestIn
+            "workshop"
+            Nothing
+            Nothing
+            (Just ("https://example.com/" <> T.replicate 2049 "a"))
+        ) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "driveLink must be 2048 characters or fewer"
+        Right _ ->
+          expectationFailure "Expected oversized driveLink to be rejected"
+
   describe "SubjectUpdate request decoding" $ do
     it "rejects typoed or unexpected JSON keys so subject patches cannot degrade into silent no-ops" $ do
       case (A.eitherDecode "{\"active\":false}" :: Either String SubjectUpdate) of
