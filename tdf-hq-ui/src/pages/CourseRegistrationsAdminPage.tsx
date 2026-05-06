@@ -1471,13 +1471,13 @@ const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrat
     .filter((kind) => identityKinds.has(kind))
     .map((kind) => {
       if (kind === 'contact') return 'el contacto';
-      if (kind === 'record') return 'el registro';
+      if (kind === 'record') return 'el número de registro';
       return 'el nombre';
     });
 
   if (orderedTargetLabels.length === 0) return 'el nombre';
   if (orderedTargetLabels.length === 1) return orderedTargetLabels[0] ?? 'el nombre';
-  const lastTargetLabel = orderedTargetLabels[orderedTargetLabels.length - 1] ?? 'el registro';
+  const lastTargetLabel = orderedTargetLabels[orderedTargetLabels.length - 1] ?? 'el número de registro';
   if (orderedTargetLabels.length === 2) return `${orderedTargetLabels[0] ?? 'el nombre'} o ${lastTargetLabel}`;
   return `${orderedTargetLabels.slice(0, -1).join(', ')} o ${lastTargetLabel}`;
 };
@@ -1711,7 +1711,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   }
 
   const terms = [...identityTerms];
-  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
+  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Número de registro' : 'número de registro');
   terms.push(...contextTerms);
 
   return formatLocalSearchPlaceholder(terms);

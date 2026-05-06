@@ -233,11 +233,11 @@ const contactPaymentWorkflowDossierScopeHint =
 const contactDossierOnlyScopeHint =
   'Usa el contacto para abrir expediente; Estado abre acciones rápidas.';
 const recordDossierScopeHint =
-  'Usa el registro para abrir expediente; Estado muestra acciones.';
+  'Usa el número de registro para abrir expediente; Estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Usa el registro para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el número de registro para abrir expediente; Estado incluye Registrar pago.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Usa el nombre, el contacto o el registro para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el nombre, el contacto o el número de registro para abrir expediente; Estado incluye Registrar pago.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
@@ -9684,7 +9684,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses registration ids as the busy-list search fallback when rows lack contact identity', async () => {
+  it('uses explicit registration-number copy as the busy-list search fallback when rows lack contact identity', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({
         crId: 501 + index,
@@ -9702,7 +9702,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
       expect(hasLabel(container, localSearchLabel)).toBe(true);
-      expect(searchInput.getAttribute('placeholder')).toBe('Registro');
+      expect(searchInput.getAttribute('placeholder')).toBe('Número de registro');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Registro');
       expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
       expect(container.textContent).toContain(
         `Busca dentro de las 9 inscripciones cargadas. ${recordPaymentWorkflowDossierScopeHint}`,
