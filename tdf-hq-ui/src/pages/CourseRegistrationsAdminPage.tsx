@@ -1168,17 +1168,24 @@ const normalizeSourceAliasKey = (source: string) =>
 
 const sourceAliasKeyVariants = (sourceKey: string) => {
   const variants = new Set([sourceKey]);
+  const pluralSuffixes = [
+    ['form', 'forms'],
+    ['page', 'pages'],
+    ['portal', 'portals'],
+  ] as const;
 
-  if (sourceKey.endsWith(' forms')) {
-    variants.add(sourceKey.replace(/\s+forms$/, ' form'));
-    variants.add(sourceKey.replace(/\s+forms$/, ''));
-    variants.add(sourceKey.replace(/\s+forms$/, 'form'));
-  } else if (sourceKey.endsWith(' form')) {
-    variants.add(sourceKey.replace(/\s+form$/, ' forms'));
-    variants.add(sourceKey.replace(/\s+form$/, ''));
-    variants.add(sourceKey.replace(/\s+form$/, 'form'));
-  } else if (sourceKey.endsWith('forms')) {
-    variants.add(sourceKey.replace(/forms$/, 'form'));
+  for (const [singularSuffix, pluralSuffix] of pluralSuffixes) {
+    if (sourceKey.endsWith(` ${pluralSuffix}`)) {
+      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), ` ${singularSuffix}`));
+      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), ''));
+      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), singularSuffix));
+    } else if (sourceKey.endsWith(` ${singularSuffix}`)) {
+      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), ` ${pluralSuffix}`));
+      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), ''));
+      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), singularSuffix));
+    } else if (sourceKey.endsWith(pluralSuffix)) {
+      variants.add(sourceKey.replace(new RegExp(`${pluralSuffix}$`), singularSuffix));
+    }
   }
 
   return variants;

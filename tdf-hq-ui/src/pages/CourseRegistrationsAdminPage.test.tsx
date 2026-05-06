@@ -9271,6 +9271,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats plural public-form source containers as default plumbing in busy lists', async () => {
+    const defaultSources = [
+      'course_registration_pages',
+      'registration_portals',
+      'course_enrollment_portals',
+      'public_course_pages',
+      'student_registration_forms',
+      'application_pages',
+      'intake_pages',
+      'admissions_pages',
+      'landing_pages',
+    ] as const;
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).not.toContain('Fuente: Course registration pages');
+      expect(container.textContent).not.toContain('Fuente: Registration portals');
+      expect(container.textContent).not.toContain('Fuente: Course enrollment portals');
+      expect(container.textContent).not.toContain('Fuente: Public course pages');
+      expect(container.textContent).not.toContain('Fuente: Student registration forms');
+      expect(container.textContent).not.toContain('Fuente: Application pages');
+      expect(container.textContent).not.toContain('Fuente: Intake pages');
+      expect(container.textContent).not.toContain('Fuente: Admissions pages');
+      expect(container.textContent).not.toContain('Fuente: Landing pages');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'registration pages');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "registration pages" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats generic intake and admissions sources as default form traffic', async () => {
     const defaultSources = [
       'intake_form',
