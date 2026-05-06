@@ -7,6 +7,7 @@ module TDF.Cron
   , startSocialAutoReplyJob
   , Directive(..)
   , parseDirective
+  , selectInstagramSyncAccessToken
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
@@ -506,7 +507,7 @@ ensureInstagramAccounts Env{..} = runSqlPool action envPool
                 , socialSyncAccountPlatform = "instagram"
                 , socialSyncAccountExternalUserId = handleTxt
                 , socialSyncAccountHandle = Just handleTxt
-                , socialSyncAccountAccessToken = instagramAppToken envConfig
+                , socialSyncAccountAccessToken = nonEmptyText (instagramAppToken envConfig)
                 , socialSyncAccountTokenExpiresAt = Nothing
                 , socialSyncAccountStatus = "pending"
                 , socialSyncAccountLastSyncedAt = Nothing
@@ -528,7 +529,10 @@ syncInstagramAccount :: Env -> Entity SocialSyncAccount -> IO ()
 syncInstagramAccount Env{..} (Entity accId acc) = do
   now <- getCurrentTime
   let labelTxt = displayHandle acc
-      token = socialSyncAccountAccessToken acc <|> instagramAppToken envConfig
+      token =
+        selectInstagramSyncAccessToken
+          (socialSyncAccountAccessToken acc)
+          (instagramAppToken envConfig)
   case token of
     Nothing -> LogBuf.addLog LogBuf.LogWarning ("[Cron][IGSync] Skipping " <> labelTxt <> " (no access token configured).")
     Just tok -> do
@@ -631,6 +635,10 @@ nonEmptyText Nothing = Nothing
 nonEmptyText (Just txt) =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just trimmed
+
+selectInstagramSyncAccessToken :: Maybe Text -> Maybe Text -> Maybe Text
+selectInstagramSyncAccessToken accountToken configuredToken =
+  nonEmptyText accountToken <|> nonEmptyText configuredToken
 
 classifyTags :: Maybe Text -> [Text]
 classifyTags mCaption =

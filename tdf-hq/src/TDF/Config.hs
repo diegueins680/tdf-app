@@ -652,12 +652,12 @@ loadConfig = do
     , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
-    , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
+    , instagramAppToken = igTokenEnv >>= nonEmpty . T.pack
     , instagramGraphBase = igGraphBase
     , instagramMessagingToken =
-        case fmap (T.strip . T.pack) igMsgTokenEnv of
-          Just val | not (T.null val) -> Just val
-          _ -> fmap (T.strip . T.pack) igTokenEnv
+        case igMsgTokenEnv >>= nonEmpty . T.pack of
+          Just val -> Just val
+          Nothing -> igTokenEnv >>= nonEmpty . T.pack
     , instagramMessagingAccountId = igMsgAccountId
     , instagramMessagingApiBase = igMsgBase
     , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty

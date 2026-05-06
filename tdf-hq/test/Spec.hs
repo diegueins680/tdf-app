@@ -71,7 +71,7 @@ import TDF.Cors
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
-import TDF.Cron (Directive (..), parseDirective)
+import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
@@ -314,9 +314,11 @@ import TDF.Config
       facebookMessagingApiBase,
       facebookMessagingPageId,
       googleClientId,
+      instagramAppToken,
       instagramGraphBase,
       instagramMessagingApiBase,
       instagramMessagingAccountId,
+      instagramMessagingToken,
       loadConfig,
       openAiEmbedModel,
       openAiModel,
@@ -2548,6 +2550,33 @@ main = hspec $ do
                     <> " must be a Graph node id using only ASCII letters, numbers, "
                     <> "'.', '_' or '-' with at least one letter or number "
                     <> "(128 chars max)"
+
+        it "normalizes configured Instagram app-token fallbacks before sync or backfill use" $ do
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Just " app-token ")
+                , ("INSTAGRAM_MESSAGING_TOKEN", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramAppToken cfg `shouldBe` Just "app-token"
+                    instagramMessagingToken cfg `shouldBe` Just "app-token"
+
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Just "   ")
+                , ("INSTAGRAM_MESSAGING_TOKEN", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramAppToken cfg `shouldBe` Nothing
+                    instagramMessagingToken cfg `shouldBe` Nothing
+
+        it "falls back to configured Instagram sync tokens only after blank stored tokens are ignored" $ do
+            selectInstagramSyncAccessToken (Just " account-token ") (Just " configured-token ")
+                `shouldBe` Just "account-token"
+            selectInstagramSyncAccessToken (Just "   ") (Just " configured-token ")
+                `shouldBe` Just "configured-token"
+            selectInstagramSyncAccessToken (Just "   ") (Just "\t")
+                `shouldBe` Nothing
 
         it "rejects malformed Instagram send payloads before building Graph requests" $
             withEnvOverrides
