@@ -2713,6 +2713,15 @@ main = hspec $ do
                         "recipient-1"
                         "hola\NULops"
                         `shouldReturn` Left "Instagram message body must not contain control characters"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        ("hola" <> Data.Text.singleton '\x202E' <> "ops")
+                        `shouldReturn`
+                            Left
+                                "Instagram message body must not contain hidden formatting or separator characters"
 
         it "does not use the configured fallback token when a targeted account has no connected token" $
             withEnvOverrides

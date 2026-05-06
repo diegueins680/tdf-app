@@ -6,7 +6,7 @@ module TDF.Services.InstagramMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
+import           Data.Char (GeneralCategory(Format, LineSeparator, ParagraphSeparator), generalCategory, isControl, isSpace)
 import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -91,6 +91,8 @@ validateInstagramMessageBody rawBody =
           Left "Instagram message body must be 5000 characters or fewer"
       | T.any invalidMessageBodyControlChar messageBody ->
           Left "Instagram message body must not contain control characters"
+      | T.any invalidMessageBodyFormatChar messageBody ->
+          Left "Instagram message body must not contain hidden formatting or separator characters"
       | otherwise ->
           Right messageBody
 
@@ -191,6 +193,10 @@ invalidHeaderTextChar ch =
 invalidMessageBodyControlChar :: Char -> Bool
 invalidMessageBodyControlChar ch =
   isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+invalidMessageBodyFormatChar :: Char -> Bool
+invalidMessageBodyFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 isGraphNodeIdChar :: Char -> Bool
 isGraphNodeIdChar ch =
