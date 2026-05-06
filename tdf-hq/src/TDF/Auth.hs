@@ -105,7 +105,8 @@ hasSocialSyncAccess user =
 
 hasSocialInboxAccess :: AuthedUser -> Bool
 hasSocialInboxAccess user@AuthedUser{..} =
-  hasModuleAccess ModuleCRM user
+  hasCoherentRoleGrants user
+    && hasModuleAccess ModuleCRM user
     && any (`elem` auRoles)
       [ Admin
       , Manager

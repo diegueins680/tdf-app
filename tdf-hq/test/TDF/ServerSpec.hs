@@ -9790,6 +9790,14 @@ spec = describe "TDF.Server helpers" $ do
             hasSocialInboxAccess (mkUser [Fan, Customer]) `shouldBe` False
             hasSocialInboxAccess (mkUser [ReadOnly]) `shouldBe` False
 
+        it "rejects stale or duplicated role grants before social inbox access" $ do
+            let staleManager =
+                    (mkUser [Manager]) { auModules = modulesForRoles [Webmaster] }
+                duplicatedManager =
+                    mkUser [Manager, Manager]
+            hasSocialInboxAccess staleManager `shouldBe` False
+            hasSocialInboxAccess duplicatedManager `shouldBe` False
+
         it "matches the intended single-role inbox matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialInboxAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Reception, LiveSessionsProducer, Producer, AandR, Webmaster])
