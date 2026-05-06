@@ -539,6 +539,8 @@ const ADMIN_USER_ROLES_COLUMN_HEADER = 'Roles';
 const INLINE_ROLE_SUMMARY_LIMIT = 2;
 const ROLE_SAVE_REFRESH_FOLLOWUP = 'Al guardar, usuarios y auditoría se actualizarán automáticamente.';
 const AUDIT_ACTION_LABELS: Record<string, string> = {
+  'package.created': 'Paquete creado',
+  'package.synced': 'Paquete sincronizado',
   'roles.updated': 'Roles actualizados',
 };
 const AUDIT_ENTITY_LABELS: Record<string, string> = {

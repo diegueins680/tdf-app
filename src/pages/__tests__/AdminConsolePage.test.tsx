@@ -5989,11 +5989,11 @@ describe('AdminConsolePage', () => {
           /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Acción:\s*Package created/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Paquete creado/i)).toBeInTheDocument();
       expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Acción:\s*Package created/i)).toHaveAttribute('title', 'package.created');
+    expect(screen.getByText(/Acción:\s*Paquete creado/i)).toHaveAttribute('title', 'package.created');
     expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toHaveAttribute('title', 'package · PKG-1');
     expect(screen.queryByText(/Acción:\s*package\.created/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Actor:\s*Sistema/i)).not.toBeInTheDocument();
@@ -6077,7 +6077,7 @@ describe('AdminConsolePage', () => {
           /Primer evento de auditoría\. Revísalo aquí; cuando exista el segundo, volverá la tabla cronológica\./i,
         ),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Acción:\s*Package created/i)).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Paquete creado/i)).toBeInTheDocument();
       expect(screen.getByText(/Entidad:\s*Paquete · PKG-1/i)).toBeInTheDocument();
     });
 
@@ -6166,12 +6166,12 @@ describe('AdminConsolePage', () => {
       expect(screen.getByRole('columnheader', { name: /^Fecha$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
-      expect(screen.getByText('Package created')).toBeInTheDocument();
-      expect(screen.getByText('Package synced')).toBeInTheDocument();
+      expect(screen.getByText('Paquete creado')).toBeInTheDocument();
+      expect(screen.getByText('Paquete sincronizado')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Package created')).toHaveAttribute('title', 'package.created');
-    expect(screen.getByText('Package synced')).toHaveAttribute('title', 'package.synced');
+    expect(screen.getByText('Paquete creado')).toHaveAttribute('title', 'package.created');
+    expect(screen.getByText('Paquete sincronizado')).toHaveAttribute('title', 'package.synced');
     expect(screen.queryByText('package.created')).not.toBeInTheDocument();
     expect(screen.queryByText('package.synced')).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
@@ -6287,7 +6287,7 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Roles actualizados')).toBeInTheDocument();
-      expect(screen.getByText('Package synced')).toBeInTheDocument();
+      expect(screen.getByText('Paquete sincronizado')).toBeInTheDocument();
     });
 
     const compactDetail = screen.getByText((content) => (
@@ -6298,7 +6298,7 @@ describe('AdminConsolePage', () => {
     expect(compactDetail).not.toHaveTextContent(longDiff);
     expect(screen.queryByText(longDiff)).not.toBeInTheDocument();
 
-    const emptyDetailRow = screen.getByText('Package synced').closest('tr');
+    const emptyDetailRow = screen.getByText('Paquete sincronizado').closest('tr');
     if (!(emptyDetailRow instanceof HTMLElement)) {
       throw new Error('Expected audit row to render inside the table');
     }
@@ -6333,11 +6333,11 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('Package created')).toBeInTheDocument();
+      expect(screen.getByText('Paquete creado')).toBeInTheDocument();
       expect(screen.getByText('Roles actualizados')).toBeInTheDocument();
     });
 
-    expectToAppearBefore(screen.getByText('Roles actualizados'), screen.getByText('Package created'));
+    expectToAppearBefore(screen.getByText('Roles actualizados'), screen.getByText('Paquete creado'));
   });
 
   it('keeps the audit table focused on the five newest events until expanded', async () => {
