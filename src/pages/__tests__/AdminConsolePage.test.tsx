@@ -762,6 +762,66 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('filters duplicate admin guidance by body copy before showing optional first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-workspace-checklist',
+          title: 'Workspace checklist',
+          body: [
+            'Review team access before changing administrative permissions.',
+          ],
+        },
+        {
+          cardId: 'fallback-activity-review',
+          title: 'Actividad del panel',
+          body: [
+            'Revisa cambios administrativos recientes antes de repetir acciones.',
+          ],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Workspace checklist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Actividad del panel')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review team access before changing administrative permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa cambios administrativos recientes antes de repetir acciones\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps access-overview fallback cards from duplicating the users workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
