@@ -7595,22 +7595,40 @@ validateMarketplaceOrderListOffset (Just rawOffset)
 validateOptionalMarketplaceOrderStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalMarketplaceOrderStatus Nothing = Right Nothing
 validateOptionalMarketplaceOrderStatus (Just rawStatus) =
-  case normalizeOptionalInput (Just rawStatus) of
-    Nothing -> Left err400 { errBody = marketplaceOptionalOrderStatusErrorBody }
-    Just statusVal ->
-      case normalizeMarketplaceOrderStatus statusVal of
-        Just normalized -> Right (Just normalized)
-        Nothing -> Left err400 { errBody = marketplaceOptionalOrderStatusErrorBody }
+  Just <$>
+    validateMarketplaceOrderStatusValue
+      marketplaceOptionalOrderStatusErrorBody
+      marketplaceOptionalOrderStatusErrorBody
+      rawStatus
 
 validateMarketplaceOrderUpdateStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateMarketplaceOrderUpdateStatus Nothing = Right Nothing
 validateMarketplaceOrderUpdateStatus (Just rawStatus) =
-  case normalizeOptionalInput (Just rawStatus) of
-    Nothing -> Left err400 { errBody = "status cannot be blank" }
-    Just statusVal ->
-      case normalizeMarketplaceOrderStatus statusVal of
-        Just normalized -> Right (Just normalized)
-        Nothing -> Left err400 { errBody = marketplaceOrderStatusErrorBody }
+  Just <$>
+    validateMarketplaceOrderStatusValue
+      "status cannot be blank"
+      marketplaceOrderStatusErrorBody
+      rawStatus
+
+validateMarketplaceOrderStatusValue
+  :: BL.ByteString
+  -> BL.ByteString
+  -> Text
+  -> Either ServerError Text
+validateMarketplaceOrderStatusValue blankBody invalidBody rawStatus
+  | T.any isUnsafeMarketplaceOrderStatusChar rawStatus =
+      Left err400 { errBody = invalidBody }
+  | otherwise =
+      case normalizeOptionalInput (Just rawStatus) of
+        Nothing -> Left err400 { errBody = blankBody }
+        Just statusVal ->
+          case normalizeMarketplaceOrderStatus statusVal of
+            Just normalized -> Right normalized
+            Nothing -> Left err400 { errBody = invalidBody }
+
+isUnsafeMarketplaceOrderStatusChar :: Char -> Bool
+isUnsafeMarketplaceOrderStatusChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateOptionalMarketplacePaymentProviderUpdate :: Maybe (Maybe Text) -> Either ServerError (Maybe (Maybe Text))
 validateOptionalMarketplacePaymentProviderUpdate Nothing =
@@ -7726,18 +7744,18 @@ validateStoredPayPalOrderId rawStoredOrderId
 
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatusToken rawStatus of
-    "pending" -> Just "pending"
-    "contact" -> Just "contact"
-    "paid" -> Just "paid"
-    "cancelled" -> Just "cancelled"
-    "canceled" -> Just "cancelled"
-    "failed" -> Just "failed"
-    "datafastinit" -> Just "datafast_init"
-    "datafastpending" -> Just "datafast_pending"
-    "datafastfailed" -> Just "datafast_failed"
-    "paypalpending" -> Just "paypal_pending"
-    "paypalfailed" -> Just "paypal_failed"
+  case normalizeMarketplaceOrderStatusParts rawStatus of
+    Just ["pending"] -> Just "pending"
+    Just ["contact"] -> Just "contact"
+    Just ["paid"] -> Just "paid"
+    Just ["cancelled"] -> Just "cancelled"
+    Just ["canceled"] -> Just "cancelled"
+    Just ["failed"] -> Just "failed"
+    Just ["datafast", "init"] -> Just "datafast_init"
+    Just ["datafast", "pending"] -> Just "datafast_pending"
+    Just ["datafast", "failed"] -> Just "datafast_failed"
+    Just ["paypal", "pending"] -> Just "paypal_pending"
+    Just ["paypal", "failed"] -> Just "paypal_failed"
     _ -> Nothing
 
 normalizePayPalCaptureOrderStatus :: Text -> Maybe Text
@@ -7761,6 +7779,30 @@ normalizePayPalCaptureOrderStatus rawStatus =
 normalizeMarketplaceOrderStatusToken :: Text -> Text
 normalizeMarketplaceOrderStatusToken =
   T.filter isAlphaNum . T.toLower . T.strip
+
+normalizeMarketplaceOrderStatusParts :: Text -> Maybe [Text]
+normalizeMarketplaceOrderStatusParts rawStatus =
+  let statusVal = T.strip rawStatus
+      parts = T.split isMarketplaceOrderStatusSeparator (T.toLower statusVal)
+  in
+    if T.null statusVal || T.any (not . isMarketplaceOrderStatusTokenChar) statusVal
+      then Nothing
+      else
+        if any T.null parts
+          then Nothing
+          else Just parts
+
+isMarketplaceOrderStatusTokenChar :: Char -> Bool
+isMarketplaceOrderStatusTokenChar ch =
+  isMarketplaceOrderStatusAtom ch || isMarketplaceOrderStatusSeparator ch
+
+isMarketplaceOrderStatusSeparator :: Char -> Bool
+isMarketplaceOrderStatusSeparator ch =
+  ch == '_' || ch == '-' || ch == ' '
+
+isMarketplaceOrderStatusAtom :: Char -> Bool
+isMarketplaceOrderStatusAtom ch =
+  isAsciiLower ch || isAsciiUpper ch || isAsciiDecimalDigit ch
 
 normalizeCourseRegistrationStatus :: Text -> Maybe Text
 normalizeCourseRegistrationStatus raw =

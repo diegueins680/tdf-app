@@ -6215,6 +6215,8 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right (Just "cancelled")
             validateOptionalMarketplaceOrderStatus (Just "datafast failed")
                 `shouldBe` Right (Just "datafast_failed")
+            validateOptionalMarketplaceOrderStatus (Just "paypal-pending")
+                `shouldBe` Right (Just "paypal_pending")
 
         it "rejects blank or unknown marketplace statuses instead of silently broadening the list query" $ do
             let assertInvalid rawStatus =
@@ -6230,6 +6232,9 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   "
             assertInvalid "refunded"
+            assertInvalid "pa id"
+            assertInvalid ("paid" <> T.singleton '\x202E')
+            assertInvalid "paypal__pending"
 
     describe "validateMarketplaceOrderUpdateStatus" $ do
         it "keeps omitted update statuses untouched and canonicalizes supported explicit values" $ do
@@ -6252,6 +6257,8 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid "   " "status cannot be blank"
             assertInvalid "refunded" "pending, contact, paid, cancelled"
+            assertInvalid "paid!" "pending, contact, paid, cancelled"
+            assertInvalid "pay\npal_pending" "pending, contact, paid, cancelled"
 
     describe "validateMarketplaceOrderPaidAtUpdate" $ do
         let now = UTCTime (fromGregorian 2026 4 21) (secondsToDiffTime 43200)
