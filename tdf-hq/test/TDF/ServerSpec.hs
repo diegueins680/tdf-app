@@ -9224,6 +9224,13 @@ spec = describe "TDF.Server helpers" $ do
                 _ ->
                     expectationFailure "Expected fallback discovery area fixtures to include access entries"
 
+            let firstEntryPerArea =
+                    [ entry
+                    | area <- allowedFutureStubAreas
+                    , entry <- take 1 (filter ((== area) . fst) allowedFutureStubMetadata)
+                    ]
+            assertInvalid firstEntryPerArea
+
             let driftedEndpoint =
                     map
                         (\entry ->

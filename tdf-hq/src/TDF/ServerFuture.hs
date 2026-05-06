@@ -227,9 +227,12 @@ validateFutureStubCatalogAreaOrder catalog = do
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
-  let areaRuns = map head (group (map fst validatedCatalog))
+  let areaGroups = group (map fst validatedCatalog)
+      expectedAreaGroups = group (map fst allowedFutureStubMetadata)
+      areaRuns = map head areaGroups
   if length validatedCatalog /= length (nub validatedCatalog)
        || areaRuns /= allowedFutureStubAreas
+       || map length areaGroups /= map length expectedAreaGroups
        || length areaRuns /= length (nub areaRuns)
     then invalidFutureStubCatalog
     else Right areaRuns
