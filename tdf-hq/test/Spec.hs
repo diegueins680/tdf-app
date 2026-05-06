@@ -9129,6 +9129,20 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "channel inválido"
                 Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
+        it "rejects control or hidden-format channel values before normalization" $ do
+            let assertRejected rawChannel expectedMessage =
+                    case parseSocialErrorsChannel (Just rawChannel) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right channel ->
+                            expectationFailure
+                                ("Expected unsafe social errors channel to be rejected, got " <> show channel)
+            assertRejected "whatsapp\n" "control characters"
+            assertRejected
+                ("whats" <> Data.Text.singleton '\x202E' <> "app")
+                "hidden format characters"
+
     describe "validateSocialErrorsLimit" $ do
         it "keeps the default only when the caller omits the limit" $ do
             validateSocialErrorsLimit Nothing `shouldBe` Right 50

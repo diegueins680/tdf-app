@@ -1170,17 +1170,27 @@ ensureSocialUnholdTargetFound channel found =
 
 parseSocialErrorsChannel :: Maybe Text -> Either ServerError Text
 parseSocialErrorsChannel mChannel =
-  case fmap (T.toLower . T.strip) mChannel of
-    Just "instagram" -> Right "instagram"
-    Just "facebook" -> Right "facebook"
-    Just "whatsapp" -> Right "whatsapp"
+  case mChannel of
     Nothing -> missingChannel
-    Just txt
-      | T.null txt -> missingChannel
+    Just rawChannel
+      | T.null channel -> missingChannel
+      | T.any isControl rawChannel ->
+          Left err400 { errBody = "channel must not contain control characters" }
+      | T.any isAdminHiddenFormatChar rawChannel ->
+          Left err400 { errBody = "channel must not contain hidden format characters" }
+      | channel == "instagram" -> Right "instagram"
+      | channel == "facebook" -> Right "facebook"
+      | channel == "whatsapp" -> Right "whatsapp"
       | otherwise -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
   where
+    channel =
+      maybe "" (T.toLower . T.strip) mChannel
     missingChannel =
       Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
+
+isAdminHiddenFormatChar :: Char -> Bool
+isAdminHiddenFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialUnholdLookup :: Maybe Text -> Maybe Text -> Either ServerError SocialUnholdLookup
 validateSocialUnholdLookup mExternalId mSenderId =
