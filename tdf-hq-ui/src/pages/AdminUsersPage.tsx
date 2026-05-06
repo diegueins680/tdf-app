@@ -969,8 +969,9 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
+  const hasActiveStatusSearch = hasActiveSearch && isActiveStatusSearchQuery(searchQuery);
   const showReviewInactiveSearchEmptyAction =
-    showSearchEmptyState && !includeInactive && !isActiveStatusSearchQuery(searchQuery);
+    showSearchEmptyState && !includeInactive && !hasActiveStatusSearch;
   const hasConfirmedNoInactiveUsers =
     includeInactive
     && hasUsers
@@ -980,11 +981,12 @@ export default function AdminUsersPage() {
   const hasConfirmedNoInactiveSearchMatches =
     includeInactive
     && hasActiveSearch
-    && !isActiveStatusSearchQuery(searchQuery)
+    && !hasActiveStatusSearch
     && hasUsers
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === 0;
   const showInactiveFilterAction = !showSearchEmptyState
+    && !hasActiveStatusSearch
     && !hasConfirmedNoInactiveUsers
     && !hasConfirmedNoInactiveSearchMatches
     && (hasMultipleUsers || (includeInactive && hasUsers));

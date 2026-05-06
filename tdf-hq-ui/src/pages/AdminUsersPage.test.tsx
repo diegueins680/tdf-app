@@ -4535,6 +4535,57 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('hides the inactive toggle when an active-status search already defines the scope', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-admin',
+        partyName: 'Linus Admin',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getCheckboxByLabelText(container, 'Incluir inactivos').checked).toBe(false);
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'activo');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getPageGuidance(container)).toBe(
+          'La búsqueda coincide con los 3 usuarios de esta vista.',
+        );
+        expect(container.querySelector('[data-testid="admin-users-header-actions"]')).toBeNull();
+        expect(hasExactText(container, 'Buscar también en inactivos')).toBe(false);
+        expect(hasExactText(container, 'Incluir inactivos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps status search exact so active queries do not pull inactive accounts', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive
@@ -4616,6 +4667,9 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
         expect(container.querySelector('[data-testid="admin-user-row-102"]')).toBeNull();
         expect(container.textContent).not.toContain('Ver 1 usuario inactivo');
+        expect(hasExactText(container, 'Buscando en inactivos')).toBe(false);
+        expect(hasExactText(container, 'Buscar también en inactivos')).toBe(false);
+        expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
       });
 
       await changeInputValue(searchInput, 'inactivo');
