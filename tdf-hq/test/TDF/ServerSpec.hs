@@ -3603,7 +3603,7 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateRequestedSignupRoles" $ do
         it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do
-            validateRequestedSignupRoles (Just [Student, Fan, Customer, Vendor, Student])
+            validateRequestedSignupRoles (Just [Student, Fan, Customer, Vendor])
                 `shouldBe` Right [Customer, Fan, Student, Vendor]
             validateRequestedSignupRoles Nothing
                 `shouldBe` Right [Customer, Fan]

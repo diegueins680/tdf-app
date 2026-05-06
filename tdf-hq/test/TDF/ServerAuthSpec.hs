@@ -13,7 +13,7 @@ import Test.Hspec
 
 import TDF.Auth (resolveUsernameFromLabel)
 import TDF.DTO (LoginRequest (..))
-import TDF.Models (UserCredential (..))
+import TDF.Models (RoleEnum (..), UserCredential (..))
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
@@ -24,6 +24,7 @@ import TDF.ServerAuth
   , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validatePasswordResetToken
+  , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
   , validateSignupDisplayName
   )
@@ -33,6 +34,7 @@ spec = do
   authEmailSpec
   loginRequestSpec
   tokenLabelUsernameSpec
+  signupRoleSpec
   signupDisplayNameSpec
   signupArtistClaimEmailSpec
   passwordResetTokenSpec
@@ -120,6 +122,21 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
       `shouldBe` Nothing
     resolveUsernameFromLabel ("password-login:" <> T.replicate 255 "a")
       `shouldBe` Nothing
+
+signupRoleSpec :: Spec
+signupRoleSpec = describe "validateRequestedSignupRoles" $ do
+  it "keeps default signup roles and accepted requested roles" $
+    validateRequestedSignupRoles (Just [Artist])
+      `shouldBe` Right [Customer, Fan, Artist]
+
+  it "rejects duplicate requested roles instead of silently collapsing signup intent" $
+    case validateRequestedSignupRoles (Just [Artist, Fan, Artist]) of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err)
+          `shouldContain` "Requested signup roles must not contain duplicates: Artist"
+      Right value ->
+        expectationFailure ("Expected duplicate signup roles to be rejected, got " <> show value)
 
 signupDisplayNameSpec :: Spec
 signupDisplayNameSpec = describe "validateSignupDisplayName" $ do

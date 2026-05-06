@@ -185,14 +185,22 @@ signupAllowedRoles =
 
 validateRequestedSignupRoles :: Maybe [RoleEnum] -> Either ServerError [RoleEnum]
 validateRequestedSignupRoles requestedRoles =
-  let disallowedRoles =
-        nub (filter (`notElem` signupAllowedRoles) (fromMaybe [] requestedRoles))
-  in if null disallowedRoles
-       then Right (nub (Customer : Fan : fromMaybe [] requestedRoles))
-       else
+  let requestedRoleList = fromMaybe [] requestedRoles
+      disallowedRoles =
+        nub (filter (`notElem` signupAllowedRoles) requestedRoleList)
+      duplicateRoles =
+        nub [role | role <- requestedRoleList, length (filter (== role) requestedRoleList) > 1]
+  in if not (null disallowedRoles)
+       then
          let roleList = T.intercalate ", " (map roleToText disallowedRoles)
              msg = "Requested signup roles are not allowed for self-signup: " <> roleList
          in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+       else if not (null duplicateRoles)
+         then
+           let roleList = T.intercalate ", " (map roleToText duplicateRoles)
+               msg = "Requested signup roles must not contain duplicates: " <> roleList
+           in Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+         else Right (nub (Customer : Fan : requestedRoleList))
 
 validateOptionalSignupClaimArtistId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalSignupClaimArtistId Nothing = Right Nothing
