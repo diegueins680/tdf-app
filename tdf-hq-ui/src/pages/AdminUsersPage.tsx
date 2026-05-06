@@ -746,6 +746,47 @@ const dedupeAdminUsers = (users: readonly AdminUser[]) => {
   return [...usersById.values()];
 };
 
+const ACTIVE_STATUS_SEARCH_VALUES = [
+  'activo',
+  'activa',
+  'activos',
+  'activas',
+  'habilitado',
+  'habilitada',
+  'habilitados',
+  'habilitadas',
+].map(normalizeSearchValue);
+
+const INACTIVE_STATUS_SEARCH_VALUES = [
+  'inactivo',
+  'inactiva',
+  'inactivos',
+  'inactivas',
+  'desactivado',
+  'desactivada',
+  'desactivados',
+  'desactivadas',
+  'archivado',
+  'archivada',
+  'archivados',
+  'archivadas',
+  'suspendido',
+  'suspendida',
+  'suspendidos',
+  'suspendidas',
+].map(normalizeSearchValue);
+
+const getUserStatusSearchValues = (active: boolean) => (
+  active ? ACTIVE_STATUS_SEARCH_VALUES : INACTIVE_STATUS_SEARCH_VALUES
+);
+
+const isActiveStatusSearchQuery = (value: string) => {
+  const queryVariants = getSearchValueVariants(value);
+
+  return queryVariants.length > 0
+    && queryVariants.every((query) => ACTIVE_STATUS_SEARCH_VALUES.includes(query));
+};
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
@@ -753,36 +794,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
     ? [String(user.partyId), `id ${user.partyId}`]
     : [];
-  const statusSearchValues = (user.active
-    ? [
-        'activo',
-        'activa',
-        'activos',
-        'activas',
-        'habilitado',
-        'habilitada',
-        'habilitados',
-        'habilitadas',
-      ]
-    : [
-        'inactivo',
-        'inactiva',
-        'inactivos',
-        'inactivas',
-        'desactivado',
-        'desactivada',
-        'desactivados',
-        'desactivadas',
-        'archivado',
-        'archivada',
-        'archivados',
-        'archivadas',
-        'suspendido',
-        'suspendida',
-        'suspendidos',
-        'suspendidas',
-      ])
-    .map(normalizeSearchValue);
+  const statusSearchValues = getUserStatusSearchValues(user.active);
 
   const searchSpace = [
     user.username,
@@ -964,8 +976,16 @@ export default function AdminUsersPage() {
     && !hasActiveSearch
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === 0;
+  const hasConfirmedNoInactiveSearchMatches =
+    includeInactive
+    && hasActiveSearch
+    && !isActiveStatusSearchQuery(searchQuery)
+    && hasUsers
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === 0;
   const showInactiveFilterAction = !showSearchEmptyState
     && !hasConfirmedNoInactiveUsers
+    && !hasConfirmedNoInactiveSearchMatches
     && (hasMultipleUsers || (includeInactive && hasUsers));
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
@@ -1028,6 +1048,9 @@ export default function AdminUsersPage() {
     : '';
   const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary && !showSingleUserGuidance
     ? 'Vista actual: solo usuarios inactivos.'
+    : '';
+  const inactiveSearchScopeSummary = hasConfirmedNoInactiveSearchMatches
+    ? 'Sin coincidencias inactivas para esta búsqueda.'
     : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
@@ -1170,6 +1193,7 @@ export default function AdminUsersPage() {
       activeScopeSummary,
       inactiveScopeSummary,
       inactiveOnlyScopeSummary,
+      inactiveSearchScopeSummary,
     ]
       .filter(Boolean)
       .join(' '),
@@ -1177,6 +1201,7 @@ export default function AdminUsersPage() {
       activeScopeSummary,
       inactiveOnlyScopeSummary,
       inactiveScopeSummary,
+      inactiveSearchScopeSummary,
       visibleUsersSummary,
     ],
   );

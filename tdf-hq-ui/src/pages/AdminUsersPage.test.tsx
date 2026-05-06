@@ -3883,7 +3883,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('labels inactive expansion as search-scoped while a query already has active matches', async () => {
+  it('confirms when inactive search adds no matches instead of keeping a duplicate filter control', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
       buildUser({
         userId: 101,
@@ -3943,8 +3943,13 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([101]);
-        expect(getCheckboxByLabelText(container, 'Buscando en inactivos').checked).toBe(true);
+        expect(container.textContent).not.toContain('Buscando en inactivos');
+        expect(container.textContent).toContain('Sin coincidencias inactivas para esta búsqueda.');
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Sin coincidencias inactivas para esta búsqueda.',
+        );
         expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
+        expect(hasExactText(container, 'Buscar también en inactivos')).toBe(false);
       });
     } finally {
       await cleanup();
