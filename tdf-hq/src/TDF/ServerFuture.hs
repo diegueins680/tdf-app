@@ -245,22 +245,40 @@ validateFutureStubResponse response =
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
       | stubId response /= futureStubId area endpoint -> invalidFutureStubResponse
-      | stubPath response /= futureStubPath area endpoint -> invalidFutureStubResponse
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
       | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
-      | otherwise ->
+      | otherwise -> do
+          path <- validateFutureStubPublishedPath area endpoint (stubPath response)
           Right response
             { stubArea = area
             , stubEndpoint = endpoint
             , stubId = futureStubId area endpoint
-            , stubPath = futureStubPath area endpoint
+            , stubPath = path
             , stubMethod = futureStubMethod
             , stubRequiredRole = futureStubRequiredRole
             , stubRequiredModule = futureStubRequiredModule
             }
+
+validateFutureStubPublishedPath
+  :: Text
+  -> Text
+  -> Text
+  -> Either ServerError Text
+validateFutureStubPublishedPath area endpoint rawPath
+  | rawPath /= expectedPath = invalidFutureStubResponse
+  | pathSegments == area : endpointSegments
+      && all validFutureStubSlug pathSegments = Right rawPath
+  | otherwise = invalidFutureStubResponse
+  where
+    expectedPath = futureStubPath area endpoint
+    endpointSegments = T.splitOn "/" endpoint
+    pathSegments =
+      case T.stripPrefix "/stubs/" rawPath of
+        Nothing -> []
+        Just suffix -> T.splitOn "/" suffix
 
 futureStubCatalogResponse
   :: MonadError ServerError m

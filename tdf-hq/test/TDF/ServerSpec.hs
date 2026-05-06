@@ -352,6 +352,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalogResponses
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
+    , validateFutureStubPublishedPath
     , validateFutureStubResponse
     )
 import TDF.ServerExtra (validateSocialReplyBody)
@@ -9185,6 +9186,30 @@ spec = describe "TDF.Server helpers" $ do
                             <> "generic stub catalog, got: "
                             <> show value
                         )
+
+    describe "validateFutureStubPublishedPath" $
+        it "keeps fallback discovery paths rooted under canonical protected stubs" $ do
+            validateFutureStubPublishedPath
+                "crm"
+                "parties/list-columns"
+                "/stubs/crm/parties/list-columns"
+                `shouldBe` Right "/stubs/crm/parties/list-columns"
+
+            let assertInvalid path =
+                    case validateFutureStubPublishedPath "crm" "parties/list-columns" path of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid published future stub path, got: " <> show value)
+
+            assertInvalid "/crm/parties/list-columns"
+            assertInvalid "/stubs/crm/../parties/list-columns"
+            assertInvalid "/stubs/crm/parties//list-columns"
+            assertInvalid "/stubs/crm/parties/list-columns/"
+            assertInvalid "/stubs/crm/parties/list-columns?draft=true"
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
