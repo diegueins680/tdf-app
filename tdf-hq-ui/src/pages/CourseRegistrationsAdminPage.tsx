@@ -2128,6 +2128,7 @@ export default function CourseRegistrationsAdminPage() {
     if (cohortsQuery.isError || !selectedSlug) return null;
     return configuredCohortOptions.find((option) => option.value === selectedSlug) ?? null;
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
+  const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
 
   const activeCohortLabel = selectedSlug
     ? (
@@ -2269,6 +2270,10 @@ export default function CourseRegistrationsAdminPage() {
     && !cohortsQuery.isLoading
     && !cohortsQuery.isError
     && configuredCohortOptions.length === 0
+    && hasCustomLimit
+    && !hasManualFilters;
+  const showMultiCohortFirstRunLimitEmptyState = !hasVisibleRegistrations
+    && hasMultipleAvailableCohorts
     && hasCustomLimit
     && !hasManualFilters;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
@@ -2981,6 +2986,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showPassiveSingleCohortLimitEmptyState
     && !showSelectedCohortFirstRunEmptyState
     && !showUnconfiguredCourseFirstRunLimitEmptyState
+    && !showMultiCohortFirstRunLimitEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -3028,6 +3034,7 @@ export default function CourseRegistrationsAdminPage() {
       || showPassiveSingleCohortLimitEmptyState
       || showSelectedCohortFirstRunEmptyState
       || showUnconfiguredCourseFirstRunLimitEmptyState
+      || showMultiCohortFirstRunLimitEmptyState
     )
     && !hasVisibleRegistrations;
   const showInitialCohortResolutionState = !regsQuery.isLoading
@@ -3133,7 +3140,6 @@ export default function CourseRegistrationsAdminPage() {
     : showCollapsedSystemEmailRetryAction
       ? retrySystemEmailsLabel
       : showSystemEmailsLabel;
-  const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
   const initialEmptyStateMessage = firstRunCohort
     ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
