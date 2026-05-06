@@ -894,6 +894,16 @@ describe('AdminUsersPage', () => {
         expect(profileActionLabels).toContain('Abrir perfil de Ana Admin (Perfil #10)');
         expect(profileActionLabels).toContain('Abrir perfil de Grace Hopper');
       });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+      await changeInputValue(searchInput, 'Perfil #10');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getRowByUserId(container, 102).textContent).toContain('Perfil #10');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
+      });
     } finally {
       await cleanup();
     }

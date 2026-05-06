@@ -574,6 +574,38 @@ const getUserProfileStateSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
     : ['perfil pendiente', 'sin perfil', 'sin perfil vinculado', 'perfil no vinculado']
 );
 
+const getLinkedProfileLabelSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? [
+        `perfil ${user.partyId}`,
+        `perfil #${user.partyId}`,
+      ]
+    : []
+);
+
+const getLinkedProfileSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? [
+        String(user.partyId),
+        `id ${user.partyId}`,
+        ...getLinkedProfileLabelSearchValues(user),
+      ]
+    : []
+);
+
+const matchesLinkedProfileLabelSearchQuery = (user: Pick<AdminUser, 'partyId'>, rawQuery: string) => {
+  const queryVariants = getSearchValueVariants(rawQuery);
+  if (queryVariants.length === 0) return false;
+
+  const profileSearchSpace = getLinkedProfileLabelSearchValues(user)
+    .flatMap(getSearchValueVariants)
+    .filter(Boolean);
+
+  return queryVariants.some((query) => (
+    profileSearchSpace.some((value) => value.includes(query))
+  ));
+};
+
 const isDefaultAdminAccessSummary = ({
   modulesSummary,
   rolesSummary,
@@ -806,9 +838,6 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
   const identity = summarizeUserIdentity(user);
-  const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
-    ? [String(user.partyId), `id ${user.partyId}`]
-    : [];
   const statusSearchValues = getUserStatusSearchValues(user.active);
 
   const searchSpace = [
@@ -816,7 +845,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
     user.partyName,
     identity.primary,
     String(user.userId),
-    ...partyIdSearchSpace,
+    ...getLinkedProfileSearchValues(user),
     ...getUserContactSearchValues(user),
     ...getUserContactReadinessSearchValues(user),
     ...getUserAccessStateSearchValues(user),
@@ -1034,6 +1063,18 @@ export default function AdminUsersPage() {
   const userIdsRequiringIdentityDisambiguator = useMemo(
     () => getUserIdsRequiringIdentityDisambiguator(usersVisibleForIdentityDisambiguation),
     [usersVisibleForIdentityDisambiguation],
+  );
+  const userIdsMatchingProfileSearch = useMemo(
+    () => (
+      hasActiveSearch
+        ? new Set(
+            visibleUsers
+              .filter((user) => matchesLinkedProfileLabelSearchQuery(user, searchQuery))
+              .map((user) => user.userId),
+          )
+        : new Set<number>()
+    ),
+    [hasActiveSearch, searchQuery, visibleUsers],
   );
   const currentSummaryNoAccessCount = useMemo(
     () => usersInCurrentSummary.filter(hasNoAccessAssigned).length,
@@ -1457,7 +1498,10 @@ export default function AdminUsersPage() {
                     hideAccessSummary={hideAccessSummaryForCurrentRows}
                     hidePendingStateChip={hideSingleRowPendingState}
                     hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                    showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
+                    showIdentityDisambiguator={
+                      userIdsRequiringIdentityDisambiguator.has(user.userId)
+                      || userIdsMatchingProfileSearch.has(user.userId)
+                    }
                     showExplicitWhatsAppAction={showExplicitWhatsAppAction}
                   />
                 ))}
@@ -1508,7 +1552,10 @@ export default function AdminUsersPage() {
                             hideAccessSummary={hideAccessSummaryForCurrentRows}
                             hidePendingStateChip={hideSingleRowPendingState}
                             hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                            showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
+                            showIdentityDisambiguator={
+                              userIdsRequiringIdentityDisambiguator.has(user.userId)
+                              || userIdsMatchingProfileSearch.has(user.userId)
+                            }
                             showExplicitWhatsAppAction={showExplicitWhatsAppAction}
                           />
                         ))}
