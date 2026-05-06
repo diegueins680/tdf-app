@@ -145,7 +145,10 @@ data UserAccountCreate = UserAccountCreate
 
 instance ToJSON UserAccountCreate
 instance FromJSON UserAccountCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@UserAccountCreate{uacRoles} <- genericParseJSON strictObjectOptions value
+    validateUniqueRolePayload "uacRoles" uacRoles
+    pure payload
 
 data UserAccountUpdate = UserAccountUpdate
   { uauUsername :: Maybe Text
@@ -156,7 +159,10 @@ data UserAccountUpdate = UserAccountUpdate
 
 instance ToJSON UserAccountUpdate
 instance FromJSON UserAccountUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@UserAccountUpdate{uauRoles} <- genericParseJSON strictObjectOptions value
+    validateUniqueRolePayload "uauRoles" uauRoles
+    pure payload
 
 data AccountStatusDTO = AccountStatusActive | AccountStatusInactive
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
@@ -185,9 +191,18 @@ instance ToJSON UserRoleUpdatePayload
 instance FromJSON UserRoleUpdatePayload where
   parseJSON value = do
     payload@(UserRoleUpdatePayload roleValues) <- genericParseJSON strictObjectOptions value
-    if length roleValues == length (nub roleValues)
-      then pure payload
-      else fail "roles must not contain duplicates"
+    validateUniqueRoles "roles" roleValues
+    pure payload
+
+validateUniqueRolePayload :: String -> Maybe [RoleEnum] -> Parser ()
+validateUniqueRolePayload _ Nothing = pure ()
+validateUniqueRolePayload fieldName (Just roles) = validateUniqueRoles fieldName roles
+
+validateUniqueRoles :: String -> [RoleEnum] -> Parser ()
+validateUniqueRoles fieldName roles =
+  if length roles == length (nub roles)
+    then pure ()
+    else fail (fieldName <> " must not contain duplicates")
 
 data ServiceCatalogDTO = ServiceCatalogDTO
   { scId            :: Int64

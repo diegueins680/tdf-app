@@ -469,6 +469,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects duplicate admin role assignments instead of silently deduplicating them" $ do
+            case decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacRoles\":[\"Admin\",\"Admin\"]}" of
+                Left err ->
+                    err `shouldContain` "uacRoles must not contain duplicates"
+                Right payload ->
+                    expectationFailure
+                        ("Expected duplicate create roles to fail, got " <> show payload)
+
+            case decodeUserAccountUpdate
+                "{\"uauRoles\":[\"ReadOnly\",\"ReadOnly\"]}" of
+                Left err ->
+                    err `shouldContain` "uauRoles must not contain duplicates"
+                Right payload ->
+                    expectationFailure
+                        ("Expected duplicate update roles to fail, got " <> show payload)
+
     describe "ArtistReleaseUpsert FromJSON" $ do
         it "accepts canonical admin release write keys" $
             case decodeArtistReleaseUpsert
