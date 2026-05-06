@@ -3717,6 +3717,10 @@ export default function CourseRegistrationsAdminPage() {
     && !showNotesComposer
     && !hasSavedNotes;
   const showEmptyNotesState = !showNotesComposer && !hasSavedNotes;
+  const showNotesSaveAction = hasNotesDraftChanges;
+  const notesComposerIdleHelperText = hasSavedNotes
+    ? 'Edita el contenido para mostrar Guardar notas.'
+    : 'Escribe una nota para mostrar Guardar notas.';
   const emptyNotesSectionHelperText = showCompactMarkPaidNotesState
     ? markPaidEmptyNotesHelperText
     : emptyNotesHelperText;
@@ -3927,22 +3931,24 @@ export default function CourseRegistrationsAdminPage() {
               />
               <Stack spacing={0.75} alignItems="flex-start">
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSaveNotes}
-                    disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
-                  >
-                    Guardar notas
-                  </Button>
+                  {showNotesSaveAction && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<SaveIcon />}
+                      onClick={handleSaveNotes}
+                      disabled={updateNotesMutation.isPending}
+                    >
+                      Guardar notas
+                    </Button>
+                  )}
                   <Button variant="text" size="small" onClick={handleHideNotesComposer}>
                     Cancelar notas
                   </Button>
                 </Stack>
                 {!hasNotesDraftChanges && (
                   <Typography variant="caption" color="text.secondary">
-                    Edita el contenido para habilitar Guardar.
+                    {notesComposerIdleHelperText}
                   </Typography>
                 )}
               </Stack>

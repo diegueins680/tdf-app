@@ -2474,15 +2474,26 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
-      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
+      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
       );
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(document.body, 'Notas internas'), 'Confirmó pago por WhatsApp.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
+      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
     });
 
     await act(async () => {
@@ -4161,7 +4172,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
+      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
       expect(countButtonsByText(document.body, optionalDossierNotesActionLabel)).toBe(0);
     });
 
@@ -5549,8 +5561,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
+      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
     });
@@ -5849,9 +5862,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(getButtonByText(document.body, 'Guardar notas')).toBeTruthy();
-      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
-      expect(document.body.textContent).toContain('Edita el contenido para habilitar Guardar.');
+      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
+      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
     });
 
     await act(async () => {
@@ -5862,6 +5874,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
+      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
     });
 
     await cleanup();
