@@ -1145,7 +1145,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
-      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+      expect(container.querySelector('button[aria-label="Copiar 2 inscripciones visibles como CSV"]')).toBeNull();
     });
 
     await cleanup();
@@ -1340,7 +1341,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps a cohort-only filtered view focused on the cohort select instead of repeating reset chrome', async () => {
+  it('keeps a tiny cohort-only filtered view focused on the cohort select instead of export chrome', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -1367,7 +1368,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
-      expect(getButtonByText(container, copyVisibleCsvLabel(2))).toBeTruthy();
+      expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
+      expect(container.querySelector('button[aria-label="Copiar 2 inscripciones visibles como CSV"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);

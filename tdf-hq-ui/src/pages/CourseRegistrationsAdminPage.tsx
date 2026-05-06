@@ -2574,9 +2574,13 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch
     && loadedRegistrationCount > 1
     && loadedRegistrationCount <= MIN_DEFAULT_CSV_EXPORT_ROWS;
+  const hasTinyManualFilterView = hasManualFilters
+    && !hasLocalSearch
+    && searchedRegistrations.length > 1
+    && searchedRegistrations.length < MIN_DEFAULT_CSV_EXPORT_ROWS;
   const hasExplicitCsvExportScope = hasManualFilters
-    || localSearchNarrowsRegistrations
-    || (hasCustomLimit && !hasTinyLimitOnlyView);
+    ? !hasTinyManualFilterView
+    : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView);
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
   const showLocalSearchInlineClearAction = hasLocalSearch
@@ -2673,6 +2677,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch;
   const showUtilityCountSummary = !hasLocalSearch
     && !canCopyCsv
+    && !hasTinyManualFilterView
     && !hasTinyLimitOnlyView
     && !showTinyDefaultCountInCurrentView
     && !suppressDefaultMediumListUtilityRow
