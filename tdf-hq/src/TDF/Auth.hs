@@ -88,7 +88,8 @@ hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
 hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
 
 hasStrictAdminAccess :: AuthedUser -> Bool
-hasStrictAdminAccess AuthedUser{..} = Admin `elem` auRoles
+hasStrictAdminAccess user@AuthedUser{..} =
+  Admin `elem` auRoles && hasCoherentRoleGrants user
 
 hasOperationsAccess :: AuthedUser -> Bool
 hasOperationsAccess user@AuthedUser{..} =

@@ -22,7 +22,6 @@ import           TDF.Auth
   ( AuthedUser(..)
   , ModuleAccess(ModuleAdmin)
   , hasModuleAccess
-  , hasStrictAdminAccess
   , moduleName
   , modulesForRoles
   )
@@ -147,7 +146,7 @@ validateFutureAdminAccess user
       Left err403 { errBody = "Valid admin party required" }
   | length (auRoles user) /= length (nub (auRoles user)) =
       Left err403 { errBody = "Admin role grants must be unique" }
-  | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | Admin `notElem` auRoles user = Left err403 { errBody = "Admin role required" }
   | any (not . isFutureAdminRoleScope) (auRoles user) =
       Left err403
         { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }

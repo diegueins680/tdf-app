@@ -9068,6 +9068,14 @@ spec = describe "TDF.Server helpers" $ do
             hasStrictAdminAccess (mkUser [StudioManager]) `shouldBe` False
             hasStrictAdminAccess (mkUser [Admin]) `shouldBe` True
 
+        it "rejects stale or duplicated grants before strict-admin fallbacks" $ do
+            let staleAdmin =
+                    (mkUser [Admin]) { auModules = modulesForRoles [Webmaster] }
+                duplicatedAdmin =
+                    mkUser [Admin, Admin]
+            hasStrictAdminAccess staleAdmin `shouldBe` False
+            hasStrictAdminAccess duplicatedAdmin `shouldBe` False
+
         it "matches the intended single-role strict-admin matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasStrictAdminAccess (mkUser [role]) `shouldBe` (role == Admin)

@@ -111,7 +111,6 @@ import           TDF.Auth
   , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
-  , hasStrictAdminAccess
   , moduleName
   , modulesForRoles
   )
@@ -8967,8 +8966,8 @@ requireStrictAdmin user =
   either throwError pure (validateStrictAdminAccess user)
 
 validateStrictAdminAccess :: AuthedUser -> Either ServerError ()
-validateStrictAdminAccess user@AuthedUser{..}
-  | not (hasStrictAdminAccess user) =
+validateStrictAdminAccess AuthedUser{..}
+  | Admin `notElem` auRoles =
       Left err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
   | length auRoles /= length (nub auRoles) =
       Left err403 { errBody = "Admin role grants must be unique" }
