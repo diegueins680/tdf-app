@@ -203,14 +203,29 @@ const getUserContactReadinessSearchValues = (
   const readiness = getUserContactReadiness(user);
 
   if (readiness === 'whatsapp-ready') {
-    return ['listo para WhatsApp', 'WhatsApp listo'];
+    return ['listo para WhatsApp', 'listos para WhatsApp', 'WhatsApp listo'];
   }
 
   if (readiness === 'contact-ready') {
-    return ['pendiente de WhatsApp', 'pendiente WhatsApp', 'WhatsApp pendiente', 'sin WhatsApp'];
+    return [
+      'pendiente de WhatsApp',
+      'pendientes de WhatsApp',
+      'pendiente WhatsApp',
+      'pendientes WhatsApp',
+      'WhatsApp pendiente',
+      'sin WhatsApp',
+    ];
   }
 
-  return ['pendiente de contacto', 'pendiente contacto', 'contacto pendiente', 'sin contacto', 'sin WhatsApp'];
+  return [
+    'pendiente de contacto',
+    'pendientes de contacto',
+    'pendiente contacto',
+    'pendientes contacto',
+    'contacto pendiente',
+    'sin contacto',
+    'sin WhatsApp',
+  ];
 };
 
 const joinSpanishSummaryParts = (parts: readonly string[]) => {

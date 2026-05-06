@@ -659,6 +659,75 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('lets admins search by plural contact-state phrases from the compact header', async () => {
+    const contactStateUsers: Array<[string, string, string | null, string | null]> = [
+      ['Ada Ready', 'ada-ready', 'ada@example.com', '+593999000111'],
+      ['Bruno Ready', 'bruno-ready', 'bruno@example.com', '+593999000222'],
+      ['Carla Email', 'carla-email', 'carla@example.com', null],
+      ['Diego Email', 'diego-email', 'diego@example.com', null],
+      ['Elena Missing', 'elena-missing', null, null],
+      ['Felix Missing', 'felix-missing', null, null],
+    ];
+
+    listUsersMock.mockResolvedValue(
+      contactStateUsers.map(([partyName, username, primaryEmail, primaryPhone], index) => buildUser({
+        userId: 101 + index,
+        partyId: 21 + index,
+        partyName,
+        username,
+        primaryEmail,
+        primaryPhone,
+        whatsapp: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 6 usuarios en esta vista. 2 listos para WhatsApp, 2 pendientes de WhatsApp y 2 pendientes de contacto. Vista actual: solo usuarios activos.',
+        );
+        expect(getRowByUserId(container, 103).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 105).textContent).not.toContain('Contacto pendiente');
+      });
+
+      const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+
+      await changeInputValue(searchInput, 'listos para WhatsApp');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102]);
+        expect(getPageGuidance(container)).toBe('Mostrando 2 de 6 usuarios.');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+      });
+
+      await changeInputValue(searchInput, 'pendientes de WhatsApp');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([103, 104]);
+        expect(getPageGuidance(container)).toBe('Mostrando 2 de 6 usuarios. 2 pendientes de WhatsApp.');
+        expect(getRowByUserId(container, 103).textContent).not.toContain('WhatsApp pendiente');
+        expect(getRowByUserId(container, 104).textContent).not.toContain('WhatsApp pendiente');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+      });
+
+      await changeInputValue(searchInput, 'pendientes de contacto');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([105, 106]);
+        expect(getPageGuidance(container)).toBe('Mostrando 2 de 6 usuarios. 2 pendientes de contacto.');
+        expect(getRowByUserId(container, 105).textContent).not.toContain('Contacto pendiente');
+        expect(getRowByUserId(container, 106).textContent).not.toContain('Contacto pendiente');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('orders mixed-readiness rows by the next available admin action before falling back to name', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
