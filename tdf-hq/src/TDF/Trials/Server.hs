@@ -1138,8 +1138,7 @@ createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM 
 createOrFetchParty mName mEmail mPhone now = do
   emailVal <- either (liftIO . throwIO) pure (validateRequiredEmail mEmail)
   phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
-  let
-      display = fromMaybe emailVal (cleanOptional mName)
+  display <- either (liftIO . throwIO) pure (validatePublicLeadDisplayName mName emailVal)
   existing <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] [LimitTo 2]
   case existing of
     [Entity pid party] -> do
@@ -1166,6 +1165,14 @@ createOrFetchParty mName mEmail mPhone now = do
       }
     _ ->
       liftIO $ throwIO err409 { errBody = "Multiple parties match this email" }
+
+validatePublicLeadDisplayName :: Maybe Text -> Text -> Either ServerError Text
+validatePublicLeadDisplayName rawName fallbackEmail =
+  fromMaybe fallbackEmail
+    <$> validateOptionalPublicTextField "displayName" maxPublicLeadDisplayNameChars rawName
+
+maxPublicLeadDisplayNameChars :: Int
+maxPublicLeadDisplayNameChars = 160
 
 composeFullName :: Text -> Text -> Maybe Text
 composeFullName firstName lastName =

@@ -134,6 +134,23 @@ spec = do
 
       storedName `shouldBe` "student@example.com"
 
+    it "rejects unsafe or oversized display names before storing public lead parties" $ do
+      let assertRejected rawName expectedMessage = do
+            result <- tryCreateOrFetchParty (Just rawName) (Just "user@example.com") Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right partyId ->
+                expectationFailure
+                  ("Expected unsafe display name to be rejected, got " <> show partyId)
+      assertRejected
+        ("Ada" <> T.singleton '\x202E')
+        "displayName must not contain control characters or hidden formatting characters"
+      assertRejected
+        (T.replicate 161 "a")
+        "displayName must be 1-160 characters"
+
     it "accepts common dot-and-plus email aliases while still normalizing casing" $ do
       storedEmail <- runInMemory $ do
         now <- liftIO getCurrentTime
