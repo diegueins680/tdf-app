@@ -8,6 +8,7 @@ module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
   , FacebookAccessToken(..)
   , resolveInstagramRedirectUri
+  , sanitizeFacebookGraphErrorMessage
   , validateInstagramRedirectUri
   ) where
 
@@ -20,7 +21,6 @@ import           Data.Aeson                 (FromJSON(..), eitherDecode, withObj
 import           Data.Aeson.Types           (Parser)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Char
   ( GeneralCategory(Format)
   , generalCategory
@@ -32,6 +32,7 @@ import           Data.Maybe                 (fromMaybe, listToMaybe)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
+import           Data.Text.Encoding.Error   (lenientDecode)
 import           Data.Time                  (getCurrentTime)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
@@ -534,16 +535,33 @@ requestFacebookJson manager cfg path params = do
   respOrErr <- liftIO $ (try (httpLbs req manager) :: IO (Either SomeException (Response ByteString)))
   resp <- case respOrErr of
     Left err ->
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+      throwError err502
+        { errBody =
+            textBody $
+              "Facebook request failed: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack (displayException err))
+        }
     Right ok -> pure ok
   let status = statusCode (responseStatus resp)
   when (status >= 400) $ do
-    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+    let bodySnippet =
+          TE.decodeUtf8With lenientDecode (BL.toStrict (responseBody resp))
     throwError err502
-      { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook request failed (" <> T.pack (show status) <> ") " <> T.pack bodySnippet)) }
+      { errBody =
+          textBody $
+            "Facebook request failed ("
+              <> T.pack (show status)
+              <> "): "
+              <> sanitizeFacebookGraphErrorMessage bodySnippet
+      }
   case eitherDecode (responseBody resp) of
     Left err ->
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook parse error: " <> T.pack err)) }
+      throwError err502
+        { errBody =
+            textBody $
+              "Facebook parse error: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack err)
+        }
     Right val -> pure val
 
 buildRequest
@@ -558,7 +576,32 @@ buildRequest cfg path params = do
       url = T.unpack (base <> path <> TE.decodeUtf8 query)
   reqE <- liftIO (try (parseRequest url) :: IO (Either SomeException Request))
   case reqE of
-    Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+    Left err ->
+      throwError err500
+        { errBody =
+            textBody $
+              "Facebook request configuration invalid: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack (displayException err))
+        }
     Right req -> pure req
   where
     toParam (k, v) = (TE.encodeUtf8 k, TE.encodeUtf8 v)
+
+textBody :: Text -> BL.ByteString
+textBody =
+  BL.fromStrict . TE.encodeUtf8
+
+maxFacebookGraphErrorChars :: Int
+maxFacebookGraphErrorChars = 500
+
+sanitizeFacebookGraphErrorMessage :: Text -> Text
+sanitizeFacebookGraphErrorMessage raw =
+  let compacted = T.unwords . T.words . T.map safeChar $ raw
+  in if T.length compacted > maxFacebookGraphErrorChars
+       then T.take maxFacebookGraphErrorChars compacted <> " [truncated]"
+       else compacted
+  where
+    safeChar ch
+      | isControl ch = ' '
+      | generalCategory ch == Format = ' '
+      | otherwise = ch

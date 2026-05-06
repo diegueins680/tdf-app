@@ -191,6 +191,7 @@ import TDF.ServerInstagramOAuth
     ( FacebookAccessToken (..),
       instagramOAuthServer,
       resolveInstagramRedirectUri,
+      sanitizeFacebookGraphErrorMessage,
       validateInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
@@ -3859,6 +3860,23 @@ main = hspec $ do
             assertInvalid
                 "{\"access_token\":\"token-123\",\"expires_in\":0}"
                 "Facebook expires_in must be positive"
+
+        it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
+            let sanitized =
+                    sanitizeFacebookGraphErrorMessage
+                        ( "Graph request\nfailed\NUL for token"
+                            <> "\x202E"
+                            <> "value"
+                        )
+            sanitized `shouldBe` "Graph request failed for token value"
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\x202E")
+
+            let longSanitized =
+                    sanitizeFacebookGraphErrorMessage (Data.Text.replicate 520 "x")
+            longSanitized `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+            Data.Text.length longSanitized `shouldSatisfy` (<= 512)
 
         it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
             cfg <- loadInstagramConfig
