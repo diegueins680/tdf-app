@@ -3287,6 +3287,18 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "tdf_session=cookie token")
                 `shouldBe` Left "Missing or invalid auth token"
 
+        it "requires literal spaces in bearer headers before protected-route token lookup" $ do
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer\theader-token")
+                Nothing
+                `shouldBe` Left "Invalid Authorization header"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just ("Bearer" <> T.singleton '\x00A0' <> "header-token"))
+                Nothing
+                `shouldBe` Left "Invalid Authorization header"
+
         it "rejects non cookie-safe auth token characters before database lookup" $ do
             extractTokenFromHeaders
                 (marketplaceTestConfig False)

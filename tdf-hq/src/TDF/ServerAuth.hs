@@ -91,6 +91,7 @@ import TDF.Auth (
     loadAuthedUser,
     lookupUsernameFromToken,
     moduleName,
+    parseBearerAuthorizationHeader,
     resolveUsernameFromLabel,
     sessionCookieHeader,
   )
@@ -644,11 +645,9 @@ changePassword mAuthHeader ChangePasswordRequest{..} = do
 
 parsePasswordChangeAuthToken :: Text -> Either ServerError Text
 parsePasswordChangeAuthToken rawHeader =
-  case T.words (T.strip rawHeader) of
-    [scheme, value]
-      | T.toLower scheme == "bearer"
-      , let token = T.strip value ->
-          validatePasswordChangeAuthToken token
+  case parseBearerAuthorizationHeader rawHeader of
+    Right token ->
+      validatePasswordChangeAuthToken token
     _ ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 "Authorization header must be Bearer <token>")

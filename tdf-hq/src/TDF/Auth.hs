@@ -20,6 +20,7 @@ module TDF.Auth
   , resolveUsernameFromLabel
   , extractToken
   , extractTokenFromHeaders
+  , parseBearerAuthorizationHeader
   , sessionCookieHeader
   , clearSessionCookieHeader
   ) where
@@ -304,24 +305,34 @@ extractToken cfg req =
 extractTokenFromHeaders :: AppConfig -> Maybe Text -> Maybe Text -> Either Text Text
 extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCookieHeader =
   case mAuthorizationHeader of
-    Just rawHeader ->
-      case T.words rawHeader of
-        [scheme, value]
-          | T.toLower scheme == "bearer" -> do
-              authToken <- validateAuthToken value
-              case maybe (Right Nothing) (lookupCookieIfPresent sessionCookieName) mCookieHeader of
-                Left err -> Left err
-                Right (Just cookieToken)
-                  | cookieToken /= authToken ->
-                      Left "Conflicting auth credentials found"
-                _ ->
-                    Right authToken
-        _ -> Left "Invalid Authorization header"
+    Just rawHeader -> do
+      value <- parseBearerAuthorizationHeader rawHeader
+      authToken <- validateAuthToken value
+      case maybe (Right Nothing) (lookupCookieIfPresent sessionCookieName) mCookieHeader of
+        Left err -> Left err
+        Right (Just cookieToken)
+          | cookieToken /= authToken ->
+              Left "Conflicting auth credentials found"
+        _ ->
+            Right authToken
     Nothing ->
       maybe
         (Left "Missing or invalid auth token")
         (lookupCookie sessionCookieName)
         mCookieHeader
+
+parseBearerAuthorizationHeader :: Text -> Either Text Text
+parseBearerAuthorizationHeader rawHeader =
+  let header = stripAsciiSpaces rawHeader
+      (scheme, rest) = T.breakOn " " header
+      token = T.dropWhile (== ' ') rest
+  in if T.toLower scheme == "bearer" && not (T.null rest) && not (T.null token)
+       then Right token
+       else Left "Invalid Authorization header"
+
+stripAsciiSpaces :: Text -> Text
+stripAsciiSpaces =
+  T.dropAround (== ' ')
 
 lookupCookieIfPresent :: Text -> Text -> Either Text (Maybe Text)
 lookupCookieIfPresent cookieName rawHeader =

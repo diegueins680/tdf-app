@@ -18,6 +18,7 @@ import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
   , normalizeAuthEmailAddress
+  , parsePasswordChangeAuthToken
   , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
@@ -33,6 +34,7 @@ spec :: Spec
 spec = do
   authEmailSpec
   loginRequestSpec
+  passwordChangeAuthHeaderSpec
   tokenLabelUsernameSpec
   signupRoleSpec
   signupDisplayNameSpec
@@ -105,6 +107,25 @@ loginRequestSpec = describe "validateLoginRequest" $ do
     assertRejected
       "Password must not contain control characters"
       (LoginRequest "ada@example.com" "Temp\nPass123!")
+
+passwordChangeAuthHeaderSpec :: Spec
+passwordChangeAuthHeaderSpec = describe "parsePasswordChangeAuthToken" $ do
+  it "requires literal spaces before password-change token fallback lookup" $ do
+    parsePasswordChangeAuthToken " Bearer session-token "
+      `shouldBe` Right "session-token"
+
+    let assertRejected rawHeader =
+          case parsePasswordChangeAuthToken rawHeader of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err)
+                `shouldContain` "Authorization header must be Bearer <token>"
+            Right value ->
+              expectationFailure
+                ("Expected malformed Authorization header to be rejected, got " <> show value)
+
+    assertRejected "Bearer\tsession-token"
+    assertRejected ("Bearer" <> T.singleton (chr 0x00A0) <> "session-token")
 
 tokenLabelUsernameSpec :: Spec
 tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
