@@ -381,6 +381,7 @@ type ProtectedAPI =
   :<|> "social-sync" :> SocialSyncAPI
   :<|> MetaBackfillAPI
   :<|> "social-events" :> SocialEventsAPI
+  :<|> ContractsAPI
   :<|> InternshipsAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
@@ -417,7 +418,6 @@ type API =
   :<|> WhatsAppConsentPublicAPI
   :<|> InventoryPublicAPI
   :<|> "marketplace" :> MarketplaceAPI
-  :<|> "contracts" :> ContractsAPI
   :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI

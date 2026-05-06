@@ -201,6 +201,7 @@ import TDF.Server
       resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
       sanitizeStoredCoursePublicUrl,
+      validateContractsAccess,
       validateWhatsAppConsentDisplayName,
       validateWhatsAppConsentSource,
       validateWhatsAppOptOutReason,
@@ -7475,6 +7476,26 @@ main = hspec $ do
                         expectationFailure ("Expected invalid proposal clientPartyId to be rejected, got " <> show value)
             assertInvalid 0
             assertInvalid (-9)
+
+    describe "validateContractsAccess" $ do
+        let contractUser roles =
+                AuthedUser
+                    { auPartyId = toSqlKey 1
+                    , auRoles = roles
+                    , auModules = modulesForRoles roles
+                    }
+
+        it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
+            validateContractsAccess (contractUser [Admin]) `shouldBe` Right ()
+            validateContractsAccess (contractUser [Manager]) `shouldBe` Right ()
+            case validateContractsAccess (contractUser [Fan]) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contracts access requires operations role"
+                Right value ->
+                    expectationFailure
+                        ("Expected fan contract access to be rejected, got: " <> show value)
 
     describe "validateContractId" $ do
         it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $

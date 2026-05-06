@@ -342,7 +342,6 @@ server env =
   :<|> whatsappConsentPublicServer
   :<|> inventoryPublicServer
   :<|> marketplacePublicServer
-  :<|> contractsServer
   :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
@@ -2496,6 +2495,7 @@ protectedServer user =
   :<|> socialSyncServer user
   :<|> metaBackfillServer user
   :<|> socialEventsServer user
+  :<|> contractsServer user
   :<|> internshipsServer user
   :<|> adsAdminServer user
   :<|> coursesAdminServer user
@@ -10080,10 +10080,26 @@ labelServer user =
   :<|> updateLabelTrack user
   :<|> deleteLabelTrack user
 
-contractsServer :: ServerT ContractsAPI AppM
-contractsServer = hoistServer contractsProxy lift Contracts.server
+validateContractsAccess :: AuthedUser -> Either ServerError ()
+validateContractsAccess user
+  | hasOperationsAccess user = Right ()
+  | otherwise =
+      Left err403
+        { errBody = "Contracts access requires operations role"
+        }
+
+contractsServer :: AuthedUser -> ServerT ContractsAPI AppM
+contractsServer user =
+       (\body -> guardContracts (createH body))
+  :<|> (\contractId -> guardContracts (pdfH contractId))
+  :<|> (\contractId body -> guardContracts (sendH contractId body))
   where
-    contractsProxy = Proxy :: Proxy ContractsAPI
+    createH :<|> pdfH :<|> sendH = Contracts.server
+
+    guardContracts :: Handler a -> AppM a
+    guardContracts action = do
+      either throwError pure (validateContractsAccess user)
+      lift action
 
 listMarketplace :: AppM [MarketplaceItemDTO]
 listMarketplace = do
