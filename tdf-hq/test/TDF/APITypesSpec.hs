@@ -1316,13 +1316,6 @@ spec = do
                     statusVal `shouldBe` Nothing
                     notesVal `shouldBe` Just Nothing
 
-            case decodeInternPermissionUpdate "{}" of
-                Left err ->
-                    expectationFailure ("Expected empty intern permission update payload to decode, got: " <> err)
-                Right (InternPermissionUpdate statusVal notesVal) -> do
-                    statusVal `shouldBe` Nothing
-                    notesVal `shouldBe` Nothing
-
         it "rejects unexpected permission keys so over-posted review intent fails explicitly" $ do
             decodeInternPermissionCreate
                 "{\"ipcCategory\":\"leave\",\"ipcStartAt\":\"2026-04-20\",\"ipcStatus\":\"approved\"}"
@@ -1330,6 +1323,9 @@ spec = do
             decodeInternPermissionUpdate
                 "{\"ipuStatus\":\"approved\",\"reviewedBy\":7}"
                 `shouldSatisfy` isLeft
+
+        it "rejects empty permission updates instead of returning a no-op success" $
+            decodeInternPermissionUpdate "{}" `shouldSatisfy` isLeft
 
     describe "InternTodo payload FromJSON" $ do
         it "accepts canonical todo create and update payloads" $ do

@@ -1768,7 +1768,14 @@ instance FromJSON InternPermissionUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternPermissionUpdate: " <> T.unpack key)
-      [] ->
-        InternPermissionUpdate
-          <$> o .:? "ipuStatus"
-          <*> o .:! "ipuDecisionNotes"
+      [] -> do
+        statusValue <- o .:? "ipuStatus"
+        decisionNotesValue <- o .:! "ipuDecisionNotes"
+        case (statusValue, decisionNotesValue) of
+          (Nothing, Nothing) ->
+            fail "InternPermissionUpdate must include at least one field"
+          _ ->
+            pure InternPermissionUpdate
+              { ipuStatus = statusValue
+              , ipuDecisionNotes = decisionNotesValue
+              }
