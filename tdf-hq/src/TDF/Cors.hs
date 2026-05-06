@@ -9,7 +9,15 @@ import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
-import Data.Char (isDigit, isSpace, toLower)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isDigit
+  , isSpace
+  , ord
+  , toLower
+  )
 import Data.List (dropWhileEnd, intercalate, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
@@ -128,13 +136,20 @@ normalizeConfiguredCorsOrigin raw =
   in case rawTrimmed of
     "*" -> Right "*"
     _ ->
-      case parseHttpOrigin normalized of
-        Just origin -> Right origin
-        Nothing ->
+      if containsUnsupportedCorsUrlChar rawTrimmed
+        then
           Left $
-            "Configured CORS origins must be absolute http(s) origins "
-              <> "without path, query, or fragment: "
+            "Configured CORS origins must contain only ASCII URL characters "
+              <> "without whitespace, control, or hidden formatting characters: "
               <> raw
+        else
+          case parseHttpOrigin normalized of
+            Just origin -> Right origin
+            Nothing ->
+              Left $
+                "Configured CORS origins must be absolute http(s) origins "
+                  <> "without path, query, or fragment: "
+                  <> raw
 
 validateConfiguredCorsOriginList :: Bool -> [String] -> Either String [String]
 validateConfiguredCorsOriginList allowAll origins
@@ -171,13 +186,29 @@ parseHttpOrigin origin =
 -- | Convert a configured app base URL into the origin shape required by CORS.
 deriveCorsOriginFromAppBase :: String -> Either String String
 deriveCorsOriginFromAppBase raw =
-  case parseHttpBaseOrigin (trim raw) of
-    Just origin -> Right origin
-    Nothing ->
-      Left $
-        "HQ_APP_URL CORS fallback must be an absolute http(s) URL "
-          <> "with a valid origin and no query or fragment: "
-          <> raw
+  let trimmed = trim raw
+  in if containsUnsupportedCorsUrlChar trimmed
+       then
+         Left $
+           "HQ_APP_URL CORS fallback must contain only ASCII URL characters "
+             <> "without whitespace, control, or hidden formatting characters: "
+             <> raw
+       else
+         case parseHttpBaseOrigin trimmed of
+           Just origin -> Right origin
+           Nothing ->
+             Left $
+               "HQ_APP_URL CORS fallback must be an absolute http(s) URL "
+                 <> "with a valid origin and no query or fragment: "
+                 <> raw
+
+containsUnsupportedCorsUrlChar :: String -> Bool
+containsUnsupportedCorsUrlChar =
+  any $ \ch ->
+    isSpace ch
+      || isControl ch
+      || ord ch > 127
+      || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 parseHttpBaseOrigin :: String -> Maybe String
 parseHttpBaseOrigin raw

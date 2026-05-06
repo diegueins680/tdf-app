@@ -3520,6 +3520,38 @@ main = hspec $ do
                     expectationFailure
                         ("Expected ambiguous fallback port to fail, got: " <> origin)
 
+        it "rejects hidden Unicode before CORS fallback URL parsing can reshape origins" $ do
+            let hiddenFormat = "\x202E"
+                assertHiddenOriginInvalid rawOrigin =
+                    withEnvOverrides
+                        [ ("ALLOWED_ORIGINS", Just rawOrigin)
+                        , ("ALLOW_ORIGINS", Nothing)
+                        , ("ALLOW_ORIGIN", Nothing)
+                        , ("CORS_ALLOW_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ORIGIN", Nothing)
+                        , ("ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_DISABLE_DEFAULTS", Nothing)
+                        , ("DISABLE_DEFAULT_CORS", Nothing)
+                        , ("HQ_APP_URL", Nothing)
+                        ]
+                        $ corsPolicy `shouldThrow` \err ->
+                            "Configured CORS origins must contain only ASCII URL characters"
+                                `isInfixOf` show (err :: IOException)
+
+            assertHiddenOriginInvalid
+                ("https://app.example.com" <> hiddenFormat <> "evil.example")
+
+            case deriveCorsOriginFromAppBase
+                ("https://hq.example.com/app/" <> hiddenFormat <> "preview") of
+                Left msg ->
+                    msg
+                        `shouldContain`
+                            "HQ_APP_URL CORS fallback must contain only ASCII URL characters"
+                Right origin ->
+                    expectationFailure
+                        ("Expected hidden-format app fallback to fail, got: " <> origin)
+
         it "rejects malformed configured origins before building the credentialed policy" $ do
             let assertInvalid rawOrigin =
                     withEnvOverrides
