@@ -972,6 +972,27 @@ spec = describe "TDF.Server helpers" $ do
                     [ "jsonrpc" .= ("2.0" :: T.Text)
                     , "id" .= (1.5 :: Double)
                     , "method" .= ("tools/list" :: T.Text)
+                ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= ("request\n1" :: T.Text)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= ("request" <> T.singleton '\x202E' <> "1" :: T.Text)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= T.replicate 129 "a"
+                    , "method" .= ("tools/list" :: T.Text)
                     ]
                 )
             assertInvalid

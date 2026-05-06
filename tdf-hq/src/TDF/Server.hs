@@ -393,6 +393,8 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
     Just (Object _) -> fail "id must be a string, number, or null"
     Just (Array _)  -> fail "id must be a string, number, or null"
     Just (Bool _)   -> fail "id must be a string, number, or null"
+    Just (String ident) ->
+      validateMcpIdString ident
     Just (Number n)
       | not (Sci.isInteger n) -> fail "id number must be integral"
     _               -> pure ()
@@ -402,6 +404,18 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
     Nothing -> pure (McpRequest reqId method Nothing)
     Just value@(Object _) -> pure (McpRequest reqId method (Just value))
     Just _ -> fail "params must be an object"
+
+validateMcpIdString :: Text -> Parser ()
+validateMcpIdString ident = do
+  when (T.length ident > 128) $
+    fail "id string must be 128 characters or fewer"
+  when (T.any isUnsafeMcpIdChar ident) $
+    fail "id string must not contain control characters or Unicode formatting marks"
+
+isUnsafeMcpIdChar :: Char -> Bool
+isUnsafeMcpIdChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 parseToolCallParams :: Value -> Maybe (Text, Value)
 parseToolCallParams = parseMaybe $ withObject "ToolCallParams" $ \o -> do
