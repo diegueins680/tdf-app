@@ -39,19 +39,25 @@ loadWhatsAppEnv = do
   manager <- newManager tlsManagerSettings
   token <-
     validateOptionalEnvText normalizeWhatsAppAccessToken
-      =<< firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
+      =<< firstNonEmptyAliasText "WhatsApp access token" ["WHATSAPP_TOKEN", "WA_TOKEN"]
   phoneId <-
     validateOptionalEnvText normalizeWhatsAppPhoneNumberId
-      =<< firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
+      =<< firstNonEmptyAliasText
+        "WhatsApp phone number id"
+        ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
   verify <-
     validateOptionalEnvText normalizeWhatsAppVerifyToken
-      =<< firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
+      =<< firstNonEmptyAliasText
+        "WhatsApp verify token"
+        ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <-
     validateOptionalEnvText normalizeWhatsAppContactNumber
-      =<< firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+      =<< firstConfiguredText
+        ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <-
     validateOptionalEnvText normalizeGraphApiVersion
-      =<< firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
+      =<< firstConfiguredText
+        ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
     { waManager = manager
     , waToken = token
@@ -114,8 +120,8 @@ missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
           else T.intercalate "; " (map pieceToText missingPieces)
   in T.concat ["WhatsApp configuration not available: ", details]
 
-firstNonEmptyText :: [String] -> IO (Maybe Text)
-firstNonEmptyText names = go names
+firstConfiguredText :: [String] -> IO (Maybe Text)
+firstConfiguredText names = go names
   where
     go [] = pure Nothing
     go (name:rest) = do
@@ -123,3 +129,25 @@ firstNonEmptyText names = go names
       case fmap (T.strip . T.pack) val of
         Just txt | not (T.null txt) -> pure (Just txt)
         _ -> go rest
+
+firstNonEmptyAliasText :: String -> [String] -> IO (Maybe Text)
+firstNonEmptyAliasText label names = do
+  values <- traverse lookupAlias names
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstName, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictName, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstName <> " and " <> conflictName
+              <> " are both set with different values"
+  where
+    lookupAlias name = do
+      val <- lookupEnv name
+      pure $ do
+        txt <- T.strip . T.pack <$> val
+        if T.null txt
+          then Nothing
+          else Just (name, txt)

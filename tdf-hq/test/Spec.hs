@@ -1548,6 +1548,28 @@ main = hspec $ do
                     WhatsAppService.waToken cfg `shouldBe` "token_123"
                     WhatsAppService.waPhoneId cfg `shouldBe` "1234567890"
 
+        it "rejects conflicting WhatsApp provider credential aliases before fallback use" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_TOKEN", Just "token_service")
+                , ("WHATSAPP_TOKEN", Just "token_transport")
+                ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "WhatsApp access token aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token_transport")
+                , ("WA_TOKEN", Just "token_service")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp access token aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes WhatsApp verify token aliases before webhook verification" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

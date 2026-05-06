@@ -53,11 +53,15 @@ mkWhatsAppService = do
 loadWhatsAppConfig :: IO WhatsAppConfig
 loadWhatsAppConfig = do
   tok <- requireValidOptionalCredential normalizeWhatsAppAccessToken
-    =<< lookupFirstNonEmptyEnv ["WA_TOKEN", "WHATSAPP_TOKEN"]
+    =<< lookupFirstNonEmptyAliasEnv "WhatsApp access token" ["WA_TOKEN", "WHATSAPP_TOKEN"]
   pid <- requireValidOptionalCredential normalizeWhatsAppPhoneNumberId
-    =<< lookupFirstNonEmptyEnv ["WA_PHONE_ID", "WHATSAPP_PHONE_NUMBER_ID"]
+    =<< lookupFirstNonEmptyAliasEnv
+      "WhatsApp phone number id"
+      ["WA_PHONE_ID", "WHATSAPP_PHONE_NUMBER_ID"]
   ver <- traverse (either fail pure . normalizeWhatsAppVerifyToken . T.pack)
-    =<< lookupFirstNonEmptyEnv ["WA_VERIFY_TOKEN", "WHATSAPP_VERIFY_TOKEN"]
+    =<< lookupFirstNonEmptyAliasEnv
+      "WhatsApp verify token"
+      ["WA_VERIFY_TOKEN", "WHATSAPP_VERIFY_TOKEN"]
   mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
@@ -90,6 +94,24 @@ lookupFirstNonEmptyEnv (key:rest) = do
   case value >>= nonEmptyString of
     Just normalized -> pure (Just normalized)
     Nothing -> lookupFirstNonEmptyEnv rest
+
+lookupFirstNonEmptyAliasEnv :: String -> [String] -> IO (Maybe String)
+lookupFirstNonEmptyAliasEnv label keys = do
+  values <- traverse lookupAlias keys
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstKey, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictKey, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstKey <> " and " <> conflictKey
+              <> " are both set with different values"
+  where
+    lookupAlias key = do
+      value <- lookupEnv key
+      pure ((,) key <$> (value >>= nonEmptyString))
 
 nonEmptyString :: String -> Maybe String
 nonEmptyString raw =
