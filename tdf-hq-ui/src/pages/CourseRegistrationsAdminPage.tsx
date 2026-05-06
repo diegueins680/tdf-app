@@ -922,6 +922,12 @@ const firstRunEmergingSocialLeadDescriptorPrefixPattern =
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
+const firstRunCommunityGroupDescriptorPrefixPattern =
+  /^(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb)))(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)/i;
+
+const firstRunCommunityGroupDescriptorSuffixPattern =
+  /\s*[-:/|]\s*(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb)))\s*$/i;
+
 const firstRunEventPlatformDescriptorPrefixPattern =
   /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+events?(?:\s+(?:page|portal))?(?:\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
 
@@ -1045,6 +1051,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
+    .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
@@ -1095,6 +1102,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
+    .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
