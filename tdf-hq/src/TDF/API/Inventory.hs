@@ -106,14 +106,17 @@ validateImageUpload nameTxt file = do
           Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
 
 allowedImageExtensions :: Text -> Either Text [Text]
-allowedImageExtensions rawContentType =
-  case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
-    "image/jpeg" -> Right [".jpg", ".jpeg"]
-    "image/png"  -> Right [".png"]
-    "image/webp" -> Right [".webp"]
-    "image/gif"  -> Right [".gif"]
-    _ ->
-      Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
+allowedImageExtensions rawContentType
+  | T.any isUnsafeUploadNameChar rawContentType =
+      Left "Asset upload MIME type must not contain control characters or Unicode formatting marks"
+  | otherwise =
+      case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
+        "image/jpeg" -> Right [".jpg", ".jpeg"]
+        "image/png"  -> Right [".png"]
+        "image/webp" -> Right [".webp"]
+        "image/gif"  -> Right [".gif"]
+        _ ->
+          Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
 
 resolveImageExtension :: Maybe Text -> FileData Tmp -> Either Text Text
 resolveImageExtension nameTxt file =

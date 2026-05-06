@@ -498,6 +498,23 @@ spec = do
           [mkAssetUploadFile "front-room.jpg"]
         )
 
+    it "rejects unsafe MIME parameters before trusting the upload content type" $
+      case fromMultipart
+        (mkAssetUploadMultipart
+          []
+          [ (mkAssetUploadFile "front-room.jpg")
+              { fdFileCType = "image/jpeg;\nContent-Type: text/html" }
+          ]
+        )
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Asset upload MIME type must not contain control characters"
+        Right payload ->
+          expectationFailure
+            ( "Expected unsafe asset upload MIME type to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
     it "rejects conflicting upload name and browser filename extensions" $
       case fromMultipart
         (mkAssetUploadMultipart
