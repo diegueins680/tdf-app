@@ -961,6 +961,12 @@ const firstRunLandingPageDescriptorPrefixPattern =
 const firstRunLandingPageDescriptorSuffixPattern =
   /\s*[-:/|]\s*(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
 
+const firstRunCourseWebsiteDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:website|web\s+page|site)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
+
+const firstRunCourseWebsiteDescriptorSuffixPattern =
+  /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site)|(?:p[aá]gina|sitio)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site)|(?:p[aá]gina|sitio)\s+web))\s*$/i;
+
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
 
 const firstRunReservationDescriptorPrefixPattern =
@@ -1041,6 +1047,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunLandingPageDescriptorPrefixPattern, '')
+    .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -1090,6 +1097,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunLandingPageDescriptorSuffixPattern, '')
+    .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
