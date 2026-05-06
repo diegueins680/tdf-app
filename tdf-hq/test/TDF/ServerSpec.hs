@@ -313,6 +313,7 @@ import TDF.Server
     , resolveMarketplacePhotoUrl
     )
 import qualified TDF.ServerRadio as Radio
+import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
     ( findReusableActiveToken
@@ -9860,6 +9861,36 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the intended single-role inbox matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasSocialInboxAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Reception, LiveSessionsProducer, Producer, AandR, Webmaster])
+
+    describe "social sync URL validation" $ do
+        it "requires HTTPS permalinks and media URLs before persisting synced posts" $ do
+            SocialSync.validateSocialSyncPermalink
+                (Just " https://www.instagram.com/p/post42/ ")
+                `shouldBe` Right (Just "https://www.instagram.com/p/post42/")
+            SocialSync.validateSocialSyncMediaUrls
+                (Just [" https://cdn.example.com/post.jpg?sig=1 "])
+                `shouldBe` Right (Just "https://cdn.example.com/post.jpg?sig=1")
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected unsafe social sync URL to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "permalink must be an absolute public https URL"
+                ( SocialSync.validateSocialSyncPermalink
+                    (Just "http://www.instagram.com/p/post42/")
+                )
+            assertInvalid
+                "mediaUrls entries must be absolute public https URLs"
+                ( SocialSync.validateSocialSyncMediaUrls
+                    (Just ["http://cdn.example.com/post.jpg"])
+                )
 
     describe "hasSocialSyncAccess" $ do
         it "denies baseline and non-admin staff sessions" $ do

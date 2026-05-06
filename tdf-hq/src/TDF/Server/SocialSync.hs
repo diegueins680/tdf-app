@@ -420,10 +420,10 @@ validateSocialSyncPermalink (Just rawUrl) =
                 BL.fromStrict
                   (TE.encodeUtf8 "permalink must be 2048 characters or fewer")
             }
-      | not (TrialsServer.isValidHttpUrl url) ->
+      | not (isValidSocialSyncHttpsUrl url) ->
           Left err400
             { errBody =
-                BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public http(s) URL")
+                BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public https URL")
             }
       | otherwise -> Right (Just url)
 
@@ -448,11 +448,11 @@ validateSocialSyncMediaUrls (Just rawUrls)
             BL.fromStrict
               (TE.encodeUtf8 "mediaUrls entries must be 2048 characters or fewer")
         }
-  | any (not . TrialsServer.isValidHttpUrl) mediaUrls =
+  | any (not . isValidSocialSyncHttpsUrl) mediaUrls =
       Left err400
         { errBody =
             BL.fromStrict
-              (TE.encodeUtf8 "mediaUrls entries must be absolute public http(s) URLs")
+              (TE.encodeUtf8 "mediaUrls entries must be absolute public https URLs")
         }
   | length mediaUrls /= length (nub mediaUrls) =
       Left err400
@@ -462,6 +462,11 @@ validateSocialSyncMediaUrls (Just rawUrls)
       Right (nonEmptyText (T.intercalate "\n" mediaUrls))
   where
     mediaUrls = map T.strip rawUrls
+
+isValidSocialSyncHttpsUrl :: Text -> Bool
+isValidSocialSyncHttpsUrl url =
+  "https://" `T.isPrefixOf` T.toLower (T.strip url)
+    && TrialsServer.isValidHttpUrl url
 
 validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
 validateSocialSyncPostsLimit Nothing = Right 50
