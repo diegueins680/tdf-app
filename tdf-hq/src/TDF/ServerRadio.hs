@@ -568,6 +568,7 @@ isNonPublicIpv6 host =
     || isMulticast firstSegment
     || isUniqueLocal firstSegment
     || isLinkLocal firstSegment
+    || isSiteLocal firstSegment
     || maybe False isNonPublicIpv4 (embeddedIpv4Octets host)
   where
     segments = T.splitOn ":" host
@@ -591,6 +592,9 @@ isNonPublicIpv6 host =
 
     isLinkLocal segment =
       any (`T.isPrefixOf` segment) ["fe8", "fe9", "fea", "feb"]
+
+    isSiteLocal segment =
+      any (`T.isPrefixOf` segment) ["fec", "fed", "fee", "fef"]
 
 embeddedIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
 embeddedIpv4Octets host =

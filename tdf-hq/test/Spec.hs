@@ -6856,6 +6856,7 @@ main = hspec $ do
             assertPrivateTarget "https://192.168.1.23/live"
             assertPrivateTarget "https://[::1]/live"
             assertPrivateTarget "https://[fd12::1234]/live"
+            assertPrivateTarget "https://[fec0::1]/live"
             assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
             assertPrivateTarget "https://[::ffff:7f00:1]/live"
             assertPrivateTarget "https://[0:0:0:0:0:ffff:c0a8:117]/live"
