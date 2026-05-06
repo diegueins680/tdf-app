@@ -14191,7 +14191,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('does not imply hidden course names when all first-run form labels dedupe to one preview', async () => {
+  it('clarifies when all first-run form labels are variants of one course', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'beatmaking-101-weekend', ccTitle: 'Formulario público - beatmaking 101' },
@@ -14207,9 +14207,12 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101.',
+        'Hay 3 formularios públicos para Beatmaking 101 listos para recibir la primera inscripción.',
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(emptyState?.textContent).not.toContain(
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101.',
+      );
       expect(emptyState?.textContent).not.toContain('y 2 más');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
