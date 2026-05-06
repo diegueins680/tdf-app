@@ -133,6 +133,7 @@ import TDF.Server
     , validatePartyDisplayNameUpdate
     , validatePublicBookingDurationMinutes
     , validateRolePayload
+    , validateStrictAdminAccess
     , validateUserRoleUserId
     , validateServiceAdCatalogId
     , validateServiceAdCurrency
@@ -8916,6 +8917,27 @@ spec = describe "TDF.Server helpers" $ do
         it "matches the intended single-role strict-admin matrix" $
             forM_ [minBound .. maxBound] $ \role ->
                 hasStrictAdminAccess (mkUser [role]) `shouldBe` (role == Admin)
+
+    describe "validateStrictAdminAccess" $ do
+        it "requires coherent Admin grants before protected role-management handlers run" $ do
+            validateStrictAdminAccess (mkUser [Admin]) `shouldBe` Right ()
+
+            let assertRejected expectedMessage user =
+                    case validateStrictAdminAccess user of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected strict Admin access to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertRejected "Admin role required" (mkUser [StudioManager])
+            assertRejected "Admin role grants must be unique" (mkUser [Admin, Admin])
+            assertRejected
+                "Admin module grants must match roles"
+                ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
 
     describe "validateFutureAdminAccess" $ do
         it "keeps admin discovery stubs scoped to literal Admin sessions" $ do

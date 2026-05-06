@@ -8920,10 +8920,19 @@ requireModule user moduleTag
     msg = "Missing access to module: " <> moduleName moduleTag
 
 requireStrictAdmin :: AuthedUser -> AppM ()
-requireStrictAdmin user
-  | hasStrictAdminAccess user = pure ()
-  | otherwise = throwError err403
-      { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
+requireStrictAdmin user =
+  either throwError pure (validateStrictAdminAccess user)
+
+validateStrictAdminAccess :: AuthedUser -> Either ServerError ()
+validateStrictAdminAccess user@AuthedUser{..}
+  | not (hasStrictAdminAccess user) =
+      Left err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
+  | length auRoles /= length (nub auRoles) =
+      Left err403 { errBody = "Admin role grants must be unique" }
+  | auModules /= modulesForRoles auRoles =
+      Left err403 { errBody = "Admin module grants must match roles" }
+  | otherwise =
+      Right ()
 -- User roles API
 userRolesServer :: AuthedUser -> ServerT UserRolesAPI AppM
 userRolesServer user =
