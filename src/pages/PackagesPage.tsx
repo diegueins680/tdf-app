@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -302,6 +303,17 @@ export default function PackagesPage() {
   const products = productsQuery.data ?? [];
 
   const activeProducts = useMemo(() => products.filter(p => !!p), [products]);
+  const hasProducts = activeProducts.length > 0;
+  const showFirstProductSetup =
+    !productsQuery.isLoading
+    && !productsQuery.isError
+    && !hasProducts;
+
+  useEffect(() => {
+    if (tab === 'purchases' && showFirstProductSetup) {
+      setTab('catalog');
+    }
+  }, [showFirstProductSetup, tab]);
 
   const onCreate = () => {
     setEditingProduct(null);
@@ -331,9 +343,11 @@ export default function PackagesPage() {
       >
         <Typography variant="h5">Paquetes</Typography>
         <Stack direction="row" spacing={1} justifyContent="flex-end">
-          <Button component={RouterLink} to="resumen" variant="outlined">
-            Vista resumida
-          </Button>
+          {hasProducts && (
+            <Button component={RouterLink} to="resumen" variant="outlined">
+              Vista resumida
+            </Button>
+          )}
           {tab === 'catalog' ? (
             <Button variant="contained" onClick={onCreate}>Nuevo producto</Button>
           ) : (
@@ -353,46 +367,63 @@ export default function PackagesPage() {
       <Paper variant="outlined">
         <Tabs value={tab} onChange={(_event, value) => setTab(value)} variant="fullWidth">
           <Tab label="Catálogo" value="catalog" />
-          <Tab label="Compras" value="purchases" />
+          {hasProducts && <Tab label="Compras" value="purchases" />}
         </Tabs>
         {tab === 'catalog' ? (
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Producto</TableCell>
-                  <TableCell>Servicio</TableCell>
-                  <TableCell>Unidades</TableCell>
-                  <TableCell>Precio</TableCell>
-                  <TableCell width={120}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {activeProducts.map(product => (
-                  <TableRow key={product.ppId} hover>
-                    <TableCell>{product.ppName}</TableCell>
-                    <TableCell>{product.ppService}</TableCell>
-                    <TableCell>{product.ppUnitsQty} {product.ppUnitsKind}</TableCell>
-                    <TableCell>${centsToCurrency(product.ppPriceCents)}</TableCell>
-                    <TableCell>
-                      <Button size="small" variant="outlined" onClick={() => onEdit(product)}>
-                        Editar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {activeProducts.length === 0 && (
+          productsQuery.isLoading ? (
+            <Box sx={{ px: 2, py: 3 }}>
+              <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" color="text.secondary">
+                  Cargando catálogo de paquetes…
+                </Typography>
+              </Stack>
+            </Box>
+          ) : productsQuery.isError ? (
+            <Box sx={{ p: 2 }}>
+              <Alert severity="error">
+                {(productsQuery.error as Error).message || 'No se pudo cargar el catálogo de paquetes.'}
+              </Alert>
+            </Box>
+          ) : showFirstProductSetup ? (
+            <Box sx={{ px: 3, py: 4, textAlign: 'center' }}>
+              <Stack spacing={1.5} sx={{ maxWidth: 560, mx: 'auto' }}>
+                <Typography variant="h6">Todavía no hay paquetes configurados.</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Empieza con Nuevo producto. La compra y la vista resumida aparecerán cuando exista el primer paquete para vender.
+                </Typography>
+              </Stack>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={5}>
-                      <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                        Aún no hay productos creados.
-                      </Typography>
-                    </TableCell>
+                    <TableCell>Producto</TableCell>
+                    <TableCell>Servicio</TableCell>
+                    <TableCell>Unidades</TableCell>
+                    <TableCell>Precio</TableCell>
+                    <TableCell width={120}>Acciones</TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {activeProducts.map(product => (
+                    <TableRow key={product.ppId} hover>
+                      <TableCell>{product.ppName}</TableCell>
+                      <TableCell>{product.ppService}</TableCell>
+                      <TableCell>{product.ppUnitsQty} {product.ppUnitsKind}</TableCell>
+                      <TableCell>${centsToCurrency(product.ppPriceCents)}</TableCell>
+                      <TableCell>
+                        <Button size="small" variant="outlined" onClick={() => onEdit(product)}>
+                          Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )
         ) : (
           <Box component="form" onSubmit={purchaseForm.handleSubmit(submitPurchase)} sx={{ p: 2, display: 'grid', gap: 2 }}>
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
