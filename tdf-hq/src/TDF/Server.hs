@@ -12131,8 +12131,12 @@ cmsAdminServer user =
     cmsDeleteH cid = do
       requireWebmaster
       contentKey <- either throwError pure (validateCmsContentPathId cid)
-      runDB $ delete contentKey
-      pure NoContent
+      mEnt <- runDB $ get contentKey
+      case mEnt of
+        Nothing -> throwError err404
+        Just _ -> do
+          runDB $ delete contentKey
+          pure NoContent
 
 toCmsDTO :: Entity CMS.CmsContent -> CmsContentDTO
 toCmsDTO (Entity cid c) =

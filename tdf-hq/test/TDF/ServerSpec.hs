@@ -15,7 +15,14 @@ import qualified Data.Text as T
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), Key, count, get, insert, insert_, insertKey, (==.))
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql
+    ( SqlPersistT
+    , fromSqlKey
+    , rawExecute
+    , runMigration
+    , runSqlPool
+    , toSqlKey
+    )
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
     ( AdsInquiry (..)
@@ -315,6 +322,7 @@ import TDF.Server
     , shouldRetryWithFallbackModel
     , listMarketplace
     , resolveMarketplacePhotoUrl
+    , cmsAdminServer
     )
 import qualified TDF.ServerRadio as Radio
 import qualified TDF.Server.SocialSync as SocialSync
@@ -3201,6 +3209,25 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid CMS content id, got: " <> show (fromSqlKey contentKey))
             assertInvalid 0
             assertInvalid (-7)
+
+    describe "cms admin delete handler" $
+        it "returns 404 for valid ids that do not map to CMS content rows" $ do
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool (runMigration CMS.migrateCMS) pool
+            let _listContent :<|> _createContent :<|> _publishContent :<|> deleteContent =
+                    cmsAdminServer (mkUser [Webmaster])
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = marketplaceTestConfig False
+                        }
+            result <- runHandler $ runReaderT (deleteContent 42) env
+            case result of
+                Left serverErr ->
+                    errHTTPCode serverErr `shouldBe` 404
+                Right _ ->
+                    expectationFailure
+                        "Expected missing CMS content delete to return 404"
 
     describe "normalizeAuthEmailAddress" $ do
         it "trims and lowercases valid auth emails before signup or reset flows use them" $ do
