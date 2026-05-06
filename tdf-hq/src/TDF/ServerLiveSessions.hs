@@ -7,6 +7,7 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   , LiveSessionMusicianLookup(..)
   , buildLiveSessionUsernameCollisionCandidate
+  , liveSessionMusicianPartyNotes
   , resolveLiveSessionMusicianLookup
   , selectUniqueLiveSessionMusicianByEmail
   , sanitizeLiveSessionRiderFileName
@@ -33,7 +34,7 @@ import           Data.Char                  ( GeneralCategory
                                             , isAscii
                                             , isControl
                                             )
-import           Data.Maybe                 (fromMaybe, mapMaybe)
+import           Data.Maybe                 (mapMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
@@ -75,6 +76,12 @@ data LiveSessionMusicianLookup
   = LookupLiveSessionMusicianByEmail Text
   | CreateLiveSessionMusician
   deriving (Eq, Show)
+
+liveSessionMusicianPartyNotes :: Maybe Text -> Maybe Text
+liveSessionMusicianPartyNotes rawInstrument =
+  case T.strip <$> rawInstrument of
+    Just instrument | not (T.null instrument) -> Just instrument
+    _ -> Nothing
 
 liveSessionsServer
   :: forall m.
@@ -209,7 +216,7 @@ liveSessionsServer user = intakeHandler
                 , partyWhatsapp         = Nothing
                 , partyInstagram        = Nothing
                 , partyEmergencyContact = Nothing
-                , partyNotes            = Just (fromMaybe "" lsmInstrument)
+                , partyNotes            = liveSessionMusicianPartyNotes lsmInstrument
                 , partyCreatedAt        = now
                 }
               pure (key, mEmail)

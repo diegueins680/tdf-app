@@ -225,6 +225,7 @@ import TDF.Server
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
+      liveSessionMusicianPartyNotes,
       resolveLiveSessionMusicianLookup,
       selectUniqueLiveSessionMusicianByEmail,
       sanitizeLiveSessionRiderFileName,
@@ -9412,6 +9413,12 @@ main = hspec $ do
             assertInvalid
                 Nothing
                 (Just "artist@example.com")
+
+    describe "liveSessionMusicianPartyNotes" $
+        it "omits blank instrument notes for auto-created musician parties" $ do
+            liveSessionMusicianPartyNotes Nothing `shouldBe` Nothing
+            liveSessionMusicianPartyNotes (Just "   ") `shouldBe` Nothing
+            liveSessionMusicianPartyNotes (Just "  Synths  ") `shouldBe` Just "Synths"
 
     describe "validateLiveSessionTermsAcceptance" $ do
         it "requires explicit accepted terms before live-session intake persistence" $ do
