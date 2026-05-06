@@ -4458,6 +4458,12 @@ validateSocialReplyIdentifier fieldName value
             BL.fromStrict
               (TE.encodeUtf8 (fieldName <> " must not contain hidden formatting characters"))
         }
+  | T.any (not . isAscii) value =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must contain only ASCII characters"))
+        }
   | T.length value > 256 =
       Left err400
         { errBody =

@@ -5005,6 +5005,9 @@ spec = do
         "senderId must not contain hidden formatting characters"
         (validateSocialReplySenderId ("ig" <> T.singleton '\x200D' <> "user"))
       assertInvalid
+        "senderId must contain only ASCII characters"
+        (validateSocialReplySenderId "usuario-ñ")
+      assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId (T.replicate 257 "a"))
 
@@ -5324,6 +5327,9 @@ spec = do
       assertInvalid
         "externalId must not contain whitespace"
         (validateSocialReplyExternalId (Just "mid.abc 123"))
+      assertInvalid
+        "externalId must contain only ASCII characters"
+        (validateSocialReplyExternalId (Just "mid.ñ"))
       assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId longSenderId)
