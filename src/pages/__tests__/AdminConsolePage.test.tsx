@@ -2694,6 +2694,51 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps test-fixture fallback cards from duplicating the first-run seed action', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'test-data',
+          title: 'Sandbox records',
+          body: ['Load temporary admin records for sandbox review.'],
+        },
+        {
+          cardId: 'demo-fixtures',
+          title: 'Demo fixtures',
+          body: ['Prepare a disposable workspace for onboarding checks.'],
+        },
+        {
+          cardId: 'datos-prueba',
+          title: 'Datos de prueba',
+          body: ['Prepara registros temporales para revisar la consola.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sandbox records')).not.toBeInTheDocument();
+    expect(screen.queryByText('Demo fixtures')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datos de prueba')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Load temporary admin records/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Prepare a disposable workspace/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Prepara registros temporales/i)).not.toBeInTheDocument();
+  });
+
   it('strips built-in admin copy from custom fallback cards before showing optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
