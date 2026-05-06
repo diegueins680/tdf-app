@@ -562,6 +562,7 @@ const GETTING_STARTED_ADMIN_SECTIONS = [
 const MAX_SINGLE_ADDITIONAL_MODULE_ACTION_TITLE_LENGTH = 32;
 const FIRST_RUN_USERS_EMPTY_STATE = 'Aún no hay usuarios administrables.';
 const FIRST_RUN_AUDIT_EMPTY_STATE = 'La auditoría aparecerá cuando se registre el primer cambio.';
+const ADMIN_USERS_VISIBLE_LIMIT = 5;
 const AUDIT_VISIBLE_ENTRY_LIMIT = 5;
 const AUDIT_DETAIL_PREVIEW_LIMIT = 72;
 const ADMIN_DATE_UNAVAILABLE_LABEL = 'Fecha no disponible';
@@ -1650,6 +1651,7 @@ export default function AdminConsolePage() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [showFirstRunAdditionalModules, setShowFirstRunAdditionalModules] = useState(false);
   const [showStandaloneAdditionalModules, setShowStandaloneAdditionalModules] = useState(false);
+  const [showAllAdminUsers, setShowAllAdminUsers] = useState(false);
   const [showAllAuditEntries, setShowAllAuditEntries] = useState(false);
 
   const healthQuery = useQuery({
@@ -1743,8 +1745,14 @@ export default function AdminConsolePage() {
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
     : null;
   const showUsersTable = users.length > 1;
-  const showUsersLastAccessColumn = users.some((user) => getAdminUserLastAccess(user) != null);
-  const showUsersStatusColumn = users.some((user) => user.status != null && user.status !== 'ACTIVE');
+  const visibleAdminUsers = showAllAdminUsers ? users : users.slice(0, ADMIN_USERS_VISIBLE_LIMIT);
+  const hiddenAdminUserCount = Math.max(users.length - visibleAdminUsers.length, 0);
+  const showAdminUsersOverflowAction = showUsersTable && users.length > ADMIN_USERS_VISIBLE_LIMIT;
+  const adminUsersOverflowActionLabel = showAllAdminUsers
+    ? `Mostrar solo ${ADMIN_USERS_VISIBLE_LIMIT} usuarios`
+    : `Ver ${hiddenAdminUserCount} ${hiddenAdminUserCount === 1 ? 'usuario más' : 'usuarios más'}`;
+  const showUsersLastAccessColumn = visibleAdminUsers.some((user) => getAdminUserLastAccess(user) != null);
+  const showUsersStatusColumn = visibleAdminUsers.some((user) => user.status != null && user.status !== 'ACTIVE');
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
@@ -1873,6 +1881,18 @@ export default function AdminConsolePage() {
   const additionalModuleSignature = JSON.stringify(
     consoleCards.map((card) => [card.cardId, card.title, card.body]),
   );
+  const adminUserSignature = JSON.stringify(
+    users.map((user) => [
+      user.userId,
+      user.username,
+      user.displayName,
+      user.partyId,
+      user.roles,
+      user.status,
+      user.lastLoginAt,
+      user.lastSeenAt,
+    ]),
+  );
   const auditEntrySignature = JSON.stringify(
     audits.map((entry) => [
       entry.auditId,
@@ -1900,6 +1920,9 @@ export default function AdminConsolePage() {
   useEffect(() => {
     setShowAllAuditEntries(false);
   }, [auditEntrySignature]);
+  useEffect(() => {
+    setShowAllAdminUsers(false);
+  }, [adminUserSignature]);
   const editingTitle = useMemo(() => {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
@@ -2251,78 +2274,93 @@ export default function AdminConsolePage() {
             {isUsersLoading ? (
               renderSectionLoading('Cargando usuarios…')
             ) : showUsersTable ? (
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Usuario</TableCell>
-                      <TableCell>{ADMIN_USER_ROLES_COLUMN_HEADER}</TableCell>
-                      {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
-                      {showUsersStatusColumn && <TableCell>Estado</TableCell>}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {users.map((user, index) => {
-                      const identity = summarizeAdminUserIdentity(user);
-                      const editRoleLabel = buildAdminUserRoleEditLabel(user);
-                      const editRoleTitle = buildAdminUserRoleButtonTitle(user);
-                      const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
-                      return (
-                        <TableRow key={user.userId} hover>
-                          <TableCell>
-                            <Stack spacing={0.25}>
-                              <Typography variant="body2" fontWeight={600}>
-                                {identity.primary}
-                              </Typography>
-                              {identity.showUsername && (
-                                <Typography variant="caption" color="text.secondary">
-                                  Usuario: {identity.username}
+              <>
+                <TableContainer id="admin-users-table">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Usuario</TableCell>
+                        <TableCell>{ADMIN_USER_ROLES_COLUMN_HEADER}</TableCell>
+                        {showUsersLastAccessColumn && <TableCell>Último acceso</TableCell>}
+                        {showUsersStatusColumn && <TableCell>Estado</TableCell>}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleAdminUsers.map((user, index) => {
+                        const identity = summarizeAdminUserIdentity(user);
+                        const editRoleLabel = buildAdminUserRoleEditLabel(user);
+                        const editRoleTitle = buildAdminUserRoleButtonTitle(user);
+                        const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
+                        return (
+                          <TableRow key={user.userId} hover>
+                            <TableCell>
+                              <Stack spacing={0.25}>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {identity.primary}
                                 </Typography>
-                              )}
-                              {shouldShowPartyId ? (
-                                <Typography variant="caption" color="text.secondary">
-                                  Party #{user.partyId}
-                                </Typography>
-                              ) : null}
-                            </Stack>
-                          </TableCell>
-                          <TableCell>
-                            <Stack spacing={0.5} alignItems="flex-start">
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                title={formatEditableRoleList(user.roles)}
-                              >
-                                {formatInlineAdminUserRoleSummary(user.roles)}
-                              </Typography>
-                              {canEditAdminRoles && (
-                                <Button
-                                  size="small"
-                                  onClick={() => setEditingUser(user)}
-                                  aria-label={editRoleLabel}
-                                  title={editRoleTitle}
-                                  sx={{
-                                    px: 0,
-                                    minWidth: 0,
-                                    justifyContent: 'flex-start',
-                                    textTransform: 'none',
-                                  }}
+                                {identity.showUsername && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Usuario: {identity.username}
+                                  </Typography>
+                                )}
+                                {shouldShowPartyId ? (
+                                  <Typography variant="caption" color="text.secondary">
+                                    Party #{user.partyId}
+                                  </Typography>
+                                ) : null}
+                              </Stack>
+                            </TableCell>
+                            <TableCell>
+                              <Stack spacing={0.5} alignItems="flex-start">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  title={formatEditableRoleList(user.roles)}
                                 >
-                                  {buildCompactAdminUserRoleActionLabel(user.roles, {
-                                    showFullLabel: index === 0,
-                                  })}
-                                </Button>
-                              )}
-                            </Stack>
-                          </TableCell>
-                          {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
-                          {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                                  {formatInlineAdminUserRoleSummary(user.roles)}
+                                </Typography>
+                                {canEditAdminRoles && (
+                                  <Button
+                                    size="small"
+                                    onClick={() => setEditingUser(user)}
+                                    aria-label={editRoleLabel}
+                                    title={editRoleTitle}
+                                    sx={{
+                                      px: 0,
+                                      minWidth: 0,
+                                      justifyContent: 'flex-start',
+                                      textTransform: 'none',
+                                    }}
+                                  >
+                                    {buildCompactAdminUserRoleActionLabel(user.roles, {
+                                      showFullLabel: index === 0,
+                                    })}
+                                  </Button>
+                                )}
+                              </Stack>
+                            </TableCell>
+                            {showUsersLastAccessColumn && <TableCell>{formatDateOrDash(getAdminUserLastAccess(user))}</TableCell>}
+                            {showUsersStatusColumn && <TableCell>{renderStatus(user.status, { hideActive: true })}</TableCell>}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                {showAdminUsersOverflowAction && (
+                  <Box sx={{ px: 2, pb: 2, pt: 1 }}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setShowAllAdminUsers((current) => !current)}
+                      aria-controls="admin-users-table"
+                      aria-expanded={showAllAdminUsers}
+                    >
+                      {adminUsersOverflowActionLabel}
+                    </Button>
+                  </Box>
+                )}
+              </>
             ) : singleAdminUser && !usersError ? (
               <Box sx={{ px: 2, pb: 2 }}>
                 <Stack

@@ -5638,6 +5638,85 @@ describe('AdminConsolePage', () => {
     expectToAppearBefore(screen.getByText('Grace Hopper'), screen.getByText('Zoe Washburne'));
   });
 
+  it('keeps large admin user lists compact until the admin asks for the rest', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+      buildAdminUser({
+        userId: 103,
+        username: 'linus',
+        displayName: 'Linus Torvalds',
+        partyId: 11,
+        roles: ['ReadOnly'],
+      }),
+      buildAdminUser({
+        userId: 104,
+        username: 'marie',
+        displayName: 'Marie Curie',
+        partyId: 12,
+        roles: ['Accounting'],
+      }),
+      buildAdminUser({
+        userId: 105,
+        username: 'nikola',
+        displayName: 'Nikola Tesla',
+        partyId: 13,
+        roles: ['Engineer'],
+      }),
+      buildAdminUser({
+        userId: 106,
+        username: 'rosalind',
+        displayName: 'Rosalind Franklin',
+        partyId: 14,
+        roles: ['Teacher'],
+      }),
+      buildAdminUser({
+        userId: 107,
+        username: 'zoe',
+        displayName: 'Zoe Washburne',
+        partyId: 15,
+        roles: ['Reception'],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Nikola Tesla')).toBeInTheDocument();
+      expect(screen.queryByText('Rosalind Franklin')).not.toBeInTheDocument();
+      expect(screen.queryByText('Zoe Washburne')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Editar roles de /i })).toHaveLength(5);
+      expect(screen.getByRole('button', { name: /Ver 2 usuarios más/i })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    await user.click(screen.getByRole('button', { name: /Ver 2 usuarios más/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Rosalind Franklin')).toBeInTheDocument();
+      expect(screen.getByText('Zoe Washburne')).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Editar roles de /i })).toHaveLength(7);
+      expect(screen.getByRole('button', { name: /Mostrar solo 5 usuarios/i })).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    await user.click(screen.getByRole('button', { name: /Mostrar solo 5 usuarios/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Rosalind Franklin')).not.toBeInTheDocument();
+      expect(screen.queryByText('Zoe Washburne')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Editar roles de /i })).toHaveLength(5);
+    });
+  });
+
   it('keeps role review uncluttered until a pending role change needs save and discard actions', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);
