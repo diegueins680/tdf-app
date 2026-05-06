@@ -875,6 +875,12 @@ const firstRunWaitlistDescriptorPrefixPattern =
 const firstRunWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|(?:captaci[oó]n|captura)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|lista\s+de\s+(?:espera|interesad[oa]s)|(?:captaci[oó]n|captura)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|(?:course\s+)?interest(?:ed)?\s+sign[-\s]?up(?:\s+(?:form|page))?|newsletter\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?)|mailing\s+list(?:\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?)\s*$/i;
 
+const firstRunLeadMagnetDescriptorPrefixPattern =
+  /^(?:(?:lead\s+magnet|freebie|free\s+resource|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLeadMagnetDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:lead\s+magnet|freebie|free\s+resource|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))\s*$/i;
+
 const firstRunProviderFormDescriptorPrefixPattern =
   /^(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform|many\s*chat|manychat|tally(?:\s+forms?)?|jot\s*forms?|airtable|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|notion|fillout|cognito\s+forms?)(?:\s+forms?)?)|typeform|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1019,6 +1025,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunProgramDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
+    .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
@@ -1067,6 +1074,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunProgramDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
+    .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
