@@ -462,6 +462,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const [providerMessageId, setProviderMessageId] = useState<string | null>(null);
   const [showReplyErrorDetails, setShowReplyErrorDetails] = useState(false);
   const [showSendErrorDetails, setShowSendErrorDetails] = useState(false);
+  const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [failedAttachmentUrls, setFailedAttachmentUrls] = useState<string[]>([]);
 
   useEffect(() => {
@@ -478,6 +479,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     setProviderMessageId(null);
     setShowReplyErrorDetails(false);
     setShowSendErrorDetails(false);
+    setShowFollowUpComposer(false);
     setFailedAttachmentUrls([]);
   }, [open, msg]);
 
@@ -496,6 +498,8 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
   const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
   const hasReplyDraft = replyDraft.trim().length > 0;
+  const showReplyComposer = !hasDeliveredReply || showFollowUpComposer || hasReplyDraft || sendLoading;
+  const showFollowUpPrompt = hasDeliveredReply && !showReplyComposer;
   const showSendAction = !hasDeliveredReply || hasReplyDraft || sendLoading;
 
   const extractProviderMessageId = (payload: unknown): string | null => {
@@ -554,6 +558,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
       setOptimisticReplyText(outgoingMessage);
       setOptimisticReplyError(null);
       setReplyDraft('');
+      setShowFollowUpComposer(false);
       setNotice(reviewMode ? 'Message sent from app UI.' : 'Respuesta enviada.');
       onRefresh();
     } catch (err) {
@@ -885,9 +890,15 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                   <Typography variant="subtitle1" fontWeight={800}>
-                    {reviewMode ? 'Reply from app UI' : 'Responder'}
+                    {hasDeliveredReply
+                      ? reviewMode
+                        ? 'Delivered proof'
+                        : 'Respuesta enviada'
+                      : reviewMode
+                        ? 'Reply from app UI'
+                        : 'Responder'}
                   </Typography>
-                  {hasReplyDraft && (
+                  {showReplyComposer && hasReplyDraft && (
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="outlined"
@@ -897,7 +908,14 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       >
                         {reviewMode ? 'Copy' : 'Copiar'}
                       </Button>
-                      <Button variant="outlined" size="small" onClick={() => setReplyDraft('')}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setReplyDraft('');
+                          if (hasDeliveredReply) setShowFollowUpComposer(false);
+                        }}
+                      >
                         {reviewMode ? 'Clear' : 'Limpiar'}
                       </Button>
                     </Stack>
@@ -972,7 +990,18 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   </Alert>
                 )}
 
-                {showAiDraftControls ? (
+                {showFollowUpPrompt && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowFollowUpComposer(true)}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    {reviewMode ? 'Write follow-up' : 'Escribir seguimiento'}
+                  </Button>
+                )}
+
+                {showReplyComposer && showAiDraftControls ? (
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                     <TextField
                       label={reviewMode ? 'AI instructions (optional)' : 'Instrucciones para IA (opcional)'}
@@ -996,23 +1025,25 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
                     </Button>
                   </Stack>
-                ) : !reviewMode && !hasDeliveredReply ? (
+                ) : showReplyComposer && !reviewMode && !hasDeliveredReply ? (
                   <Alert severity="info" variant="outlined">
                     La IA se oculta porque este mensaje no tiene texto. Revisa el adjunto, escribe la respuesta y enviala.
                   </Alert>
                 ) : null}
 
-                <TextField
-                  label={replyInputLabel}
-                  placeholder={replyInputPlaceholder}
-                  helperText={replyInputHelper}
-                  value={replyDraft}
-                  onChange={(e) => setReplyDraft(e.target.value)}
-                  disabled={sendLoading}
-                  multiline
-                  minRows={6}
-                  fullWidth
-                />
+                {showReplyComposer && (
+                  <TextField
+                    label={replyInputLabel}
+                    placeholder={replyInputPlaceholder}
+                    helperText={replyInputHelper}
+                    value={replyDraft}
+                    onChange={(e) => setReplyDraft(e.target.value)}
+                    disabled={sendLoading}
+                    multiline
+                    minRows={6}
+                    fullWidth
+                  />
+                )}
               </Stack>
             </Paper>
           </Stack>

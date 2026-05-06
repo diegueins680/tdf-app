@@ -752,7 +752,8 @@ describe('SocialInboxPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Reply from app UI');
+      expect(document.body.textContent).toContain('Delivered proof');
+      expect(document.body.textContent).not.toContain('Reply from app UI');
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
@@ -832,8 +833,10 @@ describe('SocialInboxPage', () => {
     });
 
     await waitForExpectation(() => {
-      const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
-      expect(followUpInput.value).toBe('');
+      expect(document.body.textContent).toContain('Delivered proof');
+      expect(document.body.textContent).not.toContain('Reply from app UI');
+      expect(() => getTextControlByLabel(document.body, 'Follow-up message')).toThrow();
+      expect(countButtonsByText(document.body, 'Write follow-up')).toBe(1);
       expect(countButtonsByText(document.body, 'Send message')).toBe(0);
       expect(countButtonsByText(document.body, 'Copy')).toBe(0);
       expect(countButtonsByText(document.body, 'Clear')).toBe(0);
@@ -842,11 +845,31 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).not.toContain('Step 2 of 3: keep this dialog visible, click Send');
       expect(document.body.textContent).not.toContain('Explain each button while recording');
       expect(countTextOccurrences(document.body, 'Step 3 of 3:')).toBe(1);
-      expect(document.body.textContent).toContain(
+      expect(document.body.textContent).not.toContain(
         'Already replied. Send a follow-up only if the review run needs a second app message.',
       );
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
+      );
+    });
+
+    await act(async () => {
+      const followUpButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Write follow-up',
+      );
+      if (!followUpButton) throw new Error('Write follow-up button not found');
+      followUpButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
+      expect(followUpInput.value).toBe('');
+      expect(countButtonsByText(document.body, 'Write follow-up')).toBe(0);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(0);
+      expect(document.body.textContent).toContain(
+        'Already replied. Send a follow-up only if the review run needs a second app message.',
       );
     });
 
