@@ -2235,6 +2235,12 @@ export default function CourseRegistrationsAdminPage() {
     && Boolean(selectedConfiguredCohort)
     && hasSlugFilter
     && !hasStatusFilter;
+  const showUnconfiguredCourseFirstRunLimitEmptyState = !hasVisibleRegistrations
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && configuredCohortOptions.length === 0
+    && hasCustomLimit
+    && !hasManualFilters;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({
@@ -2944,6 +2950,7 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && !showPassiveSingleCohortLimitEmptyState
     && !showSelectedCohortFirstRunEmptyState
+    && !showUnconfiguredCourseFirstRunLimitEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
@@ -2986,7 +2993,12 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && !cohortsQuery.isError
     && !cohortsQuery.isLoading
-    && (!hasCustomFilters || showPassiveSingleCohortLimitEmptyState || showSelectedCohortFirstRunEmptyState)
+    && (
+      !hasCustomFilters
+      || showPassiveSingleCohortLimitEmptyState
+      || showSelectedCohortFirstRunEmptyState
+      || showUnconfiguredCourseFirstRunLimitEmptyState
+    )
     && !hasVisibleRegistrations;
   const showInitialCohortResolutionState = !regsQuery.isLoading
     && !regsQuery.isError

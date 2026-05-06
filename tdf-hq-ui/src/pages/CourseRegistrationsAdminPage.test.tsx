@@ -7462,6 +7462,37 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps a limit-only first-run without configured courses focused on setup instead of refresh', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=50');
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: undefined,
+        limit: 50,
+      });
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateConfigActionLabel);
+      expect(container.textContent).not.toContain('No hay inscripciones con el límite actual');
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps limit-only cohort failures focused on the cohort retry instead of duplicate list refresh', async () => {
     listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
     listRegistrationsMock.mockResolvedValue([]);
