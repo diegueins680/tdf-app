@@ -524,9 +524,10 @@ describe('CourseRegistrationsAdminPage', () => {
         'Expediente reúne notas, pagos, seguimiento y correos de la inscripción.',
       );
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierOnlyScopeHint,
+        paymentWorkflowDossierScopeHint,
       );
-      expect(countOccurrences(container, dossierOnlyScopeHint)).toBe(1);
+      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').getAttribute('title')).toBe(
@@ -751,7 +752,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        `${dossierOnlyScopeHint} Contacto pendiente en esta inscripción.`,
+        `${paymentWorkflowDossierScopeHint} Contacto pendiente en esta inscripción.`,
       );
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
@@ -1275,7 +1276,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
       expect(container.textContent).not.toContain('Vista filtrada:');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierOnlyScopeHint,
+        paymentWorkflowDossierScopeHint,
       );
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
@@ -1473,7 +1474,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        contactDossierOnlyScopeHint,
+        contactPaymentWorkflowDossierScopeHint,
       );
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(contactDossierScopeHint);
@@ -2241,7 +2242,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        dossierOnlyScopeHint,
+        paymentWorkflowDossierScopeHint,
       );
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
