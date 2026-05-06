@@ -107,6 +107,7 @@ formatSriScriptFailure stderrTxt =
     sanitizeFailureChar ch
       | ch == '\n' || ch == '\t' = ch
       | ch == '\DEL' || ch < ' ' = ' '
+      | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
       | otherwise = ch
 
 limitSriScriptFailure :: Text -> Text

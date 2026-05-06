@@ -3427,10 +3427,12 @@ main = hspec $ do
         it "bounds and sanitizes failed SRI runner stderr before returning backend errors" $ do
             let formatted =
                     Sri.formatSriScriptFailure
-                        ("fatal\NULdetail\n" <> replicate 2100 'x')
+                        ("fatal\NULdetail\x202Ehidden\x2028line\n" <> replicate 2100 'x')
             Data.Text.unpack formatted `shouldContain` "fatal detail"
+            Data.Text.unpack formatted `shouldContain` "hidden line"
             Data.Text.unpack formatted `shouldContain` "[SRI script stderr truncated]"
             formatted `shouldSatisfy` (not . Data.Text.any (\ch -> ch == '\NUL' || ch == '\DEL'))
+            formatted `shouldSatisfy` (not . Data.Text.any (`elem` ['\x202E', '\x2028']))
             Data.Text.length formatted `shouldSatisfy` (<= 2040)
 
     describe "CORS environment fallback discovery" $ do
