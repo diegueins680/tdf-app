@@ -8318,6 +8318,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses direct paid recovery actions when the busy list already states paid status', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, () => ({ crStatus: 'paid' })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pagado. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).toContain(
+        'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.',
+      );
+      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(9);
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Estudiante 1')).toBeTruthy();
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
+      expect(countOccurrences(container, 'Pagado')).toBe(1);
+      expect(container.textContent).not.toContain('Reabrir vuelve a pendiente.');
+    });
+
+    await cleanup();
+  });
+
   it('matches busy cancelled-list guidance to the direct reopen row action', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, () => ({ crStatus: 'cancelled' })));
 

@@ -141,6 +141,8 @@ const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Estado abre acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
+const buildPaidRecoveryScopeHint = (targetLabel: string) =>
+  `Usa ${targetLabel} para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -2504,10 +2506,18 @@ export default function CourseRegistrationsAdminPage() {
     && limit === DEFAULT_LIMIT;
   const allVisibleRowsCanOpenPaymentWorkflow = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
+  const allVisibleRowsUseDirectPaidRecoveryAction = statusAlreadyVisibleInBusySearchOnboarding
+    && searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid');
   const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
-    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(reg.crStatus));
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
+      reg.crStatus,
+      allVisibleRowsUseDirectPaidRecoveryAction,
+    ));
   const localSearchOnboardingActionText = allVisibleRowsUseDirectPendingRecoveryAction
-    ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+    ? allVisibleRowsUseDirectPaidRecoveryAction
+      ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
+      : buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
     : allVisibleRowsCanOpenPaymentWorkflow
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
       : statusAlreadyVisibleInBusySearchOnboarding
@@ -5126,9 +5136,10 @@ export default function CourseRegistrationsAdminPage() {
                   const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(
                     reg.crStatus,
                     showActiveStatusFilterSummary
+                      || statusAlreadyVisibleInBusySearchOnboarding
                       || (
-                        searchedRegistrations.length === 1
-                        && showSingleStatusSummaryInPageChrome
+                        showSingleStatusSummaryInPageChrome
+                        && searchedRegistrations.length === 1
                       ),
                   );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
