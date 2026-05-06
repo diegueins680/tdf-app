@@ -12505,6 +12505,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Hotmart checkout for Beatmaking 101',
       'Beatmaking 101 - Podia checkout',
       'LearnWorlds course page - Beatmaking 101',
+      'ClickFunnels checkout - Beatmaking 101',
+      'GoHighLevel registration funnel for Beatmaking 101',
+      'Beatmaking 101 - Kartra enrollment page',
+      'Systeme.io course checkout for Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -12520,8 +12524,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds/i);
-        expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup/i);
+        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds|ClickFunnels|GoHighLevel|Kartra|Systeme\.io/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup|registration funnel/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
