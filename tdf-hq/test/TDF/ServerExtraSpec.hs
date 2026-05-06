@@ -3069,6 +3069,31 @@ spec = do
           assetId asset `shouldBe` existingAssetId
           qrToken asset `shouldBe` Just canonicalToken
 
+    it "rejects duplicated QR token rows instead of resolving whichever asset sorts first" $ do
+      firstAssetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first QR asset fixture key" >> fail "unreachable"
+      secondAssetKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000907" :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second QR asset fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (do
+            insertKey firstAssetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                })
+            insertKey secondAssetKey
+              ((fixtureAsset "Moog Matriarch" "Synth" (Just "Moog") (Just "Matriarch") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                }))
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "resolves to multiple assets"
+        Right asset ->
+          expectationFailure ("Expected duplicate QR token lookup to fail, got " <> show asset)
+
     it "rejects assets with multiple active checkouts so QR reads cannot silently pick whichever row sorts newest" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

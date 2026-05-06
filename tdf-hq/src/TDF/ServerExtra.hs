@@ -465,8 +465,20 @@ loadAssetEntityByQrToken
   -> m (Entity Asset)
 loadAssetEntityByQrToken token = do
   tokenCanonical <- either throwError pure (validateAssetQrToken token)
-  mEntity <- withPool $ selectFirst [AssetQrCode ==. Just tokenCanonical] []
-  maybe (throwError err404 { errBody = "Asset not found" }) pure mEntity
+  matches <- withPool $
+    selectList
+      [AssetQrCode ==. Just tokenCanonical]
+      [Asc AssetId, LimitTo 2]
+  case matches of
+    [] ->
+      throwError err404 { errBody = "Asset not found" }
+    [entity] ->
+      pure entity
+    _ ->
+      throwError err409
+        { errBody =
+            "Asset QR token resolves to multiple assets; resolve the inventory state before QR lookup"
+        }
 
 loadAssetDTOByKey
   :: ( MonadReader Env m
