@@ -354,7 +354,9 @@ describe('SocialInboxPage', () => {
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       );
       expect(countTextOccurrences(container, 'App Review mode auto-refreshes every 5 seconds')).toBe(1);
-      expect(countInstagramSetupLinks(container)).toBe(1);
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
+      expect(container.textContent).not.toContain('Select asset in Instagram setup');
     });
 
     await cleanup();
