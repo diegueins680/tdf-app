@@ -3686,6 +3686,8 @@ export default function CourseRegistrationsAdminPage() {
     ? 'paid'
     : activeRegistration?.crStatus ?? '';
   const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
+  const showActiveRegistrationStatusChip = Boolean(activeRegistrationStatus)
+    && !(isMarkPaidIntent && showMarkPaidAction);
   const showInlineEmptyNotesAction = !isMarkPaidIntent
     && !showReceiptComposer
     && !showNotesComposer
@@ -5381,7 +5383,7 @@ export default function CourseRegistrationsAdminPage() {
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
-                    {activeRegistrationStatus && statusChip(activeRegistrationStatus)}
+                    {showActiveRegistrationStatusChip && statusChip(activeRegistrationStatus)}
                   </Stack>
                   {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
