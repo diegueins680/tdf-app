@@ -11,6 +11,7 @@ import           Data.Aeson                   (ToJSON(..), object, (.=))
 import           Data.Char                    ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
                                                 , generalCategory
                                                 , isControl
+                                                , isDigit
                                                 , isHexDigit
                                                 , isSpace
                                                 )
@@ -77,7 +78,36 @@ canonCommit txt = do
     else Just value
 
 canonBuildTime :: Text -> Maybe Text
-canonBuildTime = canonRuntimeMetadata
+canonBuildTime txt = do
+  value <- canonRuntimeMetadata txt
+  if isCanonicalBuildTime value
+    then Just value
+    else Nothing
+
+isCanonicalBuildTime :: Text -> Bool
+isCanonicalBuildTime value =
+  T.length value == 20
+    && T.index value 4 == '-'
+    && T.index value 7 == '-'
+    && T.index value 10 == 'T'
+    && T.index value 13 == ':'
+    && T.index value 16 == ':'
+    && T.index value 19 == 'Z'
+    && T.all isDigit
+      ( T.take 4 value
+        <> T.take 2 (T.drop 5 value)
+        <> T.take 2 (T.drop 8 value)
+        <> T.take 2 (T.drop 11 value)
+        <> T.take 2 (T.drop 14 value)
+        <> T.take 2 (T.drop 17 value)
+      )
+    && case parseCanonicalBuildTime value of
+         Just _  -> True
+         Nothing -> False
+
+parseCanonicalBuildTime :: Text -> Maybe Time.UTCTime
+parseCanonicalBuildTime =
+  Time.parseTimeM True Time.defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" . T.unpack
 
 canonRuntimeMetadata :: Text -> Maybe Text
 canonRuntimeMetadata txt =

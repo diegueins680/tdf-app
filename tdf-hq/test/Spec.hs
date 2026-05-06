@@ -664,6 +664,17 @@ main = hspec $ do
                     info <- getVersionInfo
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
+        it "skips malformed build-time aliases before publishing version metadata" $
+            withEnvOverrides
+                (clearEnv buildTimeEnvKeys
+                    ++ [ ("BUILD_TIME", Just "deployed today")
+                       , ("SOURCE_BUILD_TIME", Just "2026-02-30T01:02:03Z")
+                       , ("RENDER_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
     describe "MCP parser" $ do
         it "rejects ambiguous request method names before dispatch" $ do
             let requestWithMethod methodName =
