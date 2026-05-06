@@ -918,6 +918,12 @@ const firstRunOnlineRegistrationDescriptorPrefixPattern =
 const firstRunOnlineRegistrationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunLandingPageDescriptorPrefixPattern =
+  /^(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*[-:/|]\s*/i;
+
+const firstRunLandingPageDescriptorSuffixPattern =
+  /\s*[-:/|]\s*(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
+
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
 
 const firstRunReservationDescriptorPrefixPattern =
@@ -984,6 +990,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunLandingPageDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -1029,6 +1036,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunLandingPageDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
