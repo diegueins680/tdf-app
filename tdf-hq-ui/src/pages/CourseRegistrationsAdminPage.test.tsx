@@ -10485,12 +10485,18 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
+
+      expect(emptySearch).not.toBeNull();
       expect(searchInput.value).toBe(longQuery);
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
         'No hay coincidencias para "permisos administrativos pendientes para revisar inscripciones..." en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
+      expect(emptySearch?.getAttribute('title')).toBe(
+        `Beatmaking 101 · Pendiente de pago. No hay coincidencias para "${longQuery}" en las 9 inscripciones cargadas.`,
+      );
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);

@@ -2475,6 +2475,19 @@ export default function CourseRegistrationsAdminPage() {
           : '',
     ].filter(Boolean).join(' ')
     : '';
+  const emptyLocalSearchResultsTitle = showEmptyLocalSearchResults
+    && !shortPhoneSearchHint
+    && localSearchSummary !== localSearchTerm
+    ? [
+      defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',
+      `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+      showEmptyLocalSearchLimitRecoveryAction
+        ? ''
+        : viewHitsCurrentLimit
+          ? cappedLocalSearchEmptyHint
+          : '',
+    ].filter(Boolean).join(' ')
+    : undefined;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -4955,6 +4968,7 @@ export default function CourseRegistrationsAdminPage() {
             <Alert
               severity="info"
               data-testid="course-registration-empty-local-search"
+              title={emptyLocalSearchResultsTitle}
               action={showEmptyLocalSearchLimitRecoveryAction || showEmptyLocalSearchAlertClearAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {showEmptyLocalSearchLimitRecoveryAction && (
