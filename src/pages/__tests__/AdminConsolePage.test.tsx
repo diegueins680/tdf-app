@@ -4902,6 +4902,69 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores generated dummy-copy fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-dummy-copy',
+          title: 'Integraciones',
+          body: ['Lorem ipsum dolor sit amet.'],
+        },
+        {
+          cardId: 'ops-report-sample-copy',
+          title: 'Reporte operativo',
+          body: ['Sample content goes here.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Opcional: ver 1 módulo adicional$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Lorem ipsum/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sample content goes here/i)).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+  });
+
   it('strips repeated card titles from fallback bodies so optional modules do not echo themselves', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
