@@ -797,6 +797,50 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('keeps the inventory search placeholder focused on fields that can narrow the current table', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: null,
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: ' micrófono ',
+        location: '   ',
+        condition: ' excelente ',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+
+        expect(searchInput).not.toBeNull();
+        expect(searchInput?.getAttribute('placeholder')).toBe('Equipo');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('categoría');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('ubicación');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('condición');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('estado');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('tenencia');
+        expect(container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent).toContain(
+          'estado Disponible',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the empty-search recovery attached to the field instead of duplicating clear or refresh actions', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({

@@ -317,6 +317,43 @@ const INVENTORY_RESET_SEARCH_ACTION_LABEL = 'Volver a la tabla completa';
 const INVENTORY_INITIAL_LOADING_GUIDANCE =
   'Estamos consultando equipos antes de mostrar búsqueda, actualización o tabla operativa.';
 
+function inventorySearchFieldCanNarrow(
+  assets: readonly AssetDTO[],
+  getValue: (asset: AssetDTO) => string | null | undefined,
+) {
+  const values = assets.map((asset) => normalizeInventoryComparisonValue(getValue(asset)));
+  const populatedValues = values.filter(Boolean);
+
+  return populatedValues.length > 0
+    && (populatedValues.length < assets.length || new Set(populatedValues).size > 1);
+}
+
+function inventorySearchPlaceholderConnector(term: string) {
+  return /^[ií]|^hi/i.test(term.trim()) ? 'u' : 'o';
+}
+
+function formatInventorySearchPlaceholder(terms: readonly string[]) {
+  if (terms.length <= 1) return terms[0] ?? '';
+  const lastTerm = terms[terms.length - 1] ?? '';
+  const connector = inventorySearchPlaceholderConnector(lastTerm);
+  if (terms.length === 2) return `${terms[0]} ${connector} ${lastTerm}`;
+  return `${terms.slice(0, -1).join(', ')} ${connector} ${lastTerm}`;
+}
+
+function buildInventorySearchPlaceholder(assets: readonly AssetDTO[], roomMap: Map<string, RoomDTO>) {
+  const terms = ['Equipo'];
+
+  if (inventorySearchFieldCanNarrow(assets, (asset) => asset.category)) terms.push('categoría');
+  if (inventorySearchFieldCanNarrow(assets, (asset) => asset.location)) terms.push('ubicación');
+  if (inventorySearchFieldCanNarrow(assets, (asset) => asset.condition)) terms.push('condición');
+  if (inventorySearchFieldCanNarrow(assets, (asset) => getInventoryStatusLabel(asset.status))) terms.push('estado');
+  if (inventorySearchFieldCanNarrow(assets, (asset) => buildCurrentCheckoutSummary(asset, roomMap))) {
+    terms.push('tenencia');
+  }
+
+  return formatInventorySearchPlaceholder(terms);
+}
+
 function getInventoryMovementGuidance({
   canCheckout,
   canCheckin,
@@ -685,6 +722,10 @@ export default function InventoryPage() {
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const showInitialInventoryLoadingState = assetsQuery.isLoading && assets.length === 0;
   const showInventorySearch = !showInitialInventoryLoadingState && !assetsQuery.error && assets.length > 1;
+  const inventorySearchPlaceholder = useMemo(
+    () => buildInventorySearchPlaceholder(assets, roomMap),
+    [assets, roomMap],
+  );
   const normalizedInventorySearch = normalizeInventoryComparisonValue(inventorySearch);
   const hasActiveInventorySearch = normalizedInventorySearch !== '';
   const grouped = useMemo(
@@ -807,7 +848,7 @@ export default function InventoryPage() {
             label="Buscar en inventario"
             value={inventorySearch}
             onChange={(event) => setInventorySearch(event.target.value)}
-            placeholder="Equipo, categoría, ubicación, estado o tenencia"
+            placeholder={inventorySearchPlaceholder}
             inputProps={{ 'aria-label': 'Buscar en inventario' }}
             InputProps={{
               endAdornment: hasActiveInventorySearch ? (
