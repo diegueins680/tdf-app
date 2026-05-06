@@ -963,13 +963,13 @@ const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+sch
 
 const firstRunReservationDescriptorPrefixPattern =
   new RegExp(
-    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation|rsvp)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
     'i',
   );
 
 const firstRunReservationDescriptorSuffixPattern =
   new RegExp(
-    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
+    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation|rsvp)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
     'i',
   );
 

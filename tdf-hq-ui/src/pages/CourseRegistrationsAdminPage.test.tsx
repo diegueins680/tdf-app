@@ -14042,11 +14042,14 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips reservation-form descriptors from first-run cohort copy', async () => {
+  it('strips reservation and RSVP form descriptors from first-run cohort copy', async () => {
     const titles = [
       'Booking form for Beatmaking 101',
       'Beatmaking 101 - reservation page',
+      'RSVP form for Beatmaking 101',
+      'Beatmaking 101 - RSVP page',
       'Formulario de reserva - Beatmaking 101',
+      'Formulario de RSVP - Beatmaking 101',
       'Beatmaking 101 - solicitud de reserva',
     ];
 
@@ -14065,6 +14068,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Booking form');
         expect(emptyState?.textContent).not.toContain('reservation page');
+        expect(emptyState?.textContent).not.toMatch(/rsvp/i);
         expect(emptyState?.textContent).not.toContain('Formulario de reserva');
         expect(emptyState?.textContent).not.toContain('solicitud de reserva');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
