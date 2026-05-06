@@ -3951,6 +3951,10 @@ main = hspec $ do
             assertRejected "{\"items\":[],\"nextSyncToken\":\"sync cursor\"}"
             assertRejected "{\"items\":[],\"nextPageToken\":\"page-cursor\",\"nextSyncToken\":\"sync-cursor\"}"
 
+        it "rejects non-object Google Calendar items instead of silently skipping them" $
+            (eitherDecode "{\"items\":[\"not-an-event\"],\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
+                `shouldSatisfy` isLeft
+
         it "rejects hidden formatting marks in Calendar ids before fallback lookups" $ do
             CalAPI.normalizeCalendarId " primary "
                 `shouldBe` Right "primary"

@@ -263,6 +263,10 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o -> do
     parsedItems <- o .: "items"
+    forM_ (zip [(0 :: Int)..] parsedItems) $ \(idx, item) ->
+      case item of
+        Object _ -> pure ()
+        _ -> fail ("items[" <> show idx <> "] must be an event object")
     nextPage <- o .:? "nextPageToken" >>= traverse (parseGoogleCursorField "nextPageToken")
     nextSync <- o .:? "nextSyncToken" >>= traverse (parseGoogleCursorField "nextSyncToken")
     when (isJust nextPage && isJust nextSync) $
