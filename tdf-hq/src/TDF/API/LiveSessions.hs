@@ -275,23 +275,34 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
 
       validateSetlistSong song =
         let normalizedTitle = T.strip (lssTitle song)
-            normalizedSong =
-              song
-                { lssTitle = normalizedTitle
-                , lssSongKey = lssSongKey song >>= normalizeOptionalText
-                , lssLyrics = lssLyrics song >>= normalizeOptionalText
-                }
         in if T.null normalizedTitle
              then Left "each setlist song must include a non-blank title"
              else if T.length normalizedTitle > 160
                then Left "setlist song title must be 160 characters or fewer"
              else if T.any isUnsafeIntakeTextChar normalizedTitle
                then Left "setlist song title must not contain control characters or hidden formatting characters"
-             else
+             else do
+               normalizedSongKey <-
+                 validateOptionalSetlistSongKey (lssSongKey song >>= normalizeOptionalText)
                case lssBpm song of
                  Just bpm | bpm <= 0 ->
                    Left "setlist song bpm must be a positive integer"
-                 _ -> Right normalizedSong
+                 _ ->
+                   Right song
+                     { lssTitle = normalizedTitle
+                     , lssSongKey = normalizedSongKey
+                     , lssLyrics = lssLyrics song >>= normalizeOptionalText
+                     }
+
+      validateOptionalSetlistSongKey :: Maybe Text -> Either String (Maybe Text)
+      validateOptionalSetlistSongKey Nothing = Right Nothing
+      validateOptionalSetlistSongKey (Just songKey)
+        | T.length songKey > 64 =
+            Left "setlist song songKey must be 64 characters or fewer"
+        | T.any isUnsafeIntakeTextChar songKey =
+            Left "setlist song songKey must not contain control characters or hidden formatting characters"
+        | otherwise =
+            Right (Just songKey)
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =

@@ -9393,6 +9393,30 @@ main = hspec $ do
                         songs ->
                             expectationFailure ("Expected one song from canonical payload, got: " <> show songs)
 
+        it "rejects malformed setlist song keys before intake persistence" $ do
+            let assertInvalid rawSongKey expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\"Intro Jam\",\"songKey\":\""
+                                  <> rawSongKey
+                                  <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected invalid setlist songKey to be rejected, got: " <> show payload)
+
+            assertInvalid
+                (Data.Text.replicate 65 "a")
+                "setlist song songKey must be 64 characters or fewer"
+            assertInvalid
+                ("C" <> Data.Text.singleton '\x202E' <> "m")
+                "setlist song songKey must not contain control characters or hidden formatting characters"
+
         it "rejects conflicting canonical and legacy musician keys instead of accepting ambiguous payloads" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
