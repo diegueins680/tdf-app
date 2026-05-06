@@ -3,7 +3,7 @@
 module TDF.ServerSpec (spec) where
 
 import Control.Monad (forM_)
-import Control.Exception (bracket, try)
+import Control.Exception (bracket, toException, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
@@ -310,6 +310,7 @@ import TDF.Server
     , validateDriveUploadFileSize
     , resolveDrivePublicUrl
     , resolveWorkflowId
+    , openAIChatRequestErrorMessage
     , shouldRetryWithFallbackModel
     , listMarketplace
     , resolveMarketplacePhotoUrl
@@ -4306,6 +4307,17 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Nothing
 
     describe "shouldRetryWithFallbackModel" $ do
+        it "sanitizes OpenAI chat transport exceptions before fallback classification" $ do
+            let msg =
+                    openAIChatRequestErrorMessage
+                        (toException (userError ("ConnectionFailure: model_not_found\n" <> replicate 700 'x')))
+            msg `shouldSatisfy` T.isInfixOf "OpenAI chat request failed"
+            msg `shouldSatisfy` T.isInfixOf "ConnectionFailure: model_not_found"
+            msg `shouldSatisfy` T.isInfixOf "[truncated]"
+            msg `shouldSatisfy` (not . T.isInfixOf "\n")
+            T.length msg `shouldSatisfy` (<= 520)
+            shouldRetryWithFallbackModel 0 msg `shouldBe` False
+
         it "falls back only when the upstream error is explicitly model-related" $ do
             shouldRetryWithFallbackModel 403 "Project does not have access to model gpt-x"
                 `shouldBe` True

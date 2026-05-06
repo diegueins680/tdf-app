@@ -9573,24 +9573,33 @@ requestOpenAIChat manager reqBase key modelName messages = do
               ]
           , requestBody = RequestBodyLBS body
           }
-  resp <- httpLbs req manager
-  let status = statusCode (responseStatus resp)
-      raw = responseBody resp
-  if status >= 200 && status < 300
-    then case (eitherDecode raw :: Either String Value) of
-      Left err ->
-        pure (Left (status, T.pack err))
-      Right payload ->
-        case extractModelReplyText payload of
-          Just reply -> pure (Right reply)
-          Nothing ->
-            pure (Left (status, fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
-    else do
-      let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
-          msg = case (eitherDecode raw :: Either String Value) of
-            Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
-            Left _ -> baseMsg
-      pure (Left (status, msg))
+  respResult <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
+  case respResult of
+    Left err ->
+      pure (Left (0, openAIChatRequestErrorMessage err))
+    Right resp -> do
+      let status = statusCode (responseStatus resp)
+          raw = responseBody resp
+      if status >= 200 && status < 300
+        then case (eitherDecode raw :: Either String Value) of
+          Left err ->
+            pure (Left (status, T.pack err))
+          Right payload ->
+            case extractModelReplyText payload of
+              Just reply -> pure (Right reply)
+              Nothing ->
+                pure (Left (status, fromMaybe "Sin respuesta de modelo" (extractApiErrorMessage payload)))
+        else do
+          let baseMsg = "Error al generar respuesta (HTTP " <> T.pack (show status) <> ")"
+              msg = case (eitherDecode raw :: Either String Value) of
+                Right payload -> fromMaybe baseMsg (extractApiErrorMessage payload)
+                Left _ -> baseMsg
+          pure (Left (status, msg))
+
+openAIChatRequestErrorMessage :: SomeException -> Text
+openAIChatRequestErrorMessage err =
+  fromMaybe "OpenAI chat request failed" $
+    sanitizeApiErrorMessage ("OpenAI chat request failed: " <> T.pack (displayException err))
 
 openAIChatModelCandidates :: Text -> [Text]
 openAIChatModelCandidates primaryModel =
