@@ -6116,6 +6116,7 @@ createParty :: AuthedUser -> PartyCreate -> AppM PartyDTO
 createParty user req = do
   requireModule user ModuleCRM
   displayNameVal <- either throwError pure (validatePartyDisplayName (cDisplayName req))
+  primaryEmailVal <- either throwError pure (validatePartyPrimaryEmail (cPrimaryEmail req))
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   let p = Party
@@ -6123,7 +6124,7 @@ createParty user req = do
           , partyDisplayName = displayNameVal
           , partyIsOrg = cIsOrg req
           , partyTaxId = cTaxId req
-          , partyPrimaryEmail = cPrimaryEmail req
+          , partyPrimaryEmail = primaryEmailVal
           , partyPrimaryPhone = cPrimaryPhone req
           , partyWhatsapp = cWhatsapp req
           , partyInstagram = cInstagram req
@@ -6157,6 +6158,7 @@ updateParty user pidI req = do
   requireModule user ModuleCRM
   pidValid <- either throwError pure (validatePositiveIdField "partyId" pidI)
   displayNameUpdate <- either throwError pure (validatePartyDisplayNameUpdate (uDisplayName req))
+  primaryEmailUpdate <- either throwError pure (validatePartyPrimaryEmailUpdate (uPrimaryEmail req))
   Env pool _ <- ask
   let pid = toSqlKey pidValid :: Key Party
   liftIO $ flip runSqlPool pool $ do
@@ -6169,7 +6171,7 @@ updateParty user pidI req = do
               , partyDisplayName      = fromMaybe (M.partyDisplayName p) displayNameUpdate
               , partyIsOrg            = fromMaybe (partyIsOrg p)         (uIsOrg req)
               , partyTaxId            = maybe (partyTaxId p) Just       (uTaxId req)
-              , partyPrimaryEmail     = maybe (partyPrimaryEmail p) Just (uPrimaryEmail req)
+              , partyPrimaryEmail     = fromMaybe (partyPrimaryEmail p) primaryEmailUpdate
               , partyPrimaryPhone     = maybe (partyPrimaryPhone p) Just (uPrimaryPhone req)
               , partyWhatsapp         = maybe (partyWhatsapp p) Just    (uWhatsapp req)
               , partyInstagram        = maybe (partyInstagram p) Just   (uInstagram req)
@@ -6195,6 +6197,17 @@ validatePartyDisplayNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validatePartyDisplayNameUpdate Nothing = Right Nothing
 validatePartyDisplayNameUpdate (Just rawDisplayName) =
   Just <$> validatePartyDisplayName rawDisplayName
+
+validatePartyPrimaryEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validatePartyPrimaryEmail rawEmail =
+  case validateCourseRegistrationEmail rawEmail of
+    Right emailVal -> Right emailVal
+    Left _ -> Left err400 { errBody = "primaryEmail inválido" }
+
+validatePartyPrimaryEmailUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
+validatePartyPrimaryEmailUpdate Nothing = Right Nothing
+validatePartyPrimaryEmailUpdate (Just rawEmail) =
+  Just <$> validatePartyPrimaryEmail (Just rawEmail)
 
 isUnsafePartyDisplayNameChar :: Char -> Bool
 isUnsafePartyDisplayNameChar ch =

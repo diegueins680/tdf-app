@@ -131,6 +131,8 @@ import TDF.Server
     , validateBookingListFilters
     , validatePartyDisplayName
     , validatePartyDisplayNameUpdate
+    , validatePartyPrimaryEmail
+    , validatePartyPrimaryEmailUpdate
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateStrictAdminAccess
@@ -684,6 +686,29 @@ spec = describe "TDF.Server helpers" $ do
             validatePartyDisplayNameUpdate Nothing `shouldBe` Right Nothing
             validatePartyDisplayNameUpdate (Just "  Ada Updated  ")
                 `shouldBe` Right (Just "Ada Updated")
+
+        it "normalizes CRM party emails and treats blank updates as explicit clears" $ do
+            validatePartyPrimaryEmail Nothing `shouldBe` Right Nothing
+            validatePartyPrimaryEmail (Just "  Ada@Example.COM  ")
+                `shouldBe` Right (Just "ada@example.com")
+            validatePartyPrimaryEmail (Just "   ") `shouldBe` Right Nothing
+            validatePartyPrimaryEmailUpdate Nothing `shouldBe` Right Nothing
+            validatePartyPrimaryEmailUpdate (Just "   ")
+                `shouldBe` Right (Just Nothing)
+
+        it "rejects malformed CRM party emails before party storage" $ do
+            let assertInvalid result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "primaryEmail inválido"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid party primaryEmail to be rejected, got: " <> show value)
+            assertInvalid (validatePartyPrimaryEmail (Just "not-an-email"))
+            assertInvalid (validatePartyPrimaryEmail (Just "ada@example..com"))
+            assertInvalid (validatePartyPrimaryEmailUpdate (Just "ada @example.com"))
 
         it "rejects blank or unsafe CRM display names before party creation reaches storage" $ do
             let assertInvalid rawDisplayName expectedMessage = do
