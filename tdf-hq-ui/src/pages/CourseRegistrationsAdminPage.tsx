@@ -940,6 +940,12 @@ const firstRunInquiryDescriptorPrefixPattern =
 const firstRunInquiryDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
+const firstRunSurveyDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:survey|questionnaire)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSurveyDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:survey|questionnaire)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
+
 const firstRunInfoSessionDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:info(?:rmation)?\s+session|orientation|open\s+house)\s+(?:form|page|signup|sign[-\s]?up|registration)|(?:formulario|p[aá]gina|registro|inscripci[oó]n(?:es)?)\s+de\s+(?:sesi[oó]n\s+informativa|orientaci[oó]n|clase\s+abierta)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1057,6 +1063,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
+    .replace(firstRunSurveyDescriptorPrefixPattern, '')
     .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
     .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
@@ -1108,6 +1115,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
+    .replace(firstRunSurveyDescriptorSuffixPattern, '')
     .replace(firstRunInfoSessionDescriptorSuffixPattern, '')
     .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
