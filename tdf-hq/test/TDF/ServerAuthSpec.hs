@@ -24,6 +24,7 @@ import TDF.ServerAuth
   , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validatePasswordResetToken
+  , validateSignupArtistClaimEmail
   , validateSignupDisplayName
   )
 
@@ -33,6 +34,7 @@ spec = do
   loginRequestSpec
   tokenLabelUsernameSpec
   signupDisplayNameSpec
+  signupArtistClaimEmailSpec
   passwordResetTokenSpec
   googleTokenInfoSpec
   loginEmailFallbackSpec
@@ -140,6 +142,21 @@ signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
       validateSignupDisplayName ("Ada" <> hiddenFormat) "Lovelace"
     assertRejected "lastName" $
       validateSignupDisplayName "Ada" ("Love" <> hiddenFormat <> "lace")
+
+signupArtistClaimEmailSpec :: Spec
+signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
+  it "allows unclaimed artist profiles with no stored email or the same normalized email" $ do
+    validateSignupArtistClaimEmail "ada@example.com" Nothing `shouldBe` Right ()
+    validateSignupArtistClaimEmail " ada@example.com " (Just "ADA@Example.com")
+      `shouldBe` Right ()
+    validateSignupArtistClaimEmail "ada@example.com" (Just "   ")
+      `shouldBe` Right ()
+
+  it "rejects mismatched or malformed stored emails before binding a signup to an artist profile" $ do
+    validateSignupArtistClaimEmail "ada@example.com" (Just "other@example.com")
+      `shouldBe` Left "Artist profile email does not match signup email"
+    validateSignupArtistClaimEmail "ada@example.com" (Just "not-an-email")
+      `shouldBe` Left "Artist profile email does not match signup email"
 
 passwordResetTokenSpec :: Spec
 passwordResetTokenSpec = describe "validatePasswordResetToken" $ do

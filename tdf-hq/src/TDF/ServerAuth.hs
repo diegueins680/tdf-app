@@ -34,6 +34,7 @@ module TDF.ServerAuth
   , validateSignupDisplayName
   , validateRequestedSignupRoles
   , validateSignupArtistClaimIntent
+  , validateSignupArtistClaimEmail
   , validateOptionalSignupClaimArtistId
   , validateOptionalSignupPhone
   , validateSignupInternshipFields
@@ -212,6 +213,20 @@ validateSignupArtistClaimIntent rolesVal (Just _)
             BL.fromStrict
               (TE.encodeUtf8 "claimArtistId requires requesting the Artist or Artista role")
         }
+
+validateSignupArtistClaimEmail :: Text -> Maybe Text -> Either Text ()
+validateSignupArtistClaimEmail signupEmail storedArtistEmail =
+  case normalizeAuthEmailAddress signupEmail of
+    Nothing ->
+      Left "Signup email must be a valid email address"
+    Just signupEmailVal ->
+      case cleanOptional storedArtistEmail of
+        Nothing ->
+          Right ()
+        Just rawStoredEmail ->
+          case normalizeAuthEmailAddress rawStoredEmail of
+            Just storedEmailVal | storedEmailVal == signupEmailVal -> Right ()
+            _ -> Left "Artist profile email does not match signup email"
 
 validateSignupFanArtistIds :: Maybe [Int64] -> Either ServerError [Int64]
 validateSignupFanArtistIds Nothing = Right []
@@ -1170,18 +1185,27 @@ resolveParty _ (Just artistId) emailVal phoneVal _ = do
           case mArtistParty of
             Nothing -> pure (Left SignupArtistUnavailable)
             Just (Entity _ party) -> do
-              let normalizedPhone = cleanOptional phoneVal
-                  normalizedEmail = Just emailVal
-                  emailMissing = maybe True T.null (M.partyPrimaryEmail party)
-                  updates =
-                    [PartyPrimaryEmail =. normalizedEmail | emailMissing]
-                    ++ [PartyPrimaryPhone =. normalizedPhone | isNothing (M.partyPrimaryPhone party), isJust normalizedPhone]
-              unless (null updates) $
-                update artistKey updates
-              activeRoles <- selectList [PartyRolePartyId ==. artistKey, PartyRoleActive ==. True] []
-              let existingRoles = map (partyRoleRole . entityVal) activeRoles
-                  label = M.partyDisplayName party
-              pure (Right (artistKey, label, existingRoles))
+              case validateSignupArtistClaimEmail emailVal (M.partyPrimaryEmail party) of
+                Left _ -> pure (Left SignupArtistUnavailable)
+                Right () -> do
+                  let normalizedPhone = cleanOptional phoneVal
+                      normalizedEmail = Just emailVal
+                      emailMissing = isNothing (cleanOptional (M.partyPrimaryEmail party))
+                      updates =
+                        [PartyPrimaryEmail =. normalizedEmail | emailMissing]
+                        ++ [ PartyPrimaryPhone =. normalizedPhone
+                           | isNothing (M.partyPrimaryPhone party)
+                           , isJust normalizedPhone
+                           ]
+                  unless (null updates) $
+                    update artistKey updates
+                  activeRoles <-
+                    selectList
+                      [PartyRolePartyId ==. artistKey, PartyRoleActive ==. True]
+                      []
+                  let existingRoles = map (partyRoleRole . entityVal) activeRoles
+                      label = M.partyDisplayName party
+                  pure (Right (artistKey, label, existingRoles))
 
 runChangePassword
   :: Text
