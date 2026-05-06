@@ -9671,6 +9671,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps social source brand casing readable in busy-list rows and search summaries', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crSource: 'tiktok_ad' }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Brenda Lee',
+        crEmail: 'brenda@example.com',
+        crSource: 'whatsapp_campaign',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 103 + index,
+        crPartyId: 11 + index,
+        crFullName: `Estudiante ${index + 3}`,
+        crEmail: `student${index + 3}@example.com`,
+        crSource: index % 2 === 0 ? 'landing' : null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre, contacto o fuente',
+      );
+      expect(container.textContent).toContain('Fuente: TikTok ad');
+      expect(container.textContent).toContain('Fuente: WhatsApp campaign');
+      expect(container.textContent).not.toContain('Fuente: Tiktok ad');
+      expect(container.textContent).not.toContain('Fuente: Whatsapp campaign');
+      expect(container.textContent).not.toContain('Fuente: tiktok_ad');
+      expect(container.textContent).not.toContain('Fuente: whatsapp_campaign');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'whatsapp campaign');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Brenda Lee');
+      expect(container.textContent).not.toContain('Ada Lovelace');
+      expect(container.textContent).toContain('Fuente visible: WhatsApp campaign.');
+      expect(container.textContent).not.toContain('whatsapp_campaign');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps a shared humanized source out of the busy-list search placeholder', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),

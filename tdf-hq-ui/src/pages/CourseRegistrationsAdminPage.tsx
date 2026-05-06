@@ -1143,17 +1143,24 @@ const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
   return summaryLabel || cohortOptionLabel(cohort);
 };
 
-const sourceLabelAcronyms = new Map([
+const sourceLabelSpecialWords = new Map([
   ['api', 'API'],
   ['crm', 'CRM'],
+  ['facebook', 'Facebook'],
+  ['instagram', 'Instagram'],
+  ['linkedin', 'LinkedIn'],
+  ['meta', 'Meta'],
   ['qr', 'QR'],
   ['sms', 'SMS'],
+  ['tiktok', 'TikTok'],
   ['utm', 'UTM'],
+  ['whatsapp', 'WhatsApp'],
+  ['youtube', 'YouTube'],
 ]);
 
 const formatDelimitedSourceWord = (word: string, index: number) => {
   const lowerWord = word.toLocaleLowerCase('es');
-  const acronym = sourceLabelAcronyms.get(lowerWord);
+  const acronym = sourceLabelSpecialWords.get(lowerWord);
   if (acronym) return acronym;
   if (index > 0) return lowerWord;
   return `${lowerWord.charAt(0).toLocaleUpperCase('es')}${lowerWord.slice(1)}`;
