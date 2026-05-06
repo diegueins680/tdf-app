@@ -506,6 +506,25 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_EXACT_KEYS = new Set([
   'no data',
   'sin datos',
 ]);
+const ADMIN_CONSOLE_PLACEHOLDER_TITLE_EXACT_KEYS = new Set([
+  'coming soon',
+  'empty state',
+  'en desarrollo',
+  'n/a',
+  'no configurado',
+  'no data',
+  'no disponible',
+  'not available',
+  'not configured',
+  'not implemented',
+  'not implemented yet',
+  'placeholder',
+  'proximamente',
+  'setup required',
+  'sin datos',
+  'under construction',
+  'work in progress',
+]);
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'revisa el estado del sistema ajusta permisos y valida cambios recientes desde un solo lugar',
   'review system status adjust permissions and validate recent changes from one place',
@@ -667,6 +686,10 @@ const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
     const title = stripAdminConsolePresentationMarkers(card.title);
+    if (title === '' || isPlaceholderAdminConsoleTitle(title)) {
+      return [];
+    }
+
     const titleParagraphKey = normalizeAdminConsoleParagraphKey(title);
     const seenParagraphs = new Set<string>();
     const body = card.body
@@ -689,12 +712,19 @@ function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
         return true;
       });
 
-    if (title === '' || body.length === 0) {
+    if (body.length === 0) {
       return [];
     }
 
     return [{ ...card, title, body }];
   });
+}
+
+function isPlaceholderAdminConsoleTitle(title: string) {
+  const normalizedTitle = normalizeAdminConsoleCardKey(title);
+  const exactPlaceholderKey = normalizedTitle.replace(/[.!?:;]+$/g, '').trim();
+
+  return ADMIN_CONSOLE_PLACEHOLDER_TITLE_EXACT_KEYS.has(exactPlaceholderKey);
 }
 
 function isPlaceholderAdminConsoleParagraph(paragraph: string) {
