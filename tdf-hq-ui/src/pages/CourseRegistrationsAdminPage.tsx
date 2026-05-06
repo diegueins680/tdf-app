@@ -817,6 +817,12 @@ const firstRunRegistrationLinkDescriptorPrefixPattern =
 const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
+const firstRunEnrollmentFlowDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|intake|sign[-\s]?up)\s+(?:flows?|funnels?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunEnrollmentFlowDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|intake|sign[-\s]?up)\s+(?:flows?|funnels?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
+
 const firstRunPaymentDescriptorPrefixPattern =
   /^(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -990,6 +996,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
+    .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
@@ -1037,6 +1044,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
+    .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
