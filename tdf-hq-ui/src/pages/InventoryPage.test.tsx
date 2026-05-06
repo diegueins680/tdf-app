@@ -841,6 +841,68 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('matches unaccented category searches against accented inventory labels instead of showing an empty state', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: ' micrófono ',
+        location: 'Sala B',
+        condition: 'Bueno',
+        status: 'Retired',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Interfaz Uno',
+        category: 'Interfaz',
+        location: 'Sala C',
+        condition: 'Regular',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Retirado Uno');
+        expect(container.textContent).toContain('Interfaz Uno');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'microfono');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Mostrando 2 de 3 equipos.');
+        expect(container.textContent).toContain(
+          'Mostrando una sola categoría: Micrófono. La categoría volverá cuando esta vista mezcle categorías distintas.',
+        );
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Retirado Uno');
+        expect(container.textContent).not.toContain('Interfaz Uno');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the empty-search recovery attached to the field instead of duplicating clear or refresh actions', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({

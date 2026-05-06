@@ -95,8 +95,16 @@ function normalizeInventoryField(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
-const normalizeInventoryComparisonValue = (value?: string | null) =>
-  normalizeInventoryField(value)?.toLocaleLowerCase('es') ?? '';
+const normalizeInventoryComparisonValue = (value?: string | null) => {
+  const normalizedValue = normalizeInventoryField(value);
+  if (!normalizedValue) return '';
+
+  return normalizedValue
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('es');
+};
 
 function getSharedInventoryLocationSummary(assets: readonly AssetDTO[]) {
   if (assets.length < 2) return '';
