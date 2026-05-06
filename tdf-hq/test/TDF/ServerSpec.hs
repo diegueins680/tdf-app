@@ -9230,6 +9230,18 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "/stubs/crm/parties/list-columns/"
             assertInvalid "/stubs/crm/parties/list-columns?draft=true"
 
+            case validateFutureStubPublishedPath
+                "crm"
+                "parties/export"
+                "/stubs/crm/parties/export" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub response"
+                Right value ->
+                    expectationFailure
+                        ("Expected unregistered future stub path to fail, got: " <> show value)
+
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
             let mkResponseWithId

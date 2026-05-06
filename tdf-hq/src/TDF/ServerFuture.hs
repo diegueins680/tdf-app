@@ -267,18 +267,21 @@ validateFutureStubPublishedPath
   -> Text
   -> Text
   -> Either ServerError Text
-validateFutureStubPublishedPath area endpoint rawPath
-  | rawPath /= expectedPath = invalidFutureStubResponse
-  | pathSegments == area : endpointSegments
-      && all validFutureStubSlug pathSegments = Right rawPath
-  | otherwise = invalidFutureStubResponse
-  where
-    expectedPath = futureStubPath area endpoint
-    endpointSegments = T.splitOn "/" endpoint
-    pathSegments =
-      case T.stripPrefix "/stubs/" rawPath of
-        Nothing -> []
-        Just suffix -> T.splitOn "/" suffix
+validateFutureStubPublishedPath rawArea rawEndpoint rawPath =
+  case validateFutureStubMetadata rawArea rawEndpoint of
+    Left _ -> invalidFutureStubResponse
+    Right (area, endpoint)
+      | rawPath /= expectedPath -> invalidFutureStubResponse
+      | pathSegments == area : endpointSegments
+          && all validFutureStubSlug pathSegments -> Right rawPath
+      | otherwise -> invalidFutureStubResponse
+      where
+        expectedPath = futureStubPath area endpoint
+        endpointSegments = T.splitOn "/" endpoint
+        pathSegments =
+          case T.stripPrefix "/stubs/" rawPath of
+            Nothing -> []
+            Just suffix -> T.splitOn "/" suffix
 
 futureStubCatalogResponse
   :: MonadError ServerError m
