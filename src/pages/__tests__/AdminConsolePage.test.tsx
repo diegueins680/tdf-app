@@ -4245,6 +4245,16 @@ describe('AdminConsolePage', () => {
           title: 'Service tokens',
           body: ['No elements available yet.'],
         },
+        {
+          cardId: 'admin-information-empty',
+          title: 'Reporte operativo',
+          body: ['No information to display.'],
+        },
+        {
+          cardId: 'admin-informacion-empty',
+          title: 'Bitácora técnica',
+          body: ['No hay información para mostrar.'],
+        },
       ],
     });
 
@@ -4261,11 +4271,19 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Integraciones|Service tokens/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /Integraciones|Service tokens|Reporte operativo|Bitácora técnica/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
     expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora técnica')).not.toBeInTheDocument();
     expect(screen.queryByText(/Sin información disponible/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No information to display/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay información para mostrar/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/No elements available/i)).not.toBeInTheDocument();
   });
 
