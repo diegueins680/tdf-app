@@ -540,8 +540,19 @@ function invalidateAdminPanelQueries(queryClient: QueryClient) {
   });
 }
 
-function normalizeAdminConsoleCardKey(value: string) {
+function stripAdminConsolePresentationMarkers(value: string) {
   return value
+    .trim()
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/^>\s+/, '')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .trim();
+}
+
+function normalizeAdminConsoleCardKey(value: string) {
+  return stripAdminConsolePresentationMarkers(value)
     .replace(/\s+/g, ' ')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -589,10 +600,11 @@ function escapeRegExp(value: string) {
 }
 
 function stripAdminConsoleListMarker(paragraph: string) {
-  return paragraph
-    .trim()
+  const withoutListMarker = stripAdminConsolePresentationMarkers(paragraph)
     .replace(/^(?:[-*•]\s+|\d+[.)]\s+)/, '')
     .trim();
+
+  return stripAdminConsolePresentationMarkers(withoutListMarker);
 }
 
 function stripAdminConsoleTitlePrefix(paragraph: string, title: string) {
@@ -621,7 +633,7 @@ const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
 
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
-    const title = card.title.trim();
+    const title = stripAdminConsolePresentationMarkers(card.title);
     const titleParagraphKey = normalizeAdminConsoleParagraphKey(title);
     const seenParagraphs = new Set<string>();
     const body = card.body
