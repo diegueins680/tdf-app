@@ -3,27 +3,36 @@
 module TDF.Social.FollowHandlerSpec (spec) where
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (runStdoutLoggingT)
+import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
+import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
 import qualified Data.Text as T
+import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity (..), insert)
+import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (ServerError (errBody, errHTTPCode))
+import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
 import TDF.DTO.SocialEventsDTO
     ( ArtistFollowerDTO (..)
+    , EventDTO (..)
     , EventMetadataUpdateDTO (..)
+    , EventUpdateDTO (..)
     , NullableFieldUpdate (..)
     )
-import TDF.Models (Party (..))
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.DB (Env (..))
+import TDF.Models (Party (..), RoleEnum (Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( followArtistDb
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
+    , socialEventsServer
     , validateEventImageUploadSize
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
@@ -147,6 +156,46 @@ spec = describe "social event handler helpers" $ do
         resolveExistingPartyIdText pool "followerPartyId" (" 00" <> existingPartyText <> " ")
             `shouldReturn` Right existingPartyText
 
+    it "requires the event organizer before updating event details" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 7
+        runSqlPool
+            ( insertKey
+                eventKey
+                (seedSocialEvent "1" "Original event" now)
+            )
+            pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by social event update auth tests"
+                    }
+        result <-
+            runHandler $
+                runReaderT
+                    ( socialEventUpdateHandlerFor
+                        (socialEventUser 2)
+                        "7"
+                        (socialEventUpdatePayload "Hijacked event")
+                    )
+                    env
+
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err)
+                    `shouldContain` "Only the event organizer can manage this event"
+            Right updated ->
+                expectationFailure
+                    ("Expected non-organizer event update to fail, got: " <> show updated)
+
+        stored <- runSqlPool (get eventKey) pool
+        fmap socialEventTitle stored `shouldBe` Just "Original event"
+
     it "creates a follow and is idempotent" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -172,6 +221,78 @@ spec = describe "social event handler helpers" $ do
         liftIO $ do
             (afFollowId first) `shouldSatisfy` (/= Nothing)
             (afFollowId second) `shouldSatisfy` (/= Nothing)
+
+socialEventUpdateHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventUpdateDTO
+    -> ReaderT Env Handler EventDTO
+socialEventUpdateHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _venues :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _tickets :<|> _budget :<|> _finance ->
+            case eventsServer of
+                _listEvents :<|> _createEvent :<|> _getEvent :<|> updateEventHandler :<|> _uploadEventImage :<|> _deleteEvent ->
+                    updateEventHandler
+
+socialEventUser :: Int64 -> AuthedUser
+socialEventUser partyId =
+    AuthedUser
+        { auPartyId = toSqlKey partyId
+        , auRoles = [Fan]
+        , auModules = modulesForRoles [Fan]
+        }
+
+socialEventStartFixture :: UTCTime
+socialEventStartFixture =
+    UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 0)
+
+socialEventEndFixture :: UTCTime
+socialEventEndFixture =
+    UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 3600)
+
+seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
+seedSocialEvent owner title now =
+    SocialEvent
+        { socialEventOrganizerPartyId = Just owner
+        , socialEventTitle = title
+        , socialEventDescription = Nothing
+        , socialEventVenueId = Nothing
+        , socialEventStartTime = socialEventStartFixture
+        , socialEventEndTime = socialEventEndFixture
+        , socialEventPriceCents = Nothing
+        , socialEventCapacity = Nothing
+        , socialEventMetadata = Nothing
+        , socialEventCreatedAt = now
+        , socialEventUpdatedAt = now
+        }
+
+socialEventUpdatePayload :: T.Text -> EventUpdateDTO
+socialEventUpdatePayload title =
+    EventUpdateDTO
+        { eudEvent =
+            EventDTO
+                { eventId = Just "7"
+                , eventOrganizerPartyId = Nothing
+                , eventTitle = title
+                , eventDescription = Nothing
+                , eventStart = socialEventStartFixture
+                , eventEnd = socialEventEndFixture
+                , eventVenueId = Nothing
+                , eventPriceCents = Nothing
+                , eventCapacity = Nothing
+                , eventTicketUrl = Nothing
+                , eventImageUrl = Nothing
+                , eventIsPublic = Nothing
+                , eventType = Nothing
+                , eventStatus = Nothing
+                , eventCurrency = Nothing
+                , eventBudgetCents = Nothing
+                , eventCreatedAt = Nothing
+                , eventUpdatedAt = Nothing
+                , eventArtists = []
+                }
+        , eudMetadataUpdate = emptyEventMetadataUpdate
+        }
 
 emptyEventMetadataUpdate :: EventMetadataUpdateDTO
 emptyEventMetadataUpdate =
@@ -215,6 +336,32 @@ initializeSocialSchema = do
         \\"social_links\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"social_event\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"organizer_party_id\" VARCHAR NULL,\
+        \\"title\" VARCHAR NOT NULL,\
+        \\"description\" VARCHAR NULL,\
+        \\"venue_id\" INTEGER NULL,\
+        \\"start_time\" TIMESTAMP NOT NULL,\
+        \\"end_time\" TIMESTAMP NOT NULL,\
+        \\"price_cents\" INTEGER NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"metadata\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_artist\" (\
+        \\"event_id\" INTEGER NOT NULL,\
+        \\"artist_id\" INTEGER NOT NULL,\
+        \\"role\" VARCHAR NULL,\
+        \PRIMARY KEY (\"event_id\", \"artist_id\"),\
+        \FOREIGN KEY(\"event_id\") REFERENCES \"social_event\"(\"id\") ON DELETE CASCADE,\
+        \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
         \)"
         []
     rawExecute

@@ -639,6 +639,7 @@ socialEventsServer user = eventsServer
       eventKey <- parseKeyOr400 "event" rawId
       mExisting <- liftIO $ runSqlPool (get eventKey) envPool
       existing <- maybe (throwError err404 { errBody = "Event not found" }) pure mExisting
+      managedEvent <- claimOrRequireEventManager currentPartyId envPool eventKey existing
       let dto = eudEvent
       titleVal <- either throwError pure (validateEventTitleInput (eventTitle dto))
       when (eventStart dto >= eventEnd dto) $ throwError err400 { errBody = "start time must be before end time" }
@@ -649,7 +650,7 @@ socialEventsServer user = eventsServer
           (eventBudgetCents dto)
       validatedMetadataUpdate <- either throwError pure (validateEventMetadataUpdate eudMetadataUpdate)
       artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
-      let existingMetadata = decodeEventMetadata (socialEventMetadata existing)
+      let existingMetadata = decodeEventMetadata (socialEventMetadata managedEvent)
           mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
@@ -674,7 +675,7 @@ socialEventsServer user = eventsServer
       pure (dto
         { eventId = Just rawId
         , eventTitle = titleVal
-        , eventOrganizerPartyId = socialEventOrganizerPartyId existing
+        , eventOrganizerPartyId = socialEventOrganizerPartyId managedEvent
         , eventTicketUrl = emTicketUrl mergedMetadata
         , eventImageUrl = emImageUrl mergedMetadata
         , eventIsPublic = emIsPublic mergedMetadata
@@ -682,7 +683,7 @@ socialEventsServer user = eventsServer
         , eventStatus = emStatus mergedMetadata
         , eventCurrency = emCurrency mergedMetadata
         , eventBudgetCents = emBudgetCents mergedMetadata
-        , eventCreatedAt = Just (socialEventCreatedAt existing)
+        , eventCreatedAt = Just (socialEventCreatedAt managedEvent)
         , eventUpdatedAt = Just now
         })
 
