@@ -109,6 +109,8 @@ validateRadioStreamUrl rawUrl
       Left err400 { errBody = "streamUrl must include a host" }
   | Left authorityErr <- validateRadioAuthority authority =
       Left authorityErr
+  | T.any (not . isAscii) streamUrl =
+      Left err400 { errBody = "streamUrl must contain only ASCII URL characters" }
   | otherwise =
       Right streamUrl
   where
@@ -245,6 +247,8 @@ validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes ra
       Left err400 { errBody = fieldBody " must include a host" }
   | Left authorityErr <- validateRadioAuthority authority =
       Left (radioFieldError label authorityErr)
+  | T.any (not . isAscii) endpointBase =
+      Left err400 { errBody = fieldBody " must contain only ASCII URL characters" }
   | T.any (`elem` ("?#" :: String)) normalizedEndpointBase =
       Left err400 { errBody = fieldBody " must not include query or fragment" }
   | otherwise =

@@ -6742,6 +6742,13 @@ main = hspec $ do
                     BL.unpack (errBody err)
                         `shouldContain` "streamUrl must not contain hidden formatting characters"
                 Right _ -> expectationFailure "Expected hidden-format streamUrl to be rejected"
+            case validateRadioStreamUrl
+                ("https://radio.example.com/ma" <> Data.Text.singleton '\x00F1' <> "ana") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl must contain only ASCII URL characters"
+                Right _ -> expectationFailure "Expected non-ASCII streamUrl to be rejected"
             case validateRadioStreamUrl "https://radio.example.com/live#main" of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -6964,6 +6971,9 @@ main = hspec $ do
                                 ("Expected invalid public radio base to be rejected, got " <> show value)
             assertInvalid "https://" "RADIO_PUBLIC_BASE must include a host"
             assertInvalid
+                ("https://radio.example.com/ma" <> Data.Text.singleton '\x00F1' <> "ana")
+                "RADIO_PUBLIC_BASE must contain only ASCII URL characters"
+            assertInvalid
                 "http://127.0.0.1/live"
                 "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
 
@@ -7061,6 +7071,11 @@ main = hspec $ do
                     ("rtmp://stream.example.com/live" <> Data.Text.singleton '\x200B')
                 )
                 "RADIO_INGEST_BASE must not contain hidden formatting characters"
+            assertInvalid
+                ( validateRadioTransmissionIngestBase
+                    ("rtmp://stream.example.com/l" <> Data.Text.singleton '\x00ED' <> "ve")
+                )
+                "RADIO_INGEST_BASE must contain only ASCII URL characters"
             assertInvalid
                 (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
                 "RADIO_WHIP_BASE must be https"
