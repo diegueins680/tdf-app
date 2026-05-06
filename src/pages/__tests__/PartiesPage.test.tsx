@@ -361,6 +361,44 @@ describe('PartiesPage', () => {
     expect(screen.queryByText('Ada Lovelace')).not.toBeInTheDocument();
   });
 
+  it('combines compact CRM table hints into one guidance line', async () => {
+    const user = userEvent.setup();
+    mockPartiesList.mockResolvedValue([
+      buildParty({
+        primaryEmail: '   ',
+        instagram: null,
+      }),
+      buildParty({
+        partyId: 102,
+        displayName: 'Ada Lovelace',
+        isOrg: false,
+        legalName: null,
+        primaryEmail: null,
+        primaryPhone: null,
+        instagram: '   ',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Personas / CRM')).toBeInTheDocument();
+    await user.type(await screen.findByPlaceholderText(/Buscar…/i), 'acme');
+
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Haz clic en una fila o presiona Enter para abrir la ficha\. Usa Acciones solo para editar o convertir\. Vista compacta: Org aparecerá cuando convivan personas y organizaciones; Email e Instagram aparecerán cuando exista información real en esos campos\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText(/Vista compacta:/i)).toHaveLength(1);
+    expect(screen.queryByRole('columnheader', { name: /^Org$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Email$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Instagram$/i })).not.toBeInTheDocument();
+  });
+
   it('replaces an empty filtered CRM table with a focused no-results state', async () => {
     const user = userEvent.setup();
     mockPartiesList.mockResolvedValue([

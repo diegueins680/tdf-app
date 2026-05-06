@@ -79,7 +79,7 @@ function formatCompactColumnList(labels: readonly string[]) {
   return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
 }
 
-function buildCompactContactColumnsDescription(hiddenColumnLabels: readonly string[]) {
+function buildCompactContactColumnsClause(hiddenColumnLabels: readonly string[]) {
   if (hiddenColumnLabels.length === 0) {
     return null;
   }
@@ -88,7 +88,26 @@ function buildCompactContactColumnsDescription(hiddenColumnLabels: readonly stri
   const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
   const fieldLabel = hiddenColumnLabels.length === 1 ? 'ese campo' : 'esos campos';
 
-  return `Vista compacta: ${labels} ${verb} cuando exista información real en ${fieldLabel}.`;
+  return `${labels} ${verb} cuando exista información real en ${fieldLabel}`;
+}
+
+function buildCompactContactsTableGuidance({
+  showOrgColumn,
+  hiddenContactColumnLabels,
+}: {
+  showOrgColumn: boolean;
+  hiddenContactColumnLabels: readonly string[];
+}) {
+  const compactClauses = [
+    ...(!showOrgColumn ? ['Org aparecerá cuando convivan personas y organizaciones'] : []),
+    buildCompactContactColumnsClause(hiddenContactColumnLabels),
+  ].filter((clause): clause is string => clause != null);
+
+  if (compactClauses.length === 0) {
+    return null;
+  }
+
+  return `Vista compacta: ${compactClauses.join('; ')}.`;
 }
 
 function CreatePartyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -997,15 +1016,17 @@ export default function PartiesPage() {
     && visibleContacts.some((party) => party.isOrg);
   const showEmailColumn = visibleContacts.some((party) => hasPresentContactValue(party.primaryEmail));
   const showInstagramColumn = visibleContacts.some((party) => hasPresentContactValue(party.instagram));
-  const compactContactColumnsDescription = buildCompactContactColumnsDescription([
-    ...(!showEmailColumn ? ['Email'] : []),
-    ...(!showInstagramColumn ? ['Instagram'] : []),
-  ]);
-  const contactsTableDescriptions = [
+  const compactContactsTableGuidance = buildCompactContactsTableGuidance({
+    showOrgColumn,
+    hiddenContactColumnLabels: [
+      ...(!showEmailColumn ? ['Email'] : []),
+      ...(!showInstagramColumn ? ['Instagram'] : []),
+    ],
+  });
+  const contactsTableDescription = [
     'Haz clic en una fila o presiona Enter para abrir la ficha. Usa Acciones solo para editar o convertir.',
-    ...(!showOrgColumn ? ['Vista compacta: Org aparecerá cuando convivan personas y organizaciones.'] : []),
-    ...(compactContactColumnsDescription ? [compactContactColumnsDescription] : []),
-  ];
+    compactContactsTableGuidance,
+  ].filter((description): description is string => description != null).join(' ');
 
   const columns = useMemo<ColumnDef<PartyDTO>[]>(() => {
     const visibleColumns: ColumnDef<PartyDTO>[] = [
@@ -1173,11 +1194,9 @@ export default function PartiesPage() {
         </Paper>
       ) : showContactsTable ? (
         <>
-          {contactsTableDescriptions.map((description) => (
-            <Typography key={description} variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {description}
-            </Typography>
-          ))}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {contactsTableDescription}
+          </Typography>
           <TextField
             placeholder="Buscar…"
             value={search}
