@@ -1082,6 +1082,10 @@ main = hspec $ do
                 "HQ_APP_URL"
                 "https://hq.example.com/app\SOHadmin"
                 "HQ_APP_URL must not contain control characters"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com/app\8238admin"
+                "HQ_APP_URL must not contain hidden formatting characters"
 
         it "normalizes configured outbound API base URLs before building requests" $
             withEnvOverrides

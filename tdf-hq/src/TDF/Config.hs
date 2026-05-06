@@ -1200,6 +1200,8 @@ normalizeConfiguredBaseUrl envName rawUrl
   | T.null trimmed = Right Nothing
   | T.any isControl trimmed =
       Left (envName <> " must not contain control characters")
+  | T.any isHiddenConnectionUrlChar trimmed =
+      Left (envName <> " must not contain hidden formatting characters")
   | T.any isSpace trimmed =
       invalid
   | T.any (`elem` ("?#" :: String)) trimmed =
@@ -1308,6 +1310,8 @@ normalizeConfiguredHttpsUrl envName rawUrl
   | T.null trimmed = Right Nothing
   | T.any isControl trimmed =
       Left (envName <> " must not contain control characters")
+  | T.any isHiddenConnectionUrlChar trimmed =
+      Left (envName <> " must not contain hidden formatting characters")
   | T.any isSpace trimmed =
       invalid
   | not ("https://" `T.isPrefixOf` lowerUrl) =
