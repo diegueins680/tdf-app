@@ -2026,6 +2026,7 @@ validateDriveUploadFolderId :: ServerError -> Text -> Text -> Either ServerError
 validateDriveUploadFolderId baseError fieldName folderId
   | T.null folderId = invalid
   | T.length folderId > 256 = invalid
+  | not (T.any isDriveFolderIdAtom folderId) = invalid
   | not (T.all isDriveFolderIdChar folderId) = invalid
   | otherwise = Right folderId
   where
@@ -2042,6 +2043,10 @@ driveUploadFolderIdMessage fieldName =
 isDriveFolderIdChar :: Char -> Bool
 isDriveFolderIdChar ch =
   isAsciiLower ch || isAsciiUpper ch || isDigit ch || ch == '-' || ch == '_'
+
+isDriveFolderIdAtom :: Char -> Bool
+isDriveFolderIdAtom ch =
+  isAsciiLower ch || isAsciiUpper ch || isDigit ch
 
 resolveDriveUploadName :: Maybe Text -> Text -> Either ServerError Text
 resolveDriveUploadName mProvidedName rawFileName =

@@ -4552,6 +4552,16 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid Drive upload folderId to be rejected, got " <> show value)
+            case resolveDriveUploadFolderId (Just "____") (Just "env-folder") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "folderId must be a Google Drive folder id"
+                Right value ->
+                    expectationFailure
+                        ( "Expected punctuation-only Drive upload folderId to be rejected, got "
+                            <> show value
+                        )
 
         it "rejects malformed configured folder fallbacks before upload requests are built" $ do
             case resolveDriveUploadFolderId Nothing (Just "env/folder") of
@@ -4562,6 +4572,16 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid DRIVE_UPLOAD_FOLDER_ID to be rejected, got " <> show value)
+            case resolveDriveUploadFolderId Nothing (Just "----") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "DRIVE_UPLOAD_FOLDER_ID must be a Google Drive folder id"
+                Right value ->
+                    expectationFailure
+                        ( "Expected punctuation-only DRIVE_UPLOAD_FOLDER_ID to be rejected, got "
+                            <> show value
+                        )
 
     describe "resolveDriveUploadName" $ do
         it "prefers safe request names and rejects missing names instead of guessing" $ do
