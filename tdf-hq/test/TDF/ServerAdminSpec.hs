@@ -91,6 +91,23 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             normalizeAdminEmailAddress "ada@-example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example-.com" `shouldBe` Nothing
 
+        it "rejects oversized admin email parts before SMTP or user-account fallbacks use them" $ do
+            normalizeAdminEmailAddress (T.replicate 65 "a" <> "@example.com")
+                `shouldBe` Nothing
+            normalizeAdminEmailAddress ("ada@" <> T.replicate 64 "b" <> ".com")
+                `shouldBe` Nothing
+            normalizeAdminEmailAddress
+                ( T.replicate 64 "a"
+                    <> "@"
+                    <> T.intercalate
+                        "."
+                        [ T.replicate 63 "b"
+                        , T.replicate 63 "c"
+                        , T.replicate 62 "d"
+                        ]
+                )
+                `shouldBe` Nothing
+
     describe "normalizeAdminEmailBodyLines" $ do
         it "trims lines and drops blanks" $
             normalizeAdminEmailBodyLines ["  Hola  ", "", "   ", " Link: https://example.com  "]

@@ -1588,6 +1588,15 @@ normalizeAdminEmailAddress raw =
   let normalized = T.toLower (T.strip raw)
   in if isValidAdminEmailAddress normalized then Just normalized else Nothing
 
+maxAdminEmailChars :: Int
+maxAdminEmailChars = 254
+
+maxAdminEmailLocalPartChars :: Int
+maxAdminEmailLocalPartChars = 64
+
+maxAdminEmailDomainLabelChars :: Int
+maxAdminEmailDomainLabelChars = 63
+
 adminUsernameMaxLength :: Int
 adminUsernameMaxLength = 60
 
@@ -1678,7 +1687,8 @@ isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      isValidAdminEmailLocalPart localPart
+      T.length candidate <= maxAdminEmailChars
+        && isValidAdminEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && not (T.isPrefixOf "." domain)
@@ -1690,6 +1700,7 @@ isValidAdminEmailAddress candidate =
 isValidAdminEmailLocalPart :: Text -> Bool
 isValidAdminEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxAdminEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
@@ -1702,6 +1713,7 @@ isValidAdminEmailLocalChar c =
 isValidAdminEmailDomainLabel :: Text -> Bool
 isValidAdminEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= maxAdminEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidAdminEmailDomainChar label
