@@ -7821,6 +7821,19 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://tdf.example.com/contacto"
             assertInvalid "https://wa.me.evil.example/593991234567"
 
+        it "rejects oversized public course URLs before fallback metadata can publish them" $ do
+            let oversizedUrl =
+                    "https://tdf.example.com/"
+                        <> T.replicate 2049 "a"
+            case validateCoursePublicUrlField "landingUrl" (Just oversizedUrl) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "landingUrl must be 2048 characters or fewer"
+                Right urlVal ->
+                    expectationFailure
+                        ("Expected oversized course URL to be rejected, got: " <> show urlVal)
+
     describe "validatePublicBookingFullName" $ do
         it "trims public-booking names before booking title and party fallback creation" $
             validatePublicBookingFullName "  Ana Perez  " `shouldBe` Right "Ana Perez"

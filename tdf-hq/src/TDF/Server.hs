@@ -5021,10 +5021,18 @@ validateCoursePublicUrlField _ Nothing = Right Nothing
 validateCoursePublicUrlField fieldName (Just rawUrl) =
   case cleanOptional (Just rawUrl) of
     Nothing -> Right Nothing
-    Just urlVal ->
-      if "https://" `T.isPrefixOf` T.toLower urlVal
-          && TrialsServer.isValidHttpUrl urlVal
-        then
+    Just urlVal
+      | T.length urlVal > maxCoursePublicUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> " must be "
+                    <> T.pack (show maxCoursePublicUrlChars)
+                    <> " characters or fewer"
+            }
+      | "https://" `T.isPrefixOf` T.toLower urlVal
+          && TrialsServer.isValidHttpUrl urlVal ->
           if fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal)
             then
               Left err400
@@ -5032,12 +5040,15 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                     "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
                 }
             else Right (Just urlVal)
-        else
+      | otherwise ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+maxCoursePublicUrlChars :: Int
+maxCoursePublicUrlChars = 2048
 
 isAllowedWhatsAppCtaUrl :: Text -> Bool
 isAllowedWhatsAppCtaUrl rawUrl =
