@@ -7571,6 +7571,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps repeated first-run form labels compact while still counting every configured form', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'beatmaking-early', ccTitle: 'Formulario público - Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+      { ccSlug: 'live-production-night', ccTitle: 'Formulario público del curso Producción en vivo' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 5 formularios públicos listos para recibir la primera inscripción: Beatmaking 101, Mixing Bootcamp, Producción en vivo y 2 más.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, 'Producción en vivo')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Formulario público - Beatmaking 101');
+      expect(emptyState?.textContent).not.toContain('Formulario público del curso Producción en vivo');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps limit-only cohort failures focused on the cohort retry instead of duplicate list refresh', async () => {
     listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
     listRegistrationsMock.mockResolvedValue([]);
