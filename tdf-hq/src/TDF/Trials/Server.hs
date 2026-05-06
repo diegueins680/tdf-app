@@ -697,6 +697,35 @@ validateAvailabilityIdInput :: Int -> Either ServerError Int
 validateAvailabilityIdInput =
   validatePositiveIntField "availabilityId"
 
+validateTrialAvailabilityUpsertInput
+  :: TrialAvailabilityUpsert
+  -> Either ServerError TrialAvailabilityUpsert
+validateTrialAvailabilityUpsertInput
+  ( TrialAvailabilityUpsert
+      rawAvailabilityId
+      rawSubjectId
+      rawRoomId
+      rawStartAt
+      rawEndAt
+      rawNotes
+      rawTeacherId
+  ) = do
+    availabilityIdVal <- traverse validateAvailabilityIdInput rawAvailabilityId
+    subjectIdVal <- validatePositiveIntField "subjectId" rawSubjectId
+    teacherIdVal <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+    notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
+    when (rawStartAt >= rawEndAt) $
+      Left err400 { errBody = "La hora de fin debe ser posterior al inicio." }
+    Right
+      (TrialAvailabilityUpsert
+        availabilityIdVal
+        subjectIdVal
+        rawRoomId
+        rawStartAt
+        rawEndAt
+        notesVal
+        teacherIdVal)
+
 validateClassSessionListFilters
   :: Maybe Int
   -> Maybe Int
@@ -1408,10 +1437,10 @@ privateTrialsServer user@AuthedUser{..} =
       pure (map (availabilityEntityToDTO subjectMap teacherMap roomMap) records)
 
     availabilityUpsertH :: TrialAvailabilityUpsert -> AppM TrialAvailabilitySlotDTO
-    availabilityUpsertH TrialAvailabilityUpsert{..} = do
+    availabilityUpsertH rawInput = do
       ensureSchoolAccess
-      when (startAt >= endAt) $
-        liftIO $ throwIO err400 { errBody = "La hora de fin debe ser posterior al inicio." }
+      TrialAvailabilityUpsert{..} <-
+        either (liftIO . throwIO) pure (validateTrialAvailabilityUpsertInput rawInput)
       teacherKey <- resolveTeacherKey teacherId
       let isSelf = teacherKey == auPartyId
       subjectKey <- ensureSubjectExists subjectId

@@ -71,6 +71,7 @@ import TDF.Trials.Server
   , validatePublicTrialRequestInput
   , validatePublicTrialPartyId
   , validateTeacherSubjectIdsInput
+  , validateTrialAvailabilityUpsertInput
   , validateTrialScheduleInput
   )
 import qualified TDF.Models as Models
@@ -1403,6 +1404,73 @@ spec = do
             :: Either String TrialAvailabilityUpsert
         )
         `shouldBe` True
+
+  describe "validateTrialAvailabilityUpsertInput" $ do
+    let mkAvailability availabilityIdValue subjectIdValue notesValue teacherIdValue =
+          TrialAvailabilityUpsert
+            availabilityIdValue
+            subjectIdValue
+            "sala-a"
+            slotStart
+            slotEnd
+            notesValue
+            teacherIdValue
+
+    it "normalizes notes and keeps valid availability upsert identifiers explicit" $ do
+      case validateTrialAvailabilityUpsertInput
+        (mkAvailability (Just 5) 7 (Just "  Teaching block  ") (Just 2)) of
+        Left err ->
+          expectationFailure $
+            "Expected valid availability upsert input to normalize, got " <> show err
+        Right
+          ( TrialAvailabilityUpsert
+              availabilityIdValue
+              subjectIdValue
+              roomIdValue
+              startValue
+              endValue
+              notesValue
+              teacherIdValue
+          ) -> do
+          availabilityIdValue `shouldBe` Just 5
+          subjectIdValue `shouldBe` 7
+          roomIdValue `shouldBe` "sala-a"
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          notesValue `shouldBe` Just "Teaching block"
+          teacherIdValue `shouldBe` Just 2
+
+      case validateTrialAvailabilityUpsertInput
+        (mkAvailability Nothing 7 (Just "   ") Nothing) of
+        Left err ->
+          expectationFailure ("Expected blank availability notes to be dropped, got " <> show err)
+        Right (TrialAvailabilityUpsert _ _ _ _ _ notesValue _) ->
+          notesValue `shouldBe` Nothing
+
+    it "rejects malformed availability upsert ids and notes before database lookup" $ do
+      let assertRejected payload expectedMessage =
+            case validateTrialAvailabilityUpsertInput payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected malformed availability upsert to be rejected, got " <> show value)
+      assertRejected
+        (mkAvailability (Just 0) 7 Nothing (Just 2))
+        "availabilityId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 0 Nothing (Just 2))
+        "subjectId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 7 Nothing (Just 0))
+        "teacherId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 7 (Just "line one\nline two") (Just 2))
+        "notes must not contain control characters"
+      assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "sala-a" slotStart slotStart Nothing (Just 2))
+        "La hora de fin debe ser posterior al inicio"
 
   describe "teacher relationship request decoding" $ do
     it "rejects typoed or unexpected teacher-subject keys before mutating assignments" $ do
