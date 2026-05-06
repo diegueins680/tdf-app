@@ -143,6 +143,8 @@ validateFacebookMessageBody rawBody =
           Left "Facebook message body must be 5000 characters or fewer"
       | T.any invalidMessageBodyControlChar messageBody ->
           Left "Facebook message body must not contain control characters"
+      | T.any invalidMessageBodyFormatChar messageBody ->
+          Left "Facebook message body must not contain hidden formatting or separator characters"
       | otherwise ->
           Right messageBody
 
@@ -159,6 +161,10 @@ invalidFacebookRecipientIdChar ch = isSpace ch || isControl ch
 invalidMessageBodyControlChar :: Char -> Bool
 invalidMessageBodyControlChar ch =
   isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+invalidMessageBodyFormatChar :: Char -> Bool
+invalidMessageBodyFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 isGraphNodeIdAtom :: Char -> Bool
 isGraphNodeIdAtom ch =

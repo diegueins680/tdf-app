@@ -235,6 +235,7 @@ import TDF.ServerLiveSessions
       validateLiveSessionRiderFileSize,
       validateLiveSessionTermsAcceptance )
 import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
+import TDF.Services.FacebookMessaging (sendFacebookText)
 import TDF.Server.SocialSync
     ( socialSyncServer,
       validateSocialSyncArtistPartyId,
@@ -2867,6 +2868,16 @@ main = hspec $ do
                         "recipient-1"
                         "hola"
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
+
+    describe "Facebook messaging context fallback" $ do
+        it "rejects hidden-format outgoing message bodies before fallback config is evaluated" $
+            sendFacebookText
+                (error "Facebook config should be unused when payload validation fails")
+                "recipient-1"
+                ("hola" <> Data.Text.singleton '\x202E' <> "ops")
+                `shouldReturn`
+                    Left
+                        "Facebook message body must not contain hidden formatting or separator characters"
 
     describe "SRI invoice script discovery" $ do
         it "decodes UTF-8 SRI script JSON output without corrupting localized statuses" $
