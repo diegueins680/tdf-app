@@ -124,6 +124,7 @@ import TDF.Server
     , resolveServiceAdSlotEntity
     , resolveServiceMarketplaceBookingEntity
     , validateMetaBackfillOptions
+    , validateMetaBackfillConversationId
     , parsePaymentMethodText
     , validateBookingTimeRange
     , validateEngineer
@@ -2933,6 +2934,27 @@ spec = describe "TDF.Server helpers" $ do
                 Right target ->
                     expectationFailure
                         ("Expected malformed Instagram backfill target to be rejected, got: " <> show target)
+
+    describe "validateMetaBackfillConversationId" $ do
+        it "normalizes upstream conversation ids before using them in Graph request paths" $
+            validateMetaBackfillConversationId "  t_17841400000000000.abc_123  "
+                `shouldBe` Right "t_17841400000000000.abc_123"
+
+        it "rejects path-shaped upstream conversation ids before message hydration" $ do
+            let assertInvalid rawConversationId =
+                    case validateMetaBackfillConversationId rawConversationId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Meta Graph returned an invalid conversation id"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Meta conversation id to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "conversation/../../me"
+            assertInvalid "conversation?fields=messages"
+            assertInvalid "---"
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do

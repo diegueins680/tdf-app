@@ -1416,6 +1416,17 @@ validateMetaBackfillLimit fieldName _ (Just rawValue)
       metaBackfillBadRequest (fieldName <> " must be between 1 and 200")
   | otherwise = pure rawValue
 
+validateMetaBackfillConversationId :: Text -> Either ServerError Text
+validateMetaBackfillConversationId rawConversationId =
+  case normalizeConfiguredGraphNodeId
+        "Meta backfill conversation id"
+        (T.unpack rawConversationId) of
+    Right (Just conversationId) -> Right conversationId
+    _ ->
+      Left err502
+        { errBody = "Meta Graph returned an invalid conversation id"
+        }
+
 metaBackfillBadRequest :: Text -> Either ServerError a
 metaBackfillBadRequest msg =
   Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
@@ -1552,10 +1563,10 @@ fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptio
         payload <- requestFacebookGraphValue manager cfg ("/" <> trimmedId <> "/messages") msgParams
         pure (jsonArrayField "data" payload)
 
-      withMessages :: Value -> [Value] -> Value
-      withMessages conversationVal messages =
+      withMessages :: Value -> Maybe Text -> [Value] -> Value
+      withMessages conversationVal mConversationId messages =
         object
-          [ "id" .= jsonTextField "id" conversationVal
+          [ "id" .= (mConversationId <|> cleanOptional (jsonTextField "id" conversationVal))
           , "updated_time" .= jsonTextField "updated_time" conversationVal
           , "unread_count" .= jsonIntField "unread_count" conversationVal
           , "messages" .= object [ "data" .= messages ]
@@ -1565,18 +1576,21 @@ fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptio
         let unreadCount = fromMaybe 0 (jsonIntField "unread_count" conversationVal)
             mConversationId = fmap T.strip (jsonTextField "id" conversationVal)
             shouldSkipMessages = mboOnlyUnread && unreadCount <= 0
-        case mConversationId of
-          Nothing -> pure (withMessages conversationVal [])
-          Just conversationId
-            | T.null conversationId -> pure (withMessages conversationVal [])
-            | shouldSkipMessages -> pure (withMessages conversationVal [])
-            | otherwise -> do
+        case cleanOptional mConversationId of
+          Nothing -> pure (withMessages conversationVal Nothing [])
+          Just rawConversationId -> do
+            conversationId <-
+              either throwError pure $
+                validateMetaBackfillConversationId rawConversationId
+            if shouldSkipMessages
+              then pure (withMessages conversationVal (Just conversationId) [])
+              else do
                 messages <- fetchConversationMessages conversationId
                   `catchError` \err ->
                     if isMetaGraphTimeoutError err
                       then pure []
                       else throwError err
-                pure (withMessages conversationVal messages)
+                pure (withMessages conversationVal (Just conversationId) messages)
 
       runAttempt conversationLimit = do
         stubs <- fetchConversationStubs conversationLimit
