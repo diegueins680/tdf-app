@@ -222,11 +222,13 @@ const sortRolesForEditor = (currentRoles?: readonly RoleValue[] | null) => {
   });
 };
 
-const formatRoleGroupLabel = (roles: readonly RoleValue[]) => {
-  if (roles.length <= 1) return roles[0] ?? '';
-  if (roles.length === 2) return `${roles[0]} y ${roles[1]}`;
-  return `${roles.slice(0, -1).join(', ')} y ${roles[roles.length - 1]}`;
+const formatSpanishList = (items: readonly string[]) => {
+  if (items.length <= 1) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} y ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
 };
+
+const formatRoleGroupLabel = (roles: readonly RoleValue[]) => formatSpanishList(roles);
 
 const buildPendingRoleChangesSummary = (
   currentRoles?: readonly RoleValue[] | null,
@@ -301,28 +303,32 @@ const buildRoleManagementSummary = ({
   showStatusColumn: boolean;
   showMixedStatusSummary: boolean;
 }) => {
-  const hiddenColumnSummaries: string[] = [];
+  const summaryParts: string[] = [];
+  const hiddenColumnLabels: string[] = [];
 
   if (!showContactColumn) {
-    hiddenColumnSummaries.push(
-      'la columna de contacto sigue oculta hasta que exista al menos un email o teléfono',
-    );
+    hiddenColumnLabels.push('contacto');
   }
 
-  if (!showStatusColumn) {
-    hiddenColumnSummaries.push(
-      showAllInactiveSummary
-        ? 'todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar'
-        : 'la columna de estado sigue oculta mientras todas las cuentas sigan activas',
-    );
+  if (!showStatusColumn && !showAllInactiveSummary) {
+    hiddenColumnLabels.push('estado');
+  }
+
+  if (hiddenColumnLabels.length > 0) {
+    const hiddenColumnsLabel = formatSpanishList(hiddenColumnLabels);
+    const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
+    const contextVerb = hiddenColumnLabels.length === 1 ? 'aporte' : 'aporten';
+    summaryParts.push(`${hiddenColumnsLabel} ${verb} cuando ${contextVerb} contexto`);
+  }
+
+  if (showAllInactiveSummary) {
+    summaryParts.push('todas las cuentas están inactivas; Estado volverá cuando exista una cuenta activa para comparar');
   } else if (showMixedStatusSummary) {
-    hiddenColumnSummaries.push(
-      'la columna Estado solo marca las cuentas inactivas; las activas quedan implícitas',
-    );
+    summaryParts.push('Estado solo marca cuentas inactivas; las activas quedan implícitas');
   }
 
-  if (hiddenColumnSummaries.length === 0) return '';
-  return `Vista actual: ${hiddenColumnSummaries.join(' y ')}.`;
+  if (summaryParts.length === 0) return '';
+  return `Vista compacta: ${summaryParts.join('. ')}.`;
 };
 
 const renderRoleEditButtonContents = (roles: readonly RoleValue[]) => (

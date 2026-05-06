@@ -205,7 +205,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: estado aparecerá cuando aporte contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(countExactText(container, 'Roles editables')).toBe(1);
@@ -268,7 +268,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: contacto y estado aparecerán cuando aporten contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(countExactText(container, 'Roles editables')).toBe(1);
@@ -927,7 +927,7 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).toContain(
-          'Vista actual: la columna Estado solo marca las cuentas inactivas; las activas quedan implícitas.',
+          'Vista compacta: Estado solo marca cuentas inactivas; las activas quedan implícitas.',
         );
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
@@ -967,7 +967,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar.',
+          'Vista compacta: todas las cuentas están inactivas; Estado volverá cuando exista una cuenta activa para comparar.',
         );
         expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(countExactText(container, 'Inactivo')).toBe(0);
@@ -1001,7 +1001,7 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: contacto y estado aparecerán cuando aporten contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain(
