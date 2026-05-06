@@ -9371,6 +9371,7 @@ spec = describe "TDF.Server helpers" $ do
 
             case validResponses of
                 firstResponse : remainingResponses -> do
+                    assertInvalid (firstResponse { stubMethod = "POST" } : remainingResponses)
                     assertInvalid remainingResponses
                     assertInvalid (validResponses <> [firstResponse])
                     assertInvalid (remainingResponses <> [firstResponse])
