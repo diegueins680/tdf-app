@@ -246,7 +246,7 @@ const initialEmptyStateMultiCohortMessage =
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. Abre la página pública cuando estés listo para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir cuál compartir';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir primero';
@@ -14105,6 +14105,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('copiar o abrir');
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
       expect(emptyState?.textContent).not.toContain('Elegir enlace');
+      expect(emptyState?.textContent).not.toContain('Elegir cuál compartir');
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
