@@ -13,6 +13,7 @@ module TDF.Routes.Academy
   , LessonDTO(..)
   , NextCohortDTO(..)
   , validateAcademyRole
+  , validateAcademySlug
   ) where
 
 import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
@@ -54,7 +55,7 @@ instance FromJSON ProgressReq where
       genericParseJSON strictObjectOptions value
     ProgressReq
       <$> requiredEmail "email" rawEmail
-      <*> requiredLowerText "slug" rawSlug
+      <*> requiredAcademySlug rawSlug
       <*> requiredPositiveDay rawDay
 instance ToJSON ProgressReq
 
@@ -120,10 +121,6 @@ requiredEmail fieldName raw =
            then pure normalized
            else fail (fieldName <> " must be a valid email address")
 
-requiredLowerText :: String -> Text -> Parser Text
-requiredLowerText fieldName raw =
-  T.toLower <$> requiredNonBlank fieldName raw
-
 requiredAcademyRole :: Text -> Parser Text
 requiredAcademyRole raw =
   either (fail . T.unpack) pure (validateAcademyRole raw)
@@ -139,6 +136,33 @@ validateAcademyRole raw =
 
 allowedAcademyRoles :: [Text]
 allowedAcademyRoles = ["artist", "manager"]
+
+requiredAcademySlug :: Text -> Parser Text
+requiredAcademySlug raw =
+  either (fail . T.unpack) pure (validateAcademySlug raw)
+
+validateAcademySlug :: Text -> Either Text Text
+validateAcademySlug raw =
+  let slugValue = T.toLower (T.strip raw)
+  in if T.null slugValue
+       then Left "slug must not be blank"
+       else if T.length slugValue <= maxAcademySlugChars
+            && T.any isAcademySlugAtom slugValue
+            && T.all isAcademySlugChar slugValue
+         then Right slugValue
+         else Left
+           ( "slug must contain only ASCII letters, numbers, and hyphens, "
+               <> "include at least one letter or number, and be 96 characters or fewer"
+           )
+
+maxAcademySlugChars :: Int
+maxAcademySlugChars = 96
+
+isAcademySlugAtom :: Char -> Bool
+isAcademySlugAtom ch = isAsciiLower ch || isDigit ch
+
+isAcademySlugChar :: Char -> Bool
+isAcademySlugChar ch = isAcademySlugAtom ch || ch == '-'
 
 requiredNonBlank :: String -> Text -> Parser Text
 requiredNonBlank fieldName raw =

@@ -1423,6 +1423,15 @@ spec = do
             decodeProgress
                 "{\"email\":\"ada@example.com\",\"slug\":\"   \",\"day\":3}"
                 `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing/basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing\\u202E-basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
             decodeReferralClaim
                 "{\"email\":\"ada@example.com\",\"code\":\"   \"}"
                 `shouldSatisfy` isLeft
