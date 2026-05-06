@@ -95,6 +95,14 @@ const getMenuItemByText = (labelText: string) => {
   return item;
 };
 
+const getMenuHeaderByTestId = (testId: string) => {
+  const header = document.body.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+
+  if (header) return header;
+
+  throw new Error(`Menu header not found: ${testId}`);
+};
+
 const expectToAppearBefore = (first: HTMLElement, second: HTMLElement) => {
   expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 };
@@ -705,12 +713,17 @@ describe('UserRoleManagement', () => {
       });
 
       await waitForExpectation(() => {
+        const currentRolesHeader = getMenuHeaderByTestId('role-editor-current-roles-header');
+        const availableRolesHeader = getMenuHeaderByTestId('role-editor-available-roles-header');
         const receptionOption = getMenuItemByText('Reception');
         const teacherOption = getMenuItemByText('Teacher');
         const adminOption = getMenuItemByText('Admin');
 
+        expectToAppearBefore(currentRolesHeader, receptionOption);
         expectToAppearBefore(receptionOption, adminOption);
         expectToAppearBefore(teacherOption, adminOption);
+        expectToAppearBefore(teacherOption, availableRolesHeader);
+        expectToAppearBefore(availableRolesHeader, adminOption);
       });
     } finally {
       await cleanup();

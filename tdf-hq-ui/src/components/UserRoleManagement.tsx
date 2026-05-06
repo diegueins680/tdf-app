@@ -16,6 +16,7 @@ import {
   Button,
   Select,
   MenuItem,
+  ListSubheader,
   FormControl,
   FormHelperText,
   InputLabel,
@@ -371,6 +372,9 @@ export default function UserRoleManagement() {
     ? buildPendingRoleChangesSummary(selectedUser.roles, selectedRoles)
     : null;
   const roleOptionsForEditor = sortRolesForEditor(selectedUser?.roles);
+  const currentRoleKeysForEditor = new Set(
+    normalizeRoleSelection(selectedUser?.roles).map((role) => role.toLocaleLowerCase('es')),
+  );
   const selectedUserNeedsIdentityDisambiguator = selectedUser
     ? userIdsRequiringIdentityDisambiguator.has(selectedUser.id)
     : false;
@@ -661,11 +665,39 @@ export default function UserRoleManagement() {
                 </Box>
               )}
             >
-              {roleOptionsForEditor.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
-                </MenuItem>
-              ))}
+              {currentRoleKeysForEditor.size > 0 && (
+                <ListSubheader disableSticky data-testid="role-editor-current-roles-header">
+                  Roles actuales
+                </ListSubheader>
+              )}
+              {roleOptionsForEditor.map((role, index) => {
+                const isCurrentRole = currentRoleKeysForEditor.has(role.toLocaleLowerCase('es'));
+                const previousRole = roleOptionsForEditor[index - 1];
+                const previousWasCurrentRole = previousRole
+                  ? currentRoleKeysForEditor.has(previousRole.toLocaleLowerCase('es'))
+                  : false;
+                const startsAvailableRoles = !isCurrentRole && (index === 0 || previousWasCurrentRole);
+                const optionItem = (
+                  <MenuItem key={role} value={role}>
+                    {role}
+                  </MenuItem>
+                );
+
+                if (!startsAvailableRoles) {
+                  return optionItem;
+                }
+
+                return [
+                  <ListSubheader
+                    key={`${role}-available-roles`}
+                    disableSticky
+                    data-testid="role-editor-available-roles-header"
+                  >
+                    Roles disponibles
+                  </ListSubheader>,
+                  optionItem,
+                ];
+              })}
             </Select>
             <FormHelperText>
               {hasPendingRoleChanges
