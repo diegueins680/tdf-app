@@ -50,9 +50,9 @@ instance FromMultipart Tmp FeedbackPayload where
     pure FeedbackPayload
       { fpTitle        = T.strip title
       , fpDescription  = T.strip description
-      , fpCategory     = fmap T.strip category
-      , fpSeverity     = fmap T.strip severity
-      , fpContactEmail = fmap T.strip contact
+      , fpCategory     = category
+      , fpSeverity     = severity
+      , fpContactEmail = contact
       , fpConsent      = consent
       , fpAttachment   = attachment
       }
@@ -66,7 +66,11 @@ instance FromMultipart Tmp FeedbackPayload where
             in if T.null txt then Left ("Missing field: " <> T.unpack name) else Right txt
 
       optionalText name mp =
-        fmap (fmap inputValueText) (lookupSingleInput name mp)
+        fmap (>>= normalizeOptionalInput) (lookupSingleInput name mp)
+
+      normalizeOptionalInput input =
+        let txt = T.strip (inputValueText input)
+        in if T.null txt then Nothing else Just txt
 
       optionalBool name mp =
         case lookupSingleInput name mp of

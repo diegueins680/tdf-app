@@ -4743,6 +4743,21 @@ main = hspec $ do
                 Right payload ->
                     fpConsent payload `shouldBe` True
 
+        it "trims optional scalar fields and drops blank ones at the multipart boundary" $
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("category", " bug ")
+                    , ("severity", "   ")
+                    , ("contactEmail", " user@example.com ")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    expectationFailure ("Expected optional feedback fields to parse, got: " <> err)
+                Right payload -> do
+                    fpCategory payload `shouldBe` Just "bug"
+                    fpSeverity payload `shouldBe` Nothing
+                    fpContactEmail payload `shouldBe` Just "user@example.com"
+
         it "rejects malformed consent values instead of silently coercing them to false" $
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "Broken flow")
