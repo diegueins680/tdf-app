@@ -112,10 +112,31 @@ data SocialUnholdRequest = SocialUnholdRequest
   } deriving (Show, Generic)
 
 instance FromJSON SocialUnholdRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    request <- genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } value
+    case (normalizeLookupField (surExternalId request), normalizeLookupField (surSenderId request)) of
+      (Just externalId, Nothing) ->
+        pure request
+          { surExternalId = Just externalId
+          , surSenderId = Nothing
+          }
+      (Nothing, Just senderId) ->
+        pure request
+          { surExternalId = Nothing
+          , surSenderId = Just senderId
+          }
+      (Nothing, Nothing) ->
+        fail "SocialUnholdRequest requires externalId or senderId"
+      (Just _, Just _) ->
+        fail "SocialUnholdRequest requires exactly one of externalId or senderId"
+    where
+      normalizeLookupField rawValue =
+        case T.strip <$> rawValue of
+          Just lookupValue | not (T.null lookupValue) -> Just lookupValue
+          _ -> Nothing
 
 data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
   { awsrMessage          :: Text
