@@ -4800,6 +4800,59 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores navigation-only fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-navigation-shortcuts',
+          title: 'Atajos de navegación',
+          body: ['Usa el menú lateral para abrir Estado del servicio, Usuarios y Auditoría.'],
+        },
+        {
+          cardId: 'admin-sidebar-navigation',
+          title: 'Navigation shortcuts',
+          body: ['Use the side navigation to open service health, users, and audit.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Atajos de navegación')).not.toBeInTheDocument();
+    expect(screen.queryByText('Navigation shortcuts')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Usa el menú lateral/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Use the side navigation/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Atajos de navegación')).not.toBeInTheDocument();
+    expect(screen.queryByText('Navigation shortcuts')).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
