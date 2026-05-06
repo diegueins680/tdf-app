@@ -12536,8 +12536,10 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips event-platform wrappers from first-run cohort copy', async () => {
     const titles = [
       'Eventbrite - Beatmaking 101',
+      'Eventbrite event - Beatmaking 101',
       'Eventbrite registration page - Beatmaking 101',
       'Beatmaking 101 - Lu.ma signup page',
+      'Beatmaking 101 - Lu.ma event page',
       'Meetup event registration page for Beatmaking 101',
       'Formulario de Eventbrite para Beatmaking 101',
     ];
