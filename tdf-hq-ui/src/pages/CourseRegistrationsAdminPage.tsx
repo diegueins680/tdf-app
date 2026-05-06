@@ -249,6 +249,7 @@ const normalizeBackendStatusToken = (status: string) =>
 
 const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
   const normalized = normalizeBackendStatusToken(value);
+  if (normalized === 'pending') return 'pending_payment';
   if (normalized === 'payment_pending') return 'pending_payment';
   if (normalized === 'canceled') return 'cancelled';
   return isStatusFilter(normalized) ? normalized : null;
