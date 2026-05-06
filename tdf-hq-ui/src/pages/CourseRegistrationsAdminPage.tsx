@@ -84,7 +84,7 @@ const formatInitialCohortPreview = (labels: readonly string[], totalCount = labe
   const uniqueLabels = Array.from(uniqueLabelsByKey.values());
   if (uniqueLabels.length === 0) return '';
   const visibleLabels = uniqueLabels.slice(0, 3);
-  const hiddenCount = Math.max(0, totalCount - visibleLabels.length);
+  const hiddenCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
 
   if (hiddenCount > 0) {
     if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenCount} más`;

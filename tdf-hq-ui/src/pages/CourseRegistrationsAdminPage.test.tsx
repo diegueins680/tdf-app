@@ -13995,12 +13995,38 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101, Mixing Bootcamp y 1 más.',
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Beatmaking 101, beatmaking 101');
-      expect(emptyState?.textContent).not.toContain('Beatmaking 101 y Mixing Bootcamp.');
+      expect(emptyState?.textContent).not.toContain('y 1 más');
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
+  it('does not imply hidden course names when all first-run form labels dedupe to one preview', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'beatmaking-101-weekend', ccTitle: 'Formulario público - beatmaking 101' },
+      { ccSlug: 'beatmaking-101-late', ccTitle: 'Beatmaking 101 (beatmaking-101-late)' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('y 2 más');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
