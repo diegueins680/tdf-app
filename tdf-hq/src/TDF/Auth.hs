@@ -91,17 +91,17 @@ hasStrictAdminAccess AuthedUser{..} = Admin `elem` auRoles
 
 hasOperationsAccess :: AuthedUser -> Bool
 hasOperationsAccess user@AuthedUser{..} =
-  hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance]
+  hasCoherentRoleGrants user
+    && (hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance])
 
 hasAiToolingAccess :: AuthedUser -> Bool
 hasAiToolingAccess = hasOperationsAccess
 
 hasSocialSyncAccess :: AuthedUser -> Bool
-hasSocialSyncAccess user@AuthedUser{..} =
+hasSocialSyncAccess user =
   hasStrictAdminAccess user
     && hasModuleAccess ModuleAdmin user
-    && auModules == modulesForRoles auRoles
-    && rolesAreUnique auRoles
+    && hasCoherentRoleGrants user
 
 hasSocialInboxAccess :: AuthedUser -> Bool
 hasSocialInboxAccess user@AuthedUser{..} =
@@ -210,6 +210,10 @@ modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
 rolesAreUnique :: [RoleEnum] -> Bool
 rolesAreUnique roles =
   length roles == Set.size (Set.fromList roles)
+
+hasCoherentRoleGrants :: AuthedUser -> Bool
+hasCoherentRoleGrants AuthedUser{..} =
+  rolesAreUnique auRoles && auModules == modulesForRoles auRoles
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
 modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]

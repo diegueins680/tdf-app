@@ -8818,6 +8818,17 @@ spec = describe "TDF.Server helpers" $ do
             forM_ [minBound .. maxBound] $ \role ->
                 hasOperationsAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Webmaster, Maintenance])
 
+        it "rejects stale module grants and duplicated roles before operations shortcuts" $ do
+            let staleModuleUser =
+                    (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                duplicatedManager =
+                    mkUser [Manager, Manager]
+                duplicatedAdmin =
+                    mkUser [Admin, Admin]
+            hasOperationsAccess staleModuleUser `shouldBe` False
+            hasOperationsAccess duplicatedManager `shouldBe` False
+            hasOperationsAccess duplicatedAdmin `shouldBe` False
+
     describe "hasAiToolingAccess" $ do
         it "denies baseline customer sessions" $
             hasAiToolingAccess (mkUser [Fan, Customer]) `shouldBe` False
