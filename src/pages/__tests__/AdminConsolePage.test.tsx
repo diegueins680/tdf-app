@@ -2209,6 +2209,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps access-review fallback titles from duplicating the users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-access-review',
+          title: 'Access review',
+          body: ['Review team roles before changing permissions.'],
+        },
+        {
+          cardId: 'fallback-permissions-review',
+          title: 'Permissions review',
+          body: ['Review current role coverage before editing team access.'],
+        },
+        {
+          cardId: 'fallback-revision-accesos',
+          title: 'Revisión de accesos',
+          body: ['Revisa roles del equipo antes de cambiar permisos administrativos.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Access review')).not.toBeInTheDocument();
+    expect(screen.queryByText('Permissions review')).not.toBeInTheDocument();
+    expect(screen.queryByText('Revisión de accesos')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review team roles before changing permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review current role coverage before editing team access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa roles del equipo antes de cambiar permisos administrativos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps implementation-prefixed built-in fallback titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
