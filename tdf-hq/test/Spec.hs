@@ -194,6 +194,7 @@ import TDF.ServerInstagramOAuth
       validateInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
+      DriveApiResp (..),
       GoogleEventsPage (..),
       parseMcpRequest,
       parseToolCallParams,
@@ -4687,6 +4688,32 @@ main = hspec $ do
                 "Google Drive access token must be 4096 characters or fewer"
 
     describe "resolveDrivePublicUrl" $ do
+        it "rejects view-only links in Drive webContentLink responses" $ do
+            case eitherDecode
+                "{\"id\":\"1A_B-99\",\"webViewLink\":\"https://drive.google.com/file/d/1A_B-99/view?usp=sharing\",\"webContentLink\":\"https://drive.usercontent.google.com/download?id=1A_B-99&export=download\"}"
+                :: Either String DriveApiResp of
+                    Left err ->
+                        expectationFailure
+                            ("Expected valid Drive response to decode, got: " <> err)
+                    Right resp -> do
+                        darWebViewLink resp
+                            `shouldBe`
+                                Just "https://drive.google.com/file/d/1A_B-99/view?usp=sharing"
+                        darWebContentLink resp
+                            `shouldBe`
+                                Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download"
+
+            case eitherDecode
+                "{\"id\":\"1A_B-99\",\"webContentLink\":\"https://drive.google.com/file/d/1A_B-99/view?usp=sharing\"}"
+                :: Either String DriveApiResp of
+                    Left err ->
+                        err
+                            `shouldContain`
+                                "webContentLink must be a Google Drive download https link"
+                    Right resp ->
+                        expectationFailure
+                            ("Expected view-only webContentLink to be rejected, got: " <> show resp)
+
         it "keeps canonical Google Drive download links only when they point at the uploaded file" $ do
             resolveDrivePublicUrl
                 "1A_B-99"
