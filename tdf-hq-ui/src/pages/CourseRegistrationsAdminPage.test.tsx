@@ -246,10 +246,10 @@ const initialEmptyStateMultiCohortMessage =
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
+const initialEmptyStateMultiCohortActionLabel = 'Gestionar cursos';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
-const initialEmptyStateMultiCohortActionAriaLabel = 'Elegir qué formulario público compartir primero';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Abrir cursos para elegir qué formulario público compartir primero';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
@@ -7535,7 +7535,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps a limit-only first-run with multiple configured courses focused on choosing a form', async () => {
+  it('keeps a limit-only first-run with multiple configured courses focused on one course-management action', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
