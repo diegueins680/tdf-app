@@ -7626,7 +7626,12 @@ spec = describe "TDF.Server helpers" $ do
                         Right value ->
                             expectationFailure
                                 ("Expected invalid course-registration fileName, got: " <> show value)
+                unsafeNameMessage =
+                    "fileName must not contain control characters or Unicode formatting/"
+                        <> "separator characters"
             assertInvalid "fileName must not contain control characters" "receipt\n2026.pdf"
+            assertInvalid unsafeNameMessage ("receipt" <> T.singleton '\x202E' <> "fdp")
+            assertInvalid unsafeNameMessage ("receipt" <> T.singleton '\x2028' <> "2026.pdf")
             assertInvalid "fileName must not contain path separators" "folder/receipt.pdf"
             assertInvalid "fileName must not contain path separators" "folder\\receipt.pdf"
             assertInvalid "fileName must be 240 characters or fewer" (T.replicate 241 "a")

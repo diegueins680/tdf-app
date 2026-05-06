@@ -4927,10 +4927,10 @@ validateCourseRegistrationStoredName fieldName (Just rawName) =
             { errBody =
                 BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 240 characters or fewer"))
             }
-      | T.any isControl nameVal ->
+      | T.any isUnsafeCourseRegistrationStoredNameChar nameVal ->
           Left err400
             { errBody =
-                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+                BL.fromStrict (TE.encodeUtf8 (courseRegistrationStoredNameUnsafeMessage fieldName))
             }
       | T.any isPathSeparator nameVal ->
           Left err400
@@ -4941,6 +4941,17 @@ validateCourseRegistrationStoredName fieldName (Just rawName) =
           Right (Just nameVal)
   where
     isPathSeparator ch = ch == '/' || ch == '\\'
+
+isUnsafeCourseRegistrationStoredNameChar :: Char -> Bool
+isUnsafeCourseRegistrationStoredNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+courseRegistrationStoredNameUnsafeMessage :: Text -> Text
+courseRegistrationStoredNameUnsafeMessage fieldName =
+  fieldName
+    <> " must not contain control characters or Unicode formatting/"
+    <> "separator characters"
 
 validateCourseRegistrationReceiptMimeType :: Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationReceiptMimeType Nothing = Right Nothing
