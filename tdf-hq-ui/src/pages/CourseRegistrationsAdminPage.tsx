@@ -2653,13 +2653,20 @@ export default function CourseRegistrationsAdminPage() {
     localSearchNarrowsRegistrations && searchedRegistrations.length === 1
       ? (searchedRegistrations[0] ?? null)
       : null;
+  const localSearchSingleResultKnownStatus = localSearchSingleResult
+    ? normalizeKnownRegistrationStatus(localSearchSingleResult.crStatus)
+    : null;
+  const localSearchSingleResultUsesDirectPaidRecovery =
+    localSearchSingleResultKnownStatus === 'paid';
   const localSearchSingleResultTargetLabel = localSearchSingleResult
     ? registrationIdentityTargetLabel(searchedRegistrations)
     : dossierIdentityTargetLabel;
   const localSearchSingleResultActionHint = localSearchSingleResult
     ? ` ${
-      shouldUseDirectPendingRecoveryAction(localSearchSingleResult.crStatus)
+      localSearchSingleResultKnownStatus === 'cancelled'
         ? buildPendingRecoveryScopeHint(localSearchSingleResultTargetLabel)
+        : localSearchSingleResultUsesDirectPaidRecovery
+          ? buildPaidRecoveryScopeHint(localSearchSingleResultTargetLabel)
         : canOpenPaymentWorkflowFromStatus(localSearchSingleResult.crStatus)
           ? buildPaymentWorkflowScopeHint(localSearchSingleResultTargetLabel)
           : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
@@ -5261,6 +5268,10 @@ export default function CourseRegistrationsAdminPage() {
                     reg.crStatus,
                     showActiveStatusFilterSummary
                       || statusAlreadyVisibleInBusySearchOnboarding
+                      || (
+                        localSearchSingleResultUsesDirectPaidRecovery
+                        && localSearchSingleResult?.crId === reg.crId
+                      )
                       || (
                         showSingleStatusSummaryInPageChrome
                         && searchedRegistrations.length === 1

@@ -227,6 +227,8 @@ const dossierOnlyScopeHint =
   'Usa el nombre para abrir expediente; Estado abre acciones rápidas.';
 const pendingRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
+const paidRecoveryScopeHint =
+  'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.';
 const contactDossierScopeHint =
   'Usa el contacto para abrir expediente; Estado muestra acciones.';
 const contactPaymentWorkflowDossierScopeHint =
@@ -8600,6 +8602,62 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Nina Simone').getAttribute('aria-haspopup')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
+  it('uses the direct paid-recovery action when busy-list search leaves one paid registration', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => (
+        index === 8
+          ? {
+            crFullName: 'Nina Simone',
+            crEmail: 'nina@example.com',
+            crStatus: 'paid',
+          }
+          : {}
+      )),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain(
+        `Mostrando 1 de 9 inscripciones cargadas. ${paidRecoveryScopeHint}`,
+      );
+      const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
+      expect(paidRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(paidRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Estado actualizado para Nina Simone.');
+      expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(0);
     });
 
     await cleanup();
