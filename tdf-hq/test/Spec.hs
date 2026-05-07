@@ -64,7 +64,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionLookup,
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
-import TDF.App.Boot (validateSeedDatabaseStartup)
+import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
 import TDF.Cors
     ( corsPolicy,
@@ -555,6 +555,18 @@ main = hspec $ do
                 `shouldSatisfy` seedDbGuardMessage
             validateSeedDatabaseStartup True [("APP_ENV", "production")]
                 `shouldSatisfy` seedDbGuardMessage
+
+    describe "validateDatabaseStartupSafety" $ do
+        it "blocks destructive schema reset in hosted or production runtimes" $ do
+            let resetDbGuardMessage (Left msg) =
+                    "RESET_DB=true is not allowed" `isInfixOf` msg
+                resetDbGuardMessage _ = False
+            validateDatabaseStartupSafety True False [("KOYEB_APP_NAME", "tdf-hq")]
+                `shouldSatisfy` resetDbGuardMessage
+            validateDatabaseStartupSafety True False [("APP_ENV", "production")]
+                `shouldSatisfy` resetDbGuardMessage
+            validateDatabaseStartupSafety True False []
+                `shouldBe` Right ()
 
     describe "getVersionInfo" $ do
         let clearEnv keys = map (\key -> (key, Nothing)) keys

@@ -3,6 +3,7 @@
 
 module TDF.App.Boot
   ( runBootServer
+  , validateDatabaseStartupSafety
   , validateSeedDatabaseStartup
   ) where
 
@@ -78,7 +79,7 @@ runBootServer :: IO ()
 runBootServer = do
   cfg <- loadConfig
   startupEnv <- getEnvironment
-  case validateSeedDatabaseStartup (seedDatabase cfg) startupEnv of
+  case validateDatabaseStartupSafety (resetDb cfg) (seedDatabase cfg) startupEnv of
     Right () -> pure ()
     Left msg -> do
       hPutStrLn stderr msg
@@ -176,6 +177,14 @@ validateSeedDatabaseStartup shouldSeed env
         "SEED_DB=true is not allowed in hosted or production runtimes. \
         \Disable SEED_DB before starting this service."
   | otherwise = Right ()
+
+validateDatabaseStartupSafety :: Bool -> Bool -> [(String, String)] -> Either String ()
+validateDatabaseStartupSafety shouldReset shouldSeed env
+  | shouldReset && not (seededCredentialSeedingAllowed env) =
+      Left
+        "RESET_DB=true is not allowed in hosted or production runtimes. \
+        \Disable RESET_DB before starting this service."
+  | otherwise = validateSeedDatabaseStartup shouldSeed env
 
 resetSchema :: SqlPersistT IO ()
 resetSchema = do
