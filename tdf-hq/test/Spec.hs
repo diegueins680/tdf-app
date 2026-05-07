@@ -10341,7 +10341,7 @@ main = hspec $ do
                 (Data.Text.replicate 4001 "A")
                 "setlist song lyrics must be 4000 characters or fewer"
 
-        it "rejects non-positive setlist bpm values instead of persisting impossible tempo metadata" $
+        it "rejects impossible setlist bpm values before intake persistence" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
                     , ("musicians", "[]")
@@ -10351,6 +10351,16 @@ main = hspec $ do
                     err `shouldContain` "setlist song bpm must be a positive integer"
                 Right payload ->
                     expectationFailure ("Expected non-positive setlist bpm to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":401}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "setlist song bpm must be 400 or fewer"
+                Right payload ->
+                    expectationFailure ("Expected oversized setlist bpm to be rejected, got: " <> show payload)
 
         it "rejects negative or duplicate resolved setlist sortOrder values instead of accepting ambiguous ordering" $ do
             case fromMultipart (mkLiveSessionMultipart

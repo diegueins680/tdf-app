@@ -289,6 +289,8 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
                case lssBpm song of
                  Just bpm | bpm <= 0 ->
                    Left "setlist song bpm must be a positive integer"
+                 Just bpm | bpm > 400 ->
+                   Left "setlist song bpm must be 400 or fewer"
                  _ ->
                    Right song
                      { lssTitle = normalizedTitle
