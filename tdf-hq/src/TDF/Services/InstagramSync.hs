@@ -57,6 +57,8 @@ validateInstagramMediaId rawMediaId
       fail "Instagram media id must be 256 characters or fewer"
   | T.any (\ch -> isSpace ch || isControl ch) mediaId =
       fail "Instagram media id must not contain whitespace or control characters"
+  | T.any isHiddenInstagramFormattingChar mediaId =
+      fail "Instagram media id must not contain hidden formatting characters"
   | T.any (`elem` ("/?#" :: String)) mediaId =
       fail "Instagram media id must not contain path or query delimiters"
   | otherwise =
@@ -154,6 +156,8 @@ normalizeGraphAccessToken rawAccessToken
       Left "Instagram access token is required"
   | T.any (\ch -> isControl ch || isSpace ch) accessToken =
       Left "Instagram access token must not contain whitespace or control characters"
+  | T.any isHiddenInstagramFormattingChar accessToken =
+      Left "Instagram access token must not contain hidden formatting characters"
   | otherwise =
       Right accessToken
   where

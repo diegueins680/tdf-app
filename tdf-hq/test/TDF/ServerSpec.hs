@@ -9198,7 +9198,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "ig-user/../../me" "Graph node id"
             assertInvalid "ig-user?fields=id" "Graph node id"
 
-        it "rejects blank or whitespace-bearing access tokens before query construction" $ do
+        it "rejects blank or unsafe access tokens before query construction" $ do
             let assertInvalid rawToken expectedMessage =
                     case buildUserMediaRequestUrl
                         (marketplaceTestConfig False)
@@ -9211,6 +9211,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "   " "access token is required"
             assertInvalid "token with spaces" "must not contain whitespace"
             assertInvalid "token\nInjected: value" "must not contain whitespace"
+            assertInvalid
+                ("token" <> T.singleton '\x200D')
+                "must not contain hidden formatting characters"
 
     describe "Instagram sync media response decoding" $ do
         it "normalizes canonical media ids and public media links before cron storage" $
@@ -9239,6 +9242,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Instagram media id must not contain whitespace"
                 "{\"id\":\"ig media 42\"}"
+            assertInvalid
+                "Instagram media id must not contain hidden formatting characters"
+                "{\"id\":\"ig-media\\u202e42\"}"
             assertInvalid
                 "media_url must be an absolute public https URL"
                 "{\"id\":\"ig-media-42\",\"media_url\":\"javascript:alert(1)\"}"
