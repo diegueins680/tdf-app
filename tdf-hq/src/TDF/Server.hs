@@ -108,11 +108,10 @@ import           TDF.Auth
   , ModuleAccess(..)
   , authContext
   , hasAiToolingAccess
-  , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
-  , moduleName
   , modulesForRoles
+  , validateModuleAccess
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
@@ -774,8 +773,8 @@ coursesAdminServer user =
   :<|> updateFollowUpH
   :<|> deleteFollowUpH
   where
-    requireCourseAdmin = unless (hasModuleAccess ModuleAdmin user) $
-      throwError err403
+    requireCourseAdmin =
+      either throwError pure (validateModuleAccess ModuleAdmin user)
 
     upsertCourseH payload = do
       requireCourseAdmin
@@ -9000,12 +8999,8 @@ hasRole roleTag AuthedUser{..} = roleTag `elem` auRoles
 
 
 requireModule :: AuthedUser -> ModuleAccess -> AppM ()
-requireModule user moduleTag
-  | hasModuleAccess moduleTag user = pure ()
-  | otherwise = throwError err403
-      { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-  where
-    msg = "Missing access to module: " <> moduleName moduleTag
+requireModule user moduleTag =
+  either throwError pure (validateModuleAccess moduleTag user)
 
 requireStrictAdmin :: AuthedUser -> AppM ()
 requireStrictAdmin user =

@@ -13,6 +13,7 @@ module TDF.Auth
   , hasSocialSyncAccess
   , hasSocialInboxAccess
   , hasModuleAccess
+  , validateModuleAccess
   , moduleName
   , modulesForRoles
   , loadAuthedUser
@@ -86,6 +87,20 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 -- | Check whether the user can access the given module.
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
 hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
+
+validateModuleAccess :: ModuleAccess -> AuthedUser -> Either ServerError ()
+validateModuleAccess moduleTag user@AuthedUser{..}
+  | not (rolesAreUnique auRoles) =
+      Left err403 { errBody = "Role grants must be unique" }
+  | auModules /= modulesForRoles auRoles =
+      Left err403 { errBody = "Module grants must match roles" }
+  | hasModuleAccess moduleTag user =
+      Right ()
+  | otherwise =
+      Left err403
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
+        }
 
 hasStrictAdminAccess :: AuthedUser -> Bool
 hasStrictAdminAccess user@AuthedUser{..} =

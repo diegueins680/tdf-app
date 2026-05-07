@@ -11,7 +11,13 @@ import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
 
-import TDF.Auth (resolveUsernameFromLabel)
+import TDF.Auth
+  ( AuthedUser (..)
+  , ModuleAccess (..)
+  , modulesForRoles
+  , resolveUsernameFromLabel
+  , validateModuleAccess
+  )
 import TDF.DTO (LoginRequest (..))
 import TDF.Models (RoleEnum (..), UserCredential (..))
 import TDF.ServerAuth
@@ -34,6 +40,7 @@ import TDF.ServerAuth
 spec :: Spec
 spec = do
   authEmailSpec
+  moduleAccessSpec
   loginRequestSpec
   currentPasswordInputSpec
   passwordChangeAuthHeaderSpec
@@ -78,6 +85,35 @@ authEmailSpec = describe "normalizeAuthEmailAddress" $ do
             ]
       )
       `shouldBe` Nothing
+
+moduleAccessSpec :: Spec
+moduleAccessSpec = describe "validateModuleAccess" $ do
+  let mkUser roles =
+        AuthedUser
+          { auPartyId = toSqlKey 1
+          , auRoles = roles
+          , auModules = modulesForRoles roles
+          }
+      assertRejected expectedMessage result =
+        case result of
+          Left err -> do
+            errHTTPCode err `shouldBe` 403
+            BL8.unpack (errBody err) `shouldContain` expectedMessage
+          Right value ->
+            expectationFailure ("Expected module access to be rejected, got " <> show value)
+
+  it "allows coherent users with the required module grant" $
+    validateModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` Right ()
+
+  it "rejects missing, duplicated, or stale module grants before handler authorization" $ do
+    assertRejected "Missing access to module: Admin" $
+      validateModuleAccess ModuleAdmin (mkUser [Fan])
+    assertRejected "Role grants must be unique" $
+      validateModuleAccess ModuleAdmin (mkUser [Admin, Admin])
+    assertRejected "Module grants must match roles" $
+      validateModuleAccess
+        ModuleAdmin
+        ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
 
 loginRequestSpec :: Spec
 loginRequestSpec = describe "validateLoginRequest" $ do
