@@ -4002,6 +4002,9 @@ export default function CourseRegistrationsAdminPage() {
     : emptyReceiptAlertMessage;
   const emptyReceiptActionLabel = showEvidenceOnlyEmptyReceiptCopy
     ? 'Agregar evidencia'
+    : 'Agregar comprobante';
+  const emptyReceiptActionAccessibleLabel = showEvidenceOnlyEmptyReceiptCopy
+    ? 'Agregar evidencia'
     : 'Agregar primer comprobante';
   const showReceiptsSection = !(
     activeRegistrationKnownStatus === 'cancelled'
@@ -4419,7 +4422,13 @@ export default function CourseRegistrationsAdminPage() {
                     <Alert
                       severity="info"
                       action={(
-                        <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
+                        <Button
+                          color="inherit"
+                          size="small"
+                          onClick={() => setShowReceiptComposer(true)}
+                          aria-label={emptyReceiptActionAccessibleLabel}
+                          title={emptyReceiptActionAccessibleLabel}
+                        >
                           {emptyReceiptActionLabel}
                         </Button>
                       )}

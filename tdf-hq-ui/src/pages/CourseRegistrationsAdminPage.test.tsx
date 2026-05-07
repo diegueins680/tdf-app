@@ -578,7 +578,11 @@ describe('CourseRegistrationsAdminPage', () => {
         'Sube un comprobante o pega una URL existente para habilitar Marcar pagado.',
       );
       expect(document.body.textContent).not.toContain('0 guardados');
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      const firstReceiptAction = getButtonByText(document.body, 'Agregar comprobante');
+      expect(firstReceiptAction).toBeTruthy();
+      expect(firstReceiptAction.getAttribute('aria-label')).toBe('Agregar primer comprobante');
+      expect(firstReceiptAction.getAttribute('title')).toBe('Agregar primer comprobante');
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
       expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
       expect(countButtonsByText(document.body, 'Notas y seguimiento')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
@@ -594,7 +598,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       await flushPromises();
       await flushPromises();
     });
@@ -664,7 +668,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
       expect(getButtonByText(document.body, optionalDossierContextActionsLabel)).toBeTruthy();
       expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
       expect(hasLabel(document.body, 'URL del comprobante')).toBe(false);
@@ -4924,11 +4928,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).not.toContain(
         'Cuando guardes el primer comprobante, quedara listado aqui con enlace y acciones para revisarlo despues.',
       );
-      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(1);
+      const firstReceiptAction = getButtonByText(document.body, 'Agregar comprobante');
+      expect(firstReceiptAction).toBeTruthy();
+      expect(firstReceiptAction.getAttribute('aria-label')).toBe('Agregar primer comprobante');
+      expect(firstReceiptAction.getAttribute('title')).toBe('Agregar primer comprobante');
+      expect(countButtonsByText(document.body, 'Agregar primer comprobante')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(0);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
+          (el) => (el.textContent ?? '').trim() === 'Agregar primer comprobante',
         ),
       ).toBe(false);
       expect(document.body.textContent).not.toContain('Abrir comprobante');
@@ -5039,11 +5047,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain(firstReceiptComposerHelpText);
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       await flushPromises();
       await flushPromises();
     });
@@ -5085,7 +5093,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       await flushPromises();
       await flushPromises();
     });
@@ -5277,11 +5285,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       await flushPromises();
       await flushPromises();
     });
@@ -5353,11 +5361,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar primer comprobante'));
+      clickButton(getButtonByText(document.body, 'Agregar comprobante'));
       await flushPromises();
       await flushPromises();
     });
@@ -6681,7 +6689,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(emptyReceiptAlertMessage);
       expect(document.body.textContent).not.toContain(markPaidReceiptHint);
       expect(document.body.textContent).not.toContain('0 guardados');
-      expect(getButtonByText(document.body, 'Agregar primer comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
       expect(Array.from(document.body.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Marcar pagado')).toBe(false);
     });
 
