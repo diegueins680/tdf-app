@@ -491,8 +491,17 @@ isValidSriEmailDomainChar ch =
 validateLines :: [SriScriptLine] -> Either Text [SriScriptLine]
 validateLines [] =
   Left "SRI script request requires at least one invoice line"
+validateLines values
+  | length values > maxSriScriptLineItems =
+      Left $
+        "SRI script request supports at most "
+          <> T.pack (show maxSriScriptLineItems)
+          <> " invoice lines"
 validateLines values =
   traverse validateLine (zip [(1 :: Int)..] values)
+
+maxSriScriptLineItems :: Int
+maxSriScriptLineItems = 100
 
 validateLine :: (Int, SriScriptLine) -> Either Text SriScriptLine
 validateLine (index, value) = do

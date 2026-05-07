@@ -3325,6 +3325,18 @@ main = hspec $ do
                             expectationFailure
                                 ("Expected invalid SRI payment mode to fail, got: " <> show value)
 
+        it "caps SRI invoice lines before invoking the browser runner" $
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = replicate 101 sampleSriScriptLine } of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "supports at most 100 invoice lines"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected oversized SRI invoice request to fail, got: "
+                                <> show value
+                            )
+
         it "rejects hidden formatting markers in SRI request text before invoking the script" $ do
             let hidden = Data.Text.singleton '\x202E'
                 assertInvalid expected request =
