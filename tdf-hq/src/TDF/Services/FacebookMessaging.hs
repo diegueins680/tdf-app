@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Services.FacebookMessaging
   ( sendFacebookText
+  , formatFacebookGraphHttpError
   ) where
 
 import           Control.Exception (SomeException, try)
@@ -14,6 +15,7 @@ import           Data.Char
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import           Network.HTTP.Client (Request(..), RequestBody(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
@@ -56,10 +58,43 @@ sendFacebookText cfg recipientId body =
                 Left err -> Left (T.pack (show err))
                 Right resp ->
                   let status = statusCode (responseStatus resp)
-                      bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
+                      bodyTxt = decodeFacebookGraphBody (responseBody resp)
                   in if status >= 200 && status < 300
                        then Right bodyTxt
-                       else Left ("HTTP " <> T.pack (show status) <> ": " <> bodyTxt)
+                       else Left (formatFacebookGraphHttpError status (responseBody resp))
+
+formatFacebookGraphHttpError :: Int -> BL.ByteString -> Text
+formatFacebookGraphHttpError status bodyBytes =
+  "HTTP " <> T.pack (show status) <> suffix
+  where
+    bodyTxt = sanitizeFacebookGraphBody bodyBytes
+    suffix =
+      if T.null bodyTxt
+        then ""
+        else ": " <> bodyTxt
+
+sanitizeFacebookGraphBody :: BL.ByteString -> Text
+sanitizeFacebookGraphBody bodyBytes =
+  truncateGraphErrorBody . T.strip . T.map sanitizeGraphErrorChar $
+    decodeFacebookGraphBody bodyBytes
+
+decodeFacebookGraphBody :: BL.ByteString -> Text
+decodeFacebookGraphBody =
+  TE.decodeUtf8With TEE.lenientDecode . BL.toStrict
+
+truncateGraphErrorBody :: Text -> Text
+truncateGraphErrorBody bodyTxt
+  | T.length bodyTxt <= maxFacebookGraphErrorBodyChars = bodyTxt
+  | otherwise = T.take maxFacebookGraphErrorBodyChars bodyTxt <> "..."
+
+sanitizeGraphErrorChar :: Char -> Char
+sanitizeGraphErrorChar ch
+  | isControl ch = ' '
+  | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+  | otherwise = ch
+
+maxFacebookGraphErrorBodyChars :: Int
+maxFacebookGraphErrorBodyChars = 1000
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =

@@ -9,9 +9,11 @@ import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), Key, count, get, insert, insert_, insertKey, (==.))
@@ -353,7 +355,7 @@ import TDF.ServerAuth
     , validateSignupFanArtistIds
     , validateSignupFanArtistTargets
     )
-import TDF.Services.FacebookMessaging (sendFacebookText)
+import TDF.Services.FacebookMessaging (formatFacebookGraphHttpError, sendFacebookText)
 import TDF.ServerProposals
     ( resolveOptionalProposalClientPartyReference
     , resolveOptionalProposalPipelineCardReference
@@ -7671,6 +7673,24 @@ spec = describe "TDF.Server helpers" $ do
                 "recipient-1"
                 ("hola" <> T.singleton '\NUL')
                 `shouldReturn` Left "Facebook message body must not contain control characters"
+
+    describe "formatFacebookGraphHttpError" $
+        it "bounds and sanitizes Graph error bodies without throwing on malformed UTF-8" $ do
+            let rawBody =
+                    BL.fromStrict
+                        ( TE.encodeUtf8
+                            ( "Graph error"
+                                <> T.singleton '\NUL'
+                                <> T.singleton '\x202E'
+                                <> T.replicate 1200 "x"
+                            )
+                        )
+                        <> BL.pack [255]
+                formatted = formatFacebookGraphHttpError 500 rawBody
+            formatted `shouldSatisfy` T.isPrefixOf "HTTP 500: Graph error"
+            formatted `shouldSatisfy` ((<= 1020) . T.length)
+            formatted `shouldNotSatisfy` T.any (== '\NUL')
+            formatted `shouldNotSatisfy` T.any (== '\x202E')
 
     describe "validateSocialReplyBody" $ do
         it "trims manual Instagram/Facebook reply text while preserving multiline formatting" $ do
