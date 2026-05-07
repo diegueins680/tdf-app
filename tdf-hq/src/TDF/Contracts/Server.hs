@@ -299,10 +299,8 @@ isValidContractEmail candidate =
     [localPart, domain] ->
       T.length candidate <= 254
         && isValidContractEmailLocalPart localPart
-        && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
-        && T.isInfixOf "." domain
-        && all isValidContractEmailDomainLabel (T.splitOn "." domain)
+        && isValidContractEmailDomain domain
     _ -> False
 
 isValidContractEmailLocalPart :: Text -> Bool
@@ -318,6 +316,17 @@ isValidContractEmailLocalChar :: Char -> Bool
 isValidContractEmailLocalChar c =
   isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
+isValidContractEmailDomain :: Text -> Bool
+isValidContractEmailDomain domain =
+  not (T.null domain)
+    && T.isInfixOf "." domain
+    && all isValidContractEmailDomainLabel labels
+    && case reverse labels of
+      finalLabel : _ -> isValidContractEmailFinalDomainLabel finalLabel
+      [] -> False
+  where
+    labels = T.splitOn "." domain
+
 isValidContractEmailDomainLabel :: Text -> Bool
 isValidContractEmailDomainLabel label =
   not (T.null label)
@@ -325,6 +334,10 @@ isValidContractEmailDomainLabel label =
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidContractEmailDomainChar label
+
+isValidContractEmailFinalDomainLabel :: Text -> Bool
+isValidContractEmailFinalDomainLabel label =
+  T.length label >= 2 && T.any isAsciiLower label
 
 isValidContractEmailDomainChar :: Char -> Bool
 isValidContractEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'

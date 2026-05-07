@@ -8126,6 +8126,12 @@ main = hspec $ do
                 (A.object ["email" .= ("sales@" <> Data.Text.replicate 64 "a" <> ".com")])
                 "Contract send payload must include a valid email"
             assertInvalid
+                (A.object ["email" .= ("sales@example.123" :: Text)])
+                "Contract send payload must include a valid email"
+            assertInvalid
+                (A.object ["email" .= ("sales@example.c" :: Text)])
+                "Contract send payload must include a valid email"
+            assertInvalid
                 (A.object ["email" .= ("sales@example.com" :: Text), "subject" .= ("Contract" :: Text)])
                 "Contract send payload only supports the email field"
 
