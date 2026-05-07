@@ -4670,6 +4670,74 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('ignores terse user and audit empty-state cards without hiding actionable onboarding copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-team-empty',
+          title: 'Equipo administrativo',
+          body: ['No users yet.'],
+        },
+        {
+          cardId: 'audit-history-empty',
+          title: 'Historial operativo',
+          body: ['No audit events found.'],
+        },
+        {
+          cardId: 'usuarios-empty',
+          title: 'Invitados administrativos',
+          body: ['Sin usuarios.'],
+        },
+        {
+          cardId: 'auditoria-empty',
+          title: 'Bitácora operativa',
+          body: ['Aún no hay eventos de auditoría.'],
+        },
+        {
+          cardId: 'secure-invites',
+          title: 'Invitación segura',
+          body: [
+            'Sin usuarios asignados a este flujo. Invita al responsable antes de activar accesos compartidos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(screen.queryByText('Equipo administrativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Historial operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Invitados administrativos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora operativa')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No users yet\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No audit events found\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sin usuarios\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Aún no hay eventos de auditoría\.$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Invitación segura')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Sin usuarios asignados a este flujo\. Invita al responsable antes de activar accesos compartidos\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('ignores terse activity-empty fallback cards without hiding actionable setup copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
