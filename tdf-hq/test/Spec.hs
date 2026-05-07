@@ -830,6 +830,13 @@ main = hspec $ do
             assertInvalid
                 "TDF Records\nBcc: ops@example.com"
                 "SMTP_FROM_NAME must not contain control characters"
+            let hiddenName =
+                    "TDF Records "
+                        <> Data.Text.unpack (Data.Text.singleton '\x202E')
+                        <> "HQ"
+            assertInvalid
+                hiddenName
+                "SMTP_FROM_NAME must not contain hidden formatting characters"
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 121 "x"))
                 "SMTP_FROM_NAME must be 120 characters or fewer"

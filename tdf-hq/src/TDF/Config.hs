@@ -804,7 +804,9 @@ loadConfig = do
              then fail "SMTP_FROM_NAME must be 120 characters or fewer"
              else if T.any isControl name || T.any (`elem` ['\n', '\r']) name
                then fail "SMTP_FROM_NAME must not contain control characters"
-               else pure name
+               else if T.any isHiddenConnectionUrlChar name
+                 then fail "SMTP_FROM_NAME must not contain hidden formatting characters"
+                 else pure name
 
     normalizeConfiguredEmailAddress rawEmail =
       let normalized = T.toLower (T.strip rawEmail)
