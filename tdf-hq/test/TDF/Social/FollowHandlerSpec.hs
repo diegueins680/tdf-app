@@ -36,6 +36,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventImageUploadSize
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
+    , validateStoredEventFinanceMetadata
     )
 
 spec :: Spec
@@ -119,6 +120,28 @@ spec = describe "social event handler helpers" $ do
             Right value ->
                 expectationFailure
                     ("Expected metadata update with unsafe image URL to fail, got: " <> show value)
+
+    it "rejects malformed stored event finance metadata instead of falling back to USD" $ do
+        let eventWithMetadata rawMetadata =
+                (seedSocialEvent "1" "Finance event" socialEventStartFixture)
+                    { socialEventMetadata = rawMetadata
+                    }
+            assertInvalid rawMetadata expectedMessage =
+                case validateStoredEventFinanceMetadata (eventWithMetadata rawMetadata) of
+                    Left message ->
+                        T.unpack message `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored event metadata to be rejected, got: " <> show value)
+
+        validateStoredEventFinanceMetadata (eventWithMetadata Nothing)
+            `shouldBe` Right ("USD", Nothing)
+        validateStoredEventFinanceMetadata
+            (eventWithMetadata (Just "{\"currency\":\"eur\",\"budgetCents\":2500}"))
+            `shouldBe` Right ("EUR", Just 2500)
+        assertInvalid (Just "not-json") "Stored event metadata is invalid JSON"
+        assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
+        assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
 
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1

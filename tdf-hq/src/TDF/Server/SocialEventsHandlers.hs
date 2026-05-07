@@ -35,6 +35,7 @@ module TDF.Server.SocialEventsHandlers
   , validateOptionalBudgetLineIdInput
   , validateStoredBudgetLineDimensions
   , validateStoredFinanceEntryDimensions
+  , validateStoredEventFinanceMetadata
   , normalizePositivePartyIdText
   , resolveExistingPartyIdText
   , resolveUniqueRsvpRow
@@ -1434,8 +1435,10 @@ socialEventsServer user = eventsServer
       when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
       when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
       when (ticketTierQuantityTotal dto <= 0) $ throwError err400 { errBody = "ticket tier quantity must be > 0" }
+      (eventCurrencyVal, _) <- either (throwError . storedEventMetadataServerError) pure
+        (validateStoredEventFinanceMetadata eventVal)
       currencyVal <- either throwError pure $
-        validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
+        validateTicketTierCurrencyInput eventCurrencyVal (ticketTierCurrency dto)
       tierCode <- either throwError pure $
         validateTicketTierCodeInput tierName (ticketTierCode dto)
       let salesStartVal = ticketTierSalesStart dto
@@ -1479,8 +1482,10 @@ socialEventsServer user = eventsServer
       when (T.null tierName) $ throwError err400 { errBody = "ticket tier name is required" }
       when (ticketTierPriceCents dto < 0) $ throwError err400 { errBody = "ticket tier price must be >= 0" }
       when (ticketTierQuantityTotal dto < eventTicketTierQuantitySold tier) $ throwError err400 { errBody = "ticket tier quantity cannot be below sold quantity" }
+      (eventCurrencyVal, _) <- either (throwError . storedEventMetadataServerError) pure
+        (validateStoredEventFinanceMetadata eventVal)
       currencyVal <- either throwError pure $
-        validateTicketTierCurrencyInput (eventCurrencyFromEvent eventVal) (ticketTierCurrency dto)
+        validateTicketTierCurrencyInput eventCurrencyVal (ticketTierCurrency dto)
       tierCode <- either throwError pure $
         validateTicketTierCodeInput tierName (ticketTierCode dto)
       let salesStartVal = ticketTierSalesStart dto
@@ -1911,12 +1916,13 @@ socialEventsServer user = eventsServer
       statusVal <- normalizeFinanceEntryStatusInput (efeStatus dto)
       when (sourceVal `elem` ["ticket_sale", "ticket_refund"]) $
         throwError err400 { errBody = "ticket_sale and ticket_refund entries are generated from ticket orders" }
+      (eventCurrencyVal, _) <- either (throwError . storedEventMetadataServerError) pure
+        (validateStoredEventFinanceMetadata eventRec)
       let categoryVal = normalizeCategory (Just (efeCategory dto))
           conceptVal = T.strip (efeConcept dto)
           amountVal = efeAmountCents dto
-          defaultCurrency = eventCurrencyFromEvent eventRec
       currencyVal <- either throwError pure
-        (validateFinanceEntryCurrencyInput defaultCurrency (efeCurrency dto))
+        (validateFinanceEntryCurrencyInput eventCurrencyVal (efeCurrency dto))
       when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
       when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
       budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
@@ -1956,12 +1962,13 @@ socialEventsServer user = eventsServer
       statusVal <- normalizeFinanceEntryStatusInput (efeStatus dto)
       when (sourceVal `elem` ["ticket_sale", "ticket_refund"]) $
         throwError err400 { errBody = "ticket_sale and ticket_refund entries are generated from ticket orders" }
+      (eventCurrencyVal, _) <- either (throwError . storedEventMetadataServerError) pure
+        (validateStoredEventFinanceMetadata eventRec)
       let categoryVal = normalizeCategory (Just (efeCategory dto))
           conceptVal = T.strip (efeConcept dto)
           amountVal = efeAmountCents dto
-          defaultCurrency = eventCurrencyFromEvent eventRec
       currencyVal <- either throwError pure
-        (validateFinanceEntryCurrencyInput defaultCurrency (efeCurrency dto))
+        (validateFinanceEntryCurrencyInput eventCurrencyVal (efeCurrency dto))
       when (T.null conceptVal) $ throwError err400 { errBody = "concept is required" }
       when (amountVal <= 0) $ throwError err400 { errBody = "amountCents must be greater than 0" }
       budgetLineKey <- resolveBudgetLineKey envPool eventKey (efeBudgetLineId dto)
@@ -1989,8 +1996,8 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       now <- liftIO getCurrentTime
       (eventKey, eventRec) <- requireManagedEvent eventIdStr
-      let eventCurrencyVal = eventCurrencyFromEvent eventRec
-          budgetOverride = eventBudgetFromEvent eventRec
+      (eventCurrencyVal, budgetOverride) <- either (throwError . storedEventMetadataServerError) pure
+        (validateStoredEventFinanceMetadata eventRec)
       budgetRows <- liftIO $ runSqlPool (selectList [EventBudgetLineEventId ==. eventKey] []) envPool
       allFinanceRows <- liftIO $ runSqlPool
         (selectList [EventFinanceEntryEventId ==. eventKey] [])
@@ -3057,13 +3064,34 @@ validateOptionalBudgetLineIdInput (Just raw)
   where
     stripped = T.strip raw
 
-eventCurrencyFromEvent :: SocialEvent -> T.Text
-eventCurrencyFromEvent eventRec =
-  fromMaybe "USD" (emCurrency (decodeEventMetadata (socialEventMetadata eventRec)))
+decodeStoredEventMetadata :: Maybe T.Text -> Either T.Text EventMetadataDTO
+decodeStoredEventMetadata Nothing = Right emptyEventMetadata
+decodeStoredEventMetadata (Just raw)
+  | T.null (T.strip raw) = Right emptyEventMetadata
+  | otherwise =
+      case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
+        Right metadata -> Right metadata
+        Left _ -> Left "Stored event metadata is invalid JSON"
 
-eventBudgetFromEvent :: SocialEvent -> Maybe Int
-eventBudgetFromEvent eventRec =
-  emBudgetCents (decodeEventMetadata (socialEventMetadata eventRec))
+validateStoredEventFinanceMetadata :: SocialEvent -> Either T.Text (T.Text, Maybe Int)
+validateStoredEventFinanceMetadata eventRec = do
+  metadata <- decodeStoredEventMetadata (socialEventMetadata eventRec)
+  currencyVal <-
+    case emCurrency metadata of
+      Nothing -> Right "USD"
+      Just rawCurrency ->
+        maybe (Left "Stored event currency is invalid") Right
+          (normalizeEventCurrencyCode rawCurrency)
+  budgetVal <-
+    case emBudgetCents metadata of
+      Just budgetCents | budgetCents < 0 ->
+        Left "Stored event budget is invalid"
+      value -> Right value
+  Right (currencyVal, budgetVal)
+
+storedEventMetadataServerError :: T.Text -> ServerError
+storedEventMetadataServerError message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
 fallbackBudget :: Int -> Maybe Int
 fallbackBudget plannedExpenseCents
