@@ -220,6 +220,7 @@ import TDF.Server
       validateCoursePublicUrlField,
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
+      validateOptionalDatafastMetadataField,
       validateDatafastCredential,
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
@@ -4685,6 +4686,32 @@ main = hspec $ do
             assertInvalid (Just "../payment")
             assertInvalid (Just "payment?entityId=other")
             assertInvalid (Just "payment#fragment")
+
+    describe "validateOptionalDatafastMetadataField" $ do
+        it "normalizes optional Datafast response metadata before marketplace storage" $ do
+            validateOptionalDatafastMetadataField "Datafast result description" Nothing
+                `shouldBe` Right Nothing
+            validateOptionalDatafastMetadataField "Datafast result description" (Just "  autorización emitida  ")
+                `shouldBe` Right (Just "autorización emitida")
+            validateOptionalDatafastMetadataField "Datafast payment brand" (Just "   ")
+                `shouldBe` Right Nothing
+
+        it "rejects malformed Datafast response metadata before marketplace storage" $ do
+            let assertInvalid fieldName rawValue =
+                    case validateOptionalDatafastMetadataField fieldName (Just rawValue) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (fieldName <> " must be 512 characters or fewer")
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Datafast metadata, got " <> show value)
+            assertInvalid "Datafast result description" "approved\nwith note"
+            assertInvalid
+                "Datafast auth code"
+                ("AUTH" <> Data.Text.singleton '\x202E' <> "123")
+            assertInvalid "Datafast acquirer code" (Data.Text.replicate 513 "A")
 
     describe "validatePayPalApprovalUrl" $ do
         it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do

@@ -10633,6 +10633,22 @@ confirmDatafastPayment mOrderId mResourcePath = do
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
+  resultDescription <- either throwError pure $
+    validateOptionalDatafastMetadataField
+      "Datafast result description"
+      (dfrDescription (dfpResult statusResp))
+  paymentBrand <- either throwError pure $
+    validateOptionalDatafastMetadataField
+      "Datafast payment brand"
+      (dfpPaymentBrand statusResp)
+  authCode <- either throwError pure $
+    validateOptionalDatafastMetadataField
+      "Datafast auth code"
+      (dfpResultDetails statusResp >>= dfrdAuthCode)
+  acquirerCode <- either throwError pure $
+    validateOptionalDatafastMetadataField
+      "Datafast acquirer code"
+      (dfpResultDetails statusResp >>= dfrdAcquirerCode)
   let nextStatus
         | success = "paid"
         | pending = "datafast_pending"
@@ -10646,10 +10662,10 @@ confirmDatafastPayment mOrderId mResourcePath = do
         , ME.MarketplaceOrderDatafastResourcePath =. Just resourcePathTxt
         , ME.MarketplaceOrderDatafastPaymentId =. paymentId
         , ME.MarketplaceOrderDatafastResultCode =. Just code
-        , ME.MarketplaceOrderDatafastResultDescription =. dfrDescription (dfpResult statusResp)
-        , ME.MarketplaceOrderDatafastPaymentBrand =. dfpPaymentBrand statusResp
-        , ME.MarketplaceOrderDatafastAuthCode =. (dfpResultDetails statusResp >>= dfrdAuthCode)
-        , ME.MarketplaceOrderDatafastAcquirerCode =. (dfpResultDetails statusResp >>= dfrdAcquirerCode)
+        , ME.MarketplaceOrderDatafastResultDescription =. resultDescription
+        , ME.MarketplaceOrderDatafastPaymentBrand =. paymentBrand
+        , ME.MarketplaceOrderDatafastAuthCode =. authCode
+        , ME.MarketplaceOrderDatafastAcquirerCode =. acquirerCode
         ]
   liftIO $ flip runSqlPool envPool $ update orderKey updateFields
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
@@ -10904,6 +10920,32 @@ validateOptionalDatafastPaymentIdField (Just rawPaymentId)
         }
   where
     paymentId = T.strip rawPaymentId
+
+validateOptionalDatafastMetadataField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalDatafastMetadataField _ Nothing =
+  Right Nothing
+validateOptionalDatafastMetadataField fieldName (Just rawValue)
+  | T.null value =
+      Right Nothing
+  | T.length value > 512 =
+      invalid
+  | T.any isDatafastMetadataUnsafeChar value =
+      invalid
+  | otherwise =
+      Right (Just value)
+  where
+    value = T.strip rawValue
+    invalid =
+      Left err502
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              fieldName
+                <> " must be 512 characters or fewer and must not contain control or formatting characters"
+        }
+
+isDatafastMetadataUnsafeChar :: Char -> Bool
+isDatafastMetadataUnsafeChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 isValidDatafastCheckoutId :: Text -> Bool
 isValidDatafastCheckoutId checkoutId =
