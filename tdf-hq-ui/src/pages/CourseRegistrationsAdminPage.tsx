@@ -167,7 +167,7 @@ const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambi
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
-const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
+const customStatusFilterUnavailableMessage = 'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
 const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
@@ -4819,7 +4819,7 @@ export default function CourseRegistrationsAdminPage() {
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            Sin filtros de estado
+                            Estados no estándar
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {customStatusFilterGuidance}

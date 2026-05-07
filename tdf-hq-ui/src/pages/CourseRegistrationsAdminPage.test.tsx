@@ -217,7 +217,8 @@ const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para 
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
 const customStatusFilterUnavailableMessage =
-  'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
+  'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
+const customStatusFilterUnavailableTitle = 'Estados no estándar';
 const dossierScopeHint =
   'Usa el nombre para abrir expediente; Estado muestra acciones.';
 const paymentWorkflowDossierScopeHint =
@@ -3440,8 +3441,9 @@ describe('CourseRegistrationsAdminPage', () => {
         '[data-testid="course-registration-status-filter-unavailable"]',
       );
 
-      expect(customStatusSummary?.textContent).toContain('Sin filtros de estado');
+      expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableTitle);
       expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(customStatusSummary?.textContent).not.toContain('Sin filtros de estado');
       expect(customStatusSummary?.textContent).not.toContain('Usa Cambiar estado');
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
