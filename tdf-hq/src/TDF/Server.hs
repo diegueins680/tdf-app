@@ -11740,7 +11740,7 @@ createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName bu
     Right val -> pure (val :: PayPalCreateResponse)
   approval <-
     either throwError pure $
-      resolvePayPalApprovalUrl (pcrLinks resObj)
+      resolvePayPalApprovalUrlForBase baseUrl (pcrLinks resObj)
   ppOrderId <-
     either throwError pure $
       validatePayPalCreateOrderIdField (pcrId resObj)
@@ -11758,6 +11758,52 @@ resolvePayPalApprovalUrl links =
       Left err502
         { errBody = "PayPal response included multiple approval URLs"
         }
+
+resolvePayPalApprovalUrlForBase :: String -> [PayPalLink] -> Either ServerError Text
+resolvePayPalApprovalUrlForBase baseUrl links = do
+  approvalUrl <- resolvePayPalApprovalUrl links
+  validatePayPalApprovalUrlEnvironment baseUrl approvalUrl
+
+validatePayPalApprovalUrlEnvironment :: String -> Text -> Either ServerError Text
+validatePayPalApprovalUrlEnvironment baseUrl approvalUrl =
+  case expectedPayPalApprovalHost (T.pack baseUrl) of
+    Nothing ->
+      Left err500
+        { errBody = "Configured PayPal API base URL is invalid"
+        }
+    Just expectedHost
+      | payPalApprovalHost approvalUrl == Just expectedHost ->
+          Right approvalUrl
+      | otherwise ->
+          Left err502
+            { errBody =
+                "PayPal approval URL host does not match configured PayPal environment"
+            }
+
+expectedPayPalApprovalHost :: Text -> Maybe Text
+expectedPayPalApprovalHost baseUrl
+  | baseUrl == "https://api-m.sandbox.paypal.com" =
+      Just "www.sandbox.paypal.com"
+  | baseUrl == "https://api-m.paypal.com" =
+      Just "www.paypal.com"
+  | otherwise =
+      Nothing
+
+payPalApprovalHost :: Text -> Maybe Text
+payPalApprovalHost rawApprovalUrl
+  | "https://" `T.isPrefixOf` T.toLower rawApprovalUrl =
+      let afterScheme = T.drop 8 rawApprovalUrl
+          authority =
+            T.takeWhile
+              (\c -> c /= '/' && c /= '?' && c /= '#')
+              afterScheme
+          (host, portSuffix) = T.breakOn ":" authority
+          normalizedHost = T.toLower host
+      in if T.null normalizedHost || not (T.null portSuffix)
+           then Nothing
+           else Just normalizedHost
+  | otherwise =
+      Nothing
 
 validatePayPalApprovalUrl :: Maybe Text -> Either ServerError Text
 validatePayPalApprovalUrl Nothing =

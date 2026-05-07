@@ -213,6 +213,7 @@ import TDF.Server
     , validatePayPalAccessTokenField
     , validatePayPalTokenResponse
     , resolvePayPalApprovalUrl
+    , resolvePayPalApprovalUrlForBase
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -7274,6 +7275,43 @@ spec = describe "TDF.Server helpers" $ do
                     " https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123 "
                 ]
                 `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123"
+
+        it "rejects approval links from a different PayPal environment" $ do
+            let liveLinks =
+                    [ PayPalLink
+                        "approve"
+                        "https://www.paypal.com/checkoutnow?token=ORDER-123"
+                    ]
+                sandboxLinks =
+                    [ PayPalLink
+                        "approve"
+                        "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+                    ]
+                assertWrongEnvironment baseUrl links =
+                    case resolvePayPalApprovalUrlForBase baseUrl links of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    ( "PayPal approval URL host does not match "
+                                        <> "configured PayPal environment"
+                                    )
+                        Right approvalUrl ->
+                            expectationFailure
+                                ( "Expected mismatched PayPal approval URL to be rejected, got: "
+                                    <> show approvalUrl
+                                )
+
+            resolvePayPalApprovalUrlForBase
+                "https://api-m.paypal.com"
+                liveLinks
+                `shouldBe` Right "https://www.paypal.com/checkoutnow?token=ORDER-123"
+            resolvePayPalApprovalUrlForBase
+                "https://api-m.sandbox.paypal.com"
+                sandboxLinks
+                `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+            assertWrongEnvironment "https://api-m.sandbox.paypal.com" liveLinks
+            assertWrongEnvironment "https://api-m.paypal.com" sandboxLinks
 
         it "rejects missing or duplicate approval links instead of silently choosing one" $ do
             let assertInvalid expectedMessage links =
