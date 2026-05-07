@@ -647,7 +647,9 @@ const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'review service health users roles and audit activity from one admin landing page',
   'review system status users roles and audit activity from one admin landing page',
   'review system health users roles and audit activity from one admin landing page',
+  'confirm service health users roles and audit before changing access',
   'revisa estado del sistema usuarios roles y auditoria desde una sola consola administrativa',
+  'confirma salud usuarios roles y auditoria antes de cambiar accesos',
   'generate sample users roles and audit events for review',
   'prepara usuarios y auditoria de demostracion para validar el panel',
 ] as const;

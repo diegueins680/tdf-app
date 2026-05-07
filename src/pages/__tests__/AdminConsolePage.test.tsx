@@ -724,6 +724,58 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps generated admin-checklist copy from duplicating the first-run walkthrough', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-operational-checklist',
+          title: 'Operational checklist',
+          body: [
+            'Confirm service health, users, roles, and audit before changing access.',
+          ],
+        },
+        {
+          cardId: 'fallback-revision-segura',
+          title: 'Revisión segura',
+          body: [
+            'Confirma salud, usuarios, roles y auditoría antes de cambiar accesos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Operational checklist')).not.toBeInTheDocument();
+    expect(screen.queryByText('Revisión segura')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm service health, users, roles, and audit before changing access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirma salud, usuarios, roles y auditoría antes de cambiar accesos\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps admin-center fallback cards from duplicating the console intro', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
