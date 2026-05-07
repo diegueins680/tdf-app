@@ -296,6 +296,7 @@ import TDF.Server
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
+    , validateAdsAdminName
     , validateCampaignBudgetCents
     , validateCampaignDateRange
     , validateCampaignStatus
@@ -4144,6 +4145,33 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://localhost/landing"
             assertInvalid "https://ads.example.com/landing copy"
 
+    describe "validateAdsAdminName" $ do
+        it "normalizes campaign and ad names before admin writes persist them" $ do
+            validateAdsAdminName "campaign name" "  Curso Abril  "
+                `shouldBe` Right "Curso Abril"
+            validateAdsAdminName "ad name" "  Meta lead ad  "
+                `shouldBe` Right "Meta lead ad"
+
+        it "rejects blank, oversized, or unsafe names before ads admin writes" $ do
+            let assertInvalid fieldName rawName expectedMessage =
+                    case validateAdsAdminName fieldName rawName of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right nameVal ->
+                            expectationFailure
+                                ("Expected invalid ads admin name to be rejected, got: " <> show nameVal)
+            assertInvalid "campaign name" "   " "campaign name is required"
+            assertInvalid "campaign name" (T.replicate 161 "A") "campaign name must be 160 characters or fewer"
+            assertInvalid
+                "campaign name"
+                ("Curso" <> T.singleton '\NUL')
+                "campaign name must not contain control characters"
+            assertInvalid
+                "ad name"
+                ("Meta" <> T.singleton '\x202E' <> "lead")
+                "ad name must not contain control characters or hidden formatting characters"
+
     describe "validateCampaignBudgetCents" $ do
         it "accepts omitted, zero, and positive campaign budgets" $ do
             validateCampaignBudgetCents Nothing `shouldBe` Right Nothing
@@ -4331,6 +4359,54 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "ad status must be an ASCII keyword"
                 (adsUpsertAd adminUser creativePayload)
+
+        it "rejects malformed campaign and ad names before database writes" $ do
+            let unusedEnv =
+                    Env
+                        { envPool = error "envPool should be unused by ads admin name validation"
+                        , envConfig = error "envConfig should be unused by ads admin name validation"
+                        }
+                adminUser = mkUser [Admin]
+                campaignPayload =
+                    CampaignUpsert
+                        { cuId = Nothing
+                        , cuName = "Curso Abril"
+                        , cuObjective = Nothing
+                        , cuPlatform = Nothing
+                        , cuStatus = Nothing
+                        , cuBudgetCents = Nothing
+                        , cuStartDate = Nothing
+                        , cuEndDate = Nothing
+                        }
+                creativePayload =
+                    AdCreativeUpsert
+                        { acuId = Nothing
+                        , acuCampaignId = Nothing
+                        , acuExternalId = Nothing
+                        , acuName = "Meta lead ad"
+                        , acuChannel = Nothing
+                        , acuAudience = Nothing
+                        , acuLandingUrl = Nothing
+                        , acuCta = Nothing
+                        , acuStatus = Nothing
+                        , acuNotes = Nothing
+                        }
+                assertInvalid expectedMessage action = do
+                    result <- runHandler (runReaderT action unusedEnv)
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right _ ->
+                            expectationFailure
+                                "Expected invalid ads admin name to be rejected"
+
+            assertInvalid
+                "campaign name must not contain control characters"
+                (adsUpsertCampaign adminUser campaignPayload { cuName = "Curso\NULAbril" })
+            assertInvalid
+                "ad name must not contain control characters or hidden formatting characters"
+                (adsUpsertAd adminUser creativePayload { acuName = "Meta\x202E lead ad" })
 
     describe "extractApiErrorMessage" $ do
         it "preserves OpenAI error code and type markers before model fallback checks" $ do

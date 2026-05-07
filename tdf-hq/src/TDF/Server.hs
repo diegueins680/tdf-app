@@ -9160,6 +9160,10 @@ validateAdsAssistChannel (Just rawChannel) =
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
 
+validateAdsAdminName :: Text -> Text -> Either ServerError Text
+validateAdsAdminName fieldName =
+  validateRequiredCourseTextField fieldName 160
+
 validateCampaignBudgetCents :: Maybe Int -> Either ServerError (Maybe Int)
 validateCampaignBudgetCents Nothing = Right Nothing
 validateCampaignBudgetCents (Just amount)
@@ -9318,8 +9322,7 @@ adsUpsertCampaign user CampaignUpsert{..} = do
   either throwError pure (validateCampaignDateRange cuStartDate cuEndDate)
   campaignIdUpdate <- either throwError pure (validateOptionalPositiveIdField "campaignId" cuId)
   statusVal <- either throwError pure (validateCampaignStatus cuStatus)
-  let nameClean = T.strip cuName
-  when (T.null nameClean) $ throwBadRequest "Nombre requerido"
+  nameClean <- either throwError pure (validateAdsAdminName "campaign name" cuName)
   now <- liftIO getCurrentTime
   cid <- case campaignIdUpdate of
     Nothing -> runDB $ insert ME.Campaign
@@ -9358,9 +9361,8 @@ adsUpsertAd user AdCreativeUpsert{..} = do
   adIdUpdate <- either throwError pure (validateOptionalPositiveIdField "adId" acuId)
   campaignIdRef <- either throwError pure (validateOptionalPositiveIdField "campaignId" acuCampaignId)
   statusVal <- either throwError pure (validateAdCreativeStatus acuStatus)
-  let nameClean = T.strip acuName
-      mCampaign = fmap toSqlKey campaignIdRef :: Maybe ME.CampaignId
-  when (T.null nameClean) $ throwBadRequest "Nombre del anuncio requerido"
+  nameClean <- either throwError pure (validateAdsAdminName "ad name" acuName)
+  let mCampaign = fmap toSqlKey campaignIdRef :: Maybe ME.CampaignId
   case mCampaign of
     Nothing -> pure ()
     Just key -> do
