@@ -11886,10 +11886,33 @@ resolveTrackScope user mOwnerId = do
   let isAdmin  = hasRole Admin user
       isArtist = hasRole Artist user || hasRole Artista user
   unless (isAdmin || isArtist) $
-    throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Solo artistas o admins pueden gestionar operaciones.") }
+    throwError err403
+      { errBody =
+          BL.fromStrict (TE.encodeUtf8 "Solo artistas o admins pueden gestionar operaciones.")
+      }
   ownerId <- either throwError pure (validateLabelTrackOwnerIdFilter mOwnerId)
-  let owner = if isAdmin then fmap toSqlKey ownerId else Just (auPartyId user)
+  owner <- either throwError pure (resolveLabelTrackOwnerScope user isAdmin ownerId)
   pure TrackScope { tsOwner = owner, tsAllowAny = isAdmin }
+
+resolveLabelTrackOwnerScope
+  :: AuthedUser
+  -> Bool
+  -> Maybe Int64
+  -> Either ServerError (Maybe PartyId)
+resolveLabelTrackOwnerScope user isAdmin mOwnerId
+  | isAdmin = Right (fmap toSqlKey mOwnerId)
+  | otherwise =
+      case mOwnerId of
+        Nothing ->
+          Right (Just (auPartyId user))
+        Just requestedOwnerId
+          | toSqlKey requestedOwnerId == auPartyId user ->
+              Right (Just (auPartyId user))
+          | otherwise ->
+              Left err403
+                { errBody =
+                    "Only admins can select another label track owner"
+                }
 
 ownerFilter :: TrackScope -> [Filter ME.LabelTrack]
 ownerFilter TrackScope{..} =

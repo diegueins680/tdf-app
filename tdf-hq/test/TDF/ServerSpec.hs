@@ -37,6 +37,7 @@ import TDF.API.Drive (DriveUploadForm (..))
 import TDF.API.Types
     ( DriveTokenExchangeRequest (..)
     , DriveTokenRefreshRequest (..)
+    , LabelTrackCreate (..)
     , LabelTrackUpdate (..)
     , maxMarketplaceCartItemQuantity
     )
@@ -216,6 +217,7 @@ import TDF.Server
     , validatePayPalCaptureOrderReference
     , prepareLine
     , validateMarketplaceOnlinePaymentTotal
+    , createLabelTrack
     , validateLabelTrackTitle
     , validateOptionalLabelTrackNote
     , validateLabelTrackOwnerIdFilter
@@ -6844,6 +6846,33 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertInvalid 0
             assertInvalid (-1)
+
+        it "rejects artist cross-owner creates before session-party fallback" $ do
+            let unusedEnv =
+                    Env
+                        { envPool =
+                            error "envPool should be unused by label track owner authorization"
+                        , envConfig =
+                            error "envConfig should be unused by label track owner authorization"
+                        }
+                artistUser = (mkUser [Artist]) { auPartyId = toSqlKey 41 }
+                payload =
+                    LabelTrackCreate
+                        { ltcTitle = "Mezcla final"
+                        , ltcNote = Nothing
+                        , ltcOwnerId = Just 42
+                        }
+            result <- runHandler (runReaderT (createLabelTrack artistUser payload) unusedEnv)
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Only admins can select another label track owner"
+                Right createdTrack ->
+                    expectationFailure
+                        ( "Expected cross-owner label-track create to be rejected, got: "
+                            <> show createdTrack
+                        )
 
         it "rejects empty label-track patches instead of only touching updatedAt" $
             case validateLabelTrackUpdateHasChanges (LabelTrackUpdate Nothing Nothing Nothing) of
