@@ -13578,6 +13578,40 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips placement-assessment descriptors from first-run cohort copy', async () => {
+    const titles = [
+      'Placement test form - Beatmaking 101',
+      'Course assessment page for Beatmaking 101',
+      'Beatmaking 101 - diagnostic quiz',
+      'Beatmaking 101 - formulario de diagnóstico',
+      'Prueba de nivel - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/placement test|assessment page|diagnostic quiz|formulario de diagn[oó]stico|prueba de nivel/i);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('keeps legitimate ingreso course titles in first-run cohort copy', async () => {
     listCohortsMock.mockResolvedValue([{ ccSlug: 'ingreso-programacion', ccTitle: 'Ingreso a la programación' }]);
     listRegistrationsMock.mockResolvedValue([]);
