@@ -3144,16 +3144,23 @@ buildUploadAssetUrl assetsBase relPath =
   in base <> "/" <> path
 
 isImageUpload :: T.Text -> T.Text -> Bool
-isImageUpload mimeType fileName =
-  let normalizedMime = normalizeUploadMimeType mimeType
-      ext = T.toLower (T.pack (takeExtension (T.unpack fileName)))
-  in case normalizedMime of
-      "image/jpeg" -> ext `elem` [".jpg", ".jpeg"]
-      "image/png" -> ext == ".png"
-      "image/webp" -> ext == ".webp"
-      "image/gif" -> ext == ".gif"
-      "image/bmp" -> ext == ".bmp"
-      _ -> False
+isImageUpload mimeType fileName
+  | T.any isUnsafeUploadMetadataChar mimeType = False
+  | otherwise =
+      let normalizedMime = normalizeUploadMimeType mimeType
+          ext = T.toLower (T.pack (takeExtension (T.unpack fileName)))
+      in case normalizedMime of
+          "image/jpeg" -> ext `elem` [".jpg", ".jpeg"]
+          "image/png" -> ext == ".png"
+          "image/webp" -> ext == ".webp"
+          "image/gif" -> ext == ".gif"
+          "image/bmp" -> ext == ".bmp"
+          _ -> False
+
+isUnsafeUploadMetadataChar :: Char -> Bool
+isUnsafeUploadMetadataChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 maxEventImageUploadBytes :: Integer
 maxEventImageUploadBytes = 10 * 1024 * 1024

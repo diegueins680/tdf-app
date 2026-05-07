@@ -163,33 +163,39 @@ instance FromMultipart Tmp EventImageUploadForm where
       isStableUploadBaseNameAtom ch =
         isAscii ch && isAlphaNum ch
 
-      validateImageUploadMetadata mName file =
-        let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
-            requestedExt = maybe "" imageExtension mName
-            browserExt = imageExtension (fdFileName file)
-            resolvedExt =
-              if T.null requestedExt
-                then browserExt
-                else requestedExt
-            providedExts = filter (not . T.null) [requestedExt, browserExt]
-        in case allowedImageExtensions uploadMimeType of
-          Nothing ->
+      validateImageUploadMetadata mName file
+        | T.any isUnsafeUploadNameChar (fdFileCType file) =
             Left
-              ( "Uploaded image must be a raster image "
-                  <> "(jpg, jpeg, png, webp, gif, or bmp)"
+              ( "Uploaded image MIME type must not contain control characters "
+                  <> "or Unicode formatting marks"
               )
-          Just allowedExts
-            | T.null resolvedExt ->
-                Left "Uploaded image file name must include a supported image extension"
-            | any (`notElem` allImageExtensions) (resolvedExt : providedExts) ->
+        | otherwise =
+            let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
+                requestedExt = maybe "" imageExtension mName
+                browserExt = imageExtension (fdFileName file)
+                resolvedExt =
+                  if T.null requestedExt
+                    then browserExt
+                    else requestedExt
+                providedExts = filter (not . T.null) [requestedExt, browserExt]
+            in case allowedImageExtensions uploadMimeType of
+              Nothing ->
                 Left
-                  ( "Uploaded image file name must end with "
-                      <> ".jpg, .jpeg, .png, .webp, .gif, or .bmp"
+                  ( "Uploaded image must be a raster image "
+                      <> "(jpg, jpeg, png, webp, gif, or bmp)"
                   )
-            | any (`notElem` allowedExts) (resolvedExt : providedExts) ->
-                Left "Uploaded image extension must match its MIME type"
-            | otherwise ->
-                Right ()
+              Just allowedExts
+                | T.null resolvedExt ->
+                    Left "Uploaded image file name must include a supported image extension"
+                | any (`notElem` allImageExtensions) (resolvedExt : providedExts) ->
+                    Left
+                      ( "Uploaded image file name must end with "
+                          <> ".jpg, .jpeg, .png, .webp, .gif, or .bmp"
+                      )
+                | any (`notElem` allowedExts) (resolvedExt : providedExts) ->
+                    Left "Uploaded image extension must match its MIME type"
+                | otherwise ->
+                    Right ()
 
       normalizeUploadMimeType rawContentType =
         T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))

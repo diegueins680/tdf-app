@@ -6035,6 +6035,13 @@ main = hspec $ do
                         { fdFileCType = "application/pdf" }
                     ])
             assertInvalid
+                "Uploaded image MIME type must not contain control characters"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png\n" }
+                    ])
+            assertInvalid
                 "Uploaded image file name must include a supported image extension"
                 (mkEventImageMultipart
                     []
@@ -6226,6 +6233,8 @@ main = hspec $ do
         it "requires matching raster MIME and extension for event image uploads" $ do
             isImageUpload " image/jpeg " "poster.JPG" `shouldBe` True
             isImageUpload "image/png; charset=binary" "poster.png" `shouldBe` True
+            isImageUpload "image/png\n" "poster.png" `shouldBe` False
+            isImageUpload "image/png\x200B" "poster.png" `shouldBe` False
             isImageUpload "application/octet-stream" "poster.jpg" `shouldBe` False
             isImageUpload "image/jpeg" "poster.txt" `shouldBe` False
             isImageUpload "image/png" "poster.jpg" `shouldBe` False
