@@ -12123,6 +12123,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
       expect(formAction?.getAttribute('target')).toBe('_blank');
       expect(formAction?.getAttribute('rel')).toBe('noreferrer');
+      expect(
+        formAction?.querySelector('[data-testid="course-registration-initial-empty-state-new-tab-icon"]'),
+      ).not.toBeNull();
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
@@ -15131,6 +15134,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.getAttribute('title'),
       ).toBe(initialEmptyStateConfigActionAriaLabel);
+      expect(emptyState?.querySelector('[data-testid="course-registration-initial-empty-state-new-tab-icon"]')).toBeNull();
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
@@ -15175,6 +15179,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
       expect(configAction?.getAttribute('title')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
+      expect(emptyState?.querySelector('[data-testid="course-registration-initial-empty-state-new-tab-icon"]')).toBeNull();
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);

@@ -4612,6 +4612,13 @@ export default function CourseRegistrationsAdminPage() {
               title={initialEmptyStateAction.title}
               target={initialEmptyStateAction.target}
               rel={initialEmptyStateAction.rel}
+              endIcon={
+                initialEmptyStateAction.target ? (
+                  <span data-testid="course-registration-initial-empty-state-new-tab-icon" aria-hidden="true">
+                    <OpenInNewIcon fontSize="small" />
+                  </span>
+                ) : undefined
+              }
             >
               {initialEmptyStateAction.label}
             </Button>
