@@ -324,6 +324,36 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
+  it('keeps service health as the first-run blocker when users also fail to load', async () => {
+    mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
+    mockListUsers.mockRejectedValue(new Error('Usuarios no disponibles'));
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Primero resuelve el estado del servicio; luego se habilitarán usuarios, auditoría y datos de ejemplo\./i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Base de datos: requiere revisión')).toBeInTheDocument();
+      expect(screen.getByText('Revisar estado del servicio')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(
+        /Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo\./i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios no disponibles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios y roles')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Reintentar carga inicial/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
+  });
+
   it('keeps role editing read-only until service health is ready', async () => {
     mockHealthFetch.mockResolvedValue({ status: 'ok', db: 'degraded' });
     mockListUsers.mockResolvedValue([

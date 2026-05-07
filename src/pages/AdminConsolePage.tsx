@@ -2038,21 +2038,23 @@ export default function AdminConsolePage() {
   const firstRunDataGateCopy = 'Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo.';
   const firstRunDemoStatusCopy = seedMutation.isSuccess
     ? null
-    : hasFirstRunDataError
-      ? firstRunDataGateCopy
-      : showFirstRunDemoAction || showFirstRunServiceHealthGate
-        ? null
-        : firstRunServiceGateCopy;
-  const firstRunRefreshActionCopy = hasFirstRunDataError
+    : showFirstRunServiceHealthGate
+      ? null
+      : hasFirstRunDataError
+        ? firstRunDataGateCopy
+        : showFirstRunDemoAction
+          ? null
+          : firstRunServiceGateCopy;
+  const firstRunRefreshActionCopy = showFirstRunServiceHealthGate || !hasFirstRunDataError
     ? {
-      label: 'Reintentar carga inicial',
-      ariaLabel: 'Reintentar carga de usuarios y auditoría',
-      title: 'Reintentar carga de usuarios y auditoría',
-    }
-    : {
       label: 'Revisar estado del servicio',
       ariaLabel: 'Volver a comprobar API y base de datos',
       title: 'Volver a comprobar API y base de datos',
+    }
+    : {
+      label: 'Reintentar carga inicial',
+      ariaLabel: 'Reintentar carga de usuarios y auditoría',
+      title: 'Reintentar carga de usuarios y auditoría',
     };
   const demoSeedActionCopy = {
     successMessage: 'Datos de demostración preparados correctamente.',
