@@ -106,6 +106,21 @@ validateInternProfileDateUpdate currentStart currentEnd updateStart updateEnd
     effectiveStart = fromMaybe currentStart updateStart
     effectiveEnd = fromMaybe currentEnd updateEnd
 
+validateInternProfileSkillsUpdate
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternProfileSkillsUpdate =
+  validateNullableInternTextField "profile skills" internProfileTextMaxLength
+
+validateInternProfileAreasUpdate
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternProfileAreasUpdate =
+  validateNullableInternTextField "profile areas" internProfileTextMaxLength
+
+internProfileTextMaxLength :: Int
+internProfileTextMaxLength = 1000
+
 validateInternProjectDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
 validateInternProjectDateRange Nothing _ = Right ()
 validateInternProjectDateRange (Just startAt) dueAt =
@@ -409,9 +424,9 @@ internshipsServer user =
             _ -> False
       when invalidHours $
         throwError err400 { errBody = "Required hours must be non-negative" }
-      let cleanedSkills = fmap normalizeOptionalText ipuSkills
-          cleanedAreas = fmap normalizeOptionalText ipuAreas
-          updates = catMaybes
+      cleanedSkills <- either throwError pure (validateInternProfileSkillsUpdate ipuSkills)
+      cleanedAreas <- either throwError pure (validateInternProfileAreasUpdate ipuAreas)
+      let updates = catMaybes
             [ fmap (ME.InternProfileStartAt =.) ipuStartAt
             , fmap (ME.InternProfileEndAt =.) ipuEndAt
             , fmap (ME.InternProfileRequiredHours =.) ipuRequiredHours
@@ -897,12 +912,6 @@ internshipsServer user =
             [ (pid, ME.internProjectTitle project)
             | Entity pid project <- projects
             ]
-
-    normalizeOptionalText :: Maybe Text -> Maybe Text
-    normalizeOptionalText Nothing = Nothing
-    normalizeOptionalText (Just txt) =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
 
 withPool
   :: (MonadReader Env m, MonadIO m)

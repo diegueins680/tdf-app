@@ -155,6 +155,8 @@ import TDF.ServerInternships
       validateInternPermissionDecisionNotes,
       validateInternPermissionReason,
       validateInternProfileDateUpdate,
+      validateInternProfileSkillsUpdate,
+      validateInternProfileAreasUpdate,
       validateInternProjectTitle,
       validateInternProjectTitleUpdate,
       validateInternTaskTitle,
@@ -8367,6 +8369,32 @@ main = hspec $ do
             assertInvalid "0" "positive integer"
             assertInvalid "-3" "positive integer"
             assertInvalid "project-7" "Invalid identifier"
+
+    describe "internship profile text validation" $ do
+        it "normalizes nullable profile skills and areas before persistence" $ do
+            validateInternProfileSkillsUpdate Nothing `shouldBe` Right Nothing
+            validateInternProfileSkillsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
+            validateInternProfileSkillsUpdate (Just (Just "  Patch bays\nLive sound  "))
+                `shouldBe` Right (Just (Just "Patch bays\nLive sound"))
+            validateInternProfileAreasUpdate (Just (Just "   "))
+                `shouldBe` Right (Just Nothing)
+
+        it "rejects oversized or unsafe profile text before storing intern profile rows" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship profile text, got " <> show value)
+            assertInvalid
+                (validateInternProfileSkillsUpdate (Just (Just (Data.Text.replicate 1001 "x"))))
+                "profile skills must be 1000 characters or fewer"
+            assertInvalid
+                (validateInternProfileSkillsUpdate (Just (Just ("Patch" <> Data.Text.singleton '\NUL'))))
+                "profile skills must not contain control characters"
+            assertInvalid
+                (validateInternProfileAreasUpdate (Just (Just ("Live" <> Data.Text.singleton '\x202E'))))
+                "profile areas must not contain control characters"
 
     describe "internship permission text validation" $ do
         it "trims permission category, reason, and decision notes before persistence" $ do
