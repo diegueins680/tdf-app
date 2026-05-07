@@ -85,14 +85,11 @@ const formatInitialCohortPreview = (labels: readonly string[], totalCount = labe
   if (uniqueLabels.length === 0) return '';
   const visibleLabels = uniqueLabels.slice(0, 3);
   const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
-  const hiddenRepeatedFormCount = Math.max(0, totalCount - uniqueLabels.length);
   const hiddenCount =
     uniqueLabels.length > 1
       ? hiddenUniqueLabelCount > 0
         ? Math.max(totalCount, uniqueLabels.length) - visibleLabels.length
-        : hiddenRepeatedFormCount >= 2
-          ? hiddenRepeatedFormCount
-          : 0
+        : 0
       : 0;
 
   if (hiddenCount > 0) {
