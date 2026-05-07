@@ -68,7 +68,7 @@ const normalizeInitialCohortPreviewKey = (label: string) =>
     .trim()
     .toLocaleLowerCase('es');
 
-const formatInitialCohortPreview = (labels: readonly string[], totalCount = labels.length) => {
+const formatInitialCohortPreview = (labels: readonly string[]) => {
   const uniqueLabelsByKey = new Map<string, string>();
 
   labels.forEach((label) => {
@@ -85,11 +85,7 @@ const formatInitialCohortPreview = (labels: readonly string[], totalCount = labe
   if (uniqueLabels.length === 0) return '';
   const visibleLabels = uniqueLabels.slice(0, 3);
   const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
-  const shouldCountHiddenForms = hiddenUniqueLabelCount > 0 || visibleLabels.length >= 3;
-  const hiddenCount =
-    uniqueLabels.length > 1 && shouldCountHiddenForms
-      ? Math.max(0, Math.max(totalCount, uniqueLabels.length) - visibleLabels.length)
-      : 0;
+  const hiddenCount = uniqueLabels.length > 1 ? hiddenUniqueLabelCount : 0;
 
   if (hiddenCount > 0) {
     if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenCount} más`;
@@ -114,7 +110,7 @@ const countInitialCohortPreviewLabels = (labels: readonly string[]) => {
 };
 
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
-  const preview = formatInitialCohortPreview(labels, count);
+  const preview = formatInitialCohortPreview(labels);
   if (preview) {
     if (count > 1 && countInitialCohortPreviewLabels(labels) === 1) {
       return `Hay ${count} formularios públicos para ${preview} listos para recibir la primera inscripción.`;

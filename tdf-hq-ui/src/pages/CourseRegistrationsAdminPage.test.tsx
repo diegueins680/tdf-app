@@ -7602,7 +7602,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps repeated first-run form labels compact while still counting every configured form', async () => {
+  it('keeps repeated first-run form labels compact without inventing extra course choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'beatmaking-early', ccTitle: 'Formulario público - Beatmaking 101' },
@@ -7621,10 +7621,12 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Hay 5 formularios públicos listos para recibir la primera inscripción: Beatmaking 101, Mixing Bootcamp, Producción en vivo y 2 más.',
+        'Hay 5 formularios públicos listos para recibir la primera inscripción: Beatmaking 101, Mixing Bootcamp y Producción en vivo.',
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(countOccurrences(emptyState!, 'Producción en vivo')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('y 2 más');
+      expect(emptyState?.textContent).not.toContain('y 1 más');
       expect(emptyState?.textContent).not.toContain('Formulario público - Beatmaking 101');
       expect(emptyState?.textContent).not.toContain('Formulario público del curso Producción en vivo');
       expect(
