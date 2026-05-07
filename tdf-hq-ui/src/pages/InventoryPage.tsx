@@ -1183,11 +1183,6 @@ export default function InventoryPage() {
               fullWidth
               InputProps={{ readOnly: true }}
             />
-            {selected?.qrToken && (
-              <Typography variant="body2">
-                Token: {selected.qrToken}
-              </Typography>
-            )}
           </Stack>
         </DialogContent>
         <DialogActions>

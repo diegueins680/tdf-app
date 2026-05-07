@@ -437,6 +437,8 @@ describe('InventoryPage', () => {
         expect(document.body.textContent).toContain('QR y enlace público');
         expect(document.body.textContent).toContain('Enlace público');
         expect(document.body.textContent).toContain('Copiar enlace');
+        expect(document.body.textContent).not.toContain('Token:');
+        expect(document.body.textContent).not.toContain('qr-1');
       });
     } finally {
       await cleanup();
