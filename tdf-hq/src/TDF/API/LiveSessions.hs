@@ -142,16 +142,16 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
   fromMultipart multipart = do
     rejectUnexpectedParts multipart
     bandName <- lookupText "bandName" multipart
-    bandDescription <- optionalText "bandDescription" multipart
-    primaryGenre <- optionalText "primaryGenre" multipart
-    inputList <- optionalText "inputList" multipart
+    bandDescription <- optionalMultilineText "bandDescription" 4000 multipart
+    primaryGenre <- optionalSingleLineText "primaryGenre" 160 multipart
+    inputList <- optionalMultilineText "inputList" 4000 multipart
     contactEmail <- optionalEmail "contactEmail" multipart
     contactPhone <- optionalPhone "contactPhone" multipart
     riderFile <- lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
-    availability <- optionalText "availability" multipart
+    availability <- optionalMultilineText "availability" 4000 multipart
     acceptedTerms <- optionalBool "acceptedTerms" multipart
-    termsVersion <- optionalText "termsVersion" multipart
+    termsVersion <- optionalSingleLineText "termsVersion" 160 multipart
     musiciansTxt <- lookupText "musicians" multipart
     musicians <- decodeMusicians musiciansTxt
     setlistTxt <- optionalText "setlist" multipart
@@ -187,6 +187,18 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           Left err -> Left err
           Right Nothing  -> Right Nothing
           Right (Just inp) -> Right (normalizeOptionalText (inputValueText inp))
+      optionalSingleLineText name maxLength mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right Nothing
+          Right (Just inp) ->
+            validateOptionalIntakeText name maxLength isUnsafeIntakeTextChar (inputValueText inp)
+      optionalMultilineText name maxLength mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just inp) ->
+            validateOptionalIntakeText name maxLength isUnsafeMultilineIntakeTextChar (inputValueText inp)
       optionalEmail name mp =
         case lookupSingleInput name mp of
           Left err -> Left err
@@ -301,6 +313,29 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
       isUnsafeIntakeTextChar ch =
         isControl ch
           || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+      isUnsafeMultilineIntakeTextChar ch =
+        isControl ch && ch `notElem` ("\n\r\t" :: String)
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+      validateOptionalIntakeText fieldName maxLength isUnsafe raw =
+        case normalizeOptionalText raw of
+          Nothing -> Right Nothing
+          Just value
+            | T.length value > maxLength ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must be "
+                      <> show maxLength
+                      <> " characters or fewer"
+                  )
+            | T.any isUnsafe value ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must not contain control characters or hidden formatting characters"
+                  )
+            | otherwise ->
+                Right (Just value)
 
       validateSetlistSong song =
         let normalizedTitle = T.strip (lssTitle song)

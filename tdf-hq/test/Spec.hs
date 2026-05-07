@@ -10115,6 +10115,50 @@ main = hspec $ do
                     lsiAcceptedTerms payload `shouldBe` True
                     lsiTermsVersion payload `shouldBe` Just "TDF Live Sessions v2"
 
+        it "normalizes bounded top-level optional text fields before intake persistence" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("bandDescription", "  Duo session\nwith guests  ")
+                    , ("primaryGenre", "  Jazz fusion  ")
+                    , ("inputList", "  Kick\nSnare  ")
+                    , ("availability", "  Weekdays after 18:00  ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected safe optional text to parse, got: " <> err)
+                Right payload -> do
+                    lsiBandDescription payload `shouldBe` Just "Duo session\nwith guests"
+                    lsiPrimaryGenre payload `shouldBe` Just "Jazz fusion"
+                    lsiInputList payload `shouldBe` Just "Kick\nSnare"
+                    lsiAvailability payload `shouldBe` Just "Weekdays after 18:00"
+
+        it "rejects unsafe or oversized top-level optional text before intake persistence" $ do
+            let assertInvalid fieldName rawValue expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , (fieldName, rawValue)
+                            , ("musicians", "[]")
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected invalid optional intake text to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "primaryGenre"
+                ("Jazz" <> Data.Text.singleton '\x202E' <> "Fusion")
+                "primaryGenre must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "availability"
+                ("Weekdays" <> Data.Text.singleton '\NUL' <> "after 18:00")
+                "availability must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "inputList"
+                (Data.Text.replicate 4001 "A")
+                "inputList must be 4000 characters or fewer"
+
         it "normalizes valid contact and musician emails before the intake reaches persistence" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
