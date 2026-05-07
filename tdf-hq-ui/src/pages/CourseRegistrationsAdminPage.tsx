@@ -833,6 +833,12 @@ const firstRunApplicationDescriptorPrefixPattern =
 const firstRunApplicationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunOnboardingDescriptorPrefixPattern =
+  /^(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?)|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url)\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOnboardingDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?)|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url)\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
 const firstRunAuditionDescriptorPrefixPattern =
   /^(?:(?:audition|casting)\s+(?:forms?|pages?|portals?|sign[-\s]?ups?|registrations?|applications?)|(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+de\s+(?:audici[oó]n(?:es)?|casting)|(?:audici[oó]n(?:es)?|casting)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1090,6 +1096,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
+    .replace(firstRunOnboardingDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(
@@ -1143,6 +1150,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunOnboardingDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(
