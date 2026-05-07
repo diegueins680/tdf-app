@@ -651,7 +651,8 @@ spec = do
                 Right SessionUpdate{suNotes = notesVal} ->
                     notesVal `shouldBe` Just (Just "Keep this note")
 
-        it "rejects unexpected session write keys before the handler applies a partial change" $ do
+        it "rejects empty or unexpected session write bodies before the handler applies a partial change" $ do
+            decodeSessionUpdate "{}" `shouldSatisfy` isLeft
             decodeSessionCreate
                 "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"service\":\"typo\"}"
                 `shouldSatisfy` isLeft

@@ -1144,26 +1144,30 @@ instance FromJSON SessionUpdate where
           ]
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        providedKeys = map AKey.toText (AKM.keys o)
     case unknownKeys of
       key:_ -> fail ("Unknown field in SessionUpdate: " <> T.unpack key)
-      [] ->
-        SessionUpdate
-          <$> o .:! "suBookingRef"
-          <*> o .:! "suBandId"
-          <*> o .:! "suClientPartyRef"
-          <*> o .:? "suService"
-          <*> o .:? "suStartAt"
-          <*> o .:? "suEndAt"
-          <*> o .:? "suEngineerRef"
-          <*> o .:! "suAssistantRef"
-          <*> o .:? "suRoomIds"
-          <*> o .:! "suSampleRate"
-          <*> o .:! "suBitDepth"
-          <*> o .:! "suDaw"
-          <*> o .:! "suSessionFolderDriveId"
-          <*> o .:! "suNotes"
-          <*> o .:? "suInputListRows"
-          <*> o .:? "suStatus"
+      []
+        | null providedKeys ->
+            fail "SessionUpdate must include at least one field"
+        | otherwise ->
+            SessionUpdate
+              <$> o .:! "suBookingRef"
+              <*> o .:! "suBandId"
+              <*> o .:! "suClientPartyRef"
+              <*> o .:? "suService"
+              <*> o .:? "suStartAt"
+              <*> o .:? "suEndAt"
+              <*> o .:? "suEngineerRef"
+              <*> o .:! "suAssistantRef"
+              <*> o .:? "suRoomIds"
+              <*> o .:! "suSampleRate"
+              <*> o .:! "suBitDepth"
+              <*> o .:! "suDaw"
+              <*> o .:! "suSessionFolderDriveId"
+              <*> o .:! "suNotes"
+              <*> o .:? "suInputListRows"
+              <*> o .:? "suStatus"
 
 data PartyRelatedBooking = PartyRelatedBooking
   { prbBookingId  :: Int64
