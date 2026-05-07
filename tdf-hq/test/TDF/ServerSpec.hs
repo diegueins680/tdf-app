@@ -297,6 +297,7 @@ import TDF.Server
     , validateAdsInquiry
     , validateAdsAssistRequest
     , validateAdCreativeLandingUrl
+    , validateAdCreativeExternalId
     , validateAdsAdminName
     , validateCampaignBudgetCents
     , validateCampaignDateRange
@@ -4148,6 +4149,35 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://ads..example.com/landing"
             assertInvalid "https://localhost/landing"
             assertInvalid "https://ads.example.com/landing copy"
+
+    describe "validateAdCreativeExternalId" $ do
+        it "normalizes omitted, blank, and trimmed external ids before ad creative writes" $ do
+            validateAdCreativeExternalId Nothing `shouldBe` Right Nothing
+            validateAdCreativeExternalId (Just "   ") `shouldBe` Right Nothing
+            validateAdCreativeExternalId (Just " ad-123 ")
+                `shouldBe` Right (Just "ad-123")
+
+        it "rejects ambiguous external ids before social auto-reply lookup can use them" $ do
+            let assertInvalid expectedMessage rawId =
+                    case validateAdCreativeExternalId (Just rawId) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right externalIdVal ->
+                            expectationFailure
+                                ( "Expected invalid ad creative externalId to be rejected, got: "
+                                    <> show externalIdVal
+                                )
+            assertInvalid "externalId must not contain whitespace" "ad 123"
+            assertInvalid
+                "externalId must not contain control characters"
+                ("ad" <> T.singleton '\NUL' <> "123")
+            assertInvalid
+                "externalId must not contain hidden formatting characters"
+                ("ad" <> T.singleton '\x202E' <> "123")
+            assertInvalid
+                "externalId must be 256 characters or fewer"
+                (T.replicate 257 "a")
 
     describe "validateAdsAdminName" $ do
         it "normalizes campaign and ad names before admin writes persist them" $ do

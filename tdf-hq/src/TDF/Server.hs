@@ -9197,6 +9197,38 @@ validateAdsAssistChannel (Just rawChannel) =
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
 
+validateAdCreativeExternalId :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdCreativeExternalId Nothing = Right Nothing
+validateAdCreativeExternalId (Just rawExternalId) =
+  case normalizeOptionalInput (Just rawExternalId) of
+    Nothing -> Right Nothing
+    Just externalId
+      | T.length externalId > maxAdCreativeExternalIdChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "externalId must be "
+                      <> T.pack (show maxAdCreativeExternalIdChars)
+                      <> " characters or fewer"
+            }
+      | T.any isSpace externalId ->
+          Left err400 { errBody = "externalId must not contain whitespace" }
+      | T.any isControl externalId ->
+          Left err400 { errBody = "externalId must not contain control characters" }
+      | T.any isHiddenAdsAdminTextChar externalId ->
+          Left err400
+            { errBody = "externalId must not contain hidden formatting characters" }
+      | otherwise ->
+          Right (Just externalId)
+
+maxAdCreativeExternalIdChars :: Int
+maxAdCreativeExternalIdChars = 256
+
+isHiddenAdsAdminTextChar :: Char -> Bool
+isHiddenAdsAdminTextChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 validateAdsAdminName :: Text -> Text -> Either ServerError Text
 validateAdsAdminName fieldName =
   validateRequiredCourseTextField fieldName 160
@@ -9395,6 +9427,7 @@ adsUpsertAd :: AuthedUser -> AdCreativeUpsert -> AppM AdCreativeDTO
 adsUpsertAd user AdCreativeUpsert{..} = do
   requireModule user ModuleAdmin
   landingUrlVal <- either throwError pure (validateAdCreativeLandingUrl acuLandingUrl)
+  externalIdVal <- either throwError pure (validateAdCreativeExternalId acuExternalId)
   adIdUpdate <- either throwError pure (validateOptionalPositiveIdField "adId" acuId)
   campaignIdRef <- either throwError pure (validateOptionalPositiveIdField "campaignId" acuCampaignId)
   statusVal <- either throwError pure (validateAdCreativeStatus acuStatus)
@@ -9409,7 +9442,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
   adId <- case adIdUpdate of
     Nothing -> runDB $ insert ME.AdCreative
       { ME.adCreativeCampaignId = mCampaign
-      , ME.adCreativeExternalId = fmap T.strip acuExternalId
+      , ME.adCreativeExternalId = externalIdVal
       , ME.adCreativeName = nameClean
       , ME.adCreativeChannel = T.strip <$> acuChannel
       , ME.adCreativeAudience = T.strip <$> acuAudience
@@ -9426,7 +9459,7 @@ adsUpsertAd user AdCreativeUpsert{..} = do
       when (isNothing mAd) $ throwError err404
       runDB $ update key
         [ ME.AdCreativeCampaignId =. mCampaign
-        , ME.AdCreativeExternalId =. (T.strip <$> acuExternalId)
+        , ME.AdCreativeExternalId =. externalIdVal
         , ME.AdCreativeName =. nameClean
         , ME.AdCreativeChannel =. (T.strip <$> acuChannel)
         , ME.AdCreativeAudience =. (T.strip <$> acuAudience)
