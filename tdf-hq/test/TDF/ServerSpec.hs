@@ -360,6 +360,7 @@ import TDF.ServerProposals
 import TDF.ServerFuture
     ( allowedFutureStubMetadata
     , allowedFutureStubAreas
+    , deriveFutureStubAreas
     , futureStubId
     , futureServer
     , validateFutureAdminAccess
@@ -9421,6 +9422,15 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateFutureStubMetadata" $ do
         it "derives mounted fallback discovery areas from the canonical catalog" $ do
+            deriveFutureStubAreas allowedFutureStubMetadata
+                `shouldBe` allowedFutureStubAreas
+            deriveFutureStubAreas
+                [ ("access", "login-options")
+                , ("access", "session-policy")
+                , ("crm", "parties/list-columns")
+                , ("access", "module-behaviour")
+                ]
+                `shouldBe` ["access", "crm", "access"]
             allowedFutureStubAreas
                 `shouldBe` [ "access"
                            , "crm"

@@ -521,16 +521,16 @@ allowedFutureStubMetadata =
   ]
 
 allowedFutureStubAreas :: [Text]
-allowedFutureStubAreas =
-  [ "access"
-  , "crm"
-  , "scheduling"
-  , "packages"
-  , "invoicing"
-  , "inventory"
-  , "admin"
-  , "experience"
-  ]
+allowedFutureStubAreas = deriveFutureStubAreas allowedFutureStubMetadata
+
+deriveFutureStubAreas :: [(Text, Text)] -> [Text]
+deriveFutureStubAreas =
+  foldr collectAreaRuns []
+  where
+    collectAreaRuns (area, _) [] = [area]
+    collectAreaRuns (area, _) areas@(nextArea : _)
+      | area == nextArea = areas
+      | otherwise = area : areas
 
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
