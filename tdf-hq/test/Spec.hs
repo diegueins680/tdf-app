@@ -3927,6 +3927,9 @@ main = hspec $ do
                         )
 
             assertInvalid
+                "{}"
+                "key \"data\" not found"
+            assertInvalid
                 (facebookPagePayload "   " "TDF HQ" "page-token")
                 "Facebook page id must not be blank"
             assertInvalid

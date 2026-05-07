@@ -189,7 +189,7 @@ newtype FacebookPageList = FacebookPageList { fplData :: [FacebookPage] }
 
 instance FromJSON FacebookPageList where
   parseJSON = withObject "FacebookPageList" $ \o ->
-    FacebookPageList <$> o .:? "data" .!= []
+    FacebookPageList <$> o .: "data"
 
 newtype InstagramBusinessAccount = InstagramBusinessAccount { ibaId :: Text }
   deriving (Show)
