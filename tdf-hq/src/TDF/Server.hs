@@ -12281,8 +12281,12 @@ parseDriveApiFileId :: Text -> Parser Text
 parseDriveApiFileId rawFileId
   | T.null fileId =
       fail "Drive file id is required"
-  | T.length fileId > 256 || not (T.all isDriveFolderIdChar fileId) =
-      fail "Drive file id must be 1-256 ASCII letters, digits, '-' or '_'"
+  | T.length fileId > 256
+      || not (T.any isDriveFolderIdAtom fileId)
+      || not (T.all isDriveFolderIdChar fileId) =
+      fail $
+        "Drive file id must be 1-256 ASCII letters, digits, '-' or '_' "
+          <> "with at least one letter or digit"
   | otherwise =
       pure fileId
   where

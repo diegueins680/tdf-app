@@ -5026,6 +5026,7 @@ spec = describe "TDF.Server helpers" $ do
             let assertRejected rawPayload =
                     (eitherDecode rawPayload :: Either String DriveApiResp) `shouldSatisfy` isLeft
             assertRejected "{\"id\":\"   \"}"
+            assertRejected "{\"id\":\"----\"}"
             assertRejected "{\"id\":\"file 123\"}"
             assertRejected "{\"id\":\"file-123&alt=media\"}"
             assertRejected $
