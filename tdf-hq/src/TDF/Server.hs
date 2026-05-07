@@ -2720,6 +2720,8 @@ validateGoogleCalendarEventId :: Text -> Either Text Text
 validateGoogleCalendarEventId rawEventId
   | T.null eventIdVal =
       Left "Google Calendar event id must not be blank"
+  | T.length eventIdVal > maxGoogleCalendarEventIdChars =
+      Left "Google Calendar event id must be 1024 characters or fewer"
   | T.any isControl eventIdVal =
       Left "Google Calendar event id must not contain control characters"
   | T.any isHiddenDriveOAuthTokenChar eventIdVal =
@@ -2730,6 +2732,9 @@ validateGoogleCalendarEventId rawEventId
       Right eventIdVal
   where
     eventIdVal = T.strip rawEventId
+
+maxGoogleCalendarEventIdChars :: Int
+maxGoogleCalendarEventIdChars = 1024
 
 calendarServer :: AuthedUser -> ServerT CalAPI.CalendarAPI AppM
 calendarServer user =

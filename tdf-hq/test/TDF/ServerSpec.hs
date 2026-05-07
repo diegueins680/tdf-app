@@ -5515,6 +5515,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "must not be blank" "   "
             assertInvalid "must not contain whitespace" "event 123"
             assertInvalid "must not contain control characters" "event\n123"
+            assertInvalid "1024 characters or fewer" (T.replicate 1025 "a")
 
     describe "googleCalendarEventsEndpoint" $ do
         it "encodes calendar ids as one path segment before sync requests are built" $ do
