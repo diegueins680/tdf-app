@@ -66,6 +66,7 @@ const TZ = import.meta.env?.['VITE_TZ'] ?? 'America/Guayaquil';
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 const ORDERS_PAGE_OVERVIEW_SUMMARY =
   'Revisa horario, servicio, booking, recursos y estado desde una sola tabla.';
+const MISSING_BOOKING_CONTEXT_LABEL = 'Sin booking asignado';
 
 const parseRowsPerPage = (value: string, fallback = 10): number => {
   const parsed = Number(value);
@@ -133,7 +134,7 @@ const getSharedSummaryValue = (values: readonly string[]) => {
     : '';
 };
 
-function formatNaturalLanguageList(values: readonly string[], conjunction: 'y' | 'o') {
+function formatNaturalLanguageList(values: readonly string[], conjunction: 'y' | 'o' | 'ni') {
   if (values.length === 0) return '';
   if (values.length === 1) return values[0] ?? '';
   if (values.length === 2) return `${values[0]} ${conjunction} ${values[1]}`;
@@ -171,13 +172,32 @@ const hasDisplayValue = (value: string) => {
 const areAllDisplayValuesMissing = (values: readonly string[]) =>
   values.length > 0 && values.every((value) => !hasDisplayValue(value));
 
-const buildMissingResourceContextSummary = ({
+const isMissingBookingContext = (value: string) =>
+  normalizeComparableString(value) === normalizeComparableString(MISSING_BOOKING_CONTEXT_LABEL);
+
+const buildMissingContextSummary = ({
+  bookingsMissing,
   engineersMissing,
   roomsMissing,
 }: {
+  bookingsMissing: boolean;
   engineersMissing: boolean;
   roomsMissing: boolean;
 }) => {
+  if (bookingsMissing) {
+    if (!engineersMissing && !roomsMissing) {
+      return 'Sin booking asignado en esta vista. La columna volverá cuando alguna sesión tenga cliente, orden o título distinto del servicio.';
+    }
+
+    const missingItems = [
+      'booking',
+      engineersMissing ? 'ingeniero' : '',
+      roomsMissing ? 'sala' : '',
+    ].filter(Boolean);
+
+    return `Sin ${formatNaturalLanguageList(missingItems, 'ni')} asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos datos.`;
+  }
+
   if (engineersMissing && roomsMissing) {
     return 'Sin ingeniero ni sala asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos recursos.';
   }
@@ -224,7 +244,7 @@ function buildBookingPrimary({
     .map((value) => value?.trim() ?? '')
     .find((value) => value !== '');
 
-  return primaryCandidate ?? (serviceOrderId ? `SO #${serviceOrderId}` : 'Sin booking asignado');
+  return primaryCandidate ?? (serviceOrderId ? `SO #${serviceOrderId}` : MISSING_BOOKING_CONTEXT_LABEL);
 }
 
 function buildBookingSecondarySummary({
@@ -378,10 +398,20 @@ export default function OrdersPage() {
   );
   const showServiceColumn = sharedServiceSummary === '';
   const sharedBookingSummary = useMemo(
-    () => getSharedSummaryValue(rows.map((row) => getOrderRowBookingSummary(row))),
+    () => {
+      if (rows.every((row) => isMissingBookingContext(getOrderRowBookingSummary(row)))) {
+        return '';
+      }
+
+      return getSharedSummaryValue(rows.map((row) => getOrderRowBookingSummary(row)));
+    },
     [rows],
   );
-  const showBookingColumn = sharedBookingSummary === '';
+  const allBookingsMissing = useMemo(
+    () => rows.length > 0 && rows.every((row) => isMissingBookingContext(getOrderRowBookingSummary(row))),
+    [rows],
+  );
+  const showBookingColumn = !allBookingsMissing && sharedBookingSummary === '';
   const sharedEngineerSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.engineers)),
     [rows],
@@ -405,12 +435,13 @@ export default function OrdersPage() {
     [rows],
   );
   const showStatusColumn = sharedStatusSummary === '';
-  const missingResourceContextSummary = useMemo(
-    () => buildMissingResourceContextSummary({
+  const missingContextSummary = useMemo(
+    () => buildMissingContextSummary({
+      bookingsMissing: allBookingsMissing,
       engineersMissing: allEngineersMissing,
       roomsMissing: allRoomsMissing,
     }),
-    [allEngineersMissing, allRoomsMissing],
+    [allBookingsMissing, allEngineersMissing, allRoomsMissing],
   );
   const combinedSharedContextSummary = useMemo(
     () =>
@@ -673,11 +704,11 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {(missingResourceContextSummary || hasSharedContextSummary) && (
+            {(missingContextSummary || hasSharedContextSummary) && (
               <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
-                {missingResourceContextSummary && (
+                {missingContextSummary && (
                   <Typography variant="caption" color="text.secondary">
-                    {missingResourceContextSummary}
+                    {missingContextSummary}
                   </Typography>
                 )}
                 {hasSharedContextSummary

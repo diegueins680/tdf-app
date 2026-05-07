@@ -423,6 +423,57 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('summarizes missing booking context once instead of treating it as a shared booking value', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 126,
+        title: 'Mixing',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 127,
+        title: 'Mastering',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mastering',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+          { brRoomId: 'eng-2', brRoomName: 'Nina', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+
+        expect(text).toContain(
+          'Sin booking asignado en esta vista. La columna volverá cuando alguna sesión tenga cliente, orden o título distinto del servicio.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Sin booking asignado')).toBe(1);
+        expect(text).not.toContain('Mostrando un solo booking: Sin booking asignado');
+        expect(hasTableHeader(container, 'Booking')).toBe(false);
+        expect(hasTableHeader(container, 'Servicio')).toBe(true);
+        expect(text).toContain('Mixing');
+        expect(text).toContain('Mastering');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the session title as booking context in the first-session summary before falling back to a generic id', async () => {
     listBookingsMock.mockResolvedValue([
       {
