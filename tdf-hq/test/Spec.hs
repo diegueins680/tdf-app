@@ -227,6 +227,7 @@ import TDF.Server
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
       validateGoogleCalendarEventId,
+      expiredGoogleCalendarSyncRetryState,
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
@@ -4186,6 +4187,12 @@ main = hspec $ do
         it "rejects non-object Google Calendar items instead of silently skipping them" $
             (eitherDecode "{\"items\":[\"not-an-event\"],\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
                 `shouldSatisfy` isLeft
+
+        it "drops partial incremental events when expired sync cursors fall back to full sync" $ do
+            let staleEvent = A.object ["id" .= ("stale-event" :: Text)]
+                retryState = expiredGoogleCalendarSyncRetryState Nothing Nothing [staleEvent]
+            retryState
+                `shouldBe` (Nothing, Nothing, Nothing, Nothing, [] :: [A.Value])
 
         it "rejects hidden formatting marks in Calendar ids before fallback lookups" $ do
             CalAPI.normalizeCalendarId " primary "

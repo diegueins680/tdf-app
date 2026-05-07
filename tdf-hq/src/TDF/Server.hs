@@ -2995,7 +2995,10 @@ calendarServer user =
       resp <- liftIO $ httpLbs req manager
       let codeStatus = statusCode (responseStatus resp)
       if codeStatus == 410
-        then fetchAllPages manager token calendarId Nothing mFrom mTo Nothing acc
+        then do
+          let (retrySync, retryFrom, retryTo, retryPage, retryAcc) =
+                expiredGoogleCalendarSyncRetryState mFrom mTo acc
+          fetchAllPages manager token calendarId retrySync retryFrom retryTo retryPage retryAcc
         else do
           when (codeStatus >= 400) $
             throwError err502 { errBody = "Google Calendar devolvió error al sincronizar." }
@@ -3105,6 +3108,14 @@ calendarServer user =
 
     formatTime' :: UTCTime -> ByteString
     formatTime' t = TE.encodeUtf8 (T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" t))
+
+expiredGoogleCalendarSyncRetryState
+  :: Maybe UTCTime
+  -> Maybe UTCTime
+  -> [Value]
+  -> (Maybe Text, Maybe UTCTime, Maybe UTCTime, Maybe Text, [Value])
+expiredGoogleCalendarSyncRetryState mFrom mTo _partialEvents =
+  (Nothing, mFrom, mTo, Nothing, [])
 
 googleCalendarEventsEndpoint :: Text -> String
 googleCalendarEventsEndpoint calendarId =
