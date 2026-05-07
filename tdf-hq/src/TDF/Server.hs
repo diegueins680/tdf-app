@@ -411,6 +411,8 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
 
 validateMcpIdString :: Text -> Parser ()
 validateMcpIdString ident = do
+  when (T.null (T.strip ident)) $
+    fail "id string must not be blank"
   when (T.length ident > 128) $
     fail "id string must be 128 characters or fewer"
   when (T.any isUnsafeMcpIdChar ident) $
