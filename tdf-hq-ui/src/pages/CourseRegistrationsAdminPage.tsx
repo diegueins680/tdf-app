@@ -1020,6 +1020,12 @@ const firstRunStandalonePublicPageDescriptorPrefixPattern =
 const firstRunStandalonePublicPageDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))\s*$/i;
 
+const firstRunBioLinkDescriptorPrefixPattern =
+  /^(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunBioLinkDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)\s*$/i;
+
 const firstRunCourseWebsiteDescriptorPrefixPattern =
   /^(?:(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio|portal)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
 
@@ -1112,6 +1118,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunLandingPageDescriptorPrefixPattern, '')
     .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
+    .replace(firstRunBioLinkDescriptorPrefixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
@@ -1170,6 +1177,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunLandingPageDescriptorSuffixPattern, '')
     .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
+    .replace(firstRunBioLinkDescriptorSuffixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')

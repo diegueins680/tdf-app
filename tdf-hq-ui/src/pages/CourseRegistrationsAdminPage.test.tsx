@@ -14853,6 +14853,40 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips bio-link wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Linktree - Beatmaking 101',
+      'Beatmaking 101 - link in bio',
+      'Bio link: Beatmaking 101',
+      'Enlace en bio para Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const copy = emptyState?.textContent ?? '';
+        expect(emptyState).not.toBeNull();
+        expect(copy).toContain(singleCohortInitialEmptyStateMessage);
+        expect(copy).not.toContain(title);
+        expect(copy).not.toMatch(/link\s*tree|linktree|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
+        ).toBe(initialEmptyStateFormActionLabel);
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips web-portal wrappers from first-run cohort copy', async () => {
     const titles = [
       'Course portal - Beatmaking 101',
