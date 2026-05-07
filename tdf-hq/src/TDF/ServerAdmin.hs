@@ -122,7 +122,7 @@ import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
                                         , auPartyId
                                         , hasStrictAdminAccess
-                                        , hasModuleAccess
+                                        , validateModuleAccess
                                         , moduleName
                                         , modulesForRoles
                                         )
@@ -1144,8 +1144,16 @@ ensureModule
   -> AuthedUser
   -> m ()
 ensureModule moduleTag user =
-  unless (hasModuleAccess moduleTag user) $
-    throwError err403 { errBody = "Missing required module access" }
+  case validateModuleAccess moduleTag user of
+    Right () -> pure ()
+    Left err
+      | errBody err == missingModuleBody ->
+          throwError err403 { errBody = "Missing required module access" }
+      | otherwise ->
+          throwError err
+  where
+    missingModuleBody =
+      BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
 
 ensureStrictAdmin
   :: (MonadError ServerError m)

@@ -833,7 +833,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err -> do
                     errHTTPCode err `shouldBe` 403
                     BL8.unpack (errBody err)
-                        `shouldContain` "Missing required module access"
+                        `shouldContain` "Admin role required"
                 Right NoContent ->
                     expectationFailure
                         "Expected malformed Admin seed access to be rejected"
@@ -1179,7 +1179,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err -> do
                     errHTTPCode err `shouldBe` 403
                     BL8.unpack (errBody err)
-                        `shouldContain` "Missing required module access"
+                        `shouldContain` "Admin role required"
                 Right value ->
                     expectationFailure
                         ( "Expected malformed Admin social unhold to be rejected, got "
@@ -1384,6 +1384,21 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     BL8.unpack (errBody err) `shouldContain` "Missing required module access"
                 Right NoContent ->
                     expectationFailure "Expected unauthorized log clearing to be rejected"
+
+        it "rejects stale Admin-module grants before listing logs" $ do
+            let staleModuleUser = (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                listLogs :<|> _clearLogs = logsHandlersFor staleModuleUser
+
+            result <- runAdminTest (listLogs Nothing)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Module grants must match roles"
+                Right value ->
+                    expectationFailure
+                        ( "Expected stale Admin-module log listing to be rejected, got "
+                            <> show value
+                        )
   where
     decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
     decodeEmailTest = eitherDecode
