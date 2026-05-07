@@ -367,6 +367,8 @@ validateAuthPassword fieldLabel rawPassword
       Left (passwordError (fieldLabel <> " must be 72 bytes or fewer"))
   | T.any isControl passwordClean =
       Left (passwordError (fieldLabel <> " must not contain control characters"))
+  | T.any isHiddenPasswordFormattingChar passwordClean =
+      Left (passwordError (fieldLabel <> " must not contain hidden formatting characters"))
   | otherwise =
       Right passwordClean
   where
@@ -375,6 +377,10 @@ validateAuthPassword fieldLabel rawPassword
 
 maxBcryptPasswordBytes :: Int
 maxBcryptPasswordBytes = 72
+
+isHiddenPasswordFormattingChar :: Char -> Bool
+isHiddenPasswordFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateCurrentPasswordInput :: Text -> Either ServerError Text
 validateCurrentPasswordInput rawPassword

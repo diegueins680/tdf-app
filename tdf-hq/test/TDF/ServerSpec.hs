@@ -3741,6 +3741,8 @@ spec = describe "TDF.Server helpers" $ do
                 validateAuthPassword "Password" (T.replicate 73 "a")
             assertInvalid "Password must not contain control characters" $
                 validateAuthPassword "Password" "Long\nPass123"
+            assertInvalid "Password must not contain hidden formatting characters" $
+                validateAuthPassword "Password" ("Long" <> T.singleton '\x202E' <> "Pass123")
             assertInvalid "New password must be 72 bytes or fewer" $
                 validateAuthPassword "New password" (T.replicate 73 "a")
 
