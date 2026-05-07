@@ -5061,6 +5061,67 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Not configured yet/i)).not.toBeInTheDocument();
   });
 
+  it('ignores disabled and not-enabled fallback cards so first-run users only open actionable modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'technical-integrations-disabled',
+          title: 'Integraciones técnicas',
+          body: ['This feature is disabled for this workspace.'],
+        },
+        {
+          cardId: 'service-keys-not-enabled',
+          title: 'Llaves de servicio',
+          body: ['Esta funcionalidad no está habilitada en este entorno.'],
+        },
+        {
+          cardId: 'feature-flag-disabled',
+          title: 'Feature disabled',
+          body: ['Contact support to enable this feature flag.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 4 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Llaves de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Feature disabled')).not.toBeInTheDocument();
+    expect(screen.queryByText(/This feature is disabled/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no está habilitada/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Contact support to enable/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Llaves de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Feature disabled')).not.toBeInTheDocument();
+  });
+
   it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
