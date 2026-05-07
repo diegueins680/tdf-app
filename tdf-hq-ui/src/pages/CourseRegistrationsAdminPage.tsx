@@ -790,6 +790,16 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\
 const normalizeFirstRunDescriptorSeparators = (value: string) =>
   value.replace(/\s*[\u00b7\u2022\u2013\u2014]\s*/g, ' - ');
 
+const stripFirstRunCohortPresentationMarkers = (value: string) =>
+  value
+    .trim()
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
+    .trim();
+
 const humanizeCohortSlug = (slug: string) => {
   const normalized = slug.trim().replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ');
   if (!normalized) return '';
@@ -1156,7 +1166,7 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const fallbackLabel = humanizeCohortSlug(slug) || slug;
-  const title = cohort.ccTitle?.trim();
+  const title = stripFirstRunCohortPresentationMarkers(cohort.ccTitle ?? '');
   if (!title) return fallbackLabel;
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),

@@ -14515,11 +14515,13 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('unwraps parenthesized first-run course names after stripping form descriptors', async () => {
+  it('unwraps formatted first-run course names after stripping form descriptors', async () => {
     const titles = [
       'Formulario público (Beatmaking 101)',
       'Registration page [Beatmaking 101]',
       '(Beatmaking 101) enrollment portal',
+      '[Beatmaking 101](https://example.test/beatmaking-101)',
+      'Formulario público [Beatmaking 101](https://example.test/beatmaking-101)',
     ];
 
     for (const title of titles) {
@@ -14536,6 +14538,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain('(Beatmaking 101)');
         expect(emptyState?.textContent).not.toContain('[Beatmaking 101]');
+        expect(emptyState?.textContent).not.toContain('https://example.test/beatmaking-101');
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
