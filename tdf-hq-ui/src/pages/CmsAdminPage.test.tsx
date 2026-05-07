@@ -518,25 +518,20 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the live payload inspector once the editor already shows that payload', async () => {
+  it('keeps the live payload behind the live-to-editor action until the editor uses it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain('Payload en vivo disponible.');
-      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(1);
+      expect(container.textContent).toContain(
+        'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
-    });
-
-    await act(async () => {
-      getButtonByText(container, 'Ver payload en vivo').click();
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(countLabelsByText(container, 'Payload actual')).toBe(1);
+      expect(container.textContent).not.toContain('Payload en vivo disponible.');
     });
 
     await act(async () => {
@@ -548,7 +543,6 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('El editor ya usa el payload en vivo.');
       expect(container.textContent).toContain('Editor coincide con versión en vivo');
-      expect(container.textContent).not.toContain('Payload en vivo disponible.');
       expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
@@ -767,32 +761,25 @@ describe('CmsAdminPage', () => {
     }
   });
 
-  it('keeps the live payload collapsed by default and opens it only on request', async () => {
+  it('keeps first-time live payload recovery to one visible action', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Payload JSON');
-      expect(container.textContent).toContain('Payload en vivo disponible.');
-      expect(container.textContent).toContain('Ver payload en vivo');
+      expect(container.textContent).toContain(
+        'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload actual');
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
-    });
-
-    await act(async () => {
-      getButtonByText(container, 'Ver payload en vivo').click();
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(container.textContent).toContain('Payload actual');
-      expect(container.textContent).toContain('Ocultar payload en vivo');
     });
 
     await cleanup();
@@ -806,7 +793,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
-      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',

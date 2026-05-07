@@ -271,7 +271,6 @@ export default function CmsAdminPage() {
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
   const [showDraftDiff, setShowDraftDiff] = useState(false);
-  const [showLivePayload, setShowLivePayload] = useState(false);
   const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
   const normalizedSlugFilter = slugFilter.trim();
   const hasSlugSelection = normalizedSlugFilter.length > 0;
@@ -386,10 +385,6 @@ export default function CmsAdminPage() {
     liveQuery.data && normalizeCmsStatus(liveQuery.data.ccdStatus) !== 'missing'
       ? liveQuery.data
       : null;
-
-  useEffect(() => {
-    setShowLivePayload(false);
-  }, [liveContent?.ccdId]);
 
   const liveVersion = liveContent?.ccdVersion ?? null;
   const draftBehindLive =
@@ -550,12 +545,10 @@ export default function CmsAdminPage() {
       titleChangedFromLive,
     ],
   );
-  const showLivePayloadInspectAction =
-    Boolean(liveContent) && !liveEditorActionState.showLiveInSyncChip && !canCompareWithLive;
   const liveContentSummary = canCompareWithLive
     ? 'El comparador revisa el payload en vivo contra este borrador.'
-    : showLivePayloadInspectAction
-      ? 'Payload en vivo disponible.'
+    : liveEditorActionState.showUseLiveAction
+      ? 'Carga la versión en vivo para editar la estructura publicada desde el formulario.'
       : 'El editor ya usa el payload en vivo.';
   const draftVsLiveDiff = useMemo(
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
@@ -1017,25 +1010,7 @@ export default function CmsAdminPage() {
                           >
                             Abrir página en vivo
                           </Button>
-                          {showLivePayloadInspectAction && (
-                            <Button
-                              size="small"
-                              variant="text"
-                              onClick={() => setShowLivePayload((current) => !current)}
-                            >
-                              {showLivePayload ? 'Ocultar payload en vivo' : 'Ver payload en vivo'}
-                            </Button>
-                          )}
                         </Stack>
-                        {showLivePayloadInspectAction && showLivePayload && (
-                          <TextField
-                            label="Payload actual"
-                            value={livePayloadPretty}
-                            multiline
-                            minRows={8}
-                            InputProps={{ readOnly: true }}
-                          />
-                        )}
                       </Stack>
                     )}
                   </Stack>
