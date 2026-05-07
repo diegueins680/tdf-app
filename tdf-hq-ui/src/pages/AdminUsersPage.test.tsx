@@ -4194,6 +4194,62 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('matches split search terms across identity and access fields without showing empty-search recovery actions', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'ada-admin',
+        partyName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: null,
+        primaryPhone: '+593999000444',
+        roles: ['Manager'],
+        modules: ['crm'],
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+        roles: ['ReadOnly'],
+        modules: ['inventory'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'grace crm');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: Manager · Módulos: crm.',
+        );
+        expect(getRowByUserId(container, 102).textContent).toContain('Grace Hopper');
+        expect(container.textContent).not.toContain('No hay coincidencias');
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
+        expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('skips the baseline admin access summary when a single search result already uses the default admin scope', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

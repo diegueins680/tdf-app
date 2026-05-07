@@ -826,6 +826,45 @@ const getUserStatusSearchValues = (active: boolean) => (
   active ? ACTIVE_STATUS_SEARCH_VALUES : INACTIVE_STATUS_SEARCH_VALUES
 );
 
+const getUserConcreteSearchValues = (user: AdminUser) => {
+  const identity = summarizeUserIdentity(user);
+
+  return [
+    user.username,
+    user.partyName,
+    identity.primary,
+    String(user.userId),
+    ...getLinkedProfileSearchValues(user),
+    ...getUserContactSearchValues(user),
+    getUserAccessSummary(user.roles),
+    getUserAccessSummary(user.modules),
+  ]
+    .flatMap(getSearchValueVariants)
+    .filter(Boolean);
+};
+
+const getUserStateSearchValues = (user: AdminUser) => [
+  ...getUserContactReadinessSearchValues(user),
+  ...getUserAccessStateSearchValues(user),
+  ...getUserProfileStateSearchValues(user),
+]
+  .flatMap(getSearchValueVariants)
+  .filter(Boolean);
+
+const getSearchTokens = (value: string) =>
+  normalizeSearchValue(value)
+    .split(' ')
+    .filter(Boolean);
+
+const matchesSearchTokenAcrossValues = (
+  token: string,
+  concreteSearchSpace: readonly string[],
+  statusSearchValues: readonly string[],
+) => (
+  concreteSearchSpace.some((value) => value.includes(token))
+  || statusSearchValues.includes(token)
+);
+
 const isActiveStatusSearchQuery = (value: string) => {
   const queryVariants = getSearchValueVariants(value);
 
@@ -836,27 +875,21 @@ const isActiveStatusSearchQuery = (value: string) => {
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
-  const identity = summarizeUserIdentity(user);
   const statusSearchValues = getUserStatusSearchValues(user.active);
-
-  const searchSpace = [
-    user.username,
-    user.partyName,
-    identity.primary,
-    String(user.userId),
-    ...getLinkedProfileSearchValues(user),
-    ...getUserContactSearchValues(user),
-    ...getUserContactReadinessSearchValues(user),
-    ...getUserAccessStateSearchValues(user),
-    ...getUserProfileStateSearchValues(user),
-    getUserAccessSummary(user.roles),
-    getUserAccessSummary(user.modules),
-  ]
-    .flatMap(getSearchValueVariants)
-    .filter(Boolean);
-
-  return queryVariants.some((query) => (
+  const concreteSearchSpace = getUserConcreteSearchValues(user);
+  const stateSearchSpace = getUserStateSearchValues(user);
+  const searchSpace = [...concreteSearchSpace, ...stateSearchSpace];
+  const matchesExactQuery = queryVariants.some((query) => (
     searchSpace.some((value) => value.includes(query)) || statusSearchValues.includes(query)
+  ));
+
+  if (matchesExactQuery) return true;
+
+  const queryTokens = getSearchTokens(rawQuery);
+  if (queryTokens.length <= 1) return false;
+
+  return queryTokens.every((token) => (
+    matchesSearchTokenAcrossValues(token, concreteSearchSpace, statusSearchValues)
   ));
 };
 
