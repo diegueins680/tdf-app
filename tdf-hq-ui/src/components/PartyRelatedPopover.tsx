@@ -100,6 +100,14 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
         .slice(0, 10),
     [tracks],
   );
+  const bookingsCustomerCount = bookings.filter((b) => b.prbRole === 'cliente').length;
+  const bookingsEngineerCount = bookings.filter((b) => b.prbRole === 'ingeniero').length;
+  const classesStudentCount = classSessions.filter((c) => c.prcRole === 'estudiante').length;
+  const classesTeacherCount = classSessions.filter((c) => c.prcRole === 'profesor').length;
+  const hasBookings = bookingsCustomerCount > 0 || bookingsEngineerCount > 0;
+  const hasClasses = classesStudentCount > 0 || classesTeacherCount > 0;
+  const hasTracks = tracks.length > 0;
+  const hasRelatedHistory = hasBookings || hasClasses || hasTracks;
 
   const go = (path: string) => {
     navigate(path);
@@ -135,25 +143,35 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
               <Button size="small" variant="outlined" onClick={() => go(`/perfil/${party.partyId}`)}>
                 Perfil
               </Button>
-              <Button size="small" variant="outlined" onClick={() => go(`/estudio/calendario?partyId=${party.partyId}`)}>
-                Reservas (cliente)
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => go(`/estudio/calendario?engineerPartyId=${party.partyId}`)}
-              >
-                Reservas (ingeniero)
-              </Button>
-              <Button size="small" variant="outlined" onClick={() => go(`/escuela/clases?studentId=${party.partyId}`)}>
-                Clases (estudiante)
-              </Button>
-              <Button size="small" variant="outlined" onClick={() => go(`/escuela/clases?teacherId=${party.partyId}`)}>
-                Clases (profesor)
-              </Button>
-              <Button size="small" variant="outlined" onClick={() => go(`/label/tracks?ownerId=${party.partyId}`)}>
-                Tracks
-              </Button>
+              {bookingsCustomerCount > 0 && (
+                <Button size="small" variant="outlined" onClick={() => go(`/estudio/calendario?partyId=${party.partyId}`)}>
+                  Reservas (cliente)
+                </Button>
+              )}
+              {bookingsEngineerCount > 0 && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => go(`/estudio/calendario?engineerPartyId=${party.partyId}`)}
+                >
+                  Reservas (ingeniero)
+                </Button>
+              )}
+              {classesStudentCount > 0 && (
+                <Button size="small" variant="outlined" onClick={() => go(`/escuela/clases?studentId=${party.partyId}`)}>
+                  Clases (estudiante)
+                </Button>
+              )}
+              {classesTeacherCount > 0 && (
+                <Button size="small" variant="outlined" onClick={() => go(`/escuela/clases?teacherId=${party.partyId}`)}>
+                  Clases (profesor)
+                </Button>
+              )}
+              {hasTracks && (
+                <Button size="small" variant="outlined" onClick={() => go(`/label/tracks?ownerId=${party.partyId}`)}>
+                  Tracks
+                </Button>
+              )}
             </>
           )}
         </Stack>
@@ -172,149 +190,150 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
         )}
 
         {!relatedQuery.isLoading && relatedQuery.data && (
-          <Stack spacing={1.5}>
-            <Box>
-              <Typography variant="overline" color="text.secondary">
-                Reservas
-              </Typography>
-              {bookingsCustomer.length === 0 && bookingsEngineer.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No hay reservas asociadas.
-                </Typography>
-              ) : (
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700}>
-                      Cliente ({bookings.filter((b) => b.prbRole === 'cliente').length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {bookingsCustomer.map((b) => (
-                        <ListItemButton
-                          key={`customer-${b.prbBookingId}`}
-                          onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
-                        >
-                          <ListItemText
-                            primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
-                            secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700}>
-                      Ingeniero ({bookings.filter((b) => b.prbRole === 'ingeniero').length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {bookingsEngineer.map((b) => (
-                        <ListItemButton
-                          key={`engineer-${b.prbBookingId}`}
-                          onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
-                        >
-                          <ListItemText
-                            primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
-                            secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                </Stack>
+          hasRelatedHistory ? (
+            <Stack spacing={1.5}>
+              {hasBookings && (
+                <Box>
+                  <Typography variant="overline" color="text.secondary">
+                    Reservas
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
+                    {bookingsCustomerCount > 0 && (
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Cliente ({bookingsCustomerCount})
+                        </Typography>
+                        <List dense disablePadding>
+                          {bookingsCustomer.map((b) => (
+                            <ListItemButton
+                              key={`customer-${b.prbBookingId}`}
+                              onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
+                            >
+                              <ListItemText
+                                primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
+                                secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
+                              />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                    {bookingsEngineerCount > 0 && (
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Ingeniero ({bookingsEngineerCount})
+                        </Typography>
+                        <List dense disablePadding>
+                          {bookingsEngineer.map((b) => (
+                            <ListItemButton
+                              key={`engineer-${b.prbBookingId}`}
+                              onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
+                            >
+                              <ListItemText
+                                primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
+                                secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
+                              />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
               )}
-            </Box>
 
-            <Box>
-              <Typography variant="overline" color="text.secondary">
-                Clases
-              </Typography>
-              {classesStudent.length === 0 && classesTeacher.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No hay clases asociadas.
-                </Typography>
-              ) : (
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700}>
-                      Estudiante ({classSessions.filter((c) => c.prcRole === 'estudiante').length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {classesStudent.map((c) => (
-                        <ListItemButton
-                          key={`student-${c.prcClassSessionId}`}
-                          onClick={() =>
-                            go(
-                              `/escuela/clases?studentId=${c.prcStudentId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
-                                c.prcStartAt,
-                              )}`,
-                            )
-                          }
-                        >
-                          <ListItemText
-                            primary={c.prcSubjectName ?? `Materia #${c.prcSubjectId}`}
-                            secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={700}>
-                      Profesor ({classSessions.filter((c) => c.prcRole === 'profesor').length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {classesTeacher.map((c) => (
-                        <ListItemButton
-                          key={`teacher-${c.prcClassSessionId}`}
-                          onClick={() =>
-                            go(
-                              `/escuela/clases?teacherId=${c.prcTeacherId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
-                                c.prcStartAt,
-                              )}`,
-                            )
-                          }
-                        >
-                          <ListItemText
-                            primary={`${c.prcSubjectName ?? `Materia #${c.prcSubjectId}`} · ${c.prcStudentName ?? `Alumno #${c.prcStudentId}`}`}
-                            secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                </Stack>
+              {hasClasses && (
+                <Box>
+                  <Typography variant="overline" color="text.secondary">
+                    Clases
+                  </Typography>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
+                    {classesStudentCount > 0 && (
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Estudiante ({classesStudentCount})
+                        </Typography>
+                        <List dense disablePadding>
+                          {classesStudent.map((c) => (
+                            <ListItemButton
+                              key={`student-${c.prcClassSessionId}`}
+                              onClick={() =>
+                                go(
+                                  `/escuela/clases?studentId=${c.prcStudentId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
+                                    c.prcStartAt,
+                                  )}`,
+                                )
+                              }
+                            >
+                              <ListItemText
+                                primary={c.prcSubjectName ?? `Materia #${c.prcSubjectId}`}
+                                secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
+                              />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                    {classesTeacherCount > 0 && (
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Profesor ({classesTeacherCount})
+                        </Typography>
+                        <List dense disablePadding>
+                          {classesTeacher.map((c) => (
+                            <ListItemButton
+                              key={`teacher-${c.prcClassSessionId}`}
+                              onClick={() =>
+                                go(
+                                  `/escuela/clases?teacherId=${c.prcTeacherId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
+                                    c.prcStartAt,
+                                  )}`,
+                                )
+                              }
+                            >
+                              <ListItemText
+                                primary={`${c.prcSubjectName ?? `Materia #${c.prcSubjectId}`} · ${c.prcStudentName ?? `Alumno #${c.prcStudentId}`}`}
+                                secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
+                              />
+                            </ListItemButton>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
               )}
-            </Box>
 
-            <Box>
-              <Typography variant="overline" color="text.secondary">
-                Tracks
-              </Typography>
-              {tracksSorted.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No hay tracks asociados.
-                </Typography>
-              ) : (
-                <List dense disablePadding>
-                  {tracksSorted.map((t) => (
-                    <ListItemButton
-                      key={t.prtId}
-                      onClick={() =>
-                        go(`/label/tracks?ownerId=${relatedQuery.data?.prPartyId ?? ''}&trackId=${encodeURIComponent(t.prtId)}`)
-                      }
-                    >
-                      <ListItemText
-                        primary={t.prtTitle}
-                        secondary={`${t.prtStatus} · actualizado: ${fmtDateTime(t.prtUpdatedAt)}`}
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
+              {hasTracks && (
+                <Box>
+                  <Typography variant="overline" color="text.secondary">
+                    Tracks
+                  </Typography>
+                  <List dense disablePadding>
+                    {tracksSorted.map((t) => (
+                      <ListItemButton
+                        key={t.prtId}
+                        onClick={() =>
+                          go(`/label/tracks?ownerId=${relatedQuery.data?.prPartyId ?? ''}&trackId=${encodeURIComponent(t.prtId)}`)
+                        }
+                      >
+                        <ListItemText
+                          primary={t.prtTitle}
+                          secondary={`${t.prtStatus} · actualizado: ${fmtDateTime(t.prtUpdatedAt)}`}
+                        />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Box>
               )}
-            </Box>
-          </Stack>
+            </Stack>
+          ) : (
+            <Alert severity="info" variant="outlined">
+              No hay historial relacionado todavía. Usa Perfil para revisar o completar este contacto.
+            </Alert>
+          )
         )}
       </Stack>
     </Popover>
   );
 }
-
