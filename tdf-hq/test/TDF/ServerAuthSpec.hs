@@ -22,6 +22,7 @@ import TDF.ServerAuth
   , selectUniqueGoogleLoginCredential
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
+  , validateCurrentPasswordInput
   , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validatePasswordResetToken
@@ -34,6 +35,7 @@ spec :: Spec
 spec = do
   authEmailSpec
   loginRequestSpec
+  currentPasswordInputSpec
   passwordChangeAuthHeaderSpec
   tokenLabelUsernameSpec
   signupRoleSpec
@@ -107,6 +109,23 @@ loginRequestSpec = describe "validateLoginRequest" $ do
     assertRejected
       "Password must not contain control characters"
       (LoginRequest "ada@example.com" "Temp\nPass123!")
+
+currentPasswordInputSpec :: Spec
+currentPasswordInputSpec = describe "validateCurrentPasswordInput" $ do
+  it "trims current passwords before the password-change credential check" $
+    validateCurrentPasswordInput "  old-pass  " `shouldBe` Right "old-pass"
+
+  it "rejects current passwords that bcrypt would truncate before password-change lookup" $ do
+    let assertRejected label rawPassword =
+          case validateCurrentPasswordInput rawPassword of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` label
+            Right value ->
+              expectationFailure ("Expected invalid current password, got " <> show value)
+    assertRejected "Current password is required" "   "
+    assertRejected "72 bytes or fewer" (T.replicate 73 "a")
+    assertRejected "control characters" "old\npass"
 
 passwordChangeAuthHeaderSpec :: Spec
 passwordChangeAuthHeaderSpec = describe "parsePasswordChangeAuthToken" $ do

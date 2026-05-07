@@ -30,6 +30,7 @@ module TDF.ServerAuth
   , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validateAuthPassword
+  , validateCurrentPasswordInput
   , validatePasswordResetToken
   , validateSignupDisplayName
   , validateRequestedSignupRoles
@@ -375,6 +376,20 @@ validateAuthPassword fieldLabel rawPassword
 maxBcryptPasswordBytes :: Int
 maxBcryptPasswordBytes = 72
 
+validateCurrentPasswordInput :: Text -> Either ServerError Text
+validateCurrentPasswordInput rawPassword
+  | T.null passwordClean =
+      Left (passwordError "Current password is required")
+  | BS8.length (TE.encodeUtf8 passwordClean) > maxBcryptPasswordBytes =
+      Left (passwordError "Current password must be 72 bytes or fewer")
+  | T.any isControl passwordClean =
+      Left (passwordError "Current password must not contain control characters")
+  | otherwise =
+      Right passwordClean
+  where
+    passwordClean = T.strip rawPassword
+    passwordError msg = err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
 validateSignupDisplayName :: Text -> Text -> Either ServerError Text
 validateSignupDisplayName rawFirst rawLast
   | T.null firstClean && T.null lastClean =
@@ -611,9 +626,8 @@ signup SignupRequest
 
 changePassword :: Maybe Text -> ChangePasswordRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 changePassword mAuthHeader ChangePasswordRequest{..} = do
-  let currentPasswordClean = T.strip currentPassword
-      maybeUsernameClean = T.strip <$> username
-  when (T.null currentPasswordClean) $ throwBadRequest "Current password is required"
+  let maybeUsernameClean = T.strip <$> username
+  currentPasswordClean <- either throwError pure (validateCurrentPasswordInput currentPassword)
   newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
   Env pool _ <- ask
   usernameClean <- resolveUsername pool maybeUsernameClean mAuthHeader
