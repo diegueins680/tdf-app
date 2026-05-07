@@ -12808,6 +12808,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Systeme.io course checkout for Beatmaking 101',
       'Mighty Networks enrollment page - Beatmaking 101',
       'Beatmaking 101 - Mighty Networks registration portal',
+      'Skool course signup page - Beatmaking 101',
+      'Beatmaking 101 - Circle.so enrollment portal',
     ];
 
     for (const title of titles) {
@@ -12823,7 +12825,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds|ClickFunnels|GoHighLevel|Kartra|Systeme\.io|Mighty Networks/i);
+        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds|ClickFunnels|GoHighLevel|Kartra|Systeme\.io|Mighty Networks|Skool|Circle\.so/i);
         expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup|registration funnel/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
