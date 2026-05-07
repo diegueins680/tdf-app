@@ -597,6 +597,7 @@ isNonPublicIpv6 host =
     || isUniqueLocal firstSegment
     || isLinkLocal firstSegment
     || isSiteLocal firstSegment
+    || maybe False isNonPublicIpv4 (sixToFourIpv4Octets host)
     || maybe False isNonPublicIpv4 (embeddedIpv4Octets host)
   where
     segments = T.splitOn ":" host
@@ -623,6 +624,14 @@ isNonPublicIpv6 host =
 
     isSiteLocal segment =
       any (`T.isPrefixOf` segment) ["fec", "fed", "fee", "fef"]
+
+sixToFourIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+sixToFourIpv4Octets host =
+  case parseIpv6Hextets host of
+    Just (prefix:hi:lo:_)
+      | prefix == 0x2002 ->
+          Just (hi `div` 256, hi `mod` 256, lo `div` 256, lo `mod` 256)
+    _ -> Nothing
 
 embeddedIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
 embeddedIpv4Octets host =

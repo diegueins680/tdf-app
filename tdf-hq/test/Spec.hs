@@ -7010,6 +7010,8 @@ main = hspec $ do
             assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
             assertPrivateTarget "https://[::ffff:7f00:1]/live"
             assertPrivateTarget "https://[0:0:0:0:0:ffff:c0a8:117]/live"
+            assertPrivateTarget "https://[2002:0a00:0001::]/live"
+            assertPrivateTarget "https://[2002:c0a8:0117::]/live"
 
         it "rejects reserved IP ranges before metadata/import fetches can target them" $ do
             let assertReservedTarget rawUrl =
@@ -7029,6 +7031,7 @@ main = hspec $ do
             assertReservedTarget "https://255.255.255.255/live"
             assertReservedTarget "https://[2001:db8::1]/live"
             assertReservedTarget "https://[ff02::1]/live"
+            assertReservedTarget "https://[2002:c000:020a::]/live"
 
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of
