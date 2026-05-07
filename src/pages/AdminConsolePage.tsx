@@ -641,6 +641,7 @@ function stripAdminConsolePresentationMarkers(value: string) {
     .trim()
     .replace(/^#{1,6}\s+/, '')
     .replace(/^>\s+/, '')
+    .replace(/!?\[([^\]\n]+)\]\([^)]+\)/g, '$1')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/__([^_\n]+)__/g, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
