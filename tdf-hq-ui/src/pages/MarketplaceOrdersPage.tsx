@@ -118,6 +118,7 @@ const normalizeBuyerPhoneDigits = (value?: string | null) => normalizeBuyerPhone
 const normalizeEmailValue = (value?: string | null) => value?.trim() ?? '';
 const normalizeEmailComparisonValue = (value?: string | null) => normalizeEmailValue(value).toLowerCase();
 const MIN_PHONE_SEARCH_DIGITS = 4;
+const MIN_DEFAULT_CSV_EXPORT_ORDERS = 8;
 const formatPaymentProvider = (value?: string | null) => (
   normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
 );
@@ -347,7 +348,9 @@ export default function MarketplaceOrdersPage() {
   const visiblePaidCount = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const visiblePendingCount = Math.max(filtered.length - visiblePaidCount, 0);
   const showVisibleOrderBreakdown = visiblePaidCount > 0 && visiblePendingCount > 0;
-  const showExportCsvAction = filtered.length > 0;
+  const showExportCsvAction =
+    filtered.length > 0
+    && (filtersDirty || filtered.length >= MIN_DEFAULT_CSV_EXPORT_ORDERS);
   const paidTotal = orders.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const paidVisible = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const ordersSummary = filtersDirty && orders.length === 0
