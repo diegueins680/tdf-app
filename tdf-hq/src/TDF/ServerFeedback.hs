@@ -14,6 +14,7 @@ module TDF.ServerFeedback
   , validateFeedbackConsent
   , validateOptionalFeedbackContactEmail
   , validateFeedbackAttachmentSize
+  , validateFeedbackAttachmentContentType
   , validateFeedbackAttachmentFileName
   , sanitizeFeedbackAttachmentFileName
   ) where
@@ -98,6 +99,7 @@ feedbackServer user = submitFeedback
     validateAndStoreAttachment :: FileData Tmp -> m FilePath
     validateAndStoreAttachment file@FileData{..} = do
       safeName <- either throwError pure (validateFeedbackAttachmentFileName fdFileName)
+      _ <- either throwError pure (validateFeedbackAttachmentContentType fdFileCType)
       size <- liftIO (getFileSize fdPayload)
       either throwError pure (validateFeedbackAttachmentSize size)
       liftIO (storeAttachment safeName file)
@@ -253,6 +255,47 @@ validateFeedbackAttachmentSize size
       Left err400 { errBody = "attachment must be 10 MB or smaller" }
   | otherwise =
       Right ()
+
+validateFeedbackAttachmentContentType :: Text -> Either ServerError Text
+validateFeedbackAttachmentContentType rawContentType
+  | T.null cleaned =
+      Left err400 { errBody = "attachment content type is required" }
+  | T.length cleaned > maxFeedbackAttachmentContentTypeChars =
+      Left err400 { errBody = "attachment content type must be 100 characters or fewer" }
+  | T.any isUnsafeAttachmentContentTypeChar cleaned =
+      Left err400
+        { errBody =
+            "attachment content type must not contain control characters or hidden formatting characters"
+        }
+  | mediaType `elem` allowedFeedbackAttachmentContentTypes =
+      Right mediaType
+  | otherwise =
+      Left err400
+        { errBody =
+            "attachment content type must be a PDF, image, plain text, or CSV file"
+        }
+  where
+    cleaned = T.strip rawContentType
+    mediaType = T.toLower (T.strip (fst (T.breakOn ";" cleaned)))
+
+maxFeedbackAttachmentContentTypeChars :: Int
+maxFeedbackAttachmentContentTypeChars = 100
+
+allowedFeedbackAttachmentContentTypes :: [Text]
+allowedFeedbackAttachmentContentTypes =
+  [ "application/csv"
+  , "application/pdf"
+  , "image/gif"
+  , "image/jpeg"
+  , "image/png"
+  , "image/webp"
+  , "text/csv"
+  , "text/plain"
+  ]
+
+isUnsafeAttachmentContentTypeChar :: Char -> Bool
+isUnsafeAttachmentContentTypeChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateFeedbackAttachmentFileName :: Text -> Either ServerError Text
 validateFeedbackAttachmentFileName rawName

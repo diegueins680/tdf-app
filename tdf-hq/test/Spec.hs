@@ -189,6 +189,7 @@ import TDF.ServerFeedback
       validateFeedbackCategory,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
+      validateFeedbackAttachmentContentType,
       validateFeedbackAttachmentFileName,
       validateFeedbackTitle,
       validateFeedbackConsent,
@@ -5087,6 +5088,43 @@ main = hspec $ do
             assertInvalid (-1) "attachment size is invalid"
             assertInvalid 0 "attachment must not be empty"
             assertInvalid (10 * 1024 * 1024 + 1) "attachment must be 10 MB or smaller"
+
+    describe "validateFeedbackAttachmentContentType" $ do
+        it "normalizes supported feedback attachment media types before storing uploads" $ do
+            validateFeedbackAttachmentContentType " Image/PNG; charset=binary "
+                `shouldBe` Right "image/png"
+            validateFeedbackAttachmentContentType "application/pdf"
+                `shouldBe` Right "application/pdf"
+            validateFeedbackAttachmentContentType "text/plain; charset=utf-8"
+                `shouldBe` Right "text/plain"
+            validateFeedbackAttachmentContentType "text/csv"
+                `shouldBe` Right "text/csv"
+
+        it "rejects ambiguous or executable-like feedback attachment media types" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackAttachmentContentType raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment content type, got " <> show value)
+            assertInvalid "   " "attachment content type is required"
+            assertInvalid
+                (Data.Text.replicate 101 "a")
+                "attachment content type must be 100 characters or fewer"
+            assertInvalid
+                "image/png;\nContent-Type: text/html"
+                "attachment content type must not contain control characters"
+            assertInvalid
+                ("image/png" <> "\x202E")
+                "attachment content type must not contain control characters"
+            assertInvalid
+                "text/html"
+                "attachment content type must be a PDF, image, plain text, or CSV file"
+            assertInvalid
+                "application/javascript"
+                "attachment content type must be a PDF, image, plain text, or CSV file"
 
     describe "feedback multipart parsing" $ do
         it "accepts omitted consent as false and normalizes explicit truthy values" $ do
