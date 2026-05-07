@@ -9526,6 +9526,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'notion_form',
       'fillout_forms',
       'cognito_form',
+      'meta_instant_form',
+      'instagram_instant_form',
+      'fb_instant_forms',
       'wufoo',
       'zoho_form',
       'gravity_form',
@@ -9558,6 +9561,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Notion form',
       'Fillout forms',
       'Cognito form',
+      'Meta instant form',
+      'Instagram instant form',
+      'Fb instant forms',
       'wufoo',
       'Zoho form',
       'Gravity form',
@@ -12545,6 +12551,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Google form',
       'Instagram Lead Form - Beatmaking 101',
       'Beatmaking 101 - IG lead form',
+      'Meta instant form - Beatmaking 101',
+      'Beatmaking 101 - Instagram instant form',
+      'FB instant forms for Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -12563,6 +12572,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Google');
         expect(emptyState?.textContent).not.toContain('Instagram Lead Form');
         expect(emptyState?.textContent).not.toContain('IG lead form');
+        expect(emptyState?.textContent).not.toContain('Meta instant form');
+        expect(emptyState?.textContent).not.toContain('Instagram instant form');
+        expect(emptyState?.textContent).not.toContain('FB instant forms');
         expect(countOccurrences(emptyState!, 'Google')).toBe(0);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
