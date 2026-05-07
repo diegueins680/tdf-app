@@ -9266,7 +9266,7 @@ main = hspec $ do
                 Nothing ->
                     expectationFailure "Expected actionable webhook text to be selected"
 
-        it "skips blank-sender text rows before selecting a later batched webhook message" $ do
+        it "normalizes Meta sender ids and skips malformed sender rows before selecting a message" $ do
             let blankSenderMessage =
                     WA.WAMessage
                         (Just "wamid.blank-sender")
@@ -9276,6 +9276,24 @@ main = hspec $ do
                         Nothing
                         Nothing
                         (Just "1770000001")
+                malformedSenderMessage =
+                    WA.WAMessage
+                        (Just "wamid.bad-sender")
+                        "text"
+                        "call me at 099 123 4567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                metaSenderMessage =
+                    WA.WAMessage
+                        (Just "wamid.meta-sender")
+                        "text"
+                        "593991234567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000003")
                 enrollmentMessage =
                     WA.WAMessage
                         (Just "wamid.valid-sender")
@@ -9284,13 +9302,18 @@ main = hspec $ do
                         (Just (WA.WAText "INSCRIBIRME"))
                         Nothing
                         Nothing
-                        (Just "1770000002")
+                        (Just "1770000004")
                 payload =
                     WA.WAMetaWebhook
                         [ WA.WAEntry
                             [ WA.WAChange
                                 ( WA.WAValue
-                                    (Just [blankSenderMessage, enrollmentMessage])
+                                    (Just
+                                        [ blankSenderMessage
+                                        , malformedSenderMessage
+                                        , metaSenderMessage
+                                        , enrollmentMessage
+                                        ])
                                     Nothing
                                     Nothing
                                 )
@@ -9298,7 +9321,7 @@ main = hspec $ do
                         ]
             case extractFirstWebhookMessage payload of
                 Just (WA.WAMessage msgId _ senderId msgText _ _ _) -> do
-                    msgId `shouldBe` Just "wamid.valid-sender"
+                    msgId `shouldBe` Just "wamid.meta-sender"
                     senderId `shouldBe` "+593991234567"
                     case msgText of
                         Just (WA.WAText messageBody) ->
@@ -9306,7 +9329,7 @@ main = hspec $ do
                         Nothing ->
                             expectationFailure "Expected later text body to be selected"
                 Nothing ->
-                    expectationFailure "Expected later valid webhook text to be selected"
+                    expectationFailure "Expected normalized webhook sender to be selected"
 
     describe "extractFirstEnrollmentWebhookMessage" $ do
         it "selects a later enrollment request instead of letting an unrelated first text hide it" $ do

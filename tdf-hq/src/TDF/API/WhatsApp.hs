@@ -120,12 +120,15 @@ extractFirstEnrollmentWebhookMessage =
 extractWebhookTextMessages :: WAMetaWebhook -> [WAMessage]
 extractWebhookTextMessages payload =
   [ msg
+      { from = senderId
+      }
   | ent <- entry payload
   , chg <- changes ent
   , msgs <- maybeToList (messages (value chg))
   , msg <- msgs
   , waType msg == "text"
-  , not (T.null (T.strip (from msg)))
+  , Just senderId <- [normalizeWhatsAppPhone (from msg)]
+  , isValidE164 senderId
   , Just txt <- [text msg]
   , not (T.null (T.strip (body txt)))
   ]
