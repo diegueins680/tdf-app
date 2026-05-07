@@ -14439,10 +14439,12 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips enrollment-funnel descriptors from first-run cohort copy', async () => {
+  it('strips enrollment workflow descriptors from first-run cohort copy', async () => {
     const titles = [
       'Enrollment funnel - Beatmaking 101',
       'Beatmaking 101 - registration flow',
+      'Course registration workflow - Beatmaking 101',
+      'Beatmaking 101 - enrollment workflow',
       'Flujo de inscripción - Beatmaking 101',
       'Beatmaking 101 - embudo de admisiones',
     ];
@@ -14460,7 +14462,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/enrollment funnel|registration flow|flujo de inscripci[oó]n|embudo de admisiones/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /enrollment funnel|registration flow|registration workflow|enrollment workflow|flujo de inscripci[oó]n|embudo de admisiones/i,
+        );
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
