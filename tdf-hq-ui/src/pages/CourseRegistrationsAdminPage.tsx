@@ -985,10 +985,10 @@ const firstRunStandalonePublicPageDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))\s*$/i;
 
 const firstRunCourseWebsiteDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:website|web\s+page|site)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
+  /^(?:(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio|portal)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
 
 const firstRunCourseWebsiteDescriptorSuffixPattern =
-  /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site)|(?:p[aá]gina|sitio)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site)|(?:p[aá]gina|sitio)\s+web))\s*$/i;
+  /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web))\s*$/i;
 
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
 
