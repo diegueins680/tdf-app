@@ -967,6 +967,8 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
       expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
       expect(container.textContent).toContain(
         'Agrega un título o payload antes de guardar la primera versión.',
       );
@@ -981,6 +983,8 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).toBeNull();
       expect(container.textContent).toContain(
         'Guardará esta versión como borrador sin cambiar la página en vivo.',
       );

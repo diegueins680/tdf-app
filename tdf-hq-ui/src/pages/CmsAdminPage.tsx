@@ -727,6 +727,7 @@ export default function CmsAdminPage() {
   const statusHelperText = showFirstVersionEmptyDraftGuard
     ? 'Agrega un título o payload antes de guardar la primera versión.'
     : baseStatusHelperText;
+  const showStatusControl = !showFirstVersionEmptyDraftGuard;
   const canSaveVersion = hasSlugSelection && !payloadError && !showFirstVersionEmptyDraftGuard;
   const showSaveVersionAction = !liveEditorActionState.showLiveInSyncChip && !showFirstVersionEmptyDraftGuard;
   const showFirstVersionHistoryGuidance =
@@ -1104,20 +1105,30 @@ export default function CmsAdminPage() {
                 >
                   {editorGuidance}
                 </Typography>
-                <TextField
-                  select
-                  label="Estado"
-                  value={status}
-                  onChange={(e) => {
-                    const next = e.target.value.trim();
-                    setStatus(isContentStatus(next) ? next : 'draft');
-                  }}
-                  helperText={statusHelperText}
-                  sx={{ width: 240 }}
-                >
-                  <MenuItem value="draft">Borrador</MenuItem>
-                  <MenuItem value="published">Publicado</MenuItem>
-                </TextField>
+                {showStatusControl ? (
+                  <TextField
+                    select
+                    label="Estado"
+                    value={status}
+                    onChange={(e) => {
+                      const next = e.target.value.trim();
+                      setStatus(isContentStatus(next) ? next : 'draft');
+                    }}
+                    helperText={statusHelperText}
+                    sx={{ width: 240 }}
+                  >
+                    <MenuItem value="draft">Borrador</MenuItem>
+                    <MenuItem value="published">Publicado</MenuItem>
+                  </TextField>
+                ) : (
+                  <Typography
+                    data-testid="cms-admin-first-version-save-guidance"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    {statusHelperText}
+                  </Typography>
+                )}
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                   {showSaveVersionAction && (
                     <Button
