@@ -65,7 +65,10 @@ loadWhatsAppConfig = do
   mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
-  mVersion <- lookupFirstNonEmptyEnv ["WA_GRAPH_API_VERSION", "WHATSAPP_API_VERSION"]
+  mVersion <-
+    lookupFirstNonEmptyAliasEnv
+      "WhatsApp API version"
+      ["WA_GRAPH_API_VERSION", "WHATSAPP_API_VERSION"]
   slugVal <- either fail pure (Config.normalizeConfiguredCourseSlug mSlug)
   regUrl <- either fail pure (normalizeWhatsAppRegistrationUrl mReg)
   baseUrl <- either fail pure (normalizeWhatsAppAppBaseUrl mBase)

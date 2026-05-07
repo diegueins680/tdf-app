@@ -1606,6 +1606,28 @@ main = hspec $ do
                     "WhatsApp access token aliases conflict"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects conflicting WhatsApp API version aliases before provider URL construction" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_GRAPH_API_VERSION", Just "v21.0")
+                , ("WHATSAPP_API_VERSION", Just "v20.0")
+                ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "WhatsApp API version aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_API_VERSION", Just "v21.0")
+                , ("WA_API_VERSION", Just "v20.0")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp API version aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes WhatsApp verify token aliases before webhook verification" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

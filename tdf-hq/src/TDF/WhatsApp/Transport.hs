@@ -56,7 +56,8 @@ loadWhatsAppEnv = do
         ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <-
     validateOptionalEnvText normalizeGraphApiVersion
-      =<< firstConfiguredText
+      =<< firstNonEmptyAliasText
+        "WhatsApp API version"
         ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
     { waManager = manager
