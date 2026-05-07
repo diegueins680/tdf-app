@@ -865,6 +865,12 @@ const firstRunEnrollmentFlowDescriptorPrefixPattern =
 const firstRunEnrollmentFlowDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
 
+const firstRunSalesDescriptorPrefixPattern =
+  /^(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
+
+const firstRunSalesDescriptorSuffixPattern =
+  /(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))\s*$/i;
+
 const firstRunPaymentDescriptorPrefixPattern =
   /^(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1081,6 +1087,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
+    .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
@@ -1138,6 +1145,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const strippedTitle = normalizedTitle
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
+    .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
