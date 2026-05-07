@@ -362,6 +362,7 @@ import TDF.ServerFuture
     , futureServer
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
+    , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleView
     , validateFutureStubArea
     , validateFutureStubCatalog
@@ -9589,6 +9590,29 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unregistered future stub path to fail, got: " <> show value)
+
+    describe "validateFutureAdminConsolePublishedPath" $
+        it "keeps the special admin console preview rooted under protected stubs" $ do
+            validateFutureAdminConsolePublishedPath "/stubs/admin/console"
+                `shouldBe` Right "/stubs/admin/console"
+
+            let assertInvalid path =
+                    case validateFutureAdminConsolePublishedPath path of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid admin console preview path, got: "
+                                    <> show value
+                                )
+
+            assertInvalid "/admin/console"
+            assertInvalid "/stubs/admin/../console"
+            assertInvalid "/stubs/admin//console"
+            assertInvalid "/stubs/admin/console/"
+            assertInvalid "/stubs/admin/console?preview=true"
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do

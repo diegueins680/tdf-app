@@ -273,17 +273,25 @@ validateFutureStubPublishedPath rawArea rawEndpoint rawPath =
   case validateFutureStubMetadata rawArea rawEndpoint of
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
-      | rawPath /= expectedPath -> invalidFutureStubResponse
-      | pathSegments == area : endpointSegments
-          && all validFutureStubSlug pathSegments -> Right rawPath
+      | isFuturePublishedPathShape area endpoint rawPath -> Right rawPath
       | otherwise -> invalidFutureStubResponse
-      where
-        expectedPath = futureStubPath area endpoint
-        endpointSegments = T.splitOn "/" endpoint
-        pathSegments =
-          case T.stripPrefix "/stubs/" rawPath of
-            Nothing -> []
-            Just suffix -> T.splitOn "/" suffix
+
+validateFutureAdminConsolePublishedPath :: Text -> Either ServerError Text
+validateFutureAdminConsolePublishedPath rawPath
+  | isFuturePublishedPathShape "admin" "console" rawPath = Right rawPath
+  | otherwise = invalidFutureAdminConsoleMetadata
+
+isFuturePublishedPathShape :: Text -> Text -> Text -> Bool
+isFuturePublishedPathShape area endpoint rawPath =
+  rawPath == futureStubPath area endpoint
+    && pathSegments == area : endpointSegments
+    && all validFutureStubSlug pathSegments
+  where
+    endpointSegments = T.splitOn "/" endpoint
+    pathSegments =
+      case T.stripPrefix "/stubs/" rawPath of
+        Nothing -> []
+        Just suffix -> T.splitOn "/" suffix
 
 futureStubCatalogResponse
   :: MonadError ServerError m
@@ -389,13 +397,13 @@ validateFutureAdminConsoleView view
   | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
   | viewId view /= futureStubId "admin" "console" = invalidFutureAdminConsoleMetadata
-  | viewPath view /= futureStubPath "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      path <- validateFutureAdminConsolePublishedPath (viewPath view)
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
       if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
            || hasDuplicateFutureAdminConsoleTitles validatedCards
@@ -405,7 +413,7 @@ validateFutureAdminConsoleView view
           { viewArea = "admin"
           , viewEndpoint = "console"
           , viewId = futureStubId "admin" "console"
-          , viewPath = futureStubPath "admin" "console"
+          , viewPath = path
           , viewMethod = futureStubMethod
           , viewStatus = "preview"
           , viewRequiredRole = futureStubRequiredRole
