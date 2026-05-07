@@ -9694,7 +9694,7 @@ shouldRetryWithFallbackModel status rawMessage =
   statusAllowsFallback && hasMarker && not hasNonFallbackMarker
   where
     msg = T.toLower (T.strip rawMessage)
-    statusAllowsFallback = status == 0 || status == 400 || status == 403 || status == 404
+    statusAllowsFallback = status == 400 || status == 403 || status == 404
     hasMarker = any (`T.isInfixOf` msg) markers || hasMissingModelMarker
     hasNonFallbackMarker = any (`T.isInfixOf` msg) nonFallbackMarkers
     hasMissingModelMarker =

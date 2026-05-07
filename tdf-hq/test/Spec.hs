@@ -1363,6 +1363,10 @@ main = hspec $ do
                 "The model gpt-expired does not exist or you do not have access to it."
                 `shouldBe` True
             shouldRetryWithFallbackModel
+                0
+                "OpenAI chat request failed: model_not_found while connecting"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
                 403
                 "billing_hard_limit_reached: model_not_found for this account"
                 `shouldBe` False
