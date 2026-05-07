@@ -138,7 +138,11 @@ import TDF.RagStore
       validateEmbeddingModelDimensions,
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
-import TDF.ServerAdmin (parseSocialErrorsChannel, validateAdminEmailCtaUrl, validateSocialErrorsLimit)
+import TDF.ServerAdmin
+    ( parseSocialErrorsChannel,
+      validateAdminEmailCtaUrl,
+      validateBrainEntryTitle,
+      validateSocialErrorsLimit )
 import TDF.Contracts.Server
     ( decodeStoredContract,
       decodeStoredContractFor,
@@ -9708,6 +9712,31 @@ main = hspec $ do
             assertRejected "http://example.com/launch" "CTA URL must be an absolute https URL"
             assertRejected "https://example.com@evil.test/launch" "CTA URL must not include user info"
             assertRejected "https://localhost/launch" "CTA URL must be an absolute public https URL"
+
+    describe "validateBrainEntryTitle" $ do
+        it "trims safe Studio Brain titles before admin storage" $
+            validateBrainEntryTitle "  Release Checklist  "
+                `shouldBe` Right "Release Checklist"
+
+        it "rejects malformed Studio Brain titles before admin storage" $ do
+            let assertRejected rawTitle expectedMessage =
+                    case validateBrainEntryTitle rawTitle of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid brain title to be rejected, got " <> show value)
+            assertRejected "   " "Brain entry title is required"
+            assertRejected
+                (Data.Text.replicate 161 "x")
+                "Brain entry title must be 160 characters or fewer"
+            assertRejected
+                "Release\nChecklist"
+                "Brain entry title must not contain control characters"
+            assertRejected
+                ("Release " <> Data.Text.singleton '\x202E' <> "Checklist")
+                "Brain entry title must not contain hidden format characters"
 
     describe "AdminEmailBroadcastRequest" $ do
         it "rejects unknown JSON fields so typos cannot silently change send behavior" $ do

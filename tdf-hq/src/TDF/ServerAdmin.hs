@@ -33,6 +33,7 @@ module TDF.ServerAdmin
   , validateDropdownOptionCategory
   , validateDropdownOptionValue
   , validateDropdownOptionLabel
+  , validateBrainEntryTitle
   , normalizeBrainEntryTags
   ) where
 
@@ -494,12 +495,11 @@ adminServer user =
 
     brainCreateHandler BrainEntryCreate{..} = do
       ensureModule ModuleAdmin user
-      let title = T.strip becTitle
-          body = T.strip becBody
+      title <- either throwError pure (validateBrainEntryTitle becTitle)
+      let body = T.strip becBody
           category = cleanMaybe becCategory
           active = fromMaybe True becActive
       tags <- either throwError pure (normalizeBrainEntryTags becTags)
-      when (T.null title) $ throwError err400 { errBody = "Título requerido" }
       when (T.null body) $ throwError err400 { errBody = "Contenido requerido" }
       now <- liftIO getCurrentTime
       entryId <- withPool $ insert ME.StudioBrainEntry
@@ -517,10 +517,8 @@ adminServer user =
     brainUpdateHandler entryId BrainEntryUpdate{..} = do
       ensureModule ModuleAdmin user
       let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
-          titleUpdate = T.strip <$> beuTitle
           bodyUpdate = T.strip <$> beuBody
-      for_ titleUpdate $ \t -> when (T.null t) $
-        throwError err400 { errBody = "Título requerido" }
+      titleUpdate <- traverse (either throwError pure . validateBrainEntryTitle) beuTitle
       for_ bodyUpdate $ \t -> when (T.null t) $
         throwError err400 { errBody = "Contenido requerido" }
       tagsUpdate <- case beuTags of
@@ -1441,6 +1439,25 @@ maxBrainEntryTags = 20
 
 maxBrainEntryTagChars :: Int
 maxBrainEntryTagChars = 40
+
+brainEntryTitleMaxChars :: Int
+brainEntryTitleMaxChars = 160
+
+validateBrainEntryTitle :: Text -> Either ServerError Text
+validateBrainEntryTitle rawTitle
+  | T.null title =
+      Left err400 { errBody = "Brain entry title is required" }
+  | T.length title > brainEntryTitleMaxChars =
+      Left err400 { errBody = "Brain entry title must be 160 characters or fewer" }
+  | T.any isControl title =
+      Left err400 { errBody = "Brain entry title must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar title =
+      Left err400
+        { errBody = "Brain entry title must not contain hidden format characters" }
+  | otherwise =
+      Right title
+  where
+    title = T.strip rawTitle
 
 normalizeBrainEntryTags :: Maybe [Text] -> Either ServerError (Maybe [Text])
 normalizeBrainEntryTags Nothing = Right Nothing
