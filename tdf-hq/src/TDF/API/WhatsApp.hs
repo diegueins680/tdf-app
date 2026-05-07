@@ -310,7 +310,11 @@ isValidLeadCompletionTokenChar c =
 
 isUnsafeLeadCompletionNameChar :: Char -> Bool
 isUnsafeLeadCompletionNameChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch || isHiddenFormattingChar ch
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId
@@ -381,10 +385,10 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
-                      | T.any (\ch -> isControl ch || isSpace ch) verifyToken ->
+                      | T.any isUnsafeVerifyTokenChar verifyToken ->
                           Left err400
                             { errBody =
-                                "hub.verify_token must not contain control characters or whitespace"
+                                "hub.verify_token must not contain control characters or whitespace; hidden formatting characters are not allowed"
                             }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
@@ -397,7 +401,7 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Nothing ->
           Left err503 { errBody = "WhatsApp verify token not configured" }
         Just txt
-          | T.any (\ch -> isControl ch || isSpace ch) txt ->
+          | T.any isUnsafeVerifyTokenChar txt ->
               Left err503 { errBody = "WhatsApp verify token is misconfigured" }
           | otherwise ->
               Right txt
@@ -414,11 +418,11 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
-      | T.any isHiddenHookChallengeChar challenge =
+      | T.any isHiddenFormattingChar challenge =
           Left err400
             { errBody = "hub.challenge must not contain hidden formatting characters" }
       | otherwise =
           Right challenge
 
-    isHiddenHookChallengeChar ch =
-      generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    isUnsafeVerifyTokenChar ch =
+      isControl ch || isSpace ch || isHiddenFormattingChar ch
