@@ -543,7 +543,13 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'todavia no esta configurado',
 ] as const;
 const ADMIN_CONSOLE_PLACEHOLDER_BODY_EXACT_KEYS = new Set([
+  'no activity',
+  'no activity to display',
+  'no activity yet',
   'no data',
+  'no recent activity',
+  'sin actividad',
+  'sin actividad reciente',
   'sin datos',
 ]);
 const ADMIN_CONSOLE_PLACEHOLDER_TITLE_EXACT_KEYS = new Set([

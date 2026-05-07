@@ -4538,6 +4538,56 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('ignores terse activity-empty fallback cards without hiding actionable setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'audit-activity-empty',
+          title: 'Actividad operacional',
+          body: ['No activity yet.'],
+        },
+        {
+          cardId: 'recent-activity-empty',
+          title: 'Bitácora técnica',
+          body: ['Sin actividad reciente.'],
+        },
+        {
+          cardId: 'activity-setup',
+          title: 'Seguimiento de actividad',
+          body: [
+            'Sin actividad reciente registrada. Programa una revisión semanal para confirmar accesos críticos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Actividad operacional')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora técnica')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No activity yet\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sin actividad reciente\.$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Seguimiento de actividad')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Sin actividad reciente registrada\. Programa una revisión semanal para confirmar accesos críticos\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('ignores no-record fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
