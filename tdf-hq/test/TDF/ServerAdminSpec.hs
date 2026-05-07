@@ -238,12 +238,16 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         BL8.unpack (errBody err) `shouldContain` expectedMessage
                     Right value ->
                         expectationFailure ("Expected invalid admin CTA URL, got " <> show value)
+                hiddenFormatUrl = "https://example.com/course" <> T.singleton '\x202E'
             assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
             assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "http://example.com/course"))
             assertInvalid "include a host" (validateAdminEmailCtaUrl (Just "https:///course"))
             assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "\nhttps://example.com/course"))
+            assertInvalid
+                "hidden formatting characters"
+                (validateAdminEmailCtaUrl (Just hiddenFormatUrl))
             assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
             assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
             assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://localhost/course"))

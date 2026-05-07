@@ -1397,6 +1397,8 @@ validateAdminEmailCtaUrl Nothing = Right Nothing
 validateAdminEmailCtaUrl (Just rawUrl)
   | T.any isControl rawUrl =
       Left err400 { errBody = "CTA URL must not contain control characters" }
+  | T.any isAdminHiddenFormatChar rawUrl =
+      Left err400 { errBody = "CTA URL must not contain hidden formatting characters" }
   | T.null url =
       Right Nothing
   | T.length url > 2048 =
