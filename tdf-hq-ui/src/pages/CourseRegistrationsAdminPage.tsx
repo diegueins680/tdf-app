@@ -859,6 +859,16 @@ const firstRunRegistrationLinkDescriptorPrefixPattern =
 const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
+const firstRunQrRegistrationDescriptorPattern = String.raw`(?:(?:qr\s*(?:code)?|c[oó]digo\s+qr)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)|(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:de|para)\s+registro|(?:de|para)\s+matr[ií]cula)|(?:(?:formulario|p[aá]gina|portal|enlaces?|links?|urls?)\s+(?:de|para)\s+(?:qr|c[oó]digo\s+qr)(?:\s+(?:(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:de|para)\s+registro|(?:de|para)\s+matr[ií]cula))?))`;
+const firstRunQrRegistrationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunQrRegistrationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunQrRegistrationDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunQrRegistrationDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunEnrollmentFlowDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|landing(?:\s+pages?)?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1091,6 +1101,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
+    .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunSalesDescriptorPrefixPattern, '')
@@ -1150,6 +1161,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
+    .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunSalesDescriptorSuffixPattern, '')
