@@ -10459,6 +10459,30 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected partyId with isExisting=false to be rejected, got: " <> show payload)
 
+        it "rejects unsafe musician instrument or role text before intake persistence" $ do
+            let assertInvalid extraFields expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\"Keys\",\"lsmIsExisting\":false,"
+                                    <> extraFields
+                                    <> "}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician metadata to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "\"lsmInstrument\":\"Synth\\u202ELead\""
+                "musician instrument must not contain control characters or hidden formatting characters"
+            assertInvalid
+                ("\"lsmRole\":\"" <> Data.Text.replicate 161 "A" <> "\"")
+                "musician role must be 160 characters or fewer"
+
         it "rejects duplicate scalar fields instead of silently taking the first multipart value" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

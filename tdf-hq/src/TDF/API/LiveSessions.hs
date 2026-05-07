@@ -238,12 +238,22 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             (validateOptionalEmailText "musician email")
             (lsmEmail musician)
         normalizedName <- validateMusicianName (lsmName musician)
+        normalizedInstrument <-
+          validateOptionalMusicianTextField
+            "musician instrument"
+            160
+            (lsmInstrument musician >>= normalizeOptionalText)
+        normalizedRole <-
+          validateOptionalMusicianTextField
+            "musician role"
+            160
+            (lsmRole musician >>= normalizeOptionalText)
         let normalizedMusician =
               musician
                 { lsmName = normalizedName
                 , lsmEmail = normalizedEmail
-                , lsmInstrument = lsmInstrument musician >>= normalizeOptionalText
-                , lsmRole = lsmRole musician >>= normalizeOptionalText
+                , lsmInstrument = normalizedInstrument
+                , lsmRole = normalizedRole
                 , lsmNotes = lsmNotes musician >>= normalizeOptionalText
                 }
             noReferenceProvided =
@@ -268,6 +278,25 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
              else if T.any isUnsafeIntakeTextChar name
                then Left "musician name must not contain control characters or hidden formatting characters"
                else Right name
+
+      validateOptionalMusicianTextField fieldName maxLength mRawValue =
+        case mRawValue of
+          Nothing -> Right Nothing
+          Just value
+            | T.length value > maxLength ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must be "
+                      <> show maxLength
+                      <> " characters or fewer"
+                  )
+            | T.any isUnsafeIntakeTextChar value ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must not contain control characters or hidden formatting characters"
+                  )
+            | otherwise ->
+                Right (Just value)
 
       isUnsafeIntakeTextChar ch =
         isControl ch
