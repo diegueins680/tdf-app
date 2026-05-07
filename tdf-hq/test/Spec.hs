@@ -2911,6 +2911,21 @@ main = hspec $ do
                     Left
                         "Facebook message body must not contain hidden formatting or separator characters"
 
+        it "rejects non-ASCII configured fallback tokens before authorization headers are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_TOKEN", Just "tokené")
+                , ("FACEBOOK_PAGE_ACCESS_TOKEN", Nothing)
+                , ("FACEBOOK_MESSAGING_PAGE_ID", Just "page-1")
+                , ("FACEBOOK_PAGE_ID", Nothing)
+                , ("FACEBOOK_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendFacebookText cfg "recipient-1" "hola"
+                        `shouldReturn`
+                            Left
+                                "FACEBOOK_MESSAGING_TOKEN must contain visible ASCII characters only"
+
     describe "SRI invoice script discovery" $ do
         it "decodes UTF-8 SRI script JSON output without corrupting localized statuses" $
             case Sri.decodeSriScriptOutput "{\"ok\":true,\"status\":\"autorización emitida\"}" of

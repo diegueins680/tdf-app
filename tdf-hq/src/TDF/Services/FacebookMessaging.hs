@@ -84,6 +84,8 @@ validateFacebookBearerToken rawToken =
           Left "FACEBOOK_MESSAGING_TOKEN must not contain whitespace or control characters"
       | T.any invalidHiddenHeaderValueChar token ->
           Left "FACEBOOK_MESSAGING_TOKEN must not contain hidden formatting characters"
+      | T.any invalidHeaderTextChar token ->
+          Left "FACEBOOK_MESSAGING_TOKEN must contain visible ASCII characters only"
       | otherwise ->
           Right token
 
@@ -154,6 +156,9 @@ invalidHeaderValueChar ch = isSpace ch || isControl ch
 invalidHiddenHeaderValueChar :: Char -> Bool
 invalidHiddenHeaderValueChar ch =
   generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+invalidHeaderTextChar :: Char -> Bool
+invalidHeaderTextChar ch = ch < '!' || ch > '~'
 
 invalidFacebookRecipientIdChar :: Char -> Bool
 invalidFacebookRecipientIdChar ch = isSpace ch || isControl ch
