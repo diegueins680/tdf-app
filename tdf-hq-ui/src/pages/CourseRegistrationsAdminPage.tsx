@@ -617,7 +617,7 @@ const eventStatusLabels: Record<string, string> = {
 const eventStatusLabel = (status: string) => {
   const normalized = status.trim().toLowerCase();
   const trimmed = status.trim();
-  return eventStatusLabels[normalized] ?? (trimmed || 'Estado desconocido');
+  return eventStatusLabels[normalized] ?? (trimmed || 'Estado no registrado');
 };
 
 const eventTypeLabels: Record<string, string> = {
@@ -660,10 +660,7 @@ const getSharedEmailEventStatusLabel = (
 ) => {
   if (events.length < 2) return '';
 
-  const rawStatuses = events.map((entry) => entry.ceStatus.trim());
-  if (rawStatuses.some((status) => status === '')) return '';
-
-  const labels = rawStatuses.map(eventStatusLabel);
+  const labels = events.map((entry) => eventStatusLabel(entry.ceStatus));
   const [firstLabel] = labels;
 
   if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
