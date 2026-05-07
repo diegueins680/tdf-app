@@ -1990,6 +1990,8 @@ const buildLocalSearchPlaceholder = (
   if (hasVariableSource && !hasVariableAcquisitionContext) contextTerms.push('fuente');
   if (includeCourseTerm && cohortKeys.size > 1) contextTerms.push('curso');
 
+  const visibleContextTerms = contextTerms.length > 1 ? ['otros datos'] : contextTerms;
+
   if (
     hasGeneratedRegistrationIdentity
     && identityTerms.length > 0
@@ -2000,7 +2002,7 @@ const buildLocalSearchPlaceholder = (
 
   const terms = [...identityTerms];
   if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Número de registro' : 'número de registro');
-  terms.push(...contextTerms);
+  terms.push(...visibleContextTerms);
 
   return formatLocalSearchPlaceholder(terms);
 };

@@ -10799,6 +10799,70 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('collapses multiple secondary search prompts into one other-data hint without losing matches', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Camila Vega',
+        crEmail: 'camila@example.com',
+        crSource: 'instagram_story',
+        crAdminNotes: 'Pidio beca parcial.',
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crSource: 'landing',
+        crAdminNotes: null,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto u otros datos');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'beca parcial');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Camila Vega');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas. Coincide con nota interna.');
+      expect(container.textContent).not.toContain('Pidio beca parcial.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'instagram story');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Camila Vega');
+      expect(container.textContent).toContain('Fuente visible: Instagram story.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "instagram story"');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('keeps shared campaign context out of the busy-list search placeholder', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
