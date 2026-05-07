@@ -163,6 +163,81 @@ validateInternTodoTextUpdate Nothing = Right Nothing
 validateInternTodoTextUpdate (Just rawText) =
   Just <$> validateInternTodoText rawText
 
+validateInternPermissionCategory :: Text -> Either ServerError Text
+validateInternPermissionCategory rawCategory
+  | T.null category =
+      Left err400 { errBody = "permission category is required" }
+  | T.length category > internPermissionCategoryMaxLength =
+      Left err400 { errBody = "permission category must be 80 characters or fewer" }
+  | T.any isUnsafeInternTitleChar category =
+      Left err400
+        { errBody = "permission category must not contain control or hidden formatting characters" }
+  | otherwise =
+      Right category
+  where
+    category = T.strip rawCategory
+
+validateInternPermissionReason :: Maybe Text -> Either ServerError (Maybe Text)
+validateInternPermissionReason =
+  validateOptionalInternTextField "permission reason" internPermissionTextMaxLength
+
+validateInternPermissionDecisionNotes
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternPermissionDecisionNotes =
+  validateNullableInternTextField "decision notes" internPermissionTextMaxLength
+
+internPermissionCategoryMaxLength :: Int
+internPermissionCategoryMaxLength = 80
+
+internPermissionTextMaxLength :: Int
+internPermissionTextMaxLength = 1000
+
+validateOptionalInternTextField
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateOptionalInternTextField _ _ Nothing = Right Nothing
+validateOptionalInternTextField fieldName maxLength (Just rawText)
+  | T.null normalized =
+      Right Nothing
+  | T.length normalized > maxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
+        }
+  | T.any isUnsafeInternLongTextChar normalized =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName
+                  <> " must not contain control characters other than tabs or line breaks, "
+                  <> "or hidden formatting characters"
+        }
+  | otherwise =
+      Right (Just normalized)
+  where
+    normalized = T.strip rawText
+
+validateNullableInternTextField
+  :: Text
+  -> Int
+  -> Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateNullableInternTextField _ _ Nothing = Right Nothing
+validateNullableInternTextField _ _ (Just Nothing) = Right (Just Nothing)
+validateNullableInternTextField fieldName maxLength (Just (Just rawText)) =
+  Just <$> validateOptionalInternTextField fieldName maxLength (Just rawText)
+
+isUnsafeInternLongTextChar :: Char -> Bool
+isUnsafeInternLongTextChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 validateInternProjectTitle :: Text -> Either ServerError Text
 validateInternProjectTitle =
   validateInternTitleField "project title"
@@ -653,12 +728,14 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
+      categoryVal <- either throwError pure (validateInternPermissionCategory ipcCategory)
+      reasonVal <- either throwError pure (validateInternPermissionReason ipcReason)
       either throwError pure (validateInternPermissionDateRange ipcStartAt ipcEndAt)
       ent <- withPool $ do
         newId <- insert ME.InternPermissionRequest
           { ME.internPermissionRequestPartyId    = partyId
-          , ME.internPermissionRequestCategory   = ipcCategory
-          , ME.internPermissionRequestReason     = ipcReason
+          , ME.internPermissionRequestCategory   = categoryVal
+          , ME.internPermissionRequestReason     = reasonVal
           , ME.internPermissionRequestStartAt    = ipcStartAt
           , ME.internPermissionRequestEndAt      = ipcEndAt
           , ME.internPermissionRequestStatus     = "pending"
@@ -678,9 +755,11 @@ internshipsServer user =
       permKey <- parseKey @ME.InternPermissionRequest rawId
       now <- liftIO getCurrentTime
       statusUpdate <- either throwError pure (validateOptionalInternPermissionStatusInput ipuStatus)
+      decisionNotesUpdate <-
+        either throwError pure (validateInternPermissionDecisionNotes ipuDecisionNotes)
       let updates = catMaybes
             [ fmap (ME.InternPermissionRequestStatus =.) statusUpdate
-            , fmap (ME.InternPermissionRequestDecisionNotes =.) ipuDecisionNotes
+            , fmap (ME.InternPermissionRequestDecisionNotes =.) decisionNotesUpdate
             ]
           reviewUpdates =
             if statusUpdate /= Nothing

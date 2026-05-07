@@ -148,7 +148,10 @@ import TDF.ServerInternships
       validateInternProjectDateRange,
       validateInternProjectDateUpdate,
       validateInternProjectStatusInput,
+      validateInternPermissionCategory,
       validateInternPermissionDateRange,
+      validateInternPermissionDecisionNotes,
+      validateInternPermissionReason,
       validateInternProfileDateUpdate,
       validateInternProjectTitle,
       validateInternProjectTitleUpdate,
@@ -8102,6 +8105,47 @@ main = hspec $ do
             assertInvalid "0" "positive integer"
             assertInvalid "-3" "positive integer"
             assertInvalid "project-7" "Invalid identifier"
+
+    describe "internship permission text validation" $ do
+        it "trims permission category, reason, and decision notes before persistence" $ do
+            validateInternPermissionCategory "  leave  " `shouldBe` Right "leave"
+            validateInternPermissionReason Nothing `shouldBe` Right Nothing
+            validateInternPermissionReason (Just "   ") `shouldBe` Right Nothing
+            validateInternPermissionReason (Just "  Dentist\nfollow-up  ")
+                `shouldBe` Right (Just "Dentist\nfollow-up")
+            validateInternPermissionDecisionNotes Nothing `shouldBe` Right Nothing
+            validateInternPermissionDecisionNotes (Just Nothing) `shouldBe` Right (Just Nothing)
+            validateInternPermissionDecisionNotes (Just (Just "  Approved\twith receipt  "))
+                `shouldBe` Right (Just (Just "Approved\twith receipt"))
+
+        it "rejects blank, oversized, or unsafe permission text before storing requests or decisions" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid internship permission text, got " <> show value)
+            assertInvalid
+                (validateInternPermissionCategory "   ")
+                "permission category is required"
+            assertInvalid
+                (validateInternPermissionCategory (Data.Text.replicate 81 "a"))
+                "permission category must be 80 characters or fewer"
+            assertInvalid
+                (validateInternPermissionCategory "leave\nrequest")
+                "permission category must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternPermissionReason (Just ("Dentist" <> Data.Text.singleton '\NUL')))
+                "permission reason must not contain control characters"
+            assertInvalid
+                ( validateInternPermissionDecisionNotes
+                    (Just (Just ("Approved" <> Data.Text.singleton '\x202E')))
+                )
+                "decision notes must not contain control characters"
+            assertInvalid
+                (validateInternPermissionReason (Just (Data.Text.replicate 1001 "x")))
+                "permission reason must be 1000 characters or fewer"
 
     describe "internship permission date validation" $ do
         it "accepts open-ended and same-day permission ranges" $ do
