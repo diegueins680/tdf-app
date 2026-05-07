@@ -3920,6 +3920,11 @@ export default function CourseRegistrationsAdminPage() {
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
   const sharedReceiptNotes = getSharedReceiptNotes(receipts);
+  const sharedReceiptSummary = sharedReceiptCreatedLabel && sharedReceiptNotes
+    ? `Resumen: subidos ${sharedReceiptCreatedLabel} · nota: ${sharedReceiptNotes}`
+    : '';
+  const sharedReceiptCreatedIsInSummary = Boolean(sharedReceiptSummary && sharedReceiptCreatedLabel);
+  const sharedReceiptNotesIsInSummary = Boolean(sharedReceiptSummary && sharedReceiptNotes);
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
   const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
   const sharedFollowUpNextLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfNextFollowUpAt));
@@ -4293,19 +4298,31 @@ export default function CourseRegistrationsAdminPage() {
                   {receiptSectionHelpText}
                 </Typography>
               )}
-              {sharedReceiptCreatedLabel && (
-                <Typography variant="body2" color="text.secondary">
-                  Todos subidos: {sharedReceiptCreatedLabel}
-                </Typography>
-              )}
-              {sharedReceiptNotes && (
+              {sharedReceiptSummary ? (
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  data-testid="course-registration-shared-receipt-notes"
+                  data-testid="course-registration-shared-receipt-summary"
                 >
-                  Nota de comprobantes: {sharedReceiptNotes}
+                  {sharedReceiptSummary}
                 </Typography>
+              ) : (
+                <>
+                  {sharedReceiptCreatedLabel && (
+                    <Typography variant="body2" color="text.secondary">
+                      Todos subidos: {sharedReceiptCreatedLabel}
+                    </Typography>
+                  )}
+                  {sharedReceiptNotes && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      data-testid="course-registration-shared-receipt-notes"
+                    >
+                      Nota de comprobantes: {sharedReceiptNotes}
+                    </Typography>
+                  )}
+                </>
               )}
             </Box>
             {showAddReceiptAction && (
@@ -4440,12 +4457,13 @@ export default function CourseRegistrationsAdminPage() {
                       receipt,
                       receiptIdsRequiringFileDisambiguator.has(receipt.crrId),
                     );
-                    const receiptCreatedLabel = sharedReceiptCreatedLabel
+                    const receiptCreatedLabel = sharedReceiptCreatedIsInSummary || sharedReceiptCreatedLabel
                       ? ''
                       : formatOptionalDate(receipt.crrCreatedAt);
                     const isReceiptBeingEdited = receiptForm.editingId === receipt.crrId;
                     const receiptNotes = receipt.crrNotes?.trim() ?? '';
-                    const showReceiptNotes = Boolean(receiptNotes) && receiptNotes !== sharedReceiptNotes;
+                    const showReceiptNotes = Boolean(receiptNotes)
+                      && !(sharedReceiptNotesIsInSummary || receiptNotes === sharedReceiptNotes);
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>

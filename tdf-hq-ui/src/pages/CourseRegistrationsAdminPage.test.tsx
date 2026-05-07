@@ -7051,6 +7051,62 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('combines shared receipt date and note into one proof summary', async () => {
+    const sharedReceiptCreatedAt = '2030-03-01T12:00:00.000Z';
+    const sharedReceiptCreatedLabel = formatTimestampForDisplay(sharedReceiptCreatedAt, '-');
+    const sharedReceiptNote = 'Transferencia confirmada por coordinación.';
+
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: buildRegistration(),
+        crdReceipts: [
+          buildReceipt({
+            crrCreatedAt: sharedReceiptCreatedAt,
+            crrNotes: sharedReceiptNote,
+          }),
+          buildReceipt({
+            crrId: 302,
+            crrFileName: 'receipt-2.pdf',
+            crrCreatedAt: sharedReceiptCreatedAt,
+            crrNotes: sharedReceiptNote,
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const summary = document.body.querySelector<HTMLElement>(
+        '[data-testid="course-registration-shared-receipt-summary"]',
+      );
+
+      expect(summary?.textContent).toBe(
+        `Resumen: subidos ${sharedReceiptCreatedLabel} · nota: ${sharedReceiptNote}`,
+      );
+      expect(document.body.textContent).not.toContain('Todos subidos:');
+      expect(document.body.textContent).not.toContain('Nota de comprobantes:');
+      expect(countOccurrences(document.body, sharedReceiptCreatedLabel)).toBe(1);
+      expect(countOccurrences(document.body, sharedReceiptNote)).toBe(1);
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).toContain('receipt-2.pdf');
+    });
+
+    await cleanup();
+  });
+
   it('disambiguates repeated receipt filenames so saved receipt actions stay distinct', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
