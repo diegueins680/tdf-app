@@ -9681,6 +9681,71 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats social lead-form sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'facebook_lead_ad',
+      'facebook_lead_ads_form',
+      'fb_leads',
+      'instagram_lead_ad_form',
+      'ig_lead_ads',
+      'meta_leads',
+      'linkedin_lead_gen_form',
+      'tiktok_lead_form',
+      'whatsapp_lead_form',
+      'leads_de_instagram',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Facebook lead ad',
+      'Facebook lead ads form',
+      'Fb leads',
+      'Instagram lead ad form',
+      'Ig lead ads',
+      'Meta leads',
+      'LinkedIn lead gen form',
+      'TikTok lead form',
+      'WhatsApp lead form',
+      'Leads de Instagram',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'facebook lead ad');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "facebook lead ad" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
