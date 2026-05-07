@@ -80,7 +80,7 @@ const mergeAdminUserRecords = (primary: AdminUser, fallback: AdminUser): AdminUs
 });
 
 const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
-  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const preferredPhone = getUserWhatsAppChannel(user);
   const email = normalizeContactValue(user.primaryEmail);
 
   if (preferredPhone && email) return `${preferredPhone} · ${email}`;
@@ -154,8 +154,7 @@ const getVisibleUserContactSummary = (
   user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail' | 'partyName' | 'username'>,
 ) => {
   const identityValues = [user.partyName, user.username];
-  const whatsapp = normalizeContactValue(user.whatsapp);
-  const preferredPhone = whatsapp ?? normalizeContactValue(user.primaryPhone);
+  const preferredPhone = getUserWhatsAppChannel(user);
   const email = normalizeContactValue(user.primaryEmail);
   const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
   const visiblePhone = preferredPhone && visibleEmail ? null : (
