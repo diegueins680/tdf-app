@@ -4760,6 +4760,8 @@ main = hspec $ do
                                     <> show value
                                 )
             assertInvalid "http://hq.example.com/oauth/google-drive/callback"
+            assertInvalid "https://localhost/oauth/google-drive/callback"
+            assertInvalid "https://127.0.0.1:5173/oauth/google-drive/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/other"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
