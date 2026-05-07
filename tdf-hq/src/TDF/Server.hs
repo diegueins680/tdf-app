@@ -263,10 +263,7 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o -> do
     parsedItems <- o .: "items"
-    forM_ (zip [(0 :: Int)..] parsedItems) $ \(idx, item) ->
-      case item of
-        Object _ -> pure ()
-        _ -> fail ("items[" <> show idx <> "] must be an event object")
+    forM_ (zip [(0 :: Int)..] parsedItems) $ uncurry validateGoogleCalendarPageItem
     nextPage <- o .:? "nextPageToken" >>= traverse (parseGoogleCursorField "nextPageToken")
     nextSync <- o .:? "nextSyncToken" >>= traverse (parseGoogleCursorField "nextSyncToken")
     when (isJust nextPage && isJust nextSync) $
@@ -279,6 +276,36 @@ instance FromJSON GoogleEventsPage where
 
 parseGoogleCursorField :: Text -> Text -> Parser Text
 parseGoogleCursorField = parseGoogleTokenField
+
+validateGoogleCalendarPageItem :: Int -> Value -> Parser ()
+validateGoogleCalendarPageItem idx (Object eventObj) = do
+  case AKeyMap.lookup "id" eventObj of
+    Just (String rawEventId) ->
+      either
+        (fail . googleItemFieldError "id")
+        (const (pure ()))
+        (validateGoogleCalendarEventId rawEventId)
+    Just _ ->
+      fail (googleItemFieldLabel "id" <> " must be a string")
+    Nothing ->
+      fail (googleItemFieldLabel "id" <> " is required")
+  case AKeyMap.lookup "status" eventObj of
+    Nothing -> pure ()
+    Just Null -> pure ()
+    Just (String rawStatus) ->
+      either
+        (fail . googleItemFieldError "status")
+        (const (pure ()))
+        (validateGoogleCalendarEventStatus rawStatus)
+    Just _ ->
+      fail (googleItemFieldLabel "status" <> " must be a string")
+  where
+    googleItemFieldLabel fieldName =
+      "items[" <> show idx <> "]." <> T.unpack fieldName
+    googleItemFieldError fieldName msg =
+      googleItemFieldLabel fieldName <> ": " <> T.unpack msg
+validateGoogleCalendarPageItem idx _ =
+  fail ("items[" <> show idx <> "] must be an event object")
 
 data ParsedEvent = ParsedEvent
   { peGoogleId   :: Text

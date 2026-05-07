@@ -4188,6 +4188,34 @@ main = hspec $ do
             (eitherDecode "{\"items\":[\"not-an-event\"],\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
                 `shouldSatisfy` isLeft
 
+        it "rejects malformed Google Calendar event objects before sync" $ do
+            let validPayload =
+                    "{\"items\":[{\"id\":\" event-123 \",\"status\":\" CONFIRMED \"}]"
+                        <> ",\"nextSyncToken\":\"cursor-1\"}"
+            case eitherDecode validPayload of
+                Left err ->
+                    expectationFailure
+                        ("Expected valid Google Calendar event object to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    length parsedItems `shouldBe` 1
+                    nextPage `shouldBe` Nothing
+                    nextSync `shouldBe` Just "cursor-1"
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected "{\"items\":[{}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected "{\"items\":[{\"id\":7}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected "{\"items\":[{\"id\":\"event 123\"}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"status\":\"archived\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"status\":7}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+
         it "drops partial incremental events when expired sync cursors fall back to full sync" $ do
             let staleEvent = A.object ["id" .= ("stale-event" :: Text)]
                 retryState = expiredGoogleCalendarSyncRetryState Nothing Nothing [staleEvent]
