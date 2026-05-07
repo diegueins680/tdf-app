@@ -871,8 +871,17 @@ isValidAuthEmailAddress candidate =
             && not (T.isPrefixOf "." domain)
             && not (T.isSuffixOf "." domain)
             && T.isInfixOf "." domain
+            && hasValidAuthTopLevelLabel domain
             && all isValidAuthDomainLabel (T.splitOn "." domain)
         _ -> False
+
+hasValidAuthTopLevelLabel :: Text -> Bool
+hasValidAuthTopLevelLabel domain =
+  case reverse (T.splitOn "." domain) of
+    topLevelLabel : _ ->
+      T.length topLevelLabel >= 2
+        && T.any isAsciiLower topLevelLabel
+    _ -> False
 
 isValidAuthEmailLocalPart :: Text -> Bool
 isValidAuthEmailLocalPart localPart =

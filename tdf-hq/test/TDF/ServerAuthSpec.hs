@@ -86,6 +86,11 @@ authEmailSpec = describe "normalizeAuthEmailAddress" $ do
       )
       `shouldBe` Nothing
 
+  it "rejects ambiguous final domain labels before auth fallback lookups run" $ do
+    normalizeAuthEmailAddress "ada@example.123" `shouldBe` Nothing
+    normalizeAuthEmailAddress "ada@example.c" `shouldBe` Nothing
+    normalizeAuthEmailAddress "ada@example.co" `shouldBe` Just "ada@example.co"
+
 moduleAccessSpec :: Spec
 moduleAccessSpec = describe "validateModuleAccess" $ do
   let mkUser roles =
