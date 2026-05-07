@@ -5,12 +5,14 @@
 
 module TDF.ServerRadio
   ( radioServer
+  , StreamMetadata(..)
   , validateRadioStreamUrl
   , validateRadioTransmissionPublicBase
   , validateRadioTransmissionIngestBase
   , validateRadioTransmissionWhipBase
   , resolveRadioTransmissionEnvBase
   , validateRadioOptionalMetadataField
+  , validateRadioFetchedMetadata
   , validateRadioSearchFilter
   , validateRadioImportSources
   , validateRadioImportLimit
@@ -66,7 +68,7 @@ import           TDF.Models
 data StreamMetadata = StreamMetadata
   { smName  :: Maybe Text
   , smGenre :: Maybe Text
-  }
+  } deriving (Show, Eq)
 
 lookupHeader :: BS.ByteString -> [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString
 lookupHeader key hdrs =
@@ -199,6 +201,28 @@ validateRadioOptionalMetadataField fieldName maxLength (Just rawValue) =
                    fieldName <> " must not contain control or hidden formatting characters"
            }
          else Right (Just value)
+
+validateRadioFetchedMetadata :: StreamMetadata -> Either Text StreamMetadata
+validateRadioFetchedMetadata StreamMetadata{..} = do
+  name <- validateRadioFetchedMetadataField "icy-name" 160 smName
+  genre <- validateRadioFetchedMetadataField "icy-genre" 120 smGenre
+  if isNothing name && isNothing genre
+    then Left "no metadata"
+    else Right StreamMetadata { smName = name, smGenre = genre }
+
+validateRadioFetchedMetadataField :: Text -> Int -> Maybe Text -> Either Text (Maybe Text)
+validateRadioFetchedMetadataField _ _ Nothing = Right Nothing
+validateRadioFetchedMetadataField fieldName maxLength (Just rawValue)
+  | T.null value =
+      Right Nothing
+  | T.length value > maxLength =
+      Left (fieldName <> " metadata must be " <> T.pack (show maxLength) <> " characters or fewer")
+  | T.any isUnsafeRadioTextChar value =
+      Left (fieldName <> " metadata must not contain control or hidden formatting characters")
+  | otherwise =
+      Right (Just value)
+  where
+    value = T.strip rawValue
 
 validateRadioSearchFilter :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateRadioSearchFilter _ _ Nothing = Right Nothing
@@ -988,9 +1012,8 @@ radioServer user =
               lookupTxt nameKey = fmap (TE.decodeUtf8With lenientDecode) (lookupHeader nameKey hdrs)
               metaName = lookupTxt "icy-name"
               metaGenre = lookupTxt "icy-genre"
-          in if isNothing metaName && isNothing metaGenre
-               then Left "no metadata"
-               else Right StreamMetadata { smName = metaName, smGenre = metaGenre }
+              metadata = StreamMetadata { smName = metaName, smGenre = metaGenre }
+          in validateRadioFetchedMetadata metadata
 
     fetchNowPlaying :: Manager -> Text -> IO (Either Text (Maybe Text))
     fetchNowPlaying manager url = do

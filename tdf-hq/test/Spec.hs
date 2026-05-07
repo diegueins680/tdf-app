@@ -117,9 +117,11 @@ import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
-    ( radioServer,
+    ( StreamMetadata (..),
+      radioServer,
       resolveRadioTransmissionEnvBase,
       resolveRadioNowPlayingFetchResult,
+      validateRadioFetchedMetadata,
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
@@ -7138,6 +7140,36 @@ main = hspec $ do
             assertInvalid
                 (validateRadioOptionalMetadataField "rtrGenre" 120 (Just "ambient\ntechno"))
                 "rtrGenre must not contain control characters"
+
+    describe "validateRadioFetchedMetadata" $ do
+        it "normalizes fetched ICY metadata before refresh persistence" $
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just "  TDF Live  "
+                    , smGenre = Just "  Ambient  "
+                    }
+                `shouldBe` Right
+                    StreamMetadata
+                        { smName = Just "TDF Live"
+                        , smGenre = Just "Ambient"
+                        }
+
+        it "rejects missing or malformed fetched ICY metadata instead of persisting provider text blindly" $ do
+            validateRadioFetchedMetadata
+                StreamMetadata { smName = Just "   ", smGenre = Nothing }
+                `shouldBe` Left "no metadata"
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just (Data.Text.replicate 161 "a")
+                    , smGenre = Nothing
+                    }
+                `shouldBe` Left "icy-name metadata must be 160 characters or fewer"
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just "TDF Live"
+                    , smGenre = Just ("ambient" <> Data.Text.singleton '\x202E')
+                    }
+                `shouldBe` Left "icy-genre metadata must not contain control or hidden formatting characters"
 
     describe "validateRadioImportSources" $ do
         it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do
