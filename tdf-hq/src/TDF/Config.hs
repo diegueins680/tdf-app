@@ -1006,8 +1006,9 @@ validateConfiguredBaseUrl envName (Just rawUrl) =
 
 validateConfiguredApiBaseUrl :: String -> Text -> Maybe String -> IO Text
 validateConfiguredApiBaseUrl _ defaultUrl Nothing = pure defaultUrl
-validateConfiguredApiBaseUrl envName defaultUrl (Just rawUrl)
-  | T.null trimmed = pure defaultUrl
+validateConfiguredApiBaseUrl envName _ (Just rawUrl)
+  | T.null trimmed =
+      fail (envName <> " is configured but blank; unset it to use the default")
   | otherwise =
       case normalizeConfiguredApiBaseUrl envName (T.unpack trimmed) of
         Left msg -> fail msg

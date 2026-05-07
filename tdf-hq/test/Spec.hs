@@ -1177,6 +1177,10 @@ main = hspec $ do
                 "FACEBOOK_GRAPH_BASE must be an absolute https URL"
             assertInvalid
                 "CHATKIT_API_BASE"
+                "   "
+                "CHATKIT_API_BASE is configured but blank; unset it to use the default"
+            assertInvalid
+                "CHATKIT_API_BASE"
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
