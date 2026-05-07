@@ -641,6 +641,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
   });
 
+  it('keeps generated admin summary cards from duplicating the first-run walkthrough', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'workspace-overview',
+          title: 'Workspace overview',
+          body: [
+            'Review system status, users, roles, and audit activity from one admin landing page.',
+          ],
+        },
+        {
+          cardId: 'fallback-admin-summary',
+          title: 'Admin snapshot',
+          body: [
+            'Review system health, users, roles, and audit activity from one admin landing page.',
+          ],
+        },
+        {
+          cardId: 'resumen-workspace',
+          title: 'Resumen del espacio de trabajo',
+          body: [
+            'Revisa estado del sistema, usuarios, roles y auditoría desde una sola consola administrativa.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(screen.queryByRole('button', { name: /Opcional: ver .*módulo/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Workspace overview')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Resumen del espacio de trabajo')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review system status, users, roles, and audit activity/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa estado del sistema, usuarios, roles y auditoría/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run checklist focused when the preview renames user management to roles and permissions', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
