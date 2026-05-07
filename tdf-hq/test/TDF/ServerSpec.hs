@@ -199,6 +199,7 @@ import TDF.Server
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , validateMarketplacePublicListingActive
+    , requireLoadedMarketplaceWriteResult
     , requireMarketplaceCartTotals
     , validateMarketplaceCartLineQuantity
     , validateDatafastEntityId
@@ -6552,7 +6553,10 @@ spec = describe "TDF.Server helpers" $ do
                                 ( "Expected marketplace cart state to be rejected, got: "
                                     <> show (totals :: Int)
                                 )
-            assertInvalid (MarketplaceCartMissing :: MarketplaceCartTotalsState Int) 404 ""
+            assertInvalid
+                (MarketplaceCartMissing :: MarketplaceCartTotalsState Int)
+                404
+                "Marketplace cart not found"
             assertInvalid MarketplaceCartEmpty 400 "El carrito esta vacio."
             assertInvalid
                 (MarketplaceCartInvalidQuantity 0)
@@ -6566,6 +6570,21 @@ spec = describe "TDF.Server helpers" $ do
         it "passes through loaded cart totals for downstream checkout logic" $
             requireMarketplaceCartTotals (MarketplaceCartTotalsReady (1200 :: Int))
                 `shouldBe` Right 1200
+
+        it "turns failed post-write marketplace DTO reloads into explicit server errors" $ do
+            requireLoadedMarketplaceWriteResult "Marketplace order" (Just ("loaded" :: Text))
+                `shouldBe` Right "loaded"
+
+            case requireLoadedMarketplaceWriteResult "Marketplace order" (Nothing :: Maybe Text) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Marketplace order could not be loaded after write"
+                Right value ->
+                    expectationFailure
+                        ( "Expected missing marketplace write result to be rejected, got: "
+                            <> show value
+                        )
 
         it "rejects impossible stored line quantities before checkout can create order items" $ do
             validateMarketplaceCartLineQuantity 1 `shouldBe` Right 1

@@ -10321,14 +10321,14 @@ createCart = do
   Env{..} <- ask
   cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
   cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartId
-  maybe (throwError err500) pure cartDto
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace cart" cartDto)
 
 getCart :: Text -> AppM MarketplaceCartDTO
 getCart rawId = do
   cartKey <- parseCartId rawId
   Env{..} <- ask
   mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartKey
-  maybe (throwError err404) pure mCart
+  maybe (throwError marketplaceCartNotFound) pure mCart
 
 upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
 upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
@@ -10425,7 +10425,8 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
         , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
         }
     loadOrderDTO orderId
-  orderDto <- maybe (throwError err404) pure mOrder
+  orderDto <- either throwError pure
+    (requireLoadedMarketplaceWriteResult "Marketplace order" mOrder)
   env <- ask
   -- fire-and-forget email confirmation
   let emailSvc = EmailSvc.mkEmailService (envConfig env)
@@ -10555,7 +10556,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
         ]
   liftIO $ flip runSqlPool envPool $ update orderKey updateFields
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-  maybe (throwError err500) pure mDto
+  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
 
 createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
 createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
@@ -10647,7 +10648,7 @@ capturePaypalOrder PaypalCaptureReq{..} = do
         , ME.MarketplaceOrderUpdatedAt =. now
         ]
       mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-      maybe (throwError err500) pure mDto
+      either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
@@ -11084,6 +11085,16 @@ marketplaceListingNotFound :: ServerError
 marketplaceListingNotFound =
   err404 { errBody = "Marketplace listing not found" }
 
+requireLoadedMarketplaceWriteResult :: Text -> Maybe a -> Either ServerError a
+requireLoadedMarketplaceWriteResult _ (Just value) =
+  Right value
+requireLoadedMarketplaceWriteResult entityLabel Nothing =
+  Left err500
+    { errBody =
+        BL.fromStrict . TE.encodeUtf8 $
+          entityLabel <> " could not be loaded after write"
+    }
+
 validateMarketplacePublicListingActive :: Bool -> Either ServerError ()
 validateMarketplacePublicListingActive True = Right ()
 validateMarketplacePublicListingActive False =
@@ -11142,7 +11153,7 @@ loadCartTotals cartId = do
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
-  Left err404
+  Left marketplaceCartNotFound
 requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
