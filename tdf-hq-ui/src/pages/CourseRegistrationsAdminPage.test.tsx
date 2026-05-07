@@ -9524,6 +9524,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'notion_form',
       'fillout_forms',
       'cognito_form',
+      'convertkit_form',
+      'brevo_form',
+      'sendinblue_form',
+      'flodesk_form',
+      'mailerlite_form',
       'meta_instant_form',
       'instagram_instant_form',
       'fb_instant_forms',
@@ -9559,6 +9564,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Notion form',
       'Fillout forms',
       'Cognito form',
+      'Convertkit form',
+      'Brevo form',
+      'Sendinblue form',
+      'Flodesk form',
+      'Mailerlite form',
       'Meta instant form',
       'Instagram instant form',
       'Fb instant forms',
@@ -12623,6 +12633,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Formulario de Leadpages para Beatmaking 101',
       'Beatmaking 101 - Leadpages',
       'Beatmaking 101 - Notion form',
+      'ConvertKit form - Beatmaking 101',
+      'Brevo registration page for Beatmaking 101',
+      'Formulario de Flodesk para Beatmaking 101',
+      'Beatmaking 101 - MailerLite signup form',
       'CRM lead form - Beatmaking 101',
       'CRM registration page for Beatmaking 101',
       'Beatmaking 101 - CRM intake form',
@@ -12665,6 +12679,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Squarespace');
         expect(emptyState?.textContent).not.toContain('Leadpages');
         expect(emptyState?.textContent).not.toContain('Notion form');
+        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Brevo|Flodesk|MailerLite/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(

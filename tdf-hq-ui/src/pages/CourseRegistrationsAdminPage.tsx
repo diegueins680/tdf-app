@@ -923,6 +923,12 @@ const firstRunProviderFormDescriptorPrefixPattern =
 const firstRunProviderFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?)|(?:formulario\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|instant|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform|many\s*chat|manychat|tally(?:\s+forms?)?|jot\s*forms?|airtable|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|lead\s*pages?|notion|fillout|cognito\s+forms?)(?:\s+forms?)?)|typeform|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally\s+forms?|jot\s*forms?|airtable\s+forms?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|lead\s*pages?(?:\s+(?:landing\s+)?pages?|forms?|portals?)?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?)\s*$/i;
 
+const firstRunEmailMarketingFormDescriptorPrefixPattern =
+  /^(?:(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunEmailMarketingFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite))\s*$/i;
+
 const firstRunCoursePlatformPattern = String.raw`(?:kajabi|teachable|thinkific|hotmart|podia|learn\s*worlds?|click\s*funnels?|clickfunnels|kartra|systeme\s*\.?\s*io|go\s*high\s*level|gohighlevel)`;
 const firstRunCoursePlatformDescriptorPattern = String.raw`(?:(?:course\s+)?(?:checkout|payment|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)(?:\s+(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))?|(?:course\s+)?(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))`;
 const firstRunCoursePlatformDescriptorPrefixPattern = new RegExp(
@@ -1091,6 +1097,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunEmailMarketingFormDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
@@ -1147,6 +1154,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunEmailMarketingFormDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
@@ -1394,6 +1402,20 @@ const defaultPublicFormSourceKeys = new Set([
   'fillout forms',
   'cognito form',
   'cognito forms',
+  'convert kit',
+  'convert kit form',
+  'convertkit',
+  'convertkit form',
+  'brevo',
+  'brevo form',
+  'sendinblue',
+  'sendinblue form',
+  'flodesk',
+  'flodesk form',
+  'mailer lite',
+  'mailer lite form',
+  'mailerlite',
+  'mailerlite form',
   'wufoo',
   'wufoo form',
   'formstack',
