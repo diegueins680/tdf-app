@@ -757,6 +757,9 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
+      expect(countTextOccurrences(document.body, 'Done.')).toBe(1);
+      expect(document.body.textContent).not.toContain('· Done.');
+      expect(document.body.textContent).toContain('Sent from app UI');
       expect(countInteractiveElementsByText(document.body, 'Open native client')).toBe(1);
     });
 
@@ -851,6 +854,7 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
+      expect(countTextOccurrences(document.body, 'Done.')).toBe(1);
     });
 
     await act(async () => {

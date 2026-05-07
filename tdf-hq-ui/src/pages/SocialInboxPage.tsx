@@ -848,7 +848,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       {repliedAtValue && (
                         <Alert severity="success">
                           {reviewMode ? 'Sent from app UI:' : 'Respondido:'} {formatTimestamp(repliedAtValue)}
-                          {replyTextValue ? ` · ${replyTextValue}` : ''}
+                          {!reviewMode && replyTextValue ? ` · ${replyTextValue}` : ''}
                         </Alert>
                       )}
                       {providerMessageId && (
