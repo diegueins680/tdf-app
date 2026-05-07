@@ -94,6 +94,7 @@ import TDF.Models
     , UnitsKind (..)
     , UserCredential (..)
     )
+import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import TDF.DTO
     ( AdCreativeUpsert (..)
@@ -370,7 +371,11 @@ import TDF.ServerFuture
     , validateFutureStubPublishedPath
     , validateFutureStubResponse
     )
-import TDF.ServerExtra (validateSocialReplyBody)
+import TDF.ServerExtra
+    ( validateFacebookReplyTarget
+    , validateInstagramReplyTarget
+    , validateSocialReplyBody
+    )
 import TDF.Services.InstagramSync (InstagramMedia(..), buildUserMediaRequestUrl)
 import Test.Hspec
 import Web.PathPieces (fromPathPiece, toPathPiece)
@@ -7483,6 +7488,79 @@ spec = describe "TDF.Server helpers" $ do
                 "message must not contain hidden formatting characters"
                 (validateSocialReplyBody ("hola" <> "\x202E" <> "mundo"))
 
+    describe "validateInstagramReplyTarget" $ do
+        it "requires referenced Instagram replies to target an incoming message for the same sender" $ do
+            let now = UTCTime (fromGregorian 2026 5 7) (secondsToDiffTime 0)
+                incomingTarget =
+                    fixtureInstagramMessage 1 now "ig-inbound-1" "incoming" "ig-sender"
+                outgoingTarget =
+                    fixtureInstagramMessage 2 now "ig-outbound-1" "outgoing" "ig-sender"
+                otherSenderTarget =
+                    fixtureInstagramMessage 3 now "ig-inbound-2" "incoming" "ig-other"
+                deletedTarget =
+                    Entity
+                        (toSqlKey 4)
+                        ((entityVal incomingTarget) { M.instagramMessageDeletedAt = Just now })
+
+            case validateInstagramReplyTarget "ig-sender" Nothing Nothing of
+                Right Nothing -> pure ()
+                other ->
+                    expectationFailure
+                        ("Expected omitted Instagram reply target to be accepted, got: " <> show other)
+
+            case validateInstagramReplyTarget "ig-sender" (Just "ig-inbound-1") (Just incomingTarget) of
+                Right (Just (Entity targetKey _)) -> targetKey `shouldBe` toSqlKey 1
+                other ->
+                    expectationFailure
+                        ("Expected matching Instagram reply target, got: " <> show other)
+
+            let assertInvalid expectedStatus expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` expectedStatus
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid Instagram reply target to be rejected, got: " <> show value)
+
+            assertInvalid
+                404
+                "not found"
+                (validateInstagramReplyTarget "ig-sender" (Just "missing") Nothing)
+            assertInvalid
+                400
+                "incoming"
+                (validateInstagramReplyTarget "ig-sender" (Just "ig-outbound-1") (Just outgoingTarget))
+            assertInvalid
+                400
+                "does not match recipient"
+                (validateInstagramReplyTarget "ig-sender" (Just "ig-inbound-2") (Just otherSenderTarget))
+            assertInvalid
+                404
+                "not found"
+                (validateInstagramReplyTarget "ig-sender" (Just "ig-deleted") (Just deletedTarget))
+
+    describe "validateFacebookReplyTarget" $ do
+        it "applies the same referenced-message invariant to Facebook replies" $ do
+            let now = UTCTime (fromGregorian 2026 5 7) (secondsToDiffTime 0)
+                incomingTarget =
+                    fixtureFacebookMessage 1 now "fb-inbound-1" "incoming" "fb-sender"
+                otherSenderTarget =
+                    fixtureFacebookMessage 2 now "fb-inbound-2" "incoming" "fb-other"
+
+            case validateFacebookReplyTarget "fb-sender" (Just "fb-inbound-1") (Just incomingTarget) of
+                Right (Just (Entity targetKey _)) -> targetKey `shouldBe` toSqlKey 1
+                other ->
+                    expectationFailure
+                        ("Expected matching Facebook reply target, got: " <> show other)
+
+            case validateFacebookReplyTarget "fb-sender" (Just "fb-inbound-2") (Just otherSenderTarget) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "does not match recipient"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid Facebook reply target to be rejected, got: " <> show value)
+
     describe "validateWhatsAppPhoneInput" $ do
         it "normalizes meaningful WhatsApp phone inputs before they reach transport handlers" $
             validateWhatsAppPhoneInput " +593 99 123 4567 " `shouldBe` Right "+593991234567"
@@ -10478,6 +10556,60 @@ insertBookingResourceHoldFixture bookingTitleVal resourceId startsAt endsAt = do
         , bookingResourceRole = "primary"
         }
     pure ()
+
+fixtureInstagramMessage
+    :: Int -> UTCTime -> T.Text -> T.Text -> T.Text -> Entity M.InstagramMessage
+fixtureInstagramMessage keyVal now externalId direction senderId =
+    Entity (toSqlKey (fromIntegral keyVal)) M.InstagramMessage
+        { M.instagramMessageExternalId = externalId
+        , M.instagramMessageSenderId = senderId
+        , M.instagramMessageSenderName = Just "Ada"
+        , M.instagramMessageText = Just "Original message"
+        , M.instagramMessageDirection = direction
+        , M.instagramMessageAdExternalId = Nothing
+        , M.instagramMessageAdName = Nothing
+        , M.instagramMessageCampaignExternalId = Nothing
+        , M.instagramMessageCampaignName = Nothing
+        , M.instagramMessageMetadata = Nothing
+        , M.instagramMessageReplyStatus =
+            if direction == "incoming" then "pending" else "sent"
+        , M.instagramMessageHoldReason = Nothing
+        , M.instagramMessageHoldRequiredFields = Nothing
+        , M.instagramMessageLastAttemptAt = Nothing
+        , M.instagramMessageAttemptCount = 0
+        , M.instagramMessageRepliedAt = Nothing
+        , M.instagramMessageReplyText = Nothing
+        , M.instagramMessageReplyError = Nothing
+        , M.instagramMessageDeletedAt = Nothing
+        , M.instagramMessageCreatedAt = now
+        }
+
+fixtureFacebookMessage
+    :: Int -> UTCTime -> T.Text -> T.Text -> T.Text -> Entity ME.FacebookMessage
+fixtureFacebookMessage keyVal now externalId direction senderId =
+    Entity (toSqlKey (fromIntegral keyVal)) ME.FacebookMessage
+        { ME.facebookMessageExternalId = externalId
+        , ME.facebookMessageSenderId = senderId
+        , ME.facebookMessageSenderName = Just "Ada"
+        , ME.facebookMessageText = Just "Original message"
+        , ME.facebookMessageDirection = direction
+        , ME.facebookMessageAdExternalId = Nothing
+        , ME.facebookMessageAdName = Nothing
+        , ME.facebookMessageCampaignExternalId = Nothing
+        , ME.facebookMessageCampaignName = Nothing
+        , ME.facebookMessageMetadata = Nothing
+        , ME.facebookMessageReplyStatus =
+            if direction == "incoming" then "pending" else "sent"
+        , ME.facebookMessageHoldReason = Nothing
+        , ME.facebookMessageHoldRequiredFields = Nothing
+        , ME.facebookMessageLastAttemptAt = Nothing
+        , ME.facebookMessageAttemptCount = 0
+        , ME.facebookMessageRepliedAt = Nothing
+        , ME.facebookMessageReplyText = Nothing
+        , ME.facebookMessageReplyError = Nothing
+        , ME.facebookMessageDeletedAt = Nothing
+        , ME.facebookMessageCreatedAt = now
+        }
 
 fixtureWhatsAppMessage
     :: Int -> UTCTime -> T.Text -> T.Text -> T.Text -> Entity ME.WhatsAppMessage

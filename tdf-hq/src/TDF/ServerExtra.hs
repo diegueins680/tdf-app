@@ -3978,6 +3978,14 @@ instagramServer user =
       recipient <- either throwError pure (validateSocialReplySenderId (IG.irSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (IG.irExternalId req))
       body <- either throwError pure (validateSocialReplyBody (IG.irMessage req))
+      mReplyTarget <-
+        liftIO $
+          flip runSqlPool envPool $
+            case mExternalId of
+              Nothing -> pure Nothing
+              Just extId -> getBy (M.UniqueInstagramMessage extId)
+      _ <- either throwError pure $
+        validateInstagramReplyTarget recipient mExternalId mReplyTarget
       (mTargetAccountId, mTargetAccessToken) <-
         liftIO $
           flip runSqlPool envPool $
@@ -4099,6 +4107,14 @@ facebookServer user =
       recipient <- either throwError pure (validateSocialReplySenderId (FB.frSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (FB.frExternalId req))
       body <- either throwError pure (validateSocialReplyBody (FB.frMessage req))
+      mReplyTarget <-
+        liftIO $
+          flip runSqlPool envPool $
+            case mExternalId of
+              Nothing -> pure Nothing
+              Just extId -> getBy (ME.UniqueFacebookMessage extId)
+      _ <- either throwError pure $
+        validateFacebookReplyTarget recipient mExternalId mReplyTarget
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
       let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
@@ -4417,6 +4433,68 @@ validateSocialReplyExternalId (Just rawExternalId) =
   case normalizeOptionalTextField (Just rawExternalId) of
     Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
     Just externalId -> Just <$> validateSocialReplyIdentifier "externalId" externalId
+
+validateInstagramReplyTarget
+  :: Text
+  -> Maybe Text
+  -> Maybe (Entity M.InstagramMessage)
+  -> Either ServerError (Maybe (Entity M.InstagramMessage))
+validateInstagramReplyTarget =
+  validateMetaReplyTarget
+    "Instagram"
+    M.instagramMessageDirection
+    M.instagramMessageSenderId
+    M.instagramMessageDeletedAt
+
+validateFacebookReplyTarget
+  :: Text
+  -> Maybe Text
+  -> Maybe (Entity ME.FacebookMessage)
+  -> Either ServerError (Maybe (Entity ME.FacebookMessage))
+validateFacebookReplyTarget =
+  validateMetaReplyTarget
+    "Facebook"
+    ME.facebookMessageDirection
+    ME.facebookMessageSenderId
+    ME.facebookMessageDeletedAt
+
+validateMetaReplyTarget
+  :: Text
+  -> (record -> Text)
+  -> (record -> Text)
+  -> (record -> Maybe UTCTime)
+  -> Text
+  -> Maybe Text
+  -> Maybe (Entity record)
+  -> Either ServerError (Maybe (Entity record))
+validateMetaReplyTarget _ _ _ _ _ Nothing _ = Right Nothing
+validateMetaReplyTarget channelLabel getDirection getSenderId getDeletedAt recipient (Just _) mTarget =
+  case mTarget of
+    Nothing ->
+      Left err404
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (channelLabel <> " reply target not found"))
+        }
+    Just target@(Entity _ row)
+      | isJust (getDeletedAt row) ->
+          Left err404
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (channelLabel <> " reply target not found"))
+            }
+      | getDirection row /= "incoming" ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (channelLabel <> " reply target must be an incoming message"))
+            }
+      | normalizeMetaWebhookActorId (getSenderId row) /= Just recipient ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (channelLabel <> " reply target does not match recipient"))
+            }
+      | otherwise ->
+          Right (Just target)
 
 validateSocialReplyBody :: Text -> Either ServerError Text
 validateSocialReplyBody rawBody
