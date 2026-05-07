@@ -98,7 +98,7 @@ socialSyncServer user =
     ingestHandler SocialSyncIngestRequest{..} = do
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
-      validatedPosts <- either throwError pure (traverse validateSocialSyncPostPayload ssirPosts)
+      validatedPosts <- either throwError pure (validateSocialSyncIngestPosts ssirPosts)
       resolvedPosts <- traverse resolveSocialSyncArtistReferences validatedPosts
       results <- forM resolvedPosts $ \ValidatedSocialSyncPost{..} -> do
         let tagList = classifyTags (sspCaption payload)
@@ -278,6 +278,31 @@ validateSocialSyncPostPayload payload = do
     , vsspArtistPartyId = artistPartyId
     , vsspArtistProfileId = artistProfileId
     }
+
+validateSocialSyncIngestPosts :: [SocialSyncPostIn] -> Either ServerError [ValidatedSocialSyncPost]
+validateSocialSyncIngestPosts posts
+  | null posts =
+      Left err400 { errBody = "posts must contain at least one post" }
+  | length posts > maxSocialSyncIngestPosts =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                "posts must contain at most "
+                  <> T.pack (show maxSocialSyncIngestPosts)
+                  <> " posts"
+        }
+  | otherwise = do
+      validated <- traverse validateSocialSyncPostPayload posts
+      let identities =
+            map
+              (\post -> (vsspPlatform post, vsspExternalPostId post))
+              validated
+      if length identities /= length (nub identities)
+        then
+          Left err400
+            { errBody = "posts must not contain duplicate platform/externalPostId pairs" }
+        else Right validated
 
 validateSocialSyncArtistPartyKey :: Text -> Either ServerError (Key Party)
 validateSocialSyncArtistPartyKey raw =

@@ -5514,6 +5514,40 @@ main = hspec $ do
                 _ ->
                     expectationFailure ("Expected one social sync run audit row, got: " <> show runs)
 
+        it "rejects duplicate normalized post identities before recording ambiguous ingest audit rows" $ do
+            let mkIngestPost platform externalPostId =
+                    SocialSyncPostIn
+                        { sspPlatform = platform
+                        , sspExternalPostId = externalPostId
+                        , sspCaption = Nothing
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Nothing
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                request =
+                    SocialSyncIngestRequest
+                        [ mkIngestPost "instagram" " ig-media-42 "
+                        , mkIngestPost " Instagram " "ig-media-42"
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "posts must not contain duplicate platform/externalPostId pairs"
+                Right response ->
+                    expectationFailure
+                        ("Expected duplicate social sync ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
         it "normalizes captions before persisting summary and tag data" $ do
             let request =
                     SocialSyncIngestRequest
