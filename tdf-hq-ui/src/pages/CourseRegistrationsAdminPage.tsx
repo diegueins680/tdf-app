@@ -1836,7 +1836,10 @@ const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseReg
   return hasCustomStatus && statusKeys.size > 1;
 };
 
-const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
+const buildLocalSearchPlaceholder = (
+  registrations: readonly CourseRegistrationDTO[],
+  { includeCourseTerm = true }: { includeCourseTerm?: boolean } = {},
+) => {
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
   let hasNameIdentity = false;
@@ -1912,7 +1915,7 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   }
   if (hasSearchableCustomRegistrationStatus(registrations)) contextTerms.push('estado');
   if (hasVariableSource && !hasVariableAcquisitionContext) contextTerms.push('fuente');
-  if (cohortKeys.size > 1) contextTerms.push('curso');
+  if (includeCourseTerm && cohortKeys.size > 1) contextTerms.push('curso');
 
   if (
     hasGeneratedRegistrationIdentity
@@ -2604,9 +2607,15 @@ export default function CourseRegistrationsAdminPage() {
     && !showAdvancedFilters;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
+  const hasDedicatedCohortFilterControl = showCohortSelect
+    && !cohortsQuery.isError
+    && cohortOptions.length > 1;
   const localSearchPlaceholder = useMemo(
-    () => buildLocalSearchPlaceholder(registrations),
-    [registrations],
+    () => buildLocalSearchPlaceholder(registrations, {
+      includeCourseTerm: !hasDedicatedCohortFilterControl,
+    }),
+    [hasDedicatedCohortFilterControl, registrations],
   );
   const hasCustomStatusSearch = useMemo(
     () => hasSearchableCustomRegistrationStatus(registrations),
@@ -2743,7 +2752,6 @@ export default function CourseRegistrationsAdminPage() {
     hasSlugFilter: hasEffectiveSlugFilter,
     hasStatusFilter,
   });
-  const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
   const showCohortFilterLoadingSummary = showCohortSelect
     && cohortsQuery.isLoading
     && hasVisibleRegistrations

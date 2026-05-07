@@ -3532,7 +3532,9 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
 
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o curso');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.textContent).toContain(
@@ -8272,6 +8274,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
@@ -9937,8 +9940,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
-        'Nombre, contacto o curso',
+        'Nombre o contacto',
       );
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
@@ -10183,7 +10187,9 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, fuente o curso');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o fuente');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
