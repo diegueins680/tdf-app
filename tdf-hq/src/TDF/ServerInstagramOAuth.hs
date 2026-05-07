@@ -7,6 +7,8 @@
 module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
   , FacebookAccessToken(..)
+  , FacebookPage(..)
+  , FacebookPageList(..)
   , resolveInstagramRedirectUri
   , sanitizeFacebookGraphErrorMessage
   , validateInstagramRedirectUri
@@ -73,16 +75,22 @@ instance FromJSON FacebookAccessToken where
       }
 
 normalizeFacebookAccessToken :: Text -> Parser Text
-normalizeFacebookAccessToken rawToken =
+normalizeFacebookAccessToken =
+  normalizeFacebookAccessTokenField "Facebook access_token"
+
+normalizeFacebookAccessTokenField :: Text -> Text -> Parser Text
+normalizeFacebookAccessTokenField fieldName rawToken =
   let tokenValue = T.strip rawToken
+      fieldLabel = T.unpack fieldName
   in if T.null tokenValue
-       then fail "Facebook access_token must not be blank"
+       then fail (fieldLabel <> " must not be blank")
        else if T.any isUnsafeFacebookAccessTokenChar tokenValue
          then fail $
-           "Facebook access_token must not contain whitespace or control characters "
+           fieldLabel
+             <> " must not contain whitespace or control characters "
              <> "or hidden formatting characters"
          else if T.length tokenValue > maxFacebookAccessTokenChars
-           then fail "Facebook access_token must be 4096 characters or fewer"
+           then fail (fieldLabel <> " must be 4096 characters or fewer")
          else pure tokenValue
 
 maxFacebookAccessTokenChars :: Int
@@ -91,6 +99,54 @@ maxFacebookAccessTokenChars = 4096
 isUnsafeFacebookAccessTokenChar :: Char -> Bool
 isUnsafeFacebookAccessTokenChar ch =
   isSpace ch || isControl ch || generalCategory ch == Format
+
+normalizeFacebookGraphId :: Text -> Text -> Parser Text
+normalizeFacebookGraphId fieldName rawId =
+  let graphId = T.strip rawId
+      fieldLabel = T.unpack fieldName
+  in if T.null graphId
+       then fail (fieldLabel <> " must not be blank")
+       else if T.any isUnsafeFacebookAccessTokenChar graphId
+         then fail $
+           fieldLabel
+             <> " must not contain whitespace or control characters "
+             <> "or hidden formatting characters"
+       else if T.length graphId > maxFacebookGraphIdChars
+         then fail (fieldLabel <> " must be 256 characters or fewer")
+       else if not (T.all isFacebookGraphIdChar graphId)
+         then fail $
+           fieldLabel
+             <> " must contain only ASCII letters, digits, '-' or '_'"
+       else pure graphId
+
+maxFacebookGraphIdChars :: Int
+maxFacebookGraphIdChars = 256
+
+isFacebookGraphIdChar :: Char -> Bool
+isFacebookGraphIdChar ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
+    || ch == '-'
+    || ch == '_'
+
+normalizeFacebookRequiredText :: Text -> Int -> Text -> Parser Text
+normalizeFacebookRequiredText fieldName maxChars rawText =
+  let textValue = T.strip rawText
+      fieldLabel = T.unpack fieldName
+  in if T.null textValue
+       then fail (fieldLabel <> " must not be blank")
+       else if T.any isUnsafeFacebookGraphTextChar textValue
+         then fail $
+           fieldLabel
+             <> " must not contain control characters or hidden formatting characters"
+       else if T.length textValue > maxChars
+         then fail (fieldLabel <> " must be " <> show maxChars <> " characters or fewer")
+       else pure textValue
+
+isUnsafeFacebookGraphTextChar :: Char -> Bool
+isUnsafeFacebookGraphTextChar ch =
+  isControl ch || generalCategory ch == Format
 
 normalizeFacebookTokenType :: Maybe Text -> Parser Text
 normalizeFacebookTokenType Nothing = pure "bearer"
@@ -112,7 +168,7 @@ data FacebookUser = FacebookUser
 
 instance FromJSON FacebookUser where
   parseJSON = withObject "FacebookUser" $ \o ->
-    FacebookUser <$> o .: "id"
+    FacebookUser <$> (normalizeFacebookGraphId "Facebook user id" =<< o .: "id")
                  <*> o .:? "name"
 
 data FacebookPage = FacebookPage
@@ -123,11 +179,13 @@ data FacebookPage = FacebookPage
 
 instance FromJSON FacebookPage where
   parseJSON = withObject "FacebookPage" $ \o ->
-    FacebookPage <$> o .: "id"
-                 <*> o .: "name"
-                 <*> o .: "access_token"
+    FacebookPage
+      <$> (normalizeFacebookGraphId "Facebook page id" =<< o .: "id")
+      <*> (normalizeFacebookRequiredText "Facebook page name" 200 =<< o .: "name")
+      <*> (normalizeFacebookAccessTokenField "Facebook page access_token" =<< o .: "access_token")
 
 newtype FacebookPageList = FacebookPageList { fplData :: [FacebookPage] }
+  deriving (Show)
 
 instance FromJSON FacebookPageList where
   parseJSON = withObject "FacebookPageList" $ \o ->
@@ -138,7 +196,8 @@ newtype InstagramBusinessAccount = InstagramBusinessAccount { ibaId :: Text }
 
 instance FromJSON InstagramBusinessAccount where
   parseJSON = withObject "InstagramBusinessAccount" $ \o ->
-    InstagramBusinessAccount <$> o .: "id"
+    InstagramBusinessAccount <$>
+      (normalizeFacebookGraphId "Instagram business account id" =<< o .: "id")
 
 data PageInstagramAccount = PageInstagramAccount
   { piaInstagramBusinessAccount :: Maybe InstagramBusinessAccount
@@ -155,7 +214,7 @@ data InstagramUser = InstagramUser
 
 instance FromJSON InstagramUser where
   parseJSON = withObject "InstagramUser" $ \o ->
-    InstagramUser <$> o .: "id"
+    InstagramUser <$> (normalizeFacebookGraphId "Instagram user id" =<< o .: "id")
                   <*> o .:? "username"
 
 data InstagramMedia = InstagramMedia
@@ -168,7 +227,7 @@ data InstagramMedia = InstagramMedia
 
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o ->
-    InstagramMedia <$> o .: "id"
+    InstagramMedia <$> (normalizeFacebookGraphId "Instagram media id" =<< o .: "id")
                    <*> o .:? "caption"
                    <*> o .:? "media_url"
                    <*> o .:? "permalink"

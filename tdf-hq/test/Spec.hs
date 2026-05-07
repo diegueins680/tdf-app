@@ -194,6 +194,8 @@ import TDF.ServerFeedback
       validateOptionalFeedbackContactEmail )
 import TDF.ServerInstagramOAuth
     ( FacebookAccessToken (..),
+      FacebookPage (..),
+      FacebookPageList (..),
       instagramOAuthServer,
       resolveInstagramRedirectUri,
       sanitizeFacebookGraphErrorMessage,
@@ -3888,6 +3890,60 @@ main = hspec $ do
             assertInvalid
                 "{\"access_token\":\"token-123\",\"expires_in\":0}"
                 "Facebook expires_in must be positive"
+
+        it "rejects malformed Facebook page rows before storing OAuth credentials" $ do
+            let decodePages rawPayload =
+                    eitherDecode rawPayload :: Either String FacebookPageList
+                facebookPagePayload pageId pageName pageToken =
+                    BL.pack $
+                        "{\"data\":[{\"id\":\""
+                            <> pageId
+                            <> "\",\"name\":\""
+                            <> pageName
+                            <> "\",\"access_token\":\""
+                            <> pageToken
+                            <> "\"}]}"
+                assertInvalid rawPayload expectedMessage =
+                    case decodePages rawPayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right decodedPages ->
+                            expectationFailure
+                                ( "Expected malformed Facebook page response to fail, got: "
+                                    <> show decodedPages
+                                )
+            case decodePages
+                (facebookPagePayload " page-123 " " TDF HQ " " page-token-123 ") of
+                Left err ->
+                    expectationFailure ("Expected valid Facebook page response, got: " <> err)
+                Right (FacebookPageList [page]) -> do
+                    fpId page `shouldBe` "page-123"
+                    fpName page `shouldBe` "TDF HQ"
+                    fpAccessToken page `shouldBe` "page-token-123"
+                Right decodedPages ->
+                    expectationFailure
+                        ( "Expected one Facebook page discovery row, got: "
+                            <> show decodedPages
+                        )
+
+            assertInvalid
+                (facebookPagePayload "   " "TDF HQ" "page-token")
+                "Facebook page id must not be blank"
+            assertInvalid
+                (facebookPagePayload "page 123" "TDF HQ" "page-token")
+                "Facebook page id must not contain whitespace"
+            assertInvalid
+                (facebookPagePayload "page/123" "TDF HQ" "page-token")
+                "Facebook page id must contain only ASCII letters"
+            assertInvalid
+                (facebookPagePayload "page-123" "   " "page-token")
+                "Facebook page name must not be blank"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF\\nHQ" "page-token")
+                "Facebook page name must not contain control characters"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF HQ" "page token")
+                "Facebook page access_token must not contain whitespace"
 
         it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
             let sanitized =
