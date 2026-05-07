@@ -694,6 +694,55 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps admin-center fallback cards from duplicating the console intro', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-admin-center',
+          title: 'Admin center',
+          body: ['Review admin settings, service status, users, roles, and audit from one hub.'],
+        },
+        {
+          cardId: 'administration-hub',
+          title: 'Administration hub',
+          body: ['Review admin users and audit history from this overview.'],
+        },
+        {
+          cardId: 'centro-admin',
+          title: 'Centro de administración',
+          body: ['Revisa estado, usuarios y auditoría desde este centro.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin center')).not.toBeInTheDocument();
+    expect(screen.queryByText('Administration hub')).not.toBeInTheDocument();
+    expect(screen.queryByText('Centro de administración')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review admin settings, service status, users, roles, and audit/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa estado, usuarios y auditoría desde este centro\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps the first-run checklist focused when the preview renames user management to roles and permissions', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
