@@ -1070,9 +1070,12 @@ export default function AdminUsersPage() {
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
   const showReviewInactiveSingleUserAction =
     showSingleUserGuidance && !includeInactive && !usersQuery.isLoading && !usersQuery.error;
-  const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
-  const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
-    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && showSearchField);
+  const showInlineErrorRetryAction = Boolean(usersQuery.error);
+  const showRefreshAction = !usersQuery.error
+    && !hasActiveSearch
+    && hasUsers
+    && !showSearchEmptyState
+    && showSearchField;
   const showHeaderActions = showInactiveFilterAction || showRefreshAction;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;

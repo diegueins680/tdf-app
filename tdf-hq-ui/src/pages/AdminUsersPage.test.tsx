@@ -365,6 +365,65 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps stale-load retry next to the error instead of leaving it as a header refresh icon', async () => {
+    const users = [
+      buildUser(),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus View',
+        username: 'linus-view',
+        primaryEmail: 'linus@example.com',
+      }),
+    ];
+    listUsersMock
+      .mockResolvedValueOnce(users)
+      .mockRejectedValueOnce(new Error('admin users unavailable'))
+      .mockResolvedValueOnce(users);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+      });
+
+      const headerRefresh = container.querySelector<HTMLElement>('button[aria-label="Refrescar lista de usuarios"]');
+      if (!headerRefresh) throw new Error('Header refresh button not found');
+      await clickButton(headerRefresh);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('No se pudieron cargar los usuarios: admin users unavailable.');
+        expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+      });
+
+      await clickButton(getButtonsByText(container, 'Reintentar usuarios')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenCalledTimes(3);
+        expect(container.textContent).not.toContain('No se pudieron cargar los usuarios');
+        expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(0);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('waits to show refresh until the roster is dense enough to need the wider list controls', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
