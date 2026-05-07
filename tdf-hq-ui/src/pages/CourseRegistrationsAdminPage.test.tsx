@@ -14749,6 +14749,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - registration flow',
       'Course registration workflow - Beatmaking 101',
       'Beatmaking 101 - enrollment workflow',
+      'Registration landing page - Beatmaking 101',
+      'Beatmaking 101 - enrollment landing page',
+      'Application landing page for Beatmaking 101',
       'Flujo de inscripción - Beatmaking 101',
       'Beatmaking 101 - embudo de admisiones',
     ];
@@ -14767,7 +14770,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /enrollment funnel|registration flow|registration workflow|enrollment workflow|flujo de inscripci[oó]n|embudo de admisiones/i,
+          /enrollment funnel|registration flow|registration workflow|enrollment workflow|landing page|flujo de inscripci[oó]n|embudo de admisiones/i,
         );
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(

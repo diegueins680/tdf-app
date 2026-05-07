@@ -860,10 +860,10 @@ const firstRunRegistrationLinkDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
 
 const firstRunEnrollmentFlowDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|landing(?:\s+pages?)?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunEnrollmentFlowDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|landing(?:\s+pages?)?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
 
 const firstRunSalesDescriptorPrefixPattern =
   /^(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
