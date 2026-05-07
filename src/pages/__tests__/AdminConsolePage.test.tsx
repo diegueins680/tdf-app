@@ -5111,6 +5111,56 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Not configured yet/i)).not.toBeInTheDocument();
   });
 
+  it('ignores configuration-required fallback cards so first-run users only open actionable modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-configuration-required',
+          title: 'Integrations setup',
+          body: ['Configuration required before this module can be opened.'],
+        },
+        {
+          cardId: 'tokens-configuracion-requerida',
+          title: 'Configuración requerida',
+          body: ['Requiere configuración antes de mostrar credenciales.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: ['Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integrations setup')).not.toBeInTheDocument();
+    expect(screen.queryByText('Configuración requerida')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Configuration required before this module can be opened\./i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Requiere configuración antes de mostrar credenciales\./i)).not.toBeInTheDocument();
+  });
+
   it('ignores disabled and not-enabled fallback cards so first-run users only open actionable modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
