@@ -8,6 +8,7 @@ module TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , validateRsvpStatus
   , validateInvitationToPartyId
+  , validateInvitationFromPartyId
   , validateInvitationStatusInput
   , validateInvitationStatusUpdateInput
   , normalizeInvitationStatus
@@ -1254,10 +1255,13 @@ socialEventsServer user = eventsServer
       mEvent <- liftIO $ runSqlPool (get eventKey) envPool
       when (isNothing mEvent) $ throwError err404 { errBody = "Event not found" }
       toParty <- either throwError pure (validateInvitationToPartyId (invitationToPartyId dto))
+      fromParty <-
+        either throwError pure
+          (validateInvitationFromPartyId currentPartyId (invitationFromPartyId dto))
       statusVal <- either throwError pure (validateInvitationStatusInput (invitationStatus dto))
       key <- liftIO $ runSqlPool (insert EventInvitation
         { eventInvitationEventId = eventKey
-        , eventInvitationFromPartyId = cleanMaybeText (invitationFromPartyId dto)
+        , eventInvitationFromPartyId = Just fromParty
         , eventInvitationToPartyId = Just toParty
         , eventInvitationStatus = Just statusVal
         , eventInvitationMessage = invitationMessage dto
@@ -1267,7 +1271,7 @@ socialEventsServer user = eventsServer
       pure InvitationDTO
         { invitationId = Just (renderKeyText key)
         , invitationEventId = Just (T.strip eventIdStr)
-        , invitationFromPartyId = invitationFromPartyId dto
+        , invitationFromPartyId = Just fromParty
         , invitationToPartyId = toParty
         , invitationStatus = Just statusVal
         , invitationMessage = invitationMessage dto
@@ -2283,6 +2287,18 @@ validateInvitationToPartyId rawInvitationPartyId =
       case normalizePositivePartyIdText trimmed of
         Nothing -> Left err400 { errBody = "invitationToPartyId must be a positive integer" }
         Just normalized -> Right normalized
+
+validateInvitationFromPartyId :: T.Text -> Maybe T.Text -> Either ServerError T.Text
+validateInvitationFromPartyId currentPartyId rawInvitationPartyId =
+  case cleanMaybeText rawInvitationPartyId of
+    Nothing -> Right currentPartyId
+    Just trimmed ->
+      case normalizePositivePartyIdText trimmed of
+        Nothing -> Left err400 { errBody = "invitationFromPartyId must be a positive integer" }
+        Just normalized
+          | normalized == currentPartyId -> Right currentPartyId
+          | otherwise ->
+              Left err403 { errBody = "invitationFromPartyId must match the authenticated party" }
 
 validateRsvpStatus :: T.Text -> Either ServerError T.Text
 validateRsvpStatus raw =

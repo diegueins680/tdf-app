@@ -22,6 +22,7 @@ import TDF.DTO.SocialEventsDTO
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventUpdateDTO (..)
+    , InvitationDTO (..)
     , NullableFieldUpdate (..)
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
@@ -36,6 +37,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventImageUploadSize
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
+    , validateInvitationFromPartyId
     , validateStoredEventFinanceMetadata
     )
 
@@ -219,6 +221,46 @@ spec = describe "social event handler helpers" $ do
         stored <- runSqlPool (get eventKey) pool
         fmap socialEventTitle stored `shouldBe` Just "Original event"
 
+    it "rejects spoofed invitation senders before inserting social event invitations" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 9
+        runSqlPool
+            ( insertKey
+                eventKey
+                (seedSocialEvent "5" "Invitation event" now)
+            )
+            pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by invitation auth tests"
+                    }
+
+        validateInvitationFromPartyId "5" Nothing `shouldBe` Right "5"
+        validateInvitationFromPartyId "5" (Just " 005 ") `shouldBe` Right "5"
+
+        spoofed <-
+            runHandler $
+                runReaderT
+                    ( socialEventInvitationCreateHandlerFor
+                        (socialEventUser 5)
+                        "9"
+                        (invitationCreatePayload (Just "999"))
+                    )
+                    env
+        case spoofed of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err)
+                    `shouldContain` "invitationFromPartyId must match the authenticated party"
+            Right value ->
+                expectationFailure
+                    ("Expected spoofed invitation sender to be rejected, got: " <> show value)
+
     it "creates a follow and is idempotent" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -256,6 +298,26 @@ socialEventUpdateHandlerFor user =
             case eventsServer of
                 _listEvents :<|> _createEvent :<|> _getEvent :<|> updateEventHandler :<|> _uploadEventImage :<|> _deleteEvent ->
                     updateEventHandler
+
+socialEventInvitationCreateHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> InvitationDTO
+    -> ReaderT Env Handler InvitationDTO
+socialEventInvitationCreateHandlerFor user eventIdText =
+    case socialEventsServer user of
+        _events
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> invitationsServer
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
+            case invitationsServer eventIdText of
+                _listInvitations :<|> createInvitationHandler :<|> _updateInvitation ->
+                    createInvitationHandler
 
 socialEventUser :: Int64 -> AuthedUser
 socialEventUser partyId =
@@ -315,6 +377,19 @@ socialEventUpdatePayload title =
                 , eventArtists = []
                 }
         , eudMetadataUpdate = emptyEventMetadataUpdate
+        }
+
+invitationCreatePayload :: Maybe T.Text -> InvitationDTO
+invitationCreatePayload mFromPartyId =
+    InvitationDTO
+        { invitationId = Nothing
+        , invitationEventId = Nothing
+        , invitationFromPartyId = mFromPartyId
+        , invitationToPartyId = "2"
+        , invitationStatus = Just "pending"
+        , invitationMessage = Just "Join us"
+        , invitationCreatedAt = Nothing
+        , invitationUpdatedAt = Nothing
         }
 
 emptyEventMetadataUpdate :: EventMetadataUpdateDTO
