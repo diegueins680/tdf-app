@@ -528,7 +528,7 @@ loadConfig = do
   igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
-  igVerifyEnv <- lookupFirstEnv ["INSTAGRAM_VERIFY_TOKEN", "IG_VERIFY_TOKEN"]
+  igVerifyEnv <- lookupUniqueNamedEnv ["INSTAGRAM_VERIFY_TOKEN", "IG_VERIFY_TOKEN"]
   sessionCookieNameEnv <- lookupEnv "SESSION_COOKIE_NAME"
   sessionCookieDomainEnv <- lookupEnv "SESSION_COOKIE_DOMAIN"
   sessionCookiePathEnv <- lookupEnv "SESSION_COOKIE_PATH"
@@ -597,6 +597,7 @@ loadConfig = do
   igMsgAccountId <-
     validateConfiguredGraphNodeId
       (fmap (\value -> ("INSTAGRAM_MESSAGING_ACCOUNT_ID", value)) igMsgAccountEnv)
+  igVerifyTokenVal <- validateConfiguredMetaVerifyToken igVerifyEnv
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
@@ -660,7 +661,7 @@ loadConfig = do
           Nothing -> igTokenEnv >>= nonEmpty . T.pack
     , instagramMessagingAccountId = igMsgAccountId
     , instagramMessagingApiBase = igMsgBase
-    , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
+    , instagramVerifyToken = igVerifyTokenVal
     , sessionCookieName = cookieName
     , sessionCookieDomain = cookieDomain
     , sessionCookiePath = cookiePath
@@ -1035,6 +1036,13 @@ validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
     Left msg -> fail msg
     Right nodeId -> pure nodeId
 
+validateConfiguredMetaVerifyToken :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredMetaVerifyToken Nothing = pure Nothing
+validateConfiguredMetaVerifyToken (Just (envName, rawToken)) =
+  case normalizeConfiguredMetaVerifyToken envName rawToken of
+    Left msg -> fail msg
+    Right token -> pure token
+
 validateConfiguredOpenAiModel :: Maybe String -> IO Text
 validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
 validateConfiguredOpenAiModel (Just rawModel) =
@@ -1154,6 +1162,19 @@ normalizeConfiguredGraphNodeId envName rawNodeId
         || (ch >= '0' && ch <= '9')
     isGraphNodeIdChar ch =
       isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+normalizeConfiguredMetaVerifyToken :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredMetaVerifyToken envName rawToken
+  | T.null token = Right Nothing
+  | T.length token > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) token =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar token =
+      Left (envName <> " must not contain hidden formatting characters")
+  | otherwise = Right (Just token)
+  where
+    token = T.strip (T.pack rawToken)
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl

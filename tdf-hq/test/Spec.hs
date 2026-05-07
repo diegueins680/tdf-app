@@ -332,6 +332,7 @@ import TDF.Config
       instagramMessagingApiBase,
       instagramMessagingAccountId,
       instagramMessagingToken,
+      instagramVerifyToken,
       loadConfig,
       openAiEmbedModel,
       openAiModel,
@@ -1210,6 +1211,40 @@ main = hspec $ do
                 ]
                 $ loadConfig `shouldThrow` \err ->
                     "FACEBOOK_MESSAGING_TOKEN and FACEBOOK_PAGE_ACCESS_TOKEN must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes Instagram verify token aliases before Meta webhook verification" $
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just " webhook-secret_123 ")
+                , ("IG_VERIFY_TOKEN", Just "webhook-secret_123")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramVerifyToken cfg `shouldBe` Just "webhook-secret_123"
+
+        it "rejects Instagram verify token fallback ambiguity before webhook verification" $ do
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just "primary-secret")
+                , ("IG_VERIFY_TOKEN", Just "fallback-secret")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_VERIFY_TOKEN and IG_VERIFY_TOKEN must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just "webhook secret")
+                , ("IG_VERIFY_TOKEN", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_VERIFY_TOKEN must not contain whitespace or control characters"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Nothing)
+                , ("IG_VERIFY_TOKEN", Just ("webhook" <> Data.Text.unpack (Data.Text.singleton '\x202E') <> "secret"))
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "IG_VERIFY_TOKEN must not contain hidden formatting characters"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed Graph messaging node ids before token-bearing requests are built" $ do
