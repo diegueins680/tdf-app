@@ -885,6 +885,9 @@ main = hspec $ do
                 "seed-token\nInjected: value"
                 "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
             assertInvalid
+                ("seed-token_123456" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "SEED_TRIGGER_TOKEN must not contain hidden formatting characters"
+            assertInvalid
                 (replicate 513 'a')
                 "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
 

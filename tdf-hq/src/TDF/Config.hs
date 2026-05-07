@@ -745,6 +745,8 @@ loadConfig = do
           | T.null txt -> pure Nothing
           | T.any (\ch -> isSpace ch || isControl ch) txt ->
               fail "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+          | T.any isHiddenConnectionUrlChar txt ->
+              fail "SEED_TRIGGER_TOKEN must not contain hidden formatting characters"
           | T.length txt < 16 ->
               fail "SEED_TRIGGER_TOKEN must be at least 16 characters"
           | T.length txt > 512 ->
