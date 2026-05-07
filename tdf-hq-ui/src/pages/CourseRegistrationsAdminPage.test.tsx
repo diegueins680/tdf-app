@@ -9519,6 +9519,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'surveymonkey_form',
       'surveymonkey_forms',
       'squarespace_form',
+      'leadpages_landing_page',
+      'lead_pages_landing_page',
       'notion_form',
       'fillout_forms',
       'cognito_form',
@@ -9549,6 +9551,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Surveymonkey form',
       'Surveymonkey forms',
       'Squarespace form',
+      'Leadpages landing page',
+      'Lead pages landing page',
       'Notion form',
       'Fillout forms',
       'Cognito form',
@@ -12603,6 +12607,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Webflow form - Beatmaking 101',
       'Beatmaking 101 - Wix form',
       'Squarespace form for Beatmaking 101',
+      'Leadpages landing page - Beatmaking 101',
+      'Formulario de Leadpages para Beatmaking 101',
+      'Beatmaking 101 - Leadpages',
       'Beatmaking 101 - Notion form',
       'CRM lead form - Beatmaking 101',
       'CRM registration page for Beatmaking 101',
@@ -12644,6 +12651,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Webflow');
         expect(emptyState?.textContent).not.toContain('Wix');
         expect(emptyState?.textContent).not.toContain('Squarespace');
+        expect(emptyState?.textContent).not.toContain('Leadpages');
         expect(emptyState?.textContent).not.toContain('Notion form');
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
