@@ -3297,7 +3297,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').textContent?.trim()).toBe(reopenPendingLabel);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('title')).toBe(
-        'Cambiar estado; actual: Pendiente de pago',
+        'Registrar pago o cambiar estado; actual: Pendiente de pago',
       );
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').getAttribute('title')).toBe(
         'Cambiar estado; actual: Pagado',
@@ -8506,6 +8506,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 1').getAttribute('title')).toBe(
+        'Registrar pago o cambiar estado; actual: Pendiente de pago',
+      );
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });

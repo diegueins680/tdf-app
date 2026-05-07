@@ -583,6 +583,14 @@ const pendingStatusMenuTargetLabel = (currentStatus: string) =>
     ? 'reabrir la inscripción como pendiente'
     : 'marcar el pago como pendiente';
 
+const statusMenuButtonTitle = (currentStatus: string) => {
+  const currentStatusLabel = registrationStatusLabel(currentStatus);
+  if (canOpenPaymentWorkflowFromStatus(currentStatus)) {
+    return `${openPaymentWorkflowLabel} o cambiar estado; actual: ${currentStatusLabel}`;
+  }
+  return `Cambiar estado; actual: ${currentStatusLabel}`;
+};
+
 const shouldUseDirectPendingRecoveryAction = (
   currentStatus: string,
   includePaidRecovery = false,
@@ -5463,12 +5471,12 @@ export default function CourseRegistrationsAdminPage() {
                         </Box>
                       )}
                       {useStatusIconAction ? (
-                        <Tooltip title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}>
+                        <Tooltip title={statusMenuButtonTitle(reg.crStatus)}>
                           <span>
                             <IconButton
                               size="small"
                               color={registrationStatusButtonColor(reg.crStatus)}
-                              title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}
+                              title={statusMenuButtonTitle(reg.crStatus)}
                               aria-label={`Cambiar estado para ${rowActionTarget}`}
                               aria-haspopup="menu"
                               disabled={isUpdating}
@@ -5493,7 +5501,7 @@ export default function CourseRegistrationsAdminPage() {
                           title={
                             useDirectPendingRecoveryAction
                               ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
-                              : `Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`
+                              : statusMenuButtonTitle(reg.crStatus)
                           }
                           aria-label={
                             useDirectPendingRecoveryAction
