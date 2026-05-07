@@ -28,6 +28,7 @@ import           Data.Foldable (for_)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAscii
   , isControl
   , isDigit
   , isAlphaNum
@@ -2221,6 +2222,9 @@ validateDriveAccessTokenWith baseError token
   | T.any isHiddenDriveOAuthTokenChar token =
       Left baseError
         { errBody = "Google Drive access token must not contain hidden formatting characters" }
+  | T.any (not . isAscii) token =
+      Left baseError
+        { errBody = "Google Drive access token must contain only ASCII characters" }
   | otherwise = Right token
 
 driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM DriveTokenResponse
