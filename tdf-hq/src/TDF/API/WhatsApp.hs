@@ -132,9 +132,48 @@ extractWebhookTextMessages payload =
 
 isEnrollmentWebhookMessage :: WAMessage -> Bool
 isEnrollmentWebhookMessage msg =
-  ("INSCRIBIRME" `T.isInfixOf` normalizedText) || ("INSCRIBIR" `T.isInfixOf` normalizedText)
+  case dropWhile (not . isEnrollmentCommandToken) tokens of
+    [] -> False
+    commandAndAfter ->
+      let beforeCommand = take (length tokens - length commandAndAfter) tokens
+      in not (any (`elem` negativeEnrollmentTokens) tokens)
+           && (null beforeCommand || any (`elem` affirmativeEnrollmentTokens) beforeCommand)
   where
-    normalizedText = T.toUpper . T.strip $ maybe "" body (text msg)
+    tokens = T.words (normalizeEnrollmentCommandText (maybe "" body (text msg)))
+
+normalizeEnrollmentCommandText :: Text -> Text
+normalizeEnrollmentCommandText =
+  T.unwords . T.words . T.map normalizeChar . T.toUpper
+  where
+    normalizeChar ch
+      | isAlphaNum ch = ch
+      | otherwise = ' '
+
+isEnrollmentCommandToken :: Text -> Bool
+isEnrollmentCommandToken tokenValue =
+  tokenValue == "INSCRIBIRME" || tokenValue == "INSCRIBIR"
+
+affirmativeEnrollmentTokens :: [Text]
+affirmativeEnrollmentTokens =
+  [ "QUIERO"
+  , "DESEO"
+  , "ACEPTO"
+  , "CONFIRMO"
+  , "SI"
+  , "SÍ"
+  , "OK"
+  ]
+
+negativeEnrollmentTokens :: [Text]
+negativeEnrollmentTokens =
+  [ "NO"
+  , "NUNCA"
+  , "TAMPOCO"
+  , "CANCELAR"
+  , "CANCELO"
+  , "CANCELEN"
+  , "BAJA"
+  ]
 
 -- Link minting & sender -------------------------------------------------------
 

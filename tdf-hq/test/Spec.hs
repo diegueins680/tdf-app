@@ -8917,6 +8917,58 @@ main = hspec $ do
             fmap messageId (extractFirstEnrollmentWebhookMessage payload)
                 `shouldBe` Just (Just "wamid.enroll")
 
+        it "ignores negated or incidental enrollment mentions before selecting a command" $ do
+            let negativeMessage =
+                    WA.WAMessage
+                        (Just "wamid.no")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "No quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                incidentalMessage =
+                    WA.WAMessage
+                        (Just "wamid.incidental")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Tengo una pregunta para inscribir a mi hija"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                commandMessage =
+                    WA.WAMessage
+                        (Just "wamid.command")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Quiero inscribirme, por favor"))
+                        Nothing
+                        Nothing
+                        (Just "1770000003")
+                messageId (WA.WAMessage msgId _ _ _ _ _ _) = msgId
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [negativeMessage, incidentalMessage, commandMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+                negativeOnlyPayload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue (Just [negativeMessage]) Nothing Nothing)
+                            ]
+                        ]
+            fmap messageId (extractFirstEnrollmentWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.command")
+            fmap messageId (extractFirstEnrollmentWebhookMessage negativeOnlyPayload)
+                `shouldBe` Nothing
+
     describe "PreviewReq" $ do
         it "accepts canonical preview-link bodies and normalizes user-entered phone formatting up front" $ do
             case eitherDecode "{\"phone\":\"+593991234567\"}" of
