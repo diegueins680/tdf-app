@@ -2626,6 +2626,16 @@ describe('AdminConsolePage', () => {
           title: 'Inicio rápido',
           body: ['Revisa salud, usuarios y auditoría antes de cambiar permisos.'],
         },
+        {
+          cardId: 'fallback-admin-onboarding',
+          title: 'Admin onboarding',
+          body: ['Confirm the admin onboarding checklist before changing access.'],
+        },
+        {
+          cardId: 'fallback-bienvenida-admin',
+          title: 'Bienvenida administrativa',
+          body: ['Revisa la bienvenida administrativa antes de cargar datos de ejemplo.'],
+        },
       ],
     });
 
@@ -2648,11 +2658,19 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Getting started')).not.toBeInTheDocument();
     expect(screen.queryByText('Inicio rápido')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin onboarding')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bienvenida administrativa')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Review service health, users, roles, and audit activity/i),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Revisa salud, usuarios y auditoría antes de cambiar permisos\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm the admin onboarding checklist before changing access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa la bienvenida administrativa antes de cargar datos de ejemplo\./i),
     ).not.toBeInTheDocument();
   });
 
