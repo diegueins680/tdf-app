@@ -124,14 +124,14 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 };
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Gestionar cursos';
+const initialEmptyStateMultiCohortActionLabel = 'Ver cursos configurados';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
-const initialEmptyStateMultiCohortActionAriaLabel = 'Abrir cursos para elegir qué formulario público compartir primero';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
