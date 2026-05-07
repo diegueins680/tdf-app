@@ -14547,6 +14547,44 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips standalone public-page wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Página pública - Beatmaking 101',
+      'Beatmaking 101 - página pública',
+      'Public page: Beatmaking 101',
+      'Beatmaking 101 public portal',
+      'Portal público - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const copy = emptyState?.textContent ?? '';
+        expect(emptyState).not.toBeNull();
+        expect(copy).toContain(singleCohortInitialEmptyStateMessage);
+        expect(copy).not.toContain(title);
+        expect(copy).not.toMatch(/p[aá]gina\s+p[uú]blica\s*[-:/|]/i);
+        expect(copy).not.toMatch(/[-:/|]\s*p[aá]gina\s+p[uú]blica/i);
+        expect(copy).not.toMatch(/public\s+(?:page|portal)/i);
+        expect(copy.toLocaleLowerCase('es').split('página pública')).toHaveLength(2);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('waits for cohort context before showing first-run empty-state actions', async () => {
     listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
     listRegistrationsMock.mockResolvedValue([]);

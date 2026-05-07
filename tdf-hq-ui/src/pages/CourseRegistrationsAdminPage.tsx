@@ -978,6 +978,12 @@ const firstRunLandingPageDescriptorPrefixPattern =
 const firstRunLandingPageDescriptorSuffixPattern =
   /\s*[-:/|]\s*(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
 
+const firstRunStandalonePublicPageDescriptorPrefixPattern =
+  /^(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunStandalonePublicPageDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))\s*$/i;
+
 const firstRunCourseWebsiteDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:website|web\s+page|site)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
 
@@ -1066,6 +1072,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunLandingPageDescriptorPrefixPattern, '')
+    .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
@@ -1118,6 +1125,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunLandingPageDescriptorSuffixPattern, '')
+    .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
