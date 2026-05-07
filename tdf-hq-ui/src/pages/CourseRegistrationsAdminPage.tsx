@@ -2920,7 +2920,6 @@ export default function CourseRegistrationsAdminPage() {
     && !combinedSingleChoiceSummary
     && !hasCustomFilters
     && !showAdvancedLimitControl
-    && !standaloneSingleChoiceInlineSourceSummary
     && !hasSharedListContextSummary;
   const hiddenBusyListMissingContactContext = showBusyListSearchOnboarding
     ? sharedVisibleMissingContactSummary.replace(/\.$/, '')
@@ -2936,11 +2935,14 @@ export default function CourseRegistrationsAdminPage() {
     : hideBusyListPassiveSingleCohortSummary
       ? [singleAvailableCohortLabel, standaloneSingleChoiceBusySearchSourceSummary].filter(Boolean).join(' · ')
       : hideBusyListPassiveSingleStatusSummary
-        ? singleVisibleStatus
-          ? statusFilterLabels[singleVisibleStatus]
-          : singleVisibleCustomStatus != null
-            ? customRegistrationStatusLabel(singleVisibleCustomStatus)
-            : ''
+        ? [
+          singleVisibleStatus
+            ? statusFilterLabels[singleVisibleStatus]
+            : singleVisibleCustomStatus != null
+              ? customRegistrationStatusLabel(singleVisibleCustomStatus)
+              : '',
+          standaloneSingleChoiceBusySearchSourceSummary,
+        ].filter(Boolean).join(' · ')
       : '';
   const hiddenBusyListContextSummary = [
     hiddenBusyListBaseContextSummary,

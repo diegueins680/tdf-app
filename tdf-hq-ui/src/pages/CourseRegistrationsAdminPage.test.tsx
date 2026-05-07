@@ -2137,6 +2137,37 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds shared source context into busy-list search instead of keeping a passive status block', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
+      crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'mixing-bootcamp',
+      crSource: 'instagram',
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Estado disponible');
+      expect(container.textContent).toContain(
+        `Pendiente de pago · Fuente visible: instagram. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
+      );
+      expect(countOccurrences(container, 'Fuente visible: instagram')).toBe(1);
+      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(8);
+    });
+
+    await cleanup();
+  });
+
   it('absorbs a shared source into the single-cohort summary block instead of adding another summary line', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram' }),
