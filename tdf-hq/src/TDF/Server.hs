@@ -12368,6 +12368,7 @@ parseDriveApiResourceKey fieldName rawResourceKey =
       fail
         ( T.unpack fieldName
             <> " must be 1-256 ASCII letters, digits, '-' or '_'"
+            <> " with at least one letter or digit"
         )
 
 data DriveMetaResp = DriveMetaResp
@@ -12522,7 +12523,7 @@ hasConflictingDriveResourceKeys resourceKeyCandidates =
 sanitizeDriveResourceKey :: Maybe Text -> Maybe Text
 sanitizeDriveResourceKey mResourceKey = do
   resourceKey <- cleanOptional mResourceKey
-  if T.length resourceKey <= 256 && T.all isDriveFolderIdChar resourceKey
+  if isValidDriveResourceKey resourceKey
     then Just resourceKey
     else Nothing
 
@@ -12691,6 +12692,7 @@ isValidDriveResourceKey rawValue =
   let value = T.strip rawValue
   in not (T.null value)
       && T.length value <= 256
+      && T.any isDriveFolderIdAtom value
       && T.all isDriveFolderIdChar value
 
 queryParamValue :: Text -> Maybe Text

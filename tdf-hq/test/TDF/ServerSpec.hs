@@ -5037,6 +5037,8 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"id\":\"file-123\","
                     <> "\"webViewLink\":\"https://drive.google.com/file/d/other-file/view\"}"
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"   \"}"
+            assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"----\"}"
+            assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"____\"}"
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk bad\"}"
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk%20bad\"}"
 
@@ -5178,6 +5180,14 @@ spec = describe "TDF.Server helpers" $ do
                     "https://drive.google.com/download/file-123?alt=media"
 
         it "ignores malformed upload resource keys before trying metadata fallbacks" $ do
+            resolveDrivePublicUrl
+                "file-123"
+                Nothing
+                (Just "----")
+                (Just "rk_meta-123")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk_meta-123"
+
             resolveDrivePublicUrl
                 "file-123"
                 Nothing
