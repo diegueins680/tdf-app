@@ -310,6 +310,7 @@ import TDF.Server
     , validateCalendarSyncWindow
     , validateCalendarRedirectUri
     , validateConfiguredCalendarRedirectUri
+    , validateGoogleCalendarSyncCursor
     , validateGoogleCalendarEventId
     , validateGoogleCalendarEventStatus
     , selectUniqueCalendarConfigFallback
@@ -5544,6 +5545,28 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right ()
             validateCalendarSyncWindow Nothing (Just fromTs) (Just toTs)
                 `shouldBe` Right ()
+
+        it "validates stored sync cursors before Calendar sync fallback handling" $ do
+            validateGoogleCalendarSyncCursor Nothing `shouldBe` Right Nothing
+            validateGoogleCalendarSyncCursor (Just " sync-token_123 ")
+                `shouldBe` Right (Just "sync-token_123")
+
+            let assertInvalid rawCursor =
+                    case validateGoogleCalendarSyncCursor (Just rawCursor) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Stored Google Calendar sync cursor is invalid"
+                        Right cursor ->
+                            expectationFailure
+                                ( "Expected invalid stored Calendar sync cursor, got: "
+                                    <> show cursor
+                                )
+            assertInvalid "   "
+            assertInvalid "sync token"
+            assertInvalid ("sync" <> T.singleton '\NUL' <> "token")
+            assertInvalid ("sync" <> T.singleton '\x202E' <> "token")
+            assertInvalid (T.replicate 4097 "a")
 
         it "rejects requested ranges when an existing cursor would make Google ignore them" $ do
             let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)

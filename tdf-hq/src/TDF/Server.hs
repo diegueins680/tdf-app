@@ -2700,13 +2700,35 @@ validateCalendarSyncWindow
   -> Maybe UTCTime
   -> Either ServerError ()
 validateCalendarSyncWindow mSyncCursor mFrom mTo =
-  case (mSyncCursor, mFrom <|> mTo) of
-    (Just _, Just _) ->
+  case (validateGoogleCalendarSyncCursor mSyncCursor, mFrom <|> mTo) of
+    (Left err, _) -> Left err
+    (Right (Just _), Just _) ->
       Left err400
         { errBody =
             "Calendar sync range cannot be combined with an existing Google sync cursor"
         }
     _ -> Right ()
+
+validateGoogleCalendarSyncCursor :: Maybe Text -> Either ServerError (Maybe Text)
+validateGoogleCalendarSyncCursor Nothing = Right Nothing
+validateGoogleCalendarSyncCursor (Just rawCursor)
+  | T.null cursorVal =
+      Left err500 { errBody = "Stored Google Calendar sync cursor is invalid" }
+  | T.length cursorVal > maxGoogleCalendarSyncCursorChars =
+      Left err500 { errBody = "Stored Google Calendar sync cursor is invalid" }
+  | T.any isControl cursorVal =
+      Left err500 { errBody = "Stored Google Calendar sync cursor is invalid" }
+  | T.any isHiddenDriveOAuthTokenChar cursorVal =
+      Left err500 { errBody = "Stored Google Calendar sync cursor is invalid" }
+  | T.any isSpace cursorVal =
+      Left err500 { errBody = "Stored Google Calendar sync cursor is invalid" }
+  | otherwise =
+      Right (Just cursorVal)
+  where
+    cursorVal = T.strip rawCursor
+
+maxGoogleCalendarSyncCursorChars :: Int
+maxGoogleCalendarSyncCursorChars = 4096
 
 validateCalendarEventStatusQuery :: Maybe Text -> Either ServerError (Maybe Text)
 validateCalendarEventStatusQuery Nothing = Right Nothing
@@ -2884,9 +2906,12 @@ calendarServer user =
         Nothing -> throwError err404
         Just (Entity cfgId cfg) -> do
           now <- liftIO getCurrentTime
+          syncCursorVal <- either throwError pure $
+            validateGoogleCalendarSyncCursor (Cal.googleCalendarConfigSyncCursor cfg)
           either throwError pure $
-            validateCalendarSyncWindow (Cal.googleCalendarConfigSyncCursor cfg) from to
-          cfgFresh <- ensureAccessToken cidEnv secEnv redirectEnv cfg now
+            validateCalendarSyncWindow syncCursorVal from to
+          let cfgValidated = cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal }
+          cfgFresh <- ensureAccessToken cidEnv secEnv redirectEnv cfgValidated now
           (createdCount, updatedCount, cancelledCount, newCursor) <-
             syncFromGoogle cfgFresh from to now
           runDB $ update cfgId
