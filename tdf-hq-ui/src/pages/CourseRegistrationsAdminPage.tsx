@@ -160,6 +160,8 @@ const markPaidEmptyFollowUpHelperText = 'Agrega seguimiento solo si necesitas de
 const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
+const markPaidOptionalFollowUpActionLabel = 'Agregar seguimiento';
+const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
@@ -6076,8 +6078,14 @@ export default function CourseRegistrationsAdminPage() {
                                 <Typography variant="body2" color="text.secondary">
                                   {markPaidEmptyFollowUpHelperText}
                                 </Typography>
-                                <Button size="small" variant="text" onClick={() => setShowFollowUpComposer(true)}>
-                                  Agregar seguimiento opcional
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  onClick={() => setShowFollowUpComposer(true)}
+                                  aria-label={markPaidOptionalFollowUpAccessibleLabel}
+                                  title={markPaidOptionalFollowUpAccessibleLabel}
+                                >
+                                  {markPaidOptionalFollowUpActionLabel}
                                 </Button>
                               </Stack>
                             ) : followUps.length === 0 && !showFollowUpComposer ? (

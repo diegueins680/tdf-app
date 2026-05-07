@@ -201,6 +201,8 @@ const markPaidEmptyNotesHelperText =
   'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const markPaidEmptyFollowUpHelperText =
   'Agrega seguimiento solo si necesitas dejar contexto manual aparte del comprobante o del cambio de estado.';
+const markPaidOptionalFollowUpActionLabel = 'Agregar seguimiento';
+const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
@@ -5685,14 +5687,18 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(document.body, 'Seguimiento (opcional)')).toBe(true);
       expect(document.body.textContent).toContain(markPaidEmptyFollowUpHelperText);
-      expect(getButtonByText(document.body, 'Agregar seguimiento opcional')).toBeTruthy();
+      const followUpAction = getButtonByText(document.body, markPaidOptionalFollowUpActionLabel);
+      expect(followUpAction).toBeTruthy();
+      expect(followUpAction.getAttribute('aria-label')).toBe(markPaidOptionalFollowUpAccessibleLabel);
+      expect(followUpAction.getAttribute('title')).toBe(markPaidOptionalFollowUpAccessibleLabel);
+      expect(countButtonsByText(document.body, markPaidOptionalFollowUpAccessibleLabel)).toBe(0);
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar seguimiento opcional'));
+      clickButton(getButtonByText(document.body, markPaidOptionalFollowUpActionLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -5701,7 +5707,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(document.body, 'Primer seguimiento')).toBe(true);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
       expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
-      expect(countButtonsByText(document.body, 'Agregar seguimiento opcional')).toBe(0);
+      expect(countButtonsByText(document.body, markPaidOptionalFollowUpActionLabel)).toBe(0);
       expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
     });
 
