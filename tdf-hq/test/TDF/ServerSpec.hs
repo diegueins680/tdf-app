@@ -9358,6 +9358,17 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected duplicated Admin roles to be rejected, got: " <> show value)
 
+        it "does not expose role-grant diagnostics to non-admin fallback discovery callers" $ do
+            let duplicatedManager = mkUser [Manager, Manager]
+            case validateFutureAdminAccess duplicatedManager of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                    BL8.unpack (errBody serverErr) `shouldNotContain` "role grants"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicated non-admin access to be rejected, got: " <> show value)
+
         it "accepts default Admin role scope but rejects mixed staff roles before discovery" $ do
             validateFutureAdminAccess futureAdminUser `shouldBe` Right ()
 
