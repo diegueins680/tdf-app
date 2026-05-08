@@ -1223,6 +1223,10 @@ spec = do
                 "{\"ipuSkills\":\"Patch bays\",\"skills\":\"typo duplicate\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty profile patches instead of creating or returning no-op profiles" $
+            decodeInternProfileUpdate "{}"
+                `shouldSatisfy` isLeft
+
     describe "InternTaskCreate FromJSON" $ do
         it "accepts canonical task create payloads" $
             case decodeInternTaskCreate
