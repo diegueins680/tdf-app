@@ -399,6 +399,7 @@ const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar cuentas inactivas';
 const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en cuentas inactivas';
+const ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION = 'Buscar cuentas inactivas';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
 const INCLUDE_INACTIVE_SEARCH_FILTER_LABEL = 'Buscar también en inactivos';
@@ -872,6 +873,13 @@ const isActiveStatusSearchQuery = (value: string) => {
     && queryVariants.every((query) => ACTIVE_STATUS_SEARCH_VALUES.includes(query));
 };
 
+const isInactiveStatusSearchQuery = (value: string) => {
+  const queryVariants = getSearchValueVariants(value);
+
+  return queryVariants.length > 0
+    && queryVariants.every((query) => INACTIVE_STATUS_SEARCH_VALUES.includes(query));
+};
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
@@ -1046,8 +1054,13 @@ export default function AdminUsersPage() {
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const hasActiveStatusSearch = hasActiveSearch && isActiveStatusSearchQuery(searchQuery);
+  const hasInactiveStatusSearch = hasActiveSearch && isInactiveStatusSearchQuery(searchQuery);
+  const hasStatusSearch = hasActiveStatusSearch || hasInactiveStatusSearch;
   const showReviewInactiveSearchEmptyAction =
     showSearchEmptyState && !includeInactive && !hasActiveStatusSearch;
+  const reviewInactiveSearchEmptyActionLabel = hasInactiveStatusSearch
+    ? ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION
+    : ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION;
   const hasConfirmedNoInactiveUsers =
     includeInactive
     && hasUsers
@@ -1062,7 +1075,7 @@ export default function AdminUsersPage() {
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === 0;
   const showInactiveFilterAction = !showSearchEmptyState
-    && !hasActiveStatusSearch
+    && !hasStatusSearch
     && !hasConfirmedNoInactiveUsers
     && !hasConfirmedNoInactiveSearchMatches
     && (hasMultipleUsers || (includeInactive && hasUsers));
@@ -1514,7 +1527,7 @@ export default function AdminUsersPage() {
                       variant="outlined"
                       onClick={() => setIncludeInactive(true)}
                     >
-                      {ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION}
+                      {reviewInactiveSearchEmptyActionLabel}
                     </Button>
                   </Stack>
                 )}

@@ -46,6 +46,20 @@ status() {
   fi
 }
 
+rotate_log_if_needed() {
+  local max_bytes=104857600
+  local keep_lines=10000
+  if [ ! -f "$LOG_FILE" ]; then
+    return 0
+  fi
+  local log_size
+  log_size="$(wc -c < "$LOG_FILE" 2>/dev/null || echo 0)"
+  if [ "$log_size" -gt "$max_bytes" ]; then
+    tail -n "$keep_lines" "$LOG_FILE" > "${LOG_FILE}.tmp"
+    mv "${LOG_FILE}.tmp" "$LOG_FILE"
+  fi
+}
+
 start() {
   local existing_pid
   existing_pid="$(read_pid)"
@@ -56,6 +70,8 @@ start() {
   fi
 
   node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only
+
+  rotate_log_if_needed
 
   rm -f "$STOP_FILE" "$PID_FILE"
   nohup "$SUPERVISOR" "$CONFIG" >> "$LOG_FILE" 2>&1 < /dev/null &
