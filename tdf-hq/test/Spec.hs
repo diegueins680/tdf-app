@@ -3218,6 +3218,12 @@ main = hspec $ do
                 "buyerEmail must be a valid email address"
                 "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"not-an-email\"}"
             assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"buyer@example.123\"}"
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"buyer@example.c\"}"
+            assertInvalid
                 "buyerEmail must be 254 characters or fewer"
                 ( "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\""
                     <> Data.Text.unpack (Data.Text.replicate 245 "a")
@@ -3499,6 +3505,12 @@ main = hspec $ do
             assertInvalid
                 "customer.email must be a valid email address"
                 (Just "customer@-example.com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example.123")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example.c")
             assertInvalid
                 "customer.email must be 254 characters or fewer"
                 (Just (Data.Text.replicate 245 "a" <> "@example.com"))

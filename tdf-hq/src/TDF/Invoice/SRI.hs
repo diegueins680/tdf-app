@@ -464,7 +464,16 @@ isValidSriEmail candidate =
     [localPart, domain] ->
       isValidSriEmailLocalPart localPart
         && T.isInfixOf "." domain
+        && hasValidSriEmailFinalDomainLabel domain
         && all isValidSriEmailDomainLabel (T.splitOn "." domain)
+    _ ->
+      False
+
+hasValidSriEmailFinalDomainLabel :: Text -> Bool
+hasValidSriEmailFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
     _ ->
       False
 
