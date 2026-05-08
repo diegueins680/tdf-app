@@ -69,7 +69,7 @@ const normalizeInitialCohortPreviewKey = (label: string) =>
     .trim()
     .toLocaleLowerCase('es');
 
-const formatInitialCohortPreview = (labels: readonly string[]) => {
+const uniqueInitialCohortLabels = (labels: readonly string[]) => {
   const uniqueLabelsByKey = new Map<string, string>();
 
   labels.forEach((label) => {
@@ -82,33 +82,45 @@ const formatInitialCohortPreview = (labels: readonly string[]) => {
     }
   });
 
-  const uniqueLabels = Array.from(uniqueLabelsByKey.values());
-  if (uniqueLabels.length === 0) return '';
+  return Array.from(uniqueLabelsByKey.values());
+};
+
+const formatInitialCohortLabelList = (labels: readonly string[]) => {
+  if (labels.length === 0) return '';
+
+  if (labels.length === 1) return labels[0] ?? '';
+  if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+};
+
+const formatInitialCohortPreview = (labels: readonly string[]) => {
+  const uniqueLabels = uniqueInitialCohortLabels(labels);
   const visibleLabels = uniqueLabels.slice(0, INITIAL_COHORT_PREVIEW_LIMIT);
   const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
   const hiddenCount = uniqueLabels.length > 1 ? hiddenUniqueLabelCount : 0;
 
   if (hiddenCount > 0) {
     const hiddenLabel = `${hiddenCount} ${hiddenCount === 1 ? 'curso más' : 'cursos más'}`;
-    if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenLabel}`;
-    return `${visibleLabels.join(', ')} y ${hiddenLabel}`;
+    return formatInitialCohortLabelList([...visibleLabels, hiddenLabel]);
   }
 
-  if (visibleLabels.length === 1) return visibleLabels[0] ?? '';
-  if (visibleLabels.length === 2) return `${visibleLabels[0]} y ${visibleLabels[1]}`;
-  return `${visibleLabels[0]}, ${visibleLabels[1]} y ${visibleLabels[2]}`;
+  return formatInitialCohortLabelList(visibleLabels);
 };
 
 const countInitialCohortPreviewLabels = (labels: readonly string[]) => {
-  const uniqueLabelKeys = new Set<string>();
+  return uniqueInitialCohortLabels(labels).length;
+};
 
-  labels.forEach((label) => {
-    const trimmedLabel = label.trim();
-    if (!trimmedLabel) return;
-    uniqueLabelKeys.add(normalizeInitialCohortPreviewKey(trimmedLabel));
-  });
+const buildInitialEmptyStateMultiCohortActionTitle = (count: number, labels: readonly string[] = []) => {
+  const uniqueLabels = uniqueInitialCohortLabels(labels);
+  if (uniqueLabels.length === 0) return initialEmptyStateMultiCohortActionAriaLabel;
 
-  return uniqueLabelKeys.size;
+  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} públicos`;
+  if (count > 1 && uniqueLabels.length === 1) {
+    return `Elegir entre ${formsLabel} para ${uniqueLabels[0]}.`;
+  }
+
+  return `Elegir entre ${formsLabel}: ${formatInitialCohortLabelList(uniqueLabels)}.`;
 };
 
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
@@ -3432,12 +3444,13 @@ export default function CourseRegistrationsAdminPage() {
       ? retrySystemEmailsLabel
       : showSystemEmailsLabel;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
+  const configuredCohortFirstRunLabels = configuredCohortOptions.map((option) => option.firstRunLabel);
   const initialEmptyStateMessage = firstRunCohort
     ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
       ? buildInitialEmptyStateMultiCohortMessage(
         configuredCohortOptions.length,
-        configuredCohortOptions.map((option) => option.firstRunLabel),
+        configuredCohortFirstRunLabels,
       )
     : initialEmptyStateConfigMessage;
   const initialEmptyStateAction = firstRunCohort
@@ -3458,7 +3471,10 @@ export default function CourseRegistrationsAdminPage() {
         ? initialEmptyStateMultiCohortActionAriaLabel
         : initialEmptyStateConfigActionAriaLabel,
       title: hasMultipleAvailableCohorts
-        ? initialEmptyStateMultiCohortActionAriaLabel
+        ? buildInitialEmptyStateMultiCohortActionTitle(
+          configuredCohortOptions.length,
+          configuredCohortFirstRunLabels,
+        )
         : initialEmptyStateConfigActionAriaLabel,
       target: undefined,
       rel: undefined,
