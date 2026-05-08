@@ -34,6 +34,7 @@ module TDF.ServerAdmin
   , validateDropdownOptionValue
   , validateDropdownOptionLabel
   , validateBrainEntryTitle
+  , validateBrainEntryBody
   , normalizeBrainEntryTags
   ) where
 
@@ -496,11 +497,10 @@ adminServer user =
     brainCreateHandler BrainEntryCreate{..} = do
       ensureModule ModuleAdmin user
       title <- either throwError pure (validateBrainEntryTitle becTitle)
-      let body = T.strip becBody
-          category = cleanMaybe becCategory
+      body <- either throwError pure (validateBrainEntryBody becBody)
+      let category = cleanMaybe becCategory
           active = fromMaybe True becActive
       tags <- either throwError pure (normalizeBrainEntryTags becTags)
-      when (T.null body) $ throwError err400 { errBody = "Contenido requerido" }
       now <- liftIO getCurrentTime
       entryId <- withPool $ insert ME.StudioBrainEntry
         { ME.studioBrainEntryTitle = title
@@ -517,10 +517,8 @@ adminServer user =
     brainUpdateHandler entryId BrainEntryUpdate{..} = do
       ensureModule ModuleAdmin user
       let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
-          bodyUpdate = T.strip <$> beuBody
       titleUpdate <- traverse (either throwError pure . validateBrainEntryTitle) beuTitle
-      for_ bodyUpdate $ \t -> when (T.null t) $
-        throwError err400 { errBody = "Contenido requerido" }
+      bodyUpdate <- traverse (either throwError pure . validateBrainEntryBody) beuBody
       tagsUpdate <- case beuTags of
         Nothing -> pure Nothing
         Just rawTags ->
@@ -1443,6 +1441,9 @@ maxBrainEntryTagChars = 40
 brainEntryTitleMaxChars :: Int
 brainEntryTitleMaxChars = 160
 
+brainEntryBodyMaxChars :: Int
+brainEntryBodyMaxChars = 20000
+
 validateBrainEntryTitle :: Text -> Either ServerError Text
 validateBrainEntryTitle rawTitle
   | T.null title =
@@ -1458,6 +1459,27 @@ validateBrainEntryTitle rawTitle
       Right title
   where
     title = T.strip rawTitle
+
+validateBrainEntryBody :: Text -> Either ServerError Text
+validateBrainEntryBody rawBody
+  | T.null body =
+      Left err400 { errBody = "Brain entry body is required" }
+  | T.length body > brainEntryBodyMaxChars =
+      Left err400 { errBody = "Brain entry body must be 20000 characters or fewer" }
+  | T.any isUnsupportedBrainEntryBodyChar body =
+      Left err400
+        { errBody =
+            "Brain entry body must not contain unsupported control or hidden format characters"
+        }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+isUnsupportedBrainEntryBodyChar :: Char -> Bool
+isUnsupportedBrainEntryBodyChar ch =
+  (isControl ch && ch `notElem` ['\n', '\r', '\t'])
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizeBrainEntryTags :: Maybe [Text] -> Either ServerError (Maybe [Text])
 normalizeBrainEntryTags Nothing = Right Nothing

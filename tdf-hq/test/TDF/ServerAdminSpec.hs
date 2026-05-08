@@ -69,6 +69,7 @@ import TDF.ServerAdmin (
     validateDropdownOptionCategory,
     validateDropdownOptionValue,
     validateDropdownOptionLabel,
+    validateBrainEntryBody,
     normalizeBrainEntryTags,
   )
 
@@ -592,6 +593,31 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "must not contain hidden format characters"
                 (normalizeBrainEntryTags (Just ["ops" <> T.singleton '\x202E' <> "internal"]))
+
+    describe "validateBrainEntryBody" $ do
+        it "trims Studio Brain bodies while preserving supported multiline text" $
+            validateBrainEntryBody "  Paso 1\n\tRevisar logs\r\nPaso 2  "
+                `shouldBe` Right "Paso 1\n\tRevisar logs\r\nPaso 2"
+
+        it "rejects malformed Studio Brain bodies before RAG indexing" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid brain entry body, got " <> show value)
+            assertInvalid
+                "body is required"
+                (validateBrainEntryBody "   ")
+            assertInvalid
+                "20000 characters or fewer"
+                (validateBrainEntryBody (T.replicate 20001 "x"))
+            assertInvalid
+                "unsupported control or hidden format characters"
+                (validateBrainEntryBody ("Paso 1" <> T.singleton '\NUL' <> "Paso 2"))
+            assertInvalid
+                "unsupported control or hidden format characters"
+                (validateBrainEntryBody ("Paso 1" <> T.singleton '\x202E' <> "Paso 2"))
 
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
