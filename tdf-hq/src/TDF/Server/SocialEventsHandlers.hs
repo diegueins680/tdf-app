@@ -68,7 +68,7 @@ module TDF.Server.SocialEventsHandlers
   ) where
 
 import           Control.Applicative ((<|>))
-import           Control.Monad (forM, forM_, replicateM, unless, when)
+import           Control.Monad (filterM, forM, forM_, replicateM, unless, when)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
@@ -548,14 +548,16 @@ socialEventsServer user = eventsServer
             else pure [SocialEventId <-. eventIds]
       let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
       rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
-      let matchesMeta eventRow =
-            let meta = decodeEventMetadata (socialEventMetadata eventRow)
-                typeOk = maybe True (\t -> emType meta == Just t) typeNeedle
+      let matchesMeta (Entity _ eventRow) = do
+            meta <- either (throwError . storedEventMetadataServerError) pure $
+              decodeStoredEventMetadata (socialEventMetadata eventRow)
+            let typeOk = maybe True (\t -> emType meta == Just t) typeNeedle
                 statusOk = maybe True (\s -> emStatus meta == Just s) statusNeedle
-            in typeOk && statusOk
-      forM (filter (matchesMeta . entityVal) rows) $ \(Entity eid eventRow) -> do
+            pure (typeOk && statusOk)
+      filteredRows <- filterM matchesMeta rows
+      forM filteredRows $ \(Entity eid eventRow) -> do
         artists <- liftIO $ loadEventArtists envPool eid
-        pure (eventEntityToDTO eid eventRow artists)
+        either throwError pure (eventEntityToDTO eid eventRow artists)
 
     createEvent :: EventDTO -> AppM EventDTO
     createEvent dto = do
@@ -632,7 +634,7 @@ socialEventsServer user = eventsServer
         Nothing -> throwError err404 { errBody = "Event not found" }
         Just eventRow -> do
           artists <- liftIO $ loadEventArtists envPool eventKey
-          pure (eventEntityToDTO eventKey eventRow artists)
+          either throwError pure (eventEntityToDTO eventKey eventRow artists)
 
     updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
     updateEvent rawId EventUpdateDTO{..} = do
@@ -652,8 +654,9 @@ socialEventsServer user = eventsServer
           (eventBudgetCents dto)
       validatedMetadataUpdate <- either throwError pure (validateEventMetadataUpdate eudMetadataUpdate)
       artistKeys <- either throwError pure (validateEventArtistIds (eventArtists dto))
-      let existingMetadata = decodeEventMetadata (socialEventMetadata managedEvent)
-          mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
+      existingMetadata <- either (throwError . storedEventMetadataServerError) pure $
+        decodeStoredEventMetadata (socialEventMetadata managedEvent)
+      let mergedMetadata = applyEventMetadataUpdate validatedMetadataUpdate existingMetadata
       mVenueKey <- case eventVenueId dto of
         Nothing -> pure Nothing
         Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
@@ -706,6 +709,8 @@ socialEventsServer user = eventsServer
           }
 
       uuid <- liftIO UUIDV4.nextRandom
+      existingMeta <- either (throwError . storedEventMetadataServerError) pure $
+        decodeStoredEventMetadata (socialEventMetadata eventRow)
       let eventIdTxt = renderKeyText eventKey
           storedName = UUID.toText uuid <> "-" <> safeName
           relPath = T.intercalate "/" ["social-events", "events", eventIdTxt, storedName]
@@ -713,7 +718,6 @@ socialEventsServer user = eventsServer
           targetPath = targetDir </> T.unpack storedName
           assetsBase = resolveConfiguredAssetsBase envConfig
           publicUrl = buildUploadAssetUrl assetsBase relPath
-          existingMeta = decodeEventMetadata (socialEventMetadata eventRow)
           updatedMeta = existingMeta { emImageUrl = Just publicUrl }
       fileSize <- liftIO (getFileSize (fdPayload eiuFile))
       either throwError pure (validateEventImageUploadSize fileSize)
@@ -3342,10 +3346,12 @@ loadEventMoments pool eventKey = runSqlPool (do
     pure (momentEntityToDTO momentKey momentRow reactions comments)
   ) pool
 
-eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> EventDTO
-eventEntityToDTO eid eventRow artists =
-  let metadata = decodeEventMetadata (socialEventMetadata eventRow)
-  in EventDTO
+eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
+eventEntityToDTO eid eventRow artists = do
+  metadata <-
+    either (Left . storedEventMetadataServerError) Right $
+      decodeStoredEventMetadata (socialEventMetadata eventRow)
+  Right EventDTO
       { eventId = Just (renderKeyText eid)
       , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
       , eventTitle = socialEventTitle eventRow

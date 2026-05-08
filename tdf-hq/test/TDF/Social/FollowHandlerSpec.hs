@@ -145,6 +145,42 @@ spec = describe "social event handler helpers" $ do
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
 
+    it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 11
+        runSqlPool
+            ( insertKey
+                eventKey
+                ( (seedSocialEvent "1" "Corrupt metadata event" now)
+                    { socialEventMetadata = Just "not-json"
+                    }
+                )
+            )
+            pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by social event get tests"
+                    }
+        result <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor (socialEventUser 1) "11")
+                    env
+
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 500
+                BL8.unpack (errBody err)
+                    `shouldContain` "Stored event metadata is invalid JSON"
+            Right value ->
+                expectationFailure
+                    ("Expected malformed stored event metadata to be rejected, got: " <> show value)
+
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -298,6 +334,17 @@ socialEventUpdateHandlerFor user =
             case eventsServer of
                 _listEvents :<|> _createEvent :<|> _getEvent :<|> updateEventHandler :<|> _uploadEventImage :<|> _deleteEvent ->
                     updateEventHandler
+
+socialEventGetHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler EventDTO
+socialEventGetHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _venues :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _tickets :<|> _budget :<|> _finance ->
+            case eventsServer of
+                _listEvents :<|> _createEvent :<|> getEventHandler :<|> _updateEvent :<|> _uploadEventImage :<|> _deleteEvent ->
+                    getEventHandler
 
 socialEventInvitationCreateHandlerFor
     :: AuthedUser
