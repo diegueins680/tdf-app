@@ -8145,6 +8145,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid ".user@example.com"
             assertInvalid "user.@example.com"
             assertInvalid "user..name@example.com"
+            assertInvalid "user@example.123"
+            assertInvalid "user@example.c"
             assertInvalid "user()@example.com"
             assertInvalid "usér@example.com"
             assertInvalid (T.replicate 65 "a" <> "@example.com")
@@ -8206,6 +8208,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer@-example.com" "buyerEmail inválido"
             assertInvalid "buyer@example-.com" "buyerEmail inválido"
             assertInvalid "buyer..name@example.com" "buyerEmail inválido"
+            assertInvalid "buyer@example.123" "buyerEmail inválido"
+            assertInvalid "buyer@example.c" "buyerEmail inválido"
             assertInvalid "buyer()@example.com" "buyerEmail inválido"
 
     describe "validateMarketplaceBuyerPhone" $ do

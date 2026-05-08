@@ -5199,7 +5199,16 @@ isValidCourseRegistrationEmail candidate =
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && T.isInfixOf "." domain
+        && hasValidEmailTopLevelLabel domain
         && all isValidEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+hasValidEmailTopLevelLabel :: Text -> Bool
+hasValidEmailTopLevelLabel domain =
+  case reverse (T.splitOn "." domain) of
+    topLevelLabel : _ ->
+      T.length topLevelLabel >= 2
+        && T.any isAsciiLower topLevelLabel
     _ -> False
 
 isValidEmailLocalPart :: Text -> Bool

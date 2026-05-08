@@ -537,7 +537,16 @@ isValidMarketplaceBuyerEmail candidate =
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && T.isInfixOf "." domain
+        && hasValidMarketplaceEmailTopLevelLabel domain
         && all isValidMarketplaceEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+hasValidMarketplaceEmailTopLevelLabel :: Text -> Bool
+hasValidMarketplaceEmailTopLevelLabel domain =
+  case reverse (T.splitOn "." domain) of
+    topLevelLabel : _ ->
+      T.length topLevelLabel >= 2
+        && T.any isAsciiLower topLevelLabel
     _ -> False
 
 isValidMarketplaceEmailLocalPart :: Text -> Bool
