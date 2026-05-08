@@ -321,6 +321,15 @@ validateEventMetadataUrlField fieldName (Just rawUrl) =
   case cleanMaybeText (Just rawUrl) of
     Nothing -> Right Nothing
     Just urlVal
+      | T.length urlVal > maxEventMetadataUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> " must be "
+                    <> T.pack (show maxEventMetadataUrlChars)
+                    <> " characters or fewer"
+            }
       | Just normalizedUrl <- normalizeEventMetadataUrl (Just urlVal) ->
           Right (Just normalizedUrl)
       | otherwise ->
@@ -334,9 +343,13 @@ normalizeEventMetadataUrl :: Maybe T.Text -> Maybe T.Text
 normalizeEventMetadataUrl rawValue = do
   urlVal <- cleanMaybeText rawValue
   if "https://" `T.isPrefixOf` T.toLower urlVal
+      && T.length urlVal <= maxEventMetadataUrlChars
       && TrialsServer.isValidHttpUrl urlVal
     then Just urlVal
     else Nothing
+
+maxEventMetadataUrlChars :: Int
+maxEventMetadataUrlChars = 2048
 
 validateCreateNormalizedTextDefault
   :: BL.ByteString

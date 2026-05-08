@@ -109,6 +109,10 @@ spec = describe "social event handler helpers" $ do
             "eventImageUrl"
             "https://localhost/event.jpg"
             "eventImageUrl must be an absolute https URL"
+        assertInvalid
+            "eventTicketUrl"
+            ("https://tickets.example.com/event/" <> T.replicate 2049 "a")
+            "eventTicketUrl must be 2048 characters or fewer"
 
         case validateEventMetadataUpdate
             emptyEventMetadataUpdate
