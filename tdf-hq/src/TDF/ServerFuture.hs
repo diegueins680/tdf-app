@@ -229,10 +229,17 @@ validateFutureStubCatalogAreaOrder catalog = do
   let areaGroups = group (map fst validatedCatalog)
       expectedAreaGroups = group (map fst allowedFutureStubMetadata)
       areaRuns = map head areaGroups
+      entriesFor area = filter ((== area) . fst) validatedCatalog
+      expectedEntriesFor area = filter ((== area) . fst) allowedFutureStubMetadata
+      areaEntriesMatch =
+        all
+          (\area -> entriesFor area == expectedEntriesFor area)
+          allowedFutureStubAreas
   if length validatedCatalog /= length (nub validatedCatalog)
        || areaRuns /= allowedFutureStubAreas
        || map length areaGroups /= map length expectedAreaGroups
        || length areaRuns /= length (nub areaRuns)
+       || not areaEntriesMatch
     then invalidFutureStubCatalog
     else Right areaRuns
 

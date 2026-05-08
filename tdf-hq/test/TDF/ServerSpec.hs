@@ -9853,8 +9853,15 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure
                                 ("Expected invalid fallback discovery area order, got: " <> show value)
             case (accessEntries, crmEntries) of
-                (firstAccess : secondAccess : _, firstCrm : _) ->
+                (firstAccess : secondAccess : remainingAccess, firstCrm : _) -> do
                     assertInvalid [firstAccess, firstCrm, secondAccess]
+                    assertInvalid
+                        ( [ secondAccess
+                          , firstAccess
+                          ]
+                            <> remainingAccess
+                            <> filter ((/= "access") . fst) allowedFutureStubMetadata
+                        )
                 _ ->
                     expectationFailure "Expected fallback discovery area fixtures to include access and crm entries"
 
