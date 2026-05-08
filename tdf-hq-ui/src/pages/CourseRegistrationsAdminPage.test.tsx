@@ -13755,7 +13755,7 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips sales-page descriptors from first-run cohort copy', async () => {
+  it('strips sales and ticket-page descriptors from first-run cohort copy', async () => {
     const titles = [
       'Sales page - Beatmaking 101',
       'Order form for Beatmaking 101',
@@ -13763,6 +13763,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Página de ventas - Beatmaking 101',
       'Formulario de compra para Beatmaking 101',
       'Beatmaking 101 - enlace de venta',
+      'Tickets - Beatmaking 101',
+      'Ticket page for Beatmaking 101',
+      'Beatmaking 101 - tickets link',
+      'Página de tickets - Beatmaking 101',
+      'Beatmaking 101 - entradas',
+      'Beatmaking 101 - enlace de entradas',
     ];
 
     for (const title of titles) {
@@ -13778,7 +13784,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/sales page|order form|purchase page|p[aá]gina de ventas|formulario de compra|enlace de venta/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /sales page|order form|purchase page|tickets?|entradas?|p[aá]gina de ventas|formulario de compra|enlace de venta/i,
+        );
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
@@ -13788,6 +13796,32 @@ describe('CourseRegistrationsAdminPage', () => {
 
       await cleanup();
     }
+  });
+
+  it('keeps legitimate ticket course titles in first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'tickets-live-music', ccTitle: 'Tickets for Live Music Teams' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Tickets for Live Music Teams. La página pública ya está lista para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Live Music Teams.');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/tickets-live-music"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Tickets for Live Music Teams');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
   });
 
   it('strips signup-form descriptors from first-run cohort copy', async () => {

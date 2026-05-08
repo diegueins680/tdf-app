@@ -931,10 +931,10 @@ const firstRunOpenEnrollmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:open|abiertas?)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)|(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)\s+open|(?:pre[-\s]?)?inscripci[oó]n(?:es)?\s+abiertas?|matr[ií]cula(?:s)?\s+abiertas?)\s*$/i;
 
 const firstRunSalesDescriptorPrefixPattern =
-  /^(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
+  /^(?:(?:(?:sales?|purchase|order|tickets?)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras|tickets?|entradas?|boletos?)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?|tickets?|entradas?|boletos?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:tickets?|entradas?|boletos?)\s*[-:/|]\s*)/i;
 
 const firstRunSalesDescriptorSuffixPattern =
-  /(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))\s*$/i;
+  /(?:(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:sales?|purchase|order|tickets?)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras|tickets?|entradas?|boletos?)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?|tickets?|entradas?|boletos?))|\s*[-:/|]\s*(?:tickets?|entradas?|boletos?))\s*$/i;
 
 const firstRunPaymentDescriptorPrefixPattern =
   /^(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
