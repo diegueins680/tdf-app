@@ -108,7 +108,13 @@ data SubjectUpdate = SubjectUpdate
   } deriving (Generic)
 instance ToJSON SubjectUpdate
 instance FromJSON SubjectUpdate where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    payload@(SubjectUpdate nameValue activeValue) <- genericParseJSON strictRequestObjectOptions value
+    case (nameValue, activeValue) of
+      (Nothing, Nothing) ->
+        fail "SubjectUpdate must include at least one field"
+      _ ->
+        pure payload
 
 data PackageDTO = PackageDTO { packageId :: Int, name :: Text, hoursQty :: Int, priceCents :: Int, expiresDays :: Int } deriving (Generic)
 instance ToJSON PackageDTO; instance FromJSON PackageDTO

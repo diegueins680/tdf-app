@@ -830,6 +830,9 @@ spec = do
           "{\"active\":false,\"unexpected\":true}"
             :: Either String SubjectUpdate)
         `shouldBe` True
+      isLeft
+        (A.eitherDecode "{}" :: Either String SubjectUpdate)
+        `shouldBe` True
 
   describe "StudentCreate request decoding" $ do
     it "accepts canonical private student create payloads" $ do
