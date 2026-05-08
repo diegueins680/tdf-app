@@ -137,6 +137,7 @@ import TDF.Server
     , resolveServiceMarketplaceBookingEntity
     , validateMetaBackfillOptions
     , validateMetaBackfillConversationId
+    , validateMetaBackfillMessageCreatedAt
     , parsePaymentMethodText
     , validateBookingTimeRange
     , validateEngineer
@@ -3090,6 +3091,34 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "conversation/../../me"
             assertInvalid "conversation?fields=messages"
             assertInvalid "---"
+
+    describe "validateMetaBackfillMessageCreatedAt" $ do
+        it "normalizes valid upstream message timestamps before persistence" $
+            validateMetaBackfillMessageCreatedAt (Just " 2026-05-08T12:34:56Z ")
+                `shouldBe`
+                    Right
+                        ( UTCTime
+                            (fromGregorian 2026 5 8)
+                            (secondsToDiffTime 45296)
+                        )
+
+        it "rejects missing or malformed upstream timestamps instead of falling back to import time" $ do
+            let assertInvalid expectedMessage rawCreatedAt =
+                    case validateMetaBackfillMessageCreatedAt rawCreatedAt of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Meta message timestamp to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "Meta Graph message missing created_time" Nothing
+            assertInvalid "Meta Graph message missing created_time" (Just "   ")
+            assertInvalid
+                "Meta Graph returned an invalid message created_time"
+                (Just "not-a-timestamp")
 
     describe "validateCmsContentStatus" $ do
         it "defaults omitted status to draft and normalizes supported explicit values" $ do

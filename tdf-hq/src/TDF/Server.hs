@@ -1511,6 +1511,17 @@ parseMetaMessageTime :: Maybe Text -> Maybe UTCTime
 parseMetaMessageTime Nothing = Nothing
 parseMetaMessageTime (Just txt) = iso8601ParseM (T.unpack (T.strip txt))
 
+validateMetaBackfillMessageCreatedAt :: Maybe Text -> Either ServerError UTCTime
+validateMetaBackfillMessageCreatedAt rawCreatedTime =
+  case cleanOptional rawCreatedTime of
+    Nothing ->
+      Left err502 { errBody = "Meta Graph message missing created_time" }
+    Just createdTime ->
+      case iso8601ParseM (T.unpack createdTime) of
+        Nothing ->
+          Left err502 { errBody = "Meta Graph returned an invalid message created_time" }
+        Just parsed -> Right parsed
+
 serverErrorToText :: ServerError -> Text
 serverErrorToText err =
   let bodyTxt = T.strip (TE.decodeUtf8 (BL.toStrict (errBody err)))
@@ -1683,7 +1694,6 @@ storeBackfilledMessage
   -> Value
   -> AppM Bool
 storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = do
-  now <- liftIO getCurrentTime
   let externalId = jsonTextField "id" msgVal
       mFrom = jsonValueField "from" msgVal
       mAttachments = jsonValueField "attachments" msgVal
@@ -1694,7 +1704,6 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
         case bodyRaw of
           Just txt | not (T.null (T.strip txt)) -> T.strip txt
           _ -> "[attachment]"
-      createdAt = fromMaybe now (parseMetaMessageTime (jsonTextField "created_time" msgVal))
       metaPairs =
         [ "backfilled" .= True
         , "conversationId" .= conversationId
@@ -1703,8 +1712,11 @@ storeBackfilledMessage channel MetaBackfillOptions{..} conversationId msgVal = d
         <> maybe [] (\fromVal -> ["from" .= fromVal]) mFrom
         <> maybe [] (\attVal -> ["attachments" .= attVal]) mAttachments
       metadata = TE.decodeUtf8 (BL.toStrict (encode (object metaPairs)))
-  case (externalId, senderId) of
-    (Just extId, Just sid) | not (T.null (T.strip extId)) && not (T.null (T.strip sid)) -> do
+  case (cleanOptional externalId, cleanOptional senderId) of
+    (Just extId, Just sid) -> do
+      createdAt <-
+        either throwError pure $
+          validateMetaBackfillMessageCreatedAt (jsonTextField "created_time" msgVal)
       if mboDryRun
         then pure True
         else do
