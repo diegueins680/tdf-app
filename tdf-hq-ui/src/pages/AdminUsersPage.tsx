@@ -390,6 +390,7 @@ const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ?
 const formatActiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} activo${count === 1 ? '' : 's'}`;
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
+const MIN_USERS_FOR_REFRESH = 4;
 const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
 const ACCOUNT_SEARCH_PLACEHOLDER = 'Cuenta';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
@@ -1088,7 +1089,7 @@ export default function AdminUsersPage() {
     && !hasActiveSearch
     && hasUsers
     && !showSearchEmptyState
-    && showSearchField;
+    && usersInCurrentSummary.length >= MIN_USERS_FOR_REFRESH;
   const showHeaderActions = showInactiveFilterAction || showRefreshAction;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;

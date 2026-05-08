@@ -382,6 +382,13 @@ describe('AdminUsersPage', () => {
         username: 'linus-view',
         primaryEmail: 'linus@example.com',
       }),
+      buildUser({
+        userId: 104,
+        partyId: 12,
+        partyName: 'Marie Ops',
+        username: 'marie-ops',
+        primaryEmail: 'marie@example.com',
+      }),
     ];
     listUsersMock
       .mockResolvedValueOnce(users)
@@ -394,7 +401,7 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103, 104]);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
       });
 
@@ -407,7 +414,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain('No se pudieron cargar los usuarios: admin users unavailable.');
         expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(1);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
-        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103, 104]);
       });
 
       await clickButton(getButtonsByText(container, 'Reintentar usuarios')[0]!);
@@ -417,14 +424,14 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('No se pudieron cargar los usuarios');
         expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
-        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103, 104]);
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('waits to show refresh until the roster is dense enough to need the wider list controls', async () => {
+  it('keeps the first searchable roster free of the refresh icon until the list gets denser', async () => {
     listUsersMock.mockResolvedValue([
       buildUser(),
       buildUser({
@@ -440,6 +447,47 @@ describe('AdminUsersPage', () => {
         partyName: 'Linus View',
         username: 'linus-view',
         primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(container.querySelector('[data-testid="admin-users-header-actions"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows refresh again once the admin roster is dense enough to need list-level controls', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser(),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus View',
+        username: 'linus-view',
+        primaryEmail: 'linus@example.com',
+      }),
+      buildUser({
+        userId: 104,
+        partyId: 12,
+        partyName: 'Marie Ops',
+        username: 'marie-ops',
+        primaryEmail: 'marie@example.com',
       }),
     ]);
 
@@ -2164,7 +2212,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
         expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol, módulo o estado');
-        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -3983,7 +4031,7 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103]);
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.textContent).toContain('3 usuarios en esta vista.');
         expect(container.textContent).not.toContain('No hay coincidencias');
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
@@ -4019,6 +4067,15 @@ describe('AdminUsersPage', () => {
         primaryEmail: 'linus@example.com',
         roles: ['ReadOnly'],
         modules: ['inventory'],
+      }),
+      buildUser({
+        userId: 104,
+        partyId: 56,
+        username: 'marie-reports',
+        partyName: 'Marie Reports',
+        primaryEmail: 'marie@example.com',
+        roles: ['Accounting'],
+        modules: ['reports'],
       }),
     ]);
 
@@ -5693,7 +5750,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(getInputByLabelText(container, 'Buscar usuarios').value).toBe('');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
-        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
         expect(getRowByUserId(container, 101).textContent).toContain('ada-admin');
         expect(getRowByUserId(container, 102).textContent).toContain('grace-ops');
