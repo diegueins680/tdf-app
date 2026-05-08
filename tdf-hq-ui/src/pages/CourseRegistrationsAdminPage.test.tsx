@@ -217,6 +217,7 @@ const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
+const emptySearchLimitRecoveryLabel = 'Buscar en más registros';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
@@ -12114,9 +12115,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch?.textContent).not.toContain(
         'Aumenta el límite si el registro puede estar fuera del lote cargado.',
       );
-      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
-      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
@@ -12126,7 +12129,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Ajustar límite'));
+      clickButton(getButtonByText(container, emptySearchLimitRecoveryLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -12135,6 +12138,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
 
       expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(0);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Ocultar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
@@ -12226,9 +12230,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch?.textContent).toContain(
         'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
       );
-      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(statusSummary!, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
+      expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
     });
