@@ -9675,6 +9675,7 @@ main = hspec $ do
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example-.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example.123") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example.c") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" ".ada@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada.@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"

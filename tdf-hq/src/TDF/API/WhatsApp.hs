@@ -247,6 +247,7 @@ isValidEmailDomain domain =
   not (T.null domain) &&
   T.isInfixOf "." domain &&
   all isValidDomainLabel labels &&
+  T.length topLevelLabel >= 2 &&
   T.any isAsciiLower topLevelLabel
   where
     labels = T.splitOn "." domain
