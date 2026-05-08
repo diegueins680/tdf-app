@@ -724,12 +724,15 @@ export default function CmsAdminPage() {
     && versions.length === 0
     && !liveContent
     && !editorHasFirstVersionContentDraft;
-  const statusHelperText = showFirstVersionEmptyDraftGuard
-    ? 'Agrega un título o payload antes de guardar la primera versión.'
-    : baseStatusHelperText;
-  const showStatusControl = !showFirstVersionEmptyDraftGuard;
+  const statusHelperText = !hasSlugSelection
+    ? 'Completa el slug para habilitar el estado y el guardado.'
+    : showFirstVersionEmptyDraftGuard
+      ? 'Agrega un título o payload antes de guardar la primera versión.'
+      : baseStatusHelperText;
+  const showStatusControl = hasSlugSelection && !showFirstVersionEmptyDraftGuard;
   const canSaveVersion = hasSlugSelection && !payloadError && !showFirstVersionEmptyDraftGuard;
-  const showSaveVersionAction = !liveEditorActionState.showLiveInSyncChip && !showFirstVersionEmptyDraftGuard;
+  const showSaveVersionAction =
+    hasSlugSelection && !liveEditorActionState.showLiveInSyncChip && !showFirstVersionEmptyDraftGuard;
   const showFirstVersionHistoryGuidance =
     hasSlugSelection &&
     !listQuery.isLoading &&

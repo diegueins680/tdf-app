@@ -901,10 +901,13 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain(
         'Elige un slug para consultar la versión publicada de esa página.',
       );
+      expect(container.textContent).toContain('Completa el slug para habilitar el estado y el guardado.');
       expect(container.textContent).not.toContain('Sin contenido publicado');
       expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
       expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).toBeNull();
-      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
     });
 
     await cleanup();
