@@ -116,7 +116,9 @@ instance FromMultipart Tmp EventImageUploadForm where
           [] -> Right Nothing
           [Input _ raw] ->
             let trimmed = T.strip raw
-            in Right (if T.null trimmed then Nothing else Just trimmed)
+            in if T.null trimmed
+                then Left (T.unpack name <> " must not be blank; omit it to use the browser file name")
+                else Right (Just trimmed)
           _ -> Left ("Duplicate field: " <> T.unpack name)
 
       lookupSingleFile name mp =
