@@ -2619,6 +2619,7 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             expectInvalidHost "postgresql://flyuser:flypass@db..internal:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@bad_host.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@db\x0663.internal:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@-db.internal:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@999.999.999.999:5432/tdf_hq"
 

@@ -7,7 +7,6 @@ import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
   , generalCategory
   , isControl
-  , isDigit
   , isSpace
   , toLower
   )
@@ -208,11 +207,11 @@ validateFallbackConnUrl envName raw
 
     isConnectionHostChar :: Char -> Bool
     isConnectionHostChar ch =
-      (ch >= 'a' && ch <= 'z') || isDigit ch || ch == '-'
+      (ch >= 'a' && ch <= 'z') || isAsciiDigit ch || ch == '-'
 
     isAmbiguousNumericConnectionHost :: Text -> Bool
     isAmbiguousNumericConnectionHost host =
-      T.all (\ch -> isDigit ch || ch == '.') host
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
         && isNothing (parseIpv4Octets host)
 
     parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
@@ -228,7 +227,7 @@ validateFallbackConnUrl envName raw
 
     parseOctet :: Text -> Maybe Int
     parseOctet octet
-      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
       | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           octetNumber <- readMaybe (T.unpack octet)
@@ -247,7 +246,7 @@ validateFallbackConnUrl envName raw
       | T.null suffix = Right ()
       | ":" `T.isPrefixOf` suffix =
           let port = T.drop 1 suffix
-          in if T.null port || T.any (not . isDigit) port
+          in if T.null port || T.any (not . isAsciiDigit) port
                then Left (envName <> " port must be numeric")
                else if T.length port > 1 && T.head port == '0'
                  then Left (envName <> " port must not contain leading zeros")
@@ -322,7 +321,7 @@ validateFallbackConnUrl envName raw
     isConnectionQueryParamNameChar ch =
       (ch >= 'a' && ch <= 'z')
         || (ch >= 'A' && ch <= 'Z')
-        || isDigit ch
+        || isAsciiDigit ch
         || ch == '_'
 
 isValidConnectionSslMode :: Text -> Bool
@@ -343,6 +342,10 @@ invalidConnectionSslModeMessage envName =
 isHiddenConnectionUrlChar :: Char -> Bool
 isHiddenConnectionUrlChar ch =
   generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch =
+  ch >= '0' && ch <= '9'
 
 validateDbSslMode :: String -> String -> Either String String
 validateDbSslMode envName rawMode
@@ -1320,7 +1323,7 @@ normalizeConfiguredBaseUrl envName rawUrl
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
 
     isAmbiguousNumericHost host =
-      T.all (\ch -> isDigit ch || ch == '.') host
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
         && isNothing (parseIpv4Octets host)
 
     parseIpv4Octets host =
@@ -1334,7 +1337,7 @@ normalizeConfiguredBaseUrl envName rawUrl
         _ -> Nothing
 
     parseOctet octet
-      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
       | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
@@ -1388,7 +1391,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
 
     isAmbiguousNumericHost host =
-      T.all (\ch -> isDigit ch || ch == '.') host
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
         && isNothing (parseIpv4Octets host)
 
     validatePortSuffix suffix
@@ -1431,7 +1434,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
         _ -> Nothing
 
     parseOctet octet
-      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
       | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
