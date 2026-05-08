@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { SocialMessage } from '../api/socialInbox';
+import type { SocialChannel, SocialMessage } from '../api/socialInbox';
 import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 import type { MetaReviewAssetSelection } from '../services/instagramAuth';
 
@@ -15,6 +15,12 @@ const listFacebookMessagesMock = jest.fn<
 >();
 const listWhatsAppMessagesMock = jest.fn<
   (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
+>();
+const sendReplyMock = jest.fn<
+  (
+    channel: SocialChannel,
+    payload: { senderId: string; message: string; externalId?: string },
+  ) => Promise<{ status?: string; message?: string; response?: unknown }>
 >();
 const getInstagramOAuthProviderMock = jest.fn<() => 'facebook' | 'instagram'>();
 const getInstagramRequestedScopesMock = jest.fn<() => string[]>();
@@ -29,7 +35,10 @@ jest.unstable_mockModule('../api/socialInbox', () => ({
       listFacebookMessagesMock(filters),
     listWhatsAppMessages: (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) =>
       listWhatsAppMessagesMock(filters),
-    sendReply: jest.fn(() => Promise.resolve({ status: 'ok' })),
+    sendReply: (
+      channel: SocialChannel,
+      payload: { senderId: string; message: string; externalId?: string },
+    ) => sendReplyMock(channel, payload),
     suggestReply: jest.fn(() => Promise.resolve('Reply drafted by AI.')),
   },
 }));
@@ -225,6 +234,7 @@ describe('SocialInboxPage', () => {
     listInstagramMessagesMock.mockReset();
     listFacebookMessagesMock.mockReset();
     listWhatsAppMessagesMock.mockReset();
+    sendReplyMock.mockReset();
     getInstagramOAuthProviderMock.mockReset();
     getInstagramRequestedScopesMock.mockReset();
     getMetaReviewAssetSelectionMock.mockReset();
@@ -233,6 +243,7 @@ describe('SocialInboxPage', () => {
     listInstagramMessagesMock.mockResolvedValue([]);
     listFacebookMessagesMock.mockResolvedValue([]);
     listWhatsAppMessagesMock.mockResolvedValue([]);
+    sendReplyMock.mockResolvedValue({ status: 'ok' });
     getInstagramOAuthProviderMock.mockReturnValue('facebook');
     getInstagramRequestedScopesMock.mockReturnValue([
       'instagram_basic',
@@ -822,6 +833,54 @@ describe('SocialInboxPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('updates the review dialog title status after sending so proof copy does not conflict with delivered state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    try {
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Pending');
+        expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+      });
+
+      await act(async () => {
+        setTextControlValue(getTextControlByLabel(document.body, 'Outgoing message'), 'Done from app.');
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await act(async () => {
+        const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+          (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
+        );
+        if (!sendButton) throw new Error('Send message button not found');
+        sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(sendReplyMock).toHaveBeenCalledWith('instagram', {
+          senderId: 'sender-1',
+          message: 'Done from app.',
+          externalId: 'msg-1',
+        });
+        expect(document.body.textContent).toContain('Sent from app UI:');
+        expect(document.body.textContent).toContain(
+          'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done from app.”',
+        );
+        expect(document.body.textContent).toContain('Replied');
+        expect(document.body.textContent).not.toContain('Pending');
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('treats an already delivered reply as proof instead of preloading duplicate send controls', async () => {

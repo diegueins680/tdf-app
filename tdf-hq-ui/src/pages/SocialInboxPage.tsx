@@ -634,11 +634,11 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
             <Typography variant="caption" color="text.secondary" noWrap>
               {msg
                 ? `${formatTimestamp(msg.createdAt)} · ${
-                    msg.repliedAt
+                    repliedAtValue
                       ? reviewMode
                         ? 'Replied'
                         : 'Respondido'
-                      : msg.replyError
+                      : replyErrorValue
                         ? reviewMode
                           ? 'Failed'
                           : 'Fallido'
