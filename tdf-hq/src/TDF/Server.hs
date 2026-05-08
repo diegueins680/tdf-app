@@ -9334,7 +9334,7 @@ adsAssistPublic req = do
     case reply of
       Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
       Left err
-        | shouldRetryWithFallbackModel 0 err ->
+        | shouldUseAdsAssistNoAiFallback err ->
             pure (adsAssistNoAiFallback (envConfig env))
       Left err ->
         throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
@@ -9345,6 +9345,14 @@ adsAssistPublic req = do
     , aasUsedExamples = map adExampleToDTO examples
     , aasKnowledgeUsed = kb
     }
+
+shouldUseAdsAssistNoAiFallback :: Text -> Bool
+shouldUseAdsAssistNoAiFallback rawError =
+  errorMessage == "openai_api_key no configurada"
+    || errorMessage == "no pude generar una respuesta automática en este momento."
+    || shouldRetryWithFallbackModel 404 rawError
+  where
+    errorMessage = T.toLower (T.strip rawError)
 
 adsAssistNoAiFallback :: AppConfig -> Text
 adsAssistNoAiFallback cfg =
@@ -9785,6 +9793,7 @@ shouldRetryWithFallbackModel status rawMessage =
       , "too many requests"
       , "quota"
       , "connection"
+      , "connecting"
       , "network"
       , "timeout"
       , "timed out"
