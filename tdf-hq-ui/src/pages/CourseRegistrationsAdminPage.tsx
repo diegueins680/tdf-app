@@ -2979,10 +2979,13 @@ export default function CourseRegistrationsAdminPage() {
     ? sharedListContextSummaries.join(' ')
     : '';
   const copyCsvButtonLabel = showLocalSearchUtilityRow
-    ? 'Copiar visibles como CSV'
+    ? 'Copiar CSV'
     : `Copiar CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`;
   const copyCsvButtonAccessibleLabel =
     `Copiar ${formatCsvRegistrationCountLabel(searchedRegistrations.length)} visibles como CSV`;
+  const copyCsvButtonTitle = showLocalSearchUtilityRow
+    ? 'Copia solo los resultados visibles de la búsqueda.'
+    : 'Copia solo las inscripciones visibles de esta vista.';
   const visibleCsvScopeKey = useMemo(
     () => searchedRegistrations
       .map((reg) => `${reg.crCourseSlug}:${reg.crId}:${reg.crStatus}:${reg.crUpdatedAt}`)
@@ -4247,7 +4250,7 @@ export default function CourseRegistrationsAdminPage() {
       size="small"
       startIcon={<ContentCopyIcon fontSize="small" />}
       aria-label={copyCsvButtonAccessibleLabel}
-      title="Copia solo las inscripciones visibles de esta vista."
+      title={copyCsvButtonTitle}
       onClick={() => void handleCopyCsv()}
     >
       {copyCsvButtonLabel}

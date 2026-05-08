@@ -212,7 +212,8 @@ const markPaymentPendingLabel = 'Marcar pago pendiente';
 const compactPaymentPendingActionLabel = 'Pasar a pendiente';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
-const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
+const copyVisibleSearchCsvLabel = 'Copiar CSV';
+const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
@@ -11537,6 +11538,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const copyButton = getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel);
       expect(copyButton).toBeTruthy();
       expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
+      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda.');
+      expect(countButtonsByText(searchUtilities!, staleCopyVisibleSearchCsvLabel)).toBe(0);
       expect(countButtonsByText(searchUtilities!, copyVisibleCsvLabel(2))).toBe(0);
       expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
@@ -11754,7 +11757,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(copyButton).toBeTruthy();
       expect(copyButton.textContent?.trim()).toBe(copyVisibleSearchCsvLabel);
       expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
-      expect(copyButton.getAttribute('title')).toBe('Copia solo las inscripciones visibles de esta vista.');
+      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda.');
+      expect(countButtonsByText(container, staleCopyVisibleSearchCsvLabel)).toBe(0);
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
