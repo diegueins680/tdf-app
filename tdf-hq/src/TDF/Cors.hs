@@ -18,7 +18,7 @@ import Data.Char
   , ord
   , toLower
   )
-import Data.List (dropWhileEnd, intercalate, nub)
+import Data.List (dropWhileEnd, intercalate, isSuffixOf, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
 
@@ -136,7 +136,13 @@ normalizeConfiguredCorsOrigin raw =
   in case rawTrimmed of
     "*" -> Right "*"
     _ ->
-      if containsUnsupportedCorsUrlChar rawTrimmed
+      if "//" `isSuffixOf` rawTrimmed
+        then
+          Left $
+            "Configured CORS origins must be absolute http(s) origins "
+              <> "without path, query, or fragment: "
+              <> raw
+        else if containsUnsupportedCorsUrlChar rawTrimmed
         then
           Left $
             "Configured CORS origins must contain only ASCII URL characters "

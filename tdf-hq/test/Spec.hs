@@ -3737,6 +3737,7 @@ main = hspec $ do
             assertInvalid "https://999.999.999.999"
             assertInvalid "https://1.2.3"
             assertInvalid "https://app.example.com:0443"
+            assertInvalid "https://app.example.com//"
             assertInvalid "*/"
 
         it "rejects wildcard origins mixed with explicit allowlist entries" $
