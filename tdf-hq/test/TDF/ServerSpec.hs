@@ -290,6 +290,7 @@ import TDF.Server
     , getReceipt
     , resolvePartyRoleAssignmentTarget
     , resolvePartyRelatedTarget
+    , resolveFanFollowArtistTarget
     , fanUnfollowArtist
     , chatListMessages
     , adsGetCampaign
@@ -1621,6 +1622,72 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "partyId query supports at most 100 ids"
                 (validateSocialProfilePartyIds [1..101])
+
+    describe "resolveFanFollowArtistTarget" $ do
+        it "requires fan follow targets to be published artist profiles" $ do
+            (artistPartyId, nonArtistResult, missingResult, invalidResult, validResult) <-
+                runAuthSqlite $ do
+                    now <- liftIO getCurrentTime
+                    let insertParty displayName emailAddress =
+                            insert
+                                Party
+                                    { partyLegalName = Nothing
+                                    , partyDisplayName = displayName
+                                    , partyIsOrg = False
+                                    , partyTaxId = Nothing
+                                    , partyPrimaryEmail = Just emailAddress
+                                    , partyPrimaryPhone = Nothing
+                                    , partyWhatsapp = Nothing
+                                    , partyInstagram = Nothing
+                                    , partyEmergencyContact = Nothing
+                                    , partyNotes = Nothing
+                                    , partyCreatedAt = now
+                                    }
+                        insertArtistProfile artistKey =
+                            insert_
+                                ArtistProfile
+                                    { artistProfileArtistPartyId = artistKey
+                                    , artistProfileSlug = Just "fan-follow-target"
+                                    , artistProfileBio = Nothing
+                                    , artistProfileCity = Nothing
+                                    , artistProfileHeroImageUrl = Nothing
+                                    , artistProfileSpotifyArtistId = Nothing
+                                    , artistProfileSpotifyUrl = Nothing
+                                    , artistProfileYoutubeChannelId = Nothing
+                                    , artistProfileYoutubeUrl = Nothing
+                                    , artistProfileWebsiteUrl = Nothing
+                                    , artistProfileFeaturedVideoUrl = Nothing
+                                    , artistProfileGenres = Nothing
+                                    , artistProfileHighlights = Nothing
+                                    , artistProfileCreatedAt = now
+                                    , artistProfileUpdatedAt = Nothing
+                                    }
+                    artistPartyId <-
+                        insertParty "Fan Follow Artist" "follow-artist@example.com"
+                    insertArtistProfile artistPartyId
+                    nonArtistPartyId <- insertParty "Plain Party" "plain-party@example.com"
+                    nonArtistResult <-
+                        resolveFanFollowArtistTarget (fromSqlKey nonArtistPartyId)
+                    missingResult <- resolveFanFollowArtistTarget 999999
+                    invalidResult <- resolveFanFollowArtistTarget 0
+                    validResult <- resolveFanFollowArtistTarget (fromSqlKey artistPartyId)
+                    pure (artistPartyId, nonArtistResult, missingResult, invalidResult, validResult)
+
+            validResult `shouldBe` Right artistPartyId
+            let assertRejected :: Int -> String -> Either ServerError (Key Party) -> IO ()
+                assertRejected expectedCode expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` expectedCode
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right target ->
+                            expectationFailure
+                                ( "Expected invalid fan follow artist target, got: "
+                                    <> show (fromSqlKey target)
+                                )
+            assertRejected 404 "Artist profile not found" nonArtistResult
+            assertRejected 404 "Artist profile not found" missingResult
+            assertRejected 400 "artistId must be a positive integer" invalidResult
 
     describe "fanUnfollowArtist" $ do
         it "rejects invalid fan follow targets before deleting can return a misleading no-op" $ do

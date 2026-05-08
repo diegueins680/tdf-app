@@ -5511,19 +5511,16 @@ fanFollowArtist user artistId = do
       fanKey    = auPartyId user
   when (artistKey == fanKey) $
     throwBadRequest "No puedes seguirte a ti mismo"
+  targetKey <- runDB (resolveFanFollowArtistTarget artistId) >>= either throwError pure
   Env pool _ <- ask
   mDto <- liftIO $ flip runSqlPool pool $ do
-    mArtist <- get artistKey
-    case mArtist of
-      Nothing -> pure Nothing
-      Just _ -> do
-        now <- liftIO getCurrentTime
-        _ <- insertUnique FanFollow
-          { fanFollowFanPartyId    = fanKey
-          , fanFollowArtistPartyId = artistKey
-          , fanFollowCreatedAt     = now
-          }
-        loadFanFollowDTO fanKey artistKey
+    now <- liftIO getCurrentTime
+    _ <- insertUnique FanFollow
+      { fanFollowFanPartyId    = fanKey
+      , fanFollowArtistPartyId = targetKey
+      , fanFollowCreatedAt     = now
+      }
+    loadFanFollowDTO fanKey targetKey
   maybe (throwError err404) pure mDto
 
 fanUnfollowArtist :: AuthedUser -> Int64 -> AppM NoContent
@@ -5537,6 +5534,20 @@ fanUnfollowArtist user artistId = do
   liftIO $ flip runSqlPool pool $
     deleteBy (UniqueFanFollow (auPartyId user) artistKey)
   pure NoContent
+
+resolveFanFollowArtistTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
+resolveFanFollowArtistTarget rawArtistId =
+  case validatePositiveIdField "artistId" rawArtistId of
+    Left err -> pure (Left err)
+    Right artistId -> do
+      let artistKey = toSqlKey artistId :: PartyId
+      mProfile <- getBy (UniqueArtistProfile artistKey)
+      pure $
+        case mProfile of
+          Nothing ->
+            Left err404 { errBody = "Artist profile not found" }
+          Just _ ->
+            Right artistKey
 
 -- Chat (1:1 DM between parties)
 
