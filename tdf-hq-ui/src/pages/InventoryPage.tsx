@@ -812,6 +812,7 @@ export default function InventoryPage() {
     && !showFirstAssetEmptyState
     && !showInitialInventoryErrorState
     && !hasActiveInventorySearch;
+  const isInventoryRefreshing = assetsQuery.isFetching && !showInitialInventoryLoadingState;
   const historyAlreadyOpenFromMenu = Boolean(
     actionsMenuTarget && historyViewMode === 'panel' && selected?.assetId === actionsMenuTarget.asset.assetId,
   );
@@ -829,8 +830,13 @@ export default function InventoryPage() {
         </Box>
         {showHeaderRefreshAction && (
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRefreshAssets}>
-              Actualizar
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefreshAssets}
+              disabled={isInventoryRefreshing}
+            >
+              {isInventoryRefreshing ? 'Actualizando…' : 'Actualizar'}
             </Button>
           </Stack>
         )}

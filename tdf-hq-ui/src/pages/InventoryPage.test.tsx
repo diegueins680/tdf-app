@@ -640,6 +640,68 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('turns refresh into one disabled progress cue while inventory refetches', async () => {
+    let resolveRefresh: ((assets: AssetDTO[]) => void) | undefined;
+    const refreshedAssets = [
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ];
+
+    listAssetsMock
+      .mockResolvedValueOnce(refreshedAssets)
+      .mockImplementationOnce(() => new Promise<AssetDTO[]>((resolve) => {
+        resolveRefresh = resolve;
+      }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const findButton = (label: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => (button.textContent ?? '').trim() === label,
+    ) ?? null;
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+      });
+
+      await act(async () => {
+        findButton('Actualizar')?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const refreshingButton = findButton('Actualizando…');
+
+        expect(refreshingButton).not.toBeNull();
+        expect(refreshingButton?.disabled).toBe(true);
+        expect(findButton('Actualizar')).toBeNull();
+        expect(container.querySelector('table')).not.toBeNull();
+      });
+
+      await act(async () => {
+        resolveRefresh?.(refreshedAssets);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const refreshButton = findButton('Actualizar');
+
+        expect(refreshButton).not.toBeNull();
+        expect(refreshButton?.disabled).toBe(false);
+        expect(findButton('Actualizando…')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses a single filtered inventory match into the focused summary card before falling back to the empty-search reset path', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
