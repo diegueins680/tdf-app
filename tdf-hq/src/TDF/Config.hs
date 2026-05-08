@@ -1245,13 +1245,23 @@ normalizeConfiguredBaseUrl envName rawUrl
     invalid = Left (envName <> " must be an absolute http(s) URL")
 
     validateRemainder remainder =
-      if hasValidAuthority remainder
-        then Right (Just trimmed)
-        else invalid
+      let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
+      in if not (validateAuthority authority)
+           then invalid
+           else if not (validateBasePathSuffix pathSuffix)
+             then
+               Left
+                 ( envName
+                     <> " path must not start with // or contain backslashes"
+                 )
+             else Right (Just trimmed)
 
-    hasValidAuthority remainder =
-      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
-      in validateAuthority authority
+    validateBasePathSuffix suffix =
+      T.null suffix
+        || ( "/" `T.isPrefixOf` suffix
+             && not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+           )
 
     validateAuthority rawAuthority
       | T.null rawAuthority = False

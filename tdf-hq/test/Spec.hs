@@ -1140,6 +1140,14 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL without query or fragment"
             assertInvalid
                 "HQ_APP_URL"
+                "https://hq.example.com//admin"
+                "HQ_APP_URL path must not start with // or contain backslashes"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets\\logo"
+                "HQ_ASSETS_BASE_URL path must not start with // or contain backslashes"
+            assertInvalid
+                "HQ_APP_URL"
                 "https://hq.example.com/app\SOHadmin"
                 "HQ_APP_URL must not contain control characters"
             assertInvalid
