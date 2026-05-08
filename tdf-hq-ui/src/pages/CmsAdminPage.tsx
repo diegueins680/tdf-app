@@ -672,11 +672,12 @@ export default function CmsAdminPage() {
       ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHint.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
   const hasSamplePayload = Boolean(samplePayload);
-  const hasCustomNewPayloadDraft = !liveContent && payload.trim() !== '{}';
+  const hasStartedNewContentDraft = title.trim().length > 0 || payload.trim() !== '{}';
+  const hasCustomNewContentDraft = !liveContent && hasStartedNewContentDraft;
   const showExampleAction =
     hasSamplePayload
     && !editorMatchesSamplePayload
-    && !hasCustomNewPayloadDraft
+    && !hasCustomNewContentDraft
     && !liveContent
     && !liveLookupUnresolved;
   const samplePayloadGuidance = liveLookupPending && hasSamplePayload
@@ -688,7 +689,7 @@ export default function CmsAdminPage() {
     : samplePayload
       ? editorMatchesSamplePayload
         ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
-        : hasCustomNewPayloadDraft
+        : hasCustomNewContentDraft
         ? 'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.'
         : 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
       : hasSlugSelection
@@ -711,7 +712,16 @@ export default function CmsAdminPage() {
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
-  const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
+  const showClearPayloadAction =
+    !liveContent
+    && (payload.trim() !== '{}' || (editingFromId === null && title.trim().length > 0));
+  const handleClearEditorDraft = () => {
+    setPayload('{}');
+    if (!liveContent && editingFromId === null) {
+      setTitle('');
+      setStatus('draft');
+    }
+  };
   const editorHasFirstVersionContentDraft =
     title.trim().length > 0 || (!payloadError && formattedPayload.trim() !== '{}');
   const showFirstVersionEmptyDraftGuard =
@@ -1061,7 +1071,7 @@ export default function CmsAdminPage() {
                   {showClearPayloadAction && (
                     <Button
                       variant="text"
-                      onClick={() => setPayload('{}')}
+                      onClick={handleClearEditorDraft}
                       disabled={createMutation.isPending}
                     >
                       Limpiar

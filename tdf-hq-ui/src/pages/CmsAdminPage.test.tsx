@@ -658,6 +658,55 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('hides the generic example action once a new-page title draft has started', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing propia');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(countActionsByText(container, 'Limpiar')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(container.textContent).toContain(
+        'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
+      );
+      expect(container.textContent).not.toContain(
+        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Limpiar').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Título').value).toBe('');
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('hides the generic clear action when a live version is available to restore instead', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
