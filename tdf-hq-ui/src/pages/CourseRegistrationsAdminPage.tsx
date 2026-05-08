@@ -1061,6 +1061,12 @@ const firstRunCourseWebsiteDescriptorPrefixPattern =
 const firstRunCourseWebsiteDescriptorSuffixPattern =
   /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web))\s*$/i;
 
+const firstRunCourseCatalogDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCourseCatalogDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
+
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
 
 const firstRunReservationDescriptorPrefixPattern =
@@ -1151,6 +1157,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
     .replace(firstRunBioLinkDescriptorPrefixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
+    .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -1212,6 +1219,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
     .replace(firstRunBioLinkDescriptorSuffixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
+    .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
