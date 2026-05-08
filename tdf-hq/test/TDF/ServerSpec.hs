@@ -3347,6 +3347,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "title must not contain control characters"
                 (validateOptionalCmsTitle (Just "Hero\nDraft"))
+            assertInvalid
+                "title must not contain control characters or hidden formatting characters"
+                (validateOptionalCmsTitle (Just ("Hero" <> T.singleton '\x202E' <> "Draft")))
+            assertInvalid
+                "title must not contain control characters or hidden formatting characters"
+                (validateOptionalCmsTitle (Just ("Hero" <> T.singleton '\x2028' <> "Draft")))
 
     describe "validateOptionalCmsPayload" $ do
         it "allows omitted and object payloads but rejects JSON null as ambiguous CMS content" $ do

@@ -7580,9 +7580,15 @@ validateOptionalCmsTitle rawTitle =
     Just title
       | T.length title > 160 ->
           Left err400 { errBody = "title must be 160 characters or fewer" }
-      | T.any isControl title ->
-          Left err400 { errBody = "title must not contain control characters" }
+      | T.any isUnsafeCmsTitleChar title ->
+          Left err400
+            { errBody =
+                "title must not contain control characters or hidden formatting characters"
+            }
       | otherwise -> Right (Just title)
+  where
+    isUnsafeCmsTitleChar ch =
+      isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateCmsContentStatus :: Maybe Text -> Either ServerError Text
 validateCmsContentStatus Nothing = Right "draft"
