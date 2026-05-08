@@ -6820,6 +6820,7 @@ spec = describe "TDF.Server helpers" $ do
             validateMarketplaceOrderListOffset Nothing `shouldBe` Right 0
             validateMarketplaceOrderListOffset (Just 0) `shouldBe` Right 0
             validateMarketplaceOrderListOffset (Just 25) `shouldBe` Right 25
+            validateMarketplaceOrderListOffset (Just 10000) `shouldBe` Right 10000
 
         it "rejects explicit out-of-range pagination instead of silently clamping admin order queries" $ do
             let assertLimitInvalid result = case result of
@@ -6834,9 +6835,16 @@ spec = describe "TDF.Server helpers" $ do
                         BL8.unpack (errBody serverErr) `shouldContain` "offset must be greater than or equal to 0"
                     Right offsetVal ->
                         expectationFailure ("Expected invalid marketplace order offset to be rejected, got: " <> show offsetVal)
+                assertDeepOffsetInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` "offset must be 10000 or fewer"
+                    Right offsetVal ->
+                        expectationFailure ("Expected deep marketplace order offset to be rejected, got: " <> show offsetVal)
             assertLimitInvalid (validateMarketplaceOrderListLimit (Just 0))
             assertLimitInvalid (validateMarketplaceOrderListLimit (Just 201))
             assertOffsetInvalid (validateMarketplaceOrderListOffset (Just (-1)))
+            assertDeepOffsetInvalid (validateMarketplaceOrderListOffset (Just 10001))
 
     describe "validateOptionalMarketplaceOrderStatus" $ do
         it "keeps omitted filters absent and canonicalizes supported statuses" $ do

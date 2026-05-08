@@ -7836,8 +7836,13 @@ validateMarketplaceOrderListOffset Nothing = Right 0
 validateMarketplaceOrderListOffset (Just rawOffset)
   | rawOffset < 0 =
       Left err400 { errBody = "offset must be greater than or equal to 0" }
+  | rawOffset > maxMarketplaceOrderListOffset =
+      Left err400 { errBody = "offset must be 10000 or fewer" }
   | otherwise =
       Right rawOffset
+
+maxMarketplaceOrderListOffset :: Int
+maxMarketplaceOrderListOffset = 10000
 
 validateOptionalMarketplaceOrderStatus :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalMarketplaceOrderStatus Nothing = Right Nothing
