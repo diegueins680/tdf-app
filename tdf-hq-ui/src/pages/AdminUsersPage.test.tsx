@@ -2211,8 +2211,17 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol, módulo o estado');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, acceso o estado');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'manager');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([102]);
+        expect(container.textContent).not.toContain('No hay coincidencias');
       });
     } finally {
       await cleanup();

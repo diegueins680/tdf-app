@@ -701,8 +701,19 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   if (hasNameIdentity) terms.push('Nombre');
   if (hasDistinctUsername) terms.push(hasNameIdentity ? 'usuario' : 'Usuario');
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
-  if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
-  if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  const shouldUseAccessUmbrellaTerm =
+    hasActiveUsers
+    && hasInactiveUsers
+    && hasNonDefaultRoles
+    && hasNonDefaultModules
+    && modulesAddDistinctSearchValue;
+
+  if (shouldUseAccessUmbrellaTerm) {
+    terms.push(terms.length === 0 ? 'Acceso' : 'acceso');
+  } else {
+    if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
+    if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  }
   if (
     hasNoAccessAssignedUsers
     && !hasNonDefaultRoles
