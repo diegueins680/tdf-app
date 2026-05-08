@@ -213,6 +213,29 @@ describe('BrainAdminPage', () => {
     }
   });
 
+  it('keeps the first-entry empty state hidden when entries fail to load', async () => {
+    listEntriesMock.mockRejectedValue(new Error('brain entries unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listEntriesMock).toHaveBeenCalledWith(false);
+        expect(container.textContent).toContain('Error cargando entradas');
+        expect(container.textContent).toContain('brain entries unavailable');
+        expect(container.textContent).not.toContain(
+          'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.',
+        );
+        expect(container.textContent).not.toContain('No hay entradas cargadas, incluyendo inactivas.');
+        expect(() => getActionByText(container, 'Revisar inactivas')).toThrow();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows the inactive filter when the Brain list has entries to filter', async () => {
     listEntriesMock.mockResolvedValue([buildEntry()]);
     ragStatusMock.mockResolvedValue({

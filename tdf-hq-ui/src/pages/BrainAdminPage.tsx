@@ -122,11 +122,12 @@ export default function BrainAdminPage() {
   });
 
   const entries = useMemo<BrainEntryDTO[]>(() => entriesQuery.data ?? [], [entriesQuery.data]);
+  const showEmptyEntriesState = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
   const showInactiveToggle = includeInactive || entries.length > 0;
   const emptyEntriesMessage = includeInactive
     ? 'No hay entradas cargadas, incluyendo inactivas.'
     : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
-  const showRagFirstEntryGuidance = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
+  const showRagFirstEntryGuidance = showEmptyEntriesState;
   const hasBuiltRagIndex = Boolean(
     ragStatusQuery.data
       && (ragStatusQuery.data.risCount > 0 || ragStatusQuery.data.risUpdatedAt),
@@ -315,7 +316,7 @@ export default function BrainAdminPage() {
               <ApiErrorNotice error={entriesQuery.error} title="Error cargando entradas" />
             )}
 
-            {!entriesQuery.isLoading && entries.length === 0 && (
+            {showEmptyEntriesState && (
               <Alert
                 severity="info"
                 action={
