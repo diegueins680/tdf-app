@@ -155,6 +155,7 @@ import TDF.Server
     , validateReceiptBuyerName
     , validateReceiptBuyerEmail
     , validateServiceAdSlotMinutes
+    , validateServiceAdSlotWindow
     , validateCmsContentStatus
     , normalizeOptionalCmsFilter
     , validateCmsLocaleFilter
@@ -6391,6 +6392,32 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-5)
             assertInvalid 0
             assertInvalid 14
+
+    describe "validateServiceAdSlotWindow" $ do
+        it "requires created service ad slots to match the advertised slot length" $ do
+            let startsAt = UTCTime (fromGregorian 2026 5 1) (secondsToDiffTime 54000)
+                matchingEndsAt = addUTCTime (45 * 60) startsAt
+                shorterEndsAt = addUTCTime (30 * 60) startsAt
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right () ->
+                            expectationFailure "Expected invalid service ad slot window"
+
+            case validateServiceAdSlotWindow 45 startsAt matchingEndsAt of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid service ad slot window, got: " <> show serverErr)
+                Right () -> pure ()
+
+            assertInvalid
+                "slot duration must match service ad slotMinutes"
+                (validateServiceAdSlotWindow 45 startsAt shorterEndsAt)
+            assertInvalid
+                "endsAt must be after startsAt"
+                (validateServiceAdSlotWindow 45 startsAt startsAt)
 
     describe "validateRolePayload" $ do
         it "normalizes known role labels before party-role assignment" $ do

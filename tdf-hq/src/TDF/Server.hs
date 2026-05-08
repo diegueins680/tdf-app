@@ -53,7 +53,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, UTCTime (..), addUTCTime, diffTimeToPicoseconds, fromGregorian
+  ( Day, UTCTime (..), addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
   , getCurrentTime, secondsToDiffTime, toGregorian, utctDay
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
@@ -6583,12 +6583,14 @@ listServiceAdSlots adId = do
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
-  when (sascEndsAt <= sascStartsAt) $ throwError err400 { errBody = "Invalid slot range" }
   pool <- asks envPool
   liftIO $ flip runSqlPool pool $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
+    case validateServiceAdSlotWindow (serviceAdSlotMinutes (entityVal ad)) sascStartsAt sascEndsAt of
+      Left serverErr -> liftIO $ throwIO serverErr
+      Right () -> pure ()
     now <- liftIO getCurrentTime
     slotId <- insert ServiceAdSlot
       { serviceAdSlotAdId = adKey
@@ -8035,6 +8037,14 @@ validateServiceAdSlotMinutes (Just rawMinutes)
   | rawMinutes < 15 =
       Left err400 { errBody = "slotMinutes must be at least 15" }
   | otherwise = Right rawMinutes
+
+validateServiceAdSlotWindow :: Int -> UTCTime -> UTCTime -> Either ServerError ()
+validateServiceAdSlotWindow slotMinutes startsAt endsAt = do
+  validSlotMinutes <- validateServiceAdSlotMinutes (Just slotMinutes)
+  validateBookingTimeRange startsAt endsAt
+  if diffUTCTime endsAt startsAt == fromIntegral (validSlotMinutes * 60)
+    then Right ()
+    else Left err400 { errBody = "slot duration must match service ad slotMinutes" }
 
 requiresEngineer :: Maybe Text -> Bool
 requiresEngineer Nothing = False
