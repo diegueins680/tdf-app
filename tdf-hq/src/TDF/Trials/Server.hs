@@ -712,6 +712,7 @@ validateTrialAvailabilityUpsertInput
   ) = do
     availabilityIdVal <- traverse validateAvailabilityIdInput rawAvailabilityId
     subjectIdVal <- validatePositiveIntField "subjectId" rawSubjectId
+    roomIdVal <- validateAvailabilityRoomIdInput rawRoomId
     teacherIdVal <- traverse (validatePositiveIntField "teacherId") rawTeacherId
     notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
     when (rawStartAt >= rawEndAt) $
@@ -720,11 +721,23 @@ validateTrialAvailabilityUpsertInput
       (TrialAvailabilityUpsert
         availabilityIdVal
         subjectIdVal
-        rawRoomId
+        roomIdVal
         rawStartAt
         rawEndAt
         notesVal
         teacherIdVal)
+
+validateAvailabilityRoomIdInput :: Text -> Either ServerError Text
+validateAvailabilityRoomIdInput rawRoomId =
+  let normalized = T.strip rawRoomId
+      invalid = Left err400 { errBody = "roomId must be a positive integer" }
+  in if T.null normalized
+       || not (T.all isDigit normalized)
+       || (T.length normalized > 1 && T.head normalized == '0')
+       then invalid
+       else case readMaybe (T.unpack normalized) :: Maybe Int64 of
+         Just value | value > 0 -> Right normalized
+         _ -> invalid
 
 validateClassSessionListFilters
   :: Maybe Int

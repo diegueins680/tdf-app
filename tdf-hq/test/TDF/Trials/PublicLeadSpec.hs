@@ -1406,7 +1406,7 @@ spec = do
     it "rejects typoed teacher keys so teacherId fallback cannot publish slots for the wrong teacher" $ do
       let canonicalPayload = BL8.pack $ concat
             [ "{\"subjectId\":3"
-            , ",\"roomId\":\"sala-a\""
+            , ",\"roomId\":\"4\""
             , ",\"startAt\":\"2026-04-01T10:00:00Z\""
             , ",\"endAt\":\"2026-04-01T11:00:00Z\""
             , ",\"teacherId\":2}"
@@ -1417,7 +1417,7 @@ spec = do
         Right (TrialAvailabilityUpsert availabilityIdValue subjectIdValue roomIdValue startValue endValue notesValue teacherIdValue) -> do
           availabilityIdValue `shouldBe` Nothing
           subjectIdValue `shouldBe` 3
-          roomIdValue `shouldBe` "sala-a"
+          roomIdValue `shouldBe` "4"
           startValue `shouldBe` slotStart
           endValue `shouldBe` slotEnd
           notesValue `shouldBe` Nothing
@@ -1427,7 +1427,7 @@ spec = do
         ( A.eitherDecode
             (BL8.pack $ concat
               [ "{\"subjectId\":3"
-              , ",\"roomId\":\"sala-a\""
+              , ",\"roomId\":\"4\""
               , ",\"startAt\":\"2026-04-01T10:00:00Z\""
               , ",\"endAt\":\"2026-04-01T11:00:00Z\""
               , ",\"teacherID\":2}"
@@ -1441,7 +1441,7 @@ spec = do
           TrialAvailabilityUpsert
             availabilityIdValue
             subjectIdValue
-            "sala-a"
+            " 4 "
             slotStart
             slotEnd
             notesValue
@@ -1465,7 +1465,7 @@ spec = do
           ) -> do
           availabilityIdValue `shouldBe` Just 5
           subjectIdValue `shouldBe` 7
-          roomIdValue `shouldBe` "sala-a"
+          roomIdValue `shouldBe` "4"
           startValue `shouldBe` slotStart
           endValue `shouldBe` slotEnd
           notesValue `shouldBe` Just "Teaching block"
@@ -1494,13 +1494,19 @@ spec = do
         (mkAvailability Nothing 0 Nothing (Just 2))
         "subjectId must be a positive integer"
       assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "sala-a" slotStart slotEnd Nothing (Just 2))
+        "roomId must be a positive integer"
+      assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "04" slotStart slotEnd Nothing (Just 2))
+        "roomId must be a positive integer"
+      assertRejected
         (mkAvailability Nothing 7 Nothing (Just 0))
         "teacherId must be a positive integer"
       assertRejected
         (mkAvailability Nothing 7 (Just "line one\nline two") (Just 2))
         "notes must not contain control characters"
       assertRejected
-        (TrialAvailabilityUpsert Nothing 7 "sala-a" slotStart slotStart Nothing (Just 2))
+        (TrialAvailabilityUpsert Nothing 7 "4" slotStart slotStart Nothing (Just 2))
         "La hora de fin debe ser posterior al inicio"
 
   describe "teacher relationship request decoding" $ do
