@@ -5174,6 +5174,20 @@ main = hspec $ do
                         expectationFailure
                             ("Expected view-only webContentLink to be rejected, got: " <> show resp)
 
+        it "rejects conflicting Drive resource keys before public URL fallback handling" $ do
+            case eitherDecode
+                ( "{\"id\":\"1A_B-99\","
+                    <> "\"webContentLink\":\"https://drive.usercontent.google.com/download"
+                    <> "?id=1A_B-99&resourcekey=rk_link\","
+                    <> "\"resourceKey\":\"rk_upload\"}"
+                )
+                :: Either String DriveApiResp of
+                    Left err ->
+                        err `shouldContain` "Drive upload response has conflicting resource keys"
+                    Right resp ->
+                        expectationFailure
+                            ("Expected conflicting Drive resource keys to be rejected, got: " <> show resp)
+
         it "keeps canonical Google Drive download links only when they point at the uploaded file" $ do
             resolveDrivePublicUrl
                 "1A_B-99"
