@@ -12531,6 +12531,10 @@ data DriveApiResp = DriveApiResp
 
 instance FromJSON DriveApiResp where
   parseJSON = withObject "DriveApiResp" $ \o -> do
+    rejectUnexpectedDriveResponseKeys
+      "Drive upload response"
+      ["id", "webViewLink", "webContentLink", "resourceKey"]
+      o
     darId <- (o .: "id") >>= parseDriveApiFileId
     darWebViewLink <-
       (o .:? "webViewLink") >>=
@@ -12599,9 +12603,24 @@ data DriveMetaResp = DriveMetaResp
   } deriving (Show, Generic)
 
 instance FromJSON DriveMetaResp where
-  parseJSON = withObject "DriveMetaResp" $ \o ->
+  parseJSON = withObject "DriveMetaResp" $ \o -> do
+    rejectUnexpectedDriveResponseKeys
+      "Drive metadata response"
+      ["resourceKey"]
+      o
     DriveMetaResp <$>
       ((o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey"))
+
+rejectUnexpectedDriveResponseKeys :: String -> [Text] -> AKeyMap.KeyMap Value -> Parser ()
+rejectUnexpectedDriveResponseKeys responseLabel allowedKeys o =
+  case filter (`Set.notMember` allowedKeySet) (AKeyMap.keys o) of
+    [] -> pure ()
+    unexpectedKey : _ ->
+      fail $
+        responseLabel <> " contains unexpected field: "
+          <> T.unpack (AKey.toText unexpectedKey)
+  where
+    allowedKeySet = Set.fromList (map AKey.fromText allowedKeys)
 
 uploadToDrive
   :: Manager

@@ -109,6 +109,7 @@ import qualified TDF.DTO as DTO
 import TDF.Server
     ( MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
+    , DriveMetaResp(..)
     , GoogleToken(..)
     , PayPalLink(..)
     , PayPalToken(..)
@@ -5244,6 +5245,15 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"____\"}"
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk bad\"}"
             assertRejected "{\"id\":\"file-123\",\"resourceKey\":\"rk%20bad\"}"
+
+        it "rejects unexpected Drive response keys before fallback URL resolution" $ do
+            let assertUploadRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String DriveApiResp) `shouldSatisfy` isLeft
+                assertMetaRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String DriveMetaResp) `shouldSatisfy` isLeft
+            assertUploadRejected $
+                "{\"id\":\"file-123\",\"webContentLink\":\"https://drive.google.com/uc?id=file-123\",\"mimeType\":\"image/png\"}"
+            assertMetaRejected "{\"resourceKey\":\"rk-123\",\"kind\":\"drive#file\"}"
 
     describe "GoogleToken FromJSON" $ do
         it "normalizes valid Google OAuth token responses before proxying them" $ do
