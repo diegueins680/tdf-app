@@ -363,6 +363,11 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(
           Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
         ).toBe(true);

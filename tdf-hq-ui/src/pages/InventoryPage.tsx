@@ -811,6 +811,7 @@ export default function InventoryPage() {
     !showInitialInventoryLoadingState
     && !showFirstAssetEmptyState
     && !showInitialInventoryErrorState
+    && !showSingleAssetSummary
     && !hasActiveInventorySearch;
   const isInventoryRefreshing = assetsQuery.isFetching && !showInitialInventoryLoadingState;
   const historyAlreadyOpenFromMenu = Boolean(
