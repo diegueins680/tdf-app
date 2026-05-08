@@ -6464,6 +6464,71 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('summarizes hidden admin statuses in the overflow action without adding a status column early', async () => {
+    const user = userEvent.setup();
+    mockListUsers.mockResolvedValue([
+      buildAdminUser(),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+      }),
+      buildAdminUser({
+        userId: 103,
+        username: 'linus',
+        displayName: 'Linus Torvalds',
+        partyId: 11,
+        roles: ['ReadOnly'],
+      }),
+      buildAdminUser({
+        userId: 104,
+        username: 'marie',
+        displayName: 'Marie Curie',
+        partyId: 12,
+        roles: ['Accounting'],
+      }),
+      buildAdminUser({
+        userId: 105,
+        username: 'nikola',
+        displayName: 'Nikola Tesla',
+        partyId: 13,
+        roles: ['Engineer'],
+      }),
+      buildAdminUser({
+        userId: 106,
+        username: 'zoe',
+        displayName: 'Zoe Washburne',
+        partyId: 14,
+        roles: ['Teacher'],
+        status: 'INVITED',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Nikola Tesla')).toBeInTheDocument();
+      expect(screen.queryByText('Zoe Washburne')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Ver 1 usuario más \(1 requiere atención\)/i })).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
+      expect(screen.queryByText('Invitado')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Ver 1 usuario más \(1 requiere atención\)/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Zoe Washburne')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Estado$/i })).toBeInTheDocument();
+      expect(screen.getByText('Invitado')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Mostrar solo 5 usuarios/i })).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
   it('keeps role review uncluttered until a pending role change needs save and discard actions', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);

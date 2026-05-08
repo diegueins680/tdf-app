@@ -1362,6 +1362,10 @@ function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLog
   return user.lastSeenAt ?? user.lastLoginAt;
 }
 
+function adminUserStatusNeedsAttention(status?: AdminUserStatus | null) {
+  return status != null && status !== 'ACTIVE';
+}
+
 function normalizeHealthIndicator(value?: string | null) {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -1886,13 +1890,20 @@ export default function AdminConsolePage() {
     : null;
   const showUsersTable = users.length > 1;
   const visibleAdminUsers = showAllAdminUsers ? users : users.slice(0, ADMIN_USERS_VISIBLE_LIMIT);
+  const hiddenAdminUsers = showAllAdminUsers ? [] : users.slice(ADMIN_USERS_VISIBLE_LIMIT);
   const hiddenAdminUserCount = Math.max(users.length - visibleAdminUsers.length, 0);
+  const hiddenAdminUserAttentionCount = hiddenAdminUsers.filter((user) =>
+    adminUserStatusNeedsAttention(user.status),
+  ).length;
+  const hiddenAdminUserAttentionSuffix = hiddenAdminUserAttentionCount > 0
+    ? ` (${hiddenAdminUserAttentionCount} ${hiddenAdminUserAttentionCount === 1 ? 'requiere' : 'requieren'} atención)`
+    : '';
   const showAdminUsersOverflowAction = showUsersTable && users.length > ADMIN_USERS_VISIBLE_LIMIT;
   const adminUsersOverflowActionLabel = showAllAdminUsers
     ? `Mostrar solo ${ADMIN_USERS_VISIBLE_LIMIT} usuarios`
-    : `Ver ${hiddenAdminUserCount} ${hiddenAdminUserCount === 1 ? 'usuario más' : 'usuarios más'}`;
+    : `Ver ${hiddenAdminUserCount} ${hiddenAdminUserCount === 1 ? 'usuario más' : 'usuarios más'}${hiddenAdminUserAttentionSuffix}`;
   const showUsersLastAccessColumn = visibleAdminUsers.some((user) => getAdminUserLastAccess(user) != null);
-  const showUsersStatusColumn = visibleAdminUsers.some((user) => user.status != null && user.status !== 'ACTIVE');
+  const showUsersStatusColumn = visibleAdminUsers.some((user) => adminUserStatusNeedsAttention(user.status));
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
