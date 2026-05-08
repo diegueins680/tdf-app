@@ -1969,11 +1969,18 @@ export default function AdminConsolePage() {
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
   const showAuditTable = audits.length > 1;
   const visibleAuditEntries = showAllAuditEntries ? audits : audits.slice(0, AUDIT_VISIBLE_ENTRY_LIMIT);
+  const hiddenAuditEntries = showAllAuditEntries ? [] : audits.slice(AUDIT_VISIBLE_ENTRY_LIMIT);
   const hiddenAuditEntryCount = Math.max(audits.length - visibleAuditEntries.length, 0);
+  const hiddenAuditEntryContextCount = hiddenAuditEntries.filter((entry) =>
+    hasAuditActor(entry.actorId) || hasAuditDetail(entry.diff),
+  ).length;
+  const hiddenAuditEntryContextSuffix = hiddenAuditEntryContextCount > 0
+    ? ` (${hiddenAuditEntryContextCount} con actor o detalle)`
+    : '';
   const showAuditOverflowAction = showAuditTable && audits.length > AUDIT_VISIBLE_ENTRY_LIMIT;
   const auditOverflowActionLabel = showAllAuditEntries
     ? 'Mostrar solo cambios recientes'
-    : `Ver ${hiddenAuditEntryCount} ${hiddenAuditEntryCount === 1 ? 'cambio anterior' : 'cambios anteriores'}`;
+    : `Ver ${hiddenAuditEntryCount} ${hiddenAuditEntryCount === 1 ? 'cambio anterior' : 'cambios anteriores'}${hiddenAuditEntryContextSuffix}`;
   const showAuditDateColumn = visibleAuditEntries.some((entry) => hasAuditTimestamp(entry));
   const showAuditActorColumn = visibleAuditEntries.some((entry) => hasAuditActor(entry.actorId));
   const showAuditDetailColumn = visibleAuditEntries.some((entry) => hasAuditDetail(entry.diff));

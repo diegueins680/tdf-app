@@ -7693,6 +7693,51 @@ describe('AdminConsolePage', () => {
     });
   });
 
+  it('summarizes hidden audit actor/detail context in the overflow action without adding columns early', async () => {
+    const user = userEvent.setup();
+    mockAuditLogs.mockResolvedValue(
+      Array.from({ length: 6 }, (_, index) => {
+        const auditNumber = index + 1;
+        const isHiddenOlderEntry = auditNumber === 1;
+
+        return {
+          auditId: `audit-${auditNumber}`,
+          actorId: isHiddenOlderEntry ? 777 : null,
+          entity: 'package',
+          entityId: `PKG-${auditNumber}`,
+          action: `package.synced.${auditNumber}`,
+          diff: isHiddenOlderEntry ? 'Revisó permisos después de importar usuarios.' : null,
+          createdAt: `2026-04-09T1${auditNumber}:00:00.000Z`,
+        };
+      }),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Paquete · PKG-6')).toBeInTheDocument();
+      expect(screen.getByText('Paquete · PKG-2')).toBeInTheDocument();
+      expect(screen.queryByText('Paquete · PKG-1')).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Actor$/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: /^Detalle$/i })).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Ver 1 cambio anterior \(1 con actor o detalle\)/i }),
+      ).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    await user.click(screen.getByRole('button', { name: /Ver 1 cambio anterior \(1 con actor o detalle\)/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Paquete · PKG-1')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
+      expect(screen.getByText('Usuario #777')).toBeInTheDocument();
+      expect(screen.getByText('Revisó permisos después de importar usuarios.')).toBeInTheDocument();
+    });
+  });
+
   it('collapses expanded audit history when a refreshed audit feed arrives', async () => {
     const user = userEvent.setup();
     mockAuditLogs.mockResolvedValue(
