@@ -1528,6 +1528,9 @@ const defaultPublicFormSourceKeys = new Set([
   'notion',
   'notion form',
   'notion forms',
+  'forms app',
+  'forms app form',
+  'forms app forms',
 ].map(normalizeSourceAliasKey));
 
 const registrationSourceLabel = (source: string | null | undefined) => {

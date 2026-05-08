@@ -9815,6 +9815,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'gravity_form',
       'webflow_forms',
       'wix_forms',
+      'forms_app',
+      'forms.app_form',
     ] as const;
     const hiddenSourceLabels = [
       'Google forms',
@@ -9855,6 +9857,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Gravity form',
       'Webflow forms',
       'Wix forms',
+      'Forms app',
+      'Forms app form',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
