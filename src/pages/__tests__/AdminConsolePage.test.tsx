@@ -5235,6 +5235,62 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/no está disponible/i)).not.toBeInTheDocument();
   });
 
+  it('ignores support-hand-off fallback cards so first-run users do not open dead-end modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-credentials-contact-support',
+          title: 'Credenciales externas',
+          body: ['Contact support to enable this module.'],
+        },
+        {
+          cardId: 'technical-integrations-admin-contact',
+          title: 'Integraciones técnicas',
+          body: ['Ask your administrator to enable this workflow before using it.'],
+        },
+        {
+          cardId: 'service-keys-contacto-admin',
+          title: 'Llaves de servicio',
+          body: ['Contacta al administrador para habilitar este módulo.'],
+        },
+        {
+          cardId: 'api-access-pide-admin',
+          title: 'Acceso API',
+          body: ['Pide al administrador que habilite este flujo.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', {
+        name: /Credenciales externas|Integraciones técnicas|Llaves de servicio|Acceso API/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Llaves de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Contact support to enable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ask your administrator to enable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Contacta al administrador/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Pide al administrador/i)).not.toBeInTheDocument();
+  });
+
   it('ignores setup-required fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
