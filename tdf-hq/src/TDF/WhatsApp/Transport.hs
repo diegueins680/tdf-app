@@ -51,9 +51,10 @@ loadWhatsAppEnv = do
         "WhatsApp verify token"
         ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
   contact <-
-    validateOptionalEnvText normalizeWhatsAppContactNumber
-      =<< firstConfiguredText
-        ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+    firstNormalizedAliasText
+      "WhatsApp contact number"
+      normalizeWhatsAppContactNumber
+      ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
   apiVersion <-
     validateOptionalEnvText normalizeGraphApiVersion
       =<< firstNonEmptyAliasText
@@ -121,16 +122,6 @@ missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
           else T.intercalate "; " (map pieceToText missingPieces)
   in T.concat ["WhatsApp configuration not available: ", details]
 
-firstConfiguredText :: [String] -> IO (Maybe Text)
-firstConfiguredText names = go names
-  where
-    go [] = pure Nothing
-    go (name:rest) = do
-      val <- lookupEnv name
-      case fmap (T.strip . T.pack) val of
-        Just txt | not (T.null txt) -> pure (Just txt)
-        _ -> go rest
-
 firstNonEmptyAliasText :: String -> [String] -> IO (Maybe Text)
 firstNonEmptyAliasText label names = do
   values <- traverse lookupAlias names
@@ -152,3 +143,26 @@ firstNonEmptyAliasText label names = do
         if T.null txt
           then Nothing
           else Just (name, txt)
+
+firstNormalizedAliasText :: String -> (Text -> Either String Text) -> [String] -> IO (Maybe Text)
+firstNormalizedAliasText label normalizeValue names = do
+  values <- traverse lookupAlias names
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstName, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictName, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstName <> " and " <> conflictName
+              <> " are both set with different values"
+  where
+    lookupAlias name = do
+      val <- lookupEnv name
+      case fmap (T.strip . T.pack) val of
+        Just txt | not (T.null txt) ->
+          case normalizeValue txt of
+            Left err -> fail err
+            Right normalized -> pure (Just (name, normalized))
+        _ -> pure Nothing

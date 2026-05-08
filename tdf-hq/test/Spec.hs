@@ -1766,6 +1766,29 @@ main = hspec $ do
                         `shouldSatisfy`
                             Data.Text.isPrefixOf "https://wa.me/593991234567?text="
 
+        it "rejects conflicting WhatsApp contact-number aliases before CTA fallback use" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just " +593 99 123 4567 ")
+                , ("WHATSAPP_CONTACT_NUMBER", Just "+593991234567")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waContactNumber cfg `shouldBe` Just "+593991234567"
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just "+593991234567")
+                , ("WA_CONTACT_NUMBER", Just "+593981234567")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp contact number aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects malformed WhatsApp transport fallbacks before provider sends" $ do
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
