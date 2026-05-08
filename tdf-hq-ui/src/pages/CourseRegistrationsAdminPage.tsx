@@ -566,6 +566,16 @@ const statusFilterChipAriaLabel = (status: StatusFilter, isActive: boolean) => {
     : `Filtrar inscripciones por estado ${statusLabel}`;
 };
 
+const statusFilterChipTitle = (
+  status: StatusFilter,
+  isActive: boolean,
+  clearsLocalSearch: boolean,
+) => (
+  clearsLocalSearch
+    ? `${statusFilterChipAriaLabel(status, isActive)} y limpiar la búsqueda actual.`
+    : undefined
+);
+
 const statusChip = (status: string) => {
   return (
     <Chip
@@ -5114,6 +5124,7 @@ export default function CourseRegistrationsAdminPage() {
                                 variant={status === value ? 'filled' : 'outlined'}
                                 aria-label={statusFilterChipAriaLabel(value, status === value)}
                                 aria-pressed={status === value}
+                                title={statusFilterChipTitle(value, status === value, hasLocalSearch)}
                                 onClick={() => {
                                   setHasUsedFilterControl(true);
                                   setLocalSearch('');

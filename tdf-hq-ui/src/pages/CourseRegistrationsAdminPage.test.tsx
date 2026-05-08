@@ -11164,6 +11164,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(container.textContent).toContain('Nina Simone');
+      const pendingStatusFilter = getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago');
+      expect(pendingStatusFilter.getAttribute('title')).toBe(
+        'Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual.',
+      );
+      expect(container.textContent).not.toContain('limpiar la búsqueda actual');
     });
 
     listRegistrationsMock.mockClear();
