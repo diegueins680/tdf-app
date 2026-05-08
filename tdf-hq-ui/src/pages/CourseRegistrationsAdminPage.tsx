@@ -3341,7 +3341,7 @@ export default function CourseRegistrationsAdminPage() {
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
     && cohortsQuery.isError
-    && !hasCustomFilters
+    && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
   const showRegistrationErrorInlineRetry = regsQuery.isError;
   const showInlineCohortRetryAction = showCohortFilterUnavailableSummary && !regsQuery.isError;

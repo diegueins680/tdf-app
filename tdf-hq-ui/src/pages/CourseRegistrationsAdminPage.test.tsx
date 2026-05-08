@@ -7946,19 +7946,23 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 50,
       });
-      expect(container.textContent).toContain(
-        'No hay inscripciones con el límite actual de hasta 50 inscripciones.',
-      );
+      const errorState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-cohort-error"]');
+      expect(errorState?.textContent).toContain(initialCohortErrorMessage);
+      expect(container.textContent).not.toContain('No hay inscripciones con el límite actual');
       expect(container.textContent).not.toContain('Usa refrescar si esperabas resultados.');
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
-      expect(container.querySelector('[data-testid="course-registration-initial-cohort-error"]')).toBeNull();
-      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      clickButton(getButtonByText(container, initialCohortRetryLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -7966,7 +7970,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(listCohortsMock).toHaveBeenCalledTimes(2);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-initial-cohort-error"]')).toBeNull();
     });
 
     await cleanup();
