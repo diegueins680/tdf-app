@@ -831,10 +831,10 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
 };
 
 const firstRunApplicationDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|(?:student\s+|course\s+)?admissions?\s+packets?|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n|admisi[oó]n|admisiones|ingreso)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunApplicationDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|(?:student\s+|course\s+)?admissions?\s+packets?|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n|admisi[oó]n|admisiones|ingreso)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
 const firstRunOnboardingDescriptorPrefixPattern =
   /^(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?)|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url)\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
@@ -1148,11 +1148,11 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunCohortDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
+    .replace(firstRunApplicationDescriptorPrefixPattern, '')
     .replace(
       /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s|para\s+el|para)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso|para\s+el|para)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
     )
-    .replace(firstRunApplicationDescriptorPrefixPattern, '')
     .trim();
   if (strippedTitle === normalizedTitle) return trimmedTitle;
 
@@ -1208,11 +1208,11 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunCohortDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')
+    .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .replace(
       /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
       '',
     )
-    .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .trim();
 
   return strippedTitle === normalizedTitle ? trimmedTitle : unwrapFirstRunDescriptorWrappedTitle(strippedTitle);
