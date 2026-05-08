@@ -1690,7 +1690,26 @@ data InternTodoUpdate = InternTodoUpdate
   } deriving (Show, Generic)
 instance ToJSON InternTodoUpdate
 instance FromJSON InternTodoUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "InternTodoUpdate" $ \o -> do
+    let allowedKeys =
+          [ "itduText"
+          , "itduDone"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternTodoUpdate: " <> T.unpack key)
+      [] -> do
+        textValue <- o .:? "itduText"
+        doneValue <- o .:? "itduDone"
+        case (textValue, doneValue) of
+          (Nothing, Nothing) ->
+            fail "InternTodoUpdate must include at least one field"
+          _ ->
+            pure InternTodoUpdate
+              { itduText = textValue
+              , itduDone = doneValue
+              }
 
 data ClockInRequest = ClockInRequest
   { cirNotes :: Maybe Text

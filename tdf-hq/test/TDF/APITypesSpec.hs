@@ -1367,6 +1367,9 @@ spec = do
                 "{\"done\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty todo updates instead of returning a no-op success" $
+            decodeInternTodoUpdate "{}" `shouldSatisfy` isLeft
+
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
             case decodeEnroll
