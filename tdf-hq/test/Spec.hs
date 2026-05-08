@@ -9164,6 +9164,18 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected hidden-format challenge to be rejected, got " <> show value)
+            case validateHookVerifyRequest
+                (Just "subscribe")
+                (Just " challenge-123 ")
+                (Just "secret")
+                (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.challenge must not contain whitespace"
+                Right value ->
+                    expectationFailure
+                        ("Expected whitespace-padded challenge to be rejected, got " <> show value)
 
         it "rejects missing verification query params with precise 400s" $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
@@ -9230,6 +9242,16 @@ main = hspec $ do
                     BL.unpack (errBody err)
                         `shouldContain` "hidden formatting characters"
                 Right _ -> expectationFailure "Expected hidden-format hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just " secret ")
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must not contain control characters or whitespace"
+                Right _ -> expectationFailure "Expected padded hub.verify_token to be rejected"
             case validateHookVerifyRequest
                     (Just "subscribe")
                     (Just "challenge-123")

@@ -377,14 +377,14 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Nothing ->
           Left err400 { errBody = "hub.mode is required" }
         Just "subscribe" ->
-          case nonBlank mchall of
+          case nonBlankRaw mchall of
             Nothing ->
               Left err400 { errBody = "hub.challenge is required" }
             Just challenge ->
               case validateHookChallenge challenge of
                 Left err -> Left err
                 Right challengeVal ->
-                  case nonBlank mtoken of
+                  case nonBlankRaw mtoken of
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
@@ -415,12 +415,20 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Just txt | not (T.null txt) -> Just txt
         _ -> Nothing
 
+    nonBlankRaw :: Maybe Text -> Maybe Text
+    nonBlankRaw mTxt =
+      case mTxt of
+        Just txt | not (T.null (T.strip txt)) -> Just txt
+        _ -> Nothing
+
     validateHookChallenge :: Text -> Either ServerError Text
     validateHookChallenge challenge
       | T.length challenge > 512 =
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isSpace challenge =
+          Left err400 { errBody = "hub.challenge must not contain whitespace" }
       | T.any isHiddenFormattingChar challenge =
           Left err400
             { errBody = "hub.challenge must not contain hidden formatting characters" }
