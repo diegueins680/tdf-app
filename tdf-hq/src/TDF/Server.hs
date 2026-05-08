@@ -422,22 +422,27 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
   version <- o .: "jsonrpc"
   when (version /= ("2.0" :: Text)) $
     fail "jsonrpc must be 2.0"
-  reqId <- o .:? "id"
-  case reqId of
-    Just (Object _) -> fail "id must be a string, number, or null"
-    Just (Array _)  -> fail "id must be a string, number, or null"
-    Just (Bool _)   -> fail "id must be a string, number, or null"
-    Just (String ident) ->
-      validateMcpIdString ident
-    Just (Number n)
-      | not (Sci.isInteger n) -> fail "id number must be integral"
-    _               -> pure ()
+  reqId <- case AKeyMap.lookup "id" o of
+    Nothing -> pure Nothing
+    Just Null -> fail "id must be omitted for notifications or a string/integral number for requests"
+    Just value -> validateMcpIdValue value *> pure (Just value)
   method <- o .: "method" >>= validateMcpNameField "method"
   mParams <- o .:? "params"
   case mParams of
     Nothing -> pure (McpRequest reqId method Nothing)
     Just value@(Object _) -> pure (McpRequest reqId method (Just value))
     Just _ -> fail "params must be an object"
+
+validateMcpIdValue :: Value -> Parser ()
+validateMcpIdValue (Object _) = fail "id must be a string or integral number"
+validateMcpIdValue (Array _)  = fail "id must be a string or integral number"
+validateMcpIdValue (Bool _)   = fail "id must be a string or integral number"
+validateMcpIdValue (String ident) = validateMcpIdString ident
+validateMcpIdValue (Number n)
+  | Sci.isInteger n = pure ()
+  | otherwise = fail "id number must be integral"
+validateMcpIdValue Null =
+  fail "id must be omitted for notifications or a string/integral number for requests"
 
 validateMcpIdString :: Text -> Parser ()
 validateMcpIdString ident = do
