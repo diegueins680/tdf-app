@@ -2636,7 +2636,8 @@ validateConfiguredCalendarRedirectUri rawRedirect =
 isSafeCalendarRedirectUri :: Text -> Bool
 isSafeCalendarRedirectUri uri
   | not (googleCalendarOAuthCallbackPath `T.isSuffixOf` uri) = False
-  | "https://" `T.isPrefixOf` lowerUri = True
+  | "https://" `T.isPrefixOf` lowerUri =
+      maybe False (not . isLocalCalendarRedirectHost) (calendarRedirectHost (T.drop 8 uri))
   | "http://" `T.isPrefixOf` lowerUri =
       maybe False isLocalCalendarRedirectHost (calendarRedirectHost (T.drop 7 uri))
   | otherwise = False

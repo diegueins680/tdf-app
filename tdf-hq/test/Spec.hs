@@ -229,6 +229,7 @@ import TDF.Server
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
       validateDriveRedirectUri,
+      validateCalendarRedirectUri,
       validateCalendarEventListQuery,
       validatePayPalCredential,
       validatePayPalPayerEmailField,
@@ -4219,6 +4220,32 @@ main = hspec $ do
                                 ("Expected mismatched Instagram redirectUri to be rejected, got " <> show value)
             assertMismatch "https://tdf-app.pages.dev/oauth/instagram/callback"
             assertMismatch "https://hq.example.com/oauth/instagram/callback"
+
+    describe "Google Calendar OAuth redirect validation" $ do
+        it "only accepts HTTPS public or local HTTP Calendar callbacks" $ do
+            validateCalendarRedirectUri
+                " https://tdf-app.pages.dev/configuracion/integraciones/calendario "
+                `shouldBe` Right "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+            validateCalendarRedirectUri
+                " http://127.0.0.1:5173/configuracion/integraciones/calendario "
+                `shouldBe` Right "http://127.0.0.1:5173/configuracion/integraciones/calendario"
+
+            let assertInvalid rawRedirect =
+                    case validateCalendarRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute https Google Calendar OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Calendar redirectUri to be rejected, got " <> show value)
+            assertInvalid "http://hq.example.com/configuracion/integraciones/calendario"
+            assertInvalid "https://localhost/configuracion/integraciones/calendario"
+            assertInvalid "https://127.0.0.1:5173/configuracion/integraciones/calendario"
+            assertInvalid "https://[::1]:5173/configuracion/integraciones/calendario"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#token"
 
     describe "Google Calendar event page decoding" $ do
         it "requires an items array instead of treating malformed pages as empty syncs" $ do
