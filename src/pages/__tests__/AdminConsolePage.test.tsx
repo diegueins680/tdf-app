@@ -2026,6 +2026,61 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps table and list labeled built-in admin titles out of optional modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-users-list',
+          title: 'Users list',
+          body: ['Review assigned teammates before changing workspace permissions.'],
+        },
+        {
+          cardId: 'fallback-lista-usuarios',
+          title: 'Lista de usuarios',
+          body: ['Confirma usuarios administrables antes de ajustar roles.'],
+        },
+        {
+          cardId: 'fallback-service-health-grid',
+          title: 'Service health grid',
+          body: ['Review uptime and dependency checks before changing access.'],
+        },
+        {
+          cardId: 'fallback-audit-table',
+          title: 'Recent audit table',
+          body: ['Check latest admin history before repeating access changes.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Users list')).not.toBeInTheDocument();
+    expect(screen.queryByText('Lista de usuarios')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service health grid')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent audit table')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review assigned teammates before changing workspace permissions\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Check latest admin history before repeating access changes\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps workflow-labeled built-in admin titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
