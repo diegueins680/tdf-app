@@ -209,6 +209,7 @@ const firstFollowUpComposerHelpText =
   'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaymentPendingLabel = 'Marcar pago pendiente';
+const compactPaymentPendingActionLabel = 'Pasar a pendiente';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
 const copyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
@@ -2985,7 +2986,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[role="group"][aria-label="Filtro de estado activo: Pagado"]')).toBeNull();
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       const pendingRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
-      expect(pendingRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(pendingRecoveryAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
       expect(pendingRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
       expect(pendingRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
@@ -3112,7 +3113,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-inline-reset"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(1))).toBe(0);
       const pendingRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
-      expect(pendingRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(pendingRecoveryAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
       expect(pendingRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
       expect(pendingRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
@@ -3204,13 +3205,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       const graceAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
       const katherineAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Katherine Johnson');
-      expect(graceAction.textContent?.trim()).toBe(markPaymentPendingLabel);
-      expect(katherineAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(graceAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
+      expect(katherineAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
       expect(graceAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
       expect(graceAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Katherine Johnson"]')).toBeNull();
-      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(2);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(2);
+      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Estado: Pagado')).toBe(0);
     });
@@ -8577,7 +8579,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.',
       );
-      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(9);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(9);
+      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
       expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Estudiante 1')).toBeTruthy();
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(countOccurrences(container, 'Pagado')).toBe(1);

@@ -573,10 +573,12 @@ const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
 const pendingStatusMenuLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pago pendiente';
 
-const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: boolean) =>
-  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' && useCompactActionLabel
-    ? 'Reabrir'
-    : pendingStatusMenuLabel(currentStatus);
+const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: boolean) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  if (knownStatus === 'cancelled' && useCompactActionLabel) return 'Reabrir';
+  if (knownStatus === 'paid' && useCompactActionLabel) return 'Pasar a pendiente';
+  return pendingStatusMenuLabel(currentStatus);
+};
 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
