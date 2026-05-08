@@ -659,7 +659,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
 
         const row = getRowByUserId(container, 101);
@@ -1107,7 +1107,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
 
         const row = getRowByUserId(container, 101);
@@ -1143,8 +1143,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
+        expect(getPageGuidance(container)).not.toContain('Cuando la lista crezca');
+        expect(container.textContent).not.toContain('Buscar usuarios');
 
         const row = getRowByUserId(container, 101);
         expect(hasLinkWithTextAndHref(row, '999000111', '/perfil/9')).toBe(true);
@@ -1182,7 +1184,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
 
         const row = getRowByUserId(container, 101);
@@ -2963,13 +2965,13 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
         expect(container.textContent).not.toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
         expect(container.textContent).not.toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
         expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
@@ -2998,10 +3000,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
         expect(container.textContent).not.toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
         expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
@@ -3028,10 +3030,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil. Usa WhatsApp si ya tiene un número disponible.',
         );
         expect(container.textContent).not.toContain(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
         const loneRow = getRowByUserId(container, 101);
@@ -3058,7 +3060,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(
           container.textContent?.includes('Haz clic en el nombre para abrir el perfil.'),
@@ -3117,7 +3119,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
@@ -3162,7 +3164,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
         expect(container.textContent).not.toContain('Incluir inactivos');
@@ -3174,7 +3176,7 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. No hay usuarios inactivos.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. No hay usuarios inactivos.',
         );
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
@@ -3205,7 +3207,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Manager · Módulos: crm.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Acceso de este usuario: Roles: Manager · Módulos: crm.',
         );
 
         const loneRow = getRowByUserId(container, 101);
@@ -3238,10 +3240,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Admin, Engineer, Manager +2 roles · Módulos: admin, crm, inventory +1 módulo.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Acceso de este usuario: Roles: Admin, Engineer, Manager +2 roles · Módulos: admin, crm, inventory +1 módulo.',
         );
         expect(getPageGuidanceElement(container).getAttribute('title')).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Roles: Admin, Engineer, Manager, Reception, Teacher · Módulos: admin, crm, inventory, reports.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Acceso de este usuario: Roles: Admin, Engineer, Manager, Reception, Teacher · Módulos: admin, crm, inventory, reports.',
         );
 
         const loneRow = getRowByUserId(container, 101);
@@ -3272,7 +3274,7 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados. Acceso de este usuario: Sin acceso asignado.',
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Acceso de este usuario: Sin acceso asignado.',
         );
 
         const loneRow = getRowByUserId(container, 101);

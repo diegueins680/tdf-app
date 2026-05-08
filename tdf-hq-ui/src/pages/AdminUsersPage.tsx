@@ -421,23 +421,20 @@ const ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO =
   'Estos usuarios todavía no tienen un perfil vinculado. Cuando lo tengan, podrás abrirlos desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const NO_ACCESS_ASSIGNED_SUMMARY = 'Sin acceso asignado';
 const SINGLE_USER_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.';
 const SINGLE_USER_NUMBER_SETUP_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.';
 const SINGLE_USER_CONTACT_SETUP_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.';
 const SINGLE_SEARCH_RESULT_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.';
 const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
-const SINGLE_USER_FUTURE_LIST_HINT =
-  ' Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
 const makeSingleUserInactiveGuidance = (guidance: string) =>
   guidance
-    .replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.')
-    .replace(SINGLE_USER_FUTURE_LIST_HINT, '');
+    .replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.');
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
@@ -470,22 +467,18 @@ const buildPendingProfileGuidance = ({
   readiness: UserContactReadiness;
 }) => {
   const scopePrefix = scope === 'single-user' ? 'Solo hay un usuario por ahora.' : 'Resultado único.';
-  const scopeSuffix =
-    scope === 'single-user'
-      ? ' Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.'
-      : '';
   const missingProfileMessage =
     ' Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil.';
 
   if (readiness === 'whatsapp-ready') {
-    return `${scopePrefix}${missingProfileMessage} Usa WhatsApp si ya tiene un número disponible.${scopeSuffix}`;
+    return `${scopePrefix}${missingProfileMessage} Usa WhatsApp si ya tiene un número disponible.`;
   }
 
   if (readiness === 'contact-ready') {
-    return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+    return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.`;
   }
 
-  return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+  return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.`;
 };
 
 const buildUserAccessSummary = ({
