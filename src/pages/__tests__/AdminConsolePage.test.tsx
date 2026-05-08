@@ -4660,6 +4660,61 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/This workflow is not ready yet\./i)).not.toBeInTheDocument();
   });
 
+  it('ignores section-not-ready fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-credentials-section-not-ready',
+          title: 'Credenciales externas',
+          body: ['This section is not ready yet.'],
+        },
+        {
+          cardId: 'admin-automations-area-not-ready',
+          title: 'Automatizaciones admin',
+          body: ['Esta área no está lista para este workspace.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Automatizaciones admin')).not.toBeInTheDocument();
+    expect(screen.queryByText(/This section is not ready/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Esta área no está lista/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Automatizaciones admin')).not.toBeInTheDocument();
+  });
+
   it('ignores terse Spanish coming-soon preview cards so fallback discovery does not add dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
