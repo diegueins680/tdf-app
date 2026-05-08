@@ -2,6 +2,7 @@
 module TDF.Services.InstagramMessaging
   ( sendInstagramText
   , sendInstagramTextWithContext
+  , formatInstagramGraphHttpError
   ) where
 
 import           Control.Exception (SomeException, try)
@@ -11,6 +12,7 @@ import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
@@ -255,7 +257,40 @@ sendToEndpoint manager token recipientId body urlTxt = do
         Left err -> Left (T.pack (show err))
         Right resp ->
           let status = statusCode (responseStatus resp)
-              bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
+              bodyTxt = decodeInstagramGraphBody (responseBody resp)
           in if status >= 200 && status < 300
                then Right bodyTxt
-               else Left ("HTTP " <> T.pack (show status) <> ": " <> bodyTxt)
+               else Left (formatInstagramGraphHttpError status (responseBody resp))
+
+formatInstagramGraphHttpError :: Int -> BL.ByteString -> Text
+formatInstagramGraphHttpError status bodyBytes =
+  "HTTP " <> T.pack (show status) <> suffix
+  where
+    bodyTxt = sanitizeInstagramGraphBody bodyBytes
+    suffix =
+      if T.null bodyTxt
+        then ""
+        else ": " <> bodyTxt
+
+sanitizeInstagramGraphBody :: BL.ByteString -> Text
+sanitizeInstagramGraphBody bodyBytes =
+  truncateInstagramGraphErrorBody . T.strip . T.map sanitizeGraphErrorChar $
+    decodeInstagramGraphBody bodyBytes
+
+decodeInstagramGraphBody :: BL.ByteString -> Text
+decodeInstagramGraphBody =
+  TE.decodeUtf8With TEE.lenientDecode . BL.toStrict
+
+truncateInstagramGraphErrorBody :: Text -> Text
+truncateInstagramGraphErrorBody bodyTxt
+  | T.length bodyTxt <= maxInstagramGraphErrorBodyChars = bodyTxt
+  | otherwise = T.take maxInstagramGraphErrorBodyChars bodyTxt <> "..."
+
+sanitizeGraphErrorChar :: Char -> Char
+sanitizeGraphErrorChar ch
+  | isControl ch = ' '
+  | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+  | otherwise = ch
+
+maxInstagramGraphErrorBodyChars :: Int
+maxInstagramGraphErrorBodyChars = 1000

@@ -253,7 +253,9 @@ import TDF.ServerLiveSessions
       validateLiveSessionRiderFileName,
       validateLiveSessionRiderFileSize,
       validateLiveSessionTermsAcceptance )
-import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
+import TDF.Services.InstagramMessaging
+    ( formatInstagramGraphHttpError,
+      sendInstagramTextWithContext )
 import TDF.Services.FacebookMessaging (sendFacebookText)
 import TDF.Server.SocialSync
     ( socialSyncServer,
@@ -2985,6 +2987,17 @@ main = hspec $ do
                         "recipient-1"
                         "hola"
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
+
+        it "sanitizes malformed Graph error bodies before surfacing fallback send failures" $ do
+            let formatted =
+                    Data.Text.unpack $
+                        formatInstagramGraphHttpError
+                            500
+                            (BL.pack "bad\255\nline\226\128\139tail")
+            formatted `shouldContain` "HTTP 500: bad"
+            formatted `shouldContain` "line tail"
+            formatted `shouldNotContain` "\n"
+            formatted `shouldNotContain` "\x200B"
 
     describe "Facebook messaging context fallback" $ do
         it "rejects hidden-format outgoing message bodies before fallback config is evaluated" $
