@@ -108,6 +108,10 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
 const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
   `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
 
+const getQueryErrorMessage = (error: unknown) => (
+  error instanceof Error ? error.message : 'Error inesperado.'
+);
+
 const hasSingleSocialMessageState = (stats: MessageStats) => {
   if (stats.incoming.length === 0) return false;
 
@@ -166,6 +170,11 @@ export default function AdminDiagnosticsPage() {
     { label: 'Facebook', stats: facebookStats, loading: facebookQuery.isLoading },
     { label: 'WhatsApp', stats: whatsappStats, loading: whatsappQuery.isLoading },
   ];
+  const socialQueryErrors = [
+    instagramQuery.isError ? { label: 'Instagram', message: getQueryErrorMessage(instagramQuery.error) } : null,
+    facebookQuery.isError ? { label: 'Facebook', message: getQueryErrorMessage(facebookQuery.error) } : null,
+    whatsappQuery.isError ? { label: 'WhatsApp', message: getQueryErrorMessage(whatsappQuery.error) } : null,
+  ].filter((error): error is { label: string; message: string } => error != null);
   const showGlobalSocialQuietGuidance =
     !instagramQuery.isError
     && !facebookQuery.isError
@@ -189,6 +198,10 @@ export default function AdminDiagnosticsPage() {
   const showSharedAwaitingReplyHistorySummary = awaitingReplyHistoryChannelLabels.length > 1;
   const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
   const showSocialRefreshAction = !showGlobalSocialQuietGuidance && !showSocialLoadingSummary;
+  const showGroupedSocialError = socialQueryErrors.length > 1;
+  const groupedSocialErrorTitle = showGroupedSocialError
+    ? socialQueryErrors.map(({ label, message }) => `${label}: ${message}`).join(' · ')
+    : undefined;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -258,23 +271,22 @@ export default function AdminDiagnosticsPage() {
           </Button>
         )}
       </Paper>
-      {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
+      {socialQueryErrors.length > 0 && (
         <Stack spacing={1}>
-          {instagramQuery.isError && (
-            <Alert severity="error">
-              Instagram: {instagramQuery.error instanceof Error ? instagramQuery.error.message : 'Error inesperado.'}
+          {showGroupedSocialError ? (
+            <Alert
+              severity="error"
+              title={groupedSocialErrorTitle}
+              data-testid="admin-diagnostics-social-error-summary"
+            >
+              No se pudieron cargar mensajes de {formatChannelList(socialQueryErrors.map(({ label }) => label))}.
+              Usa Actualizar mensajes para reintentar.
             </Alert>
-          )}
-          {facebookQuery.isError && (
-            <Alert severity="error">
-              Facebook: {facebookQuery.error instanceof Error ? facebookQuery.error.message : 'Error inesperado.'}
+          ) : socialQueryErrors.map(({ label, message }) => (
+            <Alert severity="error" key={label}>
+              {label}: {message}
             </Alert>
-          )}
-          {whatsappQuery.isError && (
-            <Alert severity="error">
-              WhatsApp: {whatsappQuery.error instanceof Error ? whatsappQuery.error.message : 'Error inesperado.'}
-            </Alert>
-          )}
+          ))}
         </Stack>
       )}
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>

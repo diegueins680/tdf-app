@@ -267,6 +267,40 @@ describe('AdminDiagnosticsPage', () => {
     }
   });
 
+  it('groups multiple social inbox errors into one recovery cue', async () => {
+    listInstagramMessagesMock.mockRejectedValue(new Error('instagram unavailable'));
+    listFacebookMessagesMock.mockRejectedValue(new Error('facebook unavailable'));
+    listWhatsAppMessagesMock.mockRejectedValue(new Error('whatsapp unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const errorSummary = container.querySelector<HTMLElement>(
+          '[data-testid="admin-diagnostics-social-error-summary"]',
+        );
+
+        expect(errorSummary).not.toBeNull();
+        expect(errorSummary?.textContent).toContain(
+          'No se pudieron cargar mensajes de Instagram, Facebook y WhatsApp. Usa Actualizar mensajes para reintentar.',
+        );
+        expect(errorSummary?.getAttribute('title')).toBe(
+          'Instagram: instagram unavailable · Facebook: facebook unavailable · WhatsApp: whatsapp unavailable',
+        );
+        expect(container.textContent).toContain('Actualizar mensajes');
+        expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Instagram: instagram unavailable');
+        expect(container.textContent).not.toContain('Facebook: facebook unavailable');
+        expect(container.textContent).not.toContain('WhatsApp: whatsapp unavailable');
+        expect(container.textContent).not.toContain('Entrantes: 0');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the detailed history table only for channels that already have replied messages', async () => {
     listInstagramMessagesMock.mockResolvedValue([buildMessage()]);
 
