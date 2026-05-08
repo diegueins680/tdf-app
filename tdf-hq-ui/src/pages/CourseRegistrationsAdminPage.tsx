@@ -2789,16 +2789,16 @@ export default function CourseRegistrationsAdminPage() {
     && limit === DEFAULT_LIMIT;
   const allVisibleRowsCanOpenPaymentWorkflow = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
-  const allVisibleRowsUseDirectPaidRecoveryAction = statusAlreadyVisibleInBusySearchOnboarding
+  const allVisibleRowsUseBusyListPaidRecoveryAction = statusAlreadyVisibleInBusySearchOnboarding
     && searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid');
   const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
       reg.crStatus,
-      allVisibleRowsUseDirectPaidRecoveryAction,
+      allVisibleRowsUseBusyListPaidRecoveryAction,
     ));
   const localSearchOnboardingActionText = allVisibleRowsUseDirectPendingRecoveryAction
-    ? allVisibleRowsUseDirectPaidRecoveryAction
+    ? allVisibleRowsUseBusyListPaidRecoveryAction
       ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
       : buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
     : allVisibleRowsCanOpenPaymentWorkflow
@@ -3105,11 +3105,32 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const allVisibleRowsUsePaidRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid')
+    && (
+      allVisibleRowsUseBusyListPaidRecoveryAction
+      || showActiveStatusFilterSummary
+      || (
+        localSearchSingleResultUsesDirectPaidRecovery
+        && searchedRegistrations.length === 1
+      )
+      || (
+        showSingleStatusSummaryInPageChrome
+        && searchedRegistrations.length === 1
+      )
+    );
+  const allVisibleRowsUseDossierRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
+      reg.crStatus,
+      allVisibleRowsUsePaidRecoveryAction,
+    ));
   const showBusyStatusIconActions = showBusyListSearchOnboarding
     && useCompactStatusActionLabel
     && !allVisibleRowsUseDirectPendingRecoveryAction;
   const dossierScopeHint = [
-    allVisibleRowsUseDirectPendingRecoveryAction
+    allVisibleRowsUsePaidRecoveryAction
+      ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseDossierRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
       : allVisibleRowsCanOpenPaymentWorkflow
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)

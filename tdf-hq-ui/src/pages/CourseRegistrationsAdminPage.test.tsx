@@ -3200,8 +3200,13 @@ describe('CourseRegistrationsAdminPage', () => {
       const activeStatusSummary = container.querySelector<HTMLElement>(
         '[data-testid="course-registration-active-status-summary"]',
       );
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        paidRecoveryScopeHint,
+      );
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
+      expect(container.textContent).not.toContain(pendingRecoveryScopeHint);
+      expect(container.textContent).not.toContain('el menú de estado muestra acciones.');
       expect(container.querySelector(`[aria-label="${clearPaidStatusFilterLabel}"]`)).toBeNull();
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       const graceAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
