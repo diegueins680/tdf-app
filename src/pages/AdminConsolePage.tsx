@@ -1103,6 +1103,10 @@ function getAuditEntryTimestamp(entry: Pick<AuditLogEntry, 'createdAt'>) {
   return parseAdminDateTimestamp(entry.createdAt) ?? Number.NEGATIVE_INFINITY;
 }
 
+function hasAuditTimestamp(entry: Pick<AuditLogEntry, 'createdAt'>) {
+  return parseAdminDateTimestamp(entry.createdAt) != null;
+}
+
 function compareAuditEntries(left: AuditLogEntry, right: AuditLogEntry) {
   const timestampDifference = getAuditEntryTimestamp(right) - getAuditEntryTimestamp(left);
 
@@ -1572,13 +1576,19 @@ function buildAdminUsersSectionDescription({
 }
 
 function buildAuditSectionDescription({
+  showDateColumn,
   showActorColumn,
   showDetailColumn,
 }: {
+  showDateColumn: boolean;
   showActorColumn: boolean;
   showDetailColumn: boolean;
 }) {
   const hiddenColumnLabels: string[] = [];
+
+  if (!showDateColumn) {
+    hiddenColumnLabels.push('fecha');
+  }
 
   if (!showActorColumn) {
     hiddenColumnLabels.push('actor');
@@ -1885,6 +1895,7 @@ export default function AdminConsolePage() {
   const auditOverflowActionLabel = showAllAuditEntries
     ? 'Mostrar solo cambios recientes'
     : `Ver ${hiddenAuditEntryCount} ${hiddenAuditEntryCount === 1 ? 'cambio anterior' : 'cambios anteriores'}`;
+  const showAuditDateColumn = visibleAuditEntries.some((entry) => hasAuditTimestamp(entry));
   const showAuditActorColumn = visibleAuditEntries.some((entry) => hasAuditActor(entry.actorId));
   const showAuditDetailColumn = visibleAuditEntries.some((entry) => hasAuditDetail(entry.diff));
   const isAdminPanelBaselining = consoleQuery.isPending || usersQuery.isLoading || auditQuery.isLoading;
@@ -1964,6 +1975,7 @@ export default function AdminConsolePage() {
     : (
       showAuditTable
         ? buildAuditSectionDescription({
+          showDateColumn: showAuditDateColumn,
           showActorColumn: showAuditActorColumn,
           showDetailColumn: showAuditDetailColumn,
         })
@@ -2586,7 +2598,7 @@ export default function AdminConsolePage() {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Fecha</TableCell>
+                        {showAuditDateColumn && <TableCell>Fecha</TableCell>}
                         <TableCell>Entidad</TableCell>
                         <TableCell>Acción</TableCell>
                         {showAuditActorColumn && <TableCell>Actor</TableCell>}
@@ -2596,7 +2608,7 @@ export default function AdminConsolePage() {
                     <TableBody>
                       {visibleAuditEntries.map((entry: AuditLogEntry, index: number) => (
                         <TableRow key={`${entry.entity}-${entry.entityId}-${index}`}>
-                          <TableCell>{formatDate(entry.createdAt)}</TableCell>
+                          {showAuditDateColumn && <TableCell>{formatDate(entry.createdAt)}</TableCell>}
                           <TableCell>
                             <Typography variant="body2" title={getAuditEntityReferenceTitle(entry)}>
                               {formatAuditEntityReference(entry)}

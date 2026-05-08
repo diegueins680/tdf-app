@@ -7104,6 +7104,51 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/^Sistema$/i)).not.toBeInTheDocument();
   });
 
+  it('hides invalid audit timestamps from the table until a real date adds context', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Manager',
+        createdAt: 'not-a-date',
+      },
+      {
+        auditId: 'audit-2',
+        actorId: 102,
+        entity: 'package',
+        entityId: 'PKG-2',
+        action: 'package.synced',
+        diff: 'Paquete sincronizado con facturación',
+        createdAt: '   ',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Vista compacta: fecha aparecerá cuando aporte contexto\./i),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /^Detalle$/i })).toBeInTheDocument();
+      expect(screen.getByText('Roles actualizados')).toBeInTheDocument();
+      expect(screen.getByText('Paquete sincronizado')).toBeInTheDocument();
+      expect(screen.getByText('Usuario #101')).toBeInTheDocument();
+      expect(screen.getByText('Usuario #102')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /^Fecha$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Fecha no disponible')).not.toBeInTheDocument();
+    expect(screen.queryByText('not-a-date')).not.toBeInTheDocument();
+  });
+
   it('shows user-facing audit entity labels while preserving raw entity details', async () => {
     mockAuditLogs.mockResolvedValue([
       {
