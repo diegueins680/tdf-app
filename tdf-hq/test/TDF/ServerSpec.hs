@@ -377,6 +377,7 @@ import TDF.ServerFuture
     , deriveFutureStubAreas
     , futureStubId
     , futureServer
+    , invalidCardText
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsolePublishedPath
@@ -10345,6 +10346,14 @@ spec = describe "TDF.Server helpers" $ do
                     "Admin"
                     "Admin"
                     False)
+
+    describe "invalidCardText" $
+        it "rejects Unicode space lookalikes in admin console fallback copy" $ do
+            invalidCardText 120 "Tokens API" `shouldBe` False
+            invalidCardText 120 ("Tokens" <> T.singleton '\x00A0' <> "API")
+                `shouldBe` True
+            invalidCardText 120 ("Tokens" <> T.singleton '\x2007' <> "API")
+                `shouldBe` True
 
     describe "validateFutureAdminConsoleCard" $ do
         it "rejects malformed or mislabeled admin console cards before serving fallback discovery metadata" $ do

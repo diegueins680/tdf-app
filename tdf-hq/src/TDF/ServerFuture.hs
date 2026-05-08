@@ -6,7 +6,7 @@ module TDF.ServerFuture where
 import           Control.Monad.Except (MonadError)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isControl
   )
@@ -365,14 +365,14 @@ validateFutureAdminConsoleCard card
   | cardId card `notElem` allowedFutureAdminConsoleCardIds =
       invalidFutureAdminConsoleMetadata
   | implemented card = invalidFutureAdminConsoleMetadata
-  | title card /= expectedFutureAdminConsoleTitle (cardId card) =
-      invalidFutureAdminConsoleMetadata
-  | body card /= expectedFutureAdminConsoleBody (cardId card) =
-      invalidFutureAdminConsoleMetadata
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
   | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
   | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
   | hasDuplicateFutureAdminConsoleBodyLines card = invalidFutureAdminConsoleMetadata
+  | title card /= expectedFutureAdminConsoleTitle (cardId card) =
+      invalidFutureAdminConsoleMetadata
+  | body card /= expectedFutureAdminConsoleBody (cardId card) =
+      invalidFutureAdminConsoleMetadata
   | otherwise = Right card
 
 expectedFutureAdminConsoleTitle :: Text -> Text
@@ -455,6 +455,7 @@ invalidCardText maxLength value =
     invalidCardChar ch =
       isControl ch
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+        || (generalCategory ch == Space && ch /= ' ')
 
 accessLoginOptionsStub, accessModuleBehaviourStub, accessSessionPolicyStub
   :: (Text, Text)
