@@ -2782,6 +2782,10 @@ export default function CourseRegistrationsAdminPage() {
           : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
     }`
     : '';
+  const loadedSearchScopeHint = buildLoadedSearchScopeHint(loadedRegistrationCount);
+  const localSearchLoadedScopeHint = hasCustomFilters
+    ? `${loadedSearchScopeHint.replace(/\.$/, '')} sin cambiar filtros.`
+    : loadedSearchScopeHint;
   const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
@@ -2800,7 +2804,7 @@ export default function CourseRegistrationsAdminPage() {
           : undefined
     : viewHitsCurrentLimit
       ? `${buildLoadedSearchScopeHint(loadedRegistrationCount)}${localSearchOnboardingActionHint}`
-      : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.${localSearchOnboardingActionHint}`;
+      : `${localSearchLoadedScopeHint}${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
       defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',

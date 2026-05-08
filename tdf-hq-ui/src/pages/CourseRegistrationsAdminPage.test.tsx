@@ -8561,7 +8561,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe('Nombre o contacto');
-      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
+      expect(container.textContent).not.toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
