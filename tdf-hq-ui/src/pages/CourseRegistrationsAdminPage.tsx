@@ -960,6 +960,12 @@ const firstRunClassDescriptorPrefixPattern =
 const firstRunClassDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|(?:master\s*class|masterclass|class)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
 
+const firstRunTrialLessonDescriptorPrefixPattern =
+  /^(?:(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up|forms?|pages?|portals?)|(?:forms?|pages?|portals?)\s+(?:for\s+)?(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba|(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba\s+(?:formularios?|fichas?|p[aá]ginas?|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTrialLessonDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up|forms?|pages?|portals?)|(?:forms?|pages?|portals?)\s+(?:for\s+)?(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba|(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba\s+(?:formularios?|fichas?|p[aá]ginas?|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?))\s*$/i;
+
 const firstRunProgramDescriptorPrefixPattern =
   /^(?:(?:program(?:me)?|training)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|matr[ií]culas?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1180,6 +1186,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
+    .replace(firstRunTrialLessonDescriptorPrefixPattern, '')
     .replace(firstRunProgramDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
@@ -1245,6 +1252,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
+    .replace(firstRunTrialLessonDescriptorSuffixPattern, '')
     .replace(firstRunProgramDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
