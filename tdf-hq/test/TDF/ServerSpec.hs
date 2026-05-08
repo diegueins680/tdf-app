@@ -8184,6 +8184,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
             assertInvalid "attachmentUrl" ("https://files.example.com/proof" <> T.singleton '\x202E' <> "fdp")
 
+        it "rejects oversized course registration asset URLs before receipt or follow-up storage" $
+            case validateCourseRegistrationUrlField
+                    "fileUrl"
+                    (Just ("https://files.example.com/" <> T.replicate 2049 "a")) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "fileUrl must be 2048 characters or fewer"
+                Right urlVal ->
+                    expectationFailure
+                        ( "Expected oversized course registration URL to be rejected, got: "
+                            <> show urlVal
+                        )
+
     describe "course registration attachment name validation" $ do
         it "normalizes optional attachment labels before storing course-registration metadata" $ do
             validateCourseRegistrationStoredName "fileName" Nothing

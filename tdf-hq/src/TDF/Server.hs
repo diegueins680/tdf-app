@@ -5014,16 +5014,28 @@ validateCourseRegistrationUrlField _ Nothing = Right Nothing
 validateCourseRegistrationUrlField fieldName (Just rawUrl) =
   case cleanOptional (Just rawUrl) of
     Nothing -> Right Nothing
-    Just urlVal ->
-      if "https://" `T.isPrefixOf` T.toLower urlVal
+    Just urlVal
+      | T.length urlVal > maxCourseRegistrationUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> " must be "
+                    <> T.pack (show maxCourseRegistrationUrlChars)
+                    <> " characters or fewer"
+            }
+      | "https://" `T.isPrefixOf` T.toLower urlVal
           && TrialsServer.isValidHttpUrl urlVal
-        then Right (Just urlVal)
-        else
+        -> Right (Just urlVal)
+      | otherwise ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+
+maxCourseRegistrationUrlChars :: Int
+maxCourseRegistrationUrlChars = 2048
 
 resolveCourseRegistrationAttachmentName
   :: Maybe Text
