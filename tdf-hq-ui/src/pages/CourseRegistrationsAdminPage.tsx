@@ -891,6 +891,12 @@ const firstRunCohortDescriptorPrefixPattern =
 const firstRunCohortDescriptorSuffixPattern =
   /\s*[-:/|]\s*(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*$/i;
 
+const firstRunVariantDescriptorPrefixPattern =
+  /^(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunVariantDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))\s*$/i;
+
 const firstRunRegistrationLinkDescriptorPrefixPattern =
   /^(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1219,6 +1225,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunOnboardingDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
+    .replace(firstRunVariantDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
     .replace(firstRunApplicationDescriptorPrefixPattern, '')
@@ -1285,6 +1292,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunOnboardingDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
+    .replace(firstRunVariantDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
