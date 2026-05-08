@@ -59,7 +59,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público y las inscripciones aparecerán aquí.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
 const normalizeInitialCohortPreviewKey = (label: string) =>
   label
     .normalize('NFD')

@@ -244,7 +244,7 @@ const mixedIdentityPaymentWorkflowDossierScopeHint =
   'Usa el nombre, el contacto o el número de registro para abrir expediente; Estado incluye Registrar pago.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. Configura el primer formulario público y las inscripciones aparecerán aquí.';
+  'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
 const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
@@ -15436,6 +15436,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Configura el primer formulario público');
       expect(emptyState?.textContent).not.toContain('para empezar a recibirlas aquí');
       expect(countButtonsByText(emptyState!, 'Configurar formulario')).toBe(0);
       expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
