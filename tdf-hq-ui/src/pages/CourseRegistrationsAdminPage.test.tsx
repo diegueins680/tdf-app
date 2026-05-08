@@ -224,25 +224,25 @@ const customStatusFilterUnavailableMessage =
   'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
 const customStatusFilterUnavailableTitle = 'Estados no estándar';
 const dossierScopeHint =
-  'Usa el nombre para abrir expediente; Estado muestra acciones.';
+  'Usa el nombre para abrir expediente; el menú de estado muestra acciones.';
 const paymentWorkflowDossierScopeHint =
-  'Usa el nombre para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el nombre para abrir expediente; el menú de estado incluye Registrar pago.';
 const dossierOnlyScopeHint =
-  'Usa el nombre para abrir expediente; Estado abre acciones rápidas.';
+  'Usa el nombre para abrir expediente; el menú de estado abre acciones rápidas.';
 const pendingRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
 const paidRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.';
 const contactDossierScopeHint =
-  'Usa el contacto para abrir expediente; Estado muestra acciones.';
+  'Usa el contacto para abrir expediente; el menú de estado muestra acciones.';
 const contactPaymentWorkflowDossierScopeHint =
-  'Usa el contacto para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el contacto para abrir expediente; el menú de estado incluye Registrar pago.';
 const recordDossierScopeHint =
-  'Usa el número de registro para abrir expediente; Estado muestra acciones.';
+  'Usa el número de registro para abrir expediente; el menú de estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Usa el número de registro para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Usa el nombre, el contacto o el número de registro para abrir expediente; Estado incluye Registrar pago.';
+  'Usa el nombre, el contacto o el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';

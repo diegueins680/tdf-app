@@ -137,11 +137,11 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Estado muestra acciones.`;
+  `Usa ${targetLabel} para abrir expediente; el menú de estado muestra acciones.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Estado incluye Registrar pago.`;
+  `Usa ${targetLabel} para abrir expediente; el menú de estado incluye Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Estado abre acciones rápidas.`;
+  `Usa ${targetLabel} para abrir expediente; el menú de estado abre acciones rápidas.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
 const buildPaidRecoveryScopeHint = (targetLabel: string) =>
