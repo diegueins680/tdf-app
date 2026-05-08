@@ -5298,6 +5298,57 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No aplica/i)).not.toBeInTheDocument();
   });
 
+  it('ignores terse workflow-empty fallback cards while keeping real optional modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'automations-workflows-empty',
+          title: 'Automatizaciones',
+          body: ['No workflows configured yet.'],
+        },
+        {
+          cardId: 'flujos-internos-empty',
+          title: 'Flujos internos',
+          body: ['No hay flujos disponibles todavía.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: ['Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Automatizaciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Flujos internos')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No workflows configured/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay flujos disponibles/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Automatizaciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Flujos internos')).not.toBeInTheDocument();
+  });
+
   it('ignores permission and unavailable fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
