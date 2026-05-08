@@ -132,7 +132,7 @@ const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario 
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
-const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
+const emptyCohortFilterMessage = 'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
@@ -3381,12 +3381,15 @@ export default function CourseRegistrationsAdminPage() {
     && !hidePassiveFiltersDuringEmptyLocalSearch
     && !hideBusyListPassiveSingleCohortSummary
     && !hideSingleResultSearchPassiveCohortSummary;
+  const showInlineEmptyCohortFilterGuidance = showEmptyCohortFilterSummary && showStatusFilterColumn;
+  const showEmptyCohortFilterSummaryBlock = showEmptyCohortFilterSummary && !showInlineEmptyCohortFilterGuidance;
+  const showCohortSelectControl = showCohortSelect && !showInlineEmptyCohortFilterGuidance;
   const showCohortFilterColumn = !hidePassiveFiltersDuringEmptyLocalSearch
     && (
-      showCohortSelect
+      showCohortSelectControl
       || showCohortFilterUnavailableSummary
       || showCohortFilterLoadingSummary
-      || showEmptyCohortFilterSummary
+      || showEmptyCohortFilterSummaryBlock
       || showPassiveSingleCohortSummary
     );
   const filterGridColumns = showStatusFilterColumn ? 6 : 12;
@@ -4837,7 +4840,7 @@ export default function CourseRegistrationsAdminPage() {
                           {cohortFilterLoadingMessage}
                         </Typography>
                       </Stack>
-                    ) : showEmptyCohortFilterSummary ? (
+                    ) : showEmptyCohortFilterSummaryBlock ? (
                       <Stack
                         data-testid="course-registration-empty-cohort-filter"
                         spacing={0.5}
@@ -5087,6 +5090,16 @@ export default function CourseRegistrationsAdminPage() {
                 </>
               )}
             </Grid>
+            {showInlineEmptyCohortFilterGuidance && (
+              <Typography
+                data-testid="course-registration-empty-cohort-filter-inline"
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 1.5 }}
+              >
+                {emptyCohortFilterMessage}
+              </Typography>
+            )}
             {showLimitAdjustmentAction
               && !showInlineSingleChoiceLimitToggle
               && !showEmptyLocalSearchLimitGuidance && (

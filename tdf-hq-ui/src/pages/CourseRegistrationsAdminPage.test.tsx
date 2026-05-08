@@ -266,7 +266,7 @@ const cohortFilterUnavailableMessage =
 const cohortFilterLoadingMessage =
   'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage =
-  'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
+  'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -12468,7 +12468,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('replaces an empty cohort selector with passive setup guidance when registrations are loaded', async () => {
+  it('folds empty cohort setup guidance into one inline note when registrations are loaded', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
@@ -12486,16 +12486,25 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      const cohortSummary = container.querySelector<HTMLElement>(
+      const cohortSummaryBlock = container.querySelector<HTMLElement>(
         '[data-testid="course-registration-empty-cohort-filter"]',
       );
+      const cohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-empty-cohort-filter-inline"]',
+      );
 
+      expect(cohortSummaryBlock).toBeNull();
       expect(cohortSummary).not.toBeNull();
-      expect(cohortSummary?.textContent).toContain('Cohortes no configuradas');
       expect(cohortSummary?.textContent).toContain(emptyCohortFilterMessage);
+      expect(cohortSummary?.textContent).not.toContain('Cohortes no configuradas');
+      expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-loading"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')?.textContent).toContain(
+        'Pendiente de pago',
+      );
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
