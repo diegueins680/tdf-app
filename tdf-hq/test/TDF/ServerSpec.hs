@@ -7078,6 +7078,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (Just "entity/../status")
                 "DATAFAST_ENTITY_ID must contain only ASCII letters"
+            assertInvalid
+                (Just "---...")
+                "DATAFAST_ENTITY_ID must contain at least one ASCII letter or digit"
 
     describe "validateOptionalDatafastCredential" $ do
         it "omits blank optional Datafast parameters and trims configured values" $ do

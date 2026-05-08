@@ -11612,14 +11612,25 @@ validateOptionalDatafastCredential envName mRawCredential =
 validateDatafastEntityId :: Maybe String -> Either ServerError Text
 validateDatafastEntityId mRawEntityId = do
   entityId <- validateDatafastCredential "DATAFAST_ENTITY_ID" mRawEntityId
-  if T.all isDatafastGatewayIdChar entityId
-    then Right entityId
-    else
-      Left err500
-        { errBody =
-            "DATAFAST_ENTITY_ID must contain only ASCII letters, digits, hyphen, underscore, or dot"
-        }
+  validateDatafastEntityIdShape entityId
   where
+    validateDatafastEntityIdShape entityId
+      | not (T.any isDatafastGatewayIdAtom entityId) =
+          Left err500
+            { errBody =
+                "DATAFAST_ENTITY_ID must contain at least one ASCII letter or digit"
+            }
+      | not (T.all isDatafastGatewayIdChar entityId) =
+          Left err500
+            { errBody =
+                "DATAFAST_ENTITY_ID must contain only ASCII letters, digits, hyphen, underscore, or dot"
+            }
+      | otherwise =
+          Right entityId
+
+    isDatafastGatewayIdAtom c =
+      isDigit c || isAsciiLower c || isAsciiUpper c
+
     isDatafastGatewayIdChar c =
       isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_' || c == '.'
 
