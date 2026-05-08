@@ -3077,6 +3077,10 @@ export default function CourseRegistrationsAdminPage() {
     && !hasCustomFilters
     && !showAdvancedLimitControl
     && !hasSharedListContextSummary;
+  const hideSingleResultSearchPassiveCohortSummary = Boolean(localSearchSingleResult)
+    && !hasManualFilters
+    && !hasEffectiveSlugFilter
+    && !cohortsQuery.isError;
   const hasBusyListPassiveSingleStatusSummary = showSingleStatusSummaryBlock || showSingleCustomStatusSummary;
   const hideBusyListPassiveSingleStatusSummary = showBusyListSearchOnboarding
     && hasBusyListPassiveSingleStatusSummary
@@ -3344,7 +3348,8 @@ export default function CourseRegistrationsAdminPage() {
     );
   const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
     && !hidePassiveFiltersDuringEmptyLocalSearch
-    && !hideBusyListPassiveSingleCohortSummary;
+    && !hideBusyListPassiveSingleCohortSummary
+    && !hideSingleResultSearchPassiveCohortSummary;
   const showCohortFilterColumn = !hidePassiveFiltersDuringEmptyLocalSearch
     && (
       showCohortSelect

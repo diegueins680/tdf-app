@@ -8614,6 +8614,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
