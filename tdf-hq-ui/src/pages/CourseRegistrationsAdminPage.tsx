@@ -120,7 +120,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 };
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
-const initialEmptyStateMultiCohortActionLabel = 'Ver cursos configurados';
+const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
