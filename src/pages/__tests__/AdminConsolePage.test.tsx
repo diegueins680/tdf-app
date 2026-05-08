@@ -4964,6 +4964,16 @@ describe('AdminConsolePage', () => {
           body: ['Sin actividad reciente.'],
         },
         {
+          cardId: 'recent-changes-empty',
+          title: 'Revisión operativa',
+          body: ['No recent changes yet.'],
+        },
+        {
+          cardId: 'cambios-recientes-empty',
+          title: 'Historial técnico',
+          body: ['Sin cambios recientes.'],
+        },
+        {
           cardId: 'activity-setup',
           title: 'Seguimiento de actividad',
           body: [
@@ -4985,8 +4995,12 @@ describe('AdminConsolePage', () => {
 
     expect(screen.queryByText('Actividad operacional')).not.toBeInTheDocument();
     expect(screen.queryByText('Bitácora técnica')).not.toBeInTheDocument();
+    expect(screen.queryByText('Revisión operativa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Historial técnico')).not.toBeInTheDocument();
     expect(screen.queryByText(/^No activity yet\.$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Sin actividad reciente\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No recent changes yet\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sin cambios recientes\.$/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
 
