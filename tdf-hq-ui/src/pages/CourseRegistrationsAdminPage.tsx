@@ -896,6 +896,12 @@ const firstRunOfferDescriptorPrefixPattern =
 const firstRunOfferDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:early[-\s]?bird|promo(?:tional)?|discount(?:ed)?|pre[-\s]?sale)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:descuento|promoci[oó]n|oferta|preventa)(?:\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))?|(?:descuento|promoci[oó]n|oferta|preventa)\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))\s*$/i;
 
+const firstRunCallToActionDescriptorPrefixPattern =
+  /^(?:(?:apply|enroll|register|sign\s*up)\s+now|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+ahora)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCallToActionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:apply|enroll|register|sign\s*up)\s+now|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+ahora)\s*$/i;
+
 const firstRunSalesDescriptorPrefixPattern =
   /^(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
 
@@ -1133,6 +1139,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunOfferDescriptorPrefixPattern, '')
+    .replace(firstRunCallToActionDescriptorPrefixPattern, '')
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -1195,6 +1202,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunOfferDescriptorSuffixPattern, '')
+    .replace(firstRunCallToActionDescriptorSuffixPattern, '')
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
