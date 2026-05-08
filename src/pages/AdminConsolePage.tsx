@@ -775,14 +775,46 @@ function normalizeAdminConsoleParagraphKey(value: string) {
   return normalizeAdminConsoleSectionKey(value);
 }
 
-function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
+function getAdminConsoleCardBodyKeys(card: Pick<AdminConsoleCard, 'body'>) {
   return [...new Set(
     card.body
       .map((paragraph) => normalizeAdminConsoleParagraphKey(paragraph))
       .filter((paragraphKey) => paragraphKey.length > 0),
   )]
-    .sort()
-    .join('\n');
+    .sort();
+}
+
+function getAdminConsoleCardBodyKey(card: Pick<AdminConsoleCard, 'body'>) {
+  return getAdminConsoleCardBodyKeys(card).join('\n');
+}
+
+function findAdminConsoleCardTitleKeyByBodySubset(
+  cardsByTitle: ReadonlyMap<string, AdminConsoleCard>,
+  bodyKeys: readonly string[],
+) {
+  if (bodyKeys.length === 0) {
+    return undefined;
+  }
+
+  const bodyKeySet = new Set(bodyKeys);
+
+  for (const [existingTitleKey, existingCard] of cardsByTitle) {
+    const existingBodyKeys = getAdminConsoleCardBodyKeys(existingCard);
+
+    if (existingBodyKeys.length === 0) {
+      continue;
+    }
+
+    const existingBodyKeySet = new Set(existingBodyKeys);
+    const currentContainsExisting = existingBodyKeys.every((paragraphKey) => bodyKeySet.has(paragraphKey));
+    const existingContainsCurrent = bodyKeys.every((paragraphKey) => existingBodyKeySet.has(paragraphKey));
+
+    if (currentContainsExisting || existingContainsCurrent) {
+      return existingTitleKey;
+    }
+  }
+
+  return undefined;
 }
 
 function escapeRegExp(value: string) {
@@ -897,10 +929,15 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   cards.forEach((card) => {
     const titleKey = normalizeAdditionalAdminConsoleModuleKey(card.title);
     const cardIdKey = normalizeAdditionalAdminConsoleModuleKey(card.cardId);
-    const bodyKey = getAdminConsoleCardBodyKey(card);
+    const bodyKeys = getAdminConsoleCardBodyKeys(card);
+    const bodyKey = bodyKeys.join('\n');
     const existingTitleKey = cardsByTitle.has(titleKey)
       ? titleKey
-      : (titleKeyByBody.get(bodyKey) ?? titleKeyByCardId.get(cardIdKey));
+      : (
+        titleKeyByBody.get(bodyKey)
+        ?? titleKeyByCardId.get(cardIdKey)
+        ?? findAdminConsoleCardTitleKeyByBodySubset(cardsByTitle, bodyKeys)
+      );
     const existingCard = existingTitleKey ? cardsByTitle.get(existingTitleKey) : undefined;
 
     if (!existingTitleKey || !existingCard) {
@@ -931,6 +968,10 @@ function dedupeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
     });
 
     cardsByTitle.set(existingTitleKey, { ...existingCard, body: mergedBody });
+    const mergedBodyKey = getAdminConsoleCardBodyKey({ body: mergedBody });
+    if (mergedBodyKey !== '') {
+      titleKeyByBody.set(mergedBodyKey, existingTitleKey);
+    }
     if (bodyKey !== '') {
       titleKeyByBody.set(bodyKey, existingTitleKey);
     }
