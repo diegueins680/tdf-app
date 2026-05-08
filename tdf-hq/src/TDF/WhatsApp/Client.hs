@@ -134,14 +134,21 @@ normalizeWhatsAppAccessToken :: Text -> Either String Text
 normalizeWhatsAppAccessToken rawToken
   | T.null token =
       Left "Invalid WhatsApp access token: token is required"
+  | T.length token > maxWhatsAppAccessTokenChars =
+      Left "Invalid WhatsApp access token: token must be 4096 characters or fewer"
   | T.any isWhitespaceOrControlChar token =
       Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
   | T.any isHiddenFormattingChar token =
       Left "Invalid WhatsApp access token: must not contain hidden formatting characters"
+  | T.any (not . isVisibleAsciiHeaderChar) token =
+      Left "Invalid WhatsApp access token: must contain visible ASCII characters only"
   | otherwise =
       Right token
   where
     token = T.strip rawToken
+
+maxWhatsAppAccessTokenChars :: Int
+maxWhatsAppAccessTokenChars = 4096
 
 normalizeWhatsAppVerifyToken :: Text -> Either String Text
 normalizeWhatsAppVerifyToken rawToken
@@ -240,6 +247,10 @@ isWhitespaceOrControlChar ch =
 isHiddenFormattingChar :: Char -> Bool
 isHiddenFormattingChar ch =
   generalCategory ch == Format
+
+isVisibleAsciiHeaderChar :: Char -> Bool
+isVisibleAsciiHeaderChar ch =
+  ch >= '!' && ch <= '~'
 
 extractMessageId :: Value -> Maybe Text
 extractMessageId =

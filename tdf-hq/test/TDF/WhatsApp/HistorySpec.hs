@@ -116,6 +116,10 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
       normalizeWhatsAppAccessToken ("token" <> T.singleton '\x202E' <> "value")
         `shouldBe` Left "Invalid WhatsApp access token: must not contain hidden formatting characters"
+      normalizeWhatsAppAccessToken "tokén"
+        `shouldBe` Left "Invalid WhatsApp access token: must contain visible ASCII characters only"
+      normalizeWhatsAppAccessToken (T.replicate 4097 "a")
+        `shouldBe` Left "Invalid WhatsApp access token: token must be 4096 characters or fewer"
       normalizeWhatsAppVerifyToken ("webhook" <> T.singleton '\x202E' <> "secret")
         `shouldBe` Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
       normalizeWhatsAppPhoneNumberId "   "
