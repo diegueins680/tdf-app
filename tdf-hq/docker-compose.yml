@@ -21,11 +21,9 @@ services:
       retries: 30
 
   app:
-    build:
-      context: ..
-      dockerfile: tdf-hq/Dockerfile
+    image: diegueins680/tdf-hq:b5c5d2f3b9083e2e0b20b3b8b76f9f08db230612
     environment:
-      DB_HOST: db
+      DB_HOST: host.docker.internal
       DB_PORT: "5432"
       DB_USER: postgres
       DB_PASS: postgres

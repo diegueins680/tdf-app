@@ -239,10 +239,21 @@ isValidEmail candidate =
       T.length candidate <= maxLeadCompletionEmailChars &&
       isValidEmailLocalPart localPart &&
       not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
-      not (T.null domain) &&
-      T.isInfixOf "." domain &&
-      all isValidDomainLabel (T.splitOn "." domain)
+      isValidEmailDomain domain
     _ -> False
+
+isValidEmailDomain :: Text -> Bool
+isValidEmailDomain domain =
+  not (T.null domain) &&
+  T.isInfixOf "." domain &&
+  all isValidDomainLabel labels &&
+  T.any isAsciiLower topLevelLabel
+  where
+    labels = T.splitOn "." domain
+    topLevelLabel =
+      case reverse labels of
+        label : _ -> label
+        [] -> ""
 
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
