@@ -11346,6 +11346,7 @@ data MarketplaceCartTotalsState a
   = MarketplaceCartMissing
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
+  | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
@@ -11380,13 +11381,14 @@ loadCartTotals cartId = do
                     sum [ qty * ME.marketplaceListingPriceUsdCents (entityVal listing)
                         | (_, listing, _, qty) <- items
                         ]
-                  currencies =
-                    nub [ ME.marketplaceListingCurrency (entityVal listing)
-                        | (_, listing, _, _) <- items
-                        ]
-              case currencies of
-                [currency] -> pure (MarketplaceCartTotalsReady (items, totalCents, currency))
-                mixed -> pure (MarketplaceCartMixedCurrencies mixed)
+                  rawCurrencies =
+                    [ ME.marketplaceListingCurrency (entityVal listing)
+                    | (_, listing, _, _) <- items
+                    ]
+              case resolveMarketplaceCartCurrency rawCurrencies of
+                Left invalidCurrencyState -> pure invalidCurrencyState
+                Right currency ->
+                  pure (MarketplaceCartTotalsReady (items, totalCents, currency))
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
@@ -11395,6 +11397,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
+  Left err500 { errBody = "Stored marketplace listing currency is invalid" }
 requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
   Left err400
     { errBody =
@@ -11403,6 +11407,16 @@ requireMarketplaceCartTotals (MarketplaceCartMixedCurrencies currencies) =
     }
 requireMarketplaceCartTotals (MarketplaceCartTotalsReady totals) =
   Right totals
+
+resolveMarketplaceCartCurrency :: [Text] -> Either (MarketplaceCartTotalsState a) Text
+resolveMarketplaceCartCurrency rawCurrencies =
+  case find (isNothing . normalizeCurrencyCodeText) rawCurrencies of
+    Just rawCurrency -> Left (MarketplaceCartInvalidCurrency rawCurrency)
+    Nothing ->
+      case nub (mapMaybe normalizeCurrencyCodeText rawCurrencies) of
+        [] -> Right "USD"
+        [currency] -> Right currency
+        mixed -> Left (MarketplaceCartMixedCurrencies mixed)
 
 validateMarketplaceCartLineQuantity :: Int -> Either ServerError Int
 validateMarketplaceCartLineQuantity rawQuantity

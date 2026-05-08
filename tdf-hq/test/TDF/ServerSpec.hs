@@ -204,6 +204,7 @@ import TDF.Server
     , validateMarketplacePublicListingActive
     , requireLoadedMarketplaceWriteResult
     , requireMarketplaceCartTotals
+    , resolveMarketplaceCartCurrency
     , validateMarketplaceCartLineQuantity
     , validateDatafastEntityId
     , validateDatafastResourcePath
@@ -6904,6 +6905,10 @@ spec = describe "TDF.Server helpers" $ do
                 409
                 "El carrito contiene una cantidad invalida"
             assertInvalid
+                (MarketplaceCartInvalidCurrency "US1")
+                500
+                "Stored marketplace listing currency is invalid"
+            assertInvalid
                 (MarketplaceCartMixedCurrencies ["USD", "EUR"])
                 400
                 "El carrito no puede mezclar monedas: USD, EUR"
@@ -6945,6 +6950,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid 0
             assertInvalid (-2)
             assertInvalid (maxMarketplaceCartItemQuantity + 1)
+
+    describe "resolveMarketplaceCartCurrency" $ do
+        it "normalizes one cart currency before checkout creates orders or gateway requests" $
+            (resolveMarketplaceCartCurrency [" usd ", "USD"] :: Either (MarketplaceCartTotalsState Int) Text)
+                `shouldBe` Right "USD"
+
+        it "rejects invalid or mixed stored listing currencies before checkout totals are trusted" $ do
+            (resolveMarketplaceCartCurrency ["US1"] :: Either (MarketplaceCartTotalsState Int) Text)
+                `shouldBe` Left (MarketplaceCartInvalidCurrency "US1")
+            (resolveMarketplaceCartCurrency ["USD", " eur "] :: Either (MarketplaceCartTotalsState Int) Text)
+                `shouldBe` Left (MarketplaceCartMixedCurrencies ["USD", "EUR"])
 
     describe "validateMarketplaceOnlinePaymentTotal" $ do
         it "accepts positive totals so payable carts can proceed to online gateways" $ do
