@@ -10667,6 +10667,48 @@ main = hspec $ do
                 (Data.Text.replicate 161 "A")
                 "musician name must be 160 characters or fewer"
 
+        it "normalizes safe musician notes but rejects hidden, control, or oversized note text" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"Keys\",\"lsmNotes\":\"  bring DI\\nstand  \",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected multiline musician notes to parse, got: " <> err)
+                Right payload ->
+                    case lsiMusicians payload of
+                        [musician] ->
+                            lsmNotes musician `shouldBe` Just "bring DI\nstand"
+                        musicians ->
+                            expectationFailure ("Expected one musician, got: " <> show musicians)
+
+            let assertInvalid rawNotes expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\"Keys\",\"lsmNotes\":\""
+                                    <> rawNotes
+                                    <> "\",\"lsmIsExisting\":false}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician notes to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "bring DI\\u202Estand"
+                "musician notes must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "bring DI\\u0000stand"
+                "musician notes must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 4001 "A")
+                "musician notes must be 4000 characters or fewer"
+
         it "rejects blank setlist titles instead of silently dropping songs from the intake" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

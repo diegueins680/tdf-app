@@ -260,13 +260,22 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             "musician role"
             160
             (lsmRole musician >>= normalizeOptionalText)
+        normalizedNotes <-
+          case lsmNotes musician of
+            Nothing -> Right Nothing
+            Just rawNotes ->
+              validateOptionalIntakeText
+                "musician notes"
+                4000
+                isUnsafeMultilineIntakeTextChar
+                rawNotes
         let normalizedMusician =
               musician
                 { lsmName = normalizedName
                 , lsmEmail = normalizedEmail
                 , lsmInstrument = normalizedInstrument
                 , lsmRole = normalizedRole
-                , lsmNotes = lsmNotes musician >>= normalizeOptionalText
+                , lsmNotes = normalizedNotes
                 }
             noReferenceProvided =
               lsmPartyId normalizedMusician == Nothing
