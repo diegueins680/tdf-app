@@ -206,6 +206,7 @@ import TDF.ServerInstagramOAuth
       instagramOAuthServer,
       resolveInstagramRedirectUri,
       sanitizeFacebookGraphErrorMessage,
+      selectPrimaryInstagramCandidate,
       validateInstagramRedirectUri )
 import TDF.Server
     ( buildWhatsappCtaFor,
@@ -4169,6 +4170,26 @@ main = hspec $ do
                     sanitizeFacebookGraphErrorMessage (Data.Text.replicate 520 "x")
             longSanitized `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
             Data.Text.length longSanitized `shouldSatisfy` (<= 512)
+
+        it "rejects ambiguous Instagram page fallbacks instead of selecting the first page" $ do
+            let firstPage = ("ig-1", "page-1" :: Text)
+                secondPage = ("ig-2", "page-2" :: Text)
+
+            case selectPrimaryInstagramCandidate [] [firstPage, secondPage] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "primary page fallback is ambiguous"
+                Right value ->
+                    expectationFailure
+                        ("Expected ambiguous Instagram fallback to fail, got " <> show value)
+
+            case selectPrimaryInstagramCandidate ["ig-2"] [firstPage, secondPage] of
+                Right (Just selected) ->
+                    selected `shouldBe` "page-2"
+                other ->
+                    expectationFailure
+                        ("Expected preferred Instagram page to resolve, got " <> show other)
 
         it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
             cfg <- loadInstagramConfig

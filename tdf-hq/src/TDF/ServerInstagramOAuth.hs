@@ -11,6 +11,7 @@ module TDF.ServerInstagramOAuth
   , FacebookPageList(..)
   , resolveInstagramRedirectUri
   , sanitizeFacebookGraphErrorMessage
+  , selectPrimaryInstagramCandidate
   , validateInstagramRedirectUri
   ) where
 
@@ -30,7 +31,7 @@ import           Data.Char
   , isSpace
   )
 import           Data.List                  (find)
-import           Data.Maybe                 (fromMaybe, listToMaybe)
+import           Data.Maybe                 (fromMaybe)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
@@ -324,7 +325,8 @@ instagramOAuthServer user = exchangeHandler
             pure ()
 
       let pagesDto = map toPageDTO pageContexts
-          primary = selectPrimary preferredIds pageContexts
+      primary <-
+        either throwError pure (selectPrimaryInstagramPage preferredIds pageContexts)
       (mPrimaryId, mPrimaryHandle, media) <-
         case primary of
           Nothing -> pure (Nothing, Nothing, [])
@@ -347,19 +349,6 @@ instagramOAuthServer user = exchangeHandler
         , ioeMedia = media
         }
 
-    hasInstagram PageContext{..} = pcInstagramUserId /= Nothing
-
-    selectPrimary preferredIds contexts =
-      case go preferredIds of
-        Just ctx -> Just ctx
-        Nothing -> listToMaybe (filter hasInstagram contexts)
-      where
-        go [] = Nothing
-        go (pid:rest) =
-          case find (\ctx -> pcInstagramUserId ctx == Just pid) contexts of
-            Just ctx -> Just ctx
-            Nothing -> go rest
-
     toPageDTO PageContext{..} =
       InstagramOAuthPage
         { iopPageId = pcPageId
@@ -376,6 +365,33 @@ instagramOAuthServer user = exchangeHandler
         , imdPermalink = imPermalink
         , imdTimestamp = imTimestamp >>= (iso8601ParseM . T.unpack)
         }
+
+selectPrimaryInstagramPage :: [Text] -> [PageContext] -> Either ServerError (Maybe PageContext)
+selectPrimaryInstagramPage preferredIds contexts =
+  selectPrimaryInstagramCandidate
+    preferredIds
+    [ (igUserId, ctx) | ctx <- contexts, Just igUserId <- [pcInstagramUserId ctx] ]
+
+selectPrimaryInstagramCandidate :: [Text] -> [(Text, a)] -> Either ServerError (Maybe a)
+selectPrimaryInstagramCandidate preferredIds candidates =
+  case go preferredIds of
+    Just candidate -> Right (Just candidate)
+    Nothing ->
+      case candidates of
+        [] -> Right Nothing
+        [(_, candidate)] -> Right (Just candidate)
+        _ ->
+          Left err409
+            { errBody =
+                "Instagram OAuth primary page fallback is ambiguous; reconnect from an existing "
+                  <> "account or keep only one Instagram page connected."
+            }
+  where
+    go [] = Nothing
+    go (pid:rest) =
+      case find (\(candidateId, _) -> candidateId == pid) candidates of
+        Just (_, candidate) -> Just candidate
+        Nothing -> go rest
 
 loadFacebookCreds :: MonadError ServerError m => AppConfig -> m (Text, Text)
 loadFacebookCreds cfg =
