@@ -5062,10 +5062,54 @@ spec = describe "TDF.Server helpers" $ do
         it "uses the generic Google fallback only when Drive-specific credentials are absent" $
             resolveDriveClientCreds
                 Nothing
-                (Just "   ")
+                Nothing
                 (Just "  google-client  ")
                 (Just "  google-secret  ")
                 `shouldBe` Right ("google-client", "google-secret")
+
+        it "rejects explicitly blank Drive OAuth aliases instead of falling back" $ do
+            let assertBlank result expectedMessage =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected blank Drive credentials to be rejected, got: "
+                                    <> show value
+                                )
+            assertBlank
+                ( resolveDriveClientCreds
+                    (Just "   ")
+                    Nothing
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_ID is configured but blank"
+            assertBlank
+                ( resolveDriveClientCreds
+                    Nothing
+                    (Just "\t")
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_SECRET is configured but blank"
+            assertBlank
+                ( resolveDriveClientCreds
+                    Nothing
+                    Nothing
+                    (Just " ")
+                    (Just "google-secret")
+                )
+                "GOOGLE_CLIENT_ID is configured but blank"
+            assertBlank
+                ( resolveDriveClientCreds
+                    Nothing
+                    Nothing
+                    (Just "google-client")
+                    (Just "")
+                )
+                "GOOGLE_CLIENT_SECRET is configured but blank"
 
         it "rejects partial Drive credentials instead of mixing credential families" $ do
             let assertInvalid result =

@@ -2433,10 +2433,10 @@ requestGoogleToken manager form = do
 
 loadDriveClientCreds :: AppM (Text, Text)
 loadDriveClientCreds = do
-  mCid <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_ID"
-  mSecret <- liftIO $ lookupEnvTextNonEmpty "DRIVE_CLIENT_SECRET"
-  mCidFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
-  mSecretFallback <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
+  mCid <- liftIO $ lookupEnvText "DRIVE_CLIENT_ID"
+  mSecret <- liftIO $ lookupEnvText "DRIVE_CLIENT_SECRET"
+  mCidFallback <- liftIO $ lookupEnvText "GOOGLE_CLIENT_ID"
+  mSecretFallback <- liftIO $ lookupEnvText "GOOGLE_CLIENT_SECRET"
   either throwError pure $
     resolveDriveClientCreds mCid mSecret mCidFallback mSecretFallback
 
@@ -2492,17 +2492,31 @@ validateOptionalDriveClientId envName rawClientId =
   case rawClientId of
     Nothing -> Right Nothing
     Just clientId ->
-      case normalizeConfiguredGoogleClientId (T.unpack envName) (T.unpack clientId) of
-        Left msg ->
+      if T.null (T.strip clientId)
+        then
           Left err503
-            { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
-        Right normalized -> Right normalized
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " is configured but blank"
+            }
+        else
+          case normalizeConfiguredGoogleClientId (T.unpack envName) (T.unpack clientId) of
+            Left msg ->
+              Left err503
+                { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
+            Right normalized -> Right normalized
 
 validateOptionalDriveClientCredential :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveClientCredential envName rawCredential =
-  case cleanOptional rawCredential of
+  case rawCredential of
     Nothing -> Right Nothing
-    Just credential
+    Just raw
+      | T.null credential ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " is configured but blank"
+            }
       | T.any (\ch -> isControl ch || isSpace ch) credential ->
           Left err503
             { errBody =
@@ -2522,6 +2536,8 @@ validateOptionalDriveClientCredential envName rawCredential =
                   envName <> " must be 4096 characters or fewer"
             }
       | otherwise -> Right (Just credential)
+      where
+        credential = T.strip raw
 
 refreshDriveAccessToken :: Manager -> Text -> Text -> Text -> AppM Text
 refreshDriveAccessToken manager cid secret rt = do
@@ -2532,6 +2548,9 @@ refreshDriveAccessToken manager cid secret rt = do
     , ("grant_type", "refresh_token")
     ]
   pure (access_token token)
+
+lookupEnvText :: String -> IO (Maybe Text)
+lookupEnvText key = fmap (fmap T.pack) (lookupEnv key)
 
 lookupEnvTextNonEmpty :: String -> IO (Maybe Text)
 lookupEnvTextNonEmpty key = do
