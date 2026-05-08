@@ -13323,9 +13323,12 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips provider-prefixed registration descriptors from first-run cohort copy', async () => {
     const titles = [
       'Google application form - Beatmaking 101',
+      'Google application link - Beatmaking 101',
       'Instagram registration page - Beatmaking 101',
+      'Instagram registration URL - Beatmaking 101',
       'Meta enrollment portal - Beatmaking 101',
       'Beatmaking 101 - WhatsApp registration form',
+      'Beatmaking 101 - WhatsApp enrollment link',
     ];
 
     for (const title of titles) {
@@ -13342,7 +13345,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(/Google application|Instagram registration|Meta enrollment|WhatsApp registration/i);
-        expect(emptyState?.textContent).not.toMatch(/registration page|enrollment portal|registration form|application form/i);
+        expect(emptyState?.textContent).not.toMatch(/registration page|enrollment portal|registration form|application form|application link|registration URL|enrollment link/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
