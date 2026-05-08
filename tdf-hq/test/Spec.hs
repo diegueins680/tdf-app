@@ -3732,6 +3732,16 @@ main = hspec $ do
                 Right origin ->
                     expectationFailure
                         ("Expected ambiguous fallback port to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com//admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected ambiguous fallback path to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app\\admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected backslash fallback path to fail, got: " <> origin)
 
         it "rejects hidden Unicode before CORS fallback URL parsing can reshape origins" $ do
             let hiddenFormat = "\x202E"

@@ -246,7 +246,10 @@ parseHttpBaseOrigin raw
 
     validBaseSuffix suffix =
       BS.null suffix
-        || ("/" `BS.isPrefixOf` suffix && not (BS.any (\c -> c == '?' || c == '#') suffix))
+        || ( "/" `BS.isPrefixOf` suffix
+             && not ("//" `BS.isPrefixOf` suffix)
+             && not (BS.any (\c -> c == '?' || c == '#' || c == '\\') suffix)
+           )
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
