@@ -3306,7 +3306,7 @@ export default function CourseRegistrationsAdminPage() {
   const showInitialCohortResolutionState = !regsQuery.isLoading
     && !regsQuery.isError
     && cohortsQuery.isLoading
-    && !hasCustomFilters
+    && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
   const showInitialRegistrationLoading = regsQuery.isLoading && !regsQuery.data;
   const showRegistrationFilterPanel = !showInitialRegistrationLoading
