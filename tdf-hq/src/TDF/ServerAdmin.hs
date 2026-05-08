@@ -1741,6 +1741,8 @@ validateAdminPassword :: Text -> Either ServerError Text
 validateAdminPassword rawPassword
   | T.any isControl rawPassword =
       Left err400 { errBody = "Password must not contain control characters" }
+  | T.any isHiddenAdminTextChar rawPassword =
+      Left err400 { errBody = "Password must not contain hidden formatting characters" }
   | T.null trimmed =
       Left err400 { errBody = "Password must not be empty" }
   | T.length trimmed < 8 =

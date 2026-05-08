@@ -305,7 +305,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "trims valid explicit admin passwords before hashing or emailing them" $
             validateAdminPassword "  TempPass123!  " `shouldBe` Right "TempPass123!"
 
-        it "rejects blank, short, or control-character admin passwords" $ do
+        it "rejects blank, short, control-character, or hidden-format admin passwords" $ do
             let assertInvalid expectedMessage rawPassword =
                     case validateAdminPassword rawPassword of
                         Left err -> do
@@ -319,6 +319,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "Password must not contain control characters" "Long\nPass123"
             assertInvalid "Password must not contain control characters" "\nTempPass123!"
             assertInvalid "Password must not contain control characters" "TempPass123!\t"
+            assertInvalid
+                "Password must not contain hidden formatting characters"
+                ("TempPass" <> T.singleton '\x202E' <> "123!")
 
     describe "dropdown option validation" $ do
         it "normalizes valid dropdown categories, values, and labels before persistence" $ do
