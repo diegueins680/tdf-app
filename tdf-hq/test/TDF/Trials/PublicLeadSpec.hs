@@ -2378,6 +2378,23 @@ spec = do
         Right _ ->
           expectationFailure "Expected blank student names to be rejected"
 
+    it "rejects unsafe or oversized notes before persisting private student profiles" $ do
+      let assertRejected rawNotes expectedMessage = do
+            result <- try $ runTrialsInMemory $
+              privateStudentCreateHandler
+                (StudentCreate "Student One" "student@example.com" Nothing (Just rawNotes))
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student create notes to be rejected"
+      assertRejected "line one\nline two" "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected (pack (replicate 2001 'a')) "notes must be 1-2000 characters"
+
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
       result <- try $ runTrialsInMemory $ do
@@ -2417,6 +2434,26 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "correo ya está asignado"
         Right _ ->
           expectationFailure "Expected duplicate student emails to be rejected"
+
+    it "rejects unsafe or oversized notes before updating private student profiles" $ do
+      let assertRejected rawNotes expectedMessage = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              targetStudentId <- insertPartyFixture "Target Student" now
+              privateStudentUpdateHandler
+                (fromIntegral (fromSqlKey targetStudentId))
+                (StudentUpdate Nothing Nothing Nothing (Just rawNotes))
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student update notes to be rejected"
+      assertRejected "line one\nline two" "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected (pack (replicate 2001 'a')) "notes must be 1-2000 characters"
 
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =

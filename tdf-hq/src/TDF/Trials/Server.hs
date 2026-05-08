@@ -2230,13 +2230,14 @@ privateTrialsServer user@AuthedUser{..} =
       let fullNameVal = T.strip fullName
       when (T.null fullNameVal) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
+      notesValue <- either (liftIO . throwIO) pure (validateOptionalPublicTextField "notes" 2000 notes)
       now <- liftIO getCurrentTime
       partyId <- createOrFetchParty (Just fullNameVal) (Just email) phone now
       void $ upsert (PartyRole partyId Student True) [Models.PartyRoleActive =. True]
       unless isSchoolStaff $
         void $ upsert (TeacherStudent auPartyId partyId True now) [TeacherStudentActive =. True]
-      when (isJust notes) $
-        update partyId [Models.PartyNotes =. fmap T.strip notes]
+      forM_ notesValue $ \txt ->
+        update partyId [Models.PartyNotes =. Just txt]
       Entity _ party <- getJustEntity partyId
       pure StudentDTO
         { studentId   = entityKeyInt partyId
@@ -2260,11 +2261,13 @@ privateTrialsServer user@AuthedUser{..} =
           liftIO $ throwIO err403
 
       let nameUpdate = displayName >>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t)
-          notesUpdate = case notes of
-            Nothing -> Nothing
-            Just raw -> Just (cleanOptional (Just raw))
       emailUpdate <- either (liftIO . throwIO) pure (validateEmailUpdate email)
       phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
+      notesUpdate <- case notes of
+        Nothing -> pure Nothing
+        Just raw ->
+          Just <$> either (liftIO . throwIO) pure
+            (validateOptionalPublicTextField "notes" 2000 (Just raw))
       ensureEmailAvailableForParty studentKey emailUpdate
 
       when (isJust displayName && isNothing nameUpdate) $
