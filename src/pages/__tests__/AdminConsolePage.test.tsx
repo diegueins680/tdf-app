@@ -1574,6 +1574,57 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps bare API and database fallback cards from duplicating service health', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'api',
+          title: 'API',
+          body: ['Monitoriza disponibilidad antes de cambiar accesos administrativos.'],
+        },
+        {
+          cardId: 'database',
+          title: 'Database',
+          body: ['Confirm storage readiness before opening admin access changes.'],
+        },
+        {
+          cardId: 'base-de-datos',
+          title: 'Base de datos',
+          body: ['Confirma conexión antes de ajustar permisos administrativos.'],
+        },
+        {
+          cardId: 'db',
+          title: 'DB',
+          body: ['Review database uptime before editing roles.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Estado del servicio')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^API$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Database')).not.toBeInTheDocument();
+    expect(screen.queryByText('Base de datos')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^DB$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Monitoriza disponibilidad/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Confirm storage readiness/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Confirma conexión/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Review database uptime/i)).not.toBeInTheDocument();
+  });
+
   it('keeps readiness fallback cards from duplicating service health', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
