@@ -4956,9 +4956,24 @@ describe('AdminConsolePage', () => {
           body: ['Sin usuarios.'],
         },
         {
+          cardId: 'admin-users-empty',
+          title: 'Operadores administrativos',
+          body: ['No admin users found.'],
+        },
+        {
+          cardId: 'usuarios-administrables-empty',
+          title: 'Usuarios administrables',
+          body: ['Aún no hay usuarios administrables.'],
+        },
+        {
           cardId: 'auditoria-empty',
           title: 'Bitácora operativa',
           body: ['Aún no hay eventos de auditoría.'],
+        },
+        {
+          cardId: 'admin-audit-empty',
+          title: 'Historial administrativo',
+          body: ['No administrative audit events yet.'],
         },
         {
           cardId: 'secure-invites',
@@ -4987,11 +5002,17 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Equipo administrativo')).not.toBeInTheDocument();
     expect(screen.queryByText('Historial operativo')).not.toBeInTheDocument();
     expect(screen.queryByText('Invitados administrativos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Operadores administrativos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios administrables')).not.toBeInTheDocument();
     expect(screen.queryByText('Bitácora operativa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Historial administrativo')).not.toBeInTheDocument();
     expect(screen.queryByText(/^No users yet\.$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^No audit events found\.$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Sin usuarios\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No admin users found\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Aún no hay usuarios administrables\.$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^Aún no hay eventos de auditoría\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No administrative audit events yet\.$/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
 
