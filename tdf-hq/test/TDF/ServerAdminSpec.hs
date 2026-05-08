@@ -69,6 +69,7 @@ import TDF.ServerAdmin (
     validateDropdownOptionCategory,
     validateDropdownOptionValue,
     validateDropdownOptionLabel,
+    validateBrainEntryId,
     validateBrainEntryBody,
     normalizeBrainEntryTags,
   )
@@ -564,6 +565,22 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeBrainEntryUpdate
                 "{\"beuTitle\":\"Updated runbook\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+    describe "validateBrainEntryId" $
+        it "rejects non-positive Studio Brain ids before update lookup can report a missing row" $ do
+            validateBrainEntryId 1 `shouldBe` Right 1
+
+            let assertInvalid rawId =
+                    case validateBrainEntryId rawId of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL8.unpack (errBody err)
+                                `shouldContain` "entryId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid brain entry id, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-7)
 
     describe "normalizeBrainEntryTags" $ do
         it "trims, drops blanks, and deduplicates tags before brain entry persistence" $ do

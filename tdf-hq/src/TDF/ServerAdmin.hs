@@ -33,6 +33,7 @@ module TDF.ServerAdmin
   , validateDropdownOptionCategory
   , validateDropdownOptionValue
   , validateDropdownOptionLabel
+  , validateBrainEntryId
   , validateBrainEntryTitle
   , validateBrainEntryBody
   , normalizeBrainEntryTags
@@ -514,8 +515,9 @@ adminServer user =
       row <- withPool $ getJust entryId
       pure (brainEntryToDTO (Entity entryId row))
 
-    brainUpdateHandler entryId BrainEntryUpdate{..} = do
+    brainUpdateHandler rawEntryId BrainEntryUpdate{..} = do
       ensureModule ModuleAdmin user
+      entryId <- either throwError pure (validateBrainEntryId rawEntryId)
       let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
       titleUpdate <- traverse (either throwError pure . validateBrainEntryTitle) beuTitle
       bodyUpdate <- traverse (either throwError pure . validateBrainEntryBody) beuBody
@@ -1273,6 +1275,10 @@ validatePositiveAdminLookupId fieldName rawId
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
   | otherwise = Right rawId
+
+validateBrainEntryId :: Int64 -> Either ServerError Int64
+validateBrainEntryId =
+  validatePositiveAdminLookupId "entryId"
 
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
 validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
