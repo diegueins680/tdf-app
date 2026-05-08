@@ -11,6 +11,7 @@ import           Data.Char
   , isControl
   )
 import           Data.List            (group, nub)
+import qualified Data.Set             as Set
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import qualified Data.Text.Encoding   as TE
@@ -21,7 +22,6 @@ import           TDF.API.Future
 import           TDF.Auth
   ( AuthedUser(..)
   , ModuleAccess(ModuleAdmin)
-  , hasModuleAccess
   , moduleName
   , modulesForRoles
   )
@@ -157,7 +157,7 @@ validateFutureAdminAccess user
               "Admin fallback discovery requires baseline roles; missing: "
                 <> T.intercalate ", " (map roleToText missingBaselineRoles)
         }
-  | not (hasModuleAccess ModuleAdmin user) =
+  | not (ModuleAdmin `Set.member` auModules user) =
       Left err403 { errBody = "Admin module access required" }
   | auModules user /= modulesForRoles (auRoles user) =
       Left err403 { errBody = "Admin module grants must match roles" }

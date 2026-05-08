@@ -9688,6 +9688,8 @@ spec = describe "TDF.Server helpers" $ do
                     errHTTPCode serverErr `shouldBe` 403
                     BL8.unpack (errBody serverErr)
                         `shouldContain` "Admin module grants must match roles"
+                    BL8.unpack (errBody serverErr)
+                        `shouldNotContain` "Admin module access required"
                 Right value ->
                     expectationFailure
                         ("Expected stale Admin module grants to be rejected, got: " <> show value)
