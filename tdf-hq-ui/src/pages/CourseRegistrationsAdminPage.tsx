@@ -897,10 +897,10 @@ const firstRunSalesDescriptorSuffixPattern =
   /(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:sales?|purchase|order)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?))\s*$/i;
 
 const firstRunPaymentDescriptorPrefixPattern =
-  /^(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunPaymentDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|mercado\s*pago|mercadopago)\s+)?(?:(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout)|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
 
 const firstRunSignupSheetDescriptorPrefixPattern =
   /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

@@ -13533,7 +13533,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Stripe checkout form for Beatmaking 101',
       'Datafast payment link - Beatmaking 101',
       'Beatmaking 101 - payment page',
+      'Payment button for Beatmaking 101',
       'Formulario de pago - Beatmaking 101',
+      'Botón de pago - Beatmaking 101',
       'Beatmaking 101 - página de pago',
       'Enlace de pago para Beatmaking 101',
     ];
