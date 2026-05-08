@@ -10191,11 +10191,25 @@ describe('CourseRegistrationsAdminPage', () => {
         crEmail: 'brenda@example.com',
         crSource: 'whatsapp_campaign',
       }),
-      ...buildRegistrations(7, (index) => ({
-        crId: 103 + index,
-        crPartyId: 11 + index,
-        crFullName: `Estudiante ${index + 3}`,
-        crEmail: `student${index + 3}@example.com`,
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: 'Claudia Jones',
+        crEmail: 'claudia@example.com',
+        crSource: 'ig_story',
+      }),
+      buildRegistration({
+        crId: 104,
+        crPartyId: 12,
+        crFullName: 'David Bowie',
+        crEmail: 'david@example.com',
+        crSource: 'fb_story',
+      }),
+      ...buildRegistrations(5, (index) => ({
+        crId: 105 + index,
+        crPartyId: 13 + index,
+        crFullName: `Estudiante ${index + 5}`,
+        crEmail: `student${index + 5}@example.com`,
         crSource: index % 2 === 0 ? 'landing' : null,
       })),
     ]);
@@ -10211,10 +10225,16 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).toContain('Fuente: TikTok ad');
       expect(container.textContent).toContain('Fuente: WhatsApp campaign');
+      expect(container.textContent).toContain('Fuente: Instagram story');
+      expect(container.textContent).toContain('Fuente: Facebook story');
       expect(container.textContent).not.toContain('Fuente: Tiktok ad');
       expect(container.textContent).not.toContain('Fuente: Whatsapp campaign');
+      expect(container.textContent).not.toContain('Fuente: Ig story');
+      expect(container.textContent).not.toContain('Fuente: Fb story');
       expect(container.textContent).not.toContain('Fuente: tiktok_ad');
       expect(container.textContent).not.toContain('Fuente: whatsapp_campaign');
+      expect(container.textContent).not.toContain('Fuente: ig_story');
+      expect(container.textContent).not.toContain('Fuente: fb_story');
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
