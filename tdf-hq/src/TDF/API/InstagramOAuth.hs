@@ -8,7 +8,7 @@ module TDF.API.InstagramOAuth where
 import           Data.Aeson (FromJSON(..), Options(rejectUnknownFields), ToJSON(..),
                              defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON,
                              omitNothingFields)
-import           Data.Char (isControl, isSpace, toLower)
+import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace, toLower)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -29,12 +29,16 @@ instance FromJSON InstagramOAuthExchangeRequest where
   parseJSON value = do
     request <- genericParseJSON strictObjectOptions value
     code <- maybe (fail "code cannot be blank") pure (nonEmptyText (ioeCode request))
-    if T.any (\ch -> isSpace ch || isControl ch) code
-      then fail "code must not contain whitespace or control characters"
+    if T.any isUnsafeOAuthCodeChar code
+      then fail "code must not contain whitespace, control, or hidden formatting characters"
       else pure request
         { ioeCode = code
         , ioeRedirectUri = ioeRedirectUri request >>= nonEmptyText
         }
+
+isUnsafeOAuthCodeChar :: Char -> Bool
+isUnsafeOAuthCodeChar ch =
+  isSpace ch || isControl ch || generalCategory ch == Format
 
 data InstagramOAuthPage = InstagramOAuthPage
   { iopPageId              :: Text
