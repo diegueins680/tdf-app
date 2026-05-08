@@ -4130,6 +4130,18 @@ export default function CourseRegistrationsAdminPage() {
   const statusMenuActionTargetLabel = statusMenuReg ? getActionTargetLabelForRegistration(statusMenuReg) : '';
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
   const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
+  const receiptMenuActionLabel = receiptMenuReceipt
+    ? receiptDisplayLabelWithContext(
+      receiptMenuReceipt,
+      receiptIdsRequiringFileDisambiguator.has(receiptMenuReceipt.crrId),
+    )
+    : '';
+  const followUpMenuActionLabel = followUpMenuEntry
+    ? followUpActionTargetLabelWithContext(
+      followUpMenuEntry,
+      followUpIdsRequiringActionDisambiguator.has(followUpMenuEntry.crfId),
+    )
+    : '';
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
     ? (
@@ -5589,12 +5601,20 @@ export default function CourseRegistrationsAdminPage() {
         onClose={handleCloseReceiptMenu}
       >
         {receiptMenuReceipt && (
-          <MenuItem onClick={() => handleEditReceipt(receiptMenuReceipt)}>
+          <MenuItem
+            aria-label={`Editar comprobante ${receiptMenuActionLabel}`}
+            title={`Editar comprobante ${receiptMenuActionLabel}`}
+            onClick={() => handleEditReceipt(receiptMenuReceipt)}
+          >
             Editar comprobante
           </MenuItem>
         )}
         {receiptMenuReceipt && (
-          <MenuItem onClick={() => handleDeleteReceipt(receiptMenuReceipt)}>
+          <MenuItem
+            aria-label={`Eliminar comprobante ${receiptMenuActionLabel}`}
+            title={`Eliminar comprobante ${receiptMenuActionLabel}`}
+            onClick={() => handleDeleteReceipt(receiptMenuReceipt)}
+          >
             Eliminar comprobante
           </MenuItem>
         )}
@@ -5637,12 +5657,20 @@ export default function CourseRegistrationsAdminPage() {
         onClose={handleCloseFollowUpMenu}
       >
         {followUpMenuEntry && (
-          <MenuItem onClick={() => handleEditFollowUp(followUpMenuEntry)}>
+          <MenuItem
+            aria-label={`Editar seguimiento ${followUpMenuActionLabel}`}
+            title={`Editar seguimiento ${followUpMenuActionLabel}`}
+            onClick={() => handleEditFollowUp(followUpMenuEntry)}
+          >
             Editar seguimiento
           </MenuItem>
         )}
         {followUpMenuEntry && (
-          <MenuItem onClick={() => handleDeleteFollowUp(followUpMenuEntry)}>
+          <MenuItem
+            aria-label={`Eliminar seguimiento ${followUpMenuActionLabel}`}
+            title={`Eliminar seguimiento ${followUpMenuActionLabel}`}
+            onClick={() => handleDeleteFollowUp(followUpMenuEntry)}
+          >
             Eliminar seguimiento
           </MenuItem>
         )}

@@ -6602,8 +6602,15 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Editar seguimiento')).toBeTruthy();
-      expect(getMenuItemByText(document.body, 'Eliminar seguimiento')).toBeTruthy();
+      const editFollowUpItem = getMenuItemByText(document.body, 'Editar seguimiento');
+      const deleteFollowUpItem = getMenuItemByText(document.body, 'Eliminar seguimiento');
+
+      expect(editFollowUpItem).toBeTruthy();
+      expect(deleteFollowUpItem).toBeTruthy();
+      expect(editFollowUpItem.getAttribute('aria-label')).toBe('Editar seguimiento Confirmó transferencia');
+      expect(editFollowUpItem.getAttribute('title')).toBe('Editar seguimiento Confirmó transferencia');
+      expect(deleteFollowUpItem.getAttribute('aria-label')).toBe('Eliminar seguimiento Confirmó transferencia');
+      expect(deleteFollowUpItem.getAttribute('title')).toBe('Eliminar seguimiento Confirmó transferencia');
     });
 
     await act(async () => {
@@ -6826,8 +6833,15 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getMenuItemByText(document.body, 'Editar comprobante')).toBeTruthy();
-      expect(getMenuItemByText(document.body, 'Eliminar comprobante')).toBeTruthy();
+      const editReceiptItem = getMenuItemByText(document.body, 'Editar comprobante');
+      const deleteReceiptItem = getMenuItemByText(document.body, 'Eliminar comprobante');
+
+      expect(editReceiptItem).toBeTruthy();
+      expect(deleteReceiptItem).toBeTruthy();
+      expect(editReceiptItem.getAttribute('aria-label')).toBe('Editar comprobante receipt.pdf');
+      expect(editReceiptItem.getAttribute('title')).toBe('Editar comprobante receipt.pdf');
+      expect(deleteReceiptItem.getAttribute('aria-label')).toBe('Eliminar comprobante receipt.pdf');
+      expect(deleteReceiptItem.getAttribute('title')).toBe('Eliminar comprobante receipt.pdf');
     });
 
     await act(async () => {
@@ -7150,6 +7164,22 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toHaveLength(1);
     });
 
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para comprobante receipt.pdf · #302'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const editReceiptItem = getMenuItemByText(document.body, 'Editar comprobante');
+      const deleteReceiptItem = getMenuItemByText(document.body, 'Eliminar comprobante');
+
+      expect(editReceiptItem.getAttribute('aria-label')).toBe('Editar comprobante receipt.pdf · #302');
+      expect(deleteReceiptItem.getAttribute('aria-label')).toBe('Eliminar comprobante receipt.pdf · #302');
+      expect(editReceiptItem.textContent?.trim()).toBe('Editar comprobante');
+      expect(deleteReceiptItem.textContent?.trim()).toBe('Eliminar comprobante');
+    });
+
     await cleanup();
   });
 
@@ -7194,6 +7224,22 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toHaveLength(1);
       expect(countOccurrences(document.body, 'Confirmó transferencia')).toBe(2);
       expect(document.body.textContent).toContain('2 entradas');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia · #402'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const editFollowUpItem = getMenuItemByText(document.body, 'Editar seguimiento');
+      const deleteFollowUpItem = getMenuItemByText(document.body, 'Eliminar seguimiento');
+
+      expect(editFollowUpItem.getAttribute('aria-label')).toBe('Editar seguimiento Confirmó transferencia · #402');
+      expect(deleteFollowUpItem.getAttribute('aria-label')).toBe('Eliminar seguimiento Confirmó transferencia · #402');
+      expect(editFollowUpItem.textContent?.trim()).toBe('Editar seguimiento');
+      expect(deleteFollowUpItem.textContent?.trim()).toBe('Eliminar seguimiento');
     });
 
     await cleanup();
