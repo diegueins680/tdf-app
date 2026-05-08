@@ -13,7 +13,12 @@ module TDF.WhatsApp.Client
 
 import Data.Aeson
 import Data.Aeson.Types (parseMaybe)
-import Data.Char (GeneralCategory (Format), generalCategory, isControl, isSpace)
+import Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -216,6 +221,8 @@ normalizeWhatsAppMessageBody rawBody
       Left "Invalid WhatsApp message body: message must be 4096 characters or fewer"
   | T.any invalidMessageBodyControlChar body =
       Left invalidWhatsAppMessageBodyControlMessage
+  | T.any invalidMessageBodyFormatChar body =
+      Left invalidWhatsAppMessageBodyFormatMessage
   | otherwise =
       Right body
   where
@@ -232,6 +239,15 @@ invalidWhatsAppMessageBodyControlMessage :: String
 invalidWhatsAppMessageBodyControlMessage =
   "Invalid WhatsApp message body: message must not contain "
     <> "unsupported control characters"
+
+invalidMessageBodyFormatChar :: Char -> Bool
+invalidMessageBodyFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+invalidWhatsAppMessageBodyFormatMessage :: String
+invalidWhatsAppMessageBodyFormatMessage =
+  "Invalid WhatsApp message body: message must not contain "
+    <> "hidden formatting or separator characters"
 
 isAsciiDigit :: Char -> Bool
 isAsciiDigit ch = ch >= '0' && ch <= '9'

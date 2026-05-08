@@ -145,6 +145,9 @@ spec = do
           bodyControlMessage =
             "Invalid WhatsApp message body: message must not contain "
               <> "unsupported control characters"
+          bodyFormatMessage =
+            "Invalid WhatsApp message body: message must not contain "
+              <> "hidden formatting or separator characters"
       normalizeWhatsAppRecipientPhone "   "
         `shouldBe` Left "Invalid WhatsApp recipient phone: phone is required"
       normalizeWhatsAppRecipientPhone "call me at 099 123 4567"
@@ -169,6 +172,10 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp message body: message must be 4096 characters or fewer"
       normalizeWhatsAppMessageBody ("hola" <> T.singleton '\NUL')
         `shouldBe` Left bodyControlMessage
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\x202E' <> "ops")
+        `shouldBe` Left bodyFormatMessage
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\x2028' <> "ops")
+        `shouldBe` Left bodyFormatMessage
 
   describe "recordIncomingWhatsAppMessage" $ do
     it "allocates safe distinct fallback external ids for malformed inbound ids" $ do
