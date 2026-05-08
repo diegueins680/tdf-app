@@ -444,9 +444,12 @@ normalizeMarketplacePositiveDecimalId fieldName rawValue =
     isPositiveDecimalId candidate =
       not (T.null candidate)
         && T.all isDigit candidate
+        && not (hasLeadingZero candidate)
         && case reads (T.unpack candidate) :: [(Integer, String)] of
              [(n, "")] -> n > 0 && n <= fromIntegral (maxBound :: Int64)
              _         -> False
+    hasLeadingZero candidate =
+      T.length candidate > 1 && T.head candidate == '0'
 
 data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   { mcrBuyerName  :: Text

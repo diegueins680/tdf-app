@@ -1048,6 +1048,9 @@ spec = do
                 "{\"mciuListingId\":\"0\",\"mciuQuantity\":1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"01\",\"mciuQuantity\":1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate
                 "{\"mciuListingId\":\"+1\",\"mciuQuantity\":1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate
@@ -1109,6 +1112,9 @@ spec = do
                 `shouldSatisfy` isLeft
             decodePaypalCapture
                 "{\"pcCaptureOrderId\":\"0\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"0042\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
                 `shouldSatisfy` isLeft
             decodePaypalCapture
                 "{\"pcCaptureOrderId\":\"../42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
