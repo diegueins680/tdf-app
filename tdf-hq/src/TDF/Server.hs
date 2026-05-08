@@ -2747,7 +2747,9 @@ validateCalendarQueryText fieldName rawValue =
        then Left (calendarQueryError (fieldName <> " must not be blank"))
        else if T.any isControl trimmed
          then Left (calendarQueryError (fieldName <> " must not contain control characters"))
-         else Right trimmed
+       else if T.any isHiddenDriveOAuthTokenChar trimmed
+         then Left (calendarQueryError (fieldName <> " must not contain hidden formatting characters"))
+       else Right trimmed
 
 calendarQueryError :: Text -> ServerError
 calendarQueryError message =

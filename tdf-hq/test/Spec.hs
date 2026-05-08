@@ -229,6 +229,7 @@ import TDF.Server
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
       validateDriveRedirectUri,
+      validateCalendarEventListQuery,
       validatePayPalCredential,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
@@ -4267,6 +4268,22 @@ main = hspec $ do
                 `shouldBe` Left "calendarId must not contain hidden formatting characters"
             validateGoogleCalendarEventId ("event-123" <> Data.Text.singleton '\x202E')
                 `shouldBe` Left "Google Calendar event id must not contain hidden formatting characters"
+
+        it "rejects hidden formatting marks in Calendar status filters before event lookups" $
+            case validateCalendarEventListQuery
+                Nothing
+                Nothing
+                Nothing
+                (Just ("confirmed" <> Data.Text.singleton '\x202E')) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err)
+                            `shouldContain` "status must not contain hidden formatting characters"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected hidden-format Calendar status filter to fail, got: "
+                                <> show value
+                            )
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
