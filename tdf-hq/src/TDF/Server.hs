@@ -2191,7 +2191,7 @@ validateDriveUploadMimeType mimeType
 
 isDriveMimeToken :: Text -> Bool
 isDriveMimeToken token =
-  not (T.null token) && T.all isDriveMimeTokenChar token
+  not (T.null token) && token /= "*" && T.all isDriveMimeTokenChar token
 
 isDriveMimeTokenChar :: Char -> Bool
 isDriveMimeTokenChar ch =

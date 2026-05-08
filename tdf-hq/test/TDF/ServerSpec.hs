@@ -5015,6 +5015,12 @@ spec = describe "TDF.Server helpers" $ do
                 "file content type must be a MIME type"
                 ("application/" <> T.replicate 244 "a")
             assertInvalid
+                "file content type must be a MIME type"
+                "application/*"
+            assertInvalid
+                "file content type must be a MIME type"
+                "*/*"
+            assertInvalid
                 "file content type must not contain control characters"
                 "application/pdf\r\nContent-Type: text/plain"
             assertInvalid
