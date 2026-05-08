@@ -151,6 +151,9 @@ spec = do
                 "{\"douActive\":false,\"active\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty dropdown updates instead of accepting a silent no-op patch" $
+            decodeDropdownOptionUpdate "{}" `shouldSatisfy` isLeft
+
     describe "ChatKitSessionRequest FromJSON" $ do
         it "accepts canonical top-level and nested workflow selectors" $ do
             case decodeChatKitSession "{\"workflowId\":\" wf_primary \"}" of

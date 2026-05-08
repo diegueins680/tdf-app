@@ -103,12 +103,21 @@ instance FromJSON DropdownOptionUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in DropdownOptionUpdate: " <> T.unpack key)
-      [] ->
-        DropdownOptionUpdate
-          <$> o .:? "douValue"
-          <*> o .:! "douLabel"
-          <*> o .:! "douSortOrder"
-          <*> o .:? "douActive"
+      [] -> do
+        valueValue <- o .:? "douValue"
+        labelValue <- o .:! "douLabel"
+        sortOrderValue <- o .:! "douSortOrder"
+        activeValue <- o .:? "douActive"
+        case (valueValue, labelValue, sortOrderValue, activeValue) of
+          (Nothing, Nothing, Nothing, Nothing) ->
+            fail "DropdownOptionUpdate must include at least one field"
+          _ ->
+            pure DropdownOptionUpdate
+              { douValue = valueValue
+              , douLabel = labelValue
+              , douSortOrder = sortOrderValue
+              , douActive = activeValue
+              }
 
 data RoleDetailDTO = RoleDetailDTO
   { role    :: RoleEnum
