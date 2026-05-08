@@ -12257,6 +12257,53 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps stale registration refresh errors next to the error while preserving the visible list', async () => {
+    const registrations = buildRegistrations(9);
+    listRegistrationsMock
+      .mockResolvedValueOnce(registrations)
+      .mockRejectedValueOnce(new Error('Backend unavailable'))
+      .mockResolvedValueOnce(registrations);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup, queryClient } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'course-registrations'] });
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain('No se pudieron cargar las inscripciones: Backend unavailable');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(1);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Reintentar inscripciones'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledTimes(3);
+      expect(container.textContent).not.toContain('No se pudieron cargar las inscripciones');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps filtered registration errors focused on retry and one reset path', async () => {
     listRegistrationsMock.mockRejectedValue(new Error('Backend unavailable'));
 
