@@ -4691,10 +4691,8 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
 
     describe "resolveWorkflowId" $ do
-        it "uses the configured ChatKit workflow when the request override is omitted or blank" $ do
+        it "uses the configured ChatKit workflow only when the request override is omitted" $ do
             resolveWorkflowId Nothing (Just "  wf_default  ")
-                `shouldBe` Right "wf_default"
-            resolveWorkflowId (Just "   ") (Just "  wf_default  ")
                 `shouldBe` Right "wf_default"
 
         it "prefers a meaningful request workflow over the configured fallback" $
@@ -4714,6 +4712,10 @@ spec = describe "TDF.Server helpers" $ do
                 400
                 "workflowId must not contain whitespace"
                 (resolveWorkflowId (Just "wf override") (Just "wf_default"))
+            assertInvalid
+                400
+                "workflowId cannot be blank"
+                (resolveWorkflowId (Just "   ") (Just "wf_default"))
             assertInvalid
                 500
                 "CHATKIT_WORKFLOW_ID must not contain whitespace"

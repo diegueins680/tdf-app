@@ -10027,13 +10027,15 @@ chatKitSessionErrorMessage status raw =
 
 resolveWorkflowId :: Maybe Text -> Maybe Text -> Either ServerError Text
 resolveWorkflowId primary fallback =
-  case (primary >>= nonEmptyText, fallback >>= nonEmptyText) of
-    (Just rawWorkflowId, _) ->
+  case primary of
+    Just rawWorkflowId ->
       toServerError err400 (normalizeChatKitWorkflowId "workflowId" rawWorkflowId)
-    (Nothing, Just rawWorkflowId) ->
-      toServerError err500 (normalizeChatKitWorkflowId "CHATKIT_WORKFLOW_ID" rawWorkflowId)
-    (Nothing, Nothing) ->
-      Left err400 { errBody = "workflowId requerido" }
+    Nothing ->
+      case fallback >>= nonEmptyText of
+        Just rawWorkflowId ->
+          toServerError err500 (normalizeChatKitWorkflowId "CHATKIT_WORKFLOW_ID" rawWorkflowId)
+        Nothing ->
+          Left err400 { errBody = "workflowId requerido" }
   where
     toServerError status result =
       case result of
