@@ -18,7 +18,8 @@ import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
 import TDF.DTO.SocialEventsDTO
-    ( ArtistFollowerDTO (..)
+    ( ArtistDTO
+    , ArtistFollowerDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventUpdateDTO (..)
@@ -185,6 +186,48 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected malformed stored event metadata to be rejected, got: " <> show value)
 
+    it "rejects malformed stored artist social links before publishing artist DTO fallbacks" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let artistKey :: ArtistProfileId
+            artistKey = toSqlKey 15
+        runSqlPool
+            ( insertKey
+                artistKey
+                ArtistProfile
+                    { artistProfilePartyId = Nothing
+                    , artistProfileName = "Corrupt Links"
+                    , artistProfileBio = Nothing
+                    , artistProfileAvatarUrl = Nothing
+                    , artistProfileGenres = Nothing
+                    , artistProfileSocialLinks = Just "{\"bandcamp\":\"https://artist.example\"}"
+                    , artistProfileCreatedAt = now
+                    , artistProfileUpdatedAt = now
+                    }
+            )
+            pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by artist get tests"
+                    }
+        result <-
+            runHandler $
+                runReaderT
+                    (artistGetHandlerFor (socialEventUser 1) "15")
+                    env
+
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 500
+                BL8.unpack (errBody err)
+                    `shouldContain` "Stored artist social links are invalid"
+            Right value ->
+                expectationFailure
+                    ("Expected malformed stored artist social links to be rejected, got: " <> show value)
+
     it "rejects unknown follower party ids before the handler can create orphan follows or RSVPs" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -334,9 +377,22 @@ socialEventUpdateHandlerFor
     -> ReaderT Env Handler EventDTO
 socialEventUpdateHandlerFor user =
     case socialEventsServer user of
-        eventsServer :<|> _venues :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _tickets :<|> _budget :<|> _finance ->
+        eventsServer
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
             case eventsServer of
-                _listEvents :<|> _createEvent :<|> _getEvent :<|> updateEventHandler :<|> _uploadEventImage :<|> _deleteEvent ->
+                _listEvents
+                    :<|> _createEvent
+                    :<|> _getEvent
+                    :<|> updateEventHandler
+                    :<|> _uploadEventImage
+                    :<|> _deleteEvent ->
                     updateEventHandler
 
 socialEventGetHandlerFor
@@ -345,10 +401,48 @@ socialEventGetHandlerFor
     -> ReaderT Env Handler EventDTO
 socialEventGetHandlerFor user =
     case socialEventsServer user of
-        eventsServer :<|> _venues :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _tickets :<|> _budget :<|> _finance ->
+        eventsServer
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
             case eventsServer of
-                _listEvents :<|> _createEvent :<|> getEventHandler :<|> _updateEvent :<|> _uploadEventImage :<|> _deleteEvent ->
+                _listEvents
+                    :<|> _createEvent
+                    :<|> getEventHandler
+                    :<|> _updateEvent
+                    :<|> _uploadEventImage
+                    :<|> _deleteEvent ->
                     getEventHandler
+
+artistGetHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler ArtistDTO
+artistGetHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _venues
+            :<|> artistsServer
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
+            case artistsServer of
+                _listArtists
+                    :<|> _createArtist
+                    :<|> getArtistHandler
+                    :<|> _updateArtist
+                    :<|> _listArtistFollowers
+                    :<|> _followArtist
+                    :<|> _unfollowArtist ->
+                    getArtistHandler
 
 socialEventInvitationCreateHandlerFor
     :: AuthedUser
@@ -485,6 +579,14 @@ initializeSocialSchema = do
         \\"social_links\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_genre\" (\
+        \\"artist_id\" INTEGER NOT NULL,\
+        \\"genre\" VARCHAR NOT NULL,\
+        \PRIMARY KEY (\"artist_id\", \"genre\"),\
+        \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
         \)"
         []
     rawExecute

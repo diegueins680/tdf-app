@@ -153,10 +153,14 @@ data TicketCheckInLookup
   | TicketCheckInLookupByCode T.Text
   deriving (Show, Eq)
 
-decodeSocialLinks :: Maybe T.Text -> Maybe ArtistSocialLinksDTO
-decodeSocialLinks mTxt = do
-  txt <- mTxt
-  Aeson.decodeStrict (TE.encodeUtf8 txt)
+decodeStoredArtistSocialLinks :: Maybe T.Text -> Either T.Text (Maybe ArtistSocialLinksDTO)
+decodeStoredArtistSocialLinks Nothing = Right Nothing
+decodeStoredArtistSocialLinks (Just raw)
+  | T.null (T.strip raw) = Right Nothing
+  | otherwise =
+      case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
+        Right links -> Right (Just links)
+        Left _ -> Left "Stored artist social links are invalid or contain unsupported fields"
 
 encodeSocialLinks :: Maybe ArtistSocialLinksDTO -> Maybe T.Text
 encodeSocialLinks mLinks =
@@ -569,7 +573,7 @@ socialEventsServer user = eventsServer
             pure (typeOk && statusOk)
       filteredRows <- filterM matchesMeta rows
       forM filteredRows $ \(Entity eid eventRow) -> do
-        artists <- liftIO $ loadEventArtists envPool eid
+        artists <- loadEventArtists envPool eid
         either throwError pure (eventEntityToDTO eid eventRow artists)
 
     createEvent :: EventDTO -> AppM EventDTO
@@ -646,7 +650,7 @@ socialEventsServer user = eventsServer
       case mEvent of
         Nothing -> throwError err404 { errBody = "Event not found" }
         Just eventRow -> do
-          artists <- liftIO $ loadEventArtists envPool eventKey
+          artists <- loadEventArtists envPool eventKey
           either throwError pure (eventEntityToDTO eventKey eventRow artists)
 
     updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
@@ -980,19 +984,9 @@ socialEventsServer user = eventsServer
         let genreMatches = case genreFilter of
               Nothing -> True
               Just genre -> any ((== genre) . T.toCaseFold) genreList
-        pure $ if nameMatches && genreMatches
-          then Just ArtistDTO
-            { artistId = Just (renderKeyText aid)
-            , artistPartyId = artistProfilePartyId a
-            , artistName = artistProfileName a
-            , artistGenres = genreList
-            , artistBio = artistProfileBio a
-            , artistAvatarUrl = artistProfileAvatarUrl a
-            , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-            , artistCreatedAt = Just (artistProfileCreatedAt a)
-            , artistUpdatedAt = Just (artistProfileUpdatedAt a)
-            }
-          else Nothing
+        if nameMatches && genreMatches
+          then Just <$> either throwError pure (artistProfileToDTO aid a genreList)
+          else pure Nothing
       let filtered = catMaybes artists
       pure
         (if hasFilter
@@ -1089,17 +1083,7 @@ socialEventsServer user = eventsServer
         Just a -> do
           genres <- liftIO $ runSqlPool (selectList [ArtistGenreArtistId ==. artistKey] []) envPool
           let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
-          pure ArtistDTO
-            { artistId = Just (T.strip idStr)
-            , artistPartyId = artistProfilePartyId a
-            , artistName = artistProfileName a
-            , artistGenres = genreList
-            , artistBio = artistProfileBio a
-            , artistAvatarUrl = artistProfileAvatarUrl a
-            , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-            , artistCreatedAt = Just (artistProfileCreatedAt a)
-            , artistUpdatedAt = Just (artistProfileUpdatedAt a)
-            }
+          either throwError pure (artistProfileToDTO artistKey a genreList)
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
     updateArtist idStr dto = do
@@ -3074,6 +3058,31 @@ artistGenresFromRowsAndFallback genreRows fallbackGenres =
       normalizedFallback = normalizeArtistGenres (fromMaybe [] fallbackGenres)
   in if null normalizedFromRows then normalizedFallback else normalizedFromRows
 
+artistProfileToDTO
+  :: ArtistProfileId
+  -> ArtistProfile
+  -> [T.Text]
+  -> Either ServerError ArtistDTO
+artistProfileToDTO artistKey artist genreList = do
+  socialLinks <-
+    either (Left . storedArtistSocialLinksServerError) Right $
+      decodeStoredArtistSocialLinks (artistProfileSocialLinks artist)
+  Right ArtistDTO
+    { artistId = Just (renderKeyText artistKey)
+    , artistPartyId = artistProfilePartyId artist
+    , artistName = artistProfileName artist
+    , artistGenres = genreList
+    , artistBio = artistProfileBio artist
+    , artistAvatarUrl = artistProfileAvatarUrl artist
+    , artistSocialLinks = socialLinks
+    , artistCreatedAt = Just (artistProfileCreatedAt artist)
+    , artistUpdatedAt = Just (artistProfileUpdatedAt artist)
+    }
+
+storedArtistSocialLinksServerError :: T.Text -> ServerError
+storedArtistSocialLinksServerError message =
+  err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
 resolveBudgetLineKey :: ConnectionPool -> SocialEventId -> Maybe T.Text -> AppM (Maybe EventBudgetLineId)
 resolveBudgetLineKey _ _ Nothing = pure Nothing
 resolveBudgetLineKey pool eventKey rawInput = do
@@ -3254,39 +3263,31 @@ claimOrRequireEventManager currentParty pool eventKey eventRow =
         pool
       pure eventRow { socialEventOrganizerPartyId = Just currentParty, socialEventUpdatedAt = now }
 
-loadEventArtists :: ConnectionPool -> SocialEventId -> IO [ArtistDTO]
-loadEventArtists pool eventKey = runSqlPool (do
-  artistLinks <- selectList [EventArtistEventId ==. eventKey] []
-  forM artistLinks $ \(Entity _ link) -> do
-    mArtist <- get (eventArtistArtistId link)
-    case mArtist of
-      Nothing ->
-        pure ArtistDTO
-          { artistId = Nothing
-          , artistPartyId = Nothing
-          , artistName = "(unknown)"
-          , artistGenres = []
-          , artistBio = Nothing
-          , artistAvatarUrl = Nothing
-          , artistSocialLinks = Nothing
-          , artistCreatedAt = Nothing
-          , artistUpdatedAt = Nothing
-          }
-      Just a -> do
-        genres <- selectList [ArtistGenreArtistId ==. eventArtistArtistId link] []
-        let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
-        pure ArtistDTO
-          { artistId = Just (renderKeyText (eventArtistArtistId link))
-          , artistPartyId = artistProfilePartyId a
-          , artistName = artistProfileName a
-          , artistGenres = genreList
-          , artistBio = artistProfileBio a
-          , artistAvatarUrl = artistProfileAvatarUrl a
-          , artistSocialLinks = decodeSocialLinks (artistProfileSocialLinks a)
-          , artistCreatedAt = Just (artistProfileCreatedAt a)
-          , artistUpdatedAt = Just (artistProfileUpdatedAt a)
-          }
-  ) pool
+loadEventArtists :: ConnectionPool -> SocialEventId -> AppM [ArtistDTO]
+loadEventArtists pool eventKey = do
+  loaded <- liftIO $ runSqlPool (do
+    artistLinks <- selectList [EventArtistEventId ==. eventKey] []
+    forM artistLinks $ \(Entity _ link) -> do
+      mArtist <- get (eventArtistArtistId link)
+      case mArtist of
+        Nothing ->
+          pure $ Right ArtistDTO
+            { artistId = Nothing
+            , artistPartyId = Nothing
+            , artistName = "(unknown)"
+            , artistGenres = []
+            , artistBio = Nothing
+            , artistAvatarUrl = Nothing
+            , artistSocialLinks = Nothing
+            , artistCreatedAt = Nothing
+            , artistUpdatedAt = Nothing
+            }
+        Just a -> do
+          genres <- selectList [ArtistGenreArtistId ==. eventArtistArtistId link] []
+          let genreList = artistGenresFromRowsAndFallback genres (artistProfileGenres a)
+          pure (artistProfileToDTO (eventArtistArtistId link) a genreList)
+    ) pool
+  either throwError pure (sequence loaded)
 
 momentReactionEntityToDTO :: Entity EventMomentReaction -> EventMomentReactionDTO
 momentReactionEntityToDTO (Entity _ reactionRow) = EventMomentReactionDTO
