@@ -3465,6 +3465,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps custom-status fallback guidance from duplicating first-run filter onboarding', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'needs_review',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCourseSlug: 'mixing-bootcamp',
+        crStatus: 'waitlist',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const customStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-status-filter-unavailable"]',
+      );
+
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(countOccurrences(container, customStatusFilterUnavailableMessage)).toBe(1);
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
+      expect(container.textContent).not.toContain('Empieza por cohorte y estado');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+    });
+
+    await cleanup();
+  });
+
   it('uses busy-list search for custom statuses without adding the status fallback panel', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({

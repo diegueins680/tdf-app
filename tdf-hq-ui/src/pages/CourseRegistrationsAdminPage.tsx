@@ -290,12 +290,14 @@ const summarizeActiveFilters = ({
 
 const buildAutomaticFilterHelpText = ({
   combinedSingleChoiceSummary,
+  hasStatusFilterControl,
   hasVisibleRegistrations,
   showAdvancedLimitControl,
   showSingleStatusSummary,
   singleAvailableCohortLabel,
 }: {
   combinedSingleChoiceSummary: string;
+  hasStatusFilterControl: boolean;
   hasVisibleRegistrations: boolean;
   showAdvancedLimitControl: boolean;
   showSingleStatusSummary: boolean;
@@ -306,6 +308,8 @@ const buildAutomaticFilterHelpText = ({
   if (singleAvailableCohortLabel || showSingleStatusSummary) {
     return '';
   }
+
+  if (!hasStatusFilterControl) return '';
 
   const filterStartingPoint = singleAvailableCohortLabel
     ? 'Usa Estado.'
@@ -3310,6 +3314,7 @@ export default function CourseRegistrationsAdminPage() {
     : 'Estado único en esta vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
+    hasStatusFilterControl: actionableStatusFilters.length > 0,
     hasVisibleRegistrations,
     showAdvancedLimitControl,
     showSingleStatusSummary: showSingleStatusSummaryBlock,
