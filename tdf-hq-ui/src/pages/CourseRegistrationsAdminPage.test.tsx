@@ -7851,6 +7851,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips pre-sale wrappers from first-run form labels', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Pre-sale registration page - Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Página de preventa de inscripción - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.textContent).not.toContain('Pre-sale registration page');
+      expect(emptyState?.textContent).not.toContain('Página de preventa de inscripción');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
+      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps limit-only cohort failures focused on the cohort retry instead of duplicate list refresh', async () => {
     listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
     listRegistrationsMock.mockResolvedValue([]);
