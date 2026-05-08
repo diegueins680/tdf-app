@@ -207,7 +207,12 @@ validateSriScriptResult dto =
           "buyerEmail"
           validateSriBuyerEmail
           (sirBuyerEmail result)
-      Right result { sirBuyerEmail = buyerEmail }
+      case (buyerEmail, sirBuyer result >>= sibEmail) of
+        (Just topLevelEmail, Just nestedEmail)
+          | topLevelEmail /= nestedEmail ->
+              Left "SRI script JSON output buyerEmail must match buyer.email when both are present"
+        _ ->
+          Right result { sirBuyerEmail = buyerEmail }
 
     validateOptionalDocumentIdentifiers result = do
       authorizationNumber <-

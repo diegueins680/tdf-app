@@ -3196,6 +3196,14 @@ main = hspec $ do
                     <> Data.Text.unpack (Data.Text.replicate 245 "a")
                     <> "@example.com\"}"
                 )
+            assertInvalid
+                "buyerEmail must match buyer.email"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyerEmail\":\"billing@example.com\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"email\":\"other@example.com\"}}"
+                )
             case Sri.decodeSriScriptOutput
                 "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\" Billing+SRI@Example.COM \"}" of
                 Left err ->
