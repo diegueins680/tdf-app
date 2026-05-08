@@ -176,6 +176,9 @@ currentPasswordInputSpec = describe "validateCurrentPasswordInput" $ do
     assertRejected "Current password is required" "   "
     assertRejected "72 bytes or fewer" (T.replicate 73 "a")
     assertRejected "control characters" "old\npass"
+    assertRejected
+      "hidden formatting"
+      ("old" <> T.singleton (chr 0x200D) <> "pass")
 
 passwordChangeAuthHeaderSpec :: Spec
 passwordChangeAuthHeaderSpec = describe "parsePasswordChangeAuthToken" $ do

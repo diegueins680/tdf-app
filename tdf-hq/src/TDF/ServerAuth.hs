@@ -390,6 +390,8 @@ validateCurrentPasswordInput rawPassword
       Left (passwordError "Current password must be 72 bytes or fewer")
   | T.any isControl passwordClean =
       Left (passwordError "Current password must not contain control characters")
+  | T.any isHiddenPasswordFormattingChar passwordClean =
+      Left (passwordError "Current password must not contain hidden formatting characters")
   | otherwise =
       Right passwordClean
   where
