@@ -14221,10 +14221,13 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips admission-form descriptors from first-run cohort copy', async () => {
     const titles = [
       'Formulario de admisión - Beatmaking 101',
+      'Portal de admisiones - Beatmaking 101',
+      'Portal de ingreso para Beatmaking 101',
       'Admisiones del curso - Beatmaking 101',
       'Solicitud de ingreso - Beatmaking 101',
       'Beatmaking 101 - admission form',
       'Beatmaking 101 - formulario de admisiones',
+      'Beatmaking 101 - portal de ingreso',
       'Beatmaking 101 - ingreso al curso',
     ];
 
@@ -14242,9 +14245,12 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de admisión');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Portal de admisiones');
+        expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Portal de ingreso');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Admisiones');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Solicitud de ingreso');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - ingreso');
+        expect(emptyState?.textContent).not.toContain('portal de ingreso');
         expect(emptyState?.textContent).not.toContain('formulario de admisiones');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Beatmaking 101 - admission');
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);

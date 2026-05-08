@@ -1142,10 +1142,10 @@ const firstRunMatriculacionDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+matriculaci[oó]n|matriculaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
 const firstRunSpanishAdmissionsDescriptorPrefixPattern =
-  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:formulario|ficha|p[aá]gina|portal(?:es)?|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunSpanishAdmissionsDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|portal(?:es)?|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))\s*$/i;
 
 const firstRunLooseEnrollmentDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)(?:\s*(?:[-:/|]\s*))/i;
