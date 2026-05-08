@@ -12938,6 +12938,7 @@ describe('CourseRegistrationsAdminPage', () => {
       'ManyChat lead form - Beatmaking 101',
       'Beatmaking 101 - ManyChat form',
       'Formulario de ManyChat para Beatmaking 101',
+      'Airtable - Beatmaking 101',
       'Airtable form - Beatmaking 101',
       'HubSpot Forms for Beatmaking 101',
       'Mailchimp signup form - Beatmaking 101',
