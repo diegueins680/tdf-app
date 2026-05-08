@@ -1053,6 +1053,53 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps user-access overview fallback cards from duplicating the users workflow', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-user-access-overview',
+          title: 'User access overview',
+          body: [
+            'Review which users can open protected modules before editing roles.',
+          ],
+        },
+        {
+          cardId: 'fallback-resumen-acceso-usuarios',
+          title: 'Resumen de acceso de usuarios',
+          body: [
+            'Revisa qué usuarios pueden abrir módulos protegidos antes de editar roles.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Aún no hay usuarios administrables.')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('User access overview')).not.toBeInTheDocument();
+    expect(screen.queryByText('Resumen de acceso de usuarios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review which users can open protected modules before editing roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa qué usuarios pueden abrir módulos protegidos antes de editar roles\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps team-access fallback cards from duplicating the users workflow', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
