@@ -4277,6 +4277,14 @@ main = hspec $ do
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
 
+        it "rejects duplicate Google Calendar event ids before sync fallback upserts" $
+            ( eitherDecode
+                ( "{\"items\":[{\"id\":\"event-123\"},{\"id\":\" event-123 \"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                ) :: Either String GoogleEventsPage
+            )
+                `shouldSatisfy` isLeft
+
         it "drops partial incremental events when expired sync cursors fall back to full sync" $ do
             let staleEvent = A.object ["id" .= ("stale-event" :: Text)]
                 retryState = expiredGoogleCalendarSyncRetryState Nothing Nothing [staleEvent]

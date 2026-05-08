@@ -263,7 +263,9 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o -> do
     parsedItems <- o .: "items"
-    forM_ (zip [(0 :: Int)..] parsedItems) $ uncurry validateGoogleCalendarPageItem
+    itemIds <- forM (zip [(0 :: Int)..] parsedItems) $ uncurry validateGoogleCalendarPageItem
+    when (length itemIds /= Set.size (Set.fromList itemIds)) $
+      fail "Google Calendar page must not contain duplicate event ids"
     nextPage <- o .:? "nextPageToken" >>= traverse (parseGoogleCursorField "nextPageToken")
     nextSync <- o .:? "nextSyncToken" >>= traverse (parseGoogleCursorField "nextSyncToken")
     when (isJust nextPage && isJust nextSync) $
@@ -277,13 +279,13 @@ instance FromJSON GoogleEventsPage where
 parseGoogleCursorField :: Text -> Text -> Parser Text
 parseGoogleCursorField = parseGoogleTokenField
 
-validateGoogleCalendarPageItem :: Int -> Value -> Parser ()
+validateGoogleCalendarPageItem :: Int -> Value -> Parser Text
 validateGoogleCalendarPageItem idx (Object eventObj) = do
-  case AKeyMap.lookup "id" eventObj of
+  eventId <- case AKeyMap.lookup "id" eventObj of
     Just (String rawEventId) ->
       either
         (fail . googleItemFieldError "id")
-        (const (pure ()))
+        pure
         (validateGoogleCalendarEventId rawEventId)
     Just _ ->
       fail (googleItemFieldLabel "id" <> " must be a string")
@@ -299,6 +301,7 @@ validateGoogleCalendarPageItem idx (Object eventObj) = do
         (validateGoogleCalendarEventStatus rawStatus)
     Just _ ->
       fail (googleItemFieldLabel "status" <> " must be a string")
+  pure eventId
   where
     googleItemFieldLabel fieldName =
       "items[" <> show idx <> "]." <> T.unpack fieldName
