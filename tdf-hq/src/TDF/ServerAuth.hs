@@ -717,6 +717,8 @@ validateLoginRequest (LoginRequest rawUsername rawPassword)
       Left err400 { errBody = "Password must be 72 bytes or fewer" }
   | T.any isControl passwordClean =
       Left err400 { errBody = "Password must not contain control characters" }
+  | T.any isHiddenPasswordFormattingChar passwordClean =
+      Left err400 { errBody = "Password must not contain hidden formatting characters" }
   | otherwise =
       Right (LoginRequest usernameClean passwordClean)
   where

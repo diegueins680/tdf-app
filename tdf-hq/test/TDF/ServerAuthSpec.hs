@@ -159,6 +159,9 @@ loginRequestSpec = describe "validateLoginRequest" $ do
     assertRejected
       "Password must not contain control characters"
       (LoginRequest "ada@example.com" "Temp\nPass123!")
+    assertRejected
+      "Password must not contain hidden formatting characters"
+      (LoginRequest "ada@example.com" ("Temp" <> hiddenFormat <> "Pass123!"))
 
 currentPasswordInputSpec :: Spec
 currentPasswordInputSpec = describe "validateCurrentPasswordInput" $ do
