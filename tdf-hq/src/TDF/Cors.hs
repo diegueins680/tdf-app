@@ -57,6 +57,7 @@ corsPolicy = do
   filtered <- either (ioError . userError) pure $
     validateConfiguredCorsOriginList allowAllFlag configuredOrigins
       >>= traverse normalizeConfiguredCorsOrigin
+      >>= validateUniqueConfiguredCorsOrigins
   let
       defaults = defaultsCore ++ hqBaseDefaults
       includeDefaults = not disableDefaultsFlag
@@ -171,6 +172,14 @@ validateConfiguredCorsOriginList allowAll origins
       Left
         "Configured CORS origins must not mix wildcard '*' with explicit origins; \
         \set ALLOW_ALL_ORIGINS=true for allow-all or remove '*'."
+  | otherwise = Right origins
+
+validateUniqueConfiguredCorsOrigins :: [String] -> Either String [String]
+validateUniqueConfiguredCorsOrigins origins
+  | length origins /= length (nub origins) =
+      Left
+        "Configured CORS origins must not contain duplicate entries after normalization; \
+        \remove repeated origins from the allowlist."
   | otherwise = Right origins
 
 parseHttpOrigin :: String -> Maybe String
