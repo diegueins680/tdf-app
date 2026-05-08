@@ -14,6 +14,7 @@ import Test.Hspec
 import TDF.Auth
   ( AuthedUser (..)
   , ModuleAccess (..)
+  , hasModuleAccess
   , modulesForRoles
   , resolveUsernameFromLabel
   , validateModuleAccess
@@ -109,6 +110,14 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
 
   it "allows coherent users with the required module grant" $
     validateModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` Right ()
+
+  it "denies direct module checks for stale or duplicated role grants" $ do
+    hasModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` True
+    hasModuleAccess ModuleAdmin (mkUser [Admin, Admin]) `shouldBe` False
+    hasModuleAccess
+      ModuleAdmin
+      ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
+      `shouldBe` False
 
   it "rejects missing, duplicated, or stale module grants before handler authorization" $ do
     assertRejected "Missing access to module: Admin" $

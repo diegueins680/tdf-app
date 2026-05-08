@@ -86,7 +86,8 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 
 -- | Check whether the user can access the given module.
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
-hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
+hasModuleAccess moduleTag user@AuthedUser{..} =
+  hasCoherentRoleGrants user && moduleTag `Set.member` auModules
 
 validateModuleAccess :: ModuleAccess -> AuthedUser -> Either ServerError ()
 validateModuleAccess moduleTag user@AuthedUser{..}
