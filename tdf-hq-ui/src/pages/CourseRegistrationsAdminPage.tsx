@@ -60,6 +60,7 @@ const receiptComposerHelpText = 'Este formulario ya está abierto para guardar o
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
+const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const normalizeInitialCohortPreviewKey = (label: string) =>
   label
     .normalize('NFD')
@@ -83,13 +84,14 @@ const formatInitialCohortPreview = (labels: readonly string[]) => {
 
   const uniqueLabels = Array.from(uniqueLabelsByKey.values());
   if (uniqueLabels.length === 0) return '';
-  const visibleLabels = uniqueLabels.slice(0, 3);
+  const visibleLabels = uniqueLabels.slice(0, INITIAL_COHORT_PREVIEW_LIMIT);
   const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
   const hiddenCount = uniqueLabels.length > 1 ? hiddenUniqueLabelCount : 0;
 
   if (hiddenCount > 0) {
-    if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenCount} más`;
-    return `${visibleLabels.join(', ')} y ${hiddenCount} más`;
+    const hiddenLabel = `${hiddenCount} ${hiddenCount === 1 ? 'curso más' : 'cursos más'}`;
+    if (visibleLabels.length === 1) return `${visibleLabels[0]} y ${hiddenLabel}`;
+    return `${visibleLabels.join(', ')} y ${hiddenLabel}`;
   }
 
   if (visibleLabels.length === 1) return visibleLabels[0] ?? '';
