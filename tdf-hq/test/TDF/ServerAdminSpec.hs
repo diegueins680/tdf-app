@@ -908,6 +908,16 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right NoContent ->
                     expectationFailure "Expected invalid seed token to be rejected"
 
+            malformedResult <-
+                runAdminTestWith envWithToken (seedHandler (Just (" " <> token <> " ")))
+            case malformedResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Malformed X-Seed-Token header"
+                Right NoContent ->
+                    expectationFailure "Expected malformed seed token to be rejected"
+
             disabledResult <- runAdminTestWith envWithoutToken (seedHandler (Just token))
             case disabledResult of
                 Left err -> do

@@ -656,9 +656,15 @@ requireSeedToken rawToken = do
       missingHeader = throwError err401 { errBody = encodeBody "Missing X-Seed-Token header" }
       disabled = throwError err403 { errBody = encodeBody "Seeding endpoint disabled" }
       invalid = throwError err403 { errBody = encodeBody "Invalid seed token" }
+      malformed = throwError err400 { errBody = encodeBody "Malformed X-Seed-Token header" }
+      invalidTokenChar ch =
+        isSpace ch
+          || isControl ch
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
   secret <- maybe disabled pure (seedTriggerToken envConfig)
-  token  <- maybe missingHeader (pure . T.strip) rawToken
-  when (T.null token) missingHeader
+  token <- maybe missingHeader pure rawToken
+  when (T.null (T.strip token)) missingHeader
+  when (token /= T.strip token || T.any invalidTokenChar token) malformed
   when (token /= secret) invalid
   pure ()
 
