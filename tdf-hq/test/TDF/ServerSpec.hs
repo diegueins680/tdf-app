@@ -376,6 +376,7 @@ import TDF.ServerFuture
     , allowedFutureStubAreas
     , deriveFutureStubAreas
     , futureStubId
+    , futureStubResponseFor
     , futureServer
     , invalidCardText
     , validateFutureAdminAccess
@@ -10141,6 +10142,34 @@ spec = describe "TDF.Server helpers" $ do
                             <> "generic stub catalog, got: "
                             <> show value
                         )
+
+    describe "futureStubResponseFor" $
+        it "reports invalid fallback discovery metadata before building response envelopes" $ do
+            case futureStubResponseFor "crm" "parties/list-columns" of
+                Right response -> do
+                    stubArea response `shouldBe` "crm"
+                    stubEndpoint response `shouldBe` "parties/list-columns"
+                    stubId response `shouldBe` "crm.parties.list-columns"
+                    stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
+                    stubMethod response `shouldBe` "GET"
+                    stubStatus response `shouldBe` "planned"
+                    stubRequiredRole response `shouldBe` "Admin"
+                    stubRequiredModule response `shouldBe` "Admin"
+                    stubImplemented response `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected canonical future stub response, got: " <> show serverErr)
+
+            case futureStubResponseFor "crm" "parties/export" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                    BL8.unpack (errBody serverErr)
+                        `shouldNotContain` "Invalid future stub response"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid future stub metadata, got: " <> show value)
 
     describe "validateFutureStubPublishedPath" $
         it "keeps fallback discovery paths rooted under canonical protected stubs" $ do

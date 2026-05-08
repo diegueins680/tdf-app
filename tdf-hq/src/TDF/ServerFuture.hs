@@ -33,22 +33,8 @@ stub
   => Text
   -> Text
   -> m StubResponse
-stub rawArea rawEndpoint = do
-  (area, endpoint) <-
-    either throwError pure (validateFutureStubMetadata rawArea rawEndpoint)
-  either throwError pure $
-    validateFutureStubResponse $
-      StubResponse
-        { stubArea        = area
-        , stubEndpoint    = endpoint
-        , stubId          = futureStubId area endpoint
-        , stubPath        = futureStubPath area endpoint
-        , stubMethod      = futureStubMethod
-        , stubStatus      = "planned"
-        , stubRequiredRole = futureStubRequiredRole
-        , stubRequiredModule = futureStubRequiredModule
-        , stubImplemented = False
-        }
+stub rawArea rawEndpoint =
+  either throwError pure (futureStubResponseFor rawArea rawEndpoint)
 
 futureServer
   :: MonadError ServerError m
@@ -328,7 +314,8 @@ validateFutureStubCatalogResponses responses = do
     else Right validatedResponses
 
 futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
-futureStubResponseFor area endpoint =
+futureStubResponseFor rawArea rawEndpoint = do
+  (area, endpoint) <- validateFutureStubMetadata rawArea rawEndpoint
   validateFutureStubResponse $
     StubResponse
       { stubArea = area
