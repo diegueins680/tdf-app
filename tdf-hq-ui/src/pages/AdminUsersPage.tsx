@@ -398,7 +398,8 @@ const ADMIN_USERS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
-const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar cuentas inactivas';
+const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Ver si hay cuentas inactivas';
+const ADMIN_USERS_REVIEW_INACTIVE_SINGLE_USER_ACTION = 'Revisar cuentas inactivas';
 const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en cuentas inactivas';
 const ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION = 'Buscar cuentas inactivas';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
@@ -1449,7 +1450,7 @@ export default function AdminUsersPage() {
                   )}
                   {showReviewInactiveSingleUserAction && (
                     <Button size="small" variant="text" onClick={() => setIncludeInactive(true)}>
-                      {ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION}
+                      {ADMIN_USERS_REVIEW_INACTIVE_SINGLE_USER_ACTION}
                     </Button>
                   )}
                 </Stack>
