@@ -214,6 +214,8 @@ spec = do
       assertRejected "user.@example.com"
       assertRejected "user..name@example.com"
       assertRejected "user()@example.com"
+      assertRejected "user@example.123"
+      assertRejected "user@example.c"
       assertRejected (pack (replicate 65 'a') <> "@example.com")
       assertRejected ("user@" <> pack (replicate 64 'b') <> ".com")
 

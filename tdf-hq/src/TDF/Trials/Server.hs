@@ -91,8 +91,16 @@ isValidEmail candidate =
         && not (T.isPrefixOf "." domain)
         && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && hasValidEmailFinalDomainLabel domain
         && all isValidEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+hasValidEmailFinalDomainLabel :: Text -> Bool
+hasValidEmailFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 maxPublicEmailChars :: Int
 maxPublicEmailChars = 254
