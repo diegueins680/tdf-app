@@ -6640,6 +6640,7 @@ createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
 
 createServiceMarketplaceBooking :: AuthedUser -> Api.ServiceMarketplaceBookingReq -> AppM Api.ServiceMarketplaceBookingDTO
 createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
+  titleVal <- either throwError pure (validateServiceMarketplaceBookingTitle smbTitle)
   paymentMethodVal <- either throwError pure (parsePaymentMethodText smbPaymentMethod)
   notesVal <- either throwError pure (validateServiceMarketplaceBookingNotes smbNotes)
   (adId, slotId) <- either throwError pure (validateServiceMarketplaceBookingRefs smbAdId smbSlotId)
@@ -6656,7 +6657,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       Left serverErr -> liftIO $ throwIO serverErr
       Right () -> pure ()
     when (providerId == auPartyId user) $ liftIO $ throwIO err400 { errBody = "Cannot book your own service ad" }
-    let orderTitle = fromMaybe (serviceAdHeadline ad) (normalizeOptionalInput smbTitle)
+    let orderTitle = fromMaybe (serviceAdHeadline ad) titleVal
     catalogId <- maybe (liftIO $ throwIO err409 { errBody = "Service ad is missing catalogId" }) pure (serviceAdServiceCatalogId ad)
     catalog <- get catalogId
     catalogKind <- case validateServiceMarketplaceCatalog catalog of
@@ -7375,6 +7376,14 @@ validateServiceMarketplaceBookingRefs rawAdId rawSlotId = do
   adId <- validatePositiveIdField "adId" rawAdId
   slotId <- validatePositiveIdField "slotId" rawSlotId
   pure (adId, slotId)
+
+validateServiceMarketplaceBookingTitle :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceMarketplaceBookingTitle Nothing = Right Nothing
+validateServiceMarketplaceBookingTitle (Just rawTitle)
+  | T.null (T.strip rawTitle) =
+      Left err400 { errBody = "title cannot be blank; omit title to use the service ad headline" }
+  | otherwise =
+      Just <$> validateRequiredBookingTitle rawTitle
 
 validateServiceMarketplaceBookingNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validateServiceMarketplaceBookingNotes =

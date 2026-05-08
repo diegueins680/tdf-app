@@ -238,6 +238,7 @@ import TDF.Server
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
     , validateServiceMarketplaceBookingRefs
+    , validateServiceMarketplaceBookingTitle
     , validateServiceMarketplaceBookingNotes
     , validateServiceMarketplaceBookingSlot
     , validateServiceMarketplaceCompletion
@@ -1724,6 +1725,30 @@ spec = describe "TDF.Server helpers" $ do
                 (validateServiceMarketplaceBookingRefs 0 99)
             assertInvalid "slotId must be a positive integer"
                 (validateServiceMarketplaceBookingRefs 42 (-3))
+
+    describe "validateServiceMarketplaceBookingTitle" $ do
+        it "keeps omitted titles as the service-ad headline fallback and trims explicit titles" $ do
+            validateServiceMarketplaceBookingTitle Nothing `shouldBe` Right Nothing
+            validateServiceMarketplaceBookingTitle (Just "  Mezcla analogica  ")
+                `shouldBe` Right (Just "Mezcla analogica")
+
+        it "rejects blank, oversized, or unsafe titles before service marketplace booking writes" $ do
+            let assertInvalid rawTitle expectedMessage =
+                    case validateServiceMarketplaceBookingTitle (Just rawTitle) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid service marketplace title to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "   " "title cannot be blank"
+            assertInvalid (T.replicate 161 "x") "title must be 160 characters or fewer"
+            assertInvalid "Revision\NULurgente" "title must not contain control characters"
+            assertInvalid
+                ("Revision" <> T.singleton '\x202E' <> "urgente")
+                "hidden formatting characters"
 
     describe "validateServiceMarketplaceBookingNotes" $ do
         it "validates notes before duplicating marketplace notes into booking rows" $ do
