@@ -2729,6 +2729,9 @@ main = hspec $ do
                 "postgresql://flyuser:flypass@db.fly.internal:pg/tdf_hq"
                 "DATABASE_URL port must be numeric"
             expectInvalidPort
+                "postgresql://flyuser:flypass@db.fly.internal:05432/tdf_hq"
+                "DATABASE_URL port must not contain leading zeros"
+            expectInvalidPort
                 "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
                 "DATABASE_URL port must be between 1 and 65535"
 

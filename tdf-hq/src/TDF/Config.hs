@@ -249,6 +249,8 @@ validateFallbackConnUrl envName raw
           let port = T.drop 1 suffix
           in if T.null port || T.any (not . isDigit) port
                then Left (envName <> " port must be numeric")
+               else if T.length port > 1 && T.head port == '0'
+                 then Left (envName <> " port must not contain leading zeros")
                else case readMaybe (T.unpack port) :: Maybe Int of
                  Just portNumber | portNumber >= 1 && portNumber <= 65535 -> Right ()
                  _ -> Left (envName <> " port must be between 1 and 65535")
