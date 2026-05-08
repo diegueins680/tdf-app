@@ -295,7 +295,9 @@ import TDF.Server
     , resolvePartyRoleAssignmentTarget
     , resolvePartyRelatedTarget
     , resolveFanFollowArtistTarget
+    , fanListFollows
     , fanUnfollowArtist
+    , artistGetOwnProfile
     , chatListMessages
     , adsGetCampaign
     , adsUpsertCampaign
@@ -1701,6 +1703,28 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected 400 "artistId must be a positive integer" invalidResult
 
     describe "fanUnfollowArtist" $ do
+        it "rejects malformed fan grants before loading follow fallback data" $ do
+            let staleFan =
+                    (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                duplicatedFan =
+                    mkUser [Fan, Fan]
+                assertRejected user = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (fanListFollows user)
+                                (error "fanListFollows should reject malformed auth before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Fan access requires coherent role grants"
+                        Right _ ->
+                            expectationFailure
+                                "Expected malformed fan auth scope to be rejected"
+            assertRejected staleFan
+            assertRejected duplicatedFan
+
         it "rejects invalid fan follow targets before deleting can return a misleading no-op" $ do
             let user = mkUser [Fan]
                 assertInvalid rawArtistId expectedMessage = do
@@ -1718,6 +1742,29 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid fan unfollow target to be rejected, got: " <> show value)
             assertInvalid 0 "Invalid artist id"
             assertInvalid 1 "No puedes dejar de seguirte a ti mismo"
+
+    describe "artistGetOwnProfile" $
+        it "rejects malformed artist grants before loading profile fallback data" $ do
+            let staleArtist =
+                    (mkUser [Artist]) { auModules = modulesForRoles [Admin] }
+                duplicatedArtist =
+                    mkUser [Artist, Artist]
+                assertRejected user = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (artistGetOwnProfile user)
+                                (error "artistGetOwnProfile should reject malformed auth before reading Env")
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Artist access requires coherent role grants"
+                        Right _ ->
+                            expectationFailure
+                                "Expected malformed artist auth scope to be rejected"
+            assertRejected staleArtist
+            assertRejected duplicatedArtist
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $

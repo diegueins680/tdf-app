@@ -1972,7 +1972,7 @@ driveServer user =
 
 validateDriveAccess :: AuthedUser -> Either ServerError ()
 validateDriveAccess user
-  | not (hasCoherentDriveAuthScope user) =
+  | not (hasCoherentAuthScope user) =
       Left err403
         { errBody = "Google Drive access requires coherent role grants"
         }
@@ -1983,8 +1983,8 @@ validateDriveAccess user
         { errBody = "Google Drive access requires operations or artist role"
         }
 
-hasCoherentDriveAuthScope :: AuthedUser -> Bool
-hasCoherentDriveAuthScope user =
+hasCoherentAuthScope :: AuthedUser -> Bool
+hasCoherentAuthScope user =
   length (auRoles user) == length (nub (auRoles user))
     && auModules user == modulesForRoles (auRoles user)
 
@@ -5966,14 +5966,18 @@ socialGetProfile _ partyId = do
   maybe (throwError err404) pure mProfile
 
 requireFanAccess :: AuthedUser -> AppM ()
-requireFanAccess AuthedUser{..} =
+requireFanAccess user@AuthedUser{..} = do
   unless (Fan `elem` auRoles || Customer `elem` auRoles) $
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Fan access required") }
+  unless (hasCoherentAuthScope user) $
+    throwError err403 { errBody = "Fan access requires coherent role grants" }
 
 requireArtistAccess :: AuthedUser -> AppM ()
-requireArtistAccess AuthedUser{..} =
+requireArtistAccess user@AuthedUser{..} = do
   unless (Artist `elem` auRoles || Artista `elem` auRoles || Admin `elem` auRoles) $
     throwError err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Artist access required") }
+  unless (hasCoherentAuthScope user) $
+    throwError err403 { errBody = "Artist access requires coherent role grants" }
 
 artistGetOwnProfile :: AuthedUser -> AppM ArtistProfileDTO
 artistGetOwnProfile user = do
