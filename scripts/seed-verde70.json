@@ -1,0 +1,50 @@
+{
+  "band": {
+    "bcName": "Verde70",
+    "bcLabelArtist": true,
+    "bcPrimaryGenre": "Rock Pop / Indie Rock",
+    "bcHomeCity": "Quito, Ecuador",
+    "bcPhotoUrl": null,
+    "bcContractFlags": null,
+    "bcMembers": []
+  },
+  "members": [
+    {
+      "displayName": "Darío Castro",
+      "role": "Voz principal, compositor",
+      "notes": "Co-fundador de Verde70. Líder creativo de la banda desde 1998."
+    },
+    {
+      "displayName": "César Galarza",
+      "role": "Guitarra, productor",
+      "notes": "Se unió para el segundo álbum 'Ruta Melancolía'. Productor y guitarrista."
+    },
+    {
+      "displayName": "Bastián Napolitano",
+      "role": "Batería",
+      "notes": "Se unió en el regreso de la banda en 2012."
+    },
+    {
+      "displayName": "Diego Saa",
+      "role": "Bajo, coros",
+      "notes": "Miembro original. Regresó a la banda tras la salida de Christian Dreyer. Formación en piano clásico."
+    },
+    {
+      "displayName": "Lisa María",
+      "role": "Voz, teclados, compositora",
+      "notes": "Se unió en 2024 como vocalista, compositora y tecladista oficial."
+    }
+  ],
+  "discography": [
+    { "title": "Alegre Depresión", "year": 2000, "type": "Álbum de estudio" },
+    { "title": "Ruta Melancolía", "year": 2003, "type": "Álbum de estudio" },
+    { "title": "ConCierto Cuidado!", "year": 2006, "type": "Álbum en vivo" },
+    { "title": "La Edad de la Zebra", "year": 2015, "type": "Álbum de estudio" },
+    { "title": "Tres A La Vez", "year": 2019, "type": "EP" },
+    { "title": "Éxitoína", "year": 2021, "type": "Recopilatorio" }
+  ],
+  "sources": {
+    "wikipedia": "https://es.wikipedia.org/wiki/Verde70",
+    "musicbrainz": "https://musicbrainz.org/artist/2f47f89c-0b74-4ebc-b32d-f52c9b1b497e"
+  }
+}
