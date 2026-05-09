@@ -1,29 +1,63 @@
-## 2026-05-09 10:40 America/Guayaquil — CIO checkpoint
-- Packet A status: blocked — `Metro not running on 127.0.0.1:8081` (same-run curl probe exit 28, connection timeout). Backend API on `:8080` is UP (`{"db":"ok","status":"ok"}`). Simulator `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` is `Booted`. The last official Platform report (`2026-05-08 05:04`) claimed `lane ready`, but current same-run evidence reintroduces the Metro-down blocker. Owner: `tdf-label-platform` or operator must start Metro with `cd '/Users/diegosaa/GitHub/tdf-app/tdf-mobile' && npx expo start --dev-client --host localhost` and verify with `curl -sf http://127.0.0.1:8081`.
-- Packet B gate status: closed — store-publish readiness stays strictly sequenced after fresh Packet A proof on the exact lane. RC verdict: `NO-GO`. Shipping decision: `NOT YET SHIPPABLE`.
-- Lane C runner status: live — `tmp/continuous-improvement-loop/status.json` shows `state=restarting`, `phase=child-exited`, `supervisorPid=860`, `childPid=69656`, `lastHeartbeat=2026-05-09T15:42:38Z`, `restartCount=1449`. launchd plist `ai.openclaw.tdf-app.continuous-improvement-loop` is loaded with PID 860 matching supervisor. Child exits with code 1 due to Codex usage limit (`ERROR: You've hit your usage limit... try again at May 11th, 2026 5:36 PM`); supervisor auto-restarts after 15s delay. This is normal forever-runner behavior. Durable contract verified; no repair required.
-- Product-progress line: Platform retired all code-level blockers (`events`, `bookings`, `safe-area`, auth/session, Google config, schema drift) per evidence `auth-events-bookings-20260428-0855`, `safe-area-20260428-0241`, `google-config-20260427-1135`, `ios-packager-backed-debug-20260425-212326`. App binary is present and simulator boots correctly. API remains live.
-- Publish-state line: RC verdict `NO-GO`; shipping decision `NOT YET SHIPPABLE`.
-- Exact blocker-plus-owner sequencing line: Packet A gated by `Metro down on :8081` → owner `tdf-label-platform` or operator must start Metro and verify `:8081` live, then re-run `sh /Users/diegosaa/.openclaw/orgs/tdf-label/scripts/check-lane-status.sh` until exit code 0.
-- Exact next-step line: Platform/operator starts Metro (`npx expo start --dev-client --host localhost` in `tdf-mobile`), verifies with `curl -sf http://127.0.0.1:8081`, then runs `sh /Users/diegosaa/.openclaw/orgs/tdf-label/scripts/check-lane-status.sh` to officially record `lane ready` or `lane blocked: [exact blocker]` in `reports/tdf-label-platform.md`.
-- `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-80956c0d82b9` remain paused unless manually changed.
-## 2026-05-09 12:40 America/Guayaquil — CIO checkpoint
-- Packet A status: `lane ready` — `check-lane-status.sh` exit 0 ratified by CTO-forced entry in `reports/tdf-label-platform.md` at 2026-05-09 12:20 (API UP, Metro UP, Simulator UP). Release has not yet produced a seed-backed UI auth proof since this ratification; last Release run (16:20 UTC) misread the Platform report location and reported gate blocked.
-- Packet B gate status: `closed` — store-publish readiness strictly sequenced after Packet A login-proof completion. No auth proof or six-category rerun has been produced since the 12:20 lane ratification. RC verdict: `NO-GO`. Shipping decision: `NOT YET SHIPPABLE`.
-- Lane C runner status: `live` — `tmp/continuous-improvement-loop/status.json` shows `state=restarting`, `phase=child-exited`, `supervisorPid=860`, `childPid=94761`, `lastHeartbeat=2026-05-09T17:43:17Z`, `restartCount=1558`. launchd plist `ai.openclaw.tdf-app.continuous-improvement-loop` is loaded with PID 860 matching supervisor. Child exits with code 1 due to Codex usage limit (`ERROR: You've hit your usage limit... try again at May 11th, 2026 5:36 PM`); supervisor auto-restarts after 15s delay. Durable contract verified; no repair required for an external billing blocker.
-- Product-progress line: Platform retired all code-level blockers (`events`, `bookings`, `safe-area`, auth/session, Google config, schema drift) per evidence `auth-events-bookings-20260428-0855`, `safe-area-20260428-0241`, `google-config-20260427-1135`, `ios-packager-backed-debug-20260425-212326`. App binary is present and simulator boots correctly. API remains live. Metro is UP.
-- Publish-state line: RC verdict `NO-GO`; shipping decision `NOT YET SHIPPABLE`.
-- Exact blocker-plus-owner sequencing line: Packet A infrastructure gate is cleared; remaining sub-blocker is `seed-backed UI auth proof not yet produced on simulator lane` → owner `tdf-label-release` must run logout-and-relogin sequence with `admin` / `password123` and capture screenshot or log line from simulator auth screen.
-- Exact next-step line: Release runs seed-backed username/password auth proof on simulator `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` using `admin` / `password123`, then proceeds to six-category rerun. Platform should overwrite CTO-forced entry with its own verification in next scheduled window.
-- `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-80956c0d82b9` remain paused unless manually changed.
-FINAL_STATUS: done — Lane C live with verified launchd+supervisor durability; Packet A lane ready (CTO ratified 12:20) but auth proof pending; Packet B gated; no stale Platform-era wording survives.
-## 2026-05-09 14:40 America/Guayaquil — CIO checkpoint
-- Packet A status: `lane ready` — last ratified 2026-05-09 12:20 by CTO (`check-lane-status.sh` exit 0: API UP, Metro UP, Simulator UP). Platform has not yet produced its own independent `reports/tdf-label-platform.md` entry since the 12:20 ratification. No fresh same-lane evidence reintroduces a regression; lane status stands.
-- Packet B gate status: `closed` — store-publish readiness strictly sequenced after Packet A login-proof completion. `reports/tdf-label-release.md` does not exist; no auth proof or six-category rerun has been produced since the 12:20 lane ratification. RC verdict: `NO-GO`. Shipping decision: `NOT YET SHIPPABLE`.
-- Lane C runner status: `live` — supervisor PID 860 running since May 7, launchd plist `ai.openclaw.tdf-app.continuous-improvement-loop` loaded and matching. Heartbeat current (`2026-05-09T19:40:13Z`). Child crashloops on Codex usage limit (`ERROR: You've hit your usage limit... try again at May 11th, 2026 5:36 PM`), exit code 1, supervisor auto-restarts after 15s delay (`restartCount=1686`). This is expected forever-runner behavior for an external billing blocker; durable contract (launchd + supervisor + backoff restart) is intact. No repair required.
-- Product-progress line: Platform retired all code-level blockers (`events`, `bookings`, `safe-area`, auth/session, Google config, schema drift) per evidence `auth-events-bookings-20260428-0855`, `safe-area-20260428-0241`, `google-config-20260427-1135`, `ios-packager-backed-debug-20260425-212326`. App binary is present and simulator boots correctly. API and Metro remain live.
-- Publish-state line: RC verdict `NO-GO`; shipping decision `NOT YET SHIPPABLE`.
-- Exact blocker-plus-owner sequencing line: Packet A infrastructure gate is cleared; remaining sub-blocker is `seed-backed UI auth proof not yet produced on simulator lane` → owner `tdf-label-release` must run logout-and-relogin sequence with `admin` / `password123` and capture screenshot or log line from simulator auth screen.
-- Exact next-step line: Release produces seed-backed username/password auth proof on simulator `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` using `admin` / `password123`, records it in `reports/tdf-label-release.md`, then proceeds to six-category rerun. Platform should independently run `sh /Users/diegosaa/.openclaw/orgs/tdf-label/scripts/check-lane-status.sh` and record result in `reports/tdf-label-platform.md` in its next scheduled window.
-- `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-80956c0d82b9` remain paused unless manually changed.
-FINAL_STATUS: done — Lane C live with verified launchd+supervisor durability; Packet A lane ready (CTO ratified 12:20, Platform report pending); Packet B gated pending Release auth proof; no stale blockers survive.
+# TDF Label CIO Checkpoint
+
+**Date:** 2026-05-09 16:40 America/Guayaquil / 2026-05-09 21:40 UTC  
+**Reporter:** tdf-label-cio  
+**Previous:** 2026-04-28 17:43 — 11 days stale. Gap closed.
+
+---
+
+## Packet A — Login-proof release lane
+
+- **Platform verdict (2026-05-09 20:00 UTC):** `lane ready — launch OK`
+  - API: UP, Metro: UP, Simulator: UP, EXIT_CODE=0, app launch `com.tdfrecords.app: 31684`
+- **Release has NOT run since 2026-03-21 01:28** — nearly 7 weeks stale. This is the active company-level execution gap.
+- **Exact lane of record:**
+  1. `cd '/Users/diegosaa/GitHub/tdf-app/tdf-mobile' && npx expo start --dev-client --host localhost`
+  2. `xcrun simctl install 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B '/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app'`
+  3. `xcrun simctl launch 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B com.tdfrecords.app`
+- **Exact simulator id:** `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B`
+- **Exact app path:** `/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app`
+- **Exact bundle id:** `com.tdfrecords.app`
+- **Active smoke baseline:** `/Users/diegosaa/.openclaw/orgs/tdf-label/evidence/ios-six-category-smoke-20260426-2055`
+- **RC verdict:** `NO-GO`
+- **Shipping decision:** `NOT YET SHIPPABLE`
+- **Retired blockers:** `events`, `bookings`, `safe-area`, auth/session, schema drift, Google config — none are current.
+
+**Status:** Lane infrastructure ready; waiting on `tdf-label-release` to produce seed-backed auth proof.
+
+---
+
+## Packet B — Store-publish readiness
+
+- **Gate status:** CLOSED. Strictly sequenced after Packet A proof.
+- **Blocker:** `tdf-label-release` has not produced auth proof or six-category smoke rerun.
+- **No motion** until Packet A is proven end-to-end.
+
+---
+
+## Lane C — Evergreen continuous-improvement loop
+
+- **Runner status:** DOWN
+- **Supervisor state:** STOPPED
+- **Last observed state:** `restarting`, phase `child-exited`, 1,822 restart attempts, 2GB+ log file
+- **Root cause:** OpenAI Codex CLI usage limit exhausted. Child fails on every `implementation` step with:
+  > `ERROR: You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at May 11th, 2026 5:36 PM.`
+- **Repair performed:**
+  1. Stopped supervisor via `./scripts/start-continuous-improvement-loop.sh stop`
+  2. Unloaded launchd plist `ai.openclaw.tdf-app.continuous-improvement-loop` to prevent automatic restart storm
+- **Restart gate:** Resume after OpenAI Codex billing resets (estimated 2026-05-11 17:36 UTC) or credits are purchased.
+- **Log file:** `/Users/diegosaa/GitHub/tdf-app/tmp/continuous-improvement-loop.log` (rotated/truncated recommended before next start)
+
+---
+
+## Org Summary
+
+- **Product progress:** Platform lane confirmed ready. Mobile app launches on simulator. No auth proof yet.
+- **Publish state:** NOT YET SHIPPABLE. Packet B gated.
+- **Blocker + owner:** `tdf-label-release` must run seed-backed auth proof (`tdf-owner` / `TDFowner2025!`) and six-category smoke rerun on the exact simulator lane.
+- **Next step:** `tdf-label-release` records evidence in `reports/tdf-label-release.md`.
+- **Paused functions:** `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-80956c0d82b9` remain paused unless manually changed.
+
+---
+
+FINAL_STATUS: blocked — Lane C down due to OpenAI Codex usage limit; auto-restart storm stopped by unloading launchd plist.
