@@ -6,6 +6,7 @@ import { normalizeRoles } from '../config/menu';
 import MetadataPage from '../pages/Metadata';
 import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
+import ArtistsPage from '../pages/ArtistsPage';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
@@ -112,7 +113,7 @@ export default function AppRoutes() {
           path="/label"
           element={<RequireRole allowed={['admin','productor','finanzas','artista','ingeniero']}><Outlet /></RequireRole>}
         >
-          <Route path="artistas" element={<Page title="Label / Artistas" />} />
+          <Route path="artistas" element={<ArtistsPage />} />
           <Route path="proyectos" element={<Page title="Label / Proyectos" />} />
           <Route path="releases" element={<Page title="Label / Releases" />} />
           <Route path="tracks" element={<Page title="Label / Tracks" />} />
