@@ -31,6 +31,7 @@ services:
       APP_PORT: "8080"
       RUN_MIGRATIONS: "false"
       SEED_DB: "true"
+      GOOGLE_CLIENT_ID: "1016946267087-mvr22vuc8dql37fem7aa1msdnatjvhh4.apps.googleusercontent.com"
     depends_on:
       db:
         condition: service_healthy

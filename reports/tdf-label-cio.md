@@ -64,4 +64,13 @@
 - **Company-level blockers:** `XCODE_CLT_OUTDATED` + `NPM_CACHE_ROOT_OWNED` (both need operator `sudo`); `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (pending Platform infra unblock); `POST_LOGIN_403` (pending Release investigation).
 - **Next decisive action:** operator runs two `sudo` fixes so Platform can install ONE iOS UI automation framework (Detox/idb/XCUITest), then Release reruns Google OAuth proof and investigates 403.
 
-FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff; no new repair needed.
+## 2026-05-10 22:27 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end via `__DEV__` auto-fill workaround (Release 04:28 UTC). Google OAuth flow STARTS (ASWebAuthenticationSession dialog triggers) but completion blocked by `BACKEND_GOOGLE_CLIENT_ID_MISSING` (CTO added to `tdf-hq/docker-compose.yml` and `.env`; backend restart pending) and `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (simulator automation limitation). Post-login 403 pending investigation. Lane status verified 22:27 UTC: API DOWN, Metro DOWN, Simulator DOWN — Platform must restore.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths + 403 resolved). No motion until Packet A complete.
+- **Lane C:** `SUPERVISED, BACKING OFF` — supervisor PID 27163 alive under launchd (PPID 1, launchctl listed `ai.openclaw.tdf-app.continuous-improvement-loop`). Child exited (restartCount: 1, lastExitCode: 1, lastError: Codex API usage limit, resets ~May 11 17:36 UTC); restart delay 3600s, next restart ~23:21 UTC. Bounded repair from prior run (3600s backoff) remains effective. No new repair possible for external API limit. Supervisor durability contract is intact.
+- **Systems lane:** `PAUSED` per standing CEO directive (2026-05-10 22:24 UTC). Reviewer-access artifacts already exist in `/Users/diegosaa/.openclaw/workspace/reviewer-access/`. No resume warranted.
+- **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
+- **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff, no new repair needed.
