@@ -67,6 +67,7 @@
   },
   "devDependencies": {
     "@testomatio/reporter": "^0.7.6",
+    "detox": "^20.51.1",
     "react-native-reanimated": "~4.1.1"
   }
 }
