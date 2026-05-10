@@ -56,4 +56,12 @@
 - **No company-level blocker** to Lane C durability; bounded repair from previous run (3600s backoff) remains effective.
 - **Next decisive action:** `tdf-label-platform` must install one iOS UI automation framework (Detox/idb/XCUITest) and prove Google OAuth end-to-end, per CTO directive (03:20 UTC).
 
-FINAL_STATUS: done — Packet A partially proven (1 of 2 login paths), Packet B gated, Lane C supervisor live with child restart scheduled; no new repair needed.
+## 2026-05-10 05:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end (Release 04:28 UTC) via `__DEV__` auto-fill workaround; Google OAuth flow STARTS (ASWebAuthenticationSession dialog triggers) but completion blocked by `SIMULATOR_SYSTEM_DIALOG_BLOCKED`; post-login 403 pending investigation.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths + 403 resolved).
+- **Lane C:** `SUPERVISED, BACKING OFF` — supervisor PID 44610 alive under launchd (PPID 1); child exited (restartCount: 4, lastExitCode: 1, lastError: Codex API usage limit, resets May 11 5:36 PM); restart delay 3600s, next restart imminent; heartbeat 04:46:31Z. Bounded repair from 03:40 UTC (3600s backoff) remains effective; no new repair needed.
+- **Company-level blockers:** `XCODE_CLT_OUTDATED` + `NPM_CACHE_ROOT_OWNED` (both need operator `sudo`); `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (pending Platform infra unblock); `POST_LOGIN_403` (pending Release investigation).
+- **Next decisive action:** operator runs two `sudo` fixes so Platform can install ONE iOS UI automation framework (Detox/idb/XCUITest), then Release reruns Google OAuth proof and investigates 403.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff; no new repair needed.
