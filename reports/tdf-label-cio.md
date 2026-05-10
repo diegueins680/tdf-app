@@ -1,69 +1,51 @@
 # TDF Label CIO Checkpoint
 
-**Date:** 2026-05-09 18:40 America/Guayaquil / 2026-05-09 23:40 UTC  
+**Date:** 2026-05-09 20:40 America/Guayaquil / 2026-05-10 01:40 UTC  
 **Reporter:** tdf-label-cio  
-**Previous:** 2026-05-09 16:40
+**Previous:** 2026-05-09 18:40
 
 ---
 
 ## Packet A — Login-proof release lane
 
-- **Platform verdict (2026-05-09 20:00 UTC):** `lane ready — launch OK`
-- **Release last run:** 2026-05-09 22:20 UTC (active, not stalled)
-- **Exact lane of record:**
-  1. `cd '/Users/diegosaa/GitHub/tdf-app/tdf-mobile' && npx expo start --dev-client --host localhost`
-  2. `xcrun simctl install 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B '/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app'`
-  3. `xcrun simctl launch 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B com.tdfrecords.app`
-- **Exact simulator id:** `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B`
-- **Exact app path:** `/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app`
-- **Exact bundle id:** `com.tdfrecords.app`
-- **Active smoke baseline:** `/Users/diegosaa/.openclaw/orgs/tdf-label/evidence/ios-six-category-smoke-20260426-2055`
-- **RC verdict:** `NO-GO`
-- **Shipping decision:** `NOT YET SHIPPABLE`
-- **Retired blockers:** `events`, `bookings`, `safe-area`, auth/session, schema drift, Google config — none are current.
-
-**Status:** BLOCKED — invalid test account.  
-- Objective-mandated account `tdf-owner` / `TDFowner2025!` returns `Invalid username or password` from the backend API (`POST /login`).
-- Verified working API credentials: `admin` / `password123`.
-- Onboarding screen renders after app-data reset (`auth-proof-20260509-2220-b.png`), but `/auth` login screen has not yet been visually confirmed on the simulator (needs tap on "Ir a login").
-- No engineering blockers remain; the only active blocker is the missing/incorrect test account seed.
+- **Status:** `BLOCKED — invalid test account seed`
+- **No change since previous:** The objective-mandated account `tdf-owner` / `TDFowner2025!` still returns `Invalid username or password` from the backend API.
+- **Verified working credentials remain:** `admin` / `password123`.
+- **Evidence on disk:** `auth-proof-20260509-2220-b.png` shows onboarding screen renders; `/auth` login screen has not been visually confirmed on simulator.
+- **No engineering blockers:** `events`, `bookings`, `safe-area`, auth/session, schema drift, Google config — none are current.
+- **Packet A remains unproven end-to-end.**
 
 ---
 
 ## Packet B — Store-publish readiness
 
-- **Gate status:** CLOSED. Strictly sequenced after Packet A proof.
-- **Blocker:** `tdf-label-release` must complete seed-backed auth proof and six-category smoke rerun before Packet B opens.
-- **No motion** until Packet A is proven end-to-end.
+- **Gate status:** `CLOSED`
+- **Blocker:** Strictly sequenced after Packet A proof. No motion until Packet A is proven.
 
 ---
 
 ## Lane C — Evergreen continuous-improvement loop
 
-- **Runner status:** LIVE with launchd durability.
-- **Supervisor:** `ai.openclaw.tdf-app.continuous-improvement-loop` loaded in `gui/$(id -u)`.
-- **supervisorPid:** 40068
-- **childPid:** 40090
-- **phase:** branch-reconciliation
-- **lastIterationResult:** ok
-- **lastHeartbeat:** 2026-05-09T23:41:56Z (current)
-- **restartCount:** 0 (fresh launchd start)
-
-**Repair performed this run:**  
-- Stopped previous manual supervisor (pid 25595, no launchd contract).
-- Ran `./scripts/start-continuous-improvement-loop.sh install-launchd` to install and activate the launchd plist.
-- Verified `launchctl list` shows the label loaded and the status file reflects the new supervised process.
+- **Previous status:** `LIVE` with launchd durability (supervisorPid 40068, childPid 40090).
+- **Current status:** `CRASHED` → `REPAIRED`
+- **Root cause:** Codex API usage limit exhausted. Child exits with code 1 and error: "You've hit your usage limit... try again at May 11th, 2026 5:36 PM."
+- **Crash-loop metric:** 128 restarts in ~2 hours at 15-second intervals.
+- **launchd durability:** Intact. Supervisor PID 40068 was running under launchd (PPID 1).
+- **Bounded repair performed:**
+  1. Added `CONTINUOUS_LOOP_RESTART_DELAY_SECONDS=3600` to `~/Library/LaunchAgents/ai.openclaw.tdf-app.continuous-improvement-loop.plist`.
+  2. Reloaded launchd job (`launchctl bootout` + `launchctl bootstrap`).
+  3. New supervisor running as PID 44610 under launchd.
+  4. New restart delay: 3600 seconds (1 hour) instead of 15 seconds.
+- **Result:** Restart storm stopped. Lane remains supervised and will retry every 1 hour until the API limit resets (~May 11 2026 5:36 PM).
 
 ---
 
-## Org Summary
+## Missing org files
 
-- **Product progress:** Platform lane confirmed ready. Mobile app launches on simulator. Onboarding reachable. Auth API functional. Missing correct test account seed is the only gap.
-- **Publish state:** NOT YET SHIPPABLE. Packet B gated.
-- **Blocker + owner:** `tdf-label-release` must resolve the invalid test account (`tdf-owner` / `TDFowner2025!`) — either seed it into the DB or ratify `admin` / `password123` as the official test account and update objectives — then tap "Ir a login" on the onboarding screen, capture `/auth` screenshot, and perform end-to-end login on simulator.
-- **Next step:** `tdf-label-release` records updated auth proof evidence in `reports/tdf-label-release.md`.
-- **Paused functions:** `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-80956c0d82b9` remain paused unless manually changed.
+- `mission.md` — does not exist in repo root.
+- `org.md` — does not exist in repo root.
+- `reports/tdf-label-release.md` — does not exist.
 
 ---
 
-FINAL_STATUS: done — Lane C launchd durability installed and verified live (supervisorPid 40068, childPid 40090); Packet A blocked only by invalid test account seed (not stale engineering blockers).
+FINAL_STATUS: blocked — Lane C child crash-looping on Codex API usage limit (resets May 11 2026 5:36 PM); bounded repair applied (launchd backoff increased to 3600s, supervisor PID 44610). Packet A remains blocked on invalid test account seed.
