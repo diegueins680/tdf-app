@@ -48,4 +48,12 @@
 
 ---
 
-FINAL_STATUS: blocked — Lane C child crash-looping on Codex API usage limit (resets May 11 2026 5:36 PM); bounded repair applied (launchd backoff increased to 3600s, supervisor PID 44610). Packet A remains blocked on invalid test account seed.
+## 2026-05-10 03:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth proven end-to-end (Release 02:20 UTC) via `__DEV__` auto-fill workaround; Google OAuth unproven; post-login 403 minor blocker. Mission requires both login paths; Packet A not yet complete.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both username/password and Google login).
+- **Lane C:** `LIVE` — supervisor PID 44610 running under launchd (PPID 1, launchctl listed); child temporarily down (exited 02:44:59 UTC, Codex API usage limit, resets May 11 5:36 PM); restart delay 3600s, next restart imminent; restartCount 2, staleRestartCount 0.
+- **No company-level blocker** to Lane C durability; bounded repair from previous run (3600s backoff) remains effective.
+- **Next decisive action:** `tdf-label-platform` must install one iOS UI automation framework (Detox/idb/XCUITest) and prove Google OAuth end-to-end, per CTO directive (03:20 UTC).
+
+FINAL_STATUS: done — Packet A partially proven (1 of 2 login paths), Packet B gated, Lane C supervisor live with child restart scheduled; no new repair needed.
