@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerFanClub
   ( fanClubPublicGetClub
@@ -24,7 +25,7 @@ import           Data.Time              (getCurrentTime)
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
                                          , getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), err400, err403, err404, errBody)
+import           Servant                (NoContent(..), (:<|>)(..), err400, err403, err404, errBody)
 
 import           Control.Monad.Reader   (ReaderT, ask)
 import           Servant                (Handler, throwError)
@@ -34,10 +35,11 @@ import qualified Data.ByteString.Lazy   as BL
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
-import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClubElection(..)
-                                         , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..)
+import qualified TDF.DTO                as DTO
+import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(..), FanClubElection(..)
+                                         , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..), FanClubPostId
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
-                                         , Party(..), FanFollow(..), FanProfile(..)
+                                         , Party(..), PartyId, FanFollow(..), FanProfile(..)
                                          , Unique(..))
 import qualified TDF.Models             as M
 
@@ -177,13 +179,13 @@ fanClubSecureArtistHandlers user artistId =
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
           now <- liftIO getCurrentTime
-          let parentKey = fmap toSqlKey (fcpParentId req)
+          let parentKey = fmap toSqlKey (DTO.fcpParentId req)
           pid <- insert FanClubPost
             { fanClubPostClubId = cid
             , fanClubPostFanPartyId = auPartyId user
             , fanClubPostParentId = parentKey
-            , fanClubPostTitle = fcpTitle req
-            , fanClubPostContent = fcpContent req
+            , fanClubPostTitle = DTO.fcpTitle req
+            , fanClubPostContent = DTO.fcpContent req
             , fanClubPostIsPinned = False
             , fanClubPostIsHidden = False
             , fanClubPostCreatedAt = now
@@ -191,7 +193,7 @@ fanClubSecureArtistHandlers user artistId =
             }
           author <- getAuthorDTO (auPartyId user)
           pure $ postToDTO pid
-            (FanClubPost cid (auPartyId user) parentKey (fcpTitle req) (fcpContent req) False False now Nothing)
+            (FanClubPost cid (auPartyId user) parentKey (DTO.fcpTitle req) (DTO.fcpContent req) False False now Nothing)
             0 author
 
     pinPost aId postId = runDB $ do
