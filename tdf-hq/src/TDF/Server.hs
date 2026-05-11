@@ -891,7 +891,9 @@ whatsappWebhookServer =
       cfg <- liftIO loadWhatsAppEnv
       Env{envConfig, envPool} <- ask
       either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
-      payload <- either throwError pure (eitherDecode rawBody)
+      payload <- case eitherDecode rawBody of
+        Left parseErr -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack ("Invalid JSON body: " <> parseErr))) }
+        Right val -> pure val
       now <- liftIO getCurrentTime
       let deliveryUpdates = extractWhatsAppDeliveryUpdates payload
       let inbound = extractWhatsAppInbound payload

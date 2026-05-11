@@ -77,7 +77,7 @@ import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), P
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..))
-import           TDF.Config                 (AppConfig, assetsRootDir, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
+import           TDF.Config                 (AppConfig, assetsRootDir, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
@@ -3924,7 +3924,9 @@ instagramWebhookServer =
     handleWebhook mSignature rawBody = do
       Env{envConfig, envPool} <- ask
       either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
-      payload <- either throwError pure (A.eitherDecode rawBody)
+      payload <- case A.eitherDecode rawBody of
+        Left parseErr -> throwError err400 { errBody = BL8.pack ("Invalid JSON body: " <> parseErr) }
+        Right val -> pure val
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)
@@ -3950,7 +3952,9 @@ facebookWebhookServer =
     handleWebhook mSignature rawBody = do
       Env{envConfig, envPool} <- ask
       either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
-      payload <- either throwError pure (A.eitherDecode rawBody)
+      payload <- case A.eitherDecode rawBody of
+        Left parseErr -> throwError err400 { errBody = BL8.pack ("Invalid JSON body: " <> parseErr) }
+        Right val -> pure val
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)

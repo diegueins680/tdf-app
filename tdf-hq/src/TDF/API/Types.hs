@@ -30,12 +30,11 @@ import           Data.Time    (UTCTime, Day)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
-import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText, ServerError(..), err401)
+import           Servant
 
 import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac)
 import           Data.ByteArray (convert)
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base16 as B16
 
 import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
@@ -1859,7 +1858,7 @@ verifyMetaWebhookSignature mAppSecret mSigHeader body =
               sigWithoutPrefix
                 | T.toLower prefix `T.isPrefixOf` T.toLower sigClean = T.drop (T.length prefix) sigClean
                 | otherwise = sigClean
-              expected = T.decodeUtf8 (B16.encode (convert (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)))
+              expected = TE.decodeUtf8 (B16.encode (convert (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)))
           in if T.toLower sigWithoutPrefix == T.toLower expected
              then Right ()
              else Left err401 { errBody = "Invalid webhook signature" }

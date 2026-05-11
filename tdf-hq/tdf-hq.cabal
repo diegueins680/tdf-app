@@ -301,6 +301,7 @@ test-suite tdf-hq-test
     , scientific
     , safe-exceptions
     , base64-bytestring
+    , base16-bytestring
     , temporary
     , process
     , bcrypt
@@ -310,3 +311,5 @@ test-suite tdf-hq-test
     , file-embed
     , hspec                >=2.7
     , smtp-mail
+    , crypton
+    , memory
