@@ -8741,7 +8741,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('adds local search for busy loaded lists without re-querying cohort or status filters', async () => {
+  it('adds local search for busy loaded lists without re-querying filters or repeating the matching status chip', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
         index === 8
@@ -8792,7 +8792,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Usa el nombre para abrir expediente;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');

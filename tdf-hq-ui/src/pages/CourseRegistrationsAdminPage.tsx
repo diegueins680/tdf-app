@@ -3449,17 +3449,20 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomStatusSearch
     && actionableStatusFilters.length === 0
     && !showSingleStatusSummary;
-  const redundantSharedSearchStatusFilter = shouldShowSharedStatusSummary
-    && hasLocalSearch
+  const redundantSearchStatusFilter = hasLocalSearch
     && !hasManualFilters
     && !cohortsQuery.isError
-    ? singleSearchedKnownStatus
+    ? (
+      shouldShowSharedStatusSummary
+        ? singleSearchedKnownStatus
+        : localSearchSingleResultKnownStatus
+    )
     : null;
   const displayedActionableStatusFilters = useMemo(
-    () => (redundantSharedSearchStatusFilter == null
+    () => (redundantSearchStatusFilter == null
       ? actionableStatusFilters
-      : actionableStatusFilters.filter((value) => value !== redundantSharedSearchStatusFilter)),
-    [actionableStatusFilters, redundantSharedSearchStatusFilter],
+      : actionableStatusFilters.filter((value) => value !== redundantSearchStatusFilter)),
+    [actionableStatusFilters, redundantSearchStatusFilter],
   );
   const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
     && !showSingleStatusSummary
