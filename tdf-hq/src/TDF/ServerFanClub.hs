@@ -271,7 +271,7 @@ fanClubSecureArtistHandlers user artistId =
             myCands <- selectList
               [FanClubCandidacyElectionId ==. eid, FanClubCandidacyFanPartyId ==. auPartyId user] []
             myVotes <- selectList
-              [FanClubVoteElectionId ==. eid, FanClubVoteFanPartyId ==. auPartyId user] []
+              [fanClubVoteElectionId ==. eid, fanClubVoteFanPartyId ==. auPartyId user] []
             let cands = map candidacyToDTO myCands
             let votes = map voteToDTO myVotes
             pure $ FanClubElectionDTO
@@ -286,28 +286,29 @@ fanClubSecureArtistHandlers user artistId =
               , fceMyVotes = votes
               }
 
-    createClubElection aId req = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    createClubElection aId req = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear elecciones" }
       let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
-          now <- liftIO getCurrentTime
-          mEid <- insertUnique FanClubElection
-            { fanClubElectionClubId = cid
-            , fanClubElectionYear = fcelYear req
-            , fanClubElectionCandidacyStartsAt = fcelCandidacyStartsAt req
-            , fanClubElectionCandidacyEndsAt = fcelCandidacyEndsAt req
-            , fanClubElectionVotingStartsAt = fcelVotingStartsAt req
-            , fanClubElectionVotingEndsAt = fcelVotingEndsAt req
-            , fanClubElectionStatus = Upcoming
-            , fanClubElectionCreatedAt = now
-            }
+          mEid <- runDB $ do
+            now <- liftIO getCurrentTime
+            insertUnique FanClubElection
+              { fanClubElectionClubId = cid
+              , fanClubElectionYear = fcelYear req
+              , fanClubElectionCandidacyStartsAt = fcelCandidacyStartsAt req
+              , fanClubElectionCandidacyEndsAt = fcelCandidacyEndsAt req
+              , fanClubElectionVotingStartsAt = fcelVotingStartsAt req
+              , fanClubElectionVotingEndsAt = fcelVotingEndsAt req
+              , fanClubElectionStatus = Upcoming
+              , fanClubElectionCreatedAt = now
+              }
           case mEid of
             Nothing -> throwError err400 { errBody = "Ya existe una elección para este año" }
-            Just eid' -> do
+            Just eid' -> runDB $ do
               let el = FanClubElection cid (fcelYear req) (fcelCandidacyStartsAt req) (fcelCandidacyEndsAt req)
                               (fcelVotingStartsAt req) (fcelVotingEndsAt req) Upcoming now
               pure $ FanClubElectionDTO
