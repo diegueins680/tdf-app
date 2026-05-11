@@ -58,12 +58,12 @@ throwBadRequest msg = throwError Servant.err400 { errBody = BL.fromStrict (TE.en
 -- ============================================================================
 
 fanClubPublicGetClub :: Int64 -> AppM FanClubDTO
-fanClubPublicGetClub artistId = runDB $ do
+fanClubPublicGetClub artistId = do
   let artistKey = toSqlKey artistId
-  mClub <- getBy (UniqueFanClubArtist artistKey)
+  mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
   case mClub of
     Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
-    Just (Entity cid club) -> do
+    Just (Entity cid club) -> runDB $ do
       officers <- loadOfficersDTO cid
       followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
       pure FanClubDTO
@@ -140,12 +140,12 @@ fanClubSecureArtistHandlers user artistId =
   :<|> createCandidacy artistId
   :<|> castVote artistId
   where
-    getClubDetail aId = runDB $ do
+    getClubDetail aId = do
       let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
-        Just (Entity cid club) -> do
+        Just (Entity cid club) -> runDB $ do
           officers <- loadOfficersDTO cid
           followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
           pure FanClubDTO
