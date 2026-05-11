@@ -1184,6 +1184,12 @@ spec = do
           :: Either String RoomUpdate)
         `shouldSatisfy` isLeft
 
+    it "rejects empty room patches at the JSON boundary before handler fallback" $ do
+      (A.eitherDecode "{}" :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"ruName\":null,\"ruIsBookable\":null}" :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+
   describe "roomsServer duplicate name handling" $ do
     let existingRoomId = "00000000-0000-0000-0000-000000000701"
         otherRoomId = "00000000-0000-0000-0000-000000000702"

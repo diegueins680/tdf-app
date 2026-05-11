@@ -974,7 +974,12 @@ data RoomUpdate = RoomUpdate
 
 instance ToJSON RoomUpdate
 instance FromJSON RoomUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@RoomUpdate{ruName, ruIsBookable} <- genericParseJSON strictObjectOptions value
+    case (ruName, ruIsBookable) of
+      (Nothing, Nothing) ->
+        fail "RoomUpdate must include at least one of ruName or ruIsBookable"
+      _ -> pure payload
 
 data PipelineCardDTO = PipelineCardDTO
   { pcId        :: Text
