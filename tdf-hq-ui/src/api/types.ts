@@ -732,3 +732,105 @@ export interface InternPermissionUpdate {
   ipuStatus?: string | null;
   ipuDecisionNotes?: string | null;
 }
+
+export interface FanClubDTO {
+  fcId: number;
+  fcArtistId: number;
+  fcName: string;
+  fcDescription?: string | null;
+  fcOfficers: FanClubOfficerDTO[];
+  fcFollowerCount: number;
+}
+
+export interface FanClubOfficerDTO {
+  fcoPartyId: number;
+  fcoFanName: string;
+  fcoAvatarUrl?: string | null;
+  fcoRole: string;
+  fcoElectedAt?: string | null;
+  fcoTermEndsAt?: string | null;
+}
+
+export interface FanClubPostDTO {
+  fcpId: number;
+  fcpParentId?: number | null;
+  fcpTitle?: string | null;
+  fcpContent: string;
+  fcpAuthorId: number;
+  fcpAuthorName: string;
+  fcpAvatarUrl?: string | null;
+  fcpIsPinned: boolean;
+  fcpIsHidden: boolean;
+  fcpReplies: number;
+  fcpCreatedAt: string;
+  fcpUpdatedAt?: string | null;
+}
+
+export interface FanClubEventDTO {
+  fceId: number;
+  fceTitle: string;
+  fceDescription?: string | null;
+  fceStartsAt?: string | null;
+  fceEndsAt?: string | null;
+  fceLocation?: string | null;
+  fceIsArtistConcert: boolean;
+  fceCreatedBy?: number | null;
+}
+
+export interface FanClubElectionDTO {
+  fceElectionId: number;
+  fceYear: number;
+  fceStatus: string;
+  fceCandidacyStartsAt?: string | null;
+  fceCandidacyEndsAt?: string | null;
+  fceVotingStartsAt?: string | null;
+  fceVotingEndsAt?: string | null;
+  fceMyCandidacies: FanClubCandidacyDTO[];
+  fceMyVotes: FanClubVoteDTO[];
+}
+
+export interface FanClubCandidacyDTO {
+  fccCandidacyId: number;
+  fccFanId: number;
+  fccFanName: string;
+  fccAvatarUrl?: string | null;
+  fccRole: string;
+  fccManifesto?: string | null;
+  fccVoteCount: number;
+}
+
+export interface FanClubVoteDTO {
+  fcvCandidacyId: number;
+  fcvRole: string;
+}
+
+export interface FanClubCreatePostReq {
+  fcpReqTitle?: string | null;
+  fcpReqContent: string;
+  fcpReqParentId?: number | null;
+}
+
+export interface FanClubCreateEventReq {
+  fcevTitle: string;
+  fcevDescription?: string | null;
+  fcevStartsAt?: string | null;
+  fcevEndsAt?: string | null;
+  fcevLocation?: string | null;
+}
+
+export interface FanClubCreateElectionReq {
+  fcelYear: number;
+  fcelCandidacyStartsAt?: string | null;
+  fcelCandidacyEndsAt?: string | null;
+  fcelVotingStartsAt?: string | null;
+  fcelVotingEndsAt?: string | null;
+}
+
+export interface FanClubCreateCandidacyReq {
+  fccrRole: string;
+  fccrManifesto?: string | null;
+}
+
+export interface FanClubVoteReq {
+  fcvCandidacyIds: number[];
+}
