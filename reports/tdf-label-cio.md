@@ -112,3 +112,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supe
 - **Next decisive action:** Platform completes Detox rebuild with `testID` props and runs first passing `detox test`; Release obtains real Google ID token or defers to manual test plan.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven + regression passed + seed fixed, Packet B gated, Lane C live with launchd durability and graceful rate-limit handling, no new repair needed.
+
+## 2026-05-11 19:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end; Google OAuth fully implemented in mobile (`app/auth.tsx` uses `@react-native-google-signin/google-signin` → backend `/login/google`) but e2e still unproven pending real-device or Detox automation test. No new evidence since 11:31 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Packet A complete.
+- **Lane C:** `REPAIRED` — child was down with exact blocker `DIRTY_TRACKED_WORKTREE` (status.json: "Continuous improvement loop requires a clean tracked worktree. Commit or stash tracked changes first."). Bounded repair performed: committed 4 remaining dirty files (`tdf-hq/src/TDF/API/Types.hs`, `tdf-hq/src/TDF/Server.hs`, `tdf-hq/src/TDF/ServerExtra.hs`, `tdf-hq/tdf-hq.cabal`) as `25694f50f`. Supervisor PID 1077 alive under launchd (`ai.openclaw.tdf-app.continuous-improvement-loop`); next scheduled restart ~20:23 UTC (3600s delay). Prior rate-limit graceful-exit fix remains in effect. Launchd durability contract is intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No other company-level blockers** to Lane C durability.
+
+FINAL_STATUS: done — committed dirty worktree (25694f50f), Lane C supervisor alive under launchd, next child restart ~20:23 UTC
