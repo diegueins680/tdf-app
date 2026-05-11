@@ -199,25 +199,25 @@ fanClubSecureArtistHandlers user artistId =
     pinPost aId postId = do
       isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [FanClubPostIsPinned =. True]
+      runDB $ update (toSqlKey postId) [M.FanClubPostIsPinned =. True]
       pure NoContent
 
     unpinPost aId postId = do
       isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [FanClubPostIsPinned =. False]
+      runDB $ update (toSqlKey postId) [M.FanClubPostIsPinned =. False]
       pure NoContent
 
     hidePost aId postId = do
       isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [FanClubPostIsHidden =. True]
+      runDB $ update (toSqlKey postId) [M.FanClubPostIsHidden =. True]
       pure NoContent
 
     unhidePost aId postId = do
       isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [FanClubPostIsHidden =. False]
+      runDB $ update (toSqlKey postId) [M.FanClubPostIsHidden =. False]
       pure NoContent
 
     listClubEvents aId = runDB $ do
@@ -226,7 +226,7 @@ fanClubSecureArtistHandlers user artistId =
       case mClub of
         Nothing -> pure []
         Just (Entity cid _) -> do
-          events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
+          events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
           pure (map eventToDTO events)
 
     createClubEvent aId req = do
@@ -266,7 +266,7 @@ fanClubSecureArtistHandlers user artistId =
       case mClub of
         Nothing -> pure []
         Just (Entity cid _) -> do
-          elections <- selectList [fanClubElectionClubId ==. cid] [Desc fanClubElectionYear]
+          elections <- selectList [M.FanClubElectionClubId ==. cid] [Desc M.FanClubElectionYear]
           forM elections $ \(Entity eid el) -> do
             allCands <- selectList [] []
             let myCands = filter (\(Entity _ c) -> fanClubCandidacyElectionId c == eid && fanClubCandidacyFanPartyId c == auPartyId user) allCands
@@ -381,10 +381,10 @@ fanClubSecureArtistHandlers user artistId =
 
 loadOfficersDTO :: FanClubId -> SqlPersistT IO [FanClubOfficerDTO]
 loadOfficersDTO cid = do
-  officers <- selectList [fanClubOfficerClubId ==. cid] [Asc fanClubOfficerRole]
+  officers <- selectList [M.FanClubOfficerClubId ==. cid] [Asc M.FanClubOfficerRole]
   forM officers $ \(Entity _ o) -> do
     mParty <- selectFirst [M.PartyId ==. fanClubOfficerFanPartyId o] []
-    mProfile <- selectFirst [fanProfileFanPartyId ==. fanClubOfficerFanPartyId o] []
+    mProfile <- selectFirst [M.FanProfileFanPartyId ==. fanClubOfficerFanPartyId o] []
     let name = case mParty of
           Just (Entity _ p) -> M.partyDisplayName p
           Nothing -> "Desconocido"
@@ -448,7 +448,7 @@ voteToDTO (Entity _ v) = FanClubVoteDTO
 getAuthorDTO :: PartyId -> SqlPersistT IO SocialPartyProfileDTO
 getAuthorDTO pid = do
   mParty <- selectFirst [M.PartyId ==. pid] []
-  mProfile <- selectFirst [fanProfileFanPartyId ==. pid] []
+  mProfile <- selectFirst [M.FanProfileFanPartyId ==. pid] []
   let name = case mParty of
         Just (Entity _ p) -> M.partyDisplayName p
         Nothing -> "Desconocido"
