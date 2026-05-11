@@ -268,10 +268,10 @@ fanClubSecureArtistHandlers user artistId =
         Just (Entity cid _) -> do
           elections <- selectList [fanClubElectionClubId ==. cid] [Desc fanClubElectionYear]
           forM elections $ \(Entity eid el) -> do
-            myCands <- selectList
-              [M.fanClubCandidacyElectionId ==. eid, M.fanClubCandidacyFanPartyId ==. auPartyId user] []
-            myVotes <- selectList
-              [M.fanClubVoteElectionId ==. eid, M.fanClubVoteFanPartyId ==. auPartyId user] []
+            allCands <- selectList [] []
+            let myCands = filter (\(Entity _ c) -> fanClubCandidacyElectionId c == eid && fanClubCandidacyFanPartyId c == auPartyId user) allCands
+            allVotes <- selectList [] []
+            let myVotes = filter (\(Entity _ v) -> fanClubVoteElectionId v == eid && fanClubVoteFanPartyId v == auPartyId user) allVotes
             let cands = map candidacyToDTO myCands
             let votes = map voteToDTO myVotes
             pure $ FanClubElectionDTO
