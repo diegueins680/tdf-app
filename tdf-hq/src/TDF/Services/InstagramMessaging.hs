@@ -183,6 +183,10 @@ sourceAttempts base source =
       (iasLabel source)
       (iasToken source)
       (base <> "/" <> iasAccountId source <> "/messages")
+  , InstagramAttempt
+      (iasLabel source <> " (me fallback)")
+      (iasToken source)
+      (base <> "/me/messages")
   ]
 
 invalidHeaderValueChar :: Char -> Bool
