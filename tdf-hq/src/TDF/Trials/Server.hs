@@ -625,6 +625,10 @@ validateTrialScheduleInput input@TrialScheduleIn{..}
   | otherwise =
       Right input
 
+validateClassSessionPathId :: Int -> Either ServerError Int
+validateClassSessionPathId =
+  validatePositiveIntField "classSessionId"
+
 validateOptionalClassSessionNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalClassSessionNotes =
   validateOptionalPublicTextField "notes" 2000
@@ -1898,8 +1902,9 @@ privateTrialsServer user@AuthedUser{..} =
       pure (ClassSessionOut (entityKeyInt sid) (max 0 durationMinutes))
 
     updateClassH :: Int -> ClassSessionUpdate -> AppM ClassSessionDTO
-    updateClassH classId ClassSessionUpdate{..} = do
+    updateClassH rawClassId ClassSessionUpdate{..} = do
       ensureSchoolAccess
+      classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
       mSession <- get cid
       case mSession of
@@ -1961,8 +1966,9 @@ privateTrialsServer user@AuthedUser{..} =
             Nothing -> liftIO $ throwIO err500
 
     attendH :: Int -> AttendIn -> AppM ClassSessionOut
-    attendH classId AttendIn{..} = do
+    attendH rawClassId AttendIn{..} = do
       ensureSchoolAccess
+      classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
       mSession <- get cid
       case mSession of

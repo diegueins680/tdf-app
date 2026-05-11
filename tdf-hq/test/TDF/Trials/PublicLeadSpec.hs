@@ -58,6 +58,7 @@ import TDF.Trials.Server
   , privateTrialsServer
   , trialsServer
   , validateAvailabilityIdInput
+  , validateClassSessionPathId
   , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
   , validateOptionalClassSessionNotes
@@ -1029,6 +1030,22 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotEnd 0)
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
+
+  describe "validateClassSessionPathId" $
+    it "rejects non-positive class-session path ids before update or attendance lookups" $ do
+      validateClassSessionPathId 42 `shouldBe` Right 42
+
+      let assertInvalid rawClassId =
+            case validateClassSessionPathId rawClassId of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "classSessionId must be a positive integer"
+              Right value ->
+                expectationFailure
+                  ("Expected invalid class-session path id to be rejected, got " <> show value)
+
+      assertInvalid 0
+      assertInvalid (-7)
 
   describe "private trial scheduling request decoding" $ do
     it "rejects typoed or unexpected assignment keys so teacher selection cannot be silently ignored" $ do
