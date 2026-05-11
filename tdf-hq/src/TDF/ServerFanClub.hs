@@ -10,8 +10,8 @@ module TDF.ServerFanClub
   , fanClubSecureArtistHandlers
   ) where
 
-import           Control.Monad          (forM, when, unless, void)
-import           Control.Monad.Except   (throwError)
+import           Control.Monad          (forM, forM_, when, unless, void)
+import           Control.Monad.Except   (MonadError, throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ask)
 import           Data.Int               (Int64)
@@ -40,7 +40,7 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..), FanClubPostId
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
                                          , Party(..), PartyId, FanFollow(..), FanProfile(..)
-                                         , Unique(..))
+                                         , Unique(..), FanClubElectionId, FanClubCandidacyId)
 import qualified TDF.Models             as M
 
 type AppM = ReaderT Env Handler
@@ -344,8 +344,8 @@ fanClubSecureArtistHandlers user artistId =
               pure $ FanClubCandidacyDTO
                 { fccCandidacyId = fromSqlKey cid'
                 , fccFanId = fromSqlKey (auPartyId user)
-                , fccFanName = spDisplayName author
-                , fccAvatarUrl = spAvatarUrl author
+                , fccFanName = sppDisplayName author
+                , fccAvatarUrl = sppAvatarUrl author
                 , fccRole = fccrRole req
                 , fccManifesto = fccrManifesto req
                 , fccVoteCount = 0
@@ -382,7 +382,7 @@ loadOfficersDTO cid = do
   officers <- selectList [fanClubOfficerClubId ==. cid] [Asc fanClubOfficerRole]
   forM officers $ \(Entity _ o) -> do
     mParty <- selectFirst [M.PartyId ==. fanClubOfficerFanPartyId o] []
-    mProfile <- selectFirst [FanProfileFanPartyId ==. fanClubOfficerFanPartyId o] []
+    mProfile <- selectFirst [fanProfileFanPartyId ==. fanClubOfficerFanPartyId o] []
     let name = case mParty of
           Just (Entity _ p) -> M.partyDisplayName p
           Nothing -> "Desconocido"
