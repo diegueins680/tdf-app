@@ -164,11 +164,11 @@ fanClubSecureArtistHandlers user artistId =
         Nothing -> pure []
         Just (Entity cid _) -> do
           posts <- selectList
-            [ FanClubPostClubId ==. cid
-            , FanClubPostParentId ==. Nothing
-            ] [Desc FanClubPostIsPinned, Desc FanClubPostCreatedAt]
+            [ M.FanClubPostClubId ==. cid
+            , M.FanClubPostParentId ==. Nothing
+            ] [Desc M.FanClubPostIsPinned, Desc M.FanClubPostCreatedAt]
           forM posts $ \(Entity pid p) -> do
-            replies <- count [FanClubPostParentId ==. Just pid]
+            replies <- count [M.FanClubPostParentId ==. Just pid]
             author <- getAuthorDTO (fanClubPostFanPartyId p)
             pure $ postToDTO pid p (fromIntegral replies) author
 
