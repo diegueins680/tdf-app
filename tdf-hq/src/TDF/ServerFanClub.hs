@@ -26,6 +26,11 @@ import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc,
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), err400, err403, err404, errBody)
 
+import           Control.Monad.Reader   (ReaderT, ask)
+import           Servant                (Handler, throwError)
+import qualified Data.Text.Encoding     as TE
+import qualified Data.ByteString.Lazy   as BL
+
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
@@ -37,7 +42,15 @@ import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClu
                                          , UniqueFanClubCandidacy, UniqueFanClubVote)
 import qualified TDF.Models             as M
 
-import           TDF.Server             (AppM, runDB, throwBadRequest)
+type AppM = ReaderT Env Handler
+
+runDB :: SqlPersistT IO a -> AppM a
+runDB action = do
+  Env{..} <- ask
+  liftIO $ runSqlPool action envPool
+
+throwBadRequest :: Text -> AppM a
+throwBadRequest msg = throwError Servant.err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 -- ============================================================================
 -- Public handlers
