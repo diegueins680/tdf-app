@@ -23,7 +23,7 @@ import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (getCurrentTime)
 
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
-                                         , getBy, insert, insertUnique, selectFirst, selectList, update, count)
+                                         , get, getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), (:<|>)(..), err400, err403, err404, errBody)
 
@@ -323,11 +323,11 @@ fanClubSecureArtistHandlers user artistId =
                 }
 
     createCandidacy aId electionId req = runDB $ do
-      let eid = toSqlKey electionId
-      mElection <- selectFirst [FanClubElectionId ==. eid] []
+      let eid = toSqlKey electionId :: FanClubElectionId
+      mElection <- get eid
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just (Entity _ _) -> do
+        Just _ -> do
           now <- liftIO getCurrentTime
           let role = parseOfficerRole (fccrRole req)
           mCid <- insertUnique FanClubCandidacy
@@ -352,15 +352,15 @@ fanClubSecureArtistHandlers user artistId =
                 }
 
     castVote aId electionId req = runDB $ do
-      let eid = toSqlKey electionId
-      mElection <- selectFirst [FanClubElectionId ==. eid] []
+      let eid = toSqlKey electionId :: FanClubElectionId
+      mElection <- get eid
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just (Entity _ _) -> do
+        Just _ -> do
           now <- liftIO getCurrentTime
           forM_ (fcvCandidacyIds req) $ \candId -> do
-            let cKey = toSqlKey candId
-            mCand <- selectFirst [FanClubCandidacyId ==. cKey] []
+            let cKey = toSqlKey candId :: FanClubCandidacyId
+            mCand <- get cKey
             case mCand of
               Nothing -> pure ()
               Just (Entity _ cand) -> do
