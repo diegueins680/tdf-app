@@ -6605,6 +6605,41 @@ describe('AdminConsolePage', () => {
     expect(screen.queryAllByText('—')).toHaveLength(0);
   });
 
+  it('hides invalid last-access timestamps from the users table until a real date adds context', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        lastSeenAt: 'not-a-date',
+      }),
+      buildAdminUser({
+        userId: 102,
+        username: 'grace',
+        displayName: 'Grace Hopper',
+        partyId: 10,
+        roles: ['Manager'],
+        lastLoginAt: '   ',
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Usuarios y roles')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+      expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Fecha no disponible')).not.toBeInTheDocument();
+    expect(screen.queryByText('not-a-date')).not.toBeInTheDocument();
+    expect(screen.queryAllByText('—')).toHaveLength(0);
+  });
+
   it('shows the status column again as soon as one admin account needs that extra context', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser({

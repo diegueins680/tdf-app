@@ -1443,6 +1443,12 @@ function getAdminUserLastAccess(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLog
   return user.lastSeenAt ?? user.lastLoginAt;
 }
 
+function hasAdminUserLastAccessTimestamp(user: Pick<AdminUserDTO, 'lastSeenAt' | 'lastLoginAt'>) {
+  const lastAccess = getAdminUserLastAccess(user);
+
+  return lastAccess != null && parseAdminDateTimestamp(lastAccess) != null;
+}
+
 function adminUserStatusNeedsAttention(status?: AdminUserStatus | null) {
   return status != null && status !== 'ACTIVE';
 }
@@ -1983,7 +1989,7 @@ export default function AdminConsolePage() {
   const adminUsersOverflowActionLabel = showAllAdminUsers
     ? `Mostrar solo ${ADMIN_USERS_VISIBLE_LIMIT} usuarios`
     : `Ver ${hiddenAdminUserCount} ${hiddenAdminUserCount === 1 ? 'usuario más' : 'usuarios más'}${hiddenAdminUserAttentionSuffix}`;
-  const showUsersLastAccessColumn = visibleAdminUsers.some((user) => getAdminUserLastAccess(user) != null);
+  const showUsersLastAccessColumn = visibleAdminUsers.some((user) => hasAdminUserLastAccessTimestamp(user));
   const showUsersStatusColumn = visibleAdminUsers.some((user) => adminUserStatusNeedsAttention(user.status));
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
