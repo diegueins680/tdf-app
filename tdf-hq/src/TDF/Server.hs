@@ -766,8 +766,8 @@ fanPublicServer =
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
         pure (map toArtistReleaseDTO releases)
 
-    getPublicClub = fanClubPublicServerGetClub
-    getPublicClubEvents = fanClubPublicServerGetEvents
+    getPublicClub = fanClubPublicGetClub
+    getPublicClubEvents = fanClubPublicGetEvents
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
@@ -1954,8 +1954,8 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
-  :<|> fanClubSecureServerListMyClubs user
-  :<|> fanClubSecureServerArtist user
+  :<|> fanClubSecureListMyClubs user
+  :<|> fanClubSecureArtistHandlers user
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =

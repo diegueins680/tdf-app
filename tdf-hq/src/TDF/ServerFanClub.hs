@@ -3,28 +3,29 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module TDF.ServerFanClub
-  ( fanClubPublicServer
-  , fanClubSecureServer
+  ( fanClubPublicGetClub
+  , fanClubPublicGetEvents
+  , fanClubSecureListMyClubs
+  , fanClubSecureArtistHandlers
   ) where
 
 import           Control.Monad          (forM, when, unless, void)
-import           Control.Monad.Except   (MonadError, throwError)
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Reader   (MonadReader, ask, asks)
+import           Control.Monad.Except   (throwError)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader   (ask)
 import           Data.Int               (Int64)
-import           Data.Maybe             (fromMaybe, isJust, mapMaybe)
+import           Data.Maybe             (isJust, mapMaybe)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
-import           Data.Time              (UTCTime, getCurrentTime)
+import           Data.Time              (getCurrentTime)
 
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
-                                         , deleteBy, getBy, insert, insertUnique, selectFirst, selectList, update, count)
+                                         , getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, err403, err404, errBody, (:<|>)(..))
+import           Servant                (NoContent(..), err400, err403, err404, errBody)
 
-import           TDF.API                (FanPublicAPI, FanSecureAPI)
 import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
@@ -32,35 +33,101 @@ import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClu
                                          , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..)
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
                                          , Party(..), FanFollow(..), FanProfile(..)
-                                         , UniqueFanClubArtist, UniqueFanClubOfficer, UniqueFanClubElection
-                                         , UniqueFanClubCandidacy, UniqueFanClubVote, UniqueFanFollow)
+                                         , UniqueFanClubArtist, UniqueFanClubOfficer
+                                         , UniqueFanClubCandidacy, UniqueFanClubVote)
 import qualified TDF.Models             as M
 
-type AppM = Servant.Handler
-
-throwBadRequest :: Text -> Servant.Handler a
-throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-
-runDB :: SqlPersistT IO a -> Servant.Handler a
-runDB action = do
-  Env{..} <- ask
-  liftIO $ runSqlPool action envPool
+import           TDF.Server             (AppM, runDB, throwBadRequest)
 
 -- ============================================================================
--- Public Server
+-- Public handlers
 -- ============================================================================
 
-fanClubPublicServer :: ServerT FanPublicAPI (Servant.Handler)
-fanClubPublicServer =
-       undefined
-  :<|> undefined
-  :<|> undefined
-  :<|> getPublicClub
-  :<|> getPublicClubEvents
+fanClubPublicGetClub :: Int64 -> AppM FanClubDTO
+fanClubPublicGetClub artistId = runDB $ do
+  let artistKey = toSqlKey artistId
+  mClub <- getBy (UniqueFanClubArtist artistKey)
+  case mClub of
+    Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
+    Just (Entity cid club) -> do
+      officers <- loadOfficersDTO cid
+      followerCount <- count [FanFollowArtistPartyId ==. artistKey]
+      pure FanClubDTO
+        { fcId = fromSqlKey cid
+        , fcArtistId = artistId
+        , fcName = fanClubName club
+        , fcDescription = fanClubDescription club
+        , fcOfficers = officers
+        , fcFollowerCount = fromIntegral followerCount
+        }
+
+fanClubPublicGetEvents :: Int64 -> AppM [FanClubEventDTO]
+fanClubPublicGetEvents artistId = runDB $ do
+  let artistKey = toSqlKey artistId
+  mClub <- getBy (UniqueFanClubArtist artistKey)
+  case mClub of
+    Nothing -> pure []
+    Just (Entity cid _) -> do
+      events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
+      pure (map eventToDTO events)
+
+-- ============================================================================
+-- Secure handlers
+-- ============================================================================
+
+fanClubSecureListMyClubs :: AuthedUser -> AppM [FanClubDTO]
+fanClubSecureListMyClubs user = runDB $ do
+  follows <- selectList [FanFollowFanPartyId ==. auPartyId user] [Desc FanFollowCreatedAt]
+  clubs <- forM follows $ \(Entity _ follow) -> do
+    let artistKey = fanFollowArtistPartyId follow
+    mClub <- getBy (UniqueFanClubArtist artistKey)
+    case mClub of
+      Nothing -> pure Nothing
+      Just (Entity cid club) -> do
+        officers <- loadOfficersDTO cid
+        followerCount <- count [FanFollowArtistPartyId ==. artistKey]
+        pure $ Just FanClubDTO
+          { fcId = fromSqlKey cid
+          , fcArtistId = fromSqlKey artistKey
+          , fcName = fanClubName club
+          , fcDescription = fanClubDescription club
+          , fcOfficers = officers
+          , fcFollowerCount = fromIntegral followerCount
+          }
+  pure (mapMaybe id clubs)
+
+fanClubSecureArtistHandlers :: AuthedUser -> Int64 ->
+  ( AppM FanClubDTO
+  :<|> AppM [FanClubPostDTO]
+  :<|> (FanClubCreatePostReq -> AppM FanClubPostDTO)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> AppM [FanClubEventDTO]
+  :<|> (FanClubCreateEventReq -> AppM FanClubEventDTO)
+  :<|> AppM [FanClubElectionDTO]
+  :<|> (FanClubCreateElectionReq -> AppM FanClubElectionDTO)
+  :<|> (Int64 -> FanClubCreateCandidacyReq -> AppM FanClubCandidacyDTO)
+  :<|> (Int64 -> FanClubVoteReq -> AppM NoContent)
+  )
+fanClubSecureArtistHandlers user artistId =
+       getClubDetail artistId
+  :<|> listClubPosts artistId
+  :<|> createClubPost artistId
+  :<|> pinPost artistId
+  :<|> unpinPost artistId
+  :<|> hidePost artistId
+  :<|> unhidePost artistId
+  :<|> listClubEvents artistId
+  :<|> createClubEvent artistId
+  :<|> listClubElections artistId
+  :<|> createClubElection artistId
+  :<|> createCandidacy artistId
+  :<|> castVote artistId
   where
-    getPublicClub :: Int64 -> Servant.Handler FanClubDTO
-    getPublicClub artistId = runDB $ do
-      let artistKey = toSqlKey artistId
+    getClubDetail aId = runDB $ do
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
@@ -69,107 +136,15 @@ fanClubPublicServer =
           followerCount <- count [FanFollowArtistPartyId ==. artistKey]
           pure FanClubDTO
             { fcId = fromSqlKey cid
-            , fcArtistId = artistId
+            , fcArtistId = aId
             , fcName = fanClubName club
             , fcDescription = fanClubDescription club
             , fcOfficers = officers
             , fcFollowerCount = fromIntegral followerCount
             }
 
-    getPublicClubEvents :: Int64 -> Servant.Handler [FanClubEventDTO]
-    getPublicClubEvents artistId = runDB $ do
-      let artistKey = toSqlKey artistId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
-      case mClub of
-        Nothing -> pure []
-        Just (Entity cid _) -> do
-          events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
-          pure (map eventToDTO events)
-
--- ============================================================================
--- Secure Server
--- ============================================================================
-
-fanClubSecureServer :: AuthedUser -> ServerT FanSecureAPI (Servant.Handler)
-fanClubSecureServer user =
-       undefined
-  :<|> undefined
-  :<|> undefined
-  :<|> listMyClubs
-  :<|> fanClubArtistServer
-  where
-    listMyClubs :: Servant.Handler [FanClubDTO]
-    listMyClubs = runDB $ do
-      follows <- selectList [FanFollowFanPartyId ==. auPartyId user] [Desc FanFollowCreatedAt]
-      clubs <- forM follows $ \(Entity _ follow) -> do
-        let artistKey = fanFollowArtistPartyId follow
-        mClub <- getBy (UniqueFanClubArtist artistKey)
-        case mClub of
-          Nothing -> pure Nothing
-          Just (Entity cid club) -> do
-            officers <- loadOfficersDTO cid
-            followerCount <- count [FanFollowArtistPartyId ==. artistKey]
-            pure $ Just FanClubDTO
-              { fcId = fromSqlKey cid
-              , fcArtistId = fromSqlKey artistKey
-              , fcName = fanClubName club
-              , fcDescription = fanClubDescription club
-              , fcOfficers = officers
-              , fcFollowerCount = fromIntegral followerCount
-              }
-      pure (mapMaybe id clubs)
-
-    fanClubArtistServer :: Int64 ->
-      ( Servant.Handler FanClubDTO
-      :<|> Servant.Handler [FanClubPostDTO]
-      :<|> (FanClubCreatePostReq -> Servant.Handler FanClubPostDTO)
-      :<|> (Int64 -> Servant.Handler NoContent)
-      :<|> (Int64 -> Servant.Handler NoContent)
-      :<|> (Int64 -> Servant.Handler NoContent)
-      :<|> (Int64 -> Servant.Handler NoContent)
-      :<|> Servant.Handler [FanClubEventDTO]
-      :<|> (FanClubCreateEventReq -> Servant.Handler FanClubEventDTO)
-      :<|> Servant.Handler [FanClubElectionDTO]
-      :<|> (FanClubCreateElectionReq -> Servant.Handler FanClubElectionDTO)
-      :<|> (Int64 -> FanClubCreateCandidacyReq -> Servant.Handler FanClubCandidacyDTO)
-      :<|> (Int64 -> FanClubVoteReq -> Servant.Handler NoContent)
-      )
-    fanClubArtistServer artistId =
-           getClubDetail artistId
-      :<|> listClubPosts artistId
-      :<|> createClubPost artistId
-      :<|> pinPost artistId
-      :<|> unpinPost artistId
-      :<|> hidePost artistId
-      :<|> unhidePost artistId
-      :<|> listClubEvents artistId
-      :<|> createClubEvent artistId
-      :<|> listClubElections artistId
-      :<|> createClubElection artistId
-      :<|> createCandidacy artistId
-      :<|> castVote artistId
-
-    getClubDetail :: Int64 -> Servant.Handler FanClubDTO
-    getClubDetail artistId = runDB $ do
-      let artistKey = toSqlKey artistId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
-      case mClub of
-        Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
-        Just (Entity cid club) -> do
-          officers <- loadOfficersDTO cid
-          followerCount <- count [FanFollowArtistPartyId ==. artistKey]
-          pure FanClubDTO
-            { fcId = fromSqlKey cid
-            , fcArtistId = artistId
-            , fcName = fanClubName club
-            , fcDescription = fanClubDescription club
-            , fcOfficers = officers
-            , fcFollowerCount = fromIntegral followerCount
-            }
-
-    listClubPosts :: Int64 -> Servant.Handler [FanClubPostDTO]
-    listClubPosts artistId = runDB $ do
-      let artistKey = toSqlKey artistId
+    listClubPosts aId = runDB $ do
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> pure []
@@ -183,9 +158,8 @@ fanClubSecureServer user =
             author <- getAuthorDTO (fanClubPostFanPartyId p)
             pure $ postToDTO pid p (fromIntegral replies) author
 
-    createClubPost :: Int64 -> FanClubCreatePostReq -> Servant.Handler FanClubPostDTO
-    createClubPost artistId req = runDB $ do
-      let artistKey = toSqlKey artistId
+    createClubPost aId req = runDB $ do
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -208,41 +182,32 @@ fanClubSecureServer user =
             (FanClubPost cid (auPartyId user) parentKey (fcpTitle req) (fcpContent req) False False now Nothing)
             0 author
 
-    pinPost :: Int64 -> Int64 -> Servant.Handler NoContent
-    pinPost artistId postId = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    pinPost aId postId = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      let postKey = toSqlKey postId
-      update postKey [FanClubPostIsPinned =. True]
+      update (toSqlKey postId) [FanClubPostIsPinned =. True]
       pure NoContent
 
-    unpinPost :: Int64 -> Int64 -> Servant.Handler NoContent
-    unpinPost artistId postId = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    unpinPost aId postId = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      let postKey = toSqlKey postId
-      update postKey [FanClubPostIsPinned =. False]
+      update (toSqlKey postId) [FanClubPostIsPinned =. False]
       pure NoContent
 
-    hidePost :: Int64 -> Int64 -> Servant.Handler NoContent
-    hidePost artistId postId = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    hidePost aId postId = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      let postKey = toSqlKey postId
-      update postKey [FanClubPostIsHidden =. True]
+      update (toSqlKey postId) [FanClubPostIsHidden =. True]
       pure NoContent
 
-    unhidePost :: Int64 -> Int64 -> Servant.Handler NoContent
-    unhidePost artistId postId = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    unhidePost aId postId = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      let postKey = toSqlKey postId
-      update postKey [FanClubPostIsHidden =. False]
+      update (toSqlKey postId) [FanClubPostIsHidden =. False]
       pure NoContent
 
-    listClubEvents :: Int64 -> Servant.Handler [FanClubEventDTO]
-    listClubEvents artistId = runDB $ do
-      let artistKey = toSqlKey artistId
+    listClubEvents aId = runDB $ do
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> pure []
@@ -250,11 +215,10 @@ fanClubSecureServer user =
           events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
           pure (map eventToDTO events)
 
-    createClubEvent :: Int64 -> FanClubCreateEventReq -> Servant.Handler FanClubEventDTO
-    createClubEvent artistId req = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    createClubEvent aId req = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear eventos" }
-      let artistKey = toSqlKey artistId
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -282,9 +246,8 @@ fanClubSecureServer user =
             , fceCreatedBy = Just (fromSqlKey (auPartyId user))
             }
 
-    listClubElections :: Int64 -> Servant.Handler [FanClubElectionDTO]
-    listClubElections artistId = runDB $ do
-      let artistKey = toSqlKey artistId
+    listClubElections aId = runDB $ do
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> pure []
@@ -309,11 +272,10 @@ fanClubSecureServer user =
               , fceMyVotes = votes
               }
 
-    createClubElection :: Int64 -> FanClubCreateElectionReq -> Servant.Handler FanClubElectionDTO
-    createClubElection artistId req = runDB $ do
-      isOfficer <- checkIsOfficer artistId (auPartyId user)
+    createClubElection aId req = runDB $ do
+      isOfficer <- checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear elecciones" }
-      let artistKey = toSqlKey artistId
+      let artistKey = toSqlKey aId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -346,13 +308,12 @@ fanClubSecureServer user =
                 , fceMyVotes = []
                 }
 
-    createCandidacy :: Int64 -> Int64 -> FanClubCreateCandidacyReq -> Servant.Handler FanClubCandidacyDTO
-    createCandidacy artistId electionId req = runDB $ do
+    createCandidacy aId electionId req = runDB $ do
       let eid = toSqlKey electionId
       mElection <- selectFirst [FanClubElectionId ==. eid] []
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just (Entity _ election) -> do
+        Just (Entity _ _) -> do
           now <- liftIO getCurrentTime
           let role = parseOfficerRole (fccrRole req)
           mCid <- insertUnique FanClubCandidacy
@@ -376,13 +337,12 @@ fanClubSecureServer user =
                 , fccVoteCount = 0
                 }
 
-    castVote :: Int64 -> Int64 -> FanClubVoteReq -> Servant.Handler NoContent
-    castVote artistId electionId req = runDB $ do
+    castVote aId electionId req = runDB $ do
       let eid = toSqlKey electionId
       mElection <- selectFirst [FanClubElectionId ==. eid] []
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just (Entity _ election) -> do
+        Just (Entity _ _) -> do
           now <- liftIO getCurrentTime
           forM_ (fcvCandidacyIds req) $ \candId -> do
             let cKey = toSqlKey candId
