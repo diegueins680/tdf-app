@@ -67,8 +67,24 @@ $(cat "$TASK_FILE")
 ---
 EOF
 
-cat "$PROMPT_FILE" | codex -a never -s workspace-write exec -C "$REPO_ROOT" --color never -o "$OUTPUT_FILE" -
+CODEX_STDERR="$(mktemp "${TMPDIR:-/tmp}/codex-loop-stderr.XXXXXX")"
+trap 'rm -f "$PROMPT_FILE" "$OUTPUT_FILE" "$CODEX_STDERR"' EXIT
+
+set +e
+cat "$PROMPT_FILE" | codex -a never -s workspace-write exec -C "$REPO_ROOT" --color never -o "$OUTPUT_FILE" - 2>"$CODEX_STDERR"
+CODEX_EXIT=$?
+set -e
+
 cat "$OUTPUT_FILE"
+cat "$CODEX_STDERR" >&2
+
+if [ "$CODEX_EXIT" -ne 0 ]; then
+  if grep -qi 'usage limit' "$OUTPUT_FILE" 2>/dev/null || grep -qi 'usage limit' "$CODEX_STDERR" 2>/dev/null; then
+    echo "RESULT: blocked" >> "$OUTPUT_FILE"
+    exit 0
+  fi
+  exit "$CODEX_EXIT"
+fi
 
 RESULT_MARKER="$(grep -Eo 'RESULT: (done|blocked)' "$OUTPUT_FILE" | tail -n1 || true)"
 

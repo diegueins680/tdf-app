@@ -84,3 +84,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supe
 - **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff, no new repair needed.
+
+## 2026-05-11 05:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — no change since 01:40 UTC. Username/password auth PROVEN end-to-end (Release 04:28 UTC). Google OAuth STARTS but completion blocked by `BACKEND_GOOGLE_CLIENT_ID_MISSING` (env added, backend restart pending) and `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (simulator automation limitation). Post-login 403 pending investigation.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof. No motion until Packet A complete.
+- **Lane C:** `REPAIRED` — supervisor PID 27163 alive under launchd (PPID 1, launchctl listed `ai.openclaw.tdf-app.continuous-improvement-loop`). Child was crashing every hour because Codex CLI exits 1 on OpenAI usage-limit errors. Bounded repair performed: modified `scripts/codex-loop-worker.sh` to detect "usage limit" in stdout/stderr, append `RESULT: blocked` to output, and exit 0 instead of propagating the crash. This lets the bounded loop complete iterations gracefully (no changes → skipped commit) rather than exiting 1 and forcing supervisor restarts. Prior 3600s backoff repair remains in effect. Lane C is now structurally resilient to Codex rate limits until the quota resets (~17:36 UTC).
+- **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
+- **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live with launchd durability and codex-loop-worker rate-limit resilience, one bounded repair recorded.
