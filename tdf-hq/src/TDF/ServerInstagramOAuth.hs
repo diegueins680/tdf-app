@@ -30,7 +30,7 @@ import           Data.Char
   , isControl
   , isSpace
   )
-import           Data.List                  (find)
+import           Data.List                  (find, nub)
 import           Data.Maybe                 (fromMaybe)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -374,19 +374,31 @@ selectPrimaryInstagramPage preferredIds contexts =
 
 selectPrimaryInstagramCandidate :: [Text] -> [(Text, a)] -> Either ServerError (Maybe a)
 selectPrimaryInstagramCandidate preferredIds candidates =
-  case go preferredIds of
-    Just candidate -> Right (Just candidate)
-    Nothing ->
-      case candidates of
-        [] -> Right Nothing
-        [(_, candidate)] -> Right (Just candidate)
-        _ ->
-          Left err409
-            { errBody =
-                "Instagram OAuth primary page fallback is ambiguous; reconnect from an existing "
-                  <> "account or keep only one Instagram page connected."
-            }
+  if hasDuplicateCandidateIds
+    then
+      Left err409
+        { errBody =
+            "Instagram OAuth candidate pages contain duplicate Instagram user ids; reconnect "
+              <> "from an existing account or remove duplicate page links."
+        }
+    else
+      case go preferredIds of
+        Just candidate -> Right (Just candidate)
+        Nothing ->
+          case candidates of
+            [] -> Right Nothing
+            [(_, candidate)] -> Right (Just candidate)
+            _ ->
+              Left err409
+                { errBody =
+                    "Instagram OAuth primary page fallback is ambiguous; reconnect from an existing "
+                      <> "account or keep only one Instagram page connected."
+                }
   where
+    candidateIds = map fst candidates
+    hasDuplicateCandidateIds =
+      length candidateIds /= length (nub candidateIds)
+
     go [] = Nothing
     go (pid:rest) =
       case find (\(candidateId, _) -> candidateId == pid) candidates of

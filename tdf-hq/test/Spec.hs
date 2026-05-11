@@ -4172,7 +4172,7 @@ main = hspec $ do
             longSanitized `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
             Data.Text.length longSanitized `shouldSatisfy` (<= 512)
 
-        it "rejects ambiguous Instagram page fallbacks instead of selecting the first page" $ do
+        it "rejects ambiguous or duplicate Instagram page fallbacks before selecting one" $ do
             let firstPage = ("ig-1", "page-1" :: Text)
                 secondPage = ("ig-2", "page-2" :: Text)
 
@@ -4191,6 +4191,15 @@ main = hspec $ do
                 other ->
                     expectationFailure
                         ("Expected preferred Instagram page to resolve, got " <> show other)
+
+            case selectPrimaryInstagramCandidate ["ig-1"] [firstPage, ("ig-1", "page-duplicate")] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "duplicate Instagram user ids"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate Instagram candidate ids to fail, got " <> show value)
 
         it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
             cfg <- loadInstagramConfig
