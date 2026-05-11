@@ -8765,6 +8765,11 @@ describe('CourseRegistrationsAdminPage', () => {
         'Nombre o contacto',
       );
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 1')).toBeTruthy();
+      const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
+      expect(paidRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(paidRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).toContain(dossierOnlyScopeHint);

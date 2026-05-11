@@ -635,6 +635,12 @@ const canCancelRegistrationFromStatus = (currentStatus: string) => {
   return knownStatus == null || knownStatus === 'pending_payment';
 };
 
+const hasOnlyPendingRecoveryStatusAction = (currentStatus: string) => (
+  canTransitionToStatus(currentStatus, 'pending_payment')
+  && !canOpenPaymentWorkflowFromStatus(currentStatus)
+  && !canCancelRegistrationFromStatus(currentStatus)
+);
+
 const eventStatusColor = (
   status: string,
 ): 'default' | 'success' | 'warning' | 'error' | 'info' => {
@@ -5531,19 +5537,24 @@ export default function CourseRegistrationsAdminPage() {
                       && !rowSecondaryIdentity
                     );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
-                  const useDirectPendingRecoveryAction = shouldUseDirectPendingRecoveryAction(
-                    reg.crStatus,
-                    showActiveStatusFilterSummary
-                      || statusAlreadyVisibleInBusySearchOnboarding
-                      || (
-                        localSearchSingleResultUsesDirectPaidRecovery
-                        && localSearchSingleResult?.crId === reg.crId
-                      )
-                      || (
-                        showSingleStatusSummaryInPageChrome
-                        && searchedRegistrations.length === 1
-                      ),
-                  );
+                  const useDirectPendingRecoveryAction =
+                    shouldUseDirectPendingRecoveryAction(
+                      reg.crStatus,
+                      showActiveStatusFilterSummary
+                        || statusAlreadyVisibleInBusySearchOnboarding
+                        || (
+                          localSearchSingleResultUsesDirectPaidRecovery
+                          && localSearchSingleResult?.crId === reg.crId
+                        )
+                        || (
+                          showSingleStatusSummaryInPageChrome
+                          && searchedRegistrations.length === 1
+                        ),
+                    )
+                    || (
+                      showBusyListSearchOnboarding
+                      && hasOnlyPendingRecoveryStatusAction(reg.crStatus)
+                    );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
