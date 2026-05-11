@@ -17,6 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SyncIcon from '@mui/icons-material/Sync';
 import { Cms, type CmsContentDTO } from '../api/cms';
+import PageShell from '../components/PageShell';
 
 interface ProjectNote {
   id: string;
@@ -127,19 +128,12 @@ export default function LabelProjectsPage() {
   const completed = useMemo(() => notes.filter((n) => n.done), [notes]);
 
   return (
+    <PageShell
+      title="Proyectos del label"
+      subtitle="Guarda ideas, estado y pendientes de proyectos del label. Las notas se almacenan en el CMS para que el equipo las comparta."
+    >
     <Stack spacing={3}>
       {(listQuery.isLoading || liveQuery.isLoading) && <LinearProgress />}
-      <Stack spacing={0.5}>
-        <Typography variant="overline" color="text.secondary">
-          Label / Proyectos
-        </Typography>
-        <Typography variant="h4" fontWeight={800}>
-          Notas y pendientes rápidos
-        </Typography>
-        <Typography color="text.secondary">
-          Guarda ideas, estado y pendientes de proyectos del label. Las notas se almacenan en el CMS (slug {slug}) para que el equipo las comparta.
-        </Typography>
-      </Stack>
 
       <Card>
         <CardContent>
@@ -225,5 +219,6 @@ export default function LabelProjectsPage() {
         </CardContent>
       </Card>
     </Stack>
+    </PageShell>
   );
 }

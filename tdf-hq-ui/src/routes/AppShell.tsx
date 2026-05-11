@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Container, Stack } from '@mui/material';
+import { Box, Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import ApiStatusChip from '../components/ApiStatusChip';
@@ -12,6 +12,7 @@ import { buildLoginRedirectPath, pickLandingPath } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
+const TABLET_NAV_MIN_WIDTH = 768;
 
 const readStoredSidebarCollapsed = () => {
   if (typeof window === 'undefined') return false;
@@ -22,59 +23,46 @@ const readStoredSidebarCollapsed = () => {
 };
 
 export function Shell() {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const { session, loading } = useSession();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(readStoredSidebarCollapsed);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < DESKTOP_NAV_MIN_WIDTH;
+  });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) return;
-    try {
-      window.localStorage.setItem('sidebar-collapsed', sidebarCollapsed ? '1' : '0');
-    } catch {
-      // ignore storage issues
-    }
-  }, [sidebarCollapsed]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    let wasDesktop = window.innerWidth >= DESKTOP_NAV_MIN_WIDTH;
-    const handleResize = () => {
-      const isDesktop = window.innerWidth >= DESKTOP_NAV_MIN_WIDTH;
-      if (isDesktop === wasDesktop) return;
-      wasDesktop = isDesktop;
-      if (!isDesktop) {
-        setSidebarCollapsed(true);
-        return;
+    if (isDesktop) {
+      try {
+        window.localStorage.setItem('sidebar-collapsed', sidebarCollapsed ? '1' : '0');
+      } catch {
+        // ignore
       }
-      setSidebarCollapsed(readStoredSidebarCollapsed());
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+    }
+  }, [sidebarCollapsed, isDesktop]);
+
+  useEffect(() => {
+    setSidebarCollapsed(!isDesktop);
+  }, [isDesktop]);
 
   const handleNavigateFromSidebar = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < DESKTOP_NAV_MIN_WIDTH) {
+    if (!isDesktop) {
       setSidebarCollapsed(true);
     }
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
     if (sidebarCollapsed) return;
     const handler = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) {
+      if (!isDesktop) {
         setSidebarCollapsed(true);
       }
     };
     window.addEventListener('keydown', handler);
-    return () => {
-      window.removeEventListener('keydown', handler);
-    };
-  }, [sidebarCollapsed]);
+    return () => window.removeEventListener('keydown', handler);
+  }, [sidebarCollapsed, isDesktop]);
 
   if (loading) {
     return <RouteLoadingFallback />;

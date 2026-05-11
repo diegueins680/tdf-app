@@ -19,9 +19,11 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
+import PageShell, { EmptyState } from '../components/PageShell';
 
 export default function RoomsPage() {
   const qc = useQueryClient();
@@ -63,14 +65,11 @@ export default function RoomsPage() {
   };
 
   return (
+    <PageShell
+      title="Salas y recursos"
+      subtitle="Administra las salas disponibles para el calendario y su disponibilidad operativa."
+    >
     <Stack gap={3}>
-      <Stack spacing={1}>
-        <Typography variant="h4">Salas y recursos</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Administra las salas disponibles para el calendario y su disponibilidad operativa.
-        </Typography>
-      </Stack>
-
       <Paper sx={{ p: 3 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
           <TextField
@@ -107,6 +106,15 @@ export default function RoomsPage() {
         <Alert severity="error">{roomsQuery.error.message}</Alert>
       )}
 
+      {roomsQuery.isLoading && <Typography>Cargando salas…</Typography>}
+
+      {!roomsQuery.isLoading && rooms.length === 0 ? (
+        <EmptyState
+          icon={<MeetingRoomIcon />}
+          title="Sin salas registradas"
+          description="Agrega tu primera sala para empezar a gestionar reservas."
+        />
+      ) : (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -117,16 +125,6 @@ export default function RoomsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {roomsQuery.isLoading && (
-              <TableRow>
-                <TableCell colSpan={3}>Cargando salas...</TableCell>
-              </TableRow>
-            )}
-            {!roomsQuery.isLoading && rooms.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={3}>No hay salas registradas.</TableCell>
-              </TableRow>
-            )}
             {rooms.map((room) => (
               <TableRow key={room.roomId}>
                 <TableCell>
@@ -185,6 +183,8 @@ export default function RoomsPage() {
           </TableBody>
         </Table>
       </TableContainer>
+      )}
     </Stack>
+    </PageShell>
   );
 }

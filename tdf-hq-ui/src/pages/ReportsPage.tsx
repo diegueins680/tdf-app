@@ -15,6 +15,7 @@ import {
 import { Bookings } from '../api/bookings';
 import { Payments } from '../api/payments';
 import { Trials } from '../api/trials';
+import PageShell from '../components/PageShell';
 
 const currency = (cents: number) =>
   cents.toLocaleString('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 2, minimumFractionDigits: 2 }).replace('USD', '$');
@@ -202,14 +203,11 @@ export default function ReportsPage() {
     .slice(0, 5);
 
   return (
+    <PageShell
+      title="Reportes"
+      subtitle="KPIs rápidos de reservas, clases y cobros recientes. Ajusta filtros para ver el rango que necesitas."
+    >
     <Stack spacing={3}>
-      <Stack spacing={0.5}>
-        <Typography variant="overline" color="text.secondary">Estudio</Typography>
-        <Typography variant="h4" fontWeight={800}>Reportes</Typography>
-        <Typography color="text.secondary">
-          KPIs rápidos de reservas, clases y cobros recientes. Ajusta filtros para ver el rango que necesitas.
-        </Typography>
-      </Stack>
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={3}>
@@ -391,5 +389,6 @@ export default function ReportsPage() {
         </Grid>
       </Grid>
     </Stack>
+    </PageShell>
   );
 }

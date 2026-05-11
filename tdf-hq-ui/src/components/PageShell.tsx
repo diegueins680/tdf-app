@@ -86,6 +86,7 @@ export interface EmptyStateProps {
   actionLabel?: string;
   actionHref?: string;
   actionOnClick?: () => void;
+  children?: ReactNode;
 }
 
 export function EmptyState({
@@ -95,6 +96,7 @@ export function EmptyState({
   actionLabel,
   actionHref,
   actionOnClick,
+  children,
 }: EmptyStateProps) {
   const actionButton =
     actionLabel && (actionHref || actionOnClick) ? (
@@ -150,6 +152,7 @@ export function EmptyState({
         )}
       </Stack>
       {actionButton}
+      {children}
     </Box>
   );
 }

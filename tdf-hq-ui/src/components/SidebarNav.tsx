@@ -341,8 +341,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     <Box
       component="aside"
       sx={{
-        width: open ? 260 : 0,
-        transition: 'width 0.3s ease',
+        width: open ? { xs: 260, md: 240 } : 0,
+        transition: 'width 0.25s ease',
         bgcolor: 'background.paper',
         color: 'text.primary',
         borderRight: '1px solid',

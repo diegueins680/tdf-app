@@ -21,10 +21,12 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import SearchIcon from '@mui/icons-material/Search';
+import BusinessIcon from '@mui/icons-material/Business';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
+import PageShell, { EmptyState } from '../components/PageShell';
 
 interface CreateCompanyDialogProps {
   open: boolean;
@@ -222,44 +224,49 @@ export default function CompaniesPage() {
   }, [data, search]);
 
   return (
-    <Stack gap={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} gap={2}>
-        <Stack spacing={0.5}>
-          <Typography variant="h4" fontWeight={800}>CRM / Empresas</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gestiona empresas, datos fiscales y contactos principales. Usa la búsqueda para filtrar por nombre, correo o RUC.
-          </Typography>
-        </Stack>
+    <>
+    <PageShell
+      title="Empresas"
+      subtitle="Gestiona empresas, datos fiscales y contactos principales."
+      actions={(
         <Button variant="contained" startIcon={<AddBusinessIcon />} onClick={() => setCreateOpen(true)}>
           Nueva empresa
         </Button>
-      </Stack>
+      )}
+    >
+    <Stack gap={3}>
+      <TextField
+        label="Buscar empresas"
+        placeholder="Buscar por nombre, correo o RUC"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        fullWidth
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+          endAdornment: search ? (
+            <InputAdornment position="end">
+              <Button size="small" onClick={() => setSearch('')}>Limpiar</Button>
+            </InputAdornment>
+          ) : null,
+        }}
+      />
 
-      <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} gap={2} alignItems={{ xs: 'stretch', md: 'center' }}>
-          <TextField
-            label="Buscar empresas"
-            placeholder="Buscar por nombre, correo o RUC"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Stack>
-      </Paper>
-
-      <Paper sx={{ p: 2, borderRadius: 3, boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}>
+      <Paper sx={{ p: 2 }}>
         {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar las empresas'}</Alert>}
         {isLoading ? (
-          <Typography>Cargando...</Typography>
+          <Typography>Cargando empresas…</Typography>
         ) : companies.length === 0 ? (
-          <Typography color="text.secondary">No hay empresas aún.</Typography>
+          <EmptyState
+            icon={<BusinessIcon />}
+            title="Sin empresas"
+            description="Aún no hay empresas registradas. Crea la primera para empezar."
+            actionLabel="Nueva empresa"
+            actionOnClick={() => setCreateOpen(true)}
+          />
         ) : (
           <Table size="small">
             <TableHead>
@@ -315,6 +322,8 @@ export default function CompaniesPage() {
           </Table>
         )}
       </Paper>
+    </Stack>
+    </PageShell>
 
       <CreateCompanyDialog open={createOpen} onClose={() => setCreateOpen(false)} />
       <EditCompanyDialog company={selected} open={editOpen} onClose={() => setEditOpen(false)} />
@@ -326,6 +335,6 @@ export default function CompaniesPage() {
           setRelatedAnchor(null);
         }}
       />
-    </Stack>
+    </>
   );
 }
