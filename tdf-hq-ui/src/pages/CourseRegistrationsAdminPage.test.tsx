@@ -13341,6 +13341,7 @@ describe('CourseRegistrationsAdminPage', () => {
       'Kajabi enrollment page - Beatmaking 101',
       'Teachable course signup form for Beatmaking 101',
       'Beatmaking 101 - Thinkific registration portal',
+      'Moodle enrollment portal - Beatmaking 101',
       'Hotmart checkout for Beatmaking 101',
       'Beatmaking 101 - Podia checkout',
       'LearnWorlds course page - Beatmaking 101',
@@ -13367,7 +13368,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Hotmart|Podia|LearnWorlds|ClickFunnels|GoHighLevel|Kartra|Systeme\.io|Mighty Networks|Skool|Circle\.so/i);
+        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Moodle|Hotmart|Podia|LearnWorlds|ClickFunnels|GoHighLevel|Kartra|Systeme\.io|Mighty Networks|Skool|Circle\.so/i);
         expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup|registration funnel/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
