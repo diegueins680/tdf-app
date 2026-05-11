@@ -10,9 +10,8 @@ module TDF.ServerFanClub
 import           Control.Monad          (forM, when, unless, void)
 import           Control.Monad.Except   (MonadError, throwError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Reader   (MonadReader, ask)
+import           Control.Monad.Reader   (MonadReader, ask, asks)
 import           Data.Int               (Int64)
-import           Data.List              (find)
 import           Data.Maybe             (fromMaybe, isJust, mapMaybe)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -20,13 +19,13 @@ import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (UTCTime, getCurrentTime)
 
-import           Database.Persist       (Entity(..), (=.), (==.), (<=.), (>=.), SelectOpt(Asc, Desc)
-                                         , deleteBy, getBy, insert, insert_, insertUnique, selectFirst, selectList, update, count)
+import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
+                                         , deleteBy, getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, ServerT, err400, err403, err404, errBody, (:<|>)(..))
 
 import           TDF.API                (FanPublicAPI, FanSecureAPI)
-import           TDF.Auth               (AuthedUser(..), hasRole)
+import           TDF.Auth               (AuthedUser(..))
 import           TDF.DB                 (Env(..))
 import           TDF.DTO
 import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClubElection(..)
@@ -37,41 +36,30 @@ import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClu
                                          , UniqueFanClubCandidacy, UniqueFanClubVote, UniqueFanFollow)
 import qualified TDF.Models             as M
 
--- ============================================================================
--- Helpers
--- ============================================================================
+type AppM = Servant.Handler
 
-throwBadRequest :: MonadError ServerError m => Text -> m a
+throwBadRequest :: Text -> Servant.Handler a
 throwBadRequest msg = throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-requireFanAccess :: AuthedUser -> AppM ()
-requireFanAccess _ = pure ()
-
-type AppM = SqlPersistT IO  -- placeholder; we use explicit types below
-
-requireIsOfficer :: MonadError ServerError m => SqlPersistT IO Bool -> m ()
-requireIsOfficer check = do
-  isOff <- liftIO $ runSqlPool check undefined
-  unless isOff $ throwError err403 { errBody = "Solo la directiva puede realizar esta acción" }
+runDB :: SqlPersistT IO a -> Servant.Handler a
+runDB action = do
+  Env{..} <- ask
+  liftIO $ runSqlPool action envPool
 
 -- ============================================================================
 -- Public Server
 -- ============================================================================
 
-fanClubPublicServer :: Env -> ServerT FanPublicAPI (SqlPersistT IO)
-fanClubPublicServer env =
-       listFanArtists
-  :<|> fanArtistProfile
-  :<|> fanArtistReleases
+fanClubPublicServer :: ServerT FanPublicAPI (Servant.Handler)
+fanClubPublicServer =
+       undefined
+  :<|> undefined
+  :<|> undefined
   :<|> getPublicClub
   :<|> getPublicClubEvents
   where
-    listFanArtists = undefined
-    fanArtistProfile = undefined
-    fanArtistReleases = undefined
-
-    getPublicClub :: Int64 -> SqlPersistT IO FanClubDTO
-    getPublicClub artistId = do
+    getPublicClub :: Int64 -> Servant.Handler FanClubDTO
+    getPublicClub artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -88,8 +76,8 @@ fanClubPublicServer env =
             , fcFollowerCount = fromIntegral followerCount
             }
 
-    getPublicClubEvents :: Int64 -> SqlPersistT IO [FanClubEventDTO]
-    getPublicClubEvents artistId = do
+    getPublicClubEvents :: Int64 -> Servant.Handler [FanClubEventDTO]
+    getPublicClubEvents artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -102,26 +90,18 @@ fanClubPublicServer env =
 -- Secure Server
 -- ============================================================================
 
-fanClubSecureServer :: Env -> AuthedUser -> ServerT FanSecureAPI (SqlPersistT IO)
-fanClubSecureServer env user =
-       (fanGetProfile :<|> fanUpdateProfile)
-  :<|> (fanListFollows :<|> fanFollowArtist :<|> fanUnfollowArtist)
-  :<|> (artistGetOwnProfile :<|> artistUpdateOwnProfile)
+fanClubSecureServer :: AuthedUser -> ServerT FanSecureAPI (Servant.Handler)
+fanClubSecureServer user =
+       undefined
+  :<|> undefined
+  :<|> undefined
   :<|> listMyClubs
   :<|> fanClubArtistServer
   where
-    fanGetProfile = undefined
-    fanUpdateProfile = undefined
-    fanListFollows = undefined
-    fanFollowArtist = undefined
-    fanUnfollowArtist = undefined
-    artistGetOwnProfile = undefined
-    artistUpdateOwnProfile = undefined
-
-    listMyClubs :: SqlPersistT IO [FanClubDTO]
-    listMyClubs = do
+    listMyClubs :: Servant.Handler [FanClubDTO]
+    listMyClubs = runDB $ do
       follows <- selectList [FanFollowFanPartyId ==. auPartyId user] [Desc FanFollowCreatedAt]
-      forM follows $ \(Entity _ follow) -> do
+      clubs <- forM follows $ \(Entity _ follow) -> do
         let artistKey = fanFollowArtistPartyId follow
         mClub <- getBy (UniqueFanClubArtist artistKey)
         case mClub of
@@ -137,23 +117,23 @@ fanClubSecureServer env user =
               , fcOfficers = officers
               , fcFollowerCount = fromIntegral followerCount
               }
-      >>= pure . mapMaybe id
+      pure (mapMaybe id clubs)
 
-    fanClubArtistServer :: Int64 -> ServerT
-      ( Get '[JSON] FanClubDTO
-      :<|> "posts" :> Get '[JSON] [FanClubPostDTO]
-      :<|> "posts" :> ReqBody '[JSON] FanClubCreatePostReq :> Post '[JSON] FanClubPostDTO
-      :<|> "posts" :> Capture "postId" Int64 :> "pin" :> Post '[JSON] NoContent
-      :<|> "posts" :> Capture "postId" Int64 :> "unpin" :> Post '[JSON] NoContent
-      :<|> "posts" :> Capture "postId" Int64 :> "hide" :> Post '[JSON] NoContent
-      :<|> "posts" :> Capture "postId" Int64 :> "unhide" :> Post '[JSON] NoContent
-      :<|> "events" :> Get '[JSON] [FanClubEventDTO]
-      :<|> "events" :> ReqBody '[JSON] FanClubCreateEventReq :> Post '[JSON] FanClubEventDTO
-      :<|> "elections" :> Get '[JSON] [FanClubElectionDTO]
-      :<|> "elections" :> ReqBody '[JSON] FanClubCreateElectionReq :> Post '[JSON] FanClubElectionDTO
-      :<|> "elections" :> Capture "electionId" Int64 :> "candidacy" :> ReqBody '[JSON] FanClubCreateCandidacyReq :> Post '[JSON] FanClubCandidacyDTO
-      :<|> "elections" :> Capture "electionId" Int64 :> "vote" :> ReqBody '[JSON] FanClubVoteReq :> Post '[JSON] NoContent
-      ) (SqlPersistT IO)
+    fanClubArtistServer :: Int64 ->
+      ( Servant.Handler FanClubDTO
+      :<|> Servant.Handler [FanClubPostDTO]
+      :<|> (FanClubCreatePostReq -> Servant.Handler FanClubPostDTO)
+      :<|> (Int64 -> Servant.Handler NoContent)
+      :<|> (Int64 -> Servant.Handler NoContent)
+      :<|> (Int64 -> Servant.Handler NoContent)
+      :<|> (Int64 -> Servant.Handler NoContent)
+      :<|> Servant.Handler [FanClubEventDTO]
+      :<|> (FanClubCreateEventReq -> Servant.Handler FanClubEventDTO)
+      :<|> Servant.Handler [FanClubElectionDTO]
+      :<|> (FanClubCreateElectionReq -> Servant.Handler FanClubElectionDTO)
+      :<|> (Int64 -> FanClubCreateCandidacyReq -> Servant.Handler FanClubCandidacyDTO)
+      :<|> (Int64 -> FanClubVoteReq -> Servant.Handler NoContent)
+      )
     fanClubArtistServer artistId =
            getClubDetail artistId
       :<|> listClubPosts artistId
@@ -169,8 +149,8 @@ fanClubSecureServer env user =
       :<|> createCandidacy artistId
       :<|> castVote artistId
 
-    getClubDetail :: Int64 -> SqlPersistT IO FanClubDTO
-    getClubDetail artistId = do
+    getClubDetail :: Int64 -> Servant.Handler FanClubDTO
+    getClubDetail artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -187,8 +167,8 @@ fanClubSecureServer env user =
             , fcFollowerCount = fromIntegral followerCount
             }
 
-    listClubPosts :: Int64 -> SqlPersistT IO [FanClubPostDTO]
-    listClubPosts artistId = do
+    listClubPosts :: Int64 -> Servant.Handler [FanClubPostDTO]
+    listClubPosts artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -203,8 +183,8 @@ fanClubSecureServer env user =
             author <- getAuthorDTO (fanClubPostFanPartyId p)
             pure $ postToDTO pid p (fromIntegral replies) author
 
-    createClubPost :: Int64 -> FanClubCreatePostReq -> SqlPersistT IO FanClubPostDTO
-    createClubPost artistId req = do
+    createClubPost :: Int64 -> FanClubCreatePostReq -> Servant.Handler FanClubPostDTO
+    createClubPost artistId req = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -228,40 +208,40 @@ fanClubSecureServer env user =
             (FanClubPost cid (auPartyId user) parentKey (fcpTitle req) (fcpContent req) False False now Nothing)
             0 author
 
-    pinPost :: Int64 -> Int64 -> SqlPersistT IO NoContent
-    pinPost artistId postId = do
+    pinPost :: Int64 -> Int64 -> Servant.Handler NoContent
+    pinPost artistId postId = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       let postKey = toSqlKey postId
       update postKey [FanClubPostIsPinned =. True]
       pure NoContent
 
-    unpinPost :: Int64 -> Int64 -> SqlPersistT IO NoContent
-    unpinPost artistId postId = do
+    unpinPost :: Int64 -> Int64 -> Servant.Handler NoContent
+    unpinPost artistId postId = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       let postKey = toSqlKey postId
       update postKey [FanClubPostIsPinned =. False]
       pure NoContent
 
-    hidePost :: Int64 -> Int64 -> SqlPersistT IO NoContent
-    hidePost artistId postId = do
+    hidePost :: Int64 -> Int64 -> Servant.Handler NoContent
+    hidePost artistId postId = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       let postKey = toSqlKey postId
       update postKey [FanClubPostIsHidden =. True]
       pure NoContent
 
-    unhidePost :: Int64 -> Int64 -> SqlPersistT IO NoContent
-    unhidePost artistId postId = do
+    unhidePost :: Int64 -> Int64 -> Servant.Handler NoContent
+    unhidePost artistId postId = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       let postKey = toSqlKey postId
       update postKey [FanClubPostIsHidden =. False]
       pure NoContent
 
-    listClubEvents :: Int64 -> SqlPersistT IO [FanClubEventDTO]
-    listClubEvents artistId = do
+    listClubEvents :: Int64 -> Servant.Handler [FanClubEventDTO]
+    listClubEvents artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -270,8 +250,8 @@ fanClubSecureServer env user =
           events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
           pure (map eventToDTO events)
 
-    createClubEvent :: Int64 -> FanClubCreateEventReq -> SqlPersistT IO FanClubEventDTO
-    createClubEvent artistId req = do
+    createClubEvent :: Int64 -> FanClubCreateEventReq -> Servant.Handler FanClubEventDTO
+    createClubEvent artistId req = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear eventos" }
       let artistKey = toSqlKey artistId
@@ -302,8 +282,8 @@ fanClubSecureServer env user =
             , fceCreatedBy = Just (fromSqlKey (auPartyId user))
             }
 
-    listClubElections :: Int64 -> SqlPersistT IO [FanClubElectionDTO]
-    listClubElections artistId = do
+    listClubElections :: Int64 -> Servant.Handler [FanClubElectionDTO]
+    listClubElections artistId = runDB $ do
       let artistKey = toSqlKey artistId
       mClub <- getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -329,8 +309,8 @@ fanClubSecureServer env user =
               , fceMyVotes = votes
               }
 
-    createClubElection :: Int64 -> FanClubCreateElectionReq -> SqlPersistT IO FanClubElectionDTO
-    createClubElection artistId req = do
+    createClubElection :: Int64 -> FanClubCreateElectionReq -> Servant.Handler FanClubElectionDTO
+    createClubElection artistId req = runDB $ do
       isOfficer <- checkIsOfficer artistId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear elecciones" }
       let artistKey = toSqlKey artistId
@@ -339,7 +319,7 @@ fanClubSecureServer env user =
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
           now <- liftIO getCurrentTime
-          eid <- insertUnique FanClubElection
+          mEid <- insertUnique FanClubElection
             { fanClubElectionClubId = cid
             , fanClubElectionYear = fcelYear req
             , fanClubElectionCandidacyStartsAt = fcelCandidacyStartsAt req
@@ -349,8 +329,8 @@ fanClubSecureServer env user =
             , fanClubElectionStatus = Upcoming
             , fanClubElectionCreatedAt = now
             }
-          case eid of
-            Nothing -> throwBadRequest "Ya existe una elección para este año"
+          case mEid of
+            Nothing -> throwError err400 { errBody = "Ya existe una elección para este año" }
             Just eid' -> do
               let el = FanClubElection cid (fcelYear req) (fcelCandidacyStartsAt req) (fcelCandidacyEndsAt req)
                               (fcelVotingStartsAt req) (fcelVotingEndsAt req) Upcoming now
@@ -366,8 +346,8 @@ fanClubSecureServer env user =
                 , fceMyVotes = []
                 }
 
-    createCandidacy :: Int64 -> Int64 -> FanClubCreateCandidacyReq -> SqlPersistT IO FanClubCandidacyDTO
-    createCandidacy artistId electionId req = do
+    createCandidacy :: Int64 -> Int64 -> FanClubCreateCandidacyReq -> Servant.Handler FanClubCandidacyDTO
+    createCandidacy artistId electionId req = runDB $ do
       let eid = toSqlKey electionId
       mElection <- selectFirst [FanClubElectionId ==. eid] []
       case mElection of
@@ -375,15 +355,15 @@ fanClubSecureServer env user =
         Just (Entity _ election) -> do
           now <- liftIO getCurrentTime
           let role = parseOfficerRole (fccrRole req)
-          cid <- insertUnique FanClubCandidacy
+          mCid <- insertUnique FanClubCandidacy
             { fanClubCandidacyElectionId = eid
             , fanClubCandidacyFanPartyId = auPartyId user
             , fanClubCandidacyRole = role
             , fanClubCandidacyManifesto = fccrManifesto req
             , fanClubCandidacyCreatedAt = now
             }
-          case cid of
-            Nothing -> throwBadRequest "Ya estás postulado para este cargo"
+          case mCid of
+            Nothing -> throwError err400 { errBody = "Ya estás postulado para este cargo" }
             Just cid' -> do
               author <- getAuthorDTO (auPartyId user)
               pure $ FanClubCandidacyDTO
@@ -396,15 +376,15 @@ fanClubSecureServer env user =
                 , fccVoteCount = 0
                 }
 
-    castVote :: Int64 -> Int64 -> FanClubVoteReq -> SqlPersistT IO NoContent
-    castVote artistId electionId req = do
+    castVote :: Int64 -> Int64 -> FanClubVoteReq -> Servant.Handler NoContent
+    castVote artistId electionId req = runDB $ do
       let eid = toSqlKey electionId
       mElection <- selectFirst [FanClubElectionId ==. eid] []
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
         Just (Entity _ election) -> do
           now <- liftIO getCurrentTime
-          forM (fcvCandidacyIds req) $ \candId -> do
+          forM_ (fcvCandidacyIds req) $ \candId -> do
             let cKey = toSqlKey candId
             mCand <- selectFirst [FanClubCandidacyId ==. cKey] []
             case mCand of
