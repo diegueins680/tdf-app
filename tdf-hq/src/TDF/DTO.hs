@@ -737,3 +737,126 @@ data SessionResponse = SessionResponse
 
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
+
+-- ============================================================================
+-- FAN CLUB DTOs
+-- ============================================================================
+
+data FanClubDTO = FanClubDTO
+  { fcId          :: Int64
+  , fcArtistId    :: Int64
+  , fcName        :: Text
+  , fcDescription :: Maybe Text
+  , fcOfficers    :: [FanClubOfficerDTO]
+  , fcFollowerCount :: Int
+  } deriving (Show, Generic)
+instance ToJSON FanClubDTO
+
+data FanClubOfficerDTO = FanClubOfficerDTO
+  { fcoPartyId    :: Int64
+  , fcoFanName    :: Text
+  , fcoAvatarUrl  :: Maybe Text
+  , fcoRole       :: Text
+  , fcoElectedAt  :: Maybe UTCTime
+  , fcoTermEndsAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubOfficerDTO
+
+data FanClubPostDTO = FanClubPostDTO
+  { fcpId          :: Int64
+  , fcpParentId    :: Maybe Int64
+  , fcpTitle       :: Maybe Text
+  , fcpContent     :: Text
+  , fcpAuthorId    :: Int64
+  , fcpAuthorName  :: Text
+  , fcpAvatarUrl   :: Maybe Text
+  , fcpIsPinned    :: Bool
+  , fcpIsHidden    :: Bool
+  , fcpReplies     :: Int
+  , fcpCreatedAt   :: UTCTime
+  , fcpUpdatedAt   :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubPostDTO
+
+data FanClubEventDTO = FanClubEventDTO
+  { fceId            :: Int64
+  , fceTitle         :: Text
+  , fceDescription   :: Maybe Text
+  , fceStartsAt      :: Maybe UTCTime
+  , fceEndsAt        :: Maybe UTCTime
+  , fceLocation      :: Maybe Text
+  , fceIsArtistConcert :: Bool
+  , fceCreatedBy     :: Maybe Int64
+  } deriving (Show, Generic)
+instance ToJSON FanClubEventDTO
+
+data FanClubElectionDTO = FanClubElectionDTO
+  { fceElectionId     :: Int64
+  , fceYear           :: Int
+  , fceStatus         :: Text
+  , fceCandidacyStartsAt :: Maybe UTCTime
+  , fceCandidacyEndsAt   :: Maybe UTCTime
+  , fceVotingStartsAt    :: Maybe UTCTime
+  , fceVotingEndsAt      :: Maybe UTCTime
+  , fceMyCandidacies   :: [FanClubCandidacyDTO]
+  , fceMyVotes         :: [FanClubVoteDTO]
+  } deriving (Show, Generic)
+instance ToJSON FanClubElectionDTO
+
+data FanClubCandidacyDTO = FanClubCandidacyDTO
+  { fccCandidacyId :: Int64
+  , fccFanId       :: Int64
+  , fccFanName     :: Text
+  , fccAvatarUrl   :: Maybe Text
+  , fccRole        :: Text
+  , fccManifesto   :: Maybe Text
+  , fccVoteCount   :: Int
+  } deriving (Show, Generic)
+instance ToJSON FanClubCandidacyDTO
+
+data FanClubVoteDTO = FanClubVoteDTO
+  { fcvCandidacyId :: Int64
+  , fcvRole        :: Text
+  } deriving (Show, Generic)
+instance ToJSON FanClubVoteDTO
+
+data FanClubCreatePostReq = FanClubCreatePostReq
+  { fcpTitle   :: Maybe Text
+  , fcpContent :: Text
+  , fcpParentId :: Maybe Int64
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreatePostReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateEventReq = FanClubCreateEventReq
+  { fcevTitle       :: Text
+  , fcevDescription :: Maybe Text
+  , fcevStartsAt    :: Maybe UTCTime
+  , fcevEndsAt      :: Maybe UTCTime
+  , fcevLocation    :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateEventReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateElectionReq = FanClubCreateElectionReq
+  { fcelYear             :: Int
+  , fcelCandidacyStartsAt :: Maybe UTCTime
+  , fcelCandidacyEndsAt   :: Maybe UTCTime
+  , fcelVotingStartsAt    :: Maybe UTCTime
+  , fcelVotingEndsAt      :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateElectionReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateCandidacyReq = FanClubCreateCandidacyReq
+  { fccrRole      :: Text
+  , fccrManifesto :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateCandidacyReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubVoteReq = FanClubVoteReq
+  { fcvCandidacyIds :: [Int64]
+  } deriving (Show, Generic)
+instance FromJSON FanClubVoteReq where
+  parseJSON = genericParseJSON strictDecodeOptions
