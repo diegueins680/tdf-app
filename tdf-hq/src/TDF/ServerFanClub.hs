@@ -65,7 +65,7 @@ fanClubPublicGetClub artistId = runDB $ do
     Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
     Just (Entity cid club) -> do
       officers <- loadOfficersDTO cid
-      followerCount <- count [FanFollowArtistPartyId ==. artistKey]
+      followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
       pure FanClubDTO
         { fcId = fromSqlKey cid
         , fcArtistId = artistId
@@ -82,7 +82,7 @@ fanClubPublicGetEvents artistId = runDB $ do
   case mClub of
     Nothing -> pure []
     Just (Entity cid _) -> do
-      events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
+      events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
       pure (map eventToDTO events)
 
 -- ============================================================================
@@ -91,7 +91,7 @@ fanClubPublicGetEvents artistId = runDB $ do
 
 fanClubSecureListMyClubs :: AuthedUser -> AppM [FanClubDTO]
 fanClubSecureListMyClubs user = runDB $ do
-  follows <- selectList [FanFollowFanPartyId ==. auPartyId user] [Desc FanFollowCreatedAt]
+  follows <- selectList [M.FanFollowFanPartyId ==. auPartyId user] [Desc M.FanFollowCreatedAt]
   clubs <- forM follows $ \(Entity _ follow) -> do
     let artistKey = fanFollowArtistPartyId follow
     mClub <- getBy (UniqueFanClubArtist artistKey)
@@ -99,7 +99,7 @@ fanClubSecureListMyClubs user = runDB $ do
       Nothing -> pure Nothing
       Just (Entity cid club) -> do
         officers <- loadOfficersDTO cid
-        followerCount <- count [FanFollowArtistPartyId ==. artistKey]
+        followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
         pure $ Just FanClubDTO
           { fcId = fromSqlKey cid
           , fcArtistId = fromSqlKey artistKey
@@ -147,7 +147,7 @@ fanClubSecureArtistHandlers user artistId =
         Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
         Just (Entity cid club) -> do
           officers <- loadOfficersDTO cid
-          followerCount <- count [FanFollowArtistPartyId ==. artistKey]
+          followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
           pure FanClubDTO
             { fcId = fromSqlKey cid
             , fcArtistId = aId
