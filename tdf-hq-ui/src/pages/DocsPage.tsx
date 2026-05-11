@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import PageShell from '../components/PageShell';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import DownloadIcon from '@mui/icons-material/Download';
 import MapIcon from '@mui/icons-material/Map';
@@ -24,7 +25,11 @@ export default function DocsPage() {
   }, [version]);
 
   return (
-    <Stack gap={4}>
+    <PageShell
+      title="Documentación"
+      subtitle="Consulta los contratos de la API, guías de integración y el mapa funcional desde un solo lugar."
+    >
+      <Stack gap={4}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack gap={1}>
           <Typography variant="overline">Documentación</Typography>
@@ -81,5 +86,6 @@ export default function DocsPage() {
         />
       </Paper>
     </Stack>
+    </PageShell>
   );
 }

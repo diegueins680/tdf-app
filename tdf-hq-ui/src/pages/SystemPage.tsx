@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Meta } from '../api/meta';
+import PageShell from '../components/PageShell';
 
 function formatBuildTime(value?: string | null) {
   if (!value) return '—';
@@ -51,9 +52,8 @@ export default function SystemPage() {
   const healthColor = (health?.status || '').toLowerCase() === 'ok' ? 'success' : 'warning';
 
   return (
+    <PageShell title="Estado del sistema" subtitle="Versión, salud y metadatos del backend.">
     <Stack gap={3}>
-      <Typography variant="h5">Estado del sistema</Typography>
-
       {loading && (
         <Box display="flex" alignItems="center" justifyContent="center" minHeight={160}>
           <CircularProgress />
@@ -107,5 +107,6 @@ export default function SystemPage() {
         </Paper>
       )}
     </Stack>
+    </PageShell>
   );
 }

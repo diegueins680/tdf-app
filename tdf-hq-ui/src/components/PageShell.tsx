@@ -1,0 +1,168 @@
+import type { ReactNode } from 'react';
+import { Box, Stack, Typography, Button, Skeleton } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+
+export interface PageShellProps {
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+  loading?: boolean;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | false;
+}
+
+export default function PageShell({
+  title,
+  subtitle,
+  actions,
+  children,
+  loading = false,
+  maxWidth = 'xl',
+}: PageShellProps) {
+  return (
+    <Stack spacing={4}>
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          bgcolor: 'background.default',
+          pt: { xs: 2, md: 3 },
+          pb: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          mb: -2,
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={{ xs: 1.5, sm: 2 }}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+        >
+          <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+            {loading ? (
+              <>
+                <Skeleton variant="text" width={200} height={36} />
+                <Skeleton variant="text" width={280} height={20} />
+              </>
+            ) : (
+              <>
+                <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '1.75rem' } }}>
+                  {title}
+                </Typography>
+                {subtitle && (
+                  <Typography variant="body1" color="text.secondary">
+                    {subtitle}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Stack>
+          {actions && <Stack direction="row" spacing={1}>{actions}</Stack>}
+        </Stack>
+      </Box>
+      <Box sx={{ maxWidth: maxWidth === false ? undefined : `${maxWidthMap[maxWidth]}px`, width: '100%' }}>
+        {children}
+      </Box>
+    </Stack>
+  );
+}
+
+const maxWidthMap: Record<string, number> = {
+  sm: 600,
+  md: 900,
+  lg: 1200,
+  xl: 1536,
+};
+
+/* ------------------------------------------------------------------ */
+// EmptyState
+
+export interface EmptyStateProps {
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  actionHref?: string;
+  actionOnClick?: () => void;
+}
+
+export function EmptyState({
+  icon,
+  title,
+  description,
+  actionLabel,
+  actionHref,
+  actionOnClick,
+}: EmptyStateProps) {
+  const actionButton =
+    actionLabel && (actionHref || actionOnClick) ? (
+      actionHref ? (
+        <Button variant="contained" component={RouterLink} to={actionHref}>
+          {actionLabel}
+        </Button>
+      ) : (
+        <Button variant="contained" onClick={actionOnClick}>
+          {actionLabel}
+        </Button>
+      )
+    ) : null;
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        py: { xs: 6, md: 10 },
+        px: 3,
+        gap: 2,
+      }}
+    >
+      {icon && (
+        <Box
+          sx={{
+            width: 72,
+            height: 72,
+            borderRadius: 3,
+            bgcolor: 'action.hover',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'text.secondary',
+            fontSize: 32,
+          }}
+        >
+          {icon}
+        </Box>
+      )}
+      <Stack spacing={0.5} alignItems="center">
+        <Typography variant="h5" color="text.primary">
+          {title}
+        </Typography>
+        {description && (
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360 }}>
+            {description}
+          </Typography>
+        )}
+      </Stack>
+      {actionButton}
+    </Box>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+// SkeletonCards — placeholder for loading dashboards/lists
+
+export function SkeletonCards({ count = 3 }: { count?: number }) {
+  return (
+    <Stack spacing={3}>
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} />
+      ))}
+    </Stack>
+  );
+}

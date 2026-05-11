@@ -31,6 +31,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
@@ -165,7 +166,7 @@ export default function LabelArtistsPage() {
   const hasArtistSearch = search.trim().length > 0;
   const showArtistSearch = hasArtistProfiles || hasArtistSearch;
   const showArtistRefresh = hasArtistProfiles || Boolean(artistsQuery.error);
-  const showQuickNotesCard = filteredArtists.length > 0;
+  const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
   const selectedParty = useMemo(
@@ -313,57 +314,37 @@ export default function LabelArtistsPage() {
   };
 
   return (
-    <Stack spacing={3}>
+    <PageShell
+      title="Artistas"
+      subtitle="Administra los perfiles que alimentan la comunidad y los lanzamientos del label."
+      actions={(
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+          Nuevo perfil
+        </Button>
+      )}
+    >
+      <Stack spacing={3}>
       {bannerMessage && (
         <Alert severity="success" onClose={() => setBannerMessage(null)}>
           {bannerMessage}
         </Alert>
       )}
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="flex-start">
-        <Stack spacing={0.5}>
-          <Typography variant="h4" fontWeight={700}>Label / Artistas</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Administra los perfiles que alimentan la comunidad y los lanzamientos del label.
-          </Typography>
-        </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
-          {showArtistSearch && (
-            <TextField
-              size="small"
-              aria-label="Buscar artistas"
-              placeholder="Buscar por nombre, slug o ciudad"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              inputProps={{ 'aria-label': 'Buscar artistas' }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ minWidth: { xs: 200, md: 280 } }}
-            />
-          )}
-          {showArtistRefresh && (
-            <Tooltip title="Refrescar">
-              <span>
-                <IconButton
-                  onClick={handleRefresh}
-                  disabled={artistsQuery.isFetching}
-                  aria-label="Refrescar artistas"
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-          )}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-            Nuevo perfil
-          </Button>
-        </Stack>
-      </Stack>
-
+      <TextField
+        size="small"
+        aria-label="Buscar artistas"
+        placeholder="Buscar por nombre, slug o ciudad"
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        inputProps={{ 'aria-label': 'Buscar artistas' }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ minWidth: { xs: 200, md: 280 } }}
+      />
       {showQuickNotesCard && (
         <Card>
           <CardContent>
@@ -373,6 +354,14 @@ export default function LabelArtistsPage() {
                 Usa este espacio para pendientes breves; se guardan en las notas del contacto (Party.notes) y se reutilizan en el CRM.
               </Typography>
               <Stack spacing={1.5}>
+                {filteredArtists.length === 0 && (
+                  <EmptyState
+                    title="Sin artistas"
+                    description="Aún no hay perfiles de artista. Crea el primero para empezar."
+                    actionLabel="Nuevo perfil"
+                    actionOnClick={handleOpenNew}
+                  />
+                )}
                 {filteredArtists.map((artist) => {
                   const party = partyMap.get(artist.apArtistId);
                   const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
@@ -426,19 +415,25 @@ export default function LabelArtistsPage() {
 
       <Card>
         <CardContent>
-          {artistsQuery.isLoading && <Typography>Cargando artistas…</Typography>}
+          {artistsQuery.isLoading && <SkeletonCards count={4} />}
           {artistsQuery.error && (
             <Alert severity="error">
               No pudimos cargar los artistas. Verifica tus permisos de admin.
             </Alert>
           )}
           {showFirstArtistSetup && (
-            <Alert severity="info" variant="outlined">
-              Todavía no hay perfiles de artista. Usa Nuevo perfil para enlazar el primer contacto del CRM; la búsqueda, notas rápidas, refresco y tabla aparecerán cuando exista al menos un perfil.
-            </Alert>
+            <EmptyState
+              title="Sin artistas"
+              description="Aún no hay perfiles de artista. Crea el primero para empezar."
+              actionLabel="Nuevo perfil"
+              actionOnClick={handleOpenNew}
+            />
           )}
           {!showFirstArtistSetup && !artistsQuery.isLoading && filteredArtists.length === 0 && !artistsQuery.error && (
-            <Typography color="text.secondary">No hay perfiles de artista que coincidan con la búsqueda.</Typography>
+            <EmptyState
+              title="Sin coincidencias"
+              description="No hay perfiles de artista que coincidan con la búsqueda."
+            />
           )}
           {filteredArtists.length > 0 && (
             <Box sx={{ overflowX: 'auto' }}>
@@ -704,5 +699,6 @@ export default function LabelArtistsPage() {
         </DialogActions>
       </Dialog>
     </Stack>
+    </PageShell>
   );
 }

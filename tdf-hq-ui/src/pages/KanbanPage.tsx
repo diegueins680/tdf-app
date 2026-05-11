@@ -3,13 +3,13 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import {
   Alert,
   Box,
-  CircularProgress,
   Paper,
   Stack,
   Tab,
   Tabs,
   Typography,
 } from '@mui/material';
+import PageShell, { SkeletonCards } from '../components/PageShell';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pipelines } from '../api/pipelines';
 import type { PipelineCardDTO } from '../api/types';
@@ -148,12 +148,9 @@ export default function KanbanPage() {
   const activeLabel = PIPELINE_TYPES.find((type) => type.slug === activeType)?.label ?? 'Pipeline';
 
   return (
-    <Stack gap={2}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ md: 'center' }} spacing={2}>
-        <Typography variant="h5" fontWeight={600}>
-          Pipelines — {activeLabel}
-        </Typography>
-        <Tabs
+    <PageShell title="Pipelines" subtitle={`Gestiona proyectos de ${activeLabel.toLowerCase()}`}>
+    <Stack gap={3}>
+      <Tabs
           value={activeType}
           onChange={(_: SyntheticEvent, value: string) => setActiveType(value)}
           variant="scrollable"
@@ -163,7 +160,6 @@ export default function KanbanPage() {
             <Tab key={type.slug} value={type.slug} label={type.label} />
           ))}
         </Tabs>
-      </Stack>
 
       {loadError && <Alert severity="error">{loadError.message}</Alert>}
       {updateMutation.isError && updateMutation.error && (
@@ -173,9 +169,7 @@ export default function KanbanPage() {
       )}
 
       {isLoading ? (
-        <Box display="flex" justifyContent="center" py={6}>
-          <CircularProgress />
-        </Box>
+        <SkeletonCards count={4} />
       ) : columnOrder.length === 0 ? (
         <Alert severity="info">No hay etapas definidas para este pipeline.</Alert>
       ) : (
@@ -243,5 +237,6 @@ export default function KanbanPage() {
         </DragDropContext>
       )}
     </Stack>
+    </PageShell>
   );
 }

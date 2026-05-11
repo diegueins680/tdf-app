@@ -46,6 +46,7 @@ import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -447,14 +448,16 @@ export default function PartiesPage() {
   const editContactActionLabel = missingPrimaryEmail ? 'Completar contacto' : 'Editar contacto';
 
   return (
-    <Stack gap={3}>
-      <Stack spacing={1}>
-        <Typography variant="h4">Personas / CRM</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Gestiona personas, empresas y roles en un solo lugar. El tipo se elige dentro del formulario de alta.
-        </Typography>
-      </Stack>
-
+    <PageShell
+      title="Contactos"
+      subtitle="Gestiona personas, empresas y roles en un solo lugar."
+      actions={(
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+          Nuevo contacto
+        </Button>
+      )}
+    >
+      <Stack gap={3}>
       <Paper sx={{ p: 3 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
@@ -489,27 +492,19 @@ export default function PartiesPage() {
               fullWidth
             />
           )}
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateOpen(true)}
-            >
-              Nuevo contacto
-            </Button>
-          </Stack>
         </Stack>
 
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
-        {showInitialLoadingState ? (
-          <Alert severity="info" variant="outlined">
-            Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
-          </Alert>
-        ) : !partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
-          <Alert severity="info" variant="outlined">
-            Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
-          </Alert>
+        {partiesQuery.isLoading && <SkeletonCards count={4} />}
+
+        {!partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
+          <EmptyState
+            title="Sin contactos aún"
+            description="Crea tu primer contacto para empezar a gestionar personas, empresas y roles."
+            actionLabel="Nuevo contacto"
+            actionOnClick={() => setCreateOpen(true)}
+          />
         ) : showSearchEmptyState ? (
           <Alert severity="info" variant="outlined">
             {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
@@ -596,12 +591,7 @@ export default function PartiesPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {partiesQuery.isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={3}>Cargando...</TableCell>
-                  </TableRow>
-                )}
-                {!partiesQuery.isLoading && filtered.map((party) => (
+                {filtered.map((party) => (
                   <TableRow key={party.partyId} hover>
                     <TableCell>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -683,5 +673,6 @@ export default function PartiesPage() {
         }}
       />
     </Stack>
+    </PageShell>
   );
 }

@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -37,6 +36,7 @@ import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -427,7 +427,7 @@ function InventoryAssetSummaryCard({
             <Typography variant="h6" fontWeight={700}>
               {title}
             </Typography>
-            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+            <Typography variant="body2" color="text.secondary">
               {description}
             </Typography>
           </Stack>
@@ -435,36 +435,36 @@ function InventoryAssetSummaryCard({
             <Typography variant="body1" fontWeight={700}>
               {asset.name}
             </Typography>
-            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+            <Typography variant="body2" color="text.secondary">
               Categoría: {asset.category}
             </Typography>
-            <Typography variant="body2" color="rgba(226,232,240,0.78)">
+            <Typography variant="body2" color="text.secondary">
               Estado: {getInventoryStatusLabel(asset.status)}
             </Typography>
             {assetLocation && (
-              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+              <Typography variant="body2" color="text.secondary">
                 Ubicación: {assetLocation}
               </Typography>
             )}
             {assetCondition && (
-              <Typography variant="body2" color="rgba(226,232,240,0.78)">
+              <Typography variant="body2" color="text.secondary">
                 Condición: {assetCondition}
               </Typography>
             )}
             {showCheckoutSummary && (
               <>
                 {normalizeInventoryField(asset.currentCheckoutTarget) && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  <Typography variant="body2" color="text.secondary">
                     Tenencia actual: {getCurrentTargetSummary(asset, roomMap)}
                   </Typography>
                 )}
                 {checkoutContextSummary && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  <Typography variant="body2" color="text.secondary">
                     Contexto: {checkoutContextSummary}
                   </Typography>
                 )}
                 {checkoutContactSummary && (
-                  <Typography variant="body2" color="rgba(226,232,240,0.78)">
+                  <Typography variant="body2" color="text.secondary">
                     Contacto: {checkoutContactSummary}
                   </Typography>
                 )}
@@ -495,7 +495,7 @@ function InventoryAssetSummaryCard({
               </Button>
             )}
             {showNoMovementGuidance && (
-              <Typography variant="body2" color="rgba(226,232,240,0.68)">
+              <Typography variant="body2" color="text.secondary">
                 {INVENTORY_SINGLE_ASSET_NO_MOVEMENT_GUIDANCE}
               </Typography>
             )}
@@ -819,30 +819,22 @@ export default function InventoryPage() {
   );
 
   return (
-    <Box sx={{ color: '#e2e8f0' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Box>
-          <Typography variant="h5" fontWeight={800}>
-            Inventario de equipo
-          </Typography>
-          <Typography variant="body2" color="rgba(226,232,240,0.75)">
-            Administra equipos, ve quién los tiene, comparte enlaces públicos y registra check-out / check-in con evidencia.
-          </Typography>
-        </Box>
-        {showHeaderRefreshAction && (
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon />}
-              onClick={handleRefreshAssets}
-              disabled={isInventoryRefreshing}
-            >
-              {isInventoryRefreshing ? 'Actualizando…' : 'Actualizar'}
-            </Button>
-          </Stack>
-        )}
-      </Stack>
-
+    <PageShell
+      title="Inventario de equipo"
+      subtitle="Administra equipos, ve quién los tiene, comparte enlaces públicos y registra check-out / check-in con evidencia."
+      actions={(
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefreshAssets}
+            disabled={isInventoryRefreshing}
+          >
+            {isInventoryRefreshing ? 'Actualizando…' : 'Actualizar'}
+          </Button>
+        </Stack>
+      )}
+    >
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
       {assetsQuery.error && (
         <Alert
@@ -879,7 +871,7 @@ export default function InventoryPage() {
             sx={{ minWidth: { xs: '100%', sm: 320 }, maxWidth: 480 }}
           />
           {showFilteredResultsCount && (
-            <Typography variant="caption" color="rgba(226,232,240,0.68)">
+            <Typography variant="caption" color="text.secondary">
               {`Mostrando ${grouped.length} de ${assets.length} equipos.`}
             </Typography>
           )}
@@ -887,47 +879,14 @@ export default function InventoryPage() {
       )}
 
       {!showInitialInventoryErrorState && (showInitialInventoryLoadingState ? (
-        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <CircularProgress size={18} />
-                <Typography variant="h6" fontWeight={700}>
-                  Cargando inventario
-                </Typography>
-              </Stack>
-              <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                {INVENTORY_INITIAL_LOADING_GUIDANCE}
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
+        <SkeletonCards count={4} />
       ) : showFirstAssetEmptyState ? (
-        <Card
-          data-testid="inventory-first-run-empty-state"
-          sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="h6" fontWeight={700}>
-                Primeros pasos
-              </Typography>
-              <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial
-                para operar check-out y check-in desde una sola fila.
-              </Typography>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={handleRefreshAssets}
-                sx={{ alignSelf: 'flex-start' }}
-              >
-                Volver a consultar inventario
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Primeros pasos"
+          description="Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila."
+          actionLabel="Volver a consultar inventario"
+          actionOnClick={handleRefreshAssets}
+        />
       ) : showSingleAssetSummary && singleAsset ? (
         <InventoryAssetSummaryCard
           title="Primer equipo registrado"
@@ -949,27 +908,18 @@ export default function InventoryPage() {
           onOpenSecondaryActions={openActionsMenu}
         />
       ) : showFilteredEmptyState ? (
-        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Typography variant="h6" fontWeight={700}>
-                Sin coincidencias
-              </Typography>
-              <Typography variant="body2" color="rgba(226,232,240,0.78)">
-                No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de
-                arriba para volver a la vista completa.
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Sin coincidencias"
+          description="No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de arriba para volver a la vista completa."
+        />
       ) : (
-        <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <Card>
           <CardContent>
             <Stack spacing={1.5}>
               {sharedViewSummary ? (
                 <Typography
                   variant="caption"
-                  color="rgba(226,232,240,0.68)"
+                  color="text.secondary"
                   data-testid="inventory-shared-columns-summary"
                 >
                   {sharedViewSummary}
@@ -977,38 +927,38 @@ export default function InventoryPage() {
               ) : (
                 <>
                   {sharedStatusSummary && (
-                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                    <Typography variant="caption" color="text.secondary">
                       {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
                     </Typography>
                   )}
                   {sharedCategorySummary && (
-                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                    <Typography variant="caption" color="text.secondary">
                       {`Mostrando una sola categoría: ${sharedCategorySummary}. La categoría volverá cuando esta vista mezcle categorías distintas.`}
                     </Typography>
                   )}
                   {sharedLocationSummary && (
-                    <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                    <Typography variant="caption" color="text.secondary">
                       {`Mostrando una sola ubicación: ${sharedLocationSummary}. La columna volverá cuando esta vista mezcle ubicaciones distintas.`}
                     </Typography>
                   )}
                 </>
               )}
               {tableGuidance && (
-                <Typography variant="body2" color="rgba(226,232,240,0.68)">
+                <Typography variant="body2" color="text.secondary">
                   {tableGuidance}
                 </Typography>
               )}
               {sharedCheckoutSummary && !sharedViewSummary && (
                 <Typography
                   variant="caption"
-                  color="rgba(226,232,240,0.68)"
+                  color="text.secondary"
                   data-testid="inventory-shared-checkout-summary"
                 >
                   {`${INVENTORY_SHARED_CHECKOUT_SUMMARY_PREFIX}${sharedCheckoutSummary}. ${INVENTORY_SHARED_CHECKOUT_SUMMARY_SUFFIX}`}
                 </Typography>
               )}
               {sharedConditionSummary && !sharedViewSummary && (
-                <Typography variant="caption" color="rgba(226,232,240,0.68)">
+                <Typography variant="caption" color="text.secondary">
                   {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
                 </Typography>
               )}
@@ -1231,7 +1181,7 @@ export default function InventoryPage() {
       </Menu>
 
       {historyViewMode === 'panel' && selected && (
-        <Card sx={{ mt: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <Card sx={{ mt: 3 }}>
           <CardContent>
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -1352,7 +1302,7 @@ export default function InventoryPage() {
           </CardContent>
         </Card>
       )}
-    </Box>
+    </PageShell>
   );
 }
 

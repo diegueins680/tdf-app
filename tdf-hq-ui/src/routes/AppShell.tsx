@@ -136,7 +136,8 @@ export function Shell() {
             sx={{
               position: 'fixed',
               inset: 0,
-              bgcolor: 'rgba(15,17,24,0.72)',
+              bgcolor: 'rgba(0,0,0,0.45)',
+              backdropFilter: 'blur(2px)',
               zIndex: 1100,
               display: { xs: 'block', lg: 'none' },
             }}

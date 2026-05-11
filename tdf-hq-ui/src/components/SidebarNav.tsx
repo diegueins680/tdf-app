@@ -1,5 +1,18 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Badge, Box, Button, Collapse, IconButton, List, ListItemButton, ListItemText, Stack, Typography, TextField, InputAdornment } from '@mui/material';
+import {
+  Badge,
+  Box,
+  Button,
+  Collapse,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  Typography,
+  TextField,
+  InputAdornment,
+} from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
@@ -33,17 +46,30 @@ const MAX_SHORTCUT_RECENTS = 6;
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    title: 'PÚBLICO',
+    title: 'CREAR',
     items: [
       { label: 'Inicio', path: '/inicio' },
-      { label: 'Tienda', path: '/marketplace' },
-      { label: 'Comunidad', path: '/fans' },
-      { label: 'Lanzamientos', path: '/records' },
+      { label: 'Calendario', path: '/estudio/calendario' },
+      { label: 'Salas y recursos', path: '/estudio/salas' },
+      { label: 'Órdenes estudio', path: '/estudio/ordenes' },
+      { label: 'Servicios', path: '/estudio/servicios' },
+      { label: 'Pipelines', path: '/estudio/pipelines' },
+      { label: 'Sesiones en vivo', path: '/estudio/live-sessions' },
+      { label: 'Reportes', path: '/estudio/reportes' },
+      { label: 'Profesores', path: '/escuela/profesores' },
+      { label: 'Clases', path: '/escuela/clases' },
+      { label: 'Clases de prueba', path: '/escuela/trial-lessons' },
+      { label: 'Solicitudes de prueba', path: '/escuela/trial-queue' },
+      { label: 'Portal del profesor', path: '/mi-profesor' },
+      { label: 'Panel de pasantes', path: '/practicas' },
     ],
   },
   {
-    title: 'CRM',
+    title: 'GENTE',
     items: [
+      { label: 'Comunidad', path: '/fans' },
+      { label: 'Tienda', path: '/marketplace' },
+      { label: 'Lanzamientos', path: '/records' },
       { label: 'Conexiones', path: '/social' },
       { label: 'Instagram', path: '/social/instagram' },
       { label: 'Chat', path: '/chat' },
@@ -52,34 +78,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Contactos', path: '/crm/contactos' },
       { label: 'Empresas', path: '/crm/empresas' },
       { label: 'Leads', path: '/crm/leads' },
-    ],
-  },
-  {
-    title: 'ESTUDIO',
-    items: [
-      { label: 'Calendario', path: '/estudio/calendario' },
-      { label: 'Salas y recursos', path: '/estudio/salas' },
-      { label: 'Órdenes', path: '/estudio/ordenes' },
-      { label: 'Servicios', path: '/estudio/servicios' },
-      { label: 'Pipelines', path: '/estudio/pipelines' },
-      { label: 'Sesiones en vivo', path: '/estudio/live-sessions' },
-      { label: 'Reportes', path: '/estudio/reportes' },
-    ],
-  },
-  {
-    title: 'ESCUELA',
-    items: [
-      { label: 'Portal del profesor', path: '/mi-profesor' },
-      { label: 'Profesores', path: '/escuela/profesores' },
-      { label: 'Clases', path: '/escuela/clases' },
-      { label: 'Clases de prueba', path: '/escuela/trial-lessons' },
-      { label: 'Solicitudes de prueba', path: '/escuela/trial-queue' },
-    ],
-  },
-  {
-    title: 'PRÁCTICAS',
-    items: [
-      { label: 'Panel de pasantes', path: '/practicas' },
     ],
   },
   {
@@ -93,15 +91,16 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'OPERACIÓN',
+    title: 'OPERAR',
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
       { label: 'Órdenes tienda', path: '/operacion/ordenes-marketplace' },
       { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
+      { label: 'Pagos', path: '/finanzas/pagos' },
     ],
   },
   {
-    title: 'CONFIGURACIÓN',
+    title: 'ADMIN',
     items: [
       { label: COURSE_REGISTRATIONS_NAV_LABEL, path: '/configuracion/inscripciones-curso' },
       { label: 'Cursos', path: '/configuracion/cursos' },
@@ -116,21 +115,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'WhatsApp consentimiento', path: '/configuracion/whatsapp-consentimiento' },
       { label: 'Opciones UX', path: '/configuracion/opciones-ux' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
-    ],
-  },
-  {
-    title: 'FINANZAS',
-    items: [
-      { label: 'Pagos', path: '/finanzas/pagos' },
-    ],
-  },
-  {
-    title: 'RECURSOS',
-    items: [
       { label: 'Manual', path: '/manual' },
       { label: 'Documentación', path: '/docs' },
       { label: 'Acerca de', path: '/acerca' },
-      { label: 'Donar', path: '/donar' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
       { label: 'ChatKit', path: '/herramientas/chatkit' },
@@ -269,7 +256,6 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => ensureExpandedDefaults(allowedNavGroups));
 
-  // Keep active group expanded when route or available groups change.
   useEffect(() => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
@@ -357,9 +343,10 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       sx={{
         width: open ? 260 : 0,
         transition: 'width 0.3s ease',
-        bgcolor: '#10131b',
-        color: '#f8fafc',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        borderRight: '1px solid',
+        borderColor: 'divider',
         overflowX: 'hidden',
         overflowY: 'hidden',
         display: { xs: open ? 'flex' : 'none', lg: 'flex' },
@@ -373,8 +360,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         flexDirection: 'column',
       }}
     >
-      <Stack spacing={2} sx={{ px: 3, pt: 4, pb: 3, flexShrink: 0 }}>
-        <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.6)', letterSpacing: 2 }}>
+      <Stack spacing={2} sx={{ px: 2.5, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 2 }}>
           MENÚ
         </Typography>
         <TextField
@@ -415,7 +402,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'rgba(248,250,252,0.55)' }} />
+                <SearchIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
               </InputAdornment>
             ),
             endAdornment: filter ? (
@@ -424,25 +411,27 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                   size="small"
                   aria-label="Limpiar búsqueda"
                   onClick={() => setFilter('')}
-                  sx={{ color: 'rgba(248,250,252,0.7)' }}
+                  sx={{ color: 'text.secondary' }}
                 >
                   <ClearIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
             ) : null,
             sx: {
-              '& input': { color: '#e2e8f0' },
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.08)' },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.16)' },
+              bgcolor: 'action.hover',
+              borderRadius: 2,
+              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { border: 'none' },
             },
           }}
         />
       </Stack>
-      <List disablePadding sx={{ flex: 1, overflowY: 'auto', pr: 1 }}>
+      <List disablePadding sx={{ flex: 1, overflowY: 'auto', px: 1.5 }}>
         {!filter.trim() && shortcutItems.length > 0 && (
-          <Box sx={{ px: 1, pb: 1.5 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
-              <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.55)', letterSpacing: 1 }}>
+          <Box sx={{ pb: 1.5 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
+              <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
                 ATAJOS
               </Typography>
             </Stack>
@@ -462,15 +451,14 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     selected={active}
                     aria-current={active ? 'page' : undefined}
                     sx={{
-                      borderRadius: 2,
-                      mx: 1.5,
+                      borderRadius: 1.5,
                       mb: index === shortcutItems.length - 1 ? 0 : 0.5,
-                      bgcolor: active ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.03)',
-                      color: active ? '#ffffff' : 'rgba(248,250,252,0.88)',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                      bgcolor: active ? 'action.selected' : 'transparent',
+                      color: active ? 'primary.main' : 'text.primary',
+                      '&:hover': { bgcolor: 'action.hover' },
                     }}
                   >
-                    <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5 }} />
+                    <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: active ? 'primary.main' : 'text.disabled' }} />
                     <ListItemText
                       primary={unreadBadge > 0 ? (
                         <Badge
@@ -482,8 +470,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         </Badge>
                       ) : item.label}
                       secondary={recentPathSet.has(item.path) ? `Reciente · ${item.group}` : item.group}
-                      primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
-                      secondaryTypographyProps={{ fontSize: 11, color: 'rgba(226,232,240,0.72)' }}
+                      primaryTypographyProps={{ fontSize: 13, fontWeight: 600 }}
+                      secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
                     />
                   </ListItemButton>
                 );
@@ -492,7 +480,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           </Box>
         )}
         {filteredNavGroups.length === 0 && (
-          <Typography variant="body2" sx={{ px: 3, py: 1.5, color: 'rgba(248,250,252,0.6)' }}>
+          <Typography variant="body2" sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
             Sin coincidencias.
           </Typography>
         )}
@@ -500,9 +488,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           const isSearching = filter.trim().length > 0;
           const isExpanded = isSearching || expandedGroups.has(group.title) || group.restricted;
           return (
-            <Box key={group.title} sx={{ px: 1 }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
-                <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.55)', letterSpacing: 1 }}>
+            <Box key={group.title}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
                   {group.title}
                 </Typography>
                 {group.items.length > 1 && (
@@ -511,7 +499,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     aria-label={`Mostrar u ocultar ${group.title}`}
                     aria-expanded={isExpanded}
                     onClick={() => toggleGroup(group.title)}
-                    sx={{ color: 'rgba(248,250,252,0.6)' }}
+                    sx={{ color: 'text.secondary' }}
                   >
                     {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                   </IconButton>
@@ -535,7 +523,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                       return (
                         <span>
                           {before}
-                          <span style={{ color: '#93c5fd', fontWeight: 700 }}>{match}</span>
+                          <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>{match}</Box>
                           {after}
                         </span>
                       );
@@ -552,22 +540,17 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                         selected={hot || (!filter.trim() && active)}
                         aria-current={active ? 'page' : undefined}
                         sx={{
-                          borderRadius: 2,
-                          mx: 1.5,
+                          borderRadius: 1.5,
                           mb: 0.5,
-                          color: active ? '#ffffff' : 'rgba(248,250,252,0.6)',
-                          bgcolor: hot
-                            ? 'rgba(148, 163, 184, 0.12)'
-                            : active
-                              ? 'rgba(59,130,246,0.2)'
-                              : 'transparent',
-                          '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' },
+                          color: active ? 'primary.main' : 'text.primary',
+                          bgcolor: hot ? 'action.hover' : active ? 'action.selected' : 'transparent',
+                          '&:hover': { bgcolor: 'action.hover' },
                         }}
                       >
-                        <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5 }} />
+                        <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: active ? 'primary.main' : 'text.disabled' }} />
                         <ListItemText
-                          primaryTypographyProps={{ fontSize: 14 }}
-                          secondaryTypographyProps={{ fontSize: 11, color: 'rgba(226,232,240,0.75)' }}
+                          primaryTypographyProps={{ fontSize: 13 }}
+                          secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
                           primary={(
                             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
                               <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -597,20 +580,20 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
                     );
                   })}
                   {group.items.length === 0 && group.restricted && (
-                  <Stack spacing={1} sx={{ px: 3, py: 1.5 }}>
-                    <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.65)' }}>
-                      No tienes acceso a esta sección.
-                    </Typography>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      sx={{ color: '#cbd5e1', borderColor: 'rgba(248,250,252,0.3)', alignSelf: 'flex-start' }}
-                      href={buildAccessMailto(group)}
-                    >
-                      Solicitar acceso
-                    </Button>
-                  </Stack>
-                )}
+                    <Stack spacing={1} sx={{ px: 2, py: 1.5 }}>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        No tienes acceso a esta sección.
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        sx={{ alignSelf: 'flex-start' }}
+                        href={buildAccessMailto(group)}
+                      >
+                        Solicitar acceso
+                      </Button>
+                    </Stack>
+                  )}
                 </List>
               </Collapse>
             </Box>
