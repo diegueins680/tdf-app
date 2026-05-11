@@ -132,3 +132,13 @@ FINAL_STATUS: done — committed dirty worktree (25694f50f), Lane C supervisor a
 - **Systems lane:** `PAUSED` per standing CEO directive; `objectives/tdf-label-systems.md` unchanged. No resume warranted.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live with launchd durability, binary rebuild 1 of 2 resolved, no new repair needed.
+
+## 2026-05-11 23:43 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end (Platform rebuilt backend 22:00 UTC, Release verified 22:20 UTC). Post-login 403 RESOLVED and seed-fixed. Google OAuth backend READY (`GOOGLE_CLIENT_ID` configured, `/login/google` returns 401 for invalid tokens = alive). Google OAuth frontend e2e still unproven; blocked on `LOGIN_TESTID_NOT_VISIBLE` (Detox, owner: tdf-label-platform) and `MAESTRO_JAVA_MISSING` (Maestro, owner: operator). No new evidence since 22:20 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Packet A complete.
+- **Lane C:** `live` — supervisor PID 1077 under launchd (PPID 1). Child PID 94846 running, heartbeat 23:44:07Z, lastExitCode 0, lastIterationResult ok. `lastError` stale from dirty-worktree incident; bounded repair performed this run: committed 2 dirty tracked files (`tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx`, `tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx`) as `b8f754e1e`. Launchd durability contract intact. Loop no longer blocked on worktree cleanliness.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend Google OAuth ready, Packet B gated, Lane C live with launchd durability and active child, dirty-worktree blocker repaired (commit b8f754e1e)
