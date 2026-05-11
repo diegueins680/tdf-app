@@ -891,3 +891,108 @@ CREATE INDEX idx_proposal_version_proposal ON proposal_version(proposal_id);
 -- ============================================================================
 -- END OF SCHEMA
 -- ============================================================================
+
+-- ============================================================================
+-- FAN CLUBS
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS fan_club (
+    id              BIGSERIAL PRIMARY KEY,
+    artist_party_id BIGINT NOT NULL UNIQUE REFERENCES party(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    description     TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_fan_club_artist ON fan_club(artist_party_id);
+
+CREATE TABLE IF NOT EXISTS fan_club_officer (
+    id            BIGSERIAL PRIMARY KEY,
+    club_id       BIGINT NOT NULL REFERENCES fan_club(id) ON DELETE CASCADE,
+    fan_party_id  BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
+    role          TEXT NOT NULL,
+    elected_at    TIMESTAMPTZ,
+    term_ends_at  TIMESTAMPTZ,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT unique_club_officer_role UNIQUE (club_id, role)
+);
+
+CREATE INDEX idx_fan_club_officer_club ON fan_club_officer(club_id);
+CREATE INDEX idx_fan_club_officer_fan ON fan_club_officer(fan_party_id);
+
+CREATE TABLE IF NOT EXISTS fan_club_election (
+    id                   BIGSERIAL PRIMARY KEY,
+    club_id              BIGINT NOT NULL REFERENCES fan_club(id) ON DELETE CASCADE,
+    year                 INT NOT NULL,
+    candidacy_starts_at  TIMESTAMPTZ,
+    candidacy_ends_at    TIMESTAMPTZ,
+    voting_starts_at     TIMESTAMPTZ,
+    voting_ends_at       TIMESTAMPTZ,
+    status               TEXT NOT NULL DEFAULT 'upcoming',
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT unique_club_election_year UNIQUE (club_id, year)
+);
+
+CREATE INDEX idx_fan_club_election_club ON fan_club_election(club_id);
+
+CREATE TABLE IF NOT EXISTS fan_club_candidacy (
+    id            BIGSERIAL PRIMARY KEY,
+    election_id   BIGINT NOT NULL REFERENCES fan_club_election(id) ON DELETE CASCADE,
+    fan_party_id  BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
+    role          TEXT NOT NULL,
+    manifesto     TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT unique_candidacy_per_role UNIQUE (election_id, fan_party_id, role)
+);
+
+CREATE INDEX idx_fan_club_candidacy_election ON fan_club_candidacy(election_id);
+
+CREATE TABLE IF NOT EXISTS fan_club_vote (
+    id            BIGSERIAL PRIMARY KEY,
+    election_id   BIGINT NOT NULL REFERENCES fan_club_election(id) ON DELETE CASCADE,
+    fan_party_id  BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
+    candidacy_id  BIGINT NOT NULL REFERENCES fan_club_candidacy(id) ON DELETE CASCADE,
+    role          TEXT NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT unique_fan_vote_per_role UNIQUE (election_id, fan_party_id, role)
+);
+
+CREATE INDEX idx_fan_club_vote_election ON fan_club_vote(election_id);
+CREATE INDEX idx_fan_club_vote_candidacy ON fan_club_vote(candidacy_id);
+
+CREATE TABLE IF NOT EXISTS fan_club_post (
+    id             BIGSERIAL PRIMARY KEY,
+    club_id        BIGINT NOT NULL REFERENCES fan_club(id) ON DELETE CASCADE,
+    fan_party_id   BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
+    parent_id      BIGINT REFERENCES fan_club_post(id) ON DELETE CASCADE,
+    title          TEXT,
+    content        TEXT NOT NULL,
+    is_pinned      BOOLEAN NOT NULL DEFAULT FALSE,
+    is_hidden      BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ
+);
+
+CREATE INDEX idx_fan_club_post_club ON fan_club_post(club_id);
+CREATE INDEX idx_fan_club_post_parent ON fan_club_post(parent_id);
+CREATE INDEX idx_fan_club_post_pinned ON fan_club_post(club_id, is_pinned) WHERE is_pinned = TRUE;
+
+CREATE TABLE IF NOT EXISTS fan_club_event (
+    id                  BIGSERIAL PRIMARY KEY,
+    club_id             BIGINT NOT NULL REFERENCES fan_club(id) ON DELETE CASCADE,
+    title               TEXT NOT NULL,
+    description         TEXT,
+    starts_at           TIMESTAMPTZ,
+    ends_at             TIMESTAMPTZ,
+    location            TEXT,
+    is_artist_concert   BOOLEAN NOT NULL DEFAULT FALSE,
+    created_by_party_id BIGINT REFERENCES party(id) ON DELETE SET NULL,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_fan_club_event_club ON fan_club_event(club_id);
+CREATE INDEX idx_fan_club_event_time ON fan_club_event(starts_at, ends_at);
+
+-- ============================================================================
+-- END OF FAN CLUBS SCHEMA
+-- ============================================================================

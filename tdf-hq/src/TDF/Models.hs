@@ -103,6 +103,14 @@ data StockTxnReason = Purchase | Consumption | Adjustment | Return | Transfer
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
 derivePersistField "StockTxnReason"
 
+data FanClubOfficerRole = President | VicePresident | Secretary | Treasurer | Coordinator
+  deriving (Show, Read, Eq, Enum, Bounded, Generic)
+derivePersistField "FanClubOfficerRole"
+
+data ElectionStatus = Upcoming | CandidacyOpen | VotingOpen | Closed
+  deriving (Show, Read, Eq, Enum, Bounded, Generic)
+derivePersistField "ElectionStatus"
+
 -- Provide JSON instances for enums (via Generic)
 instance ToJSON ServiceKind
 instance FromJSON ServiceKind
@@ -210,6 +218,10 @@ roleFromText raw =
     _              -> Nothing
 instance ToJSON StockTxnReason
 instance FromJSON StockTxnReason
+instance ToJSON FanClubOfficerRole
+instance FromJSON FanClubOfficerRole
+instance ToJSON ElectionStatus
+instance FromJSON ElectionStatus
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 ApiToken
@@ -683,5 +695,77 @@ RadioStream
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueRadioStreamUrl streamUrl
+    deriving Show Generic
+
+FanClub
+    artistPartyId  PartyId
+    name           Text
+    description    Text Maybe
+    createdAt      UTCTime default=now()
+    UniqueFanClubArtist artistPartyId
+    deriving Show Generic
+
+FanClubOfficer
+    clubId         FanClubId
+    fanPartyId     PartyId
+    role           FanClubOfficerRole
+    electedAt      UTCTime Maybe
+    termEndsAt     UTCTime Maybe
+    createdAt      UTCTime default=now()
+    UniqueFanClubOfficer clubId role
+    deriving Show Generic
+
+FanClubElection
+    clubId            FanClubId
+    year              Int
+    candidacyStartsAt UTCTime Maybe
+    candidacyEndsAt   UTCTime Maybe
+    votingStartsAt    UTCTime Maybe
+    votingEndsAt      UTCTime Maybe
+    status            ElectionStatus
+    createdAt         UTCTime default=now()
+    UniqueFanClubElection clubId year
+    deriving Show Generic
+
+FanClubCandidacy
+    electionId   FanClubElectionId
+    fanPartyId   PartyId
+    role         FanClubOfficerRole
+    manifesto    Text Maybe
+    createdAt    UTCTime default=now()
+    UniqueFanClubCandidacy electionId fanPartyId role
+    deriving Show Generic
+
+FanClubVote
+    electionId   FanClubElectionId
+    fanPartyId   PartyId
+    candidacyId  FanClubCandidacyId
+    role         FanClubOfficerRole
+    createdAt    UTCTime default=now()
+    UniqueFanClubVote electionId fanPartyId role
+    deriving Show Generic
+
+FanClubPost
+    clubId       FanClubId
+    fanPartyId   PartyId
+    parentId     FanClubPostId Maybe
+    title        Text Maybe
+    content      Text
+    isPinned     Bool default=False
+    isHidden     Bool default=False
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime Maybe
+    deriving Show Generic
+
+FanClubEvent
+    clubId            FanClubId
+    title             Text
+    description       Text Maybe
+    startsAt          UTCTime Maybe
+    endsAt            UTCTime Maybe
+    location          Text Maybe
+    isArtistConcert   Bool default=False
+    createdByPartyId  PartyId Maybe
+    createdAt         UTCTime default=now()
     deriving Show Generic
 |]
