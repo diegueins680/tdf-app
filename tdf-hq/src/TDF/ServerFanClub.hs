@@ -322,24 +322,25 @@ fanClubSecureArtistHandlers user artistId =
                 , fceMyVotes = []
                 }
 
-    createCandidacy aId electionId req = runDB $ do
+    createCandidacy aId electionId req = do
       let eid = toSqlKey electionId :: FanClubElectionId
-      mElection <- get eid
+      mElection <- runDB $ get eid
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
         Just _ -> do
-          now <- liftIO getCurrentTime
-          let role = parseOfficerRole (fccrRole req)
-          mCid <- insertUnique FanClubCandidacy
-            { fanClubCandidacyElectionId = eid
-            , fanClubCandidacyFanPartyId = auPartyId user
-            , fanClubCandidacyRole = role
-            , fanClubCandidacyManifesto = fccrManifesto req
-            , fanClubCandidacyCreatedAt = now
-            }
+          mCid <- runDB $ do
+            now <- liftIO getCurrentTime
+            let role = parseOfficerRole (fccrRole req)
+            insertUnique FanClubCandidacy
+              { fanClubCandidacyElectionId = eid
+              , fanClubCandidacyFanPartyId = auPartyId user
+              , fanClubCandidacyRole = role
+              , fanClubCandidacyManifesto = fccrManifesto req
+              , fanClubCandidacyCreatedAt = now
+              }
           case mCid of
             Nothing -> throwError err400 { errBody = "Ya estás postulado para este cargo" }
-            Just cid' -> do
+            Just cid' -> runDB $ do
               author <- getAuthorDTO (auPartyId user)
               pure $ FanClubCandidacyDTO
                 { fccCandidacyId = fromSqlKey cid'
@@ -351,26 +352,27 @@ fanClubSecureArtistHandlers user artistId =
                 , fccVoteCount = 0
                 }
 
-    castVote aId electionId req = runDB $ do
+    castVote aId electionId req = do
       let eid = toSqlKey electionId :: FanClubElectionId
-      mElection <- get eid
+      mElection <- runDB $ get eid
       case mElection of
         Nothing -> throwError err404 { errBody = "Elección no encontrada" }
         Just _ -> do
-          now <- liftIO getCurrentTime
-          forM_ (fcvCandidacyIds req) $ \candId -> do
-            let cKey = toSqlKey candId :: FanClubCandidacyId
-            mCand <- get cKey
-            case mCand of
-              Nothing -> pure ()
-              Just (Entity _ cand) -> do
-                void $ insertUnique FanClubVote
-                  { fanClubVoteElectionId = eid
-                  , fanClubVoteFanPartyId = auPartyId user
-                  , fanClubVoteCandidacyId = cKey
-                  , fanClubVoteRole = fanClubCandidacyRole cand
-                  , fanClubVoteCreatedAt = now
-                  }
+          runDB $ do
+            now <- liftIO getCurrentTime
+            forM_ (fcvCandidacyIds req) $ \candId -> do
+              let cKey = toSqlKey candId :: FanClubCandidacyId
+              mCand <- get cKey
+              case mCand of
+                Nothing -> pure ()
+                Just cand -> do
+                  void $ insertUnique FanClubVote
+                    { fanClubVoteElectionId = eid
+                    , fanClubVoteFanPartyId = auPartyId user
+                    , fanClubVoteCandidacyId = cKey
+                    , fanClubVoteRole = fanClubCandidacyRole cand
+                    , fanClubVoteCreatedAt = now
+                    }
           pure NoContent
 
 -- ============================================================================
