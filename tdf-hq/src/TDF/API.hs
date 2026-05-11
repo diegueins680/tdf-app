@@ -320,6 +320,8 @@ type FanPublicAPI =
        "artists" :> Get '[JSON] [ArtistProfileDTO]
   :<|> "artists" :> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
   :<|> "artists" :> Capture "artistId" Int64 :> "releases" :> Get '[JSON] [ArtistReleaseDTO]
+  :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
+  :<|> "clubs" :> Capture "artistId" Int64 :> "events" :> Get '[JSON] [FanClubEventDTO]
 
 type RadioPublicAPI =
        "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
@@ -339,6 +341,22 @@ type FanSecureAPI =
   :<|> "me" :> "artist-profile" :>
          ( Get '[JSON] ArtistProfileDTO
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
+         )
+  :<|> "me" :> "clubs" :> Get '[JSON] [FanClubDTO]
+  :<|> "me" :> "clubs" :> Capture "artistId" Int64 :>
+         ( Get '[JSON] FanClubDTO
+      :<|> "posts" :> Get '[JSON] [FanClubPostDTO]
+      :<|> "posts" :> ReqBody '[JSON] FanClubCreatePostReq :> Post '[JSON] FanClubPostDTO
+      :<|> "posts" :> Capture "postId" Int64 :> "pin" :> Post '[JSON] NoContent
+      :<|> "posts" :> Capture "postId" Int64 :> "unpin" :> Post '[JSON] NoContent
+      :<|> "posts" :> Capture "postId" Int64 :> "hide" :> Post '[JSON] NoContent
+      :<|> "posts" :> Capture "postId" Int64 :> "unhide" :> Post '[JSON] NoContent
+      :<|> "events" :> Get '[JSON] [FanClubEventDTO]
+      :<|> "events" :> ReqBody '[JSON] FanClubCreateEventReq :> Post '[JSON] FanClubEventDTO
+      :<|> "elections" :> Get '[JSON] [FanClubElectionDTO]
+      :<|> "elections" :> ReqBody '[JSON] FanClubCreateElectionReq :> Post '[JSON] FanClubElectionDTO
+      :<|> "elections" :> Capture "electionId" Int64 :> "candidacy" :> ReqBody '[JSON] FanClubCreateCandidacyReq :> Post '[JSON] FanClubCandidacyDTO
+      :<|> "elections" :> Capture "electionId" Int64 :> "vote" :> ReqBody '[JSON] FanClubVoteReq :> Post '[JSON] NoContent
          )
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
