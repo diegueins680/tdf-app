@@ -131,7 +131,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
-import           TDF.ServerFanClub (fanClubPublicServer, fanClubSecureServer)
+import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers)
 import           TDF.Trials.API (TrialsAPI)
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl, trialsServer)
 import qualified TDF.Trials.Models as Trials

@@ -480,5 +480,5 @@ checkIsOfficer artistId fanId = do
     Nothing -> pure False
     Just (Entity cid _) -> do
       mOfficer <- selectFirst
-        [fanClubOfficerClubId ==. cid, fanClubOfficerFanPartyId ==. fanId] []
+        [M.FanClubOfficerClubId ==. cid, M.FanClubOfficerFanPartyId ==. fanId] []
       pure (isJust mOfficer)
