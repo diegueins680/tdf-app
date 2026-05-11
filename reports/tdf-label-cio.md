@@ -74,3 +74,13 @@
 - **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff, no new repair needed.
+
+## 2026-05-11 01:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end (Release 04:28 UTC). Google OAuth STARTS but completion blocked by `BACKEND_GOOGLE_CLIENT_ID_MISSING` (env added, backend restart pending) and `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (simulator automation limitation). Post-login 403 pending investigation. No new evidence since 22:27 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths + 403 resolved). No motion until Packet A complete.
+- **Lane C:** `SUPERVISED, BACKING OFF` — supervisor PID 27163 alive under launchd (PPID 1, launchctl listed `ai.openclaw.tdf-app.continuous-improvement-loop`). Child exited 01:34:40Z (restartCount: 4, lastExitCode: 1, lastError: Codex API usage limit, resets ~May 11 17:36 UTC); restart delay 3600s, next restart ~02:34 UTC. Bounded repair from prior run (3600s backoff) remains effective. No new repair possible for external API limit. Supervisor durability contract is intact.
+- **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
+- **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supervised with hourly retry backoff, no new repair needed.
