@@ -6850,6 +6850,10 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldReturn` Nothing
             resolveMarketplacePhotoUrl "https://assets.example.com/static" (Just "javascript:alert(1)")
                 `shouldReturn` Nothing
+            resolveMarketplacePhotoUrl
+                "https://assets.example.com/static"
+                (Just "https://cdn.example.com/moog.jpg#preview")
+                `shouldReturn` Nothing
 
     describe "marketplace order list pagination validation" $ do
         it "keeps marketplace order defaults only when the caller omits pagination" $ do

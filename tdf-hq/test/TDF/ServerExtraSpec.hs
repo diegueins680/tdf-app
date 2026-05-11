@@ -1074,10 +1074,13 @@ spec = do
         `shouldBe` Right (Just "inventory/roland-juno.jpg")
 
     it "rejects malformed or unsupported asset photo inputs instead of storing opaque strings" $ do
-      let assertInvalid result = case result of
+      let expectedMessage =
+            "photoUrl must be an absolute https URL without a fragment "
+              <> "or an inventory asset path"
+          assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid asset photo URL error, got " <> show value)
       assertInvalid (validateAssetPhotoUrl (Just "roland-juno.jpg"))
@@ -1085,6 +1088,8 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://cdn/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
+      assertInvalid
+        (validateAssetPhotoUrl (Just "https://cdn.example.com/roland.jpg#preview"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/.hidden.jpg"))
@@ -1102,14 +1107,19 @@ spec = do
         `shouldBe` Right (Just (Just "inventory/roland-juno.jpg"))
 
     it "rejects malformed explicit photo updates instead of silently ignoring them" $ do
-      let assertInvalid result = case result of
+      let expectedMessage =
+            "photoUrl must be an absolute https URL without a fragment "
+              <> "or an inventory asset path"
+          assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid asset photo update error, got " <> show value)
       assertInvalid (validateAssetPhotoUrlUpdate (Just "roland-juno.jpg"))
       assertInvalid (validateAssetPhotoUrlUpdate (Just "ftp://cdn.example.com/roland.jpg"))
+      assertInvalid
+        (validateAssetPhotoUrlUpdate (Just "https://cdn.example.com/roland.jpg#preview"))
       assertInvalid (validateAssetPhotoUrlUpdate (Just "inventory/manual.pdf"))
 
   describe "normalizeAssetNotesUpdate" $ do

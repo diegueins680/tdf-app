@@ -2289,12 +2289,15 @@ validateAssetPhotoUrl (Just rawUrl) =
     Nothing -> Right Nothing
     Just trimmedUrl
       | "https://" `T.isPrefixOf` T.toLower trimmedUrl
-          && TrialsServer.isValidHttpUrl trimmedUrl ->
+          && TrialsServer.isValidHttpUrl trimmedUrl
+          && not ("#" `T.isInfixOf` trimmedUrl) ->
           Right (Just trimmedUrl)
       | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
       | otherwise ->
           Left err400
-            { errBody = "photoUrl must be an absolute https URL or an inventory asset path"
+            { errBody =
+                "photoUrl must be an absolute https URL without a fragment "
+                  <> "or an inventory asset path"
             }
 
 validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
