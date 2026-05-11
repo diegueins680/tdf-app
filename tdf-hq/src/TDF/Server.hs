@@ -131,6 +131,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
+import           TDF.ServerFanClub (fanClubPublicServer, fanClubSecureServer)
 import           TDF.Trials.API (TrialsAPI)
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl, trialsServer)
 import qualified TDF.Trials.Models as Trials
@@ -742,6 +743,8 @@ fanPublicServer =
        listFanArtists
   :<|> fanArtistProfile
   :<|> fanArtistReleases
+  :<|> getPublicClub
+  :<|> getPublicClubEvents
   where
     listFanArtists :: AppM [ArtistProfileDTO]
     listFanArtists = do
@@ -762,6 +765,9 @@ fanPublicServer =
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
         pure (map toArtistReleaseDTO releases)
+
+    getPublicClub = fanClubPublicServerGetClub
+    getPublicClubEvents = fanClubPublicServerGetEvents
 
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
@@ -1948,6 +1954,8 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
+  :<|> fanClubSecureServerListMyClubs user
+  :<|> fanClubSecureServerArtist user
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =
