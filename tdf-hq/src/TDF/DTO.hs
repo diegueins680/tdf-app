@@ -821,9 +821,9 @@ data FanClubVoteDTO = FanClubVoteDTO
 instance ToJSON FanClubVoteDTO
 
 data FanClubCreatePostReq = FanClubCreatePostReq
-  { fcpTitle   :: Maybe Text
-  , fcpContent :: Text
-  , fcpParentId :: Maybe Int64
+  { fcpReqTitle   :: Maybe Text
+  , fcpReqContent :: Text
+  , fcpReqParentId :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON FanClubCreatePostReq where
   parseJSON = genericParseJSON strictDecodeOptions

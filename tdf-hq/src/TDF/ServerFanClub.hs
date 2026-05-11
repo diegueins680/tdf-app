@@ -179,13 +179,13 @@ fanClubSecureArtistHandlers user artistId =
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
           now <- liftIO getCurrentTime
-          let parentKey = fmap toSqlKey (DTO.fcpParentId req)
+          let parentKey = fmap toSqlKey (fcpReqParentId req)
           pid <- insert FanClubPost
             { fanClubPostClubId = cid
             , fanClubPostFanPartyId = auPartyId user
             , fanClubPostParentId = parentKey
-            , fanClubPostTitle = DTO.fcpTitle req
-            , fanClubPostContent = DTO.fcpContent req
+            , fanClubPostTitle = fcpReqTitle req
+            , fanClubPostContent = fcpReqContent req
             , fanClubPostIsPinned = False
             , fanClubPostIsHidden = False
             , fanClubPostCreatedAt = now
@@ -193,7 +193,7 @@ fanClubSecureArtistHandlers user artistId =
             }
           author <- getAuthorDTO (auPartyId user)
           pure $ postToDTO pid
-            (FanClubPost cid (auPartyId user) parentKey (DTO.fcpTitle req) (DTO.fcpContent req) False False now Nothing)
+            (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) False False now Nothing)
             0 author
 
     pinPost aId postId = runDB $ do
