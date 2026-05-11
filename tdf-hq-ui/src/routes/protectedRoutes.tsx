@@ -21,6 +21,7 @@ const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
+const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const InstagramConnectPage = lazy(() => import('../pages/InstagramConnectPage'));
 const InternshipsPage = lazy(() => import('../pages/InternshipsPage'));
 const InventoryPage = lazy(() => import('../pages/InventoryPage'));
@@ -85,6 +86,7 @@ export function renderProtectedRoutes() {
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/fans/clubs/:artistId" element={<FanClubPage />} />
         <Route path="/practicas" element={<InternshipsPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />

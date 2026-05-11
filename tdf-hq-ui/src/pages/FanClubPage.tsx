@@ -55,7 +55,7 @@ export default function FanClubPage() {
   });
 
   const club = clubQuery.data;
-  const isOfficer = club?.fcOfficers.some(o => o.fcoPartyId === session?.sessionPartyId) ?? false;
+  const isOfficer = club?.fcOfficers.some(o => o.fcoPartyId === session?.partyId) ?? false;
 
   return (
     <PageShell
@@ -173,12 +173,20 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                 {isOfficer && (
                   <>
                     <Tooltip title={post.fcpIsPinned ? 'Desfijar' : 'Fijar'}>
-                      <IconButton size="small" onClick={() => pinMut.mutate({ postId: post.fcpId, pin: !post.fcpIsPinned })}>
+                      <IconButton
+                        size="small"
+                        aria-label={post.fcpIsPinned ? 'Desfijar post' : 'Fijar post'}
+                        onClick={() => pinMut.mutate({ postId: post.fcpId, pin: !post.fcpIsPinned })}
+                      >
                         {post.fcpIsPinned ? <PushPinOutlinedIcon fontSize="small" /> : <PushPinIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title={post.fcpIsHidden ? 'Mostrar' : 'Ocultar'}>
-                      <IconButton size="small" onClick={() => hideMut.mutate({ postId: post.fcpId, hide: !post.fcpIsHidden })}>
+                      <IconButton
+                        size="small"
+                        aria-label={post.fcpIsHidden ? 'Mostrar post' : 'Ocultar post'}
+                        onClick={() => hideMut.mutate({ postId: post.fcpId, hide: !post.fcpIsHidden })}
+                      >
                         {post.fcpIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
@@ -252,7 +260,7 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
 
       <Grid container spacing={2}>
         {events.map(ev => (
-          <Grid size={{ xs: 12, md: 6 }} key={ev.fceId}>
+          <Grid item xs={12} md={6} key={ev.fceId}>
             <Card>
               <CardContent>
                 <Stack spacing={1}>
