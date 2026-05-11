@@ -217,12 +217,13 @@ seedAll = do
 
     seedCoreStaffRoles allowSeededCredentials now
 
-    -- Ensure tdf-owner test account has Fan and Customer roles in addition to Manager
+    -- Ensure tdf-owner test account has Manager, Fan and Customer roles
     when allowSeededCredentials $ do
         mTdfOwnerCred <- getBy (UniqueCredentialUsername "tdf-owner")
         case mTdfOwnerCred of
             Just (Entity _ cred) -> do
                 let tdfPid = userCredentialPartyId cred
+                _ <- upsert (PartyRole tdfPid Manager True) [PartyRoleActive =. True]
                 _ <- upsert (PartyRole tdfPid Fan True) [PartyRoleActive =. True]
                 _ <- upsert (PartyRole tdfPid Customer True) [PartyRoleActive =. True]
                 pure ()

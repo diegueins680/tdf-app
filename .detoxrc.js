@@ -13,7 +13,7 @@ module.exports = {
     'ios.debug': {
       type: 'ios.app',
       binaryPath: '/tmp/TDFRecords-derived/Build/Products/Debug-iphonesimulator/TDFRecords.app',
-      build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Debug -sdk iphonesimulator -derivedDataPath /tmp/TDFRecords-derived',
+      build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Debug -sdk iphonesimulator -derivedDataPath /tmp/TDFRecords-derived -jobs 1',
     },
   },
   devices: {
@@ -21,7 +21,7 @@ module.exports = {
       type: 'ios.simulator',
       device: {
         type: 'iPhone 16',
-        udid: '3C3D5759-6E10-480D-B768-2747B9B0D02A',
+        udid: '8DB9DCE0-2F80-49C9-A614-F21DA3876B7B', // regression-verified device — do not use 3C3D5759 due to persistent URL-open dialog
       },
     },
   },
