@@ -379,7 +379,7 @@ fanClubSecureArtistHandlers user artistId =
 
 loadOfficersDTO :: FanClubId -> SqlPersistT IO [FanClubOfficerDTO]
 loadOfficersDTO cid = do
-  officers <- selectList [FanClubOfficerClubId ==. cid] [Asc FanClubOfficerRole]
+  officers <- selectList [fanClubOfficerClubId ==. cid] [Asc fanClubOfficerRole]
   forM officers $ \(Entity _ o) -> do
     mParty <- selectFirst [M.PartyId ==. fanClubOfficerFanPartyId o] []
     mProfile <- selectFirst [FanProfileFanPartyId ==. fanClubOfficerFanPartyId o] []
@@ -446,7 +446,7 @@ voteToDTO (Entity _ v) = FanClubVoteDTO
 getAuthorDTO :: PartyId -> SqlPersistT IO SocialPartyProfileDTO
 getAuthorDTO pid = do
   mParty <- selectFirst [M.PartyId ==. pid] []
-  mProfile <- selectFirst [FanProfileFanPartyId ==. pid] []
+  mProfile <- selectFirst [fanProfileFanPartyId ==. pid] []
   let name = case mParty of
         Just (Entity _ p) -> M.partyDisplayName p
         Nothing -> "Desconocido"
@@ -478,5 +478,5 @@ checkIsOfficer artistId fanId = do
     Nothing -> pure False
     Just (Entity cid _) -> do
       mOfficer <- selectFirst
-        [FanClubOfficerClubId ==. cid, FanClubOfficerFanPartyId ==. fanId] []
+        [fanClubOfficerClubId ==. cid, fanClubOfficerFanPartyId ==. fanId] []
       pure (isJust mOfficer)
