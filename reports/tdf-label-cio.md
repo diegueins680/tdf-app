@@ -93,4 +93,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supe
 - **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
 - **Next decisive action:** Platform restores API/Metro/Simulator lane; applies `GOOGLE_CLIENT_ID` env and restarts backend; Release reruns Google OAuth proof once backend fixed.
 
-FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live with launchd durability and codex-loop-worker rate-limit resilience, one bounded repair recorded.
+## 2026-05-11 08:32 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN + REGRESSION PASSED on fresh install (Release 06:21 UTC). Post-login 403 RESOLVED (Manager role added, Seed.hs updated by CTO 08:27 UTC for self-configuring deploys). Google OAuth backend FIXED (GOOGLE_CLIENT_ID set, Platform 22:31 UTC); e2e still unproven, blocked on `REAL_GOOGLE_ID_TOKEN_NEEDED` or Detox automation completion. ASWebAuthenticationSession dialog starts but cannot complete in simulator without proper UI automation.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths proven). No motion until Packet A complete.
+- **Lane C:** `LIVE` — supervisor PID 27163 alive under launchd (PPID 1, launchctl listed `ai.openclaw.tdf-app.continuous-improvement-loop`). Child exited 07:42:36Z with code 0 (graceful handling of Codex API usage limit via codex-loop-worker.sh fix); restart delay 3600s, next restart ~08:42 UTC. restartCount 10, staleRestartCount 0. Bounded repairs from prior runs (3600s backoff + worker exit 0 on rate limit) remain effective. External quota resets ~17:36 UTC. No new repair needed.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
+- **Next decisive action:** Platform completes Detox rebuild with testID and runs first passing `detox test`; Release obtains real Google ID token (OAuth Playground/operator) and POSTs to `/login/google` to prove backend path, OR defers to Detox e2e once automation is ready.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + regression passed, Packet B gated, Lane C live with launchd durability and graceful rate-limit handling, no new repair needed.

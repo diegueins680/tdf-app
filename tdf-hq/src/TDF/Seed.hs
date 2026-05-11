@@ -200,6 +200,7 @@ seedAll = do
             , ("Accounting", Nothing, Accounting, "accounting-token", "accounting", "password123")
             , ("Scheduling", Nothing, Engineer, "scheduling-token", "scheduling", "password123")
             , ("Packages", Nothing, Customer, "packages-token", "packages", "password123")
+            , ("tdf-owner", Nothing, Manager, "tdf-owner-token", "tdf-owner", "TDFowner2025!")
             ]
     if allowSeededCredentials
         then
@@ -215,6 +216,17 @@ seedAll = do
                     "Skipping static demo staff credentials/tokens in hosted or production runtime."
 
     seedCoreStaffRoles allowSeededCredentials now
+
+    -- Ensure tdf-owner test account has Fan and Customer roles in addition to Manager
+    when allowSeededCredentials $ do
+        mTdfOwnerCred <- getBy (UniqueCredentialUsername "tdf-owner")
+        case mTdfOwnerCred of
+            Just (Entity _ cred) -> do
+                let tdfPid = userCredentialPartyId cred
+                _ <- upsert (PartyRole tdfPid Fan True) [PartyRoleActive =. True]
+                _ <- upsert (PartyRole tdfPid Customer True) [PartyRoleActive =. True]
+                pure ()
+            Nothing -> pure ()
 
     -- Dropdown options for admin-managed metadata
     let dropdowns =
