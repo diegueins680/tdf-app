@@ -38,8 +38,7 @@ import           TDF.Models             (FanClub(..), FanClubOfficer(..), FanClu
                                          , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..)
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
                                          , Party(..), FanFollow(..), FanProfile(..)
-                                         , UniqueFanClubArtist, UniqueFanClubOfficer
-                                         , UniqueFanClubCandidacy, UniqueFanClubVote)
+                                         , Unique(..))
 import qualified TDF.Models             as M
 
 type AppM = ReaderT Env Handler

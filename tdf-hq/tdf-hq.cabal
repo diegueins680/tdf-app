@@ -80,6 +80,7 @@ executable tdf-hq-exe
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
+    TDF.ServerFanClub
     TDF.ServerFuture
     TDF.Routes.Courses
     TDF.Trials.API
@@ -233,6 +234,7 @@ test-suite tdf-hq-test
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
+    TDF.ServerFanClub
     TDF.ServerSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
