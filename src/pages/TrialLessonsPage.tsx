@@ -142,14 +142,23 @@ export default function TrialLessonsPage() {
   });
 
   const scheduleMutation = useMutation({
-    mutationFn: (payload: { requestId: number } & ScheduleForm) =>
-      Trials.scheduleTrial({
+    mutationFn: (payload: { requestId: number } & ScheduleForm) => {
+      const startDate = new Date(payload.startAt);
+      const endDate = new Date(payload.endAt);
+      if (Number.isNaN(startDate.getTime())) {
+        throw new Error('Inicio no es una fecha válida');
+      }
+      if (Number.isNaN(endDate.getTime())) {
+        throw new Error('Fin no es una fecha válida');
+      }
+      return Trials.scheduleTrial({
         requestId: payload.requestId,
         teacherId: payload.teacherId,
-        startAt: new Date(payload.startAt).toISOString(),
-        endAt: new Date(payload.endAt).toISOString(),
+        startAt: startDate.toISOString(),
+        endAt: endDate.toISOString(),
         roomId: payload.roomId,
-      }),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['trials', 'requests'] });
       setScheduleTarget(null);

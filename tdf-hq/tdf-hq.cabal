@@ -141,6 +141,7 @@ executable tdf-hq-exe
     , scientific
     , safe-exceptions
     , base64-bytestring
+    , base16-bytestring
     , directory
     , process
     , temporary
@@ -151,6 +152,8 @@ executable tdf-hq-exe
     , file-embed
     , smtp-mail
     , tagged
+    , crypton
+    , memory
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0

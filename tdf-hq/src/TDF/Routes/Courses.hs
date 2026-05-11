@@ -30,9 +30,11 @@ import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, Value(..)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import           Data.Time (Day)
+import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
+import           TDF.API.Types (RawJSON)
 import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
 
@@ -275,11 +277,11 @@ type CoursesAdminAPI =
 
 type WhatsAppWebhookAPI =
        "webhooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
-  :<|> "webhooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+  :<|> "webhooks" :> "whatsapp" :> Header "X-Hub-Signature-256" Text :> ReqBody '[RawJSON] BL.ByteString :> Post '[JSON] NoContent
 
 type WhatsAppHooksAPI =
        "hooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
-  :<|> "hooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+  :<|> "hooks" :> "whatsapp" :> Header "X-Hub-Signature-256" Text :> ReqBody '[RawJSON] BL.ByteString :> Post '[JSON] NoContent
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }

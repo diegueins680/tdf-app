@@ -30,7 +30,13 @@ import           Data.Time    (UTCTime, Day)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
-import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText)
+import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText, ServerError(..), err401)
+
+import           Crypto.Hash.Algorithms (SHA256)
+import           Crypto.MAC.HMAC (HMAC, hmac)
+import           Data.ByteArray (convert)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base16 as B16
 
 import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
 
@@ -1827,3 +1833,33 @@ instance FromJSON InternPermissionUpdate where
               { ipuStatus = statusValue
               , ipuDecisionNotes = decisionNotesValue
               }
+
+-- | A content type that accepts @application/json@ but returns the raw body bytes.
+-- Used for webhook signature verification where the original byte sequence is needed.
+data RawJSON
+
+instance Accept RawJSON where
+    contentType _ = "application" // "json"
+
+instance MimeUnrender RawJSON BL.ByteString where
+    mimeUnrender _ = Right
+
+-- | Verify the HMAC-SHA256 signature of a Meta webhook payload.
+-- When no app secret is configured the check is skipped (useful for local dev).
+verifyMetaWebhookSignature :: Maybe Text -> Maybe Text -> BL.ByteString -> Either ServerError ()
+verifyMetaWebhookSignature mAppSecret mSigHeader body =
+  case mAppSecret of
+    Nothing -> Right ()
+    Just appSecret ->
+      case mSigHeader of
+        Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }
+        Just sigRaw ->
+          let sigClean = T.strip sigRaw
+              prefix   = "sha256="
+              sigWithoutPrefix
+                | T.toLower prefix `T.isPrefixOf` T.toLower sigClean = T.drop (T.length prefix) sigClean
+                | otherwise = sigClean
+              expected = T.decodeUtf8 (B16.encode (convert (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)))
+          in if T.toLower sigWithoutPrefix == T.toLower expected
+             then Right ()
+             else Left err401 { errBody = "Invalid webhook signature" }

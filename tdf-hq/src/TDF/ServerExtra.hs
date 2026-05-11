@@ -3921,14 +3921,16 @@ instagramWebhookServer =
     verifyWebhook mMode mToken mChallenge =
       verifyMetaWebhook MetaInstagram mMode mToken mChallenge
 
-    handleWebhook payload = do
-      Env{..} <- ask
+    handleWebhook mSignature rawBody = do
+      Env{envConfig, envPool} <- ask
+      either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
+      payload <- either throwError pure (A.eitherDecode rawBody)
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr (A.encode payload)
+        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
       pure NoContent
 
@@ -3945,14 +3947,16 @@ facebookWebhookServer =
     verifyWebhook mMode mToken mChallenge =
       verifyMetaWebhook MetaFacebook mMode mToken mChallenge
 
-    handleWebhook payload = do
-      Env{..} <- ask
+    handleWebhook mSignature rawBody = do
+      Env{envConfig, envPool} <- ask
+      either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
+      payload <- either throwError pure (A.eitherDecode rawBody)
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr (A.encode payload)
+        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
       pure NoContent
 

@@ -94,11 +94,11 @@ const ROLE_ALIASES: Record<string, Role> = {
 
 export function normalizeRoles(rawRoles: readonly string[] | undefined): Role[] {
   if (!rawRoles || rawRoles.length === 0) {
-    return ['admin'];
+    return [];
   }
   const normalized = rawRoles
     .map(role => ROLE_ALIASES[role] ?? ROLE_ALIASES[role.toLowerCase()])
     .filter((value): value is Role => Boolean(value));
 
-  return normalized.length > 0 ? normalized : ['admin'];
+  return normalized;
 }

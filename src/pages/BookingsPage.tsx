@@ -33,11 +33,19 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 const schema = z.object({
   cbTitle: z.string().min(2, 'Título requerido'),
-  cbStartsAt: z.string(),
-  cbEndsAt: z.string(),
+  cbStartsAt: z.string().min(1, 'Selecciona fecha y hora de inicio'),
+  cbEndsAt: z.string().min(1, 'Selecciona fecha y hora de fin'),
   cbStatus: z.enum(['Confirmed','Tentative','Cancelled','Completed']).default('Confirmed'),
   cbPartyId: z.number().nullable().optional(),
 });
+
+function toISODateTime(value: string, fieldName: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${fieldName} no es una fecha válida`);
+  }
+  return date.toISOString();
+}
 
 function formatDateTimeLocal(value?: string) {
   if (!value) return '';
@@ -137,8 +145,8 @@ function CreateBookingDialog({ open, onClose, initialStart, initialEnd }: {
         <Button onClick={onClose}>Cancelar</Button>
         <Button variant="contained" onClick={handleSubmit((vals)=>m.mutate({
           ...vals,
-          cbStartsAt: new Date(vals.cbStartsAt).toISOString(),
-          cbEndsAt: new Date(vals.cbEndsAt).toISOString(),
+          cbStartsAt: toISODateTime(vals.cbStartsAt, 'Inicio'),
+          cbEndsAt: toISODateTime(vals.cbEndsAt, 'Fin'),
           cbPartyId: vals.cbPartyId ?? null,
         }))} disabled={m.isPending}>Guardar</Button>
       </DialogActions>

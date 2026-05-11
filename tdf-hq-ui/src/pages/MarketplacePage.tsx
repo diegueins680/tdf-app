@@ -498,12 +498,27 @@ export default function MarketplacePage() {
     },
   });
 
+  const ensuringCartRef = useRef<Promise<string> | null>(null);
+
+  const ensureCart = useCallback(async (): Promise<string> => {
+    if (cartId) return cartId;
+    if (ensuringCartRef.current) {
+      return ensuringCartRef.current;
+    }
+    const promise = createCartMutation.mutateAsync().then((data) => {
+      setCartId((prev) => prev ?? data.mcCartId);
+      return data.mcCartId;
+    }).finally(() => {
+      ensuringCartRef.current = null;
+    });
+    ensuringCartRef.current = promise;
+    return promise;
+  }, [cartId, createCartMutation]);
+
   const upsertItemMutation = useMutation<MarketplaceCartDTO, Error, { listingId: string; quantity: number }>({
     mutationFn: async ({ listingId, quantity }) => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      const nextId = cartId ?? ensuredCart;
-      setCartId(nextId);
-      return Marketplace.upsertItem(nextId, { mciuListingId: listingId, mciuQuantity: quantity });
+      const ensuredCart = await ensureCart();
+      return Marketplace.upsertItem(ensuredCart, { mciuListingId: listingId, mciuQuantity: quantity });
     },
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
@@ -532,8 +547,7 @@ export default function MarketplacePage() {
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
+      const ensuredCart = await ensureCart();
       const order = await Marketplace.checkout(ensuredCart, {
         mcrBuyerName: buyerName,
         mcrBuyerEmail: buyerEmail,
@@ -562,8 +576,7 @@ export default function MarketplacePage() {
 
   const datafastCheckoutMutation = useMutation<DatafastCheckoutDTO, Error, void>({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
+      const ensuredCart = await ensureCart();
       return Marketplace.datafastCheckout(ensuredCart, {
         mcrBuyerName: buyerName,
         mcrBuyerEmail: buyerEmail,
@@ -586,8 +599,7 @@ export default function MarketplacePage() {
 
   const createPaypalOrderMutation = useMutation({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
+      const ensuredCart = await ensureCart();
       return Marketplace.createPaypalOrder(ensuredCart, {
         mcrBuyerName: buyerName,
         mcrBuyerEmail: buyerEmail,
@@ -891,12 +903,12 @@ export default function MarketplacePage() {
 
   const clearCart = async () => {
     if (!hasCartItems) return;
-    const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-    setCartId(ensuredCart);
-    for (const item of cartItems) {
-      // eslint-disable-next-line no-await-in-loop
-      await upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 });
-    }
+    const ensuredCart = await ensureCart();
+    await Promise.all(
+      cartItems.map((item) =>
+        upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 }),
+      ),
+    );
     setToast('Carrito vacío');
   };
 

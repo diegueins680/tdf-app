@@ -326,13 +326,21 @@ const createEmptyRow = (index: number): InputRowFormValues => ({
   notes: '',
 });
 
+function toISODateTime(value: string, fieldName: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${fieldName} no es una fecha válida`);
+  }
+  return date.toISOString();
+}
+
 const toSessionCreatePayload = (values: SessionFormValues): SessionCreate => ({
   scBookingRef: stringOrNull(values.bookingRef),
   scBandId: stringOrNull(values.bandId),
   scClientPartyRef: stringOrNull(values.clientPartyRef),
   scService: values.service.trim(),
-  scStartAt: new Date(values.startAt).toISOString(),
-  scEndAt: new Date(values.endAt).toISOString(),
+  scStartAt: toISODateTime(values.startAt, 'Inicio'),
+  scEndAt: toISODateTime(values.endAt, 'Fin'),
   scEngineerRef: values.engineerRef.trim(),
   scAssistantRef: stringOrNull(values.assistantRef),
   scRoomIds: values.roomIds,
@@ -350,8 +358,8 @@ const toSessionUpdatePayload = (values: SessionFormValues): SessionUpdate => ({
   suBandId: stringOrNull(values.bandId),
   suClientPartyRef: stringOrNull(values.clientPartyRef),
   suService: values.service.trim(),
-  suStartAt: new Date(values.startAt).toISOString(),
-  suEndAt: new Date(values.endAt).toISOString(),
+  suStartAt: toISODateTime(values.startAt, 'Inicio'),
+  suEndAt: toISODateTime(values.endAt, 'Fin'),
   suEngineerRef: values.engineerRef.trim(),
   suAssistantRef: stringOrNull(values.assistantRef),
   suRoomIds: values.roomIds,

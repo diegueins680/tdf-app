@@ -13,8 +13,11 @@ import           Data.Aeson
   , rejectUnknownFields
   )
 import           Data.Text (Text)
+import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
+
+import           TDF.API.Types (RawJSON)
 
 data FacebookReplyReq = FacebookReplyReq
   { frSenderId :: Text
@@ -40,4 +43,7 @@ type FacebookWebhookAPI =
          :> QueryParam "hub.verify_token" Text
          :> QueryParam "hub.challenge" Text
          :> Get '[PlainText] Text
-  :<|> "facebook" :> "webhook" :> ReqBody '[JSON] Value :> Post '[JSON] NoContent
+  :<|> "facebook" :> "webhook"
+         :> Header "X-Hub-Signature-256" Text
+         :> ReqBody '[RawJSON] BL.ByteString
+         :> Post '[JSON] NoContent
