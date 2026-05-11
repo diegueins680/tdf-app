@@ -102,4 +102,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C supe
 - **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact.
 - **Next decisive action:** Platform completes Detox rebuild with testID and runs first passing `detox test`; Release obtains real Google ID token (OAuth Playground/operator) and POSTs to `/login/google` to prove backend path, OR defers to Detox e2e once automation is ready.
 
-FINAL_STATUS: done — Packet A 1 of 2 paths proven + regression passed, Packet B gated, Lane C live with launchd durability and graceful rate-limit handling, no new repair needed.
+## 2026-05-11 11:31 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN + REGRESSION PASSED on fresh install (06:21 UTC). Post-login 403 RESOLVED and seed-fixed (08:45 UTC). Google OAuth backend FIXED but e2e still unproven; blocked on `REAL_GOOGLE_ID_TOKEN_NEEDED` or Detox automation completion. No new evidence since 08:32 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof. No motion until Packet A complete.
+- **Lane C:** `live` — supervisor PID 27163 alive under launchd (PPID 1, elapsed 13:12:48). Child exited 10:47:33Z with code 0 (graceful Codex usage limit handling via prior `codex-loop-worker.sh` fix). Restart delay 3600s, next restart ~11:47 UTC. restartCount 13, staleRestartCount 0. Bounded repairs (3600s backoff + worker exit 0 on rate limit) remain effective. API limit resets ~17:36 Guayaquil (~6h). Heartbeat stale during restart delay is known supervisor behavior, not a durability failure.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability; launchd/supervisor contract is intact. No repair needed.
+- **Next decisive action:** Platform completes Detox rebuild with `testID` props and runs first passing `detox test`; Release obtains real Google ID token or defers to manual test plan.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + regression passed + seed fixed, Packet B gated, Lane C live with launchd durability and graceful rate-limit handling, no new repair needed.
