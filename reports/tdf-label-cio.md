@@ -122,3 +122,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven + regression passed + seed f
 - **No other company-level blockers** to Lane C durability.
 
 FINAL_STATUS: done — committed dirty worktree (25694f50f), Lane C supervisor alive under launchd, next child restart ~20:23 UTC
+
+## 2026-05-11 21:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end; post-login 403 RESOLVED and seed-fixed; Google OAuth backend env FIXED but e2e still unproven (no real token, Detox blocked on `LOGIN_TESTID_NOT_VISIBLE`, Maestro blocked on `MAESTRO_JAVA_MISSING`). No new evidence since 19:40 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof. No motion until both login paths e2e proven.
+- **Lane C:** `live` — supervisor PID 1077 under launchd (PPID 1, launchctl listed). Child in 3600s backoff after graceful exit (code 0) on Codex API usage limit at 21:26Z; next restart ~22:26 UTC, quota resets ~22:36 UTC. Stale `lastError` in status.json is from prior dirty-worktree incident, not current. Prior bounded repairs (3600s backoff + worker exit 0 on rate limit) remain effective.
+- **Binary rebuilds (CTO critical path):** `IOS_APP_BINARY_CORRUPTED` = RESOLVED (Platform fixed `.detoxrc.js` binaryPath 20:05 UTC). `BACKEND_BINARY_STALE` = PERSISTS — backend binary from Nov 2024 lacks `/login` route; owner tdf-label-platform, fix `stack build` in `tdf-hq` and restart.
+- **Systems lane:** `PAUSED` per standing CEO directive; `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live with launchd durability, binary rebuild 1 of 2 resolved, no new repair needed.
