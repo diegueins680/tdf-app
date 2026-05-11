@@ -996,13 +996,30 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
       expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
-      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).not.toBeNull();
-      expect(container.textContent).toContain(
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).toBeNull();
+      expect(container.textContent).not.toContain(
         'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
       );
       expect(container.textContent).not.toContain('No hay versiones guardadas todavía.');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Cargar ejemplo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
+      );
     });
 
     await cleanup();

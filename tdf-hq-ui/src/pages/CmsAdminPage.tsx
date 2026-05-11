@@ -745,6 +745,7 @@ export default function CmsAdminPage() {
     hasSlugSelection && !liveEditorActionState.showLiveInSyncChip && !showFirstVersionEmptyDraftGuard;
   const showFirstVersionHistoryGuidance =
     hasSlugSelection &&
+    editorHasFirstVersionContentDraft &&
     !listQuery.isLoading &&
     !listQuery.isError &&
     !listDataInvalid &&
