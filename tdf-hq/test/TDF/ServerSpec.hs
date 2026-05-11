@@ -315,6 +315,7 @@ import TDF.Server
     , validateCampaignStatus
     , validateAdCreativeStatus
     , validateCalendarAuthorizationCode
+    , resolveCalendarClientCreds
     , validateCalendarEventListQuery
     , validateCalendarSyncWindow
     , validateCalendarRedirectUri
@@ -5694,6 +5695,44 @@ spec = describe "TDF.Server helpers" $ do
                 "code must not contain hidden formatting characters"
                 ("oauth" <> T.singleton '\8205' <> "code")
             assertInvalid "code must be 4096 characters or fewer" (T.replicate 4097 "a")
+
+    describe "resolveCalendarClientCreds" $ do
+        it "normalizes Google Calendar OAuth credentials before auth URL or token calls" $
+            resolveCalendarClientCreds
+                (Just "  calendar-client.apps.googleusercontent.com  ")
+                (Just "  calendar-secret_123  ")
+                `shouldBe`
+                    Right
+                        ( "calendar-client.apps.googleusercontent.com"
+                        , "calendar-secret_123"
+                        )
+
+        it "rejects missing, partial, blank, or malformed Calendar OAuth credentials explicitly" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 503
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right creds ->
+                            expectationFailure
+                                ( "Expected invalid Calendar credentials, got: "
+                                    <> show creds
+                                )
+            assertInvalid
+                "faltan GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET"
+                (resolveCalendarClientCreds Nothing Nothing)
+            assertInvalid
+                "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must both be set"
+                (resolveCalendarClientCreds (Just "calendar-client") Nothing)
+            assertInvalid
+                "GOOGLE_CLIENT_ID is configured but blank"
+                (resolveCalendarClientCreds (Just "   ") (Just "calendar-secret"))
+            assertInvalid
+                "GOOGLE_CLIENT_ID must not contain path, query, or fragment characters"
+                (resolveCalendarClientCreds (Just "calendar-client?debug=1") (Just "calendar-secret"))
+            assertInvalid
+                "GOOGLE_CLIENT_SECRET must not contain control characters or whitespace"
+                (resolveCalendarClientCreds (Just "calendar-client") (Just "calendar secret"))
 
     describe "validateCalendarRedirectUri" $ do
         it "normalizes absolute Calendar OAuth callbacks and rejects ambiguous redirect shapes" $ do

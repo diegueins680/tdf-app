@@ -2664,6 +2664,30 @@ validateCalendarAuthorizationCode rawCode =
          then Left err400 { errBody = "code must be 4096 characters or fewer" }
        else Right codeVal
 
+resolveCalendarClientCreds
+  :: Maybe Text
+  -> Maybe Text
+  -> Either ServerError (Text, Text)
+resolveCalendarClientCreds rawClientId rawClientSecret = do
+  mClientId <- validateOptionalDriveClientId "GOOGLE_CLIENT_ID" rawClientId
+  mClientSecret <-
+    validateOptionalDriveClientCredential "GOOGLE_CLIENT_SECRET" rawClientSecret
+  case (mClientId, mClientSecret) of
+    (Just clientId, Just clientSecret) -> Right (clientId, clientSecret)
+    (Nothing, Nothing) -> Left missingCalendarCredsError
+    _ -> Left partialCalendarCredsError
+  where
+    missingCalendarCredsError =
+      err503
+        { errBody =
+            "Google Calendar no configurado (faltan GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)."
+        }
+    partialCalendarCredsError =
+      err503
+        { errBody =
+            "Google Calendar no configurado: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must both be set."
+        }
+
 validateConfiguredCalendarRedirectUri :: Text -> Either ServerError Text
 validateConfiguredCalendarRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "GOOGLE_REDIRECT_URI" (T.unpack rawRedirect) of
@@ -2853,13 +2877,14 @@ calendarServer user =
 
     loadGoogleEnv :: Maybe Text -> AppM (Text, Text, Text)
     loadGoogleEnv mRedirect = do
-      mCid <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_ID"
-      mSecret <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_CLIENT_SECRET"
+      mCid <- liftIO $ lookupEnvText "GOOGLE_CLIENT_ID"
+      mSecret <- liftIO $ lookupEnvText "GOOGLE_CLIENT_SECRET"
       mRedirectEnv <- liftIO $ lookupEnvTextNonEmpty "GOOGLE_REDIRECT_URI"
+      (cid', sec') <- either throwError pure (resolveCalendarClientCreds mCid mSecret)
       let mProvidedRedirect = cleanOptional mRedirect
           mRedirectRaw = mProvidedRedirect <|> mRedirectEnv
-      case (mCid, mSecret, mRedirectRaw) of
-        (Just cid', Just sec', Just redirRaw) -> do
+      case mRedirectRaw of
+        Just redirRaw -> do
           redir' <-
             either throwError pure $
               case mProvidedRedirect of
