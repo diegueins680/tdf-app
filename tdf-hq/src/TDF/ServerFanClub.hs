@@ -172,12 +172,12 @@ fanClubSecureArtistHandlers user artistId =
             author <- getAuthorDTO (fanClubPostFanPartyId p)
             pure $ postToDTO pid p (fromIntegral replies) author
 
-    createClubPost aId req = runDB $ do
+    createClubPost aId req = do
       let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
-        Just (Entity cid _) -> do
+        Just (Entity cid _) -> runDB $ do
           now <- liftIO getCurrentTime
           let parentKey = fmap toSqlKey (fcpReqParentId req)
           pid <- insert FanClubPost
@@ -196,28 +196,28 @@ fanClubSecureArtistHandlers user artistId =
             (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) False False now Nothing)
             0 author
 
-    pinPost aId postId = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    pinPost aId postId = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      update (toSqlKey postId) [FanClubPostIsPinned =. True]
+      runDB $ update (toSqlKey postId) [FanClubPostIsPinned =. True]
       pure NoContent
 
-    unpinPost aId postId = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    unpinPost aId postId = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      update (toSqlKey postId) [FanClubPostIsPinned =. False]
+      runDB $ update (toSqlKey postId) [FanClubPostIsPinned =. False]
       pure NoContent
 
-    hidePost aId postId = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    hidePost aId postId = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      update (toSqlKey postId) [FanClubPostIsHidden =. True]
+      runDB $ update (toSqlKey postId) [FanClubPostIsHidden =. True]
       pure NoContent
 
-    unhidePost aId postId = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    unhidePost aId postId = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      update (toSqlKey postId) [FanClubPostIsHidden =. False]
+      runDB $ update (toSqlKey postId) [FanClubPostIsHidden =. False]
       pure NoContent
 
     listClubEvents aId = runDB $ do
@@ -229,14 +229,14 @@ fanClubSecureArtistHandlers user artistId =
           events <- selectList [FanClubEventClubId ==. cid] [Asc FanClubEventStartsAt]
           pure (map eventToDTO events)
 
-    createClubEvent aId req = runDB $ do
-      isOfficer <- checkIsOfficer aId (auPartyId user)
+    createClubEvent aId req = do
+      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear eventos" }
       let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
-        Just (Entity cid _) -> do
+        Just (Entity cid _) -> runDB $ do
           now <- liftIO getCurrentTime
           eid <- insert FanClubEvent
             { fanClubEventClubId = cid
