@@ -1684,6 +1684,38 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('omits the empty status-history break from ordinary order details', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-no-history',
+        moStatusHistory: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Detalle de la orden');
+        expect(dialog?.textContent).toContain('Items');
+        expect(dialog?.textContent).not.toContain('Historial de estado');
+        expect(dialog?.querySelectorAll('hr')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('omits empty optional identifiers from sparse order details', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

@@ -1331,21 +1331,22 @@ export default function MarketplaceOrdersPage() {
                   </Card>
                 </Stack>
 
-                <Divider />
                 {showStatusHistorySection && (
-                  <Stack spacing={1}>
-                    <Typography variant="h6">Historial de estado</Typography>
-                    <Stack spacing={0.5}>
-                      {selectedStatusHistory.map(([st, ts], idx) => (
-                        <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
-                          {formatDate(ts)} — {statusLabel(st)}
-                        </Typography>
-                      ))}
+                  <>
+                    <Divider />
+                    <Stack spacing={1}>
+                      <Typography variant="h6">Historial de estado</Typography>
+                      <Stack spacing={0.5}>
+                        {selectedStatusHistory.map(([st, ts], idx) => (
+                          <Typography key={`${st}-${ts}-${idx}`} variant="body2" color="text.secondary">
+                            {formatDate(ts)} — {statusLabel(st)}
+                          </Typography>
+                        ))}
+                      </Stack>
                     </Stack>
-                  </Stack>
+                  </>
                 )}
                 <Divider />
-                
                 <Typography variant="h6">Items</Typography>
                 <Table size="small">
                   <TableHead>
