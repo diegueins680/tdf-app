@@ -3,7 +3,7 @@ module.exports = {
   testRunner: {
     args: {
       $0: 'jest',
-      config: 'e2e/jest.config.js',
+      config: 'tdf-mobile/e2e/jest.config.js',
     },
     jest: {
       setupTimeout: 120000,
@@ -12,8 +12,8 @@ module.exports = {
   apps: {
     'ios.debug': {
       type: 'ios.app',
-      binaryPath: 'tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app',
-      build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+      binaryPath: '/tmp/TDFRecords-derived/Build/Products/Debug-iphonesimulator/TDFRecords.app',
+      build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Debug -sdk iphonesimulator -derivedDataPath /tmp/TDFRecords-derived',
     },
   },
   devices: {
