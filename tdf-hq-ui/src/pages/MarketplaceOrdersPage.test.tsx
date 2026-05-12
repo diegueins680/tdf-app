@@ -1763,6 +1763,42 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('replaces empty order item detail tables with one clear empty state', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-empty-items',
+        moItems: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.textContent).toContain('Items: Sin items');
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Detalle de la orden');
+        expect(dialog?.textContent).toContain('Items');
+        expect(dialog?.textContent).toContain('Sin items registrados para esta orden.');
+        expect(dialog?.textContent).not.toContain('Producto');
+        expect(dialog?.textContent).not.toContain('Cantidad');
+        expect(dialog?.textContent).not.toContain('Subtotal');
+        expect(dialog?.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('humanizes payment provider labels in the order detail and copied summary', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {

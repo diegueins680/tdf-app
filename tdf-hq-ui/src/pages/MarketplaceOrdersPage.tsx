@@ -1348,26 +1348,32 @@ export default function MarketplaceOrdersPage() {
                 )}
                 <Divider />
                 <Typography variant="h6">Items</Typography>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Producto</TableCell>
-                      <TableCell>Cantidad</TableCell>
-                      <TableCell>Precio</TableCell>
-                      <TableCell>Subtotal</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedOrder.moItems.map((it) => (
-                      <TableRow key={it.moiListingId}>
-                        <TableCell>{it.moiTitle}</TableCell>
-                        <TableCell>{it.moiQuantity}</TableCell>
-                        <TableCell>{it.moiUnitPriceDisplay}</TableCell>
-                        <TableCell>{it.moiSubtotalDisplay}</TableCell>
+                {selectedOrder.moItems.length > 0 ? (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Producto</TableCell>
+                        <TableCell>Cantidad</TableCell>
+                        <TableCell>Precio</TableCell>
+                        <TableCell>Subtotal</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHead>
+                    <TableBody>
+                      {selectedOrder.moItems.map((it) => (
+                        <TableRow key={it.moiListingId}>
+                          <TableCell>{it.moiTitle}</TableCell>
+                          <TableCell>{it.moiQuantity}</TableCell>
+                          <TableCell>{it.moiUnitPriceDisplay}</TableCell>
+                          <TableCell>{it.moiSubtotalDisplay}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Sin items registrados para esta orden.
+                  </Typography>
+                )}
               </Stack>
             </DialogContent>
             <DialogActions>
