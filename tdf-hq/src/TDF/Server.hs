@@ -9481,12 +9481,12 @@ adsAssistPublic req = do
   (body, adKey, campaignKey, channel) <- either throwError pure (validateAdsAssistRequest req)
   env <- ask
   let hasScope = isJust adKey || isJust campaignKey
-  candidateAds <- runDB $
+  campaignAdKeys <- runDB $
     case campaignKey of
-      Nothing -> pure (maybeToList adKey)
-      Just ck -> do
-        ads <- selectKeysList [ME.AdCreativeCampaignId ==. Just ck] []
-        pure (maybe ads (:ads) adKey)
+      Nothing -> pure []
+      Just ck -> selectKeysList [ME.AdCreativeCampaignId ==. Just ck] []
+  candidateAds <- either throwError pure $
+    resolveAdsAssistExampleScope adKey campaignKey campaignAdKeys
   examples <- runDB $ loadAdExamples hasScope candidateAds
   kb <- liftIO $ retrieveRagContext (envConfig env) (envPool env) body
   reply <- liftIO $ runRagChatWithStatus (envConfig env) kb examples body channel
@@ -9712,6 +9712,23 @@ loadAdExamples hasScope adIds
   | hasScope && null adIds = pure []
   | null adIds = selectList [] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
   | otherwise = selectList [ME.AdConversationExampleAdId <-. adIds] [Desc ME.AdConversationExampleUpdatedAt, LimitTo 6]
+
+resolveAdsAssistExampleScope
+  :: Maybe ME.AdCreativeId
+  -> Maybe ME.CampaignId
+  -> [ME.AdCreativeId]
+  -> Either ServerError [ME.AdCreativeId]
+resolveAdsAssistExampleScope Nothing Nothing _ =
+  Right []
+resolveAdsAssistExampleScope (Just adKey) Nothing _ =
+  Right [adKey]
+resolveAdsAssistExampleScope Nothing (Just _) campaignAdKeys =
+  Right (nub campaignAdKeys)
+resolveAdsAssistExampleScope (Just adKey) (Just _) campaignAdKeys
+  | adKey `elem` campaignAdKeys =
+      Right (adKey : filter (/= adKey) (nub campaignAdKeys))
+  | otherwise =
+      Left err400 { errBody = "adId must belong to campaignId" }
 
 adExampleToDTO :: Entity ME.AdConversationExample -> AdConversationExampleDTO
 adExampleToDTO (Entity eid ex) =

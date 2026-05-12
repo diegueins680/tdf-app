@@ -309,6 +309,7 @@ import TDF.Server
     , adsListExamples
     , validateAdsInquiry
     , validateAdsAssistRequest
+    , resolveAdsAssistExampleScope
     , shouldUseAdsAssistNoAiFallback
     , validateAdCreativeLandingUrl
     , validateAdCreativeExternalId
@@ -4321,6 +4322,36 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "adId must be a positive integer" baseRequest { aarAdId = Just (-7) }
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just 0 }
             assertInvalid "campaignId must be a positive integer" baseRequest { aarCampaignId = Just (-9) }
+
+        it "rejects ad/campaign mismatches before public example lookup mixes scopes" $ do
+            let adOne = toSqlKey 1 :: ME.AdCreativeId
+                adTwo = toSqlKey 2 :: ME.AdCreativeId
+                campaign = toSqlKey 7 :: ME.CampaignId
+                assertRightKeys expected result =
+                    case result of
+                        Right keys -> map fromSqlKey keys `shouldBe` expected
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected ads assist scope to resolve, got: " <> show serverErr)
+
+            assertRightKeys [1] $
+                resolveAdsAssistExampleScope (Just adOne) Nothing []
+            assertRightKeys [1, 2] $
+                resolveAdsAssistExampleScope Nothing (Just campaign) [adOne, adOne, adTwo]
+            assertRightKeys [2, 1] $
+                resolveAdsAssistExampleScope (Just adTwo) (Just campaign) [adOne, adTwo]
+
+            case resolveAdsAssistExampleScope
+                (Just (toSqlKey 99))
+                (Just campaign)
+                [adOne, adTwo] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "adId must belong to campaignId"
+                Right keys ->
+                    expectationFailure
+                        ("Expected mismatched ads assist scope to be rejected, got: " <> show keys)
 
         it "rejects caller-supplied party ids on the public assist endpoint" $ do
             let request =
