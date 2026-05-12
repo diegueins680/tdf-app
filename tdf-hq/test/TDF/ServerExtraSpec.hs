@@ -1638,6 +1638,26 @@ spec = do
       (parseOptionalKeyField "targetRoom" (Just " 42 ") :: Either ServerError (Maybe (Key M.Party)))
         `shouldBe` Right (Just (toSqlKey 42))
 
+    it "rejects non-canonical UUID references before optional relation lookups" $ do
+      let canonicalRoomId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          uppercaseRoomId = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+      case ( parseOptionalKeyField "targetRoom" (Just canonicalRoomId)
+               :: Either ServerError (Maybe (Key Room))
+           ) of
+        Right (Just _) -> pure ()
+        Right Nothing -> expectationFailure "Expected canonical UUID to parse"
+        Left err ->
+          expectationFailure ("Expected canonical UUID to parse, got " <> show err)
+      case ( parseOptionalKeyField "targetRoom" (Just uppercaseRoomId)
+               :: Either ServerError (Maybe (Key Room))
+           ) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "targetRoom must be a valid identifier"
+        Right value ->
+          expectationFailure
+            ("Expected non-canonical UUID reference to be rejected, got " <> show value)
+
     it "rejects malformed optional ids instead of silently treating them as missing" $
       case (parseOptionalKeyField "targetSession" (Just "abc") :: Either ServerError (Maybe (Key M.Party))) of
         Left err -> do

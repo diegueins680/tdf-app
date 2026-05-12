@@ -2708,7 +2708,10 @@ parseKey
   => Text
   -> m (Key record)
 parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  maybe
+    (throwError err400 { errBody = "Invalid identifier" })
+    pure
+    (parseCanonicalPathPiece raw)
 
 parseOptionalKeyField
   :: forall record.
@@ -2722,9 +2725,19 @@ parseOptionalKeyField fieldName (Just raw) =
   in if T.null trimmed
       then Right Nothing
       else maybe
-        (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
+        ( Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier"))
+            }
+        )
         (Right . Just)
-        (fromPathPiece trimmed)
+        (parseCanonicalPathPiece trimmed)
+
+parseCanonicalPathPiece :: PathPiece a => Text -> Maybe a
+parseCanonicalPathPiece raw = do
+  parsed <- fromPathPiece raw
+  guard (toPathPiece parsed == raw)
+  pure parsed
 
 validateAssetQrToken :: Text -> Either ServerError Text
 validateAssetQrToken rawToken =
