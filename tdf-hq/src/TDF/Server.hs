@@ -9202,6 +9202,8 @@ validateStrictAdminAccess :: AuthedUser -> Either ServerError ()
 validateStrictAdminAccess AuthedUser{..}
   | Admin `notElem` auRoles =
       Left err403 { errBody = BL.fromStrict (TE.encodeUtf8 "Admin role required") }
+  | fromSqlKey auPartyId <= 0 =
+      Left err403 { errBody = "Valid admin party required" }
   | length auRoles /= length (nub auRoles) =
       Left err403 { errBody = "Admin role grants must be unique" }
   | auModules /= modulesForRoles auRoles =

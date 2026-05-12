@@ -9955,6 +9955,9 @@ spec = describe "TDF.Server helpers" $ do
                                 )
 
             assertRejected "Admin role required" (mkUser [StudioManager])
+            assertRejected
+                "Valid admin party required"
+                ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
             assertRejected "Admin role grants must be unique" (mkUser [Admin, Admin])
             assertRejected
                 "Admin module grants must match roles"
