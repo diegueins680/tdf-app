@@ -15593,6 +15593,39 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips priority waitlist wrappers from first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101-vip', ccTitle: 'VIP waitlist - Beatmaking 101' },
+      { ccSlug: 'beatmaking-101-prioridad', ccTitle: 'Lista prioritaria - beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp-priority', ccTitle: 'Priority list - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
+      expect(emptyState?.textContent).not.toMatch(/VIP waitlist|Lista prioritaria|Priority list/i);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('unwraps formatted first-run course names after stripping form descriptors', async () => {
     const titles = [
       'Formulario público (Beatmaking 101)',

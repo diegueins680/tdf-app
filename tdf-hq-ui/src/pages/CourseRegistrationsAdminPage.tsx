@@ -991,6 +991,12 @@ const firstRunWaitlistDescriptorPrefixPattern =
 const firstRunWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|lista\s+de\s+(?:espera|interesad[oa]s)|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|waitlist(?:\s+(?:form|page))?|waiting\s+list(?:\s+(?:form|page))?|interest(?:ed)?\s+list(?:\s+(?:form|page))?|(?:course\s+)?interest(?:ed)?\s+sign[-\s]?up(?:\s+(?:form|page))?|newsletter\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?)|mailing\s+list(?:\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?|lead[-\s]+gen(?:eration)?(?:\s+(?:forms?|pages?))?)\s*$/i;
 
+const firstRunPriorityWaitlistDescriptorPrefixPattern =
+  /^(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPriorityWaitlistDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))\s*$/i;
+
 const firstRunLeadMagnetDescriptorPrefixPattern =
   /^(?:(?:lead\s+magnet|freebie|free\s+resource|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1201,6 +1207,7 @@ const stripFirstRunCohortDescriptorPrefix = (title: string) => {
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunTrialLessonDescriptorPrefixPattern, '')
     .replace(firstRunProgramDescriptorPrefixPattern, '')
+    .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
@@ -1268,6 +1275,7 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunTrialLessonDescriptorSuffixPattern, '')
     .replace(firstRunProgramDescriptorSuffixPattern, '')
+    .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
