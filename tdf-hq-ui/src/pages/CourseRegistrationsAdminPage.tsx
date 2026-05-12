@@ -150,6 +150,8 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
 type RegistrationIdentityKind = 'name' | 'contact' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; el menú de estado muestra acciones.`;
+const buildDossierLinkScopeHint = (targetLabel: string) =>
+  `Usa ${targetLabel} para abrir expediente.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; el menú de estado incluye Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
@@ -3166,6 +3168,12 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
+    && !hasLocalSearch
+    && !showBusyListSearchOnboarding
+    && allVisibleRowsCanOpenPaymentWorkflow
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length > 1;
   const allVisibleRowsUsePaidRecoveryAction = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid')
     && (
@@ -3193,6 +3201,8 @@ export default function CourseRegistrationsAdminPage() {
       ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
       : allVisibleRowsUseDossierRecoveryAction
       ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+      : showInlinePaymentWorkflowRowLabel
+      ? buildDossierLinkScopeHint(dossierIdentityTargetLabel)
       : allVisibleRowsCanOpenPaymentWorkflow
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
       : useCompactStatusActionLabel
@@ -5744,6 +5754,8 @@ export default function CourseRegistrationsAdminPage() {
                         >
                           {useDirectPendingRecoveryAction
                             ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
+                            : showInlinePaymentWorkflowRowLabel && canOpenPaymentWorkflowFromStatus(reg.crStatus)
+                            ? openPaymentWorkflowLabel
                             : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
                         </Button>
                       )}

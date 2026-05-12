@@ -228,6 +228,8 @@ const customStatusFilterUnavailableMessage =
 const customStatusFilterUnavailableTitle = 'Estados no estándar';
 const dossierScopeHint =
   'Usa el nombre para abrir expediente; el menú de estado muestra acciones.';
+const dossierLinkScopeHint =
+  'Usa el nombre para abrir expediente.';
 const paymentWorkflowDossierScopeHint =
   'Usa el nombre para abrir expediente; el menú de estado incluye Registrar pago.';
 const dossierOnlyScopeHint =
@@ -244,8 +246,12 @@ const recordDossierScopeHint =
   'Usa el número de registro para abrir expediente; el menú de estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
   'Usa el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
+const recordDossierLinkScopeHint =
+  'Usa el número de registro para abrir expediente.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
   'Usa el nombre, el contacto o el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
+const mixedIdentityDossierLinkScopeHint =
+  'Usa el nombre, el contacto o el número de registro para abrir expediente.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
@@ -873,13 +879,15 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(contextSummary?.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(dossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(countOccurrences(
         container,
-        paymentWorkflowDossierScopeHint,
+        dossierLinkScopeHint,
       )).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(0);
-      expect(countButtonsByText(container, 'Cambiar estado')).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar')).toBe(0);
       expect(countButtonsByText(container, 'Estado')).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
@@ -889,6 +897,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado: Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper').textContent?.trim()).toBe('Grace Hopper');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(openPaymentWorkflowLabel);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe(openPaymentWorkflowLabel);
     });
 
     await cleanup();
@@ -910,7 +920,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(1);
+      expect(countOccurrences(container, dossierLinkScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain(paymentWorkflowDossierScopeHint);
     });
 
     await act(async () => {
@@ -922,7 +933,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Expediente de inscripción');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).not.toContain(paymentWorkflowDossierScopeHint);
+      expect(container.textContent).not.toContain(dossierLinkScopeHint);
     });
 
     await cleanup();
@@ -944,7 +955,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(1);
+      expect(countOccurrences(container, dossierLinkScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain(paymentWorkflowDossierScopeHint);
     });
 
     await act(async () => {
@@ -956,7 +968,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).not.toContain(paymentWorkflowDossierScopeHint);
+      expect(container.textContent).not.toContain(dossierLinkScopeHint);
     });
 
     await cleanup();
@@ -1061,7 +1073,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(currentViewSummary?.textContent).toContain('Vista actual');
       expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Pendiente de pago');
-      expect(contextSummary?.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(dossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(currentViewSummary?.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
@@ -1085,7 +1098,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(document.body.textContent).toContain(openPaymentWorkflowLabel);
       expect(currentViewSummary?.textContent).toContain('Vista actual');
       expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Pendiente de pago');
-      expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).not.toContain(dossierLinkScopeHint);
       expect(currentViewSummary?.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
@@ -1538,7 +1551,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(contextSummary?.textContent).toContain(recordPaymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(recordDossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(recordPaymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(hasExactText(container, 'Registro #101')).toBe(true);
       expect(hasExactText(container, 'Registro #102')).toBe(true);
@@ -1546,6 +1560,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Sin nombre')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de registro #"]')).toHaveLength(2);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
     });
 
     await act(async () => {
@@ -1633,8 +1648,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(contextSummary?.textContent).toContain(mixedIdentityPaymentWorkflowDossierScopeHint);
-      expect(countOccurrences(container, mixedIdentityPaymentWorkflowDossierScopeHint)).toBe(1);
+      expect(contextSummary?.textContent).toContain(mixedIdentityDossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(mixedIdentityPaymentWorkflowDossierScopeHint);
+      expect(countOccurrences(container, mixedIdentityDossierLinkScopeHint)).toBe(1);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(contactDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
@@ -1644,6 +1660,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(3);
     });
 
     await cleanup();
@@ -8309,9 +8326,11 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(container.textContent).not.toContain('Total: 2');
       expect(contextSummary?.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
-      expect(contextSummary?.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(dossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
@@ -8342,10 +8361,12 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(contextSummary?.textContent).toContain('Mostrando 2 inscripciones en esta vista.');
-      expect(contextSummary?.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(dossierLinkScopeHint);
+      expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Ada Lovelace"]')).toHaveLength(1);
       expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Grace Hopper"]')).toHaveLength(1);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
       expect(countOccurrences(container, 'Ada Lovelace')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
@@ -16327,9 +16348,13 @@ describe('CourseRegistrationsAdminPage', () => {
       ).toContain('Mostrando 2 inscripciones en esta vista.');
       expect(
         container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]')?.textContent,
-      ).toContain(paymentWorkflowDossierScopeHint);
+      ).toContain(dossierLinkScopeHint);
+      expect(
+        container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]')?.textContent,
+      ).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
     });
 
     await act(async () => {
