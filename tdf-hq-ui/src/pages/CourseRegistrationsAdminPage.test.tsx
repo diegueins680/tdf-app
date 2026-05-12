@@ -2602,6 +2602,73 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps sibling dossier add actions hidden while one inline composer is active', async () => {
+    const registrationWithNotes = buildRegistration({
+      crAdminNotes: 'Confirmo pago por transferencia.',
+    });
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdRegistration: registrationWithNotes,
+        crdReceipts: [buildReceipt()],
+        crdFollowUps: [buildFollowUp()],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Editar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Editar notas'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(document.body, 'Notas internas')).toBe(true);
+      expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Editar notas')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar comprobante')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
+      expect(countButtonsByText(document.body, 'Cancelar comprobante')).toBe(0);
+      expect(countButtonsByText(document.body, 'Cancelar seguimiento')).toBe(0);
+      expect(document.body.textContent).toContain('receipt.pdf');
+      expect(document.body.textContent).toContain('Confirmó transferencia');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar notas'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Editar notas')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('absorbs a shared source into the shared cohort summary when the page still offers multiple cohort choices', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

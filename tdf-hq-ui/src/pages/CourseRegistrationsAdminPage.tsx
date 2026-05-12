@@ -4139,6 +4139,7 @@ export default function CourseRegistrationsAdminPage() {
   const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
   const showActiveRegistrationStatusChip = Boolean(activeRegistrationStatus)
     && !(isMarkPaidIntent && showMarkPaidAction);
+  const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
   const showInlineEmptyNotesAction = !isMarkPaidIntent
     && !showReceiptComposer
     && !showNotesComposer
@@ -4196,6 +4197,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showNotesComposer
     && !hasSavedNotes;
   const showEmptyNotesState = !showNotesComposer && !hasSavedNotes;
+  const showEditNotesAction = !hasOpenDossierComposer && hasSavedNotes;
   const showNotesSaveAction = hasNotesDraftChanges;
   const notesComposerIdleHelperText = hasSavedNotes
     ? 'Edita el contenido para mostrar Guardar notas.'
@@ -4220,7 +4222,7 @@ export default function CourseRegistrationsAdminPage() {
       : showReceiptComposer && hasReceipts
         ? receiptComposerHelpText
         : '';
-  const showAddReceiptAction = !showReceiptComposer && hasReceipts && selectedDossier?.intent !== 'markPaid';
+  const showAddReceiptAction = !hasOpenDossierComposer && hasReceipts && selectedDossier?.intent !== 'markPaid';
   const canHideReceiptUrlField = showReceiptUrlField
     && receiptForm.editingId == null
     && !canSubmitReceipt
@@ -4266,6 +4268,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFollowUpUploadWidget = !showFollowUpUrlField || followUpForm.editingId != null;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
+  const showAddFollowUpAction = !hasOpenDossierComposer && followUps.length > 0;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
   const canSubmitFollowUp = Boolean(trimToNull(followUpForm.notes));
   const showFollowUpSaveAction = canSubmitFollowUp || followUpForm.editingId != null;
@@ -4336,7 +4339,6 @@ export default function CourseRegistrationsAdminPage() {
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
-  const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
   const hasDossierRefreshContext = hasReceipts
     || followUps.length > 0
     || hasSavedNotes
@@ -4399,7 +4401,7 @@ export default function CourseRegistrationsAdminPage() {
             <Typography variant="h6">
               {showEmptyNotesState ? 'Notas internas (opcional)' : 'Notas internas'}
             </Typography>
-            {!showNotesComposer && hasSavedNotes ? (
+            {showEditNotesAction ? (
               <Button
                 variant="contained"
                 size="small"
@@ -6124,7 +6126,7 @@ export default function CourseRegistrationsAdminPage() {
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}
                       </Stack>
-                      {!showFollowUpComposer && followUps.length > 0 && (
+                      {showAddFollowUpAction && (
                         <Button
                           size="small"
                           variant="contained"
