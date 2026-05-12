@@ -580,6 +580,17 @@ spec = do
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects ambiguous proposal version content sources before handler fallback resolution" $ do
+            decodeProposalVersionCreate
+                "{\"pvcNotes\":\"Regenerated PDF\"}"
+                `shouldSatisfy` isLeft
+            decodeProposalVersionCreate
+                "{\"pvcLatex\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeProposalVersionCreate
+                "{\"pvcLatex\":\"\\\\section{Hi}\",\"pvcTemplateKey\":\"tdf_live_sessions\"}"
+                `shouldSatisfy` isLeft
+
     describe "PipelineCard payload FromJSON" $ do
         it "accepts canonical pipeline create and patch payloads" $ do
             case decodePipelineCardCreate

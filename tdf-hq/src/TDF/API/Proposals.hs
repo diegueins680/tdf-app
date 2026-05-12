@@ -16,8 +16,10 @@ module TDF.API.Proposals
 
 import           Data.Aeson (FromJSON (parseJSON), Options (rejectUnknownFields), ToJSON,
                              defaultOptions, genericParseJSON)
+import           Data.Aeson.Types (Parser)
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
@@ -123,7 +125,27 @@ data ProposalVersionCreate = ProposalVersionCreate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalVersionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    validateProposalVersionCreateContentSource payload
+    pure payload
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+validateProposalVersionCreateContentSource :: ProposalVersionCreate -> Parser ()
+validateProposalVersionCreateContentSource payload = do
+  hasLatex <- validateSourceField "pvcLatex" (pvcLatex payload)
+  hasTemplateKey <- validateSourceField "pvcTemplateKey" (pvcTemplateKey payload)
+  case (hasLatex, hasTemplateKey) of
+    (True, False) -> pure ()
+    (False, True) -> pure ()
+    (False, False) ->
+      fail "ProposalVersionCreate requires pvcLatex or pvcTemplateKey"
+    (True, True) ->
+      fail "ProposalVersionCreate must provide either pvcLatex or pvcTemplateKey, not both"
+  where
+    validateSourceField _ Nothing = pure False
+    validateSourceField fieldName (Just rawValue)
+      | T.null (T.strip rawValue) = fail (fieldName <> " must not be blank")
+      | otherwise = pure True
