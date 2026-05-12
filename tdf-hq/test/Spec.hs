@@ -1702,6 +1702,14 @@ main = hspec $ do
                     "COURSE_DEFAULT_MAP_URL must not contain control characters"
                         `isInfixOf` show (err :: IOException)
 
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Nothing)
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/avatar\\copy.jpg")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR URL suffix must not start with // or contain backslashes"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes WhatsApp enrollment fallback config before minting public links" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

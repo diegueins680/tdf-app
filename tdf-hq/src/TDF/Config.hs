@@ -1369,21 +1369,36 @@ normalizeConfiguredHttpsUrl envName rawUrl
       invalid
   | not ("https://" `T.isPrefixOf` lowerUrl) =
       invalid
-  | not (hasValidAuthority (T.drop 8 trimmed)) =
-      invalid
   | otherwise =
-      Right (Just trimmed)
+      validateRemainder (T.drop 8 trimmed)
   where
     trimmed = T.strip (T.pack rawUrl)
     lowerUrl = T.toLower trimmed
     invalid = Left (envName <> " must be an absolute https URL")
 
-    hasValidAuthority remainder =
-      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
-          (host, portSuffix) = T.breakOn ":" authority
+    validateRemainder remainder =
+      let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
+      in if not (hasValidAuthority authority)
+           then invalid
+           else if not (validateHttpsPathSuffix pathSuffix)
+             then
+               Left
+                 ( envName
+                     <> " URL suffix must not start with // or contain backslashes"
+                 )
+             else Right (Just trimmed)
+
+    hasValidAuthority authority =
+      let (host, portSuffix) = T.breakOn ":" authority
       in not (T.null authority)
         && validateHost host
         && validatePortSuffix portSuffix
+
+    validateHttpsPathSuffix suffix =
+      T.null suffix
+        || ( not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+           )
 
     validateHost host =
       let normalizedHost = T.toLower host
