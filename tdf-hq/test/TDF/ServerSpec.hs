@@ -406,6 +406,10 @@ import TDF.ServerFuture
     , validateFutureStubPublishedPath
     , validateFutureStubResponse
     )
+import TDF.ServerFanClub
+    ( validateFanClubPostMutationTarget
+    , validateFanClubPostPathId
+    )
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -9955,6 +9959,57 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected
                 "Admin module grants must match roles"
                 ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
+
+    describe "fan club post moderation invariants" $ do
+        it "rejects non-positive moderation path ids before post fallback lookup" $
+            forM_ [0, -3] $ \rawPostId ->
+                case validateFanClubPostPathId rawPostId of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "Invalid fan club post id"
+                    Right postId ->
+                        expectationFailure
+                            ( "Expected malformed fan club post id to be rejected, got: "
+                                <> show postId
+                            )
+
+        it "keeps officer post mutations scoped to the requested artist club" $ do
+            let now = UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 0)
+                clubId = toSqlKey 11
+                otherClubId = toSqlKey 12
+                postId = toSqlKey 41
+                postFor club =
+                    Entity postId M.FanClubPost
+                        { M.fanClubPostClubId = club
+                        , M.fanClubPostFanPartyId = toSqlKey 7
+                        , M.fanClubPostParentId = Nothing
+                        , M.fanClubPostTitle = Just "Pinned note"
+                        , M.fanClubPostContent = "Visible to this club"
+                        , M.fanClubPostIsPinned = False
+                        , M.fanClubPostIsHidden = False
+                        , M.fanClubPostCreatedAt = now
+                        , M.fanClubPostUpdatedAt = Nothing
+                        }
+
+            case validateFanClubPostMutationTarget clubId (postFor clubId) of
+                Right targetPostId -> targetPostId `shouldBe` postId
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected same-club fan club post to be mutable, got: "
+                            <> show serverErr
+                        )
+
+            case validateFanClubPostMutationTarget clubId (postFor otherClubId) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Fan club post not found"
+                Right targetPostId ->
+                    expectationFailure
+                        ( "Expected cross-club fan club post mutation to be rejected, got: "
+                            <> show targetPostId
+                        )
 
     describe "validateFutureAdminAccess" $ do
         it "keeps admin discovery stubs scoped to literal Admin sessions" $ do

@@ -8,6 +8,8 @@ module TDF.ServerFanClub
   , fanClubPublicGetEvents
   , fanClubSecureListMyClubs
   , fanClubSecureArtistHandlers
+  , validateFanClubPostPathId
+  , validateFanClubPostMutationTarget
   ) where
 
 import           Control.Monad          (forM, forM_, when, unless, void)
@@ -25,7 +27,7 @@ import           Data.Time              (getCurrentTime)
 import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
                                          , get, getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), (:<|>)(..), err400, err403, err404, errBody)
+import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, errBody)
 
 import           Control.Monad.Reader   (ReaderT, ask)
 import           Servant                (Handler, throwError)
@@ -197,28 +199,31 @@ fanClubSecureArtistHandlers user artistId =
             0 author
 
     pinPost aId postId = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
-      unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [M.FanClubPostIsPinned =. True]
+      postKey <- requirePostOfficerTarget aId postId
+      runDB $ update postKey [M.FanClubPostIsPinned =. True]
       pure NoContent
 
     unpinPost aId postId = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
-      unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [M.FanClubPostIsPinned =. False]
+      postKey <- requirePostOfficerTarget aId postId
+      runDB $ update postKey [M.FanClubPostIsPinned =. False]
       pure NoContent
 
     hidePost aId postId = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
-      unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [M.FanClubPostIsHidden =. True]
+      postKey <- requirePostOfficerTarget aId postId
+      runDB $ update postKey [M.FanClubPostIsHidden =. True]
       pure NoContent
 
     unhidePost aId postId = do
+      postKey <- requirePostOfficerTarget aId postId
+      runDB $ update postKey [M.FanClubPostIsHidden =. False]
+      pure NoContent
+
+    requirePostOfficerTarget aId rawPostId = do
       isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ update (toSqlKey postId) [M.FanClubPostIsHidden =. False]
-      pure NoContent
+      postKey <- either throwError pure (validateFanClubPostPathId rawPostId)
+      target <- runDB $ lookupFanClubPostMutationTarget aId postKey
+      either throwError pure target
 
     listClubEvents aId = runDB $ do
       let artistKey = toSqlKey aId
@@ -482,3 +487,37 @@ checkIsOfficer artistId fanId = do
       mOfficer <- selectFirst
         [M.FanClubOfficerClubId ==. cid, M.FanClubOfficerFanPartyId ==. fanId] []
       pure (isJust mOfficer)
+
+validateFanClubPostPathId :: Int64 -> Either ServerError FanClubPostId
+validateFanClubPostPathId rawPostId
+  | rawPostId <= 0 = Left err400 { errBody = "Invalid fan club post id" }
+  | otherwise = Right (toSqlKey rawPostId)
+
+lookupFanClubPostMutationTarget
+  :: Int64
+  -> FanClubPostId
+  -> SqlPersistT IO (Either ServerError FanClubPostId)
+lookupFanClubPostMutationTarget artistId postId = do
+  let artistKey = toSqlKey artistId
+  mClub <- getBy (UniqueFanClubArtist artistKey)
+  case mClub of
+    Nothing -> pure (Left fanClubPostNotFound)
+    Just (Entity clubId _) -> do
+      mPost <- get postId
+      pure $
+        maybe
+          (Left fanClubPostNotFound)
+          (validateFanClubPostMutationTarget clubId . Entity postId)
+          mPost
+
+validateFanClubPostMutationTarget
+  :: FanClubId
+  -> Entity FanClubPost
+  -> Either ServerError FanClubPostId
+validateFanClubPostMutationTarget clubId (Entity postId post)
+  | fanClubPostClubId post == clubId = Right postId
+  | otherwise = Left fanClubPostNotFound
+
+fanClubPostNotFound :: ServerError
+fanClubPostNotFound =
+  err404 { errBody = "Fan club post not found" }
