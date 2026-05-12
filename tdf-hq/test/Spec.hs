@@ -4,6 +4,7 @@
 module Main (main) where
 
 import Control.Exception (IOException, bracket)
+import Control.Monad (forM_)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
@@ -5966,6 +5967,37 @@ main = hspec $ do
                 Right response ->
                     expectationFailure
                         ("Expected duplicate social sync ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects negative direct metric payloads before recording ingest audit rows" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-negative-metric"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Just (-1)
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "likeCount must be greater than or equal to 0"
+                Right response ->
+                    expectationFailure
+                        ("Expected negative metric ingest to fail, got: " <> show response)
             length posts `shouldBe` 0
             length runs `shouldBe` 0
 

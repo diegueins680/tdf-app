@@ -267,6 +267,7 @@ validateSocialSyncPostPayload payload = do
   caption <- validateSocialSyncCaption (sspCaption payload)
   permalink <- validateSocialSyncPermalink (sspPermalink payload)
   mediaUrls <- validateSocialSyncMediaUrls (sspMediaUrls payload)
+  validateSocialSyncMetricCounts payload
   artistPartyId <- traverse validateSocialSyncArtistPartyKey (sspArtistPartyId payload)
   artistProfileId <- traverse validateSocialSyncArtistProfileKey (sspArtistProfileId payload)
   pure ValidatedSocialSyncPost
@@ -279,6 +280,24 @@ validateSocialSyncPostPayload payload = do
     , vsspArtistPartyId = artistPartyId
     , vsspArtistProfileId = artistProfileId
     }
+
+validateSocialSyncMetricCounts :: SocialSyncPostIn -> Either ServerError ()
+validateSocialSyncMetricCounts payload = do
+  validateOptionalSocialSyncMetricCount "likeCount" (sspLikeCount payload)
+  validateOptionalSocialSyncMetricCount "commentCount" (sspCommentCount payload)
+  validateOptionalSocialSyncMetricCount "shareCount" (sspShareCount payload)
+  validateOptionalSocialSyncMetricCount "viewCount" (sspViewCount payload)
+
+validateOptionalSocialSyncMetricCount :: Text -> Maybe Int -> Either ServerError ()
+validateOptionalSocialSyncMetricCount _ Nothing = Right ()
+validateOptionalSocialSyncMetricCount fieldName (Just metricCount)
+  | metricCount >= 0 = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be greater than or equal to 0"))
+        }
 
 validateSocialSyncIngestPosts :: [SocialSyncPostIn] -> Either ServerError [ValidatedSocialSyncPost]
 validateSocialSyncIngestPosts posts
