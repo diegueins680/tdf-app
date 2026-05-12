@@ -839,7 +839,13 @@ const receiptDisplayLabelWithContext = (
 };
 
 const normalizeCohortLabelKey = (value: string) =>
-  value.trim().toLocaleLowerCase('es');
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_./-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -1363,9 +1369,19 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
-  if (!title || normalizeCohortLabelKey(title) === normalizeCohortLabelKey(slug)) return slug;
-  if (stripTrailingCohortSlug(title, slug) !== title) return title;
-  return `${title} (${slug})`;
+  const fallbackLabel = readableCohortFallbackLabel(slug);
+  if (!title) return fallbackLabel;
+
+  const strippedTitle = stripTrailingCohortSlug(title, slug);
+  const displayTitle = strippedTitle || fallbackLabel;
+  if (!slug) return displayTitle;
+
+  const displayKey = normalizeCohortLabelKey(displayTitle);
+  const slugKey = normalizeCohortLabelKey(slug);
+  const fallbackKey = normalizeCohortLabelKey(fallbackLabel);
+  if (displayKey === slugKey || displayKey === fallbackKey) return fallbackLabel;
+
+  return `${displayTitle} (${slug})`;
 };
 
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
