@@ -11006,6 +11006,25 @@ spec = describe "TDF.Server helpers" $ do
                 hasSocialInboxAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Reception, LiveSessionsProducer, Producer, AandR, Webmaster])
 
     describe "social sync URL validation" $ do
+        it "keeps social sync external post identities to visible ASCII before upsert matching" $ do
+            SocialSync.validateSocialSyncExternalPostId " ig-post_42 "
+                `shouldBe` Right "ig-post_42"
+
+            let assertInvalid rawId =
+                    case SocialSync.validateSocialSyncExternalPostId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "externalPostId must contain visible ASCII"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected non-ASCII social sync externalPostId to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertInvalid ("ig-post-" <> T.singleton '\x00E9')
+            assertInvalid ("ig-post-" <> T.singleton '\x0661')
+
         it "requires HTTPS permalinks and media URLs before persisting synced posts" $ do
             SocialSync.validateSocialSyncPermalink
                 (Just " https://www.instagram.com/p/post42/ ")

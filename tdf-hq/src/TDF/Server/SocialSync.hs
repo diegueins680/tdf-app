@@ -24,6 +24,7 @@ import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAscii
   , isAsciiLower
   , isAsciiUpper
   , isControl
@@ -366,6 +367,12 @@ validateSocialSyncExternalPostId raw =
            { errBody =
                BL.fromStrict
                  (TE.encodeUtf8 "externalPostId must not contain hidden formatting characters")
+           }
+       else if T.any (not . isAscii) trimmed
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 "externalPostId must contain visible ASCII characters only")
            }
        else Right trimmed
 
