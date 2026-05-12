@@ -3900,6 +3900,8 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isSpace challenge =
+          Left err400 { errBody = "hub.challenge must not contain whitespace" }
       | T.any isHiddenMetaWebhookTextChar challenge =
           Left err400
             { errBody = "hub.challenge must not contain hidden formatting characters" }

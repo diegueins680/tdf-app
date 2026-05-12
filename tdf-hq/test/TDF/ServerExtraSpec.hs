@@ -5215,6 +5215,10 @@ spec = do
         (validate (Just "challenge\nInjected: value") (Just "secret") [Just "secret"])
       assertInvalid
         400
+        "hub.challenge must not contain whitespace"
+        (validate (Just "challenge 123") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
         "hub.challenge must not contain hidden formatting characters"
         ( validate
             (Just ("challenge" <> T.singleton '\x200B' <> "-123"))
