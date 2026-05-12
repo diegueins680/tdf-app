@@ -1388,6 +1388,14 @@ const stripFirstRunCohortDescriptorSuffix = (title: string) => {
   return currentTitle;
 };
 
+const stripFirstRunCohortDescriptorFallback = (label: string) => {
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(label),
+  );
+
+  return strippedLabel || label.trim();
+};
+
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
@@ -1407,12 +1415,12 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
 };
 
 const hasCohortTitleFormattingWorthPreserving = (label: string) => (
-  /[^\u0000-\u007f]/.test(label) || /\b[A-Z]{2,}\b/.test(label)
+  Array.from(label).some((character) => character.charCodeAt(0) > 0x7f) || /\b[A-Z]{2,}\b/.test(label)
 );
 
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
-  const fallbackLabel = humanizeCohortSlug(slug) || slug;
+  const fallbackLabel = stripFirstRunCohortDescriptorFallback(humanizeCohortSlug(slug) || slug);
   const title = stripFirstRunCohortPresentationMarkers(cohort.ccTitle ?? '');
   if (!title) return fallbackLabel;
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
