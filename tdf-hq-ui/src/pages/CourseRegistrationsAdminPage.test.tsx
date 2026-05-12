@@ -12959,6 +12959,37 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips developer task prefixes from first-run cohort labels', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'TODO: Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'FIXME - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.textContent).not.toMatch(/TODO|FIXME/);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 2 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('falls back to a readable cohort label when first-run titles are only generic form descriptors', async () => {
     const titles = ['Formulario público', 'Public form', 'Google Forms'];
 
