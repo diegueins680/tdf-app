@@ -41,3 +41,12 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy, Packet B 
 - **No company-level blocker** to Lane C durability.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy (PID 75528, port 8080), iOS binary regressed/missing, Packet B gated, Lane C live with launchd durability (supervisor 68059, child 64266, 60s restart), no repair needed.
+
+## 2026-05-12 15:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN (historical curl + Detox PASS). Google OAuth `SIMULATOR-REALISTIC PASS` (button tap → ASWebAuthenticationSession dialog confirmed). Full Google OAuth e2e UNPROVEN (exact blocker: manual device test with real token unattempted). iOS binary PRESENT at `tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app` (mtime 2026-05-12 01:40:35 local). **REGRESSION:** backend DOWN — PID 95241 dead, `curl /health` unreachable at 15:40 UTC (was healthy at 15:00 UTC per CEO truth).
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof. Additional precondition gap: backend must be healthy. No motion.
+- **Lane C:** `live` — supervisor PID 68059 (launchd `ai.openclaw.tdf-app.continuous-improvement-loop`), child PID 92782 alive, state `running`, phase `supervising`, lastHeartbeat 2026-05-12T15:40:33Z. restartDelaySeconds 60. Highest error: git `index.lock` conflict (status.json `lastError`), child auto-recovers. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+
+FINAL_STATUS: blocked — backend down (PID 95241 dead, /health unreachable at 15:40 UTC) + Google OAuth full e2e unproven
