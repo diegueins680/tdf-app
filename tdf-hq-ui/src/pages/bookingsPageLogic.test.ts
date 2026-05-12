@@ -399,7 +399,7 @@ describe('bookingsPageLogic', () => {
     });
   });
 
-  it('guides first-time setup without showing empty calendar chrome', () => {
+  it('guides first-time setup with one explicit create action instead of duplicate action copy', () => {
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: false,
@@ -408,12 +408,20 @@ describe('bookingsPageLogic', () => {
       roomCatalogLoading: false,
       roomCount: 1,
     })).toEqual({
-      message: 'Crea la primera sesión aquí. Cuando exista al menos una, la agenda semanal servirá para mover, editar y revisar conflictos.',
+      message: 'Cuando exista al menos una sesión, la agenda semanal servirá para mover, editar y revisar conflictos.',
       primaryActionLabel: 'Crear primera sesión',
       severity: 'info',
       showCalendar: false,
       title: 'Todavía no hay sesiones.',
     });
+    expect(getBookingCalendarStatusState({
+      bookingCount: 0,
+      hasActiveFilter: false,
+      hasError: false,
+      isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 1,
+    })?.message).not.toContain('Crea la primera sesión');
 
     expect(getBookingCalendarStatusState({
       bookingCount: 1,

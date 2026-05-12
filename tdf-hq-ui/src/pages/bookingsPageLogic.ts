@@ -211,7 +211,7 @@ export const getBookingCalendarStatusState = ({
   }
 
   return {
-    message: 'Crea la primera sesión aquí. Cuando exista al menos una, la agenda semanal servirá para mover, editar y revisar conflictos.',
+    message: 'Cuando exista al menos una sesión, la agenda semanal servirá para mover, editar y revisar conflictos.',
     primaryActionLabel: 'Crear primera sesión',
     severity: 'info',
     showCalendar: false,
