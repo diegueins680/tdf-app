@@ -2000,7 +2000,8 @@ validateDriveAccess user
 
 hasCoherentAuthScope :: AuthedUser -> Bool
 hasCoherentAuthScope user =
-  length (auRoles user) == length (nub (auRoles user))
+  fromSqlKey (auPartyId user) > 0
+    && length (auRoles user) == length (nub (auRoles user))
     && auModules user == modulesForRoles (auRoles user)
 
 driveUploadServer :: AuthedUser -> Maybe Text -> DriveUploadForm -> AppM DriveUploadDTO

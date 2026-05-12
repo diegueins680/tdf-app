@@ -10031,6 +10031,7 @@ spec = describe "TDF.Server helpers" $ do
             let staleModuleUser =
                     (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
                 duplicatedArtist = mkUser [Artist, Artist]
+                invalidPartyArtist = (mkUser [Artist]) { auPartyId = toSqlKey 0 }
                 assertRejected user =
                     case validateDriveAccess user of
                         Left serverErr -> do
@@ -10044,6 +10045,7 @@ spec = describe "TDF.Server helpers" $ do
                                 )
             assertRejected staleModuleUser
             assertRejected duplicatedArtist
+            assertRejected invalidPartyArtist
 
     describe "hasStrictAdminAccess" $ do
         it "requires the literal Admin role instead of broad admin-module membership" $ do
