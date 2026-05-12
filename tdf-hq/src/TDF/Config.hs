@@ -496,8 +496,8 @@ loadConfig = do
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
-  fbAppIdEnv <- lookupFirstEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
-  fbAppSecretEnv <- lookupFirstEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
+  fbAppIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
+  fbAppSecretEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
   fbMsgTokenEnv <- lookupUniqueNamedEnv
     ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
@@ -652,8 +652,8 @@ loadConfig = do
     , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
     , googleClientId = googleClientIdVal
-    , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
-    , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
+    , facebookAppId = fmap (T.pack . snd) fbAppIdEnv >>= nonEmpty
+    , facebookAppSecret = fmap (T.pack . snd) fbAppSecretEnv >>= nonEmpty
     , facebookGraphBase = fbGraphBase
     , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fbMsgPageId

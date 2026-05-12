@@ -337,6 +337,8 @@ import TDF.Config
       dbConnString,
       emailConfig,
       emailFromName,
+      facebookAppId,
+      facebookAppSecret,
       facebookGraphBase,
       facebookMessagingApiBase,
       facebookMessagingPageId,
@@ -1238,6 +1240,38 @@ main = hspec $ do
                 ]
                 $ loadConfig `shouldThrow` \err ->
                     "FACEBOOK_MESSAGING_PAGE_ID and FACEBOOK_PAGE_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects Facebook app credential alias conflicts before OAuth and webhook use" $ do
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Just " app_primary ")
+                , ("META_APP_ID", Just "app_primary")
+                , ("FACEBOOK_APP_SECRET", Just " secret_primary ")
+                , ("META_APP_SECRET", Just "secret_primary")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    facebookAppId cfg `shouldBe` Just "app_primary"
+                    facebookAppSecret cfg `shouldBe` Just "secret_primary"
+
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Just "app_primary")
+                , ("META_APP_ID", Just "app_fallback")
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ("META_APP_SECRET", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_APP_ID and META_APP_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Just "secret_primary")
+                , ("META_APP_SECRET", Just "secret_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_APP_SECRET and META_APP_SECRET must not be set to different values"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects Facebook token fallback alias conflicts before bearer requests are built" $
