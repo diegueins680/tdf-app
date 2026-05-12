@@ -2991,7 +2991,7 @@ export default function CourseRegistrationsAdminPage() {
           : '',
     ].filter(Boolean).join(' ')
     : '';
-  const emptyLocalSearchResultsTitle = showEmptyLocalSearchResults
+  const emptyLocalSearchResultsAccessibleLabel = showEmptyLocalSearchResults
     && !shortPhoneSearchHint
     && localSearchSummary !== localSearchTerm
     ? [
@@ -5613,7 +5613,7 @@ export default function CourseRegistrationsAdminPage() {
             <Alert
               severity="info"
               data-testid="course-registration-empty-local-search"
-              title={emptyLocalSearchResultsTitle}
+              aria-label={emptyLocalSearchResultsAccessibleLabel}
               action={showEmptyLocalSearchLimitRecoveryAction || showEmptyLocalSearchAlertClearAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {showEmptyLocalSearchLimitRecoveryAction && (
