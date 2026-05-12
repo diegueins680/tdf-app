@@ -10396,6 +10396,9 @@ main = hspec $ do
             assertInvalid "../stage.pdf" "rider file name must not contain path separators"
             assertInvalid "folder\\stage.pdf" "rider file name must not contain path separators"
             assertInvalid "stage\8203plot.pdf" "rider file name must not contain control characters"
+            assertInvalid
+                (Data.Text.replicate 161 "a" <> ".pdf")
+                "rider file name must be 160 characters or fewer"
             assertInvalid "___" "rider file name must include a usable name"
 
     describe "validateLiveSessionRiderFileSize" $ do

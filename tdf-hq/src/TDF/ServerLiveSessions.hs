@@ -456,6 +456,17 @@ validateLiveSessionRiderFileName rawName
         }
   | T.any isPathSeparator trimmed =
       Left err400 { errBody = "rider file name must not contain path separators" }
+  | T.length trimmed > liveSessionRiderFileNameMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "rider file name must be "
+                      <> T.pack (show liveSessionRiderFileNameMaxLength)
+                      <> " characters or fewer"
+                  )
+              )
+        }
   | sanitized == "rider" && trimmed /= "rider" =
       Left err400 { errBody = "rider file name must include a usable name" }
   | otherwise =
