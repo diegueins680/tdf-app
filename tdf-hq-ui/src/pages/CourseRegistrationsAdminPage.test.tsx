@@ -16211,6 +16211,40 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips course-community wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Course community - Beatmaking 101',
+      'Beatmaking 101 - student group chat',
+      'Grupo del curso - Beatmaking 101',
+      'Beatmaking 101 - comunidad de estudiantes',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const copy = emptyState?.textContent ?? '';
+        expect(emptyState).not.toBeNull();
+        expect(copy).toContain(singleCohortInitialEmptyStateMessage);
+        expect(copy).not.toContain(title);
+        expect(copy).not.toMatch(/course\s+community|student\s+group\s+chat|grupo\s+del\s+curso|comunidad\s+de\s+estudiantes/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips profile-link wrappers from first-run cohort copy', async () => {
     const titles = [
       'Profile link - Beatmaking 101',

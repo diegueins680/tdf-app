@@ -1087,11 +1087,17 @@ const firstRunEmergingSocialLeadDescriptorPrefixPattern =
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
-const firstRunCommunityGroupDescriptorPrefixPattern =
-  /^(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb)))(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)/i;
+const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat))|(?:(?:group\s+chat|chat\s+group|community|group|chat)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
 
-const firstRunCommunityGroupDescriptorSuffixPattern =
-  /\s*[-:/|]\s*(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb)))\s*$/i;
+const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCommunityGroupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+
+const firstRunCommunityGroupDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*[-:/|]\s*(?:${firstRunCommunityGroupDescriptorPattern})\s*$`,
+  'i',
+);
 
 const firstRunEventPlatformDescriptorPrefixPattern =
   /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+events?(?:\s+(?:page|portal))?(?:\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
