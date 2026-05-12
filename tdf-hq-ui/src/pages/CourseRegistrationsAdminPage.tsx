@@ -1095,7 +1095,7 @@ const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
 );
 
 const firstRunCommunityGroupDescriptorSuffixPattern = new RegExp(
-  String.raw`\s*[-:/|]\s*(?:${firstRunCommunityGroupDescriptorPattern})\s*$`,
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunCommunityGroupDescriptorPattern})\s*$`,
   'i',
 );
 
