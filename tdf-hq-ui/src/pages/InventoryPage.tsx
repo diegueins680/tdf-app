@@ -36,7 +36,7 @@ import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
-import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import PageShell, { EmptyState } from '../components/PageShell';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -822,7 +822,7 @@ export default function InventoryPage() {
     <PageShell
       title="Inventario de equipo"
       subtitle="Administra equipos, ve quién los tiene, comparte enlaces públicos y registra check-out / check-in con evidencia."
-      actions={(
+      actions={showHeaderRefreshAction ? (
         <Stack direction="row" spacing={1}>
           <Button
             variant="outlined"
@@ -833,7 +833,7 @@ export default function InventoryPage() {
             {isInventoryRefreshing ? 'Actualizando…' : 'Actualizar'}
           </Button>
         </Stack>
-      )}
+      ) : undefined}
     >
       {feedback && <Alert severity="info" sx={{ mb: 2 }} onClose={() => setFeedback(null)}>{feedback}</Alert>}
       {assetsQuery.error && (
@@ -879,14 +879,19 @@ export default function InventoryPage() {
       )}
 
       {!showInitialInventoryErrorState && (showInitialInventoryLoadingState ? (
-        <SkeletonCards count={4} />
-      ) : showFirstAssetEmptyState ? (
         <EmptyState
-          title="Primeros pasos"
-          description="Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila."
-          actionLabel="Volver a consultar inventario"
-          actionOnClick={handleRefreshAssets}
+          title="Cargando inventario"
+          description={INVENTORY_INITIAL_LOADING_GUIDANCE}
         />
+      ) : showFirstAssetEmptyState ? (
+        <Box data-testid="inventory-first-run-empty-state">
+          <EmptyState
+            title="Primeros pasos"
+            description="Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila."
+            actionLabel="Volver a consultar inventario"
+            actionOnClick={handleRefreshAssets}
+          />
+        </Box>
       ) : showSingleAssetSummary && singleAsset ? (
         <InventoryAssetSummaryCard
           title="Primer equipo registrado"
