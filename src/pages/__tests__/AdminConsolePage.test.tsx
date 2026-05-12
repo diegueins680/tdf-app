@@ -5203,6 +5203,11 @@ describe('AdminConsolePage', () => {
           title: 'Service tokens',
           body: ['No items found.'],
         },
+        {
+          cardId: 'ops-records-empty',
+          title: 'Reporte operativo',
+          body: ['No records to show.'],
+        },
       ],
     });
 
@@ -5219,12 +5224,16 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Integraciones|Service tokens/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Integraciones|Service tokens|Reporte operativo/i }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
     expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
     expect(screen.queryByText(/No hay registros/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/No items found/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No records to show/i)).not.toBeInTheDocument();
   });
 
   it('ignores grid row and entry fallback cards so first-run users do not open empty table modules', async () => {
