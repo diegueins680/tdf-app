@@ -289,6 +289,7 @@ import TDF.Server
     , getInvoiceById
     , getInvoicesBySession
     , createReceipt
+    , updateBooking
     , createParty
     , getParty
     , updateParty
@@ -2847,6 +2848,32 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected conflicting booking list filters to be rejected, got: " <> show filtersVal)
             assertInvalid (validateBookingListFilters (Just 7) (Just 11) Nothing)
             assertInvalid (validateBookingListFilters (Just 7) Nothing (Just 13))
+
+    describe "updateBooking" $
+        it "rejects non-positive booking path ids before database lookup" $ do
+            let emptyUpdate =
+                    UpdateBookingReq
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+            result <-
+                runHandler $
+                    runReaderT
+                        (updateBooking (mkUser [Admin]) 0 emptyUpdate)
+                        (error "booking path id should reject before reading Env")
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "bookingId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid booking path id to be rejected, got: " <> show value)
 
     describe "whatsappWebhookServer verification" $ do
         it "rejects missing hub.mode instead of accepting token-only webhook verification" $

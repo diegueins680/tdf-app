@@ -7197,6 +7197,7 @@ createBooking user req = do
 updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
 updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
+  bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
   Env pool _ <- ask
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
@@ -7211,7 +7212,7 @@ updateBooking user bookingIdI req = do
   requestedEngineerId <-
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
-  let bookingId = toSqlKey bookingIdI :: Key Booking
+  let bookingId = toSqlKey bookingIdValid :: Key Booking
   result <- liftIO $ flip runSqlPool pool $ do
     mBooking <- getEntity bookingId
     case mBooking of
