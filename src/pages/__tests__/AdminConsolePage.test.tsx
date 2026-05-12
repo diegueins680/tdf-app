@@ -3415,6 +3415,32 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Datos de demostración')).not.toBeInTheDocument();
   });
 
+  it('keeps the first-run action ahead of optional fallback modules', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    const seedButton = await screen.findByRole('button', { name: /^Cargar datos de ejemplo$/i });
+    const optionalModulesButton = await screen.findByRole(
+      'button',
+      { name: /^Opcional: ver 1 módulo adicional$/i },
+    );
+
+    expectToAppearBefore(seedButton, optionalModulesButton);
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+  });
+
   it('keeps a single long first-run module title compact until the admin expands it', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';

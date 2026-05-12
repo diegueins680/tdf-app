@@ -2380,6 +2380,40 @@ export default function AdminConsolePage() {
                 ))}
               </Stack>
             )}
+            {(firstRunDemoStatusCopy || showFirstRunDemoAction || showFirstRunRefreshAction) && (
+              <Stack spacing={1} alignItems="flex-start">
+                {firstRunDemoStatusCopy && (
+                  <Typography variant="body2" color="text.secondary">
+                    {firstRunDemoStatusCopy}
+                  </Typography>
+                )}
+                {showFirstRunRefreshAction && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleRefreshPanel}
+                    disabled={isRefreshingPanel}
+                    aria-label={firstRunRefreshActionCopy.ariaLabel}
+                    title={firstRunRefreshActionCopy.title}
+                  >
+                    {isRefreshingPanel ? 'Actualizando panel…' : firstRunRefreshActionCopy.label}
+                  </Button>
+                )}
+                {showFirstRunDemoAction && (
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AutoFixHighIcon />}
+                    onClick={() => seedMutation.mutate()}
+                    disabled={seedMutation.isPending}
+                    title={firstRunDemoActionCopy.description}
+                  >
+                    {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
+                  </Button>
+                )}
+              </Stack>
+            )}
             {showFirstRunAdditionalModulesShowAction && (
               <Button
                 size="small"
@@ -2432,40 +2466,6 @@ export default function AdminConsolePage() {
                   id: 'admin-additional-modules-list',
                   hideSingleCardHeader: true,
                 })}
-              </Stack>
-            )}
-            {(firstRunDemoStatusCopy || showFirstRunDemoAction || showFirstRunRefreshAction) && (
-              <Stack spacing={1} alignItems="flex-start">
-                {firstRunDemoStatusCopy && (
-                  <Typography variant="body2" color="text.secondary">
-                    {firstRunDemoStatusCopy}
-                  </Typography>
-                )}
-                {showFirstRunRefreshAction && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleRefreshPanel}
-                    disabled={isRefreshingPanel}
-                    aria-label={firstRunRefreshActionCopy.ariaLabel}
-                    title={firstRunRefreshActionCopy.title}
-                  >
-                    {isRefreshingPanel ? 'Actualizando panel…' : firstRunRefreshActionCopy.label}
-                  </Button>
-                )}
-                {showFirstRunDemoAction && (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AutoFixHighIcon />}
-                    onClick={() => seedMutation.mutate()}
-                    disabled={seedMutation.isPending}
-                    title={firstRunDemoActionCopy.description}
-                  >
-                    {seedMutation.isPending ? firstRunDemoActionCopy.pendingLabel : firstRunDemoActionCopy.buttonLabel}
-                  </Button>
-                )}
               </Stack>
             )}
           </Stack>
