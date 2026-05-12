@@ -18,6 +18,7 @@ module TDF.API.SocialEventsAPI
   , IdParam
   , EventImageUploadForm(..)
   , EventImageUploadDTO(..)
+  , validateEventImageUploadForm
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -80,19 +81,26 @@ data EventImageUploadForm = EventImageUploadForm
   , eiuName :: Maybe Text
   }
 
+validateEventImageUploadForm :: EventImageUploadForm -> Either Text EventImageUploadForm
+validateEventImageUploadForm (EventImageUploadForm file rawName) = do
+  mName <- traverse normalizeEventImageUploadName rawName
+  rejectUnnamedUpload mName file
+  validateUploadName "Uploaded browser file name" (fdFileName file)
+  validateImageUploadMetadata mName file
+  pure EventImageUploadForm
+    { eiuFile = file
+    , eiuName = mName
+    }
+
 instance FromMultipart Tmp EventImageUploadForm where
   fromMultipart multipart = do
     rejectUnexpectedParts multipart
     file <- lookupSingleFile "file" multipart
     mName <- lookupOptionalInput "name" multipart
-    rejectUnnamedUpload mName file
-    mapM_ (validateUploadName "Uploaded image name") mName
-    validateUploadName "Uploaded browser file name" (fdFileName file)
-    validateImageUploadMetadata mName file
-    pure EventImageUploadForm
-      { eiuFile = file
-      , eiuName = mName
-      }
+    let uploadForm = EventImageUploadForm { eiuFile = file, eiuName = mName }
+    case validateEventImageUploadForm uploadForm of
+      Left err -> Left (T.unpack err)
+      Right validatedForm -> Right validatedForm
     where
       rejectUnexpectedParts mp =
         case (unexpectedInputs, unexpectedFiles) of
@@ -114,11 +122,7 @@ instance FromMultipart Tmp EventImageUploadForm where
       lookupOptionalInput name mp =
         case filter (\(Input inputName _) -> inputName == name) (inputs mp) of
           [] -> Right Nothing
-          [Input _ raw] ->
-            let trimmed = T.strip raw
-            in if T.null trimmed
-                then Left (T.unpack name <> " must not be blank; omit it to use the browser file name")
-                else Right (Just trimmed)
+          [Input _ raw] -> Right (Just raw)
           _ -> Left ("Duplicate field: " <> T.unpack name)
 
       lookupSingleFile name mp =
@@ -127,95 +131,114 @@ instance FromMultipart Tmp EventImageUploadForm where
           [file] -> Right file
           _ -> Left ("Duplicate file field: " <> T.unpack name)
 
-      rejectUnnamedUpload mName file =
-        case (mName, T.strip (fdFileName file)) of
-          (Nothing, fileName) | T.null fileName ->
-            Left "Either image name or uploaded browser file name must be provided"
-          _ -> Right ()
+normalizeEventImageUploadName :: Text -> Either Text Text
+normalizeEventImageUploadName rawName =
+  let trimmed = T.strip rawName
+  in if T.null trimmed
+      then Left "name must not be blank; omit it to use the browser file name"
+      else validateUploadName "Uploaded image name" trimmed *> Right trimmed
 
-      validateUploadName label rawName
-        | T.null (T.strip rawName) = Right ()
-        | T.any isUnsafeUploadNameChar rawName =
-            Left (label <> " must not contain control characters or Unicode formatting marks")
-        | T.any isPathSeparator rawName =
-            Left (label <> " must not contain path separators")
-        | not (hasNonEmptyUploadBaseName rawName) =
-            Left (label <> " must include a non-empty base name")
-        | T.length (T.strip rawName) > maxUploadNameLength =
-            Left (label <> " must be 180 characters or fewer")
-        | otherwise = Right ()
+rejectUnnamedUpload :: Maybe Text -> FileData Tmp -> Either Text ()
+rejectUnnamedUpload mName file =
+  case (mName, T.strip (fdFileName file)) of
+    (Nothing, fileName) | T.null fileName ->
+      Left "Either image name or uploaded browser file name must be provided"
+    _ -> Right ()
 
-      maxUploadNameLength = 180 :: Int
+validateUploadName :: Text -> Text -> Either Text ()
+validateUploadName label rawName
+  | T.null (T.strip rawName) = Right ()
+  | T.any isUnsafeUploadNameChar rawName =
+      Left (label <> " must not contain control characters or Unicode formatting marks")
+  | T.any isPathSeparator rawName =
+      Left (label <> " must not contain path separators")
+  | not (hasNonEmptyUploadBaseName rawName) =
+      Left (label <> " must include a non-empty base name")
+  | T.length (T.strip rawName) > maxUploadNameLength =
+      Left (label <> " must be 180 characters or fewer")
+  | otherwise = Right ()
 
-      isPathSeparator ch = ch == '/' || ch == '\\'
+maxUploadNameLength :: Int
+maxUploadNameLength = 180
 
-      isUnsafeUploadNameChar ch =
-        isControl ch
-          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+isPathSeparator :: Char -> Bool
+isPathSeparator ch = ch == '/' || ch == '\\'
 
-      hasNonEmptyUploadBaseName rawName =
-        let trimmed = T.strip rawName
-            ext = T.pack (takeExtension (T.unpack trimmed))
-            baseName =
-              if T.null ext
-                then trimmed
-                else T.dropEnd (T.length ext) trimmed
-        in T.any isStableUploadBaseNameAtom baseName
+isUnsafeUploadNameChar :: Char -> Bool
+isUnsafeUploadNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
-      isStableUploadBaseNameAtom ch =
-        isAscii ch && isAlphaNum ch
+hasNonEmptyUploadBaseName :: Text -> Bool
+hasNonEmptyUploadBaseName rawName =
+  let trimmed = T.strip rawName
+      ext = T.pack (takeExtension (T.unpack trimmed))
+      baseName =
+        if T.null ext
+          then trimmed
+          else T.dropEnd (T.length ext) trimmed
+  in T.any isStableUploadBaseNameAtom baseName
 
-      validateImageUploadMetadata mName file
-        | T.any isUnsafeUploadNameChar (fdFileCType file) =
-            Left
-              ( "Uploaded image MIME type must not contain control characters "
-                  <> "or Unicode formatting marks"
-              )
-        | otherwise =
-            let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
-                requestedExt = maybe "" imageExtension mName
-                browserExt = imageExtension (fdFileName file)
-                resolvedExt =
-                  if T.null requestedExt
-                    then browserExt
-                    else requestedExt
-                providedExts = filter (not . T.null) [requestedExt, browserExt]
-            in case allowedImageExtensions uploadMimeType of
-              Nothing ->
-                Left
-                  ( "Uploaded image must be a raster image "
-                      <> "(jpg, jpeg, png, webp, gif, or bmp)"
-                  )
-              Just allowedExts
-                | T.null resolvedExt ->
-                    Left "Uploaded image file name must include a supported image extension"
-                | any (`notElem` allImageExtensions) (resolvedExt : providedExts) ->
-                    Left
-                      ( "Uploaded image file name must end with "
-                          <> ".jpg, .jpeg, .png, .webp, .gif, or .bmp"
-                      )
-                | any (`notElem` allowedExts) (resolvedExt : providedExts) ->
-                    Left "Uploaded image extension must match its MIME type"
-                | otherwise ->
-                    Right ()
+isStableUploadBaseNameAtom :: Char -> Bool
+isStableUploadBaseNameAtom ch =
+  isAscii ch && isAlphaNum ch
 
-      normalizeUploadMimeType rawContentType =
-        T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
+validateImageUploadMetadata :: Maybe Text -> FileData Tmp -> Either Text ()
+validateImageUploadMetadata mName file
+  | T.any isUnsafeUploadNameChar (fdFileCType file) =
+      Left
+        ( "Uploaded image MIME type must not contain control characters "
+            <> "or Unicode formatting marks"
+        )
+  | otherwise =
+      let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
+          requestedExt = maybe "" imageExtension mName
+          browserExt = imageExtension (fdFileName file)
+          resolvedExt =
+            if T.null requestedExt
+              then browserExt
+              else requestedExt
+          providedExts = filter (not . T.null) [requestedExt, browserExt]
+      in case allowedImageExtensions uploadMimeType of
+        Nothing ->
+          Left
+            ( "Uploaded image must be a raster image "
+                <> "(jpg, jpeg, png, webp, gif, or bmp)"
+            )
+        Just allowedExts
+          | T.null resolvedExt ->
+              Left "Uploaded image file name must include a supported image extension"
+          | any (`notElem` allImageExtensions) (resolvedExt : providedExts) ->
+              Left
+                ( "Uploaded image file name must end with "
+                    <> ".jpg, .jpeg, .png, .webp, .gif, or .bmp"
+                )
+          | any (`notElem` allowedExts) (resolvedExt : providedExts) ->
+              Left "Uploaded image extension must match its MIME type"
+          | otherwise ->
+              Right ()
 
-      imageExtension rawName =
-        T.toLower (T.pack (takeExtension (T.unpack (T.strip rawName))))
+normalizeUploadMimeType :: Text -> Text
+normalizeUploadMimeType rawContentType =
+  T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
 
-      allowedImageExtensions mimeType =
-        case mimeType of
-          "image/jpeg" -> Just [".jpg", ".jpeg"]
-          "image/png"  -> Just [".png"]
-          "image/webp" -> Just [".webp"]
-          "image/gif"  -> Just [".gif"]
-          "image/bmp"  -> Just [".bmp"]
-          _ -> Nothing
+imageExtension :: Text -> Text
+imageExtension rawName =
+  T.toLower (T.pack (takeExtension (T.unpack (T.strip rawName))))
 
-      allImageExtensions =
-        [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
+allowedImageExtensions :: Text -> Maybe [Text]
+allowedImageExtensions mimeType =
+  case mimeType of
+    "image/jpeg" -> Just [".jpg", ".jpeg"]
+    "image/png"  -> Just [".png"]
+    "image/webp" -> Just [".webp"]
+    "image/gif"  -> Just [".gif"]
+    "image/bmp"  -> Just [".bmp"]
+    _ -> Nothing
+
+allImageExtensions :: [Text]
+allImageExtensions =
+  [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"]
 
 data EventImageUploadDTO = EventImageUploadDTO
   { eiuEventId   :: Text

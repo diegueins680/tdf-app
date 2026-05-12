@@ -710,7 +710,10 @@ socialEventsServer user = eventsServer
         })
 
     uploadEventImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
-    uploadEventImage rawId EventImageUploadForm{..} = do
+    uploadEventImage rawId rawUploadForm = do
+      EventImageUploadForm{..} <-
+        either (throwError . eventImageUploadFormServerError) pure $
+          validateEventImageUploadForm rawUploadForm
       Env{..} <- ask
       now <- liftIO getCurrentTime
       (eventKey, eventRow) <- requireManagedEvent rawId
@@ -3134,6 +3137,10 @@ validateStoredEventFinanceMetadata eventRec = do
 storedEventMetadataServerError :: T.Text -> ServerError
 storedEventMetadataServerError message =
   err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+eventImageUploadFormServerError :: T.Text -> ServerError
+eventImageUploadFormServerError message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
 fallbackBudget :: Int -> Maybe Int
 fallbackBudget plannedExpenseCents

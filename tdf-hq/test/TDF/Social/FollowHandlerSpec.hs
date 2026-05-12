@@ -14,9 +14,20 @@ import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant.Multipart
+    ( FileData (..)
+    , FromMultipart (fromMultipart)
+    , Input (..)
+    , MultipartData (..)
+    , Tmp
+    )
 import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
+import TDF.API.SocialEventsAPI
+    ( EventImageUploadForm (..)
+    , validateEventImageUploadForm
+    )
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO
     , ArtistFollowerDTO (..)
@@ -41,6 +52,22 @@ import TDF.Server.SocialEventsHandlers
     , validateInvitationFromPartyId
     , validateStoredEventFinanceMetadata
     )
+
+mkEventImageUploadMultipart :: [(T.Text, T.Text)] -> [FileData Tmp] -> MultipartData Tmp
+mkEventImageUploadMultipart fields uploads =
+    MultipartData
+        { inputs = map (uncurry Input) fields
+        , files = uploads
+        }
+
+mkEventImageUploadFile :: T.Text -> FileData Tmp
+mkEventImageUploadFile fileName =
+    FileData
+        { fdInputName = "file"
+        , fdFileName = fileName
+        , fdFileCType = "image/png"
+        , fdPayload = "/tmp/mock-event-image-upload"
+        }
 
 spec :: Spec
 spec = describe "social event handler helpers" $ do
@@ -84,6 +111,40 @@ spec = describe "social event handler helpers" $ do
         assertInvalid "event image upload size is invalid" (-1)
         assertInvalid "event image upload must not be empty" 0
         assertInvalid "event image upload must be 10 MB or smaller" (10 * 1024 * 1024 + 1)
+
+    it "revalidates event image upload names before handler filename sanitization" $ do
+        case fromMultipart
+            ( mkEventImageUploadMultipart
+                [("name", "  Poster.png  ")]
+                [mkEventImageUploadFile "camera.png"]
+            ) :: Either String EventImageUploadForm of
+            Right form ->
+                eiuName form `shouldBe` Just "Poster.png"
+            Left err ->
+                expectationFailure
+                    ("Expected valid event image upload multipart data, got: " <> err)
+
+        let assertInvalid expectedMessage form =
+                case validateEventImageUploadForm form of
+                    Left err -> T.unpack err `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ( "Expected forged event image upload form to be rejected, got: "
+                                <> show (eiuName value)
+                            )
+
+        assertInvalid
+            "Uploaded browser file name must not contain path separators"
+            EventImageUploadForm
+                { eiuFile = mkEventImageUploadFile "events/poster.png"
+                , eiuName = Just "poster.png"
+                }
+        assertInvalid
+            "Uploaded image extension must match its MIME type"
+            EventImageUploadForm
+                { eiuFile = mkEventImageUploadFile "camera.jpg"
+                , eiuName = Just "poster.png"
+                }
 
     it "rejects unsafe social event metadata URLs before storing public links" $ do
         validateEventMetadataUrlField
