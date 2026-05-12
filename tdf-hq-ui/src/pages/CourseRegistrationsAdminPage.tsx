@@ -1131,10 +1131,10 @@ const firstRunStandalonePublicPageDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))\s*$/i;
 
 const firstRunBioLinkDescriptorPrefixPattern =
-  /^(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+links?|bio\s+pages?|profile\s+links?|profile\s+pages?|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio|enlace\s+de\s+perfil|link\s+de\s+perfil|p[aá]gina\s+de\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunBioLinkDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:link\s*tree|linktree|bio\s*\.?\s*link|bio\s+links?|bio\s+pages?|profile\s+links?|profile\s+pages?|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio|enlace\s+de\s+perfil|link\s+de\s+perfil|p[aá]gina\s+de\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)\s*$/i;
 
 const firstRunCourseWebsiteDescriptorPrefixPattern =
   /^(?:(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio|portal)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
