@@ -713,6 +713,9 @@ spec = do
                 "{\"code\":\"oauth-code-123\\u202E\"}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
+                (BL8.concat ["{\"code\":\"", BL8.pack (replicate 4097 'a'), "\"}"])
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
                 "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
