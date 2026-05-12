@@ -193,7 +193,14 @@ data StudentUpdate = StudentUpdate
   } deriving (Show, Generic)
 instance ToJSON StudentUpdate
 instance FromJSON StudentUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@(StudentUpdate displayNameValue emailValue phoneValue notesValue) <-
+      genericParseJSON strictObjectOptions value
+    case (displayNameValue, emailValue, phoneValue, notesValue) of
+      (Nothing, Nothing, Nothing, Nothing) ->
+        fail "StudentUpdate must include at least one field"
+      _ ->
+        pure payload
 
 data TeacherStudentLinkIn = TeacherStudentLinkIn
   { studentId :: Int

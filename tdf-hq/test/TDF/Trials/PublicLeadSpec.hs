@@ -886,6 +886,14 @@ spec = do
           "{\"displayName\":\"Ada\",\"unexpected\":true}"
             :: Either String StudentUpdate)
         `shouldBe` True
+      isLeft
+        (A.eitherDecode "{}" :: Either String StudentUpdate)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode
+          "{\"displayName\":null,\"email\":null,\"phone\":null,\"notes\":null}"
+            :: Either String StudentUpdate)
+        `shouldBe` True
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
