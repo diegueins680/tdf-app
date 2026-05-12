@@ -665,15 +665,19 @@ data CmsContentIn = CmsContentIn
   } deriving (Show, Generic)
 instance FromJSON CmsContentIn where
   parseJSON raw = do
-    withObject "CmsContentIn" rejectNullPayload raw
+    withObject "CmsContentIn" rejectAmbiguousNulls raw
     genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True
       } raw
     where
-      rejectNullPayload obj =
-        case AesonKeyMap.lookup (AesonKey.fromText "payload") obj of
-          Just Null -> fail "payload must be omitted instead of null"
+      rejectAmbiguousNulls obj = do
+        rejectNullField "payload" "payload must be omitted instead of null" obj
+        rejectNullField "status" "status must be omitted instead of null" obj
+
+      rejectNullField fieldName message obj =
+        case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+          Just Null -> fail message
           _ -> pure ()
 
 data CmsContentDTO = CmsContentDTO

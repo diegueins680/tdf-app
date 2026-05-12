@@ -31,7 +31,7 @@ import System.IO.Temp (withSystemTempFile)
 import Test.Hspec
 import Web.PathPieces (toPathPiece)
 
-import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
+import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
@@ -4576,6 +4576,23 @@ main = hspec $ do
                             ( "Expected hidden-format Calendar status filter to fail, got: "
                                 <> show value
                             )
+
+    describe "CMS content request JSON" $ do
+        it "defaults omitted status only when clients omit it instead of sending null" $ do
+            case eitherDecode "{\"slug\":\"records-sessions\",\"locale\":\"es\",\"payload\":{}}" of
+                Left err ->
+                    expectationFailure ("Expected CMS content payload to decode, got: " <> err)
+                Right payload ->
+                    cciStatus payload `shouldBe` Nothing
+
+            case ( eitherDecode "{\"slug\":\"records-sessions\",\"locale\":\"es\",\"status\":null}"
+                    :: Either String CmsContentIn
+                 ) of
+                Left err ->
+                    err `shouldContain` "status must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null CMS status to fail, got: " <> show payload)
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
