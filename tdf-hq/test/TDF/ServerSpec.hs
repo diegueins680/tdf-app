@@ -9487,8 +9487,16 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Left "engineerName debe tener 160 caracteres o menos"
 
         it "still rejects missing engineer fallback details for recording, mixing, and mastering bookings" $
-            validateEngineer (Just "grabacion") Nothing (Just "   ")
-                `shouldBe` Left "Selecciona un ingeniero para grabación/mezcla/mastering"
+            forM_
+                [ "grabacion"
+                , "recording"
+                , "mezcla"
+                , "mixing"
+                , "mastering"
+                ]
+                $ \serviceLabel ->
+                    validateEngineer (Just serviceLabel) Nothing (Just "   ")
+                        `shouldBe` Left "Selecciona un ingeniero para grabación/mezcla/mastering"
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do

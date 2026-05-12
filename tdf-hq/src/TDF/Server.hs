@@ -8218,7 +8218,7 @@ requiresEngineer :: Maybe Text -> Bool
 requiresEngineer Nothing = False
 requiresEngineer (Just svc) =
   let lowered = T.toLower (T.strip svc)
-  in any (`T.isInfixOf` lowered) ["graba", "mezcl", "master"]
+  in any (`T.isInfixOf` lowered) ["graba", "record", "mezcl", "mix", "master"]
 
 validateEngineer :: Maybe Text -> Maybe Int64 -> Maybe Text -> Either Text ()
 validateEngineer svc mEngineerId mEngineerName
