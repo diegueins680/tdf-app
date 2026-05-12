@@ -1150,17 +1150,18 @@ const firstRunCourseCatalogDescriptorPrefixPattern =
 const firstRunCourseCatalogDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
 
-const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore)`;
+const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|google\s+calendar)`;
+const firstRunReservationDescriptorPattern = String.raw`(?:booking|reservation|rsvp|appointments?(?:\s+schedules?)?|scheduling)(?:\s+(?:forms?|pages?|links?|urls?|portals?|schedules?))?`;
 
 const firstRunReservationDescriptorPrefixPattern =
   new RegExp(
-    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation|rsvp)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?${firstRunReservationDescriptorPattern}|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
     'i',
   );
 
 const firstRunReservationDescriptorSuffixPattern =
   new RegExp(
-    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?(?:booking|reservation|rsvp)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
+    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?${firstRunReservationDescriptorPattern}|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
     'i',
   );
 

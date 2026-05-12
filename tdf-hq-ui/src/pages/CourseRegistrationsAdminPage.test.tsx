@@ -13559,6 +13559,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Cal.com booking URL',
       'Formulario de reserva de Calendly - Beatmaking 101',
       'Beatmaking 101 - pagina de reserva en Setmore',
+      'YouCanBook.me appointment page - Beatmaking 101',
+      'Beatmaking 101 - TidyCal booking link',
+      'Google Calendar appointment schedule for Beatmaking 101',
+      'Formulario de reserva de YouCanBookMe - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -13574,8 +13578,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore/i);
-        expect(emptyState?.textContent).not.toMatch(/booking|reservation|reserva/i);
+        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore|YouCanBook|TidyCal|Google Calendar/i);
+        expect(emptyState?.textContent).not.toMatch(/booking|reservation|appointment|schedule|reserva/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
