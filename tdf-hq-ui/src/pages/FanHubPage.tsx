@@ -25,6 +25,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import GroupsIcon from '@mui/icons-material/Groups';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -2326,6 +2327,16 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               Último lanzamiento
                             </Button>
                           )}
+                          <Button
+                            variant="text"
+                            size="small"
+                            component={RouterLink}
+                            to={`/fans/clubs/${artist.apArtistId}`}
+                            startIcon={<GroupsIcon />}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Club
+                          </Button>
                         </Stack>
                       </Box>
                       {featuredSources.length > 0 && (

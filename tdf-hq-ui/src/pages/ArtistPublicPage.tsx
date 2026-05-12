@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { Link as RouterLink, useParams } from 'react-router-dom';
@@ -242,6 +243,16 @@ export default function ArtistPublicPage() {
                     Editar perfil
                   </Button>
                 )}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  component={RouterLink}
+                  to={`/fans/clubs/${artist.apArtistId}`}
+                  startIcon={<GroupsIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Club de Fans
+                </Button>
               </Stack>
             </Stack>
           </Stack>

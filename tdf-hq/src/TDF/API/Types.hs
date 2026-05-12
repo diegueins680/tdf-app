@@ -1669,16 +1669,20 @@ instance FromJSON InternTaskUpdate where
           ]
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        providedKeys = map AKey.toText (AKM.keys o)
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternTaskUpdate: " <> T.unpack key)
-      [] ->
-        InternTaskUpdate
-          <$> o .:? "ituTitle"
-          <*> o .:! "ituDescription"
-          <*> o .:? "ituStatus"
-          <*> o .:? "ituProgress"
-          <*> o .:! "ituAssignedTo"
-          <*> o .:! "ituDueAt"
+      []
+        | null providedKeys ->
+            fail "InternTaskUpdate must include at least one field"
+        | otherwise ->
+            InternTaskUpdate
+              <$> o .:? "ituTitle"
+              <*> o .:! "ituDescription"
+              <*> o .:? "ituStatus"
+              <*> o .:? "ituProgress"
+              <*> o .:! "ituAssignedTo"
+              <*> o .:! "ituDueAt"
 
 data InternTodoDTO = InternTodoDTO
   { itdId        :: Text

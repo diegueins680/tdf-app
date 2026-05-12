@@ -1278,6 +1278,9 @@ spec = do
                 "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty task updates instead of returning a silent no-op patch" $
+            decodeInternTaskUpdate "{}" `shouldSatisfy` isLeft
+
     describe "InternProject payload FromJSON" $ do
         it "accepts canonical project payloads and preserves explicit clears" $ do
             case decodeInternProjectCreate
