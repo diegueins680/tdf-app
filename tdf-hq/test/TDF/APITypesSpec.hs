@@ -461,7 +461,8 @@ spec = do
                 Right (Courses.CourseRegistrationFollowUpUpdate _ _ _ _ _ nextFollowUpAtVal) ->
                     nextFollowUpAtVal `shouldBe` Just Nothing
 
-        it "rejects unexpected keys so malformed follow-up writes fail explicitly" $ do
+        it "rejects empty or unexpected follow-up updates so malformed writes fail explicitly" $ do
+            decodeFollowUpUpdate "{}" `shouldSatisfy` isLeft
             decodeFollowUpCreate
                 "{\"entryType\":\"call\",\"notes\":\"Client asked to pay tomorrow\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft

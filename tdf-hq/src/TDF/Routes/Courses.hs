@@ -183,14 +183,25 @@ instance FromJSON CourseRegistrationFollowUpUpdate where
       , attachmentName = parsedAttachmentName
       } <- genericParseJSON strictObjectOptions value
     nextFollowUpAtUpdate <- o .:! "nextFollowUpAt"
-    pure CourseRegistrationFollowUpUpdate
-      { entryType = parsedEntryType
-      , subject = parsedSubject
-      , notes = parsedNotes
-      , attachmentUrl = parsedAttachmentUrl
-      , attachmentName = parsedAttachmentName
-      , nextFollowUpAt = nextFollowUpAtUpdate
-      }
+    case
+      ( parsedEntryType
+      , parsedSubject
+      , parsedNotes
+      , parsedAttachmentUrl
+      , parsedAttachmentName
+      , nextFollowUpAtUpdate
+      ) of
+      (Nothing, Nothing, Nothing, Nothing, Nothing, Nothing) ->
+        fail "CourseRegistrationFollowUpUpdate must include at least one field"
+      _ ->
+        pure CourseRegistrationFollowUpUpdate
+          { entryType = parsedEntryType
+          , subject = parsedSubject
+          , notes = parsedNotes
+          , attachmentUrl = parsedAttachmentUrl
+          , attachmentName = parsedAttachmentName
+          , nextFollowUpAt = nextFollowUpAtUpdate
+          }
   parseJSON _ = fail "CourseRegistrationFollowUpUpdate must be an object"
 instance ToJSON CourseRegistrationFollowUpUpdate
 
