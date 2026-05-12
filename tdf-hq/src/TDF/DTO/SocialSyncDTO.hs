@@ -40,11 +40,23 @@ instance FromJSON SocialSyncPostIn where
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True
       } value
+    platform <- validateRequiredIdentityField "platform" (sspPlatform post)
+    externalPostId <- validateRequiredIdentityField "externalPostId" (sspExternalPostId post)
     validateOptionalMetricCount "likeCount" (sspLikeCount post)
     validateOptionalMetricCount "commentCount" (sspCommentCount post)
     validateOptionalMetricCount "shareCount" (sspShareCount post)
     validateOptionalMetricCount "viewCount" (sspViewCount post)
     pure post
+      { sspPlatform = platform
+      , sspExternalPostId = externalPostId
+      }
+
+validateRequiredIdentityField :: String -> Text -> Parser Text
+validateRequiredIdentityField fieldName rawValue =
+  let value = T.strip rawValue
+  in if T.null value
+       then fail (fieldName <> " must not be blank")
+       else pure value
 
 data SocialSyncIngestRequest = SocialSyncIngestRequest
   { ssirPosts :: [SocialSyncPostIn]

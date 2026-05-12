@@ -19,6 +19,7 @@ import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
 import qualified TDF.DTO as DTO
 import qualified TDF.DTO.SocialEventsDTO as SocialEvents
+import qualified TDF.DTO.SocialSyncDTO as SocialSync
 import TDF.API.Types
     ( BandCreate (..)
     , BandMemberInput (..)
@@ -1785,6 +1786,30 @@ spec = do
                 ])
                 `shouldSatisfy` isLeft
 
+    describe "SocialSyncIngestRequest FromJSON" $ do
+        it "accepts canonical ingest posts and trims identity fields before handler validation" $
+            case decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\" Instagram \",\"externalPostId\":\" ig-post_42 \",\"likeCount\":3}]}"
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical social sync ingest payload to decode, got: " <> err)
+                Right (SocialSync.SocialSyncIngestRequest [post]) -> do
+                    SocialSync.sspPlatform post `shouldBe` "Instagram"
+                    SocialSync.sspExternalPostId post `shouldBe` "ig-post_42"
+                    SocialSync.sspLikeCount post `shouldBe` Just 3
+                Right payload ->
+                    expectationFailure
+                        ("Expected one decoded social sync post, got: " <> show payload)
+
+        it "rejects blank ingest identity fields before social sync fallback validation" $ do
+            decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\"   \",\"externalPostId\":\"ig-post_42\"}]}"
+                `shouldSatisfy` isLeft
+            decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"   \"}]}"
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
@@ -1966,6 +1991,8 @@ spec = do
     decodeTicketCheckIn = eitherDecode
     decodeEventFinanceEntry :: BL8.ByteString -> Either String SocialEvents.EventFinanceEntryDTO
     decodeEventFinanceEntry = eitherDecode
+    decodeSocialSyncIngest :: BL8.ByteString -> Either String SocialSync.SocialSyncIngestRequest
+    decodeSocialSyncIngest = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
