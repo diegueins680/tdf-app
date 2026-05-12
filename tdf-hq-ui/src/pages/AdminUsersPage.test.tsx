@@ -22,9 +22,11 @@ const { default: AdminUsersPage } = await import('./AdminUsersPage');
 
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
-  'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+  'No hay cuentas admin activas. Cuando exista la primera cuenta activa, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+const ADMIN_USERS_AMBIGUOUS_EMPTY_STATE =
+  'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION = 'Ver si hay cuentas inactivas';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -229,6 +231,7 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).toContain(
           ADMIN_USERS_EMPTY_STATE,
         );
+        expect(container.textContent).not.toContain(ADMIN_USERS_AMBIGUOUS_EMPTY_STATE);
         expect(container.textContent).not.toContain('búsqueda y filtros');
         expect(container.textContent).not.toContain('señales de contacto para revisar la lista más rápido');
         expect(container.textContent).not.toContain('Buscar usuarios');
