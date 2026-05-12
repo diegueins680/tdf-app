@@ -10,6 +10,7 @@ module TDF.ServerFanClub
   , fanClubSecureArtistHandlers
   , validateFanClubPostPathId
   , validateFanClubPostMutationTarget
+  , validateFanClubReplyParentTarget
   , validateFanClubElectionPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubCandidacyPathId
@@ -184,24 +185,36 @@ fanClubSecureArtistHandlers user artistId =
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
-        Just (Entity cid _) -> runDB $ do
-          now <- liftIO getCurrentTime
-          let parentKey = fmap toSqlKey (fcpReqParentId req)
-          pid <- insert FanClubPost
-            { fanClubPostClubId = cid
-            , fanClubPostFanPartyId = auPartyId user
-            , fanClubPostParentId = parentKey
-            , fanClubPostTitle = fcpReqTitle req
-            , fanClubPostContent = fcpReqContent req
-            , fanClubPostIsPinned = False
-            , fanClubPostIsHidden = False
-            , fanClubPostCreatedAt = now
-            , fanClubPostUpdatedAt = Nothing
-            }
-          author <- getAuthorDTO (auPartyId user)
-          pure $ postToDTO pid
-            (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) False False now Nothing)
-            0 author
+        Just (Entity cid _) -> do
+          parentKey <- resolveParentKey cid (fcpReqParentId req)
+          runDB $ do
+            now <- liftIO getCurrentTime
+            pid <- insert FanClubPost
+              { fanClubPostClubId = cid
+              , fanClubPostFanPartyId = auPartyId user
+              , fanClubPostParentId = parentKey
+              , fanClubPostTitle = fcpReqTitle req
+              , fanClubPostContent = fcpReqContent req
+              , fanClubPostIsPinned = False
+              , fanClubPostIsHidden = False
+              , fanClubPostCreatedAt = now
+              , fanClubPostUpdatedAt = Nothing
+              }
+            author <- getAuthorDTO (auPartyId user)
+            pure $ postToDTO pid
+              (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) False False now Nothing)
+              0 author
+
+    resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
+    resolveParentKey _ Nothing = pure Nothing
+    resolveParentKey cid (Just rawParentId) = do
+      parentId <- either throwError pure (validateFanClubPostPathId rawParentId)
+      mParent <- runDB $ get parentId
+      either throwError (pure . Just) $
+        maybe
+          (Left fanClubPostNotFound)
+          (validateFanClubReplyParentTarget cid . Entity parentId)
+          mParent
 
     pinPost aId postId = do
       postKey <- requirePostOfficerTarget aId postId
@@ -523,6 +536,18 @@ validateFanClubPostMutationTarget
 validateFanClubPostMutationTarget clubId (Entity postId post)
   | fanClubPostClubId post == clubId = Right postId
   | otherwise = Left fanClubPostNotFound
+
+validateFanClubReplyParentTarget
+  :: FanClubId
+  -> Entity FanClubPost
+  -> Either ServerError FanClubPostId
+validateFanClubReplyParentTarget clubId entity@(Entity _ post) =
+  case validateFanClubPostMutationTarget clubId entity of
+    Left err -> Left err
+    Right postId
+      | isJust (fanClubPostParentId post) ->
+          Left err400 { errBody = "Fan club replies must target a top-level post" }
+      | otherwise -> Right postId
 
 fanClubPostNotFound :: ServerError
 fanClubPostNotFound =

@@ -15,12 +15,14 @@ import TDF.Models
   , FanClubCandidacy (..)
   , FanClubElection (..)
   , FanClubOfficerRole (Coordinator, Secretary)
+  , FanClubPost (..)
   )
 import TDF.ServerFanClub
   ( validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
   , validateFanClubOfficerRoleInput
+  , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTarget
   )
 
@@ -66,6 +68,23 @@ spec = do
           (toSqlKey 21)
           (Entity (toSqlKey 30) (mkCandidacy 20))
 
+  describe "validateFanClubReplyParentTarget" $ do
+    it "requires reply parents to be top-level posts in the requested club" $ do
+      case validateFanClubReplyParentTarget
+        (toSqlKey 10)
+        (Entity (toSqlKey 50) (mkPost 10 Nothing)) of
+          Right postId -> fromSqlKey postId `shouldBe` 50
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 404 "Fan club post not found" $
+        validateFanClubReplyParentTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 51) (mkPost 11 Nothing))
+      assertRejected 400 "top-level post" $
+        validateFanClubReplyParentTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 52) (mkPost 10 (Just 50)))
+
   describe "validateFanClubOfficerRoleInput" $ do
     it "rejects typoed candidacy roles instead of falling back to coordinator" $ do
       case validateFanClubOfficerRoleInput "  Secretario  " of
@@ -98,6 +117,20 @@ mkCandidacy electionId =
     , fanClubCandidacyRole = Coordinator
     , fanClubCandidacyManifesto = Nothing
     , fanClubCandidacyCreatedAt = testTime
+    }
+
+mkPost :: Int64 -> Maybe Int64 -> FanClubPost
+mkPost clubId parentId =
+  FanClubPost
+    { fanClubPostClubId = toSqlKey clubId
+    , fanClubPostFanPartyId = toSqlKey 40
+    , fanClubPostParentId = fmap toSqlKey parentId
+    , fanClubPostTitle = Just "Club note"
+    , fanClubPostContent = "Visible to club members"
+    , fanClubPostIsPinned = False
+    , fanClubPostIsHidden = False
+    , fanClubPostCreatedAt = testTime
+    , fanClubPostUpdatedAt = Nothing
     }
 
 testTime :: UTCTime
