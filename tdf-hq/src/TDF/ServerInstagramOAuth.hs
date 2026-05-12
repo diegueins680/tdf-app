@@ -21,7 +21,7 @@ import           Control.Monad.Except       (MonadError, catchError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Aeson                 (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
-import           Data.Aeson.Types           (Parser)
+import           Data.Aeson.Types           (Parser, parseEither)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
@@ -373,7 +373,8 @@ selectPrimaryInstagramPage preferredIds contexts =
     [ (igUserId, ctx) | ctx <- contexts, Just igUserId <- [pcInstagramUserId ctx] ]
 
 selectPrimaryInstagramCandidate :: [Text] -> [(Text, a)] -> Either ServerError (Maybe a)
-selectPrimaryInstagramCandidate preferredIds candidates =
+selectPrimaryInstagramCandidate preferredIds candidates = do
+  preferredIdsClean <- validatePreferredInstagramCandidateIds preferredIds
   if hasDuplicateCandidateIds
     then
       Left err409
@@ -382,7 +383,7 @@ selectPrimaryInstagramCandidate preferredIds candidates =
               <> "from an existing account or remove duplicate page links."
         }
     else
-      case go preferredIds of
+      case go preferredIdsClean of
         Just candidate -> Right (Just candidate)
         Nothing ->
           case candidates of
@@ -404,6 +405,30 @@ selectPrimaryInstagramCandidate preferredIds candidates =
       case find (\(candidateId, _) -> candidateId == pid) candidates of
         Just (_, candidate) -> Just candidate
         Nothing -> go rest
+
+validatePreferredInstagramCandidateIds :: [Text] -> Either ServerError [Text]
+validatePreferredInstagramCandidateIds preferredIds =
+  case traverse validatePreferredId preferredIds of
+    Left _ ->
+      Left err409
+        { errBody =
+            "Instagram OAuth stored preferred page ids are malformed; reconnect "
+              <> "from an existing account."
+        }
+    Right ids
+      | length ids /= length (nub ids) ->
+          Left err409
+            { errBody =
+                "Instagram OAuth stored preferred page ids contain duplicates; reconnect "
+                  <> "from an existing account."
+            }
+      | otherwise -> Right ids
+  where
+    validatePreferredId rawId =
+      case parseEither (normalizeFacebookGraphId "Instagram preferred account id") rawId of
+        Right cleanId
+          | cleanId == rawId -> Right cleanId
+        _ -> Left ("invalid preferred Instagram account id" :: String)
 
 loadFacebookCreds :: MonadError ServerError m => AppConfig -> m (Text, Text)
 loadFacebookCreds cfg =
