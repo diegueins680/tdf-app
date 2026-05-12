@@ -5587,6 +5587,66 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/no está disponible/i)).not.toBeInTheDocument();
   });
 
+  it('ignores not-yet-available fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-not-yet',
+          title: 'Service tokens',
+          body: ['Not yet available in this workspace.'],
+        },
+        {
+          cardId: 'technical-integrations-not-ready',
+          title: 'Integraciones técnicas',
+          body: ['Not ready for this workspace.'],
+        },
+        {
+          cardId: 'not-yet-available-title',
+          title: 'Not yet available',
+          body: ['Review future connector access here.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 4 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Not yet available')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Not yet available in this workspace/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Not ready for this workspace/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Service tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Not yet available')).not.toBeInTheDocument();
+  });
+
   it('ignores support-hand-off fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
