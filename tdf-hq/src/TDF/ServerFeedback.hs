@@ -360,6 +360,7 @@ isValidFeedbackEmail candidate =
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidDomainLabel (T.splitOn "." domain)
+        && isValidFeedbackFinalDomainLabel domain
     _ -> False
 
 isValidFeedbackEmailLocalPart :: Text -> Bool
@@ -382,6 +383,13 @@ isValidDomainLabel label =
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidDomainChar label
+
+isValidFeedbackFinalDomainLabel :: Text -> Bool
+isValidFeedbackFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 isValidDomainChar :: Char -> Bool
 isValidDomainChar c = isAsciiLower c || isDigit c || c == '-'
