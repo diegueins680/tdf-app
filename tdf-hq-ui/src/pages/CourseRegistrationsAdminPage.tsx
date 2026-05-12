@@ -5529,8 +5529,9 @@ export default function CourseRegistrationsAdminPage() {
                   label={LOCAL_SEARCH_LABEL}
                   value={localSearch}
                   onChange={(e) => {
-                    setHasUsedFilterControl(true);
-                    setLocalSearch(normalizeVisibleLocalSearchInput(e.target.value));
+                    const nextLocalSearch = normalizeVisibleLocalSearchInput(e.target.value);
+                    if (nextLocalSearch) setHasUsedFilterControl(true);
+                    setLocalSearch(nextLocalSearch);
                   }}
                   placeholder={localSearchPlaceholder}
                   helperText={localSearchHelperText}

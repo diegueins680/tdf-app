@@ -11712,6 +11712,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
       );
+      expect(container.textContent).toContain(
+        `Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
+      );
       expect(container.textContent).not.toContain(
         'Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.',
       );
