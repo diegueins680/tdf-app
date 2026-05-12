@@ -1202,8 +1202,14 @@ describe('CourseRegistrationsAdminPage', () => {
     const secondRender = await renderPage(secondContainer);
 
     await waitForExpectation(() => {
+      const limitToggle = getButtonByText(secondContainer, 'Ajustar límite');
+
       expect(hasLabel(secondContainer, 'Límite')).toBe(false);
-      expect(getButtonByText(secondContainer, 'Ajustar límite')).toBeTruthy();
+      expect(limitToggle).toBeTruthy();
+      expect(limitToggle.getAttribute('aria-label')).toBe('Ajustar límite de carga');
+      expect(limitToggle.getAttribute('title')).toBe(
+        'Mostrar el campo de límite de carga para revisar un lote distinto.',
+      );
       expect(
         secondContainer
           .querySelector('[data-testid="course-registration-current-view-summary"] button')
@@ -1243,9 +1249,13 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const hideLimitToggle = getButtonByText(secondContainer, 'Ocultar límite');
+
       expect(hasLabel(secondContainer, loadLimitLabel)).toBe(true);
       expect(hasLabel(secondContainer, 'Límite')).toBe(false);
-      expect(getButtonByText(secondContainer, 'Ocultar límite')).toBeTruthy();
+      expect(hideLimitToggle).toBeTruthy();
+      expect(hideLimitToggle.getAttribute('aria-label')).toBe('Ocultar límite de carga');
+      expect(hideLimitToggle.getAttribute('title')).toBe('Ocultar el campo de límite de carga.');
       expect(secondContainer.textContent).toContain(loadLimitHelperText);
       expect(secondContainer.textContent).not.toContain('Máximo de filas a cargar');
     });
@@ -1259,13 +1269,19 @@ describe('CourseRegistrationsAdminPage', () => {
     const thirdRender = await renderPage(thirdContainer, '/inscripciones-curso?limit=50');
 
     await waitForExpectation(() => {
+      const customLimitToggle = getButtonByText(thirdContainer, 'Ajustar límite (50)');
+
       expect(listRegistrationsMock).toHaveBeenCalledWith({
         slug: undefined,
         status: undefined,
         limit: 50,
       });
       expect(hasLabel(thirdContainer, 'Límite')).toBe(false);
-      expect(getButtonByText(thirdContainer, 'Ajustar límite (50)')).toBeTruthy();
+      expect(customLimitToggle).toBeTruthy();
+      expect(customLimitToggle.getAttribute('aria-label')).toBe('Ajustar límite de carga (50)');
+      expect(customLimitToggle.getAttribute('title')).toBe(
+        'Mostrar el campo de límite de carga para revisar un lote distinto.',
+      );
       expect(thirdContainer.textContent).toContain('Límite actual: hasta 50 inscripciones.');
       expect(thirdContainer.textContent).not.toContain('Vista filtrada: límite 50.');
       expect(thirdContainer.textContent).not.toContain('Límite activo: 50');

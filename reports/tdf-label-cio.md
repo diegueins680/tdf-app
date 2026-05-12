@@ -60,3 +60,13 @@ FINAL_STATUS: blocked — backend down (PID 95241 dead, /health unreachable at 1
 - **Reporting discipline:** Prior entry 15:40 UTC (~2h ago). This checkpoint restores <12h cadence.
 
 FINAL_STATUS: blocked — BACKEND_DOWN persists (no process on :8080 since at least 15:40 UTC) + Google OAuth full e2e unproven; Lane C live and durable (supervisor 68059, child 57652, 60s restart).
+
+## 2026-05-12 21:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN historically (Detox automated PASS, keychain fixes committed). Google OAuth simulator-realistic PASS confirmed (ASWebAuthenticationSession dialog presents). Full Google OAuth e2e UNPROVEN — exact blocker remains `MANUAL_DEVICE_TEST_NEEDED` (real token or physical device). iOS binary PRESENT at `tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app` (mtime 2026-05-12 01:40:35). **BACKEND RESTORED** — `curl http://localhost:8080/health` → `{"db":"ok","status":"ok"}` at 21:40 UTC (was down 15:40–17:40 UTC, now healthy).
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Google OAuth full e2e complete.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`), child PID 65323, state `running`, phase `supervising`, lastHeartbeat 2026-05-12T21:40:15Z (fresh, <1 min). restartDelaySeconds 60. Child actively implementing iteration 1 (UI improvement idea) since 21:39:29Z. `lastError` in status.json is stale git `index.lock` conflict (auto-recovered by loop logic — child exits 0, restarts cleanly). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend restored healthy, Packet B gated on Google OAuth full e2e, Lane C live with launchd durability (supervisor 68059, child 65323, 60s restart), systems lane paused.

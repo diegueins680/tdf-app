@@ -3563,6 +3563,14 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
+  const limitToggleAccessibleLabel = showAdvancedFilters
+    ? 'Ocultar límite de carga'
+    : limit !== DEFAULT_LIMIT
+      ? `Ajustar límite de carga (${limit})`
+      : 'Ajustar límite de carga';
+  const limitToggleTitle = showAdvancedFilters
+    ? 'Ocultar el campo de límite de carga.'
+    : 'Mostrar el campo de límite de carga para revisar un lote distinto.';
   const singleVisibleStatusHelperText = showCohortFilterUnavailableSummary
     ? ''
     : 'Estado único en esta vista.';
@@ -5024,7 +5032,9 @@ export default function CourseRegistrationsAdminPage() {
                         variant="text"
                         sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                         onClick={handleToggleAdvancedFilters}
+                        aria-label={limitToggleAccessibleLabel}
                         aria-expanded={showAdvancedFilters}
+                        title={limitToggleTitle}
                       >
                         {limitToggleLabel}
                       </Button>
@@ -5136,7 +5146,9 @@ export default function CourseRegistrationsAdminPage() {
                             variant="text"
                             sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                             onClick={handleToggleAdvancedFilters}
+                            aria-label={limitToggleAccessibleLabel}
                             aria-expanded={showAdvancedFilters}
+                            title={limitToggleTitle}
                           >
                             {limitToggleLabel}
                           </Button>
@@ -5207,7 +5219,9 @@ export default function CourseRegistrationsAdminPage() {
                               variant="text"
                               sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                               onClick={handleToggleAdvancedFilters}
+                              aria-label={limitToggleAccessibleLabel}
                               aria-expanded={showAdvancedFilters}
+                              title={limitToggleTitle}
                             >
                               {limitToggleLabel}
                             </Button>
@@ -5357,7 +5371,9 @@ export default function CourseRegistrationsAdminPage() {
                   size="small"
                   variant="text"
                   onClick={handleToggleAdvancedFilters}
+                  aria-label={limitToggleAccessibleLabel}
                   aria-expanded={showAdvancedFilters}
+                  title={limitToggleTitle}
                 >
                   {limitToggleLabel}
                 </Button>
