@@ -397,6 +397,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleView
+    , validateFutureAdminConsoleViewWithCatalog
     , validateFutureStubArea
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
@@ -11004,6 +11005,38 @@ spec = describe "TDF.Server helpers" $ do
                         , "El acceso quedará separado de usuarios humanos para integraciones internas."
                         ]
                     ])
+
+        it "rejects admin console fallback discovery when the canonical stub catalog drifts" $
+            case firstFutureAdminConsole futureAdminUser of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected canonical admin console preview, got: " <> show serverErr)
+                Right consoleView -> do
+                    case validateFutureAdminConsoleViewWithCatalog
+                            allowedFutureStubMetadata
+                            consoleView of
+                        Right validated ->
+                            Future.viewId validated `shouldBe` "admin.console"
+                        Left serverErr ->
+                            expectationFailure
+                                ( "Expected canonical admin console catalog dependency, got: "
+                                    <> show serverErr
+                                )
+
+                    case validateFutureAdminConsoleViewWithCatalog
+                            [("crm", "parties/list-columns")]
+                            consoleView of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                            BL8.unpack (errBody serverErr)
+                                `shouldNotContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected drifted fallback discovery catalog to fail, got: "
+                                    <> show value
+                                )
 
     describe "futureServer" $ do
         it "serves a validated canonical fallback discovery catalog" $ do

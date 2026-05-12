@@ -84,7 +84,7 @@ futureServer user = futureCatalog
     adminConsole = do
       requireFutureAdminAccess user
       either throwError pure $
-        validateFutureAdminConsoleView $
+        validateFutureAdminConsoleViewWithCatalog allowedFutureStubMetadata $
         AdminConsoleView
           { viewArea = "admin"
           , viewEndpoint = "console"
@@ -443,6 +443,14 @@ validateFutureAdminConsoleView view
           , viewImplemented = False
           , cards = validatedCards
           }
+
+validateFutureAdminConsoleViewWithCatalog
+  :: [(Text, Text)]
+  -> AdminConsoleView
+  -> Either ServerError AdminConsoleView
+validateFutureAdminConsoleViewWithCatalog catalog view = do
+  _ <- validateFutureStubCatalog catalog
+  validateFutureAdminConsoleView view
 
 hasDuplicateFutureAdminConsoleTitles :: [AdminConsoleCard] -> Bool
 hasDuplicateFutureAdminConsoleTitles cardsValue =
