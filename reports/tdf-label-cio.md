@@ -50,3 +50,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy (PID 75528
 - **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
 
 FINAL_STATUS: blocked — backend down (PID 95241 dead, /health unreachable at 15:40 UTC) + Google OAuth full e2e unproven
+
+## 2026-05-12 17:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN historically (Detox automated PASS, keychain fixes `9e78de9`/`ff7af9a` committed). Google OAuth simulator-realistic PASS confirmed (ASWebAuthenticationSession dialog presents). Full Google OAuth e2e UNPROVEN — exact blocker remains `MANUAL_DEVICE_TEST_NEEDED` (real token or physical device). **REGRESSION PERSISTS:** backend DOWN — `curl http://localhost:8080/health` unreachable at 17:40 UTC, no process on port 8080, no `tdf-hq`/`stack` processes running. iOS binary PRESENT at `tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app` (mtime 2026-05-12 01:40:35).
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). Additional precondition: backend must be healthy. No motion until Packet A complete + backend restored.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`), child PID 57652, state `running`, phase `supervising`, lastHeartbeat 2026-05-12T17:41:34Z (fresh, <1 min). restartDelaySeconds 60. Child completed iteration 1 at 17:32:12Z (exit 0, committed and pushed), started new child at 17:33:13Z currently in `implementation` phase. `lastError` in status.json is stale submodule conflict from 16:57Z (auto-repaired by loop logic — checkpointed dirty worktree, child exits 0, restarts cleanly). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **Reporting discipline:** Prior entry 15:40 UTC (~2h ago). This checkpoint restores <12h cadence.
+
+FINAL_STATUS: blocked — BACKEND_DOWN persists (no process on :8080 since at least 15:40 UTC) + Google OAuth full e2e unproven; Lane C live and durable (supervisor 68059, child 57652, 60s restart).

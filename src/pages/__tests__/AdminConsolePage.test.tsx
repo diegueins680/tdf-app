@@ -5970,6 +5970,67 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Feature disabled')).not.toBeInTheDocument();
   });
 
+  it('ignores read-only and no-action fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'ops-preview-only',
+          title: 'Vista operativa',
+          body: ['Read-only preview; no actions available yet.'],
+        },
+        {
+          cardId: 'integraciones-solo-lectura',
+          title: 'Integraciones',
+          body: ['Vista de solo lectura; sin acciones disponibles.'],
+        },
+        {
+          cardId: 'service-tokens-reference',
+          title: 'Referencia de tokens',
+          body: ['Reference only.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 4 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Vista operativa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Referencia de tokens')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Read-only preview/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sin acciones disponibles/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Reference only/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Vista operativa')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Referencia de tokens')).not.toBeInTheDocument();
+  });
+
   it('ignores dedicated-flow token fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
