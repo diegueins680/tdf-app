@@ -13430,9 +13430,13 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips common form-provider descriptors from first-run cohort copy', async () => {
     const titles = [
       'Typeform - Beatmaking 101',
+      'Typeform.com - Beatmaking 101',
       'Formulario de Typeform para Beatmaking 101',
+      'Formulario de Typeform.com para Beatmaking 101',
       'Tally form for Beatmaking 101',
+      'Tally.so - Beatmaking 101',
       'Beatmaking 101 - formulario de Tally',
+      'Beatmaking 101 - Tally.so',
       'Jotform - Beatmaking 101',
       'Formulario de Jotform - Beatmaking 101',
       'Microsoft Forms - Beatmaking 101',
