@@ -600,7 +600,14 @@ const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'pending_payment';
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
-  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pago pendiente';
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
+    ? 'Reabrir como pendiente'
+    : normalizeKnownRegistrationStatus(currentStatus) == null
+      ? 'Normalizar a pendiente'
+      : 'Marcar pago pendiente';
+
+const cancelStatusMenuLabel = (currentStatus: string) =>
+  normalizeKnownRegistrationStatus(currentStatus) == null ? 'Normalizar a cancelado' : 'Cancelar inscripción';
 
 const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: boolean) => {
   const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
@@ -612,7 +619,14 @@ const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
     ? 'reabrir la inscripción como pendiente'
-    : 'marcar el pago como pendiente';
+    : normalizeKnownRegistrationStatus(currentStatus) == null
+      ? 'normalizar la inscripción a pendiente de pago'
+      : 'marcar el pago como pendiente';
+
+const cancelStatusMenuTargetLabel = (currentStatus: string) =>
+  normalizeKnownRegistrationStatus(currentStatus) == null
+    ? 'normalizar la inscripción como cancelada'
+    : 'cancelar la inscripción';
 
 const statusMenuButtonTitle = (currentStatus: string) => {
   const currentStatusLabel = registrationStatusLabel(currentStatus);
@@ -5747,13 +5761,14 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {statusMenuReg && canCancelRegistrationFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
-            aria-label={`Cancelar inscripción para ${statusMenuActionTargetLabel}`}
+            aria-label={`${cancelStatusMenuLabel(statusMenuReg.crStatus)} para ${statusMenuActionTargetLabel}`}
+            title={`Usa esta acción para ${cancelStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
             onClick={() => {
               handleCloseStatusMenu();
               handleQuickStatus(statusMenuReg, 'cancelled');
             }}
           >
-            Cancelar inscripción
+            {cancelStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
       </Menu>

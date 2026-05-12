@@ -210,6 +210,8 @@ const firstFollowUpComposerHelpText =
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaymentPendingLabel = 'Marcar pago pendiente';
 const compactPaymentPendingActionLabel = 'Pasar a pendiente';
+const normalizePaymentPendingLabel = 'Normalizar a pendiente';
+const normalizeCancelledLabel = 'Normalizar a cancelado';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
 const copyVisibleSearchCsvLabel = 'Copiar CSV';
@@ -3637,8 +3639,16 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).not.toContain(openPaymentWorkflowLabel);
       expect(document.body.textContent).not.toContain('Marcar pagado');
-      expect(getMenuItemByText(document.body, markPaymentPendingLabel)).toBeTruthy();
-      expect(getMenuItemByText(document.body, 'Cancelar inscripción')).toBeTruthy();
+      expect(document.body.textContent).not.toContain(markPaymentPendingLabel);
+      expect(document.body.textContent).not.toContain('Cancelar inscripción');
+      expect(getMenuItemByText(document.body, normalizePaymentPendingLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, normalizeCancelledLabel)).toBeTruthy();
+      expect(getMenuItemByText(document.body, normalizePaymentPendingLabel).getAttribute('title')).toBe(
+        'Usa esta acción para normalizar la inscripción a pendiente de pago.',
+      );
+      expect(getMenuItemByText(document.body, normalizeCancelledLabel).getAttribute('title')).toBe(
+        'Usa esta acción para normalizar la inscripción como cancelada.',
+      );
     });
 
     await cleanup();
