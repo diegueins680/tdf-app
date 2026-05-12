@@ -1087,6 +1087,16 @@ const firstRunEmergingSocialLeadDescriptorPrefixPattern =
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
+const firstRunMessagingAutomationDescriptorPattern = String.raw`(?:(?:(?:many\s*chat|manychat|instagram|ig|facebook|fb|meta|messenger|whats\s*app)\s+)?(?:dm|direct\s+messages?|messages?|mensaje\s+directo|inbox|chat|messenger)\s+(?:automation|automations|automated\s+reply|bots?|flows?|funnels?|intake|leads?|registration|enrollment|sign[-\s]?up|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|embudos?|respuestas?(?:\s+autom[aá]ticas?)?)(?:\s+(?:forms?|pages?|links?|urls?|funnels?))?|(?:automatizaci[oó]n|automatizaciones|flujos?|embudos?|bots?|respuestas?(?:\s+autom[aá]ticas?)?)\s+(?:de|para)\s+(?:dm|direct\s+messages?|messages?|mensaje\s+directo|inbox|chat|messenger|many\s*chat|manychat|instagram|ig|facebook|fb|meta|whats\s*app))`;
+const firstRunMessagingAutomationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunMessagingAutomationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunMessagingAutomationDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunMessagingAutomationDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat))|(?:(?:group\s+chat|chat\s+group|community|group|chat)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
 
 const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
@@ -1276,6 +1286,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
+    .replace(firstRunMessagingAutomationDescriptorPrefixPattern, '')
     .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunGenericEventDescriptorPrefixPattern, '')
@@ -1357,6 +1368,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
+    .replace(firstRunMessagingAutomationDescriptorSuffixPattern, '')
     .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunGenericEventDescriptorSuffixPattern, '')
