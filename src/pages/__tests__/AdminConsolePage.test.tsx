@@ -5298,6 +5298,57 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No content available/i)).not.toBeInTheDocument();
   });
 
+  it('ignores select-to-view-detail fallback cards while keeping actionable setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-select-placeholder',
+          title: 'Integraciones',
+          body: ['Select a record to view details.'],
+        },
+        {
+          cardId: 'audit-row-select-placeholder',
+          title: 'Detalle operativo',
+          body: ['Selecciona una fila para ver detalles.'],
+        },
+        {
+          cardId: 'credential-rotation',
+          title: 'Rotación de credenciales',
+          body: ['Programa una revisión semanal de credenciales compartidas.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Detalle operativo')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Select a record to view details/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Selecciona una fila para ver detalles/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Rotación de credenciales')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Programa una revisión semanal de credenciales compartidas\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Detalle operativo')).not.toBeInTheDocument();
+  });
+
   it('ignores nothing-here fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
