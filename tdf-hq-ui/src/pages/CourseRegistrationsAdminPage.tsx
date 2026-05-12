@@ -1764,6 +1764,7 @@ const registrationVisibleSearchText = (
     courseSlug,
     cohortLabelsBySlug.get(courseSlug),
     registrationStatusLabel(reg.crStatus),
+    ...registrationContactStateSearchValues(reg),
     getSearchableRegistrationSource(reg.crSource),
   ].join(' ');
 };
@@ -1899,9 +1900,23 @@ const registrationIdentityKind = (
 };
 
 const registrationNeedsContact = (
-  reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+  reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
 ) => (
   !reg.crEmail?.trim() && !reg.crPhoneE164?.trim()
+);
+
+const registrationContactStateSearchValues = (
+  reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
+) => (
+  registrationNeedsContact(reg)
+    ? [
+      'contacto pendiente',
+      'sin contacto',
+      'sin correo ni teléfono',
+      'sin correo ni telefono',
+      missingContactSummary,
+    ]
+    : []
 );
 
 const formatVisibleMissingContactSummary = (missingContactCount: number, visibleCount: number) => {
@@ -2693,6 +2708,7 @@ export default function CourseRegistrationsAdminPage() {
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
         ...registrationStatusSearchValues(reg.crStatus),
+        ...registrationContactStateSearchValues(reg),
         getSearchableRegistrationSource(reg.crSource),
         getSearchableRegistrationAcquisitionContext(reg),
       ].join(' ');

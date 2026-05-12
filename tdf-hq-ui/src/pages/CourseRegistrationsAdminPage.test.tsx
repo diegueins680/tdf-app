@@ -9172,6 +9172,62 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins search the shared contact-pending hint without adding row placeholders', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Sin Contacto',
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Camila Sin Contacto',
+        crEmail: '   ',
+        crPhoneE164: null,
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('2 inscripciones visibles con contacto pendiente.');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'contacto pendiente');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Sin Contacto');
+      expect(container.textContent).toContain('Camila Sin Contacto');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Contacto pendiente en todas las inscripciones visibles.');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('names the exact contact field in busy-list local search prompts', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
