@@ -1217,6 +1217,14 @@ main = hspec $ do
                 "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
+                "FACEBOOK_MESSAGING_API_BASE"
+                "https://graph.facebook.com//v20.0"
+                "FACEBOOK_MESSAGING_API_BASE path must not start with // or contain backslashes"
+            assertInvalid
+                "INSTAGRAM_GRAPH_BASE"
+                "https://graph.instagram.com/v1\\profile"
+                "INSTAGRAM_GRAPH_BASE path must not start with // or contain backslashes"
+            assertInvalid
                 "CHATKIT_API_BASE"
                 "https://api.openai.com:0443"
                 "CHATKIT_API_BASE must be an absolute https URL"

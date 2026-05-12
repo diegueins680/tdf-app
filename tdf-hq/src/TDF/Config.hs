@@ -1198,8 +1198,21 @@ normalizeConfiguredApiBaseUrl envName rawUrl
         Just urlVal
           | T.any (`elem` ("?#" :: String)) urlVal ->
               Left (envName <> " must be an absolute https URL without query or fragment")
+          | not (validApiBasePathSuffix (apiBasePathSuffix urlVal)) ->
+              Left (envName <> " path must not start with // or contain backslashes")
           | otherwise ->
               Right (T.dropWhileEnd (== '/') urlVal)
+  where
+    apiBasePathSuffix urlVal =
+      let remainder = T.drop 8 urlVal
+      in snd (T.break (== '/') remainder)
+
+    validApiBasePathSuffix suffix =
+      T.null suffix
+        || ( "/" `T.isPrefixOf` suffix
+             && not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+           )
 
 validateConfiguredCourseSlug :: Maybe String -> IO Text
 validateConfiguredCourseSlug rawSlug =
