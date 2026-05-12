@@ -613,8 +613,11 @@ validateOptionalSecretField :: Text -> Maybe Text -> Either Text (Maybe Text)
 validateOptionalSecretField _ Nothing = Right Nothing
 validateOptionalSecretField fieldName (Just raw)
   | T.null (T.strip raw) = Right Nothing
-  | T.any isControlTextChar raw =
-      Left (fieldMessage fieldName "must not contain control characters")
+  | T.any isInvalidVisibleTextChar raw =
+      Left $
+        fieldMessage
+          fieldName
+          "must not contain control characters or hidden formatting characters"
   | otherwise = Right (Just raw)
 
 isInvalidVisibleTextChar :: Char -> Bool

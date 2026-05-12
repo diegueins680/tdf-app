@@ -3441,6 +3441,13 @@ main = hspec $ do
                             { Sri.description = "Studio" <> hidden <> " session" }
                         ]
                     }
+            assertInvalid
+                ( "certificatePassword must not contain control characters or "
+                    <> "hidden formatting characters"
+                )
+                sampleSriScriptRequest
+                    { Sri.certificatePassword = Just ("secret" <> hidden <> "token")
+                    }
 
         it "rejects malformed SRI customer tax ids before invoking the script" $ do
             let withRuc rawRuc =
