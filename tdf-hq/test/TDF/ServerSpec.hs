@@ -383,6 +383,7 @@ import TDF.ServerFuture
     , invalidCardText
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
+    , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleView
     , validateFutureStubArea
@@ -392,6 +393,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalogResponses
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
+    , validateFutureStubPublishedId
     , validateFutureStubPublishedPath
     , validateFutureStubResponse
     )
@@ -10241,6 +10243,42 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected invalid future stub metadata, got: " <> show value)
 
+    describe "validateFutureStubPublishedId" $
+        it "keeps fallback discovery ids tied to canonical route segments" $ do
+            validateFutureStubPublishedId
+                "crm"
+                "parties/list-columns"
+                "crm.parties.list-columns"
+                `shouldBe` Right "crm.parties.list-columns"
+
+            let assertInvalid rawId =
+                    case validateFutureStubPublishedId "crm" "parties/list-columns" rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid published future stub id, got: " <> show value)
+
+            assertInvalid "crm.parties.filters"
+            assertInvalid "crm.parties/list-columns"
+            assertInvalid "crm.parties..list-columns"
+            assertInvalid "CRM.parties.list-columns"
+            assertInvalid "crm.parties.list-columns."
+
+            case validateFutureStubPublishedId
+                "crm"
+                "parties/export"
+                "crm.parties.export" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub response"
+                Right value ->
+                    expectationFailure
+                        ("Expected unregistered future stub id to fail, got: " <> show value)
+
     describe "validateFutureStubPublishedPath" $
         it "keeps fallback discovery paths rooted under canonical protected stubs" $ do
             validateFutureStubPublishedPath
@@ -10276,6 +10314,29 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unregistered future stub path to fail, got: " <> show value)
+
+    describe "validateFutureAdminConsolePublishedId" $
+        it "keeps the special admin console preview id separate from generic stubs" $ do
+            validateFutureAdminConsolePublishedId "admin.console"
+                `shouldBe` Right "admin.console"
+
+            let assertInvalid rawId =
+                    case validateFutureAdminConsolePublishedId rawId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid admin console preview id, got: "
+                                    <> show value
+                                )
+
+            assertInvalid "admin.seed"
+            assertInvalid "admin/console"
+            assertInvalid "admin..console"
+            assertInvalid "Admin.console"
+            assertInvalid "admin.console."
 
     describe "validateFutureAdminConsolePublishedPath" $
         it "keeps the special admin console preview rooted under protected stubs" $ do

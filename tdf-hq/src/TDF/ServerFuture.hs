@@ -239,23 +239,51 @@ validateFutureStubResponse response =
   case validateFutureStubMetadata (stubArea response) (stubEndpoint response) of
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
-      | stubId response /= futureStubId area endpoint -> invalidFutureStubResponse
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
       | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
+          responseId <- validateFutureStubPublishedId area endpoint (stubId response)
           path <- validateFutureStubPublishedPath area endpoint (stubPath response)
           Right response
             { stubArea = area
             , stubEndpoint = endpoint
-            , stubId = futureStubId area endpoint
+            , stubId = responseId
             , stubPath = path
             , stubMethod = futureStubMethod
             , stubRequiredRole = futureStubRequiredRole
             , stubRequiredModule = futureStubRequiredModule
             }
+
+validateFutureStubPublishedId
+  :: Text
+  -> Text
+  -> Text
+  -> Either ServerError Text
+validateFutureStubPublishedId rawArea rawEndpoint rawId =
+  case validateFutureStubMetadata rawArea rawEndpoint of
+    Left _ -> invalidFutureStubResponse
+    Right (area, endpoint)
+      | isFuturePublishedIdShape area endpoint rawId -> Right rawId
+      | otherwise -> invalidFutureStubResponse
+
+validateFutureAdminConsolePublishedId :: Text -> Either ServerError Text
+validateFutureAdminConsolePublishedId rawId
+  | isFuturePublishedIdShape "admin" "console" rawId = Right rawId
+  | otherwise = invalidFutureAdminConsoleMetadata
+
+isFuturePublishedIdShape :: Text -> Text -> Text -> Bool
+isFuturePublishedIdShape area endpoint rawId =
+  rawId == expectedId
+    && idSegments == expectedSegments
+    && all validFutureStubSlug idSegments
+  where
+    endpointSegments = T.splitOn "/" endpoint
+    expectedSegments = area : endpointSegments
+    idSegments = T.splitOn "." rawId
+    expectedId = T.intercalate "." expectedSegments
 
 validateFutureStubPublishedPath
   :: Text
@@ -390,13 +418,13 @@ validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminCo
 validateFutureAdminConsoleView view
   | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
-  | viewId view /= futureStubId "admin" "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      viewIdVal <- validateFutureAdminConsolePublishedId (viewId view)
       path <- validateFutureAdminConsolePublishedPath (viewPath view)
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
       if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
@@ -406,7 +434,7 @@ validateFutureAdminConsoleView view
         else Right view
           { viewArea = "admin"
           , viewEndpoint = "console"
-          , viewId = futureStubId "admin" "console"
+          , viewId = viewIdVal
           , viewPath = path
           , viewMethod = futureStubMethod
           , viewStatus = "preview"
