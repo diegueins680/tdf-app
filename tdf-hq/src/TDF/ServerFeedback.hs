@@ -310,6 +310,8 @@ validateFeedbackAttachmentFileName rawName
       Left err400 { errBody = "attachment file name must not contain path separators" }
   | sanitized == "attachment" && trimmed /= "attachment" =
       Left err400 { errBody = "attachment file name must include a usable name" }
+  | hasDisallowedFeedbackAttachmentExtension sanitized =
+      Left err400 { errBody = "attachment file name extension is not allowed" }
   | otherwise =
       Right sanitized
   where
@@ -322,6 +324,32 @@ isUnsafeAttachmentFileNameChar ch =
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasDisallowedFeedbackAttachmentExtension :: Text -> Bool
+hasDisallowedFeedbackAttachmentExtension name =
+  any (`T.isSuffixOf` loweredName) disallowedFeedbackAttachmentExtensions
+  where
+    loweredName = T.toLower name
+
+disallowedFeedbackAttachmentExtensions :: [Text]
+disallowedFeedbackAttachmentExtensions =
+  [ ".bat"
+  , ".cmd"
+  , ".com"
+  , ".exe"
+  , ".htm"
+  , ".html"
+  , ".jar"
+  , ".js"
+  , ".mjs"
+  , ".php"
+  , ".ps1"
+  , ".scr"
+  , ".sh"
+  , ".svg"
+  , ".svgz"
+  , ".xhtml"
+  ]
 
 isValidFeedbackEmail :: Text -> Bool
 isValidFeedbackEmail candidate =

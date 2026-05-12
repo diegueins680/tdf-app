@@ -5386,6 +5386,10 @@ main = hspec $ do
             assertInvalid "folder\\secret.png" "attachment file name must not contain path separators"
             assertInvalid "screen\8203shot.png" "attachment file name must not contain control characters"
             assertInvalid "__--__" "attachment file name must include a usable name"
+            assertInvalid "debug.html" "attachment file name extension is not allowed"
+            assertInvalid "payload.exe" "attachment file name extension is not allowed"
+            assertInvalid "script.JS" "attachment file name extension is not allowed"
+            assertInvalid "vector.svg" "attachment file name extension is not allowed"
 
     describe "validateFeedbackAttachmentSize" $ do
         it "accepts non-empty boundary-sized feedback attachments" $ do
