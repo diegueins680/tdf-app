@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TDF.ServerSpec (spec) where
@@ -388,6 +389,7 @@ import TDF.ServerFuture
     , futureStubResponseFor
     , futureServer
     , invalidCardText
+    , mountedFutureStubAreas
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsolePublishedId
@@ -10072,6 +10074,7 @@ spec = describe "TDF.Server helpers" $ do
                 , ("access", "module-behaviour")
                 ]
                 `shouldBe` ["access", "crm", "access"]
+            allowedFutureStubAreas `shouldBe` mountedFutureStubAreas
             allowedFutureStubAreas
                 `shouldBe` [ "access"
                            , "crm"
@@ -10195,7 +10198,7 @@ spec = describe "TDF.Server helpers" $ do
 
         it "keeps fallback discovery areas grouped in mounted route order" $ do
             validateFutureStubCatalogAreaOrder allowedFutureStubMetadata
-                `shouldBe` Right allowedFutureStubAreas
+                `shouldBe` Right mountedFutureStubAreas
 
             let accessEntries = filter ((== "access") . fst) allowedFutureStubMetadata
                 crmEntries = filter ((== "crm") . fst) allowedFutureStubMetadata

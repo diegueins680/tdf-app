@@ -220,9 +220,9 @@ validateFutureStubCatalogAreaOrder catalog = do
       areaEntriesMatch =
         all
           (\area -> entriesFor area == expectedEntriesFor area)
-          allowedFutureStubAreas
+          mountedFutureStubAreas
   if length validatedCatalog /= length (nub validatedCatalog)
-       || areaRuns /= allowedFutureStubAreas
+       || areaRuns /= mountedFutureStubAreas
        || map length areaGroups /= map length expectedAreaGroups
        || length areaRuns /= length (nub areaRuns)
        || not areaEntriesMatch
@@ -543,6 +543,18 @@ allowedFutureStubMetadata =
   , experienceAuditingStub
   ]
 
+mountedFutureStubAreas :: [Text]
+mountedFutureStubAreas =
+  [ "access"
+  , "crm"
+  , "scheduling"
+  , "packages"
+  , "invoicing"
+  , "inventory"
+  , "admin"
+  , "experience"
+  ]
+
 allowedFutureStubAreas :: [Text]
 allowedFutureStubAreas = deriveFutureStubAreas allowedFutureStubMetadata
 
@@ -558,6 +570,7 @@ deriveFutureStubAreas =
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
   | rawArea /= area = invalidFutureStubMetadata
+  | area `notElem` mountedFutureStubAreas = invalidFutureStubMetadata
   | area `notElem` allowedFutureStubAreas = invalidFutureStubMetadata
   | validFutureStubSlug area = Right area
   | otherwise = invalidFutureStubMetadata
