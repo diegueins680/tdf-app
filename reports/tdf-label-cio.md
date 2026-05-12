@@ -141,4 +141,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live
 - **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
 - **No company-level blocker** to Lane C durability.
 
-FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend Google OAuth ready, Packet B gated, Lane C live with launchd durability and active child, dirty-worktree blocker repaired (commit b8f754e1e)
+## 2026-05-12 01:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end (curl `POST /login` → 200 + token + Manager role at 01:40 UTC). Post-login 403 RESOLVED and seed-fixed. Google OAuth backend READY (`POST /login/google` returns Spanish error for invalid tokens = endpoint alive and configured). **iOS binary rebuild COMPLETE** — `TDFRecords` binary mtime `2026-05-11 19:50:18` at `ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app/TDFRecords` (xcodebuild finished between CTO 01:20 UTC report and now). No Detox re-test run since rebuild; `LOGIN_TESTID_NOT_VISIBLE` status = `UNVERIFIED` (rebuild complete, awaiting Platform re-test). Google OAuth frontend e2e still unproven.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Packet A complete.
+- **Lane C:** `live` — supervisor PID 1077 under launchd (PPID 1, elapsed ~07:30). Child PID 31239 exited 00:54:36Z with code 0 (graceful completion after successful iteration, commit `ba4383894160430018a96804e0427b8bd4e9ceed` pushed to origin:main). State `restarting` with 3600s delay, next restart ~01:54 UTC. Git worktree clean. `lastError` in status.json is stale from prior dirty-worktree incident; bounded repairs (3600s backoff + worker exit 0 on rate limit) remain effective. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **Company-level blockers:** None new. `XCODE_CLT_OUTDATED` and `MAESTRO_JAVA_MISSING` persist but are owned by operator and do not block Lane C.
+- **Next decisive action:** Platform runs `npx detox test --configuration ios.sim.debug --reuse` to verify `LOGIN_TESTID_NOT_VISIBLE` is resolved by fresh binary; Release pursues Google OAuth e2e proof via any path once Platform signals Detox login test passes.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + iOS rebuild complete (unverified), Packet B gated, Lane C live with launchd durability, no repair needed.
