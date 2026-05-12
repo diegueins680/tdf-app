@@ -14,12 +14,13 @@ import TDF.Models
   ( ElectionStatus (Upcoming)
   , FanClubCandidacy (..)
   , FanClubElection (..)
-  , FanClubOfficerRole (Coordinator)
+  , FanClubOfficerRole (Coordinator, Secretary)
   )
 import TDF.ServerFanClub
   ( validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
+  , validateFanClubOfficerRoleInput
   , validateFanClubVoteCandidacyTarget
   )
 
@@ -64,6 +65,17 @@ spec = do
         validateFanClubVoteCandidacyTarget
           (toSqlKey 21)
           (Entity (toSqlKey 30) (mkCandidacy 20))
+
+  describe "validateFanClubOfficerRoleInput" $ do
+    it "rejects typoed candidacy roles instead of falling back to coordinator" $ do
+      case validateFanClubOfficerRoleInput "  Secretario  " of
+        Right Secretary -> pure ()
+        Right role -> expectationFailure ("Expected Secretary, got " <> show role)
+        Left err -> expectationFailure (unexpectedRejection err)
+      assertRejected 400 "role is required" $
+        validateFanClubOfficerRoleInput "  "
+      assertRejected 400 "role must be one of" $
+        validateFanClubOfficerRoleInput "secretary"
 
 mkElection :: Int64 -> FanClubElection
 mkElection clubId =

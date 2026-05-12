@@ -14,6 +14,7 @@ module TDF.ServerFanClub
   , validateFanClubElectionMutationTarget
   , validateFanClubCandidacyPathId
   , validateFanClubVoteCandidacyTarget
+  , validateFanClubOfficerRoleInput
   ) where
 
 import           Control.Monad          (forM, forM_, when, unless, void)
@@ -335,9 +336,9 @@ fanClubSecureArtistHandlers user artistId =
       electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
       targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
       _ <- either throwError pure targetElection
+      role <- either throwError pure (validateFanClubOfficerRoleInput (fccrRole req))
       mCid <- runDB $ do
         now <- liftIO getCurrentTime
-        let role = parseOfficerRole (fccrRole req)
         insertUnique FanClubCandidacy
           { fanClubCandidacyElectionId = electionKey
           , fanClubCandidacyFanPartyId = auPartyId user
@@ -354,7 +355,7 @@ fanClubSecureArtistHandlers user artistId =
             , fccFanId = fromSqlKey (auPartyId user)
             , fccFanName = sppDisplayName author
             , fccAvatarUrl = sppAvatarUrl author
-            , fccRole = fccrRole req
+            , fccRole = T.pack (show role)
             , fccManifesto = fccrManifesto req
             , fccVoteCount = 0
             }
@@ -467,14 +468,20 @@ getAuthorDTO pid = do
     , sppCity = Nothing
     }
 
-parseOfficerRole :: Text -> FanClubOfficerRole
-parseOfficerRole t = case T.toLower (T.strip t) of
-  "presidente" -> President
-  "vicepresidente" -> VicePresident
-  "secretario" -> Secretary
-  "tesorero" -> Treasurer
-  "coordinador" -> Coordinator
-  _ -> Coordinator
+validateFanClubOfficerRoleInput :: Text -> Either ServerError FanClubOfficerRole
+validateFanClubOfficerRoleInput rawRole =
+  case T.toLower (T.strip rawRole) of
+    "presidente" -> Right President
+    "vicepresidente" -> Right VicePresident
+    "secretario" -> Right Secretary
+    "tesorero" -> Right Treasurer
+    "coordinador" -> Right Coordinator
+    "" -> Left err400 { errBody = "role is required" }
+    _ ->
+      Left err400
+        { errBody =
+            "role must be one of: presidente, vicepresidente, secretario, tesorero, coordinador"
+        }
 
 checkIsOfficer :: Int64 -> PartyId -> SqlPersistT IO Bool
 checkIsOfficer artistId fanId = do
