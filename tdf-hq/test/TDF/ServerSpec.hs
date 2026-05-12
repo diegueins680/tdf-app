@@ -53,6 +53,8 @@ import TDF.Auth
     , hasStrictAdminAccess
     , loadAuthedUser
     , lookupUsernameFromToken
+    , ModuleAccess (..)
+    , moduleName
     , modulesForRoles
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
@@ -96,6 +98,7 @@ import TDF.Models
     , ServiceKind (..)
     , UnitsKind (..)
     , UserCredential (..)
+    , roleToText
     )
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
@@ -10312,8 +10315,8 @@ spec = describe "TDF.Server helpers" $ do
                     stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
-                    stubRequiredRole response `shouldBe` "Admin"
-                    stubRequiredModule response `shouldBe` "Admin"
+                    stubRequiredRole response `shouldBe` roleToText Admin
+                    stubRequiredModule response `shouldBe` moduleName ModuleAdmin
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
                     expectationFailure
@@ -10501,8 +10504,8 @@ spec = describe "TDF.Server helpers" $ do
                     stubPath response `shouldBe` "/stubs/crm/parties/list-columns"
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
-                    stubRequiredRole response `shouldBe` "Admin"
-                    stubRequiredModule response `shouldBe` "Admin"
+                    stubRequiredRole response `shouldBe` roleToText Admin
+                    stubRequiredModule response `shouldBe` moduleName ModuleAdmin
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
                     expectationFailure
@@ -10852,8 +10855,8 @@ spec = describe "TDF.Server helpers" $ do
                             allowedFutureStubMetadata
                     catalog `shouldSatisfy` all ((== "GET") . stubMethod)
                     catalog `shouldSatisfy` all ((== "planned") . stubStatus)
-                    catalog `shouldSatisfy` all ((== "Admin") . stubRequiredRole)
-                    catalog `shouldSatisfy` all ((== "Admin") . stubRequiredModule)
+                    catalog `shouldSatisfy` all ((== roleToText Admin) . stubRequiredRole)
+                    catalog `shouldSatisfy` all ((== moduleName ModuleAdmin) . stubRequiredModule)
                     catalog `shouldSatisfy` all (not . stubImplemented)
                 Left serverErr ->
                     expectationFailure
@@ -10885,8 +10888,8 @@ spec = describe "TDF.Server helpers" $ do
                             allowedFutureStubMetadata
                     routeResponses `shouldSatisfy` all ((== "GET") . stubMethod)
                     routeResponses `shouldSatisfy` all ((== "planned") . stubStatus)
-                    routeResponses `shouldSatisfy` all ((== "Admin") . stubRequiredRole)
-                    routeResponses `shouldSatisfy` all ((== "Admin") . stubRequiredModule)
+                    routeResponses `shouldSatisfy` all ((== roleToText Admin) . stubRequiredRole)
+                    routeResponses `shouldSatisfy` all ((== moduleName ModuleAdmin) . stubRequiredModule)
                     routeResponses `shouldSatisfy` all (not . stubImplemented)
                 Left serverErr ->
                     expectationFailure
@@ -10909,8 +10912,8 @@ spec = describe "TDF.Server helpers" $ do
                     stubId stubResponse `shouldBe` "access.login-options"
                     stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
-                    stubRequiredRole stubResponse `shouldBe` "Admin"
-                    stubRequiredModule stubResponse `shouldBe` "Admin"
+                    stubRequiredRole stubResponse `shouldBe` roleToText Admin
+                    stubRequiredModule stubResponse `shouldBe` moduleName ModuleAdmin
                 Left serverErr ->
                     expectationFailure
                         ("Expected Admin fallback discovery access, got: " <> show serverErr)

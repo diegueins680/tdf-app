@@ -369,7 +369,7 @@ futureStubMethod :: Text
 futureStubMethod = "GET"
 
 futureStubRequiredRole :: Text
-futureStubRequiredRole = "Admin"
+futureStubRequiredRole = roleToText Admin
 
 futureStubRequiredModule :: Text
 futureStubRequiredModule = moduleName ModuleAdmin
