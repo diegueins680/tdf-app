@@ -707,6 +707,55 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('keeps the visible inventory controls when a refresh fails after data loaded', async () => {
+    const visibleAssets = [
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ];
+    listAssetsMock
+      .mockResolvedValueOnce(visibleAssets)
+      .mockRejectedValueOnce(new Error('refresh unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const findButton = (label: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => (button.textContent ?? '').trim() === label,
+    ) ?? null;
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+      });
+
+      await act(async () => {
+        findButton('Actualizar')?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('No se pudo cargar inventario.');
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+        expect(findButton('Reintentar inventario')).toBeNull();
+        expect(container.textContent).not.toContain('Primeros pasos');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses a single filtered inventory match into the focused summary card before falling back to the empty-search reset path', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({

@@ -729,7 +729,8 @@ export default function InventoryPage() {
   const roomMap = useMemo(() => new Map(roomOptions.map((room) => [room.roomId, room])), [roomOptions]);
   const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const showInitialInventoryLoadingState = assetsQuery.isLoading && assets.length === 0;
-  const showInventorySearch = !showInitialInventoryLoadingState && !assetsQuery.error && assets.length > 1;
+  const showInitialInventoryErrorState = Boolean(assetsQuery.error) && assets.length === 0;
+  const showInventorySearch = !showInitialInventoryLoadingState && !showInitialInventoryErrorState && assets.length > 1;
   const inventorySearchPlaceholder = useMemo(
     () => buildInventorySearchPlaceholder(assets, roomMap),
     [assets, roomMap],
@@ -744,14 +745,13 @@ export default function InventoryPage() {
     [assets, hasActiveInventorySearch, normalizedInventorySearch, roomMap, showInventorySearch],
   );
   const singleAsset = assets.length === 1 ? (assets[0] ?? null) : null;
-  const showFirstAssetEmptyState = !showInitialInventoryLoadingState && !assetsQuery.error && assets.length === 0;
-  const showInitialInventoryErrorState = Boolean(assetsQuery.error) && assets.length === 0;
-  const showSingleAssetSummary = !showInitialInventoryLoadingState && !assetsQuery.error && singleAsset != null;
+  const showFirstAssetEmptyState = !showInitialInventoryLoadingState && !showInitialInventoryErrorState && assets.length === 0;
+  const showSingleAssetSummary = !showInitialInventoryLoadingState && !showInitialInventoryErrorState && singleAsset != null;
   const filteredSingleAsset = showInventorySearch && hasActiveInventorySearch && grouped.length === 1
     ? (grouped[0] ?? null)
     : null;
   const showFilteredSingleAssetSummary =
-    !showInitialInventoryLoadingState && !assetsQuery.error && filteredSingleAsset != null;
+    !showInitialInventoryLoadingState && !showInitialInventoryErrorState && filteredSingleAsset != null;
   const showFilteredEmptyState = showInventorySearch && hasActiveInventorySearch && grouped.length === 0;
   const showSearchFallbackState = showFilteredSingleAssetSummary || showFilteredEmptyState;
   const showFilteredResultsCount = hasActiveInventorySearch && !showSearchFallbackState;
