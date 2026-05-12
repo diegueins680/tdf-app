@@ -1468,6 +1468,25 @@ spec = do
                 "{\"email\":\"ada@example.com\",\"code\":\"   \"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects malformed academy referral codes before referral lookup fallback" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"REF 42\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"REF\\u202E42\"}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                "{\"email\":\"ada@example.com\",\"code\":\"REF\\n42\"}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                ( BL8.pack
+                    ( "{\"email\":\"ada@example.com\",\"code\":\""
+                        <> replicate 129 'A'
+                        <> "\"}"
+                    )
+                )
+                `shouldSatisfy` isLeft
+
         it "rejects malformed academy email shapes before enrollment fallback lookup" $ do
             let assertInvalidEmail rawEmail =
                     decodeEnroll

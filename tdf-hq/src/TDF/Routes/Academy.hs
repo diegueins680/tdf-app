@@ -13,6 +13,7 @@ module TDF.Routes.Academy
   , LessonDTO(..)
   , NextCohortDTO(..)
   , validateAcademyRole
+  , validateAcademyReferralCode
   , validateAcademySlug
   ) where
 
@@ -41,7 +42,7 @@ instance FromJSON EnrollReq where
       <$> requiredEmail "email" rawEmail
       <*> requiredAcademyRole rawRole
       <*> pure (optionalNonBlank rawPlatform)
-      <*> pure (T.toUpper <$> optionalNonBlank rawReferralCode)
+      <*> optionalAcademyReferralCode rawReferralCode
 
 data ProgressReq = ProgressReq
   { email :: Text
@@ -70,7 +71,7 @@ instance FromJSON ReferralClaimReq where
       genericParseJSON strictObjectOptions value
     ReferralClaimReq
       <$> requiredEmail "email" rawEmail
-      <*> (T.toUpper <$> requiredNonBlank "code" rawCode)
+      <*> requiredAcademyReferralCode rawCode
 instance ToJSON ReferralClaimReq
 
 data LessonDTO = LessonDTO
@@ -136,6 +137,37 @@ validateAcademyRole raw =
 
 allowedAcademyRoles :: [Text]
 allowedAcademyRoles = ["artist", "manager"]
+
+optionalAcademyReferralCode :: Maybe Text -> Parser (Maybe Text)
+optionalAcademyReferralCode Nothing = pure Nothing
+optionalAcademyReferralCode (Just raw)
+  | T.null (T.strip raw) = pure Nothing
+  | otherwise = Just <$> requiredAcademyReferralCode raw
+
+requiredAcademyReferralCode :: Text -> Parser Text
+requiredAcademyReferralCode raw =
+  either (fail . T.unpack) pure (validateAcademyReferralCode raw)
+
+validateAcademyReferralCode :: Text -> Either Text Text
+validateAcademyReferralCode raw =
+  let codeValue = T.toUpper (T.strip raw)
+  in if T.null codeValue
+       then Left "referral code must not be blank"
+       else if T.length codeValue > maxAcademyReferralCodeChars
+         then Left "referral code must be 128 characters or fewer"
+       else if T.any isSpace codeValue
+         then Left "referral code must not contain whitespace"
+       else if T.any isControl codeValue
+         then Left "referral code must not contain control characters"
+       else if T.any isNonVisibleAscii codeValue
+         then Left "referral code must contain visible ASCII characters only"
+       else Right codeValue
+
+maxAcademyReferralCodeChars :: Int
+maxAcademyReferralCodeChars = 128
+
+isNonVisibleAscii :: Char -> Bool
+isNonVisibleAscii ch = ch < '!' || ch > '~'
 
 requiredAcademySlug :: Text -> Parser Text
 requiredAcademySlug raw =

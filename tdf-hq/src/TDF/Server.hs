@@ -155,6 +155,7 @@ import           TDF.Routes.Academy ( AcademyAPI
                                     , LessonDTO(..)
                                     , NextCohortDTO(..)
                                     , validateAcademyRole
+                                    , validateAcademyReferralCode
                                     , validateAcademySlug
                                     )
 import           TDF.Routes.Courses ( CoursesPublicAPI
@@ -6265,9 +6266,7 @@ requireDay n = do
 
 requireReferralCode :: Text -> AppM Text
 requireReferralCode raw = do
-  let normalized = T.toUpper (T.strip raw)
-  when (T.null normalized) (throwBadRequest "code requerido")
-  pure normalized
+  either throwBadRequest pure (validateAcademyReferralCode raw)
 
 upsertAcademyUser :: Text -> Text -> Maybe Text -> AppM (Entity AcademyUser)
 upsertAcademyUser emailVal roleVal platformVal = do
