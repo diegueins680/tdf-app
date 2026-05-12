@@ -245,6 +245,7 @@ import TDF.Server
     , validateServiceMarketplaceBookingNotes
     , validateServiceMarketplaceBookingSlot
     , validateServiceMarketplaceCompletion
+    , requireServiceEscrowForBooking
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
     , selectUniquePartyByPrimaryPhone
@@ -1922,6 +1923,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalidBooking Completed
             assertInvalidBooking Cancelled
             assertInvalidBooking NoShow
+
+        it "rejects missing escrow rows with an explicit 404 before state transitions" $ do
+            let escrowEntity = Entity (toSqlKey 42) (escrowWithStatus "held")
+            case requireServiceEscrowForBooking (Just escrowEntity) of
+                Right (Entity escrowKey escrow) -> do
+                    fromSqlKey escrowKey `shouldBe` 42
+                    serviceEscrowStatus escrow `shouldBe` "held"
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected existing service escrow to pass, got: " <> show serverErr)
+            case requireServiceEscrowForBooking Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Service escrow not found for booking"
+                Right value ->
+                    expectationFailure
+                        ("Expected missing service escrow to be rejected, got: " <> show value)
 
     describe "resolveServiceAdEntity" $ do
         it "rejects non-positive ad ids before service slot handlers can treat them as missing ads or empty slot lists" $ do

@@ -6818,7 +6818,7 @@ completeServiceMarketplaceBooking user rawBookingId = do
   liftIO $ flip runSqlPool pool $ do
     Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
-    escrow <- maybe (liftIO $ throwIO err404) pure escrowEnt
+    escrow <- either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
     let canComplete = serviceEscrowProviderPartyId (entityVal escrow) == auPartyId user || hasRole Admin user
     when (not canComplete) $ liftIO $ throwIO err403
     case validateServiceMarketplaceCompletion (bookingStatus booking) (entityVal escrow) of
@@ -6827,6 +6827,14 @@ completeServiceMarketplaceBooking user rawBookingId = do
     update bookingKey [BookingStatus =. Completed]
     update (serviceEscrowServiceOrderId (entityVal escrow)) [ServiceOrderStatus =. "performed"]
     pure (mkEscrowBookingDTO escrow)
+
+requireServiceEscrowForBooking
+  :: Maybe (Entity ServiceEscrow)
+  -> Either ServerError (Entity ServiceEscrow)
+requireServiceEscrowForBooking =
+  maybe
+    (Left err404 { errBody = "Service escrow not found for booking" })
+    Right
 
 validateServiceMarketplaceCompletion :: BookingStatus -> ServiceEscrow -> Either ServerError ()
 validateServiceMarketplaceCompletion bookingStatusVal escrow
@@ -6843,7 +6851,9 @@ releaseServiceMarketplaceEscrow user rawBookingId = do
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
     booking@(Entity bookingKey _) <- resolveServiceMarketplaceBookingEntity rawBookingId
-    Entity escrowKey escrow <- maybe (liftIO $ throwIO err404) pure =<< getBy (UniqueServiceEscrowBooking bookingKey)
+    escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
+    Entity escrowKey escrow <-
+      either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
     let canRelease = serviceEscrowPatronPartyId escrow == auPartyId user || hasRole Admin user
     when (not canRelease) $ liftIO $ throwIO err403
     when (bookingStatus (entityVal booking) /= Completed) $
