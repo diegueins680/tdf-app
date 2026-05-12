@@ -628,9 +628,7 @@ listInventory mFieldParam mSessionParam mChannelParam = do
   sessionKey <- case mSessionParam of
     Nothing   -> pure Nothing
     Just raw  ->
-      case fromPathPiece raw of
-        Nothing -> throwBadRequest "Invalid sessionId"
-        Just k  -> pure (Just k)
+      Just <$> either throwError pure (validatePublicSessionIdParam raw)
   either throwError pure $
     validateInputListInventoryFilters parsedField sessionKey mChannelParam
   Env{..} <- ask
@@ -700,15 +698,19 @@ validateSessionInputLookup :: Maybe Int -> Maybe Text -> Either ServerError Sess
 validateSessionInputLookup (Just _) (Just _) =
   Left err400 { errBody = "Provide either index or sessionId, not both" }
 validateSessionInputLookup _ (Just rawId) =
-  case fromPathPiece rawId of
-    Nothing     -> Left err400 { errBody = "Invalid sessionId" }
-    Just keyVal -> Right (SessionInputByKey keyVal)
+  SessionInputByKey <$> validatePublicSessionIdParam rawId
 validateSessionInputLookup mIndex Nothing =
   case mIndex of
     Nothing -> Right (SessionInputByIndex 1)
     Just n
       | n >= 1    -> Right (SessionInputByIndex n)
       | otherwise -> Left err400 { errBody = "index must be greater than or equal to 1" }
+
+validatePublicSessionIdParam :: Text -> Either ServerError ME.SessionId
+validatePublicSessionIdParam rawId =
+  case validateSessionPathId rawId of
+    Right keyVal -> Right keyVal
+    Left _ -> Left err400 { errBody = "Invalid sessionId" }
 
 validateInputListInventoryFilters
   :: Maybe InputList.AssetField

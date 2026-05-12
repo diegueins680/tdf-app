@@ -21,3 +21,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy, Packet B 
 - **No company-level blocker** to Lane C durability after repair.
 
 FINAL_STATUS: done — Lane C repaired and live (supervisor 68059, child 68107, 60s restart delay), Packet A 1 of 2 paths proven with fresh binary + Detox pass, Packet B gated, systems lane paused.
+
+## 2026-05-12 09:44 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end with Detox automated PASS (intermittent on fresh install due to keychain persistence; `--reuse` stable). Google OAuth backend READY (`/login/google` returns 401 for invalid tokens, GOOGLE_CLIENT_ID configured). Google OAuth frontend e2e UNPROVEN — exact blocker is `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (ASWebAuthenticationSession dialog on simulator blocks all automation). Manual device test (`tdf-mobile/docs/google-oauth-manual-test.md`) is the only unblocked near-term path. Fresh iOS binary present (mtime 2026-05-12 01:40:35). Backend healthy (PID 95241, `status:ok`).
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Google OAuth e2e complete.
+- **Lane C:** `live` — supervisor PID 68059, child PID 87065, state `running`, phase `supervising`, heartbeat fresh at 2026-05-12T09:45:26Z. restartDelaySeconds 60. Active iteration 1 implementing backend improvements (committed `655036d`). lastError is stale git index.lock from prior incident (already repaired; child exits 0 and restarts cleanly). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy, Packet B gated on Google OAuth e2e, Lane C live with launchd durability (supervisor 68059, child 87065, 60s restart), no repair needed.

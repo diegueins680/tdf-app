@@ -242,6 +242,7 @@ import TDF.Server
     , validateSessionPathId
     , validateSessionInputLookup
     , validateInputListInventoryFilters
+    , listInventory
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
     , validateServiceMarketplaceBookingRefs
@@ -911,6 +912,28 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Invalid sessionId"
                 (validateSessionInputLookup Nothing (Just "not-a-session-id"))
+            assertInvalid
+                "Invalid sessionId"
+                (validateSessionInputLookup Nothing (Just "AAAAAAAA-0000-0000-0000-000000000084"))
+
+    describe "listInventory" $
+        it "rejects non-canonical public session ids before inventory fallback lookup" $ do
+            result <-
+                runHandler $
+                    runReaderT
+                        ( listInventory
+                            (Just "mic")
+                            (Just "AAAAAAAA-0000-0000-0000-000000000084")
+                            Nothing
+                        )
+                        (error "listInventory should reject invalid sessionId before reading Env")
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "Invalid sessionId"
+                Right value ->
+                    expectationFailure
+                        ("Expected non-canonical inventory sessionId to be rejected, got: " <> show value)
 
     describe "validateSessionPathId" $ do
         it "accepts canonical session UUID path identifiers" $ do
