@@ -2884,8 +2884,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateBookingListFilters (Just 7) (Just 11) Nothing)
             assertInvalid (validateBookingListFilters (Just 7) Nothing (Just 13))
 
-    describe "updateBooking" $
-      do
+    describe "updateBooking" $ do
         it "rejects non-positive booking path ids before database lookup" $ do
             let emptyUpdate =
                     UpdateBookingReq
