@@ -7426,7 +7426,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Actor:\s*101/i)).not.toBeInTheDocument();
   });
 
-  it('replaces invalid admin timestamps with a user-facing fallback', async () => {
+  it('hides invalid admin timestamps from compact summaries until a real date adds context', async () => {
     mockListUsers.mockResolvedValue([
       buildAdminUser({
         lastSeenAt: 'not-a-date',
@@ -7449,15 +7449,13 @@ describe('AdminConsolePage', () => {
     expect(await screen.findByText('Auditoría reciente')).toBeInTheDocument();
 
     await waitFor(() => {
-      const auditDateRow = screen.getByText(/^Fecha:/i).closest('p');
-      if (!(auditDateRow instanceof HTMLElement)) {
-        throw new Error('Expected audit date row to render');
-      }
-
-      expect(screen.getByText(/^Último acceso:/i)).toHaveTextContent('Último acceso: Fecha no disponible');
-      expect(auditDateRow).toHaveTextContent('Fecha: Fecha no disponible');
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
+      expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     });
 
+    expect(screen.queryByText(/^Último acceso:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Fecha:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Fecha no disponible')).not.toBeInTheDocument();
     expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/not-a-date/i)).not.toBeInTheDocument();
   });

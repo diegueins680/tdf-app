@@ -1986,6 +1986,9 @@ export default function AdminConsolePage() {
   const singleAdminUser = !isUsersLoading && users.length === 1 ? (users[0] ?? null) : null;
   const singleAdminUserIdentity = singleAdminUser ? summarizeAdminUserIdentity(singleAdminUser) : null;
   const singleAdminUserLastAccess = singleAdminUser ? getAdminUserLastAccess(singleAdminUser) : null;
+  const singleAdminUserHasLastAccessTimestamp = singleAdminUser
+    ? hasAdminUserLastAccessTimestamp(singleAdminUser)
+    : false;
   const shouldShowSingleAdminUserStatus = singleAdminUser?.status != null && singleAdminUser.status !== 'ACTIVE';
   const singleAdminUserStatusLabel = shouldShowSingleAdminUserStatus && singleAdminUser?.status
     ? (STATUS_META[singleAdminUser.status]?.label ?? singleAdminUser.status)
@@ -2007,6 +2010,7 @@ export default function AdminConsolePage() {
   const showUsersLastAccessColumn = visibleAdminUsers.some((user) => hasAdminUserLastAccessTimestamp(user));
   const showUsersStatusColumn = visibleAdminUsers.some((user) => adminUserStatusNeedsAttention(user.status));
   const singleAuditEntry = !auditQuery.isLoading && audits.length === 1 ? (audits[0] ?? null) : null;
+  const singleAuditHasTimestamp = singleAuditEntry ? hasAuditTimestamp(singleAuditEntry) : false;
   const singleAuditHasActor = hasAuditActor(singleAuditEntry?.actorId);
   const singleAuditHasDetail = hasAuditDetail(singleAuditEntry?.diff);
   const showAuditTable = audits.length > 1;
@@ -2678,7 +2682,7 @@ export default function AdminConsolePage() {
                         {buildAdminUserRoleActionLabel(singleAdminUser.roles)}
                       </Button>
                     )}
-                    {singleAdminUserLastAccess && (
+                    {singleAdminUserHasLastAccessTimestamp && singleAdminUserLastAccess && (
                       <Typography variant="body2" color="text.secondary">
                         Último acceso: {formatDateOrDash(singleAdminUserLastAccess)}
                       </Typography>
@@ -2798,9 +2802,11 @@ export default function AdminConsolePage() {
                       <Box component="span" sx={{ fontWeight: 600 }}>Acción:</Box>{' '}
                       {formatAuditAction(singleAuditEntry.action)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
-                    </Typography>
+                    {singleAuditHasTimestamp && (
+                      <Typography variant="body2" color="text.secondary">
+                        <Box component="span" sx={{ fontWeight: 600 }}>Fecha:</Box> {formatDate(singleAuditEntry.createdAt)}
+                      </Typography>
+                    )}
                     <Typography
                       variant="body2"
                       color="text.secondary"
