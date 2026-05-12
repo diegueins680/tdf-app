@@ -12188,9 +12188,7 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
     Left err -> throwError err502 { errBody = BL8.pack ("No se pudo parsear captura PayPal: " <> err) }
     Right val -> pure val
   statusTxt <-
-    either throwError pure $
-      validatePayPalCaptureStatusField
-        (join $ parseMaybe (withObject "PayPalCapture" (\o -> o .:? "status")) parsed)
+    either throwError pure (extractPayPalCaptureStatus parsed)
   payerEmail <-
     case parseEither parsePayPalPayerEmail parsed of
       Left _ ->
@@ -12201,6 +12199,20 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
     { pcoStatus = statusTxt
     , pcoPayerEmail = payerEmail
     }
+
+extractPayPalCaptureStatus :: Value -> Either ServerError Text
+extractPayPalCaptureStatus (Object o) =
+  case AKeyMap.lookup "status" o of
+    Nothing ->
+      validatePayPalCaptureStatusField Nothing
+    Just Null ->
+      Left err502 { errBody = "PayPal capture response status cannot be null" }
+    Just (String rawStatus) ->
+      validatePayPalCaptureStatusField (Just rawStatus)
+    Just _ ->
+      Left err502 { errBody = "PayPal capture response status must be a string" }
+extractPayPalCaptureStatus _ =
+  Left err502 { errBody = "PayPal capture response must be a JSON object" }
 
 validatePayPalCaptureStatusField :: Maybe Text -> Either ServerError Text
 validatePayPalCaptureStatusField Nothing =

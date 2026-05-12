@@ -220,6 +220,7 @@ import TDF.Server
     , validatePayPalTokenResponse
     , resolvePayPalApprovalUrl
     , resolvePayPalApprovalUrlForBase
+    , extractPayPalCaptureStatus
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -7592,6 +7593,34 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "COMPLETED1"
                 "PayPal capture response status must contain only ASCII letters or underscore"
+
+    describe "extractPayPalCaptureStatus" $ do
+        it "distinguishes malformed PayPal capture status fields before fallback mapping" $ do
+            extractPayPalCaptureStatus (object ["status" .= (" COMPLETED " :: Text)])
+                `shouldBe` Right "COMPLETED"
+
+            let assertInvalid expectedMessage payload =
+                    case extractPayPalCaptureStatus payload of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected invalid PayPal capture payload to be rejected, got: "
+                                    <> show statusVal
+                                )
+            assertInvalid
+                "PayPal capture response did not include a status"
+                (object [])
+            assertInvalid
+                "PayPal capture response status cannot be null"
+                (object ["status" .= A.Null])
+            assertInvalid
+                "PayPal capture response status must be a string"
+                (object ["status" .= (1 :: Int)])
+            assertInvalid
+                "PayPal capture response must be a JSON object"
+                (A.String "COMPLETED")
 
     describe "resolvePaypalBaseUrl" $ do
         it "keeps the default sandbox fallback and accepts explicit live aliases" $ do
