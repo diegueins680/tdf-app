@@ -219,12 +219,14 @@ isValidAcademyEmail :: Text -> Bool
 isValidAcademyEmail candidate =
   case T.splitOn "@" candidate of
     [local, domain] ->
-      T.length candidate <= maxAcademyEmailChars
-        && isValidAcademyEmailLocalPart local
-        && not (T.null domain)
-        && not (T.any (\ch -> isSpace ch || isControl ch) candidate)
-        && T.isInfixOf "." domain
-        && all isValidAcademyEmailDomainLabel (T.splitOn "." domain)
+      let domainLabels = T.splitOn "." domain
+      in T.length candidate <= maxAcademyEmailChars
+          && isValidAcademyEmailLocalPart local
+          && not (T.null domain)
+          && not (T.any (\ch -> isSpace ch || isControl ch) candidate)
+          && T.isInfixOf "." domain
+          && all isValidAcademyEmailDomainLabel domainLabels
+          && isValidAcademyEmailTopLevelLabel domainLabels
     _ -> False
 
 maxAcademyEmailChars :: Int
@@ -260,3 +262,10 @@ maxAcademyEmailDomainLabelChars = 63
 isValidAcademyEmailDomainChar :: Char -> Bool
 isValidAcademyEmailDomainChar ch =
   isAsciiLower ch || isDigit ch || ch == '-'
+
+isValidAcademyEmailTopLevelLabel :: [Text] -> Bool
+isValidAcademyEmailTopLevelLabel labels =
+  case reverse labels of
+    topLevelLabel : _ ->
+      T.length topLevelLabel >= 2 && T.any isAsciiLower topLevelLabel
+    [] -> False

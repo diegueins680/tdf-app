@@ -1512,6 +1512,8 @@ spec = do
             assertInvalidEmail "ada@example..com"
             assertInvalidEmail "ada@-example.com"
             assertInvalidEmail "ada@example-.com"
+            assertInvalidEmail "ada@example.123"
+            assertInvalidEmail "ada@example.c"
             assertInvalidEmail ".ada@example.com"
             assertInvalidEmail "ada.@example.com"
             assertInvalidEmail "ada..lovelace@example.com"
