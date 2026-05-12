@@ -461,7 +461,7 @@ normalizeAuthPhoneNumber raw =
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
         isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
-      hasControlChars = T.any isControl trimmed
+      hasUnsafeChars = T.any isUnsafeAuthPhoneChar trimmed
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -474,11 +474,15 @@ normalizeAuthPhoneNumber raw =
     if T.null onlyDigits
          || digitCount < 8
          || digitCount > 15
-         || hasControlChars
+         || hasUnsafeChars
          || hasInvalidChars
          || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isUnsafeAuthPhoneChar :: Char -> Bool
+isUnsafeAuthPhoneChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 sessionServer :: ServerT Api.SessionAPI AppM
 sessionServer =

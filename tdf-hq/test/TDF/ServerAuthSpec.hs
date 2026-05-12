@@ -36,6 +36,7 @@ import TDF.ServerAuth
   , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
   , validateSignupDisplayName
+  , validateOptionalSignupPhone
   )
 
 spec :: Spec
@@ -48,6 +49,7 @@ spec = do
   tokenLabelUsernameSpec
   signupRoleSpec
   signupDisplayNameSpec
+  signupPhoneSpec
   signupArtistClaimEmailSpec
   passwordResetTokenSpec
   googleTokenInfoSpec
@@ -263,6 +265,25 @@ signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
       validateSignupDisplayName ("Ada" <> hiddenFormat) "Lovelace"
     assertRejected "lastName" $
       validateSignupDisplayName "Ada" ("Love" <> hiddenFormat <> "lace")
+
+signupPhoneSpec :: Spec
+signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
+  it "normalizes explicit signup phone separators before persistence" $
+    validateOptionalSignupPhone (Just " +593 99 123 4567 ")
+      `shouldBe` Right (Just "+593991234567")
+
+  it "rejects Unicode line or hidden phone separators before signup persistence" $ do
+    let assertRejected rawPhone =
+          case validateOptionalSignupPhone (Just rawPhone) of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "phone must be a valid phone number"
+            Right value ->
+              expectationFailure
+                ("Expected unsafe signup phone to be rejected, got " <> show value)
+    assertRejected ("099" <> T.singleton (chr 0x2028) <> "1234567")
+    assertRejected ("099" <> T.singleton (chr 0x2029) <> "1234567")
+    assertRejected ("099" <> T.singleton (chr 0x200D) <> "1234567")
 
 signupArtistClaimEmailSpec :: Spec
 signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
