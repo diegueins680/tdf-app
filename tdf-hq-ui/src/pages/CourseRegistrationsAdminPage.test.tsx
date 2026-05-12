@@ -3588,6 +3588,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('preserves operational acronyms in custom status fallback labels', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'crm_review',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'api_follow_up',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).not.toBeNull();
+      const crmStatusAction = getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace');
+      const apiStatusAction = getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper');
+
+      expect(crmStatusAction.textContent?.trim()).toBe('CRM Review');
+      expect(crmStatusAction.getAttribute('title')).toBe('Cambiar estado; actual: CRM Review');
+      expect(apiStatusAction.textContent?.trim()).toBe('API Follow Up');
+      expect(apiStatusAction.getAttribute('title')).toBe('Cambiar estado; actual: API Follow Up');
+      expect(container.textContent).not.toContain('Crm Review');
+      expect(container.textContent).not.toContain('Api Follow Up');
+      expect(container.textContent).not.toContain('crm_review');
+      expect(container.textContent).not.toContain('api_follow_up');
+    });
+
+    await cleanup();
+  });
+
   it('keeps custom-status fallback guidance from duplicating first-run filter onboarding', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

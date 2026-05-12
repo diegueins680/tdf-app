@@ -506,10 +506,24 @@ const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | 
   return statusFilter && statusFilter !== 'all' ? statusFilter : null;
 };
 
+const customStatusLabelSpecialWords = new Map([
+  ['api', 'API'],
+  ['crm', 'CRM'],
+  ['id', 'ID'],
+  ['sms', 'SMS'],
+  ['url', 'URL'],
+  ['utm', 'UTM'],
+  ['whatsapp', 'WhatsApp'],
+]);
+
+const formatCustomStatusWord = (word: string) => (
+  customStatusLabelSpecialWords.get(word) ?? `${word.charAt(0).toLocaleUpperCase('es')}${word.slice(1)}`
+);
+
 const customRegistrationStatusLabel = (status: string) => {
   const normalized = status.trim().toLowerCase().replace(/[\s._/-]+/g, ' ').trim();
   if (!normalized) return 'Estado desconocido';
-  return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
+  return normalized.split(' ').map(formatCustomStatusWord).join(' ');
 };
 
 const registrationStatusLabel = (status: string) => {
