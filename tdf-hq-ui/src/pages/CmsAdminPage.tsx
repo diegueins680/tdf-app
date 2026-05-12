@@ -727,8 +727,6 @@ export default function CmsAdminPage() {
   const showFirstVersionEmptyDraftGuard =
     hasSlugSelection
     && !payloadError
-    && !liveLookupUnresolved
-    && !listQuery.isLoading
     && !listQuery.isError
     && !listDataInvalid
     && versions.length === 0

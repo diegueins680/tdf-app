@@ -1065,6 +1065,34 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps first-version save controls hidden while the live lookup is still unresolved', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => new Promise<CmsContentDTO>(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ slug: 'records-public', locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('records-public', 'es');
+      expect(container.textContent).toContain(
+        'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.',
+      );
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps version-history load failures separate from the first-version empty state', async () => {
     listMock.mockRejectedValue(new Error('versions unavailable'));
 
