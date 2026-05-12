@@ -13719,6 +13719,66 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips consultation-call booking wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Discovery call booking page - Beatmaking 101',
+      'Consultation call registration for Beatmaking 101',
+      'Beatmaking 101 - strategy call request',
+      'Formulario de llamada de consulta - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/discovery call|consultation call|strategy call|llamada de consulta/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
+  it('keeps consultation-call words when they are part of the course name', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'strategy-call-fundamentals', ccTitle: 'Strategy Call Fundamentals' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Strategy Call Fundamentals. La página pública ya está lista para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Fundamentals');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/strategy-call-fundamentals"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Strategy Call Fundamentals');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps event-platform words when they are part of the course name', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'meetup-music-production', ccTitle: 'Meetup Music Production' },

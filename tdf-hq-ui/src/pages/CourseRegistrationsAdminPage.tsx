@@ -1177,6 +1177,20 @@ const firstRunReservationDescriptorSuffixPattern =
     'i',
   );
 
+const firstRunConsultationCallDescriptorPattern = String.raw`(?:(?:discovery|consultation|intro(?:ductory)?|strategy)\s+calls?\s+(?:(?:booking|registration|sign[-\s]?up|requests?)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|enlace|link|url|portal)\s+de\s+llamada\s+de\s+(?:consulta|diagn[oó]stico))`;
+
+const firstRunConsultationCallDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunConsultationCallDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunConsultationCallDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunConsultationCallDescriptorPattern})\s*$`,
+    'i',
+  );
+
 const firstRunCourseEnrollmentConnectorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -1260,6 +1274,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
+    .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
     .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
@@ -1340,6 +1355,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
+    .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
