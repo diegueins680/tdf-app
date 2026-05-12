@@ -792,6 +792,7 @@ function stripAdminConsolePresentationMarkers(value: string) {
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/__([^_\n]+)__/g, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/^(?:fallback|preview|planned|draft|placeholder|stub)\s*(?::|-|\u2013|\u2014)\s*/i, '')
     .trim();
 }
 

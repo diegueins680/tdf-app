@@ -3693,6 +3693,47 @@ describe('AdminConsolePage', () => {
     expect(within(firstRunAlert).queryByText(/\/configuracion\/tokens/i)).not.toBeInTheDocument();
   });
 
+  it('strips generated fallback prefixes from unique optional module titles', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-tokens',
+          title: 'Fallback: Tokens de servicio',
+          body: [
+            'Fallback: Tokens de servicio: Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+    await screen.findByText('Primeros pasos');
+
+    const firstRunAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+    if (!(firstRunAlert instanceof HTMLElement)) {
+      throw new Error('Expected first-run alert container to render');
+    }
+
+    await user.click(
+      await within(firstRunAlert).findByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(await within(firstRunAlert).findAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(
+      within(firstRunAlert).getByText(
+        /^Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.$/i,
+      ),
+    ).toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/Fallback:/i)).not.toBeInTheDocument();
+  });
+
   it('removes the first-run optional modules area when no actionable fallback cards remain', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
