@@ -4260,6 +4260,15 @@ main = hspec $ do
             assertInvalid
                 (facebookPagePayload "page-123" "TDF HQ" "page token")
                 "Facebook page access_token must not contain whitespace"
+            assertInvalid
+                ( BL.pack $
+                    "{\"data\":["
+                        <> "{\"id\":\"page-123\",\"name\":\"TDF HQ\",\"access_token\":\"page-token\"},"
+                        <> "{\"id\":\"page-123\",\"name\":\"TDF HQ Backup\","
+                        <> "\"access_token\":\"backup-token\"}"
+                        <> "]}"
+                )
+                "Facebook page list must not contain duplicate page ids"
 
         it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
             let sanitized =

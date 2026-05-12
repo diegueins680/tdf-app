@@ -189,8 +189,12 @@ newtype FacebookPageList = FacebookPageList { fplData :: [FacebookPage] }
   deriving (Show)
 
 instance FromJSON FacebookPageList where
-  parseJSON = withObject "FacebookPageList" $ \o ->
-    FacebookPageList <$> o .: "data"
+  parseJSON = withObject "FacebookPageList" $ \o -> do
+    pages <- o .: "data"
+    let pageIds = map fpId pages
+    when (length pageIds /= length (nub pageIds)) $
+      fail "Facebook page list must not contain duplicate page ids"
+    pure (FacebookPageList pages)
 
 newtype InstagramBusinessAccount = InstagramBusinessAccount { ibaId :: Text }
   deriving (Show)
