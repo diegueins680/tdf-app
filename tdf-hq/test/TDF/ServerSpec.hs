@@ -6439,6 +6439,34 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 (Just "Eventos\x2028Logistica")
 
+        it "rejects oversized internship signup text before profile metadata is created" $ do
+            let assertInvalid expectedMessage skills areas =
+                    case
+                        validateSignupInternshipFields
+                            [Customer, Fan, Intern]
+                            Nothing
+                            Nothing
+                            Nothing
+                            skills
+                            areas
+                    of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected oversized internship signup text to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "internshipSkills must be 1000 characters or fewer"
+                (Just (T.replicate 1001 "x"))
+                Nothing
+            assertInvalid
+                "internshipAreas must be 1000 characters or fewer"
+                Nothing
+                (Just (T.replicate 1001 "x"))
+
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers" $ do
             parsePasswordChangeAuthToken " Bearer session-token " `shouldBe` Right "session-token"

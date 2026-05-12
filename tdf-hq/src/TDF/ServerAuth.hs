@@ -323,6 +323,18 @@ validateSignupInternshipTextField fieldName rawValue =
   case cleanOptional rawValue of
     Nothing -> Right ()
     Just cleanValue
+      | T.length cleanValue > maxSignupInternshipTextChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      ( fieldName
+                          <> " must be "
+                          <> T.pack (show maxSignupInternshipTextChars)
+                          <> " characters or fewer"
+                      )
+                  )
+            }
       | T.any isUnsafeSignupInternshipTextChar cleanValue ->
           Left err400
             { errBody =
@@ -335,6 +347,9 @@ validateSignupInternshipTextField fieldName rawValue =
             }
       | otherwise ->
           Right ()
+
+maxSignupInternshipTextChars :: Int
+maxSignupInternshipTextChars = 1000
 
 isUnsafeSignupInternshipTextChar :: Char -> Bool
 isUnsafeSignupInternshipTextChar ch =
