@@ -43,8 +43,16 @@ import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Database.Persist           (Entity(..), SelectOpt(LimitTo), getBy, selectList, upsert, (==.), (=.))
-import           Database.Persist.Sql       (SqlPersistT, runSqlPool)
+import           Database.Persist
+  ( Entity(..)
+  , SelectOpt(LimitTo)
+  , getBy
+  , selectList
+  , upsert
+  , (==.)
+  , (=.)
+  )
+import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
@@ -91,6 +99,8 @@ hasModuleAccess moduleTag user@AuthedUser{..} =
 
 validateModuleAccess :: ModuleAccess -> AuthedUser -> Either ServerError ()
 validateModuleAccess moduleTag user@AuthedUser{..}
+  | not (hasValidAuthPartyId user) =
+      Left err403 { errBody = "Valid authenticated party required" }
   | not (rolesAreUnique auRoles) =
       Left err403 { errBody = "Role grants must be unique" }
   | auModules /= modulesForRoles auRoles =
@@ -231,8 +241,12 @@ rolesAreUnique roles =
   length roles == Set.size (Set.fromList roles)
 
 hasCoherentRoleGrants :: AuthedUser -> Bool
-hasCoherentRoleGrants AuthedUser{..} =
-  rolesAreUnique auRoles && auModules == modulesForRoles auRoles
+hasCoherentRoleGrants user@AuthedUser{..} =
+  hasValidAuthPartyId user && rolesAreUnique auRoles && auModules == modulesForRoles auRoles
+
+hasValidAuthPartyId :: AuthedUser -> Bool
+hasValidAuthPartyId AuthedUser{..} =
+  fromSqlKey auPartyId > 0
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
 modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]

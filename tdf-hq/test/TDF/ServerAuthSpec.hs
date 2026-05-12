@@ -111,15 +111,23 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
   it "allows coherent users with the required module grant" $
     validateModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` Right ()
 
-  it "denies direct module checks for stale or duplicated role grants" $ do
+  it "denies direct module checks for impossible party ids, stale grants, or duplicates" $ do
     hasModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` True
+    hasModuleAccess
+      ModuleAdmin
+      ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
+      `shouldBe` False
     hasModuleAccess ModuleAdmin (mkUser [Admin, Admin]) `shouldBe` False
     hasModuleAccess
       ModuleAdmin
       ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
       `shouldBe` False
 
-  it "rejects missing, duplicated, or stale module grants before handler authorization" $ do
+  it "rejects impossible party ids or incoherent grants before handler authorization" $ do
+    assertRejected "Valid authenticated party required" $
+      validateModuleAccess
+        ModuleAdmin
+        ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
     assertRejected "Missing access to module: Admin" $
       validateModuleAccess ModuleAdmin (mkUser [Fan])
     assertRejected "Role grants must be unique" $
