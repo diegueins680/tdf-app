@@ -2213,7 +2213,7 @@ const buildLocalSearchPlaceholder = (
     && identityTerms.length > 0
     && identityTerms.length + 1 + contextTerms.length > MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS
   ) {
-    return formatLocalSearchPlaceholder([...identityTerms, 'otros datos']);
+    return formatLocalSearchPlaceholder([...identityTerms, 'registro', 'otros datos']);
   }
 
   const terms = [...identityTerms];

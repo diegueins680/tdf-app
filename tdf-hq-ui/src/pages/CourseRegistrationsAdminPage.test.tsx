@@ -9361,7 +9361,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps dense busy-list search prompts compact without dropping searchable dimensions', async () => {
+  it('keeps dense busy-list search prompts compact while naming the record fallback', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
@@ -9402,13 +9402,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto u otros datos');
-      expect(searchInput.getAttribute('placeholder')).not.toContain('registro');
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, registro u otros datos');
       expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
       expect(searchInput.getAttribute('placeholder')).not.toContain('estado');
       expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
       expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Registro #102');
     });
 
     listRegistrationsMock.mockClear();
