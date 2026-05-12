@@ -29,12 +29,17 @@ instance FromJSON InstagramOAuthExchangeRequest where
   parseJSON value = do
     request <- genericParseJSON strictObjectOptions value
     code <- maybe (fail "code cannot be blank") pure (nonEmptyText (ioeCode request))
-    if T.any isUnsafeOAuthCodeChar code
-      then fail "code must not contain whitespace, control, or hidden formatting characters"
-      else pure request
-        { ioeCode = code
-        , ioeRedirectUri = ioeRedirectUri request >>= nonEmptyText
-        }
+    if T.length code > maxInstagramOAuthCodeChars
+      then fail "code must be 4096 characters or fewer"
+      else if T.any isUnsafeOAuthCodeChar code
+        then fail "code must not contain whitespace, control, or hidden formatting characters"
+        else pure request
+          { ioeCode = code
+          , ioeRedirectUri = ioeRedirectUri request >>= nonEmptyText
+          }
+
+maxInstagramOAuthCodeChars :: Int
+maxInstagramOAuthCodeChars = 4096
 
 isUnsafeOAuthCodeChar :: Char -> Bool
 isUnsafeOAuthCodeChar ch =
