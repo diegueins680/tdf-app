@@ -3697,6 +3697,52 @@ describe('AdminConsolePage', () => {
     expect(within(firstRunAlert).queryByText(/^2\. Programa/i)).not.toBeInTheDocument();
   });
 
+  it('strips italic markdown from fallback modules before showing optional details', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: '*Tokens de servicio*',
+          body: [
+            '- *Tokens de servicio:* Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+            '2. _Programa una rotación semanal sin salir de esta consola._',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+    await screen.findByText('Primeros pasos');
+
+    const firstRunAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+    if (!(firstRunAlert instanceof HTMLElement)) {
+      throw new Error('Expected first-run alert container to render');
+    }
+
+    await user.click(
+      await within(firstRunAlert).findByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(await within(firstRunAlert).findAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(
+      within(firstRunAlert).getByText(
+        /^Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.$/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(firstRunAlert).getByText(/^Programa una rotación semanal sin salir de esta consola\.$/i),
+    ).toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/\*Tokens de servicio/i)).not.toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/_Programa una rotación/i)).not.toBeInTheDocument();
+  });
+
   it('strips markdown links from fallback modules before showing first-run details', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
