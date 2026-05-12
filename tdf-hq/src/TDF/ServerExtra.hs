@@ -2269,12 +2269,19 @@ validateRequiredAssetTextField fieldName maxLength rawValue =
               BL.fromStrict
                 (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
           }
-        else if T.any isControl trimmed
+        else if T.any isUnsafeAssetLabelChar trimmed
           then Left err400
             { errBody =
-                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      (fieldName <> " must not contain control characters or hidden formatting characters")
+                  )
             }
           else Right trimmed
+
+isUnsafeAssetLabelChar :: Char -> Bool
+isUnsafeAssetLabelChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 assetNameMaxLength :: Int
 assetNameMaxLength = 160

@@ -1054,11 +1054,17 @@ spec = do
         "Asset name must not contain control characters"
         (normalizeAssetName "Roland\nJuno-106")
       assertInvalid
+        "Asset name must not contain control characters or hidden formatting characters"
+        (normalizeAssetName ("Roland" <> T.singleton '\x202E' <> "Juno-106"))
+      assertInvalid
         "Asset category must be 120 characters or fewer"
         (normalizeAssetCategory (T.replicate 121 "a"))
       assertInvalid
         "Asset category must not contain control characters"
         (normalizeAssetCategory "Synth\NULLead")
+      assertInvalid
+        "Asset category must not contain control characters or hidden formatting characters"
+        (normalizeAssetCategory ("Synth" <> T.singleton '\x200D' <> "Lead"))
 
   describe "validateAssetPhotoUrl" $ do
     it "treats omitted or blank asset photo inputs as absent and canonicalizes supported URL shapes" $ do
