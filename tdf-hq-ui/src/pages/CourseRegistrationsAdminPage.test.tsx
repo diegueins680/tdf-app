@@ -14104,9 +14104,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Gumroad checkout',
       'Beatmaking 101 - payment page',
       'Payment button for Beatmaking 101',
+      'Online payment form - Beatmaking 101',
       'Formulario de pago - Beatmaking 101',
+      'Formulario de pago en línea - Beatmaking 101',
       'Botón de pago - Beatmaking 101',
       'Beatmaking 101 - página de pago',
+      'Beatmaking 101 - página de checkout online',
       'Enlace de pago para Beatmaking 101',
     ];
 
