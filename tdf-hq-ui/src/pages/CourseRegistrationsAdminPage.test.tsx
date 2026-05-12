@@ -12660,6 +12660,45 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('does not point first-time admins to a cohort filter when no course cohorts are configured', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCourseSlug: 'archived-course',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crPartyId: 11,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crCourseSlug: 'legacy-course',
+        crStatus: 'cancelled',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Los filtros se aplican automáticamente al cambiar. Usa Estado. Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
+      );
+      expect(container.textContent).not.toContain('Empieza por cohorte y estado');
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first-run empty state focused on sharing the configured cohort form instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 

@@ -306,6 +306,7 @@ const summarizeActiveFilters = ({
 
 const buildAutomaticFilterHelpText = ({
   combinedSingleChoiceSummary,
+  hasCohortFilterControl,
   hasStatusFilterControl,
   hasVisibleRegistrations,
   showAdvancedLimitControl,
@@ -313,6 +314,7 @@ const buildAutomaticFilterHelpText = ({
   singleAvailableCohortLabel,
 }: {
   combinedSingleChoiceSummary: string;
+  hasCohortFilterControl: boolean;
   hasStatusFilterControl: boolean;
   hasVisibleRegistrations: boolean;
   showAdvancedLimitControl: boolean;
@@ -327,11 +329,9 @@ const buildAutomaticFilterHelpText = ({
 
   if (!hasStatusFilterControl) return '';
 
-  const filterStartingPoint = singleAvailableCohortLabel
-    ? 'Usa Estado.'
-    : showSingleStatusSummary
-      ? 'Usa cohorte.'
-      : 'Empieza por cohorte y estado.';
+  const filterStartingPoint = hasCohortFilterControl
+    ? 'Empieza por cohorte y estado.'
+    : 'Usa Estado.';
   const limitGuidance = showAdvancedLimitControl
     ? 'Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
     : 'Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.';
@@ -3485,6 +3485,7 @@ export default function CourseRegistrationsAdminPage() {
     : 'Estado único en esta vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
+    hasCohortFilterControl: hasDedicatedCohortFilterControl,
     hasStatusFilterControl: actionableStatusFilters.length > 0,
     hasVisibleRegistrations,
     showAdvancedLimitControl,
