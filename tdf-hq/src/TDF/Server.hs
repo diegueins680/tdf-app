@@ -11370,16 +11370,16 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
     case mOrder of
       Nothing -> pure Nothing
       Just order -> do
-        let paidAtBase   = case paidAtInput of
-              Nothing -> ME.marketplaceOrderPaidAt order
-              Just v  -> v
-            paidAtFinal  =
-              if isNothing paidAtInput
-                 && maybe False (\s -> T.toLower s == "paid") nextStatus
-                 && isNothing (ME.marketplaceOrderPaidAt order)
-                then Just now
-                else paidAtBase
-            updates = catMaybes
+        paidAtFinal <-
+          case resolveMarketplaceOrderPaidAtForStatus
+            now
+            (ME.marketplaceOrderStatus order)
+            nextStatus
+            (ME.marketplaceOrderPaidAt order)
+            paidAtInput of
+              Left err -> liftIO $ throwIO err
+              Right value -> pure value
+        let updates = catMaybes
               [ fmap (ME.MarketplaceOrderStatus =.) nextStatus
               , fmap (ME.MarketplaceOrderPaymentProvider =.) nextProvider
               , if paidAtFinal /= ME.marketplaceOrderPaidAt order
@@ -11581,6 +11581,35 @@ validateMarketplaceOrderPaidAtUpdate _ (Just Nothing) = Right (Just Nothing)
 validateMarketplaceOrderPaidAtUpdate now (Just (Just paidAt))
   | paidAt <= now = Right (Just (Just paidAt))
   | otherwise = Left err400 { errBody = "paidAt must not be in the future" }
+
+resolveMarketplaceOrderPaidAtForStatus
+  :: UTCTime
+  -> Text
+  -> Maybe Text
+  -> Maybe UTCTime
+  -> Maybe (Maybe UTCTime)
+  -> Either ServerError (Maybe UTCTime)
+resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput
+  | isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal =
+      Left err400 { errBody = "paidAt is required when status is paid" }
+  | otherwise =
+      Right paidAtFinal
+  where
+    statusFinal = fromMaybe currentStatus mNextStatus
+    paidAtBase =
+      case paidAtInput of
+        Nothing -> currentPaidAt
+        Just value -> value
+    paidAtFinal =
+      if isNothing paidAtInput
+          && maybe False isPaidMarketplaceOrderStatus mNextStatus
+          && isNothing currentPaidAt
+        then Just now
+        else paidAtBase
+
+isPaidMarketplaceOrderStatus :: Text -> Bool
+isPaidMarketplaceOrderStatus rawStatus =
+  T.toLower (T.strip rawStatus) == "paid"
 
 loadCartLines
   :: Key ME.MarketplaceCart

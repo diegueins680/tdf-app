@@ -197,6 +197,7 @@ import TDF.Server
     , validateOptionalMarketplaceOrderStatus
     , validateMarketplaceOrderUpdateStatus
     , validateMarketplaceOrderPaidAtUpdate
+    , resolveMarketplaceOrderPaidAtForStatus
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
@@ -7112,6 +7113,51 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected future marketplace paidAt update to be rejected, got: "
                             <> show paidAtUpdate
                         )
+
+        it "requires a payment timestamp when admin updates leave an order paid" $ do
+            let historicalPaidAt = addUTCTime (-60) now
+
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                Nothing
+                `shouldBe` Right (Just now)
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                (Just (Just historicalPaidAt))
+                `shouldBe` Right (Just historicalPaidAt)
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "paid"
+                (Just "cancelled")
+                Nothing
+                Nothing
+                `shouldBe` Right Nothing
+
+            let assertInvalid currentStatus nextStatus paidAtInput =
+                    case resolveMarketplaceOrderPaidAtForStatus
+                        now
+                        currentStatus
+                        nextStatus
+                        Nothing
+                        paidAtInput of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "paidAt is required when status is paid"
+                        Right paidAtValue ->
+                            expectationFailure
+                                ( "Expected paid marketplace order without paidAt to fail, got: "
+                                    <> show paidAtValue
+                                )
+
+            assertInvalid "pending" (Just "paid") (Just Nothing)
+            assertInvalid "paid" Nothing Nothing
 
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do
