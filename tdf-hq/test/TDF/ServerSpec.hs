@@ -147,6 +147,7 @@ import TDF.Server
     , validateEngineer
     , validateWhatsAppMessagesLimit
     , validateBookingListFilters
+    , validateUpdateBookingRequestHasChanges
     , validatePartyDisplayName
     , validatePartyDisplayNameUpdate
     , validatePartyPrimaryEmail
@@ -2884,6 +2885,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateBookingListFilters (Just 7) Nothing (Just 13))
 
     describe "updateBooking" $
+      do
         it "rejects non-positive booking path ids before database lookup" $ do
             let emptyUpdate =
                     UpdateBookingReq
@@ -2908,6 +2910,31 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid booking path id to be rejected, got: " <> show value)
+
+        it "rejects empty booking updates before database lookup" $ do
+            let emptyUpdate =
+                    UpdateBookingReq
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+            result <-
+                runHandler $
+                    runReaderT
+                        (updateBooking (mkUser [Admin]) 1 emptyUpdate)
+                        (error "empty booking update should reject before reading Env")
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Booking update must include at least one field"
+                Right value ->
+                    expectationFailure
+                        ("Expected empty booking update to be rejected, got: " <> show value)
 
     describe "whatsappWebhookServer verification" $ do
         it "rejects missing hub.mode instead of accepting token-only webhook verification" $
@@ -9212,6 +9239,13 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
             decodeUpdateBookingRequest
                 "{\"ubTitle\":\"Updated title\",\"ubStatus\":\"Planned\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+        it "rejects empty or null-only booking updates instead of accepting silent no-op patches" $ do
+            decodeUpdateBookingRequest "{}" `shouldSatisfy` isLeft
+            decodeUpdateBookingRequest "{\"ubTitle\":null,\"ubNotes\":null}" `shouldSatisfy` isLeft
+            validateUpdateBookingRequestHasChanges
+                (UpdateBookingReq Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
                 `shouldSatisfy` isLeft
 
     describe "booking title validation" $ do

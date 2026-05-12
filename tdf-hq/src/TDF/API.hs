@@ -476,7 +476,31 @@ data UpdateBookingReq = UpdateBookingReq
   , ubEngineerName :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON UpdateBookingReq where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON raw@(Object o) = do
+    req <- genericParseJSON defaultOptions { rejectUnknownFields = True } raw
+    if any (hasNonNullUpdateField o) updateBookingRequestFields
+      then pure req
+      else fail "UpdateBookingReq must include at least one non-null field"
+  parseJSON raw = genericParseJSON defaultOptions { rejectUnknownFields = True } raw
+
+updateBookingRequestFields :: [Text]
+updateBookingRequestFields =
+  [ "ubTitle"
+  , "ubServiceType"
+  , "ubStatus"
+  , "ubNotes"
+  , "ubStartsAt"
+  , "ubEndsAt"
+  , "ubEngineerPartyId"
+  , "ubEngineerName"
+  ]
+
+hasNonNullUpdateField :: Object -> Text -> Bool
+hasNonNullUpdateField rawObject fieldName =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) rawObject of
+    Just Null -> False
+    Just _ -> True
+    Nothing -> False
 
 data PublicBookingReq = PublicBookingReq
   { pbFullName         :: Text

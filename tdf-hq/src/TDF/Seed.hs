@@ -249,8 +249,80 @@ seedAll = do
     seedRecordsCmsContent now
     seedHolgerSession now
     seedAcademy now
+    seedVerde70FanClub now
 
     pure ()
+
+seedVerde70FanClub :: UTCTime -> SqlPersistT IO ()
+seedVerde70FanClub now = do
+    -- Ensure Party exists
+    let displayName = "Verde 70"
+        slugVal = "verde70"
+    partyId <- ensurePartyRecord now displayName Nothing
+
+    -- Ensure ArtistProfile exists with slug
+    mExistingProfile <- getBy (UniqueArtistProfile partyId)
+    case mExistingProfile of
+        Just (Entity profileId _) -> do
+            -- Update profile fields if existing
+            update profileId
+                [ ArtistProfileSlug =. Just slugVal
+                , ArtistProfileBio =. Just "Verde 70 es una banda de rock ecuatoriana icónica."
+                , ArtistProfileCity =. Just "Quito"
+                , ArtistProfileGenres =. Just "Rock"
+                , ArtistProfileUpdatedAt =. Just now
+                ]
+        Nothing -> do
+            _ <- insert $ ArtistProfile
+                { artistProfileArtistPartyId    = partyId
+                , artistProfileSlug             = Just slugVal
+                , artistProfileBio              = Just "Verde 70 es una banda de rock ecuatoriana icónica."
+                , artistProfileCity             = Just "Quito"
+                , artistProfileHeroImageUrl     = Nothing
+                , artistProfileSpotifyArtistId  = Nothing
+                , artistProfileSpotifyUrl       = Nothing
+                , artistProfileYoutubeChannelId = Nothing
+                , artistProfileYoutubeUrl       = Nothing
+                , artistProfileWebsiteUrl       = Nothing
+                , artistProfileFeaturedVideoUrl = Nothing
+                , artistProfileGenres           = Just "Rock"
+                , artistProfileHighlights       = Nothing
+                , artistProfileCreatedAt        = now
+                , artistProfileUpdatedAt        = Just now
+                }
+            pure ()
+
+    -- Ensure FanClub exists
+    mExistingClub <- getBy (UniqueFanClubArtist partyId)
+    case mExistingClub of
+        Just _ -> pure ()
+        Nothing -> do
+            _ <- insert $ FanClub
+                { fanClubArtistPartyId = partyId
+                , fanClubName          = "Club de Fans de Verde 70"
+                , fanClubDescription   = Just "Bienvenidos al club oficial de fans de Verde 70. Únete para compartir, votar y participar en eventos exclusivos."
+                , fanClubCreatedAt     = now
+                }
+            pure ()
+
+    -- Seed a sample release
+    mExistingRelease <- selectFirst [ArtistReleaseArtistPartyId ==. partyId, ArtistReleaseTitle ==. "Ángel Oscuro"] []
+    case mExistingRelease of
+        Just _ -> pure ()
+        Nothing -> do
+            _ <- insert $ ArtistRelease
+                { artistReleaseArtistPartyId = partyId
+                , artistReleaseTitle         = "Ángel Oscuro"
+                , artistReleaseReleaseDate   = Just (fromGregorian 1999 1 1)
+                , artistReleaseDescription   = Just "El álbum debut de Verde 70, publicado en 1999."
+                , artistReleaseCoverImageUrl = Nothing
+                , artistReleaseSpotifyUrl    = Nothing
+                , artistReleaseYoutubeUrl    = Nothing
+                , artistReleaseCreatedAt     = now
+                }
+            pure ()
+
+    liftIO $ putStrLn "Seeded Verde 70 artist profile, fan club, and release."
 
 slugify :: Text -> Text
 slugify = T.toLower . T.replace " " "-"

@@ -326,7 +326,11 @@ import TDF.Server.SocialEventsHandlers (
     validateEventMetadataUpdate,
     validateBudgetLineTypeInput,
  )
-import TDF.Auth (extractToken, extractTokenFromHeaders, sessionCookieHeader)
+import TDF.Auth
+    ( clearSessionCookieHeader,
+      extractToken,
+      extractTokenFromHeaders,
+      sessionCookieHeader )
 import TDF.Config
     ( appPort,
       assetsRootDir,
@@ -973,6 +977,29 @@ main = hspec $ do
                 $ loadConfig `shouldThrow` \err ->
                     "SESSION_COOKIE_SECURE must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
+
+        it "keeps Secure on both session set and clear cookie headers" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Just "https://hq.example.com")
+                , ("SESSION_COOKIE_NAME", Nothing)
+                , ("SESSION_COOKIE_DOMAIN", Nothing)
+                , ("SESSION_COOKIE_PATH", Nothing)
+                , ("SESSION_COOKIE_SECURE", Nothing)
+                , ("SESSION_COOKIE_SAMESITE", Nothing)
+                , ("SESSION_COOKIE_MAX_AGE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    let secureSetCookie =
+                            "tdf_session=session-token; Path=/; HttpOnly; SameSite=None; "
+                                <> "Max-Age=2592000; Secure"
+                        secureClearCookie =
+                            "tdf_session=; Path=/; HttpOnly; SameSite=None; Max-Age=0; "
+                                <> "Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure"
+                    sessionCookieHeader cfg "session-token"
+                        `shouldBe` secureSetCookie
+                    clearSessionCookieHeader cfg
+                        `shouldBe` secureClearCookie
 
         it "rejects malformed session cookie SameSite values instead of silently using Lax" $ do
             withEnvOverrides

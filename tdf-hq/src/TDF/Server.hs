@@ -7199,6 +7199,7 @@ updateBooking :: AuthedUser -> Int64 -> UpdateBookingReq -> AppM BookingDTO
 updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
+  either throwError pure (validateUpdateBookingRequestHasChanges req)
   Env pool _ <- ask
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
@@ -7465,6 +7466,22 @@ validateBookingListFilters mBookingId mPartyId mEngineerPartyId = do
     )
     (Left err400 { errBody = "bookingId cannot be combined with partyId or engineerPartyId" })
   pure (bookingIdFilter, partyIdFilter, engineerPartyIdFilter)
+
+validateUpdateBookingRequestHasChanges :: UpdateBookingReq -> Either ServerError ()
+validateUpdateBookingRequestHasChanges UpdateBookingReq{..}
+  | or
+      [ isJust ubTitle
+      , isJust ubServiceType
+      , isJust ubStatus
+      , isJust ubNotes
+      , isJust ubStartsAt
+      , isJust ubEndsAt
+      , isJust ubEngineerPartyId
+      , isJust ubEngineerName
+      ] =
+      Right ()
+  | otherwise =
+      Left err400 { errBody = "Booking update must include at least one field" }
 
 validateServiceMarketplaceBookingRefs :: Int64 -> Int64 -> Either ServerError (Int64, Int64)
 validateServiceMarketplaceBookingRefs rawAdId rawSlotId = do

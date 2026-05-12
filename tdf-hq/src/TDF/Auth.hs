@@ -415,6 +415,7 @@ clearSessionCookieHeader AppConfig{..} =
         , "Expires=Thu, 01 Jan 1970 00:00:00 GMT"
         ]
         <> maybe [] (\domainVal -> ["Domain=" <> domainVal]) sessionCookieDomain
+        <> ["Secure" | sessionCookieSecure]
   in T.intercalate "; " segments
 
 cookieHeaderWithValue :: AppConfig -> Text -> Text
