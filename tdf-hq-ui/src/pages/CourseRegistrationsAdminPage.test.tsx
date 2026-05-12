@@ -13770,6 +13770,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Kushki payment link - Beatmaking 101',
       'Paymentez checkout for Beatmaking 101',
       'Beatmaking 101 - Deuna payment page',
+      'Shopify checkout - Beatmaking 101',
+      'WooCommerce checkout for Beatmaking 101',
+      'Lemon Squeezy payment link - Beatmaking 101',
+      'Beatmaking 101 - Gumroad checkout',
       'Beatmaking 101 - payment page',
       'Payment button for Beatmaking 101',
       'Formulario de pago - Beatmaking 101',
@@ -13791,7 +13795,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|stripe|datafast|kushki|paymentez|deuna|pago/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|stripe|datafast|kushki|paymentez|deuna|shopify|woocommerce|lemon\s+squeezy|gumroad|pago/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
