@@ -573,6 +573,7 @@ isValidProposalEmail candidate =
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidProposalDomainLabel (T.splitOn "." domain)
+        && isValidProposalFinalDomainLabel domain
     _ -> False
 
 maxProposalContactEmailLength :: Int
@@ -601,6 +602,13 @@ isValidProposalDomainLabel label =
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidProposalDomainChar label
+
+isValidProposalFinalDomainLabel :: Text -> Bool
+isValidProposalFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 maxProposalEmailDomainLabelLength :: Int
 maxProposalEmailDomainLabelLength = 63

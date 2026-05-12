@@ -202,6 +202,50 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected blank pipelineCardId create to fail, got: " <> show proposalDto)
 
+  it "rejects ambiguous contact email final domain labels before persisting proposal rows" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.123"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Nothing
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure
+          ( "Expected contact email rejection to be handled in the inner proposal action, got: "
+              <> show err
+          )
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "contactEmail must be a valid email address"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected ambiguous contactEmail create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
+
   it "rejects hidden-format proposal titles before persisting rows" $ do
     result <-
       runProposalTest $ do
