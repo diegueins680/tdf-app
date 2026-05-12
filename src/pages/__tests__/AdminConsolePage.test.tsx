@@ -7301,12 +7301,13 @@ describe('AdminConsolePage', () => {
       expect(
         screen.getByText(/Revisa los roles actuales y usa Asignar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Asignar roles');
-      expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Sin roles');
+      expect(screen.getByRole('button', { name: 'Asignar roles de Ada Lovelace' })).toHaveTextContent('Asignar roles');
+      expect(screen.getByRole('button', { name: 'Asignar roles de Ada Lovelace' })).toHaveAttribute('title', 'Asignar roles de Ada Lovelace. Roles actuales: Sin roles');
+      expect(screen.queryByRole('button', { name: 'Editar roles de Ada Lovelace' })).not.toBeInTheDocument();
       expect(screen.queryByText(/^—$/i)).not.toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' }));
+    await user.click(screen.getByRole('button', { name: 'Asignar roles de Ada Lovelace' }));
 
     expect(
       await screen.findByText(

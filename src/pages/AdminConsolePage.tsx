@@ -1268,14 +1268,10 @@ function summarizeAdminUserIdentity(user: Pick<AdminUserDTO, 'displayName' | 'us
   return { primary, username, showUsername };
 }
 
-function buildAdminUserRoleEditLabel(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
-  return `Editar roles de ${summarizeAdminUserIdentity(user).primary}`;
-}
-
 function buildAdminUserRoleButtonTitle(user: Pick<AdminUserDTO, 'displayName' | 'username' | 'roles'>) {
   const roleSummary = formatEditableRoleList(user.roles);
 
-  return `${buildAdminUserRoleEditLabel(user)}. Roles actuales: ${roleSummary}`;
+  return `${buildAdminUserRoleActionName(user)}. Roles actuales: ${roleSummary}`;
 }
 
 function formatEditableRoleList(roles?: readonly RoleKey[] | null) {
@@ -1313,6 +1309,10 @@ function formatInlineAdminUserRoleSummary(roles?: readonly RoleKey[] | null) {
 
 function buildAdminUserRoleActionLabel(roles?: readonly RoleKey[] | null) {
   return normalizeRoleSelection(roles).length === 0 ? 'Asignar roles' : 'Editar roles';
+}
+
+function buildAdminUserRoleActionName(user: Pick<AdminUserDTO, 'displayName' | 'username' | 'roles'>) {
+  return `${buildAdminUserRoleActionLabel(user.roles)} de ${summarizeAdminUserIdentity(user).primary}`;
 }
 
 function buildCompactAdminUserRoleActionLabel(
@@ -2563,7 +2563,7 @@ export default function AdminConsolePage() {
                     <TableBody>
                       {visibleAdminUsers.map((user, index) => {
                         const identity = summarizeAdminUserIdentity(user);
-                        const editRoleLabel = buildAdminUserRoleEditLabel(user);
+                        const editRoleLabel = buildAdminUserRoleActionName(user);
                         const editRoleTitle = buildAdminUserRoleButtonTitle(user);
                         const shouldShowPartyId = user.partyId != null && userIdsRequiringPartyId.has(user.userId);
                         return (
@@ -2678,7 +2678,7 @@ export default function AdminConsolePage() {
                       <Button
                         size="small"
                         onClick={() => setEditingUser(singleAdminUser)}
-                        aria-label={buildAdminUserRoleEditLabel(singleAdminUser)}
+                        aria-label={buildAdminUserRoleActionName(singleAdminUser)}
                         title={buildAdminUserRoleButtonTitle(singleAdminUser)}
                         sx={{
                           px: 0,
