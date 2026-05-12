@@ -13377,6 +13377,40 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips stacked form-provider and registration descriptors from first-run cohort copy', async () => {
+    const titles = [
+      'Typeform registration page - Beatmaking 101',
+      'Jotform application link for Beatmaking 101',
+      'Beatmaking 101 - Tally registration portal',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/Typeform|Jotform|Tally/i);
+        expect(emptyState?.textContent).not.toMatch(/registration page|application link|registration portal/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips community-channel wrappers from first-run cohort copy', async () => {
     const titles = [
       'WhatsApp group - Beatmaking 101',
