@@ -249,6 +249,7 @@ seedAll = do
     seedRecordsCmsContent now
     seedHolgerSession now
     seedAcademy now
+    seedArtistProfiles now
     seedVerde70FanClub now
 
     pure ()
@@ -323,6 +324,76 @@ seedVerde70FanClub now = do
             pure ()
 
     liftIO $ putStrLn "Seeded Verde 70 artist profile, fan club, and release."
+
+seedArtistProfiles :: UTCTime -> SqlPersistT IO ()
+seedArtistProfiles now = do
+    let artistSeeds =
+            [ ("Arkabuz", "arkabuz", "Arkabuz es una banda de rock ecuatoriana.", "Quito", "Rock",
+               Nothing, Nothing,
+               "https://cdn-images.dzcdn.net/images/artist/167db04ac5e9d8f48531877b7f09bf8d/1000x1000-000000-80-0-0.jpg")
+            , ("El Bloque", "el-bloque", "El Bloque es una banda de hip-hop/rap ecuatoriana.", "Quito", "Hip-Hop, Rap",
+               Nothing, Nothing,
+               "https://cdn-images.dzcdn.net/images/artist/27b0b26e9b7a54c5b01b7efdd66c4c88/1000x1000-000000-80-0-0.jpg")
+            , ("Skanka Fe", "skankafe", "Skankafe es una banda de ska/reggae ecuatoriana.", "Quito", "Ska, Reggae",
+               Just "6348Nu8zc4gZC8vtHzPP8R", Just "https://open.spotify.com/artist/6348Nu8zc4gZC8vtHzPP8R",
+               "https://cdn-images.dzcdn.net/images/artist/daad47c2eafebd911dffcd1061bcfb89/1000x1000-000000-80-0-0.jpg")
+            , ("Quimika Soul", "quimika-soul", "Quimika Soul es una banda de funk/rock ecuatoriana.", "Quito", "Funk, Rock",
+               Nothing, Nothing,
+               "https://cdn-images.dzcdn.net/images/artist/acdfdc105225159a8a2231101341429a/1000x1000-000000-80-0-0.jpg")
+            , ("Juano Ledesma", "juano-ledesma", "Juano Ledesma es un artista y productor musical ecuatoriano.", "Quito", "Hip-Hop, Rap",
+               Just "5Cg387QPuHlwM5z4Sze4JS", Just "https://open.spotify.com/artist/5Cg387QPuHlwM5z4Sze4JS",
+               "https://cdn-images.dzcdn.net/images/artist/28af648d500ec40937ebb9359458895a/1000x1000-000000-80-0-0.jpg")
+            ]
+    forM_ artistSeeds $ \(disp, slugVal, bio, city, genres, mSpotifyId, mSpotifyUrl, imgUrl) -> do
+        partyId <- ensurePartyRecord now disp Nothing
+        mExistingProfile <- getBy (UniqueArtistProfile partyId)
+        case mExistingProfile of
+            Just (Entity profileId _) -> do
+                update profileId
+                    [ ArtistProfileSlug =. Just slugVal
+                    , ArtistProfileBio =. Just bio
+                    , ArtistProfileCity =. Just city
+                    , ArtistProfileGenres =. Just genres
+                    , ArtistProfileHeroImageUrl =. Just imgUrl
+                    , ArtistProfileSpotifyArtistId =. mSpotifyId
+                    , ArtistProfileSpotifyUrl =. mSpotifyUrl
+                    , ArtistProfileUpdatedAt =. Just now
+                    ]
+            Nothing -> do
+                _ <- insert $ ArtistProfile
+                    { artistProfileArtistPartyId    = partyId
+                    , artistProfileSlug             = Just slugVal
+                    , artistProfileBio              = Just bio
+                    , artistProfileCity             = Just city
+                    , artistProfileHeroImageUrl     = Just imgUrl
+                    , artistProfileSpotifyArtistId  = mSpotifyId
+                    , artistProfileSpotifyUrl       = mSpotifyUrl
+                    , artistProfileYoutubeChannelId = Nothing
+                    , artistProfileYoutubeUrl       = Nothing
+                    , artistProfileWebsiteUrl       = Nothing
+                    , artistProfileFeaturedVideoUrl = Nothing
+                    , artistProfileGenres           = Just genres
+                    , artistProfileHighlights       = Nothing
+                    , artistProfileCreatedAt        = now
+                    , artistProfileUpdatedAt        = Just now
+                    }
+                pure ()
+    -- Update Verde 70 with Deezer image and Spotify data
+    mVerde70Party <- selectFirst [PartyDisplayName ==. "Verde 70"] []
+    case mVerde70Party of
+        Just (Entity vpid _) -> do
+            mVerde70Profile <- getBy (UniqueArtistProfile vpid)
+            case mVerde70Profile of
+                Just (Entity vprofId _) -> do
+                    update vprofId
+                        [ ArtistProfileHeroImageUrl =. Just "https://cdn-images.dzcdn.net/images/artist/afd0be4add923627925dd62bd2447ddd/1000x1000-000000-80-0-0.jpg"
+                        , ArtistProfileSpotifyArtistId =. Just "3Of13uTPqUVwBPz8gpz5kN"
+                        , ArtistProfileSpotifyUrl =. Just "https://open.spotify.com/artist/3Of13uTPqUVwBPz8gpz5kN"
+                        , ArtistProfileUpdatedAt =. Just now
+                        ]
+                Nothing -> pure ()
+        Nothing -> pure ()
+    liftIO $ putStrLn "Seeded artist profiles for Arkabuz, El Bloque, Skankafe, Quimika Soul, Juano Ledesma, and Verde 70."
 
 slugify :: Text -> Text
 slugify = T.toLower . T.replace " " "-"

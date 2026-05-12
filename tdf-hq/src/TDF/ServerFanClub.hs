@@ -10,6 +10,10 @@ module TDF.ServerFanClub
   , fanClubSecureArtistHandlers
   , validateFanClubPostPathId
   , validateFanClubPostMutationTarget
+  , validateFanClubElectionPathId
+  , validateFanClubElectionMutationTarget
+  , validateFanClubCandidacyPathId
+  , validateFanClubVoteCandidacyTarget
   ) where
 
 import           Control.Monad          (forM, forM_, when, unless, void)
@@ -328,57 +332,52 @@ fanClubSecureArtistHandlers user artistId =
                 }
 
     createCandidacy aId electionId req = do
-      let eid = toSqlKey electionId :: FanClubElectionId
-      mElection <- runDB $ get eid
-      case mElection of
-        Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just _ -> do
-          mCid <- runDB $ do
-            now <- liftIO getCurrentTime
-            let role = parseOfficerRole (fccrRole req)
-            insertUnique FanClubCandidacy
-              { fanClubCandidacyElectionId = eid
-              , fanClubCandidacyFanPartyId = auPartyId user
-              , fanClubCandidacyRole = role
-              , fanClubCandidacyManifesto = fccrManifesto req
-              , fanClubCandidacyCreatedAt = now
-              }
-          case mCid of
-            Nothing -> throwError err400 { errBody = "Ya estás postulado para este cargo" }
-            Just cid' -> runDB $ do
-              author <- getAuthorDTO (auPartyId user)
-              pure $ FanClubCandidacyDTO
-                { fccCandidacyId = fromSqlKey cid'
-                , fccFanId = fromSqlKey (auPartyId user)
-                , fccFanName = sppDisplayName author
-                , fccAvatarUrl = sppAvatarUrl author
-                , fccRole = fccrRole req
-                , fccManifesto = fccrManifesto req
-                , fccVoteCount = 0
-                }
+      electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
+      targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
+      _ <- either throwError pure targetElection
+      mCid <- runDB $ do
+        now <- liftIO getCurrentTime
+        let role = parseOfficerRole (fccrRole req)
+        insertUnique FanClubCandidacy
+          { fanClubCandidacyElectionId = electionKey
+          , fanClubCandidacyFanPartyId = auPartyId user
+          , fanClubCandidacyRole = role
+          , fanClubCandidacyManifesto = fccrManifesto req
+          , fanClubCandidacyCreatedAt = now
+          }
+      case mCid of
+        Nothing -> throwError err400 { errBody = "Ya estás postulado para este cargo" }
+        Just cid' -> runDB $ do
+          author <- getAuthorDTO (auPartyId user)
+          pure $ FanClubCandidacyDTO
+            { fccCandidacyId = fromSqlKey cid'
+            , fccFanId = fromSqlKey (auPartyId user)
+            , fccFanName = sppDisplayName author
+            , fccAvatarUrl = sppAvatarUrl author
+            , fccRole = fccrRole req
+            , fccManifesto = fccrManifesto req
+            , fccVoteCount = 0
+            }
 
     castVote aId electionId req = do
-      let eid = toSqlKey electionId :: FanClubElectionId
-      mElection <- runDB $ get eid
-      case mElection of
-        Nothing -> throwError err404 { errBody = "Elección no encontrada" }
-        Just _ -> do
-          runDB $ do
-            now <- liftIO getCurrentTime
-            forM_ (fcvCandidacyIds req) $ \candId -> do
-              let cKey = toSqlKey candId :: FanClubCandidacyId
-              mCand <- get cKey
-              case mCand of
-                Nothing -> pure ()
-                Just cand -> do
-                  void $ insertUnique FanClubVote
-                    { fanClubVoteElectionId = eid
-                    , fanClubVoteFanPartyId = auPartyId user
-                    , fanClubVoteCandidacyId = cKey
-                    , fanClubVoteRole = fanClubCandidacyRole cand
-                    , fanClubVoteCreatedAt = now
-                    }
-          pure NoContent
+      electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
+      targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
+      _ <- either throwError pure targetElection
+      candidacyKeys <- either throwError pure $
+        traverse validateFanClubCandidacyPathId (fcvCandidacyIds req)
+      candidacies <- runDB $ traverse (lookupFanClubVoteCandidacyTarget electionKey) candidacyKeys
+      resolvedCandidacies <- either throwError pure (sequence candidacies)
+      runDB $ do
+        now <- liftIO getCurrentTime
+        forM_ resolvedCandidacies $ \(cKey, cand) ->
+          void $ insertUnique FanClubVote
+            { fanClubVoteElectionId = electionKey
+            , fanClubVoteFanPartyId = auPartyId user
+            , fanClubVoteCandidacyId = cKey
+            , fanClubVoteRole = fanClubCandidacyRole cand
+            , fanClubVoteCreatedAt = now
+            }
+      pure NoContent
 
 -- ============================================================================
 -- DTO Builders
@@ -521,3 +520,68 @@ validateFanClubPostMutationTarget clubId (Entity postId post)
 fanClubPostNotFound :: ServerError
 fanClubPostNotFound =
   err404 { errBody = "Fan club post not found" }
+
+validateFanClubElectionPathId :: Int64 -> Either ServerError FanClubElectionId
+validateFanClubElectionPathId rawElectionId
+  | rawElectionId <= 0 = Left err400 { errBody = "Invalid fan club election id" }
+  | otherwise = Right (toSqlKey rawElectionId)
+
+lookupFanClubElectionMutationTarget
+  :: Int64
+  -> FanClubElectionId
+  -> SqlPersistT IO (Either ServerError FanClubElectionId)
+lookupFanClubElectionMutationTarget artistId electionId = do
+  let artistKey = toSqlKey artistId
+  mClub <- getBy (UniqueFanClubArtist artistKey)
+  case mClub of
+    Nothing -> pure (Left fanClubElectionNotFound)
+    Just (Entity clubId _) -> do
+      mElection <- get electionId
+      pure $
+        maybe
+          (Left fanClubElectionNotFound)
+          (validateFanClubElectionMutationTarget clubId . Entity electionId)
+          mElection
+
+validateFanClubElectionMutationTarget
+  :: FanClubId
+  -> Entity FanClubElection
+  -> Either ServerError FanClubElectionId
+validateFanClubElectionMutationTarget clubId (Entity electionId election)
+  | fanClubElectionClubId election == clubId = Right electionId
+  | otherwise = Left fanClubElectionNotFound
+
+fanClubElectionNotFound :: ServerError
+fanClubElectionNotFound =
+  err404 { errBody = "Fan club election not found" }
+
+validateFanClubCandidacyPathId :: Int64 -> Either ServerError FanClubCandidacyId
+validateFanClubCandidacyPathId rawCandidacyId
+  | rawCandidacyId <= 0 = Left err400 { errBody = "Invalid fan club candidacy id" }
+  | otherwise = Right (toSqlKey rawCandidacyId)
+
+lookupFanClubVoteCandidacyTarget
+  :: FanClubElectionId
+  -> FanClubCandidacyId
+  -> SqlPersistT IO (Either ServerError (FanClubCandidacyId, FanClubCandidacy))
+lookupFanClubVoteCandidacyTarget electionId candidacyId = do
+  mCandidacy <- get candidacyId
+  pure $
+    case mCandidacy of
+      Nothing -> Left fanClubCandidacyNotFound
+      Just candidacy ->
+        case validateFanClubVoteCandidacyTarget electionId (Entity candidacyId candidacy) of
+          Left err -> Left err
+          Right targetId -> Right (targetId, candidacy)
+
+validateFanClubVoteCandidacyTarget
+  :: FanClubElectionId
+  -> Entity FanClubCandidacy
+  -> Either ServerError FanClubCandidacyId
+validateFanClubVoteCandidacyTarget electionId (Entity candidacyId candidacy)
+  | fanClubCandidacyElectionId candidacy == electionId = Right candidacyId
+  | otherwise = Left fanClubCandidacyNotFound
+
+fanClubCandidacyNotFound :: ServerError
+fanClubCandidacyNotFound =
+  err404 { errBody = "Fan club candidacy not found" }

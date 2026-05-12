@@ -381,6 +381,7 @@ import TDF.Seed (seededCredentialSeedingAllowed)
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
+import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
@@ -11150,6 +11151,7 @@ main = hspec $ do
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
     ServerExtraSpec.spec
+    ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec
