@@ -49,7 +49,7 @@ const getLevelPresentation = (level: string) => {
 };
 
 const getSharedLogLevelSummary = (logs: readonly LogEntry[]) => {
-  if (logs.length < 2) return '';
+  if (logs.length === 0) return '';
 
   const normalizedLevels = logs
     .map((log) => log.logLevel.trim())
@@ -178,7 +178,7 @@ export default function LogsPage() {
               sx={{ display: 'block', px: 2, pt: 2 }}
               data-testid="server-logs-shared-level-summary"
             >
-              {`Mostrando un solo nivel: ${sharedLevelSummary}. La columna volverá cuando esta vista mezcle niveles distintos.`}
+              {`Mostrando un solo nivel: ${sharedLevelSummary}. La columna aparecerá cuando esta vista mezcle niveles distintos.`}
             </Typography>
           )}
           <TableContainer>

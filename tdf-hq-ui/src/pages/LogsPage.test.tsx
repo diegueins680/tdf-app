@@ -142,7 +142,13 @@ describe('LogsPage', () => {
   });
 
   it('keeps the clear action available once there are logs to remove', async () => {
-    getLogsMock.mockResolvedValue([buildLog()]);
+    getLogsMock.mockResolvedValue([
+      buildLog(),
+      buildLog({
+        logLevel: 'error',
+        logMessage: 'Disco lleno',
+      }),
+    ]);
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -152,6 +158,7 @@ describe('LogsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Servidor listo');
+        expect(container.textContent).toContain('Disco lleno');
         expect(container.textContent).toContain('Actualización automática cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
         expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')).toBeNull();
@@ -164,12 +171,37 @@ describe('LogsPage', () => {
         expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
         expect(container.textContent).toContain('Info');
+        expect(container.textContent).toContain('Error');
       });
 
       await clickButton(getButtonByAriaLabel(container, 'Vaciar logs'));
 
       await waitForExpectation(() => {
         expect(clearLogsMock).toHaveBeenCalledTimes(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes the first log level instead of showing a one-chip level column', async () => {
+    getLogsMock.mockResolvedValue([buildLog()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')?.textContent?.trim()).toBe(
+          'Mostrando un solo nivel: Info. La columna aparecerá cuando esta vista mezcle niveles distintos.',
+        );
+        expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
+        expect(hasTableHeader(container, 'Nivel')).toBe(false);
+        expect(hasTableHeader(container, 'Mensaje')).toBe(true);
+        expect(container.textContent).toContain('Servidor listo');
+        expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -196,7 +228,7 @@ describe('LogsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')?.textContent?.trim()).toBe(
-          'Mostrando un solo nivel: Info. La columna volverá cuando esta vista mezcle niveles distintos.',
+          'Mostrando un solo nivel: Info. La columna aparecerá cuando esta vista mezcle niveles distintos.',
         );
         expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
         expect(hasTableHeader(container, 'Nivel')).toBe(false);
