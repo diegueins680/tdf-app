@@ -9409,11 +9409,26 @@ validateAdCreativeExternalId (Just rawExternalId) =
       | T.any isHiddenAdsAdminTextChar externalId ->
           Left err400
             { errBody = "externalId must not contain hidden formatting characters" }
+      | not (T.any isAdCreativeExternalIdAtom externalId)
+          || not (T.all isAdCreativeExternalIdChar externalId) ->
+          Left err400
+            { errBody =
+                "externalId must be an ASCII token using letters, numbers, "
+                  <> "hyphens, underscores, dots, or colons"
+            }
       | otherwise ->
           Right (Just externalId)
 
 maxAdCreativeExternalIdChars :: Int
 maxAdCreativeExternalIdChars = 256
+
+isAdCreativeExternalIdAtom :: Char -> Bool
+isAdCreativeExternalIdAtom ch =
+  isDigit ch || isAsciiLower ch || isAsciiUpper ch
+
+isAdCreativeExternalIdChar :: Char -> Bool
+isAdCreativeExternalIdChar ch =
+  isAdCreativeExternalIdAtom ch || ch `elem` ("-_.:" :: String)
 
 isHiddenAdsAdminTextChar :: Char -> Bool
 isHiddenAdsAdminTextChar ch =

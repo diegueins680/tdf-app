@@ -4497,6 +4497,15 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "externalId must be 256 characters or fewer"
                 (T.replicate 257 "a")
+            assertInvalid
+                "externalId must be an ASCII token"
+                "../ad-123"
+            assertInvalid
+                "externalId must be an ASCII token"
+                "ad-123?campaign=7"
+            assertInvalid
+                "externalId must be an ASCII token"
+                ("ad" <> T.singleton '\x00E9' <> "123")
 
     describe "validateAdsAdminName" $ do
         it "normalizes campaign and ad names before admin writes persist them" $ do
