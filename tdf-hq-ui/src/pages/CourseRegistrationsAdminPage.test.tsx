@@ -2186,7 +2186,8 @@ describe('CourseRegistrationsAdminPage', () => {
         `Pendiente de pago. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(8);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(8);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
     });
@@ -2219,7 +2220,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Fuente visible: instagram')).toBe(1);
       expect(container.textContent).not.toContain('Fuente: instagram');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(8);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(8);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
     await cleanup();
@@ -8804,8 +8806,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('el botón de estado');
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 1').getAttribute('title')).toBe(
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
+      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1').getAttribute('title')).toBe(
         'Registrar pago o cambiar estado; actual: Pendiente de pago',
       );
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
@@ -8961,7 +8964,8 @@ describe('CourseRegistrationsAdminPage', () => {
         'Beatmaking 101 · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.',
       );
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(9);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
     listRegistrationsMock.mockClear();
@@ -10752,7 +10756,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('sin cambiar filtros');
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(9);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para registro #"]')).toHaveLength(9);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(0);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Registro #501');
@@ -11428,7 +11433,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 1'));
+      clickButton(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1'));
       await flushPromises();
       await flushPromises();
     });

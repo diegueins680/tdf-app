@@ -638,6 +638,12 @@ const statusMenuButtonTitle = (currentStatus: string) => {
   return `Cambiar estado; actual: ${currentStatusLabel}`;
 };
 
+const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => (
+  canOpenPaymentWorkflowFromStatus(currentStatus)
+    ? `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`
+    : `Cambiar estado para ${targetLabel}`
+);
+
 const shouldUseDirectPendingRecoveryAction = (
   currentStatus: string,
   includePaidRecovery = false,
@@ -1384,6 +1390,10 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   return `${displayTitle} (${slug})`;
 };
 
+const hasCohortTitleFormattingWorthPreserving = (label: string) => (
+  /[^\u0000-\u007f]/.test(label) || /\b[A-Z]{2,}\b/.test(label)
+);
+
 const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const fallbackLabel = humanizeCohortSlug(slug) || slug;
@@ -1392,7 +1402,9 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
   );
-  if (!strippedLabel || normalizeCohortLabelKey(strippedLabel) === normalizeCohortLabelKey(slug)) {
+  if (!strippedLabel) return fallbackLabel;
+  if (normalizeCohortLabelKey(strippedLabel) === normalizeCohortLabelKey(slug)) {
+    if (hasCohortTitleFormattingWorthPreserving(strippedLabel)) return strippedLabel;
     return fallbackLabel;
   }
   return strippedLabel;
@@ -5743,7 +5755,7 @@ export default function CourseRegistrationsAdminPage() {
                               size="small"
                               color={registrationStatusButtonColor(reg.crStatus)}
                               title={statusMenuButtonTitle(reg.crStatus)}
-                              aria-label={`Cambiar estado para ${rowActionTarget}`}
+                              aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
                               aria-haspopup="menu"
                               disabled={isUpdating}
                               onClick={(event) => {
