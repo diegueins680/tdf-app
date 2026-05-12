@@ -151,3 +151,13 @@ FINAL_STATUS: done — Packet A 1 of 2 paths proven, Packet B gated, Lane C live
 - **Next decisive action:** Platform runs `npx detox test --configuration ios.sim.debug --reuse` to verify `LOGIN_TESTID_NOT_VISIBLE` is resolved by fresh binary; Release pursues Google OAuth e2e proof via any path once Platform signals Detox login test passes.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven + iOS rebuild complete (unverified), Packet B gated, Lane C live with launchd durability, no repair needed.
+
+## 2026-05-11 22:41 America/Guayaquil / 2026-05-12 03:41 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN (backend `POST /login` on :8080 returns 200 at 03:41 UTC). Google OAuth backend READY (`POST /login/google` returns 400 for invalid token = endpoint alive and configured). iOS binary present at `tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app` (mtime 2026-05-11 19:50:18). Google OAuth frontend e2e still unproven; exact blocker is `REAL_GOOGLE_ID_TOKEN_NEEDED` or Detox automation completion with valid token. No new evidence since 01:40 UTC.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). No motion until Packet A complete.
+- **Lane C:** `live` — supervisor PID 1077 alive under launchd (PPID 1, `launchctl list` shows `ai.openclaw.tdf-app.continuous-improvement-loop`). Child exited 03:21:52Z with code 0 after successful iteration (commit `aac8880e8`, rebase to `bf1343728`). State `restarting` with 3600s delay, next restart ~04:21 UTC. Git worktree clean. Stale `lastError` in status.json from prior dirty-worktree incident; bounded repairs (3600s backoff + worker exit 0 on rate limit) remain effective. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy, Packet B gated, Lane C live with launchd durability, no repair needed.
