@@ -385,7 +385,7 @@ export default function MarketplaceOrdersPage() {
     !showFirstOrderEmptyState
     && !showSingleVisibleOrderSummary
     && (showVisibleOrderBreakdown || showExportCsvAction);
-  const showListChrome = ordersQuery.isLoading || filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState);
+  const showListChrome = !ordersQuery.isLoading && (filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState));
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
   const showFilterTrayHelper = showSearchOwnedFilterHelper && !showEmptyOrdersState;
@@ -903,7 +903,9 @@ export default function MarketplaceOrdersPage() {
         <CardHeader
           title="Pedidos recientes"
           subheader={
-            showFirstOrderEmptyState
+            ordersQuery.isLoading
+              ? 'La bandeja aparecerá cuando termine esta primera carga.'
+              : showFirstOrderEmptyState
               ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
               : showSingleVisibleOrderSummary
                 ? singleVisibleOrderSummaryText

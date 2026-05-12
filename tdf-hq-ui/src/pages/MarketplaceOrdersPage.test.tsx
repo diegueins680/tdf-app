@@ -356,9 +356,18 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Cargando órdenes...');
+        expect(container.textContent).toContain('La bandeja aparecerá cuando termine esta primera carga.');
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(countLabelsByText(container, 'Desde')).toBe(0);
+        expect(countLabelsByText(container, 'Hasta')).toBe(0);
         expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
+        expect(container.textContent).not.toContain('Haz clic en una fila para revisar estado, pago y datos del comprador.');
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).toBeNull();
+        expect(queryActionByText(container, 'Elegir…')).toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
       });
