@@ -3637,6 +3637,26 @@ main = hspec $ do
                         expectationFailure
                             ("Expected blank SRI script path to fail, got: " <> show value)
 
+        it "rejects surrounding whitespace in SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides
+                [ ( "SRI_INVOICE_SCRIPT"
+                  , Just " /tmp/tdf-hq-missing-sri-script-never-created.mjs "
+                  )
+                ]
+                $ do
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err -> do
+                            Data.Text.unpack err
+                                `shouldContain` "SRI_INVOICE_SCRIPT must not include leading or trailing whitespace"
+                            Data.Text.unpack err
+                                `shouldNotContain` "does not point to an existing file"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected whitespace-padded SRI script path to fail, got: "
+                                    <> show value
+                                )
+
         it "rejects control-character SRI_INVOICE_SCRIPT paths before filesystem discovery" $
             mapM_
                 (\rawPath ->

@@ -692,11 +692,14 @@ missingDefaultScriptMessage =
 normalizeConfiguredScriptPath :: String -> Either Text FilePath
 normalizeConfiguredScriptPath raw =
   let rawText = T.pack raw
-      trimmed = T.unpack (T.strip rawText)
+      trimmedText = T.strip rawText
+      trimmed = T.unpack trimmedText
   in if null trimmed
        then Left blankConfiguredScriptMessage
        else if T.any isInvalidVisibleTextChar rawText
          then Left invalidConfiguredScriptControlMessage
+       else if rawText /= trimmedText
+         then Left whitespaceConfiguredScriptMessage
        else if not (isAbsolute trimmed)
          then Left relativeConfiguredScriptMessage
        else Right trimmed
@@ -704,6 +707,10 @@ normalizeConfiguredScriptPath raw =
 invalidConfiguredScriptControlMessage :: Text
 invalidConfiguredScriptControlMessage =
   "SRI_INVOICE_SCRIPT must not contain control characters or hidden formatting characters."
+
+whitespaceConfiguredScriptMessage :: Text
+whitespaceConfiguredScriptMessage =
+  "SRI_INVOICE_SCRIPT must not include leading or trailing whitespace."
 
 relativeConfiguredScriptMessage :: Text
 relativeConfiguredScriptMessage =
