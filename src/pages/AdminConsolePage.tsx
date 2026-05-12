@@ -1196,6 +1196,10 @@ function dedupeAuditEntries(entries: readonly AuditLogEntry[]) {
   return dedupedEntries;
 }
 
+function isRenderableAuditEntry(entry: Pick<AuditLogEntry, 'entity' | 'action'>) {
+  return entry.entity.trim() !== '' && entry.action.trim() !== '';
+}
+
 function parseAdminDateTimestamp(value: string) {
   const timestamp = Date.parse(value.trim());
 
@@ -1964,7 +1968,9 @@ export default function AdminConsolePage() {
     }
   }, [editingUser]);
 
-  const audits = sortAuditEntries(dedupeAuditEntries(auditQuery.data ?? []));
+  const audits = sortAuditEntries(
+    dedupeAuditEntries((auditQuery.data ?? []).filter(isRenderableAuditEntry)),
+  );
   const previewCards = sortAdminConsoleCards(dedupeAdminConsoleCards(
     sanitizeAdminConsoleCards(
       consoleQuery.data?.cards?.filter((card) => !isDedicatedAdminSectionCard(card)) ?? [],

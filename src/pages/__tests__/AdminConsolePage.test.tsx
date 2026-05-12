@@ -521,6 +521,39 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores blank audit fallback rows so first-run onboarding stays focused', async () => {
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'stub-audit',
+        actorId: null,
+        entity: '   ',
+        entityId: '   ',
+        action: '   ',
+        diff: '   ',
+        createdAt: '   ',
+      },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+      expect(screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/Primer evento de auditoría/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Acción:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Entidad:/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Entidad$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
+  });
+
   it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 

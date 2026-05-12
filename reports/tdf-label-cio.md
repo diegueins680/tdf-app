@@ -31,3 +31,13 @@ FINAL_STATUS: done — Lane C repaired and live (supervisor 68059, child 68107, 
 - **No company-level blocker** to Lane C durability.
 
 FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy, Packet B gated on Google OAuth e2e, Lane C live with launchd durability (supervisor 68059, child 87065, 60s restart), no repair needed.
+
+## 2026-05-12 11:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth PROVEN end-to-end (prior evidence, no regression; backend `/login` POST → 401 for invalid creds = endpoint alive on PID 75528, port 8080). Google OAuth frontend e2e UNPROVEN — exact blocker remains `SIMULATOR_SYSTEM_DIALOG_BLOCKED` (ASWebAuthenticationSession system dialog on simulator blocks all automation); manual device test (`tdf-mobile/docs/google-oauth-manual-test.md`) unattempted since last report. **REGRESSION:** iOS binary previously at `ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app` is now MISSING (`ios/build` directory absent). Fresh build required before Packet B motion.
+- **Packet B:** `CLOSED` — strictly sequenced after Packet A full proof (both login paths e2e proven). Additional precondition gap: iOS binary absent. No motion until Packet A complete + binary rebuilt.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd), child PID 64266, state `running`, phase `supervising`, lastHeartbeat 2026-05-12T11:40:12Z. restartDelaySeconds 60. restartCount 8. lastError was git `index.lock` conflict (resolved automatically; child exits 0 and restarts cleanly). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability.
+
+FINAL_STATUS: done — Packet A 1 of 2 paths proven + backend healthy (PID 75528, port 8080), iOS binary regressed/missing, Packet B gated, Lane C live with launchd durability (supervisor 68059, child 64266, 60s restart), no repair needed.
