@@ -379,9 +379,10 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Resuelve el estado del servicio para habilitar la edición de roles desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Resuelve el estado del servicio para habilitar la edición de roles desde esta misma vista\. Último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(screen.getByText('Admin')).toBeInTheDocument();
@@ -6381,8 +6382,9 @@ describe('AdminConsolePage', () => {
         screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
+        screen.getByText(/Último acceso y estado aparecerán cuando aporten contexto\./i),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.getByText('Admin')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveTextContent('Editar');
       expect(screen.getByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveAttribute('title', 'Editar roles de Ada Lovelace. Roles actuales: Admin');
@@ -6476,7 +6478,7 @@ describe('AdminConsolePage', () => {
         screen.getByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos desde esta misma vista\./i),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i),
+        screen.getByText(/Último acceso y estado aparecerán cuando aporten contexto\./i),
       ).toBeInTheDocument();
       expect(screen.getAllByRole('button', { name: 'Editar roles de Ada Lovelace' })).toHaveLength(1);
     });
@@ -6587,15 +6589,16 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista\. Último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(
         screen.queryByText(/Revisa los roles actuales y usa Editar roles para ajustar permisos/i),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/^Vista compacta: último acceso y estado aparecerán cuando aporten contexto\.$/i),
+        screen.queryByText(/^Último acceso y estado aparecerán cuando aporten contexto\.$/i),
       ).not.toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Roles$/i })).toBeInTheDocument();
       expect(screen.queryByRole('columnheader', { name: /^Roles editables$/i })).not.toBeInTheDocument();
@@ -6644,7 +6647,7 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista\. Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Revisa los roles actuales y usa el botón de cada fila para ajustar permisos desde esta misma vista\. Último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
       expect(screen.queryByText(/Haz clic en un rol para editarlo desde esta misma vista\./i)).not.toBeInTheDocument();
@@ -6680,9 +6683,10 @@ describe('AdminConsolePage', () => {
       expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Vista compacta: último acceso y estado aparecerán cuando aporten contexto\./i,
+          /Último acceso y estado aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
     });
 
     expect(screen.queryByRole('columnheader', { name: /Último acceso/i })).not.toBeInTheDocument();
@@ -7592,9 +7596,10 @@ describe('AdminConsolePage', () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /Vista compacta: actor y detalle aparecerán cuando aporten contexto\./i,
+          /Actor y detalle aparecerán cuando aporten contexto\./i,
         ),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Fecha$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
@@ -7639,8 +7644,9 @@ describe('AdminConsolePage', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/Vista compacta: fecha aparecerá cuando aporte contexto\./i),
+        screen.getByText(/Fecha aparecerá cuando aporte contexto\./i),
       ).toBeInTheDocument();
+      expect(screen.queryByText(/Vista compacta:/i)).not.toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Entidad$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Acción$/i })).toBeInTheDocument();
       expect(screen.getByRole('columnheader', { name: /^Actor$/i })).toBeInTheDocument();

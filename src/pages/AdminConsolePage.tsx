@@ -1601,8 +1601,9 @@ function buildCompactHiddenColumnsDescription(hiddenColumnLabels: readonly strin
   const labels = formatRoleGroupLabel(hiddenColumnLabels);
   const verb = hiddenColumnLabels.length === 1 ? 'aparecerá' : 'aparecerán';
   const contextVerb = hiddenColumnLabels.length === 1 ? 'aporte' : 'aporten';
+  const sentenceSubject = `${labels.charAt(0).toUpperCase()}${labels.slice(1)}`;
 
-  return `Vista compacta: ${labels} ${verb} cuando ${contextVerb} contexto.`;
+  return `${sentenceSubject} ${verb} cuando ${contextVerb} contexto.`;
 }
 
 function buildPendingRoleChangesSummary(
