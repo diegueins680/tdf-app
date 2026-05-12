@@ -12,6 +12,7 @@ interface BookingCustomerFieldState {
 interface BookingCalendarStatusState {
   clearFilterActionLabel?: string;
   message: string;
+  primaryActionHref?: string;
   primaryActionLabel?: string;
   severity: 'info';
   showCalendar: boolean;
@@ -156,11 +157,15 @@ export const getBookingCalendarStatusState = ({
   hasActiveFilter,
   hasError,
   isLoading,
+  roomCatalogLoading,
+  roomCount,
 }: {
   bookingCount: number;
   hasActiveFilter: boolean;
   hasError: boolean;
   isLoading: boolean;
+  roomCatalogLoading: boolean;
+  roomCount: number;
 }): BookingCalendarStatusState | null => {
   if (hasError) return null;
 
@@ -182,6 +187,26 @@ export const getBookingCalendarStatusState = ({
       severity: 'info',
       showCalendar: false,
       title: 'No hay sesiones en esta vista.',
+    };
+  }
+
+  if (roomCatalogLoading) {
+    return {
+      message: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás crear la primera sesión.',
+      severity: 'info',
+      showCalendar: false,
+      title: 'Preparando salas.',
+    };
+  }
+
+  if (roomCount <= 0) {
+    return {
+      message: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos antes de agendar sesiones.',
+      primaryActionHref: '/estudio/salas',
+      primaryActionLabel: 'Abrir salas y recursos',
+      severity: 'info',
+      showCalendar: false,
+      title: 'Configura salas antes de agendar.',
     };
   }
 

@@ -389,6 +389,8 @@ describe('bookingsPageLogic', () => {
       hasActiveFilter: false,
       hasError: false,
       isLoading: true,
+      roomCatalogLoading: true,
+      roomCount: 0,
     })).toEqual({
       message: 'Cargando agenda… El calendario quedará listo para crear sesiones cuando termine esta primera carga.',
       severity: 'info',
@@ -403,6 +405,8 @@ describe('bookingsPageLogic', () => {
       hasActiveFilter: false,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 1,
     })).toEqual({
       message: 'Crea la primera sesión aquí. Cuando exista al menos una, la agenda semanal servirá para mover, editar y revisar conflictos.',
       primaryActionLabel: 'Crear primera sesión',
@@ -416,7 +420,41 @@ describe('bookingsPageLogic', () => {
       hasActiveFilter: false,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
     })).toBeNull();
+  });
+
+  it('guides room setup before opening the first booking form', () => {
+    expect(getBookingCalendarStatusState({
+      bookingCount: 0,
+      hasActiveFilter: false,
+      hasError: false,
+      isLoading: false,
+      roomCatalogLoading: true,
+      roomCount: 0,
+    })).toEqual({
+      message: 'Cargando salas disponibles… En cuanto termine esta primera carga podrás crear la primera sesión.',
+      severity: 'info',
+      showCalendar: false,
+      title: 'Preparando salas.',
+    });
+
+    expect(getBookingCalendarStatusState({
+      bookingCount: 0,
+      hasActiveFilter: false,
+      hasError: false,
+      isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
+    })).toEqual({
+      message: 'Todavía no hay salas registradas. Crea la primera en Salas y recursos antes de agendar sesiones.',
+      primaryActionHref: '/estudio/salas',
+      primaryActionLabel: 'Abrir salas y recursos',
+      severity: 'info',
+      showCalendar: false,
+      title: 'Configura salas antes de agendar.',
+    });
   });
 
   it('uses one reset-focused empty state when an active booking filter has no sessions', () => {
@@ -425,6 +463,8 @@ describe('bookingsPageLogic', () => {
       hasActiveFilter: true,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
     })).toEqual({
       clearFilterActionLabel: 'Ver toda la agenda',
       message: 'No hay sesiones para este filtro. Vuelve a toda la agenda para revisar el calendario completo.',
@@ -437,24 +477,32 @@ describe('bookingsPageLogic', () => {
       hasActiveFilter: true,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
     })?.message).not.toContain('crear una sesión nueva');
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: true,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
     })?.primaryActionLabel).toBeUndefined();
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: false,
       hasError: false,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 1,
     })?.clearFilterActionLabel).toBeUndefined();
     expect(getBookingCalendarStatusState({
       bookingCount: 0,
       hasActiveFilter: true,
       hasError: true,
       isLoading: false,
+      roomCatalogLoading: false,
+      roomCount: 0,
     })).toBeNull();
   });
 });

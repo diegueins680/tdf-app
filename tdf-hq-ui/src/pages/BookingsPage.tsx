@@ -111,6 +111,8 @@ export default function BookingsPage() {
     hasActiveFilter: hasActiveBookingFilter,
     hasError: Boolean(bookingsQuery.error),
     isLoading: bookingsQuery.isLoading,
+    roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
+    roomCount: rooms.length,
   });
   const statusOptions = [
     'Tentative',
@@ -887,9 +889,15 @@ const openDialogForRange = (start: Date, end: Date) => {
               {calendarStatusState.message}
             </Typography>
             {calendarStatusState.primaryActionLabel && (
-              <Button variant="contained" onClick={handleCreateFirstSession}>
-                {calendarStatusState.primaryActionLabel}
-              </Button>
+              calendarStatusState.primaryActionHref ? (
+                <Button variant="contained" component={RouterLink} to={calendarStatusState.primaryActionHref}>
+                  {calendarStatusState.primaryActionLabel}
+                </Button>
+              ) : (
+                <Button variant="contained" onClick={handleCreateFirstSession}>
+                  {calendarStatusState.primaryActionLabel}
+                </Button>
+              )
             )}
             {calendarStatusState.clearFilterActionLabel && (
               <Button variant="outlined" onClick={handleClearBookingFilters}>
