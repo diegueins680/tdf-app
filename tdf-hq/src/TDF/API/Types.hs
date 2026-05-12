@@ -1612,13 +1612,23 @@ instance FromJSON InternProjectUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternProjectUpdate: " <> T.unpack key)
-      [] ->
-        InternProjectUpdate
-          <$> o .:? "ipuTitle"
-          <*> o .:! "ipuDescription"
-          <*> o .:? "ipuStatus"
-          <*> o .:! "ipuStartAt"
-          <*> o .:! "ipuDueAt"
+      [] -> do
+        titleValue <- o .:? "ipuTitle"
+        descriptionValue <- o .:! "ipuDescription"
+        statusValue <- o .:? "ipuStatus"
+        startAtValue <- o .:! "ipuStartAt"
+        dueAtValue <- o .:! "ipuDueAt"
+        case (titleValue, descriptionValue, statusValue, startAtValue, dueAtValue) of
+          (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+            fail "InternProjectUpdate must include at least one field"
+          _ ->
+            pure InternProjectUpdate
+              { ipuTitle = titleValue
+              , ipuDescription = descriptionValue
+              , ipuStatus = statusValue
+              , ipuStartAt = startAtValue
+              , ipuDueAt = dueAtValue
+              }
 
 data InternTaskDTO = InternTaskDTO
   { itId          :: Text

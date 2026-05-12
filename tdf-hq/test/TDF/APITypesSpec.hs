@@ -1313,6 +1313,9 @@ spec = do
                 "{\"ipuStatus\":\"paused\",\"status\":\"completed\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty project updates instead of returning a silent no-op patch" $
+            decodeInternProjectUpdate "{}" `shouldSatisfy` isLeft
+
     describe "InternPermission payload FromJSON" $ do
         it "accepts canonical permission payloads and preserves explicit note clears" $ do
             case decodeInternPermissionCreate
