@@ -3330,6 +3330,50 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Prepara registros temporales/i)).not.toBeInTheDocument();
   });
 
+  it('keeps sandbox-record fallback copy hidden even when generated with custom ids', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-sandbox-records',
+          title: 'Sandbox records',
+          body: ['Load temporary admin records for sandbox review.'],
+        },
+        {
+          cardId: 'fallback-disposable-workspace',
+          title: 'Disposable workspace',
+          body: ['Prepare a disposable workspace for onboarding checks.'],
+        },
+        {
+          cardId: 'fallback-registros-temporales',
+          title: 'Registros temporales',
+          body: ['Prepara registros temporales para revisar la consola.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Cargar datos de ejemplo/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Sandbox records')).not.toBeInTheDocument();
+    expect(screen.queryByText('Disposable workspace')).not.toBeInTheDocument();
+    expect(screen.queryByText('Registros temporales')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Load temporary admin records/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Prepare a disposable workspace/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Prepara registros temporales/i)).not.toBeInTheDocument();
+  });
+
   it('strips built-in admin copy from custom fallback cards before showing optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

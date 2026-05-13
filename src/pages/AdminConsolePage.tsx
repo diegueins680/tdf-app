@@ -783,6 +783,9 @@ const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'confirma salud usuarios roles y auditoria antes de cambiar accesos',
   'generate sample users roles and audit events for review',
   'prepara usuarios y auditoria de demostracion para validar el panel',
+  'load temporary admin records for sandbox review',
+  'prepare a disposable workspace for onboarding checks',
+  'prepara registros temporales para revisar la consola',
 ] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
