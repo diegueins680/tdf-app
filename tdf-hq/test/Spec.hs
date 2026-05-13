@@ -4749,6 +4749,27 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+        it "rejects null sendMessage instead of silently defaulting confirmation delivery" $ do
+            case ( eitherDecode
+                    "{\"phone\":\"+593991234567\",\"consent\":true,\"sendMessage\":null}"
+                    :: Either String WhatsAppConsentRequest
+                 ) of
+                Left err ->
+                    err `shouldContain` "sendMessage must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null consent sendMessage to fail, got: " <> show payload)
+
+            case ( eitherDecode
+                    "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"sendMessage\":null}"
+                    :: Either String WhatsAppOptOutRequest
+                 ) of
+                Left err ->
+                    err `shouldContain` "sendMessage must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null opt-out sendMessage to fail, got: " <> show payload)
+
         it "normalizes optional consent metadata before storage or confirmation messages" $ do
             validateWhatsAppConsentDisplayName (Just "  Ada  ")
                 `shouldBe` Right (Just "Ada")
