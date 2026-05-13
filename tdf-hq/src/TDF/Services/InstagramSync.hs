@@ -78,6 +78,8 @@ validateInstagramMediaUrl fieldName rawUrl
       fail (T.unpack fieldName <> " must not contain hidden formatting characters")
   | not (isPublicHttpsUrl fieldName url) =
       fail (T.unpack fieldName <> " must be an absolute public https URL")
+  | fieldName == "permalink" && not (isInstagramPermalinkUrl url) =
+      fail "permalink must be an Instagram URL"
   | otherwise =
       pure url
   where
@@ -92,6 +94,15 @@ isPublicHttpsUrl fieldName url =
   case normalizeConfiguredHttpsUrl (T.unpack fieldName) (T.unpack url) of
     Right (Just normalized) -> normalized == url
     _ -> False
+
+isInstagramPermalinkUrl :: Text -> Bool
+isInstagramPermalinkUrl url =
+  host `elem` ["instagram.com", "www.instagram.com"] && T.null portSuffix
+  where
+    remainder = T.drop 8 url
+    authority = T.takeWhile (`notElem` ("/?#" :: String)) remainder
+    (rawHost, portSuffix) = T.breakOn ":" authority
+    host = T.toLower rawHost
 
 newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 

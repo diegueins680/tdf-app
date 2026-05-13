@@ -9981,6 +9981,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "permalink must not contain hidden formatting characters"
                 "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com/p/post42/\\u202e\"}"
+            assertInvalid
+                "permalink must be an Instagram URL"
+                "{\"id\":\"ig-media-42\",\"permalink\":\"https://example.com/p/post42/\"}"
+            assertInvalid
+                "permalink must be an Instagram URL"
+                "{\"id\":\"ig-media-42\",\"permalink\":\"https://www.instagram.com:444/p/post42/\"}"
 
     describe "hasOperationsAccess" $ do
         it "denies baseline customer sessions even though they carry package access" $
