@@ -1056,6 +1056,16 @@ const firstRunLeadMagnetDescriptorPrefixPattern =
 const firstRunLeadMagnetDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))\s*$/i;
 
+const firstRunCourseInfoAssetDescriptorPattern = String.raw`(?:(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)\s+(?:(?:download|request)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)|(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)\s+(?:del?\s+curso|de\s+curso)?(?:\s+(?:descarga|solicitud))?|(?:descarga|solicitud)\s+de\s+(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)(?:\s+(?:del?\s+curso|de\s+curso))?)`;
+const firstRunCourseInfoAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseInfoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseInfoAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseInfoAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCampaignDescriptorPrefixPattern =
   /^(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1304,6 +1314,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
+    .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
@@ -1388,6 +1399,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
+    .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
