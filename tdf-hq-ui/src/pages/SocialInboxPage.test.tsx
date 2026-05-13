@@ -523,7 +523,7 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
-  it('keeps zero-result filters hidden while reserving per-channel status chips for the all-messages view', async () => {
+  it('uses visible status counts in filtered channel cards while hiding zero-result filters', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
     ]);
@@ -551,8 +551,8 @@ describe('SocialInboxPage', () => {
       expect(queryFilterChip(container, 'Pending')?.textContent).toContain('Pending (1)');
       expect(queryFilterChip(container, 'Replied')?.textContent).toContain('Replied (1)');
       expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
-      expect(container.textContent).toContain('Inbound: 1');
-      expect(container.textContent).not.toContain('Pending: 1');
+      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).not.toContain('Inbound: 1');
       expect(container.textContent).not.toContain('Replied: 1');
       expect(container.textContent).not.toContain('Pending: 0');
       expect(container.textContent).not.toContain('Replied: 0');
@@ -629,7 +629,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('Instagram');
-      expect(container.textContent).toContain('Inbound: 100');
+      expect(container.textContent).toContain('Pending: 100');
+      expect(container.textContent).not.toContain('Inbound: 100');
     });
 
     await cleanup();
@@ -650,7 +651,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
-      expect(container.textContent).not.toContain('Pending: 1');
+      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).not.toContain('Inbound: 1');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
     });
 

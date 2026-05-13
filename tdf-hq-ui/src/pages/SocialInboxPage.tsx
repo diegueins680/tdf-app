@@ -1082,6 +1082,7 @@ interface ChannelPanelProps {
   messages: SocialMessage[];
   loading: boolean;
   reviewMode: boolean;
+  activeFilterLabel: string;
   showStatusChips: boolean;
   onSelect: (selection: SelectedMessage) => void;
 }
@@ -1093,6 +1094,7 @@ const ChannelPanel = ({
   messages,
   loading,
   reviewMode,
+  activeFilterLabel,
   showStatusChips,
   onSelect,
 }: ChannelPanelProps) => {
@@ -1121,6 +1123,11 @@ const ChannelPanel = ({
     (msg) => Boolean(msg.replyError?.trim()) || Boolean(msg.replyText?.trim()),
   );
   const visibleColumnCount = 3 + (showRepliedAtColumn ? 1 : 0) + (showReplyOutcomeColumn ? 1 : 0);
+  const channelCountLabel = loading
+    ? (reviewMode ? 'Loading' : 'Cargando')
+    : showStatusChips
+      ? `${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`
+      : `${activeFilterLabel}: ${messages.length}`;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
@@ -1129,7 +1136,7 @@ const ChannelPanel = ({
           <Typography variant="subtitle1" fontWeight={700}>
             {label}
           </Typography>
-          <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
+          <Chip label={channelCountLabel} size="small" variant="outlined" />
         </Stack>
         {showStatusChips && visibleStatusChips.length > 0 && (
           <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -1674,6 +1681,7 @@ export default function SocialInboxPage() {
                   messages={panel.messages}
                   loading={panel.loading}
                   reviewMode={reviewMode}
+                  activeFilterLabel={activeFilterLabel}
                   showStatusChips={showChannelStatusChips}
                   onSelect={(next) => setSelection(next)}
                 />
