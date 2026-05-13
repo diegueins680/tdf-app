@@ -973,35 +973,33 @@ whatsappWebhookServer =
                   , ME.CourseRegistrationSource ==. "whatsapp"
                   , ME.CourseRegistrationCreatedAt >=. oneHourAgo
                   ]
-              if recentCount >= 3
-                then pure ()
-                else do
-                  _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
-                    { fullName = Nothing
-                    , email = Nothing
-                    , phoneE164 = Just phone
-                    , source = "whatsapp"
-                    , howHeard = Just "whatsapp"
-                    , utm = Nothing
-                    }
-                  let incomingMsg = entityVal incomingEntity
-              (replyTxt, replyRes) <- sendWhatsappReply cfg phone
-              liftIO $ flip runSqlPool envPool $ do
-                _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
-                  { owrRecipientPhone = phone
-                  , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
-                  , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
-                  , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
-                  , owrActorPartyId = Nothing
-                  , owrBody = replyTxt
-                  , owrSource = Just "course_enrollment_auto_reply"
-                  , owrReplyToMessageId = Just (entityKey incomingEntity)
-                  , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
-                  , owrResendOfMessageId = Nothing
-                  , owrMetadata = Nothing
+              when (recentCount < 3) $ do
+                _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
+                  { fullName = Nothing
+                  , email = Nothing
+                  , phoneE164 = Just phone
+                  , source = "whatsapp"
+                  , howHeard = Just "whatsapp"
+                  , utm = Nothing
                   }
-                  replyRes
-                pure ()
+                let incomingMsg = entityVal incomingEntity
+                (replyTxt, replyRes) <- sendWhatsappReply cfg phone
+                liftIO $ flip runSqlPool envPool $ do
+                  _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+                    { owrRecipientPhone = phone
+                    , owrRecipientPartyId = ME.whatsAppMessagePartyId incomingMsg
+                    , owrRecipientName = waInboundSenderName <|> ME.whatsAppMessageSenderName incomingMsg
+                    , owrRecipientEmail = ME.whatsAppMessageContactEmail incomingMsg
+                    , owrActorPartyId = Nothing
+                    , owrBody = replyTxt
+                    , owrSource = Just "course_enrollment_auto_reply"
+                    , owrReplyToMessageId = Just (entityKey incomingEntity)
+                    , owrReplyToExternalId = Just (ME.whatsAppMessageExternalId incomingMsg)
+                    , owrResendOfMessageId = Nothing
+                    , owrMetadata = Nothing
+                    }
+                    replyRes
+                  pure ()
       pure NoContent
 
 whatsappHooksServer :: ServerT WhatsAppHooksAPI AppM
