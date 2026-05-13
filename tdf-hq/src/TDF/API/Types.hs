@@ -720,11 +720,15 @@ isValidPayPalCapturePaypalId paypalId =
 
 isPayPalCapturePaypalIdAtom :: Char -> Bool
 isPayPalCapturePaypalIdAtom c =
-  isDigit c || isAsciiLower c || isAsciiUpper c
+  isAsciiDigitChar c || isAsciiLower c || isAsciiUpper c
 
 isPayPalCapturePaypalIdChar :: Char -> Bool
 isPayPalCapturePaypalIdChar c =
   isPayPalCapturePaypalIdAtom c || c == '-' || c == '_'
+
+isAsciiDigitChar :: Char -> Bool
+isAsciiDigitChar c =
+  c >= '0' && c <= '9'
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text

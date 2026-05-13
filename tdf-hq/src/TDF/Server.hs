@@ -8130,11 +8130,11 @@ isValidPayPalOrderId orderId =
 
 isPayPalOrderIdAtom :: Char -> Bool
 isPayPalOrderIdAtom c =
-  isDigit c || isAsciiLower c || isAsciiUpper c
+  isAsciiDecimalDigit c || isAsciiLower c || isAsciiUpper c
 
 isPayPalOrderIdChar :: Char -> Bool
 isPayPalOrderIdChar c =
-  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+  isAsciiDecimalDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
 
 validatePayPalCaptureOrderReference :: Maybe Text -> Text -> Either ServerError Text
 validatePayPalCaptureOrderReference mStoredOrderId paypalOrderId =

@@ -8157,6 +8157,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "ORDER/../capture" "paypalOrderId must contain only ASCII letters"
             assertInvalid "ORDER 123" "paypalOrderId must contain only ASCII letters"
             assertInvalid
+                ("ORDER-" <> T.singleton '\x0661' <> T.singleton '\x0662')
+                "paypalOrderId must contain only ASCII letters"
+            assertInvalid
                 "---"
                 "paypalOrderId must contain at least one ASCII letter or digit"
             assertInvalid (T.replicate 129 "A") "paypalOrderId must be 128 characters or fewer"

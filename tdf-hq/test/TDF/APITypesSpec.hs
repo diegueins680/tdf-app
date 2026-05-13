@@ -1193,6 +1193,9 @@ spec = do
             decodePaypalCapture
                 "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
                 `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-\\u0661\\u0662\\u0663\"}"
+                `shouldSatisfy` isLeft
 
     describe "LabelTrack write payload FromJSON" $ do
         it "accepts canonical label track create and update payloads" $ do
