@@ -6,12 +6,16 @@ module TDF.API.Facebook where
 
 import           Data.Aeson
   ( FromJSON(..)
-  , ToJSON
+  , Options
+  , ToJSON(..)
   , Value
   , defaultOptions
+  , fieldLabelModifier
   , genericParseJSON
+  , genericToJSON
   , rejectUnknownFields
   )
+import           Data.Char (toLower)
 import           Data.Text (Text)
 import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
@@ -25,9 +29,20 @@ data FacebookReplyReq = FacebookReplyReq
   , frExternalId :: Maybe Text
   } deriving (Show, Generic)
 
+facebookReplyReqOptions :: Options
+facebookReplyReqOptions =
+  defaultOptions
+    { fieldLabelModifier = \field ->
+        case drop 2 field of
+          c:rest -> toLower c : rest
+          [] -> []
+    , rejectUnknownFields = True
+    }
+
 instance FromJSON FacebookReplyReq where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
-instance ToJSON FacebookReplyReq
+  parseJSON = genericParseJSON facebookReplyReqOptions
+instance ToJSON FacebookReplyReq where
+  toJSON = genericToJSON facebookReplyReqOptions
 
 type FacebookAPI =
        "facebook" :> "reply" :> ReqBody '[JSON] FacebookReplyReq :> Post '[JSON] Value

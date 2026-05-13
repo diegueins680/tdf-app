@@ -6,12 +6,16 @@ module TDF.API.Instagram where
 
 import           Data.Aeson
   ( FromJSON(..)
-  , ToJSON
+  , Options
+  , ToJSON(..)
   , Value
   , defaultOptions
+  , fieldLabelModifier
   , genericParseJSON
+  , genericToJSON
   , rejectUnknownFields
   )
+import           Data.Char (toLower)
 import           Data.Text (Text)
 import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
@@ -25,9 +29,20 @@ data InstagramReplyReq = InstagramReplyReq
   , irExternalId :: Maybe Text
   } deriving (Show, Generic)
 
+instagramReplyReqOptions :: Options
+instagramReplyReqOptions =
+  defaultOptions
+    { fieldLabelModifier = \field ->
+        case drop 2 field of
+          c:rest -> toLower c : rest
+          [] -> []
+    , rejectUnknownFields = True
+    }
+
 instance FromJSON InstagramReplyReq where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
-instance ToJSON InstagramReplyReq
+  parseJSON = genericParseJSON instagramReplyReqOptions
+instance ToJSON InstagramReplyReq where
+  toJSON = genericToJSON instagramReplyReqOptions
 
 type InstagramAPI =
        "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value

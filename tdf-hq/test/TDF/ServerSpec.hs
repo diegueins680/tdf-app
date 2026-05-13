@@ -37,6 +37,8 @@ import TDF.API
 import TDF.API.Future (StubResponse (..))
 import qualified TDF.API.Future as Future
 import TDF.API.Drive (DriveUploadForm (..))
+import qualified TDF.API.Facebook as FB
+import qualified TDF.API.Instagram as IG
 import TDF.API.Types
     ( DriveTokenExchangeRequest (..)
     , DriveTokenRefreshRequest (..)
@@ -8325,6 +8327,46 @@ spec = describe "TDF.Server helpers" $ do
             formatted `shouldNotSatisfy` T.any (== '\x202E')
 
     describe "validateSocialReplyBody" $ do
+        it "keeps Instagram/Facebook reply JSON on canonical API field names" $ do
+            case eitherDecode
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"ig-inbound-1\"}"
+                :: Either String IG.InstagramReplyReq of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Instagram reply JSON to decode, got: " <> err)
+                Right payload -> do
+                    IG.irSenderId payload `shouldBe` "ig-sender"
+                    IG.irMessage payload `shouldBe` "Hola"
+                    IG.irExternalId payload `shouldBe` Just "ig-inbound-1"
+                    let encoded = BL8.unpack (A.encode payload)
+                    encoded `shouldContain` "\"senderId\""
+                    encoded `shouldContain` "\"message\""
+                    encoded `shouldNotContain` "irSenderId"
+
+            case eitherDecode
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"fb-inbound-1\"}"
+                :: Either String FB.FacebookReplyReq of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Facebook reply JSON to decode, got: " <> err)
+                Right payload -> do
+                    FB.frSenderId payload `shouldBe` "fb-sender"
+                    FB.frMessage payload `shouldBe` "Hola"
+                    FB.frExternalId payload `shouldBe` Just "fb-inbound-1"
+                    let encoded = BL8.unpack (A.encode payload)
+                    encoded `shouldContain` "\"senderId\""
+                    encoded `shouldContain` "\"message\""
+                    encoded `shouldNotContain` "frSenderId"
+
+            ( eitherDecode "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\"}"
+                :: Either String IG.InstagramReplyReq
+              )
+                `shouldSatisfy` isLeft
+            ( eitherDecode "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\"}"
+                :: Either String FB.FacebookReplyReq
+              )
+                `shouldSatisfy` isLeft
+
         it "trims manual Instagram/Facebook reply text while preserving multiline formatting" $ do
             validateSocialReplyBody "  Hola, seguimos por aqui.  "
                 `shouldBe` Right "Hola, seguimos por aqui."
