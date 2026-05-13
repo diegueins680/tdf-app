@@ -549,18 +549,22 @@ validateSocialSyncTagFilter (Just raw) =
 
 validatePositiveSocialSyncId :: Text -> Text -> Either ServerError Int64
 validatePositiveSocialSyncId fieldName raw =
-  case readMaybeInt64 raw of
+  case readMaybeInt64DigitsOnly raw of
     Just val | val > 0 -> Right val
     _ ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
 
-readMaybeInt64 :: Text -> Maybe Int64
-readMaybeInt64 txt =
-  case reads (T.unpack (T.strip txt)) of
-    [(n, "")] -> Just n
-    _         -> Nothing
+readMaybeInt64DigitsOnly :: Text -> Maybe Int64
+readMaybeInt64DigitsOnly txt =
+  let clean = T.strip txt
+  in if T.null clean || not (T.all isDigit clean)
+       then Nothing
+       else
+         case reads (T.unpack clean) of
+           [(n, "")] -> Just n
+           _         -> Nothing
 
 normalizePlatform :: Text -> Text
 normalizePlatform = T.toLower . T.strip

@@ -5781,9 +5781,11 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid social sync id to be rejected, got " <> show value)
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "   "
+            assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "+12"
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "-12"
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "abc"
+            assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "7.0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "-1"
 
     describe "social sync platform validation" $ do
