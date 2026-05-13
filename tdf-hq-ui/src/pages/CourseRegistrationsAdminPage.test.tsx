@@ -17010,6 +17010,44 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('summarizes very long multi-cohort action tooltips in the first-run empty state', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+      { ccSlug: 'produccion-vocal', ccTitle: 'Producción Vocal' },
+      { ccSlug: 'dj-lab', ccTitle: 'DJ Lab' },
+      { ccSlug: 'live-sound', ccTitle: 'Live Sound' },
+      { ccSlug: 'music-business', ccTitle: 'Music Business' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 6 formularios públicos listos para recibir la primera inscripción: Beatmaking 101, Mixing Bootcamp y 4 cursos más.',
+      );
+      expect(emptyState?.textContent).not.toContain('Producción Vocal');
+      expect(emptyState?.textContent).not.toContain('DJ Lab');
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 6 formularios públicos: Beatmaking 101, Mixing Bootcamp, Producción Vocal y 3 cursos más.',
+      );
+      expect(configAction?.getAttribute('title')).not.toContain('DJ Lab');
+      expect(configAction?.getAttribute('title')).not.toContain('Live Sound');
+      expect(configAction?.getAttribute('title')).not.toContain('Music Business');
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('deduplicates repeated multi-cohort preview labels while keeping the form count', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

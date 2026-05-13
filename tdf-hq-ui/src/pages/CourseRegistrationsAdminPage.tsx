@@ -61,6 +61,7 @@ const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambio
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
+const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const normalizeInitialCohortPreviewKey = (label: string) =>
   label
     .normalize('NFD')
@@ -107,6 +108,19 @@ const formatInitialCohortPreview = (labels: readonly string[]) => {
   return formatInitialCohortLabelList(visibleLabels);
 };
 
+const formatInitialCohortActionTitleList = (labels: readonly string[]) => {
+  if (labels.length <= INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT + 1) {
+    return formatInitialCohortLabelList(labels);
+  }
+
+  const visibleLabels = labels.slice(0, INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT);
+  const hiddenCount = labels.length - visibleLabels.length;
+  return formatInitialCohortLabelList([
+    ...visibleLabels,
+    `${hiddenCount} ${hiddenCount === 1 ? 'curso más' : 'cursos más'}`,
+  ]);
+};
+
 const countInitialCohortPreviewLabels = (labels: readonly string[]) => {
   return uniqueInitialCohortLabels(labels).length;
 };
@@ -120,7 +134,7 @@ const buildInitialEmptyStateMultiCohortActionTitle = (count: number, labels: rea
     return `Elegir entre ${formsLabel} para ${uniqueLabels[0]}.`;
   }
 
-  return `Elegir entre ${formsLabel}: ${formatInitialCohortLabelList(uniqueLabels)}.`;
+  return `Elegir entre ${formsLabel}: ${formatInitialCohortActionTitleList(uniqueLabels)}.`;
 };
 
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
