@@ -138,6 +138,12 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
   , lsiRider        :: Maybe (FileData Tmp)
   } deriving (Show, Generic)
 
+maxLiveSessionMusicians :: Int
+maxLiveSessionMusicians = 50
+
+maxLiveSessionSetlistSongs :: Int
+maxLiveSessionSetlistSongs = 100
+
 instance FromMultipart Tmp LiveSessionIntakePayload where
   fromMultipart multipart = do
     rejectUnexpectedParts multipart
@@ -229,19 +235,35 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid musicians payload: " <> err)
           Right xs ->
-            case traverse validateMusician xs of
-              Left err -> Left ("Invalid musicians payload: " <> err)
-              Right validated -> Right validated
+            if length xs > maxLiveSessionMusicians
+              then
+                Left
+                  ( "Invalid musicians payload: musicians must contain at most "
+                      <> show maxLiveSessionMusicians
+                      <> " entries"
+                  )
+              else
+                case traverse validateMusician xs of
+                  Left err -> Left ("Invalid musicians payload: " <> err)
+                  Right validated -> Right validated
       decodeSetlist txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs ->
-            case traverse validateSetlistSong xs of
-              Left err -> Left ("Invalid setlist payload: " <> err)
-              Right validated ->
-                case resolveLiveSessionSetlistSortOrders validated of
+            if length xs > maxLiveSessionSetlistSongs
+              then
+                Left
+                  ( "Invalid setlist payload: setlist must contain at most "
+                      <> show maxLiveSessionSetlistSongs
+                      <> " songs"
+                  )
+              else
+                case traverse validateSetlistSong xs of
                   Left err -> Left ("Invalid setlist payload: " <> err)
-                  Right _ -> Right validated
+                  Right validated ->
+                    case resolveLiveSessionSetlistSortOrders validated of
+                      Left err -> Left ("Invalid setlist payload: " <> err)
+                      Right _ -> Right validated
 
       validateMusician musician = do
         normalizedEmail <-

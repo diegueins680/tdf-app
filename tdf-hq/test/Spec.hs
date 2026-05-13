@@ -10923,6 +10923,39 @@ main = hspec $ do
                         songs ->
                             expectationFailure ("Expected one song from canonical payload, got: " <> show songs)
 
+        it "rejects oversized nested musician and setlist arrays before intake persistence" $ do
+            let oversizedMusicians =
+                    "[" <> Data.Text.intercalate
+                        ","
+                        (replicate 51 "{\"name\":\"Keys\",\"isExisting\":false}")
+                        <> "]"
+                oversizedSetlist =
+                    "[" <> Data.Text.intercalate
+                        ","
+                        (replicate 101 "{\"title\":\"Intro Jam\"}")
+                        <> "]"
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", oversizedMusicians)
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musicians must contain at most 50 entries"
+                Right payload ->
+                    expectationFailure
+                        ("Expected oversized musicians payload to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", oversizedSetlist)
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "setlist must contain at most 100 songs"
+                Right payload ->
+                    expectationFailure
+                        ("Expected oversized setlist payload to be rejected, got: " <> show payload)
+
         it "rejects malformed setlist song keys before intake persistence" $ do
             let assertInvalid rawSongKey expectedMessage =
                     case fromMultipart (mkLiveSessionMultipart
