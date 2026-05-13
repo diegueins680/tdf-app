@@ -133,9 +133,11 @@ validateRadioTransmissionPublicBase rawBase =
     Left err -> Left (radioFieldError "RADIO_PUBLIC_BASE" err)
     Right publicBase ->
       let normalizedPublicBase = normalizePublicBaseScheme publicBase
-      in if T.any (`elem` ("?#" :: String)) normalizedPublicBase
-            then Left err400 { errBody = "RADIO_PUBLIC_BASE must not include query or fragment" }
-            else Right (T.dropWhileEnd (== '/') normalizedPublicBase)
+      in if not ("https://" `T.isPrefixOf` normalizedPublicBase)
+           then Left err400 { errBody = "RADIO_PUBLIC_BASE must be https" }
+           else if T.any (`elem` ("?#" :: String)) normalizedPublicBase
+             then Left err400 { errBody = "RADIO_PUBLIC_BASE must not include query or fragment" }
+             else Right (T.dropWhileEnd (== '/') normalizedPublicBase)
 
 validateRadioTransmissionIngestBase :: Text -> Either ServerError Text
 validateRadioTransmissionIngestBase =

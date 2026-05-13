@@ -711,6 +711,15 @@ spec = describe "TDF.Server helpers" $ do
                 Right sources ->
                     sources `shouldBe` ["https://stations.example.com/streams.csv"]
 
+        it "requires HTTPS for public radio transmission listen bases" $
+            case Radio.validateRadioTransmissionPublicBase "http://radio.example.com/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "RADIO_PUBLIC_BASE must be https"
+                Right value ->
+                    expectationFailure
+                        ("Expected insecure radio public base to be rejected, got: " <> show value)
+
     describe "Party request FromJSON" $ do
         it "accepts canonical CRM party create and update bodies" $ do
             case decodePartyCreate
