@@ -10108,6 +10108,71 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats generic lead-capture source containers as default plumbing in busy lists', async () => {
+    const defaultSources = [
+      'lead_capture_form',
+      'lead_capture_pages',
+      'lead_generation_page',
+      'lead_generation_forms',
+      'lead_gen_forms',
+      'captacion_de_leads',
+      'captura_de_prospectos',
+      'formulario_de_captura_de_prospectos',
+      'formulario_de_generacion_de_interesados',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Lead capture form',
+      'Lead capture pages',
+      'Lead generation page',
+      'Lead generation forms',
+      'Lead gen forms',
+      'Captacion de leads',
+      'Captura de prospectos',
+      'Formulario de captura de prospectos',
+      'Formulario de generacion de interesados',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'lead capture');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "lead capture" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats placeholder source values as empty source noise in busy lists', async () => {
     const placeholderSources = [
       'unknown',
