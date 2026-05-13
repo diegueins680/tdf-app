@@ -6312,6 +6312,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Accesos rápidos')).not.toBeInTheDocument();
   });
 
+  it('ignores quick-action fallback cards that duplicate built-in admin actions', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-quick-actions',
+          title: 'Quick actions',
+          body: ['Refresh the panel, load demo data, and edit roles from one action area.'],
+        },
+        {
+          cardId: 'acciones-rapidas',
+          title: 'Acciones rápidas',
+          body: ['Usa acciones rápidas para revisar estado, usuarios y auditoría desde este panel.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Quick actions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acciones rápidas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Refresh the panel/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Usa acciones rápidas/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Quick actions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acciones rápidas')).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
