@@ -400,7 +400,7 @@ const buildFullLocalSearchMatchHint = (loadedCount: number) =>
     : `Sin cambios: la búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
-const emptyLocalSearchLimitRecoveryLabel = 'Buscar en más registros';
+const emptyLocalSearchLimitRecoveryLabel = 'Aumentar límite';
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 const formatLocalSearchPlaceholder = (terms: readonly string[]) => {

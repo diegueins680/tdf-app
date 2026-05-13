@@ -219,7 +219,7 @@ const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
-const emptySearchLimitRecoveryLabel = 'Buscar en más registros';
+const emptySearchLimitRecoveryLabel = 'Aumentar límite';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
@@ -12533,6 +12533,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Aumenta el límite si el registro puede estar fuera del lote cargado.',
       );
       expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Buscar en más registros')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
