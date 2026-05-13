@@ -371,6 +371,7 @@ export default function OrdersPage() {
     ? (rows[0] ?? null)
     : null;
   const showSingleSessionSummary = singleRow != null;
+  const showSingleSessionBookingContext = singleRow ? !isMissingBookingContext(singleRow.bookingPrimary) : false;
   const showRefreshAction = totalRows > 1;
   const showHeaderCreateSessionAction =
     !showInitialLoadingState && !showInitialErrorState && !showFirstSessionEmptyState;
@@ -669,10 +670,12 @@ export default function OrdersPage() {
               <Typography variant="body2" color="text.secondary">
                 <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
-              </Typography>
-              {singleRow.bookingSecondary && (
+              {showSingleSessionBookingContext && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
+                </Typography>
+              )}
+              {showSingleSessionBookingContext && singleRow.bookingSecondary && (
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleRow.bookingSecondary}
                 </Typography>

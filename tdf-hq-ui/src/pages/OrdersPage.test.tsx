@@ -373,6 +373,36 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('hides the missing booking placeholder in the first-session summary so setup stays focused on real context', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 113,
+        title: 'Mixing',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mixing',
+        resources: [],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Primera sesión registrada');
+        expect(container.textContent).toContain('Servicio: Mixing');
+        expect(container.textContent).not.toContain('Booking:');
+        expect(container.textContent).not.toContain('Detalle:');
+        expect(container.textContent).not.toContain('Sin booking asignado');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes missing resource columns once instead of rendering repeated placeholders', async () => {
     listBookingsMock.mockResolvedValue([
       {
