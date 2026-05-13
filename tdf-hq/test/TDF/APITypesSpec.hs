@@ -187,6 +187,21 @@ spec = do
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"unexpected\":true}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"wf_nested\",\"label\":\"default\"}}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null workflow selectors instead of falling back to server defaults" $ do
+            case decodeChatKitSession "{\"workflowId\":null}" of
+                Left err ->
+                    err `shouldContain` "workflowId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null workflowId to be rejected, got: " <> show value)
+
+            case decodeChatKitSession "{\"workflow\":null}" of
+                Left err ->
+                    err `shouldContain` "workflow must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null workflow to be rejected, got: " <> show value)
+
     describe "TidalAgentRequest FromJSON" $ do
         it "accepts canonical requests and trims explicit prompt/model selectors" $ do
             case decodeTidalAgentRequest "{\"prompt\":\"  make a mellow bassline  \",\"model\":\" gpt-4o-mini \"}" of

@@ -726,6 +726,8 @@ normalizeChatKitWorkflowId fieldName rawWorkflowId
 instance FromJSON ChatKitSessionRequest where
   parseJSON = withObject "ChatKitSessionRequest" $ \o -> do
     rejectUnexpectedObjectFields "ChatKitSessionRequest" ["workflowId", "workflow"] o
+    rejectNullObjectField "workflowId" o
+    rejectNullObjectField "workflow" o
     workflowId <- traverse (normalizeWorkflowId "workflowId") =<< o .:? "workflowId"
     workflow <- o .:? "workflow"
     nestedId <- case workflow of
@@ -750,6 +752,13 @@ instance FromJSON ChatKitSessionRequest where
       normalizeWorkflowId fieldName rawWorkflowId =
         either (fail . T.unpack) pure $
           normalizeChatKitWorkflowId fieldName rawWorkflowId
+
+rejectNullObjectField :: Text -> Object -> Parser ()
+rejectNullObjectField fieldName rawObject =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) rawObject of
+    Just Null ->
+      fail (T.unpack fieldName <> " must be omitted instead of null")
+    _ -> pure ()
 
 rejectUnexpectedObjectFields :: String -> [Text] -> Object -> Parser ()
 rejectUnexpectedObjectFields objectName allowedFields rawObject =
