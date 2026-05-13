@@ -590,6 +590,8 @@ loadConfig = do
       "FACEBOOK_MESSAGING_API_BASE"
       fbGraphBase
       fbMsgBaseEnv
+  fbAppId <- validateConfiguredGraphNodeId fbAppIdEnv
+  fbAppSecret <- validateConfiguredFacebookAppSecret fbAppSecretEnv
   fbMsgPageId <- validateConfiguredGraphNodeId fbMsgPageIdEnv
   igGraphBase <-
     validateConfiguredApiBaseUrl
@@ -654,8 +656,8 @@ loadConfig = do
     , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
     , googleClientId = googleClientIdVal
-    , facebookAppId = fmap (T.pack . snd) fbAppIdEnv >>= nonEmpty
-    , facebookAppSecret = fmap (T.pack . snd) fbAppSecretEnv >>= nonEmpty
+    , facebookAppId = fbAppId
+    , facebookAppSecret = fbAppSecret
     , facebookGraphBase = fbGraphBase
     , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fbMsgPageId
@@ -1048,6 +1050,13 @@ validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
     Left msg -> fail msg
     Right nodeId -> pure nodeId
 
+validateConfiguredFacebookAppSecret :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredFacebookAppSecret Nothing = pure Nothing
+validateConfiguredFacebookAppSecret (Just (envName, rawSecret)) =
+  case normalizeConfiguredFacebookAppSecret envName rawSecret of
+    Left msg -> fail msg
+    Right secret -> pure secret
+
 validateConfiguredMetaVerifyToken :: Maybe (String, String) -> IO (Maybe Text)
 validateConfiguredMetaVerifyToken Nothing = pure Nothing
 validateConfiguredMetaVerifyToken (Just (envName, rawToken)) =
@@ -1197,6 +1206,22 @@ normalizeConfiguredGraphNodeId envName rawNodeId
         || (ch >= '0' && ch <= '9')
     isGraphNodeIdChar ch =
       isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+normalizeConfiguredFacebookAppSecret :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredFacebookAppSecret envName rawSecret
+  | T.null secret = Right Nothing
+  | T.length secret > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) secret =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar secret =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) secret =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just secret)
+  where
+    secret = T.strip (T.pack rawSecret)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
 
 normalizeConfiguredMetaVerifyToken :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredMetaVerifyToken envName rawToken

@@ -1313,6 +1313,35 @@ main = hspec $ do
                     "FACEBOOK_APP_SECRET and META_APP_SECRET must not be set to different values"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects malformed Facebook app credentials before OAuth and webhook use" $ do
+            let assertInvalid overrides expectedMessage =
+                    withEnvOverrides overrides $
+                        loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Just "app/primary")
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ("META_APP_SECRET", Nothing)
+                ]
+                "FACEBOOK_APP_ID must be a Graph node id"
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Just "secret\nInjected: value")
+                , ("META_APP_SECRET", Nothing)
+                ]
+                "FACEBOOK_APP_SECRET must not contain whitespace or control characters"
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ( "META_APP_SECRET"
+                  , Just ("secret" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                  )
+                ]
+                "META_APP_SECRET must not contain hidden formatting characters"
+
         it "rejects Facebook token fallback alias conflicts before bearer requests are built" $
             withEnvOverrides
                 [ ("FACEBOOK_MESSAGING_TOKEN", Just "token_primary")
