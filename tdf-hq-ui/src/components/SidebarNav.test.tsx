@@ -87,4 +87,23 @@ describe('SidebarNav', () => {
       await cleanup();
     }
   });
+
+  it('keeps support and tool links collapsed away from the active admin section', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/configuracion/inscripciones-curso');
+
+    try {
+      expect(container.textContent).toContain('ADMIN');
+      expect(container.textContent).toContain('HERRAMIENTAS');
+      expect(container.textContent).toContain('AYUDA');
+      expect(container.querySelector('a[href="/configuracion/inscripciones-curso"]')).not.toBeNull();
+      expect(container.querySelector('a[href="/manual"]')).toBeNull();
+      expect(container.querySelector('a[href="/docs"]')).toBeNull();
+      expect(container.querySelector('a[href="/herramientas/chatkit"]')).toBeNull();
+      expect(container.querySelector('a[href="/herramientas/token-admin"]')).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
 });

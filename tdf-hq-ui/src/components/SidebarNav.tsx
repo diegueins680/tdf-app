@@ -115,15 +115,25 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'WhatsApp consentimiento', path: '/configuracion/whatsapp-consentimiento' },
       { label: 'Opciones UX', path: '/configuracion/opciones-ux' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },
+    ],
+  },
+  {
+    title: 'HERRAMIENTAS',
+    items: [
+      { label: 'ChatKit', path: '/herramientas/chatkit' },
+      { label: 'Agente Tidal', path: '/herramientas/tidal-agent' },
+      { label: 'Creador musical', path: '/herramientas/creador-musical' },
+      { label: 'Token API', path: '/herramientas/token-admin' },
+    ],
+  },
+  {
+    title: 'AYUDA',
+    items: [
       { label: 'Manual', path: '/manual' },
       { label: 'Documentación', path: '/docs' },
       { label: 'Acerca de', path: '/acerca' },
       { label: 'Seguridad', path: '/seguridad' },
       { label: 'Sugerencias', path: '/feedback' },
-      { label: 'ChatKit', path: '/herramientas/chatkit' },
-      { label: 'Agente Tidal', path: '/herramientas/tidal-agent' },
-      { label: 'Creador musical', path: '/herramientas/creador-musical' },
-      { label: 'Token API', path: '/herramientas/token-admin' },
     ],
   },
 ];
