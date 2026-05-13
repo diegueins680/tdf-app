@@ -406,6 +406,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
     , validateFutureStubCatalogEntry
+    , validateFutureStubCatalogResponseWithConsole
     , validateFutureStubCatalogResponses
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
@@ -11240,6 +11241,35 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure
                                 ( "Expected drifted fallback discovery catalog to fail, got: "
                                     <> show value
+                                )
+
+    describe "validateFutureStubCatalogResponseWithConsole" $
+        it "rejects a drifted mounted admin console before serving the discovery catalog" $
+            case firstFutureAdminConsole futureAdminUser of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected canonical admin console preview, got: " <> show serverErr)
+                Right consoleView -> do
+                    case validateFutureStubCatalogResponseWithConsole consoleView of
+                        Right responses ->
+                            map (\response -> (stubArea response, stubEndpoint response)) responses
+                                `shouldBe` allowedFutureStubMetadata
+                        Left serverErr ->
+                            expectationFailure
+                                ( "Expected canonical discovery surface, got: "
+                                    <> show serverErr
+                                )
+
+                    case validateFutureStubCatalogResponseWithConsole
+                            consoleView { Future.viewStatus = "planned" } of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right responses ->
+                            expectationFailure
+                                ( "Expected drifted admin console to block catalog serving, got: "
+                                    <> show responses
                                 )
 
     describe "futureServer" $ do

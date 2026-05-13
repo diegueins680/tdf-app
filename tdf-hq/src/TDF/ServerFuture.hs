@@ -84,25 +84,30 @@ futureServer user = futureCatalog
     adminConsole = do
       requireFutureAdminAccess user
       either throwError pure $
-        validateFutureAdminConsoleViewWithCatalog allowedFutureStubMetadata $
-        AdminConsoleView
-          { viewArea = "admin"
-          , viewEndpoint = "console"
-          , viewId = futureStubId "admin" "console"
-          , viewPath = futureStubPath "admin" "console"
-          , viewMethod = futureStubMethod
-          , viewStatus = "preview"
-          , viewRequiredRole = futureStubRequiredRole
-          , viewRequiredModule = futureStubRequiredModule
-          , viewImplemented = False
-          , cards = adminConsoleCards
-          }
+        validateFutureAdminConsoleViewWithCatalog
+          allowedFutureStubMetadata
+          futureAdminConsoleView
 
     crossCuttingStubs = adminStubEntry experienceNavigationStub
                     :<|> adminStubEntry experienceFeedbackStub
                     :<|> adminStubEntry experienceOfflineStub
                     :<|> adminStubEntry experienceDesignStub
                     :<|> adminStubEntry experienceAuditingStub
+
+futureAdminConsoleView :: AdminConsoleView
+futureAdminConsoleView =
+  AdminConsoleView
+    { viewArea = "admin"
+    , viewEndpoint = "console"
+    , viewId = futureStubId "admin" "console"
+    , viewPath = futureStubPath "admin" "console"
+    , viewMethod = futureStubMethod
+    , viewStatus = "preview"
+    , viewRequiredRole = futureStubRequiredRole
+    , viewRequiredModule = futureStubRequiredModule
+    , viewImplemented = False
+    , cards = adminConsoleCards
+    }
 
 adminConsoleCards :: [AdminConsoleCard]
 adminConsoleCards =
@@ -321,8 +326,15 @@ futureStubCatalogResponse =
   either throwError pure validateFutureStubCatalogResponse
 
 validateFutureStubCatalogResponse :: Either ServerError [StubResponse]
-validateFutureStubCatalogResponse = do
+validateFutureStubCatalogResponse =
+  validateFutureStubCatalogResponseWithConsole futureAdminConsoleView
+
+validateFutureStubCatalogResponseWithConsole
+  :: AdminConsoleView
+  -> Either ServerError [StubResponse]
+validateFutureStubCatalogResponseWithConsole consoleView = do
   catalog <- validateFutureStubCatalog allowedFutureStubMetadata
+  _ <- validateFutureAdminConsoleViewWithCatalog catalog consoleView
   responses <- traverse (uncurry futureStubResponseFor) catalog
   validateFutureStubCatalogResponses responses
 
