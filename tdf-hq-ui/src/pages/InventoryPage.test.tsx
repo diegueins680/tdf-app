@@ -1804,7 +1804,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('turns an empty history request into one dismissible panel instead of a silent no-op', async () => {
+  it('turns an empty history request into one dismissible panel and hides the duplicate history menu action', async () => {
     historyMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -1836,20 +1836,9 @@ describe('InventoryPage', () => {
       });
 
       await waitForExpectation(() => {
-        const historyMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
-          (item) => (item.textContent ?? '').trim() === 'Historial abierto aquí abajo',
-        );
-        expect(historyMenuItem).toBeDefined();
-        expect(historyMenuItem?.getAttribute('aria-disabled')).toBe('true');
-      });
-
-      await act(async () => {
-        const historyMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
-          (item) => (item.textContent ?? '').trim() === 'Historial abierto aquí abajo',
-        );
-        historyMenuItem?.click();
-        await flushPromises();
-        await flushPromises();
+        const menuItems = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+        expect(menuItems.map((item) => (item.textContent ?? '').trim())).toEqual(['QR y enlace público']);
+        expect(document.body.textContent).not.toContain('Historial abierto aquí abajo');
       });
 
       expect(historyMock).toHaveBeenCalledTimes(1);

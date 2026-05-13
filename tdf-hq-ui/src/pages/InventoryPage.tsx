@@ -319,7 +319,6 @@ const INVENTORY_ROW_SECONDARY_ACTIONS_GUIDANCE =
   'El botón de más opciones de cada fila agrupa QR e historial.';
 const INVENTORY_QR_SHARE_ACTION_LABEL = 'QR y enlace público';
 const INVENTORY_HISTORY_ACTION_LABEL = 'Historial';
-const INVENTORY_HISTORY_OPEN_ACTION_LABEL = 'Historial abierto aquí abajo';
 const INVENTORY_CLEAR_SEARCH_ACTION_LABEL = 'Limpiar búsqueda';
 const INVENTORY_RESET_SEARCH_ACTION_LABEL = 'Volver a la tabla completa';
 const INVENTORY_INITIAL_LOADING_GUIDANCE =
@@ -1177,12 +1176,11 @@ export default function InventoryPage() {
         <MenuItem onClick={() => runAssetMenuAction((asset) => void openQr(asset))}>
           {INVENTORY_QR_SHARE_ACTION_LABEL}
         </MenuItem>
-        <MenuItem
-          onClick={() => runAssetMenuAction(openHistory)}
-          disabled={historyAlreadyOpenFromMenu}
-        >
-          {historyAlreadyOpenFromMenu ? INVENTORY_HISTORY_OPEN_ACTION_LABEL : INVENTORY_HISTORY_ACTION_LABEL}
-        </MenuItem>
+        {!historyAlreadyOpenFromMenu && (
+          <MenuItem onClick={() => runAssetMenuAction(openHistory)}>
+            {INVENTORY_HISTORY_ACTION_LABEL}
+          </MenuItem>
+        )}
       </Menu>
 
       {historyViewMode === 'panel' && selected && (
