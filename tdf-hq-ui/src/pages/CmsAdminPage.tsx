@@ -746,7 +746,10 @@ export default function CmsAdminPage() {
       : showLiveStartEmptyEditorGuard
         ? 'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.'
         : baseStatusHelperText;
-  const showStatusControl = hasSlugSelection && !showFirstVersionEmptyDraftGuard;
+  const showStatusControl =
+    hasSlugSelection
+    && !showFirstVersionEmptyDraftGuard
+    && !showLiveStartEmptyEditorGuard;
   const canSaveVersion =
     hasSlugSelection
     && !payloadError

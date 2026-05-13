@@ -1,4 +1,14 @@
 
+## 2026-05-13 15:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (Detox Release-build consecutive PASSes without Metro, per Release 14:20 UTC). Google OAuth full e2e UNPROVEN on device; simulator-realistic PASS (button → ASWebAuthenticationSession dialog confirmed). **New sub-blocker surfaced and fix applied**: EAS ios-simulator build artifact lacked Google Sign-In button because `GOOGLE_IOS_URL_SCHEME` was absent from EAS build env; owner-watch bounded fix at 14:45 UTC added `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, and `GOOGLE_IOS_URL_SCHEME` to `eas.json` `preview`/`production` profiles. Verification pending re-queue of EAS ios-simulator build. `EAS_IOS_CREDENTIALS_MISSING` persists for physical-device `.ipa` preview profile.
+- **Packet B:** `GATED` — strictly sequenced after Packet A full proof. No store-publish motion until Google OAuth device proof complete. `EAS_IOS_CREDENTIALS_MISSING` remains the operator-level blocker to physical-device distribution.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~4d19h). Child PID 57354 alive (STAT S), phase `supervising`. Heartbeat fresh at 2026-05-13T15:40:18Z. restartCount 116 over ~4 days with 60s restart delay — normal iteration cycling. lastError stale git `index.lock` (auto-resolved, lastExitCode 0). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A partially proven (EAS env fix applied, verification pending; Google OAuth device test remains production ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 57354, heartbeat 15:40Z), systems lane paused.
+
 ## 2026-05-13 13:40 UTC — CIO checkpoint
 
 - **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (2× consecutive fresh-install Detox PASS). Google OAuth full e2e UNPROVEN — simulator-realistic proven (ASWebAuthenticationSession dialog presents), but web sign-in → token → callback → post-login screen never demonstrated on device. Exact blocker: **physical device manual test** (`tdf-mobile/docs/google-oauth-manual-test.md`) or EAS preview build for TestFlight internal testing. No login-related commits since 11:40Z. `EAS_IOS_CREDENTIALS_MISSING` still blocks preview/ad-hoc distribution. `EXPO_DEV_CLIENT_MISSING`: RESOLVED.

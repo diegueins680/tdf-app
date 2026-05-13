@@ -1204,14 +1204,18 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the two-version history focused on rows instead of showing a second status control', async () => {
+  it('keeps the two-version history focused on rows without showing premature status controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+      );
       expect(container.textContent).toContain('2 versiones');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
@@ -1378,7 +1382,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Editar en formulario')).toBe(0);
       expect(container.textContent).not.toContain('1/1');
       expect(container.textContent).not.toContain('1 versión');
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
       expect(countActionsByText(container, 'Limpiar filtros')).toBe(0);
     });
@@ -1463,7 +1467,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('3 versiones');
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
     });
 
