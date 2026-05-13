@@ -4777,6 +4777,65 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
+  it('ignores explicitly unimplemented preview cards while keeping actionable fallback modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens-unimplemented',
+          title: 'Tokens de servicio',
+          implemented: false,
+          body: [
+            'Programa rotaciones de credenciales compartidas desde esta consola.',
+          ],
+        },
+        {
+          cardId: 'integrations-unimplemented',
+          title: 'Integraciones técnicas',
+          implemented: false,
+          body: [
+            'Revisa conectores pendientes antes de activar accesos administrativos.',
+          ],
+        },
+        {
+          cardId: 'credential-rotation',
+          title: 'Rotación de credenciales',
+          body: [
+            'Programa una revisión semanal de credenciales compartidas.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Programa rotaciones de credenciales/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Revisa conectores pendientes/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Rotación de credenciales')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Programa una revisión semanal de credenciales compartidas\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+  });
+
   it('ignores preview cards with placeholder titles before first-run admins open optional modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

@@ -9,6 +9,16 @@
 
 FINAL_STATUS: done — Packet A partially proven (EAS env fix applied, build verification pending; Google OAuth device test remains production ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 9397, heartbeat 17:40Z), systems lane paused.
 
+## 2026-05-13 19:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — no change since 17:40 UTC. Username/password auth remains FULLY PROVEN. Google OAuth simulator-realistic remains proven. Full device e2e UNPROVEN. EAS ios-simulator build `e9fd7e34-5ca2-448d-9bb9-5f7e0f348882` status unchanged — no new artifact reported. `EAS_IOS_CREDENTIALS_MISSING` persists for physical-device `.ipa` preview profile. No login-related commits since 17:40 UTC.
+- **Packet B:** `GATED` — strictly sequenced after Packet A full proof. No store-publish motion until Google OAuth device proof complete.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`). Child PID 31756 alive, phase `supervising`. Heartbeat fresh at 2026-05-13T19:40:09Z. restartCount 135 (up from 125 at 17:40 UTC), normal iteration cycling with 60s restart delay. lastError stale git `index.lock` (auto-resolved, lastExitCode 0). lastIterationResult `ok`. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A partially proven (no change; Google OAuth device test remains production ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 31756, heartbeat 19:40Z), systems lane paused.
+
 ## 2026-05-13 15:40 UTC — CIO checkpoint
 
 - **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (Detox Release-build consecutive PASSes without Metro, per Release 14:20 UTC). Google OAuth full e2e UNPROVEN on device; simulator-realistic PASS (button → ASWebAuthenticationSession dialog confirmed). **New sub-blocker surfaced and fix applied**: EAS ios-simulator build artifact lacked Google Sign-In button because `GOOGLE_IOS_URL_SCHEME` was absent from EAS build env; owner-watch bounded fix at 14:45 UTC added `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, and `GOOGLE_IOS_URL_SCHEME` to `eas.json` `preview`/`production` profiles. Verification pending re-queue of EAS ios-simulator build. `EAS_IOS_CREDENTIALS_MISSING` persists for physical-device `.ipa` preview profile.

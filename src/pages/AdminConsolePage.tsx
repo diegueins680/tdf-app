@@ -988,6 +988,10 @@ const BUILT_IN_ADMIN_CARD_BODY_KEYS = new Set(
 
 function sanitizeAdminConsoleCards(cards: readonly AdminConsoleCard[]) {
   return cards.flatMap((card) => {
+    if (card.implemented === false) {
+      return [];
+    }
+
     const title = stripAdminConsolePresentationMarkers(card.title);
     if (title === '' || isPlaceholderAdminConsoleTitle(title)) {
       return [];

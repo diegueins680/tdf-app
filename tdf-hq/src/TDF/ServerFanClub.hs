@@ -22,6 +22,7 @@ module TDF.ServerFanClub
   , validateFanClubMemoryPathId
   ) where
 
+import           Control.Arrow          ((&&&))
 import           Control.Monad          (forM, forM_, when, unless, void)
 import           Control.Monad.Except   (MonadError, throwError)
 import           Control.Monad.IO.Class (liftIO)
@@ -38,7 +39,7 @@ import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (getCurrentTime)
 
-import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Asc, Desc)
+import           Database.Persist       (Entity(..), Key, (=.), (==.), (<-.), SelectOpt(Asc, Desc)
                                          , get, getBy, insert, insertUnique, selectFirst, selectList, update, count)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, errBody)
@@ -643,30 +644,35 @@ fanClubSecureArtistHandlers user artistId =
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
           memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
-          runDB $ do
+          mResult <- runDB $ do
             mMem <- get memoryKey
             case mMem of
-              Nothing -> throwError err404 { errBody = "Memory no encontrado" }
+              Nothing -> pure Nothing
               Just mem -> do
                 mProfile <- get (fanClubMemoryMemberProfileId mem)
                 case mProfile of
-                  Nothing -> throwError err404 { errBody = "Memory no encontrado" }
+                  Nothing -> pure Nothing
                   Just mp -> do
-                    unless (fanClubMemberProfileClubId mp == cid) $ throwError err404 { errBody = "Memory no encontrado" }
-                    now <- liftIO getCurrentTime
-                    rid <- insert FanClubMemoryReport
-                      { fanClubMemoryReportReporterId = auPartyId user
-                      , fanClubMemoryReportMemoryId = memoryKey
-                      , fanClubMemoryReportReason = fcmrReqReason req
-                      , fanClubMemoryReportCreatedAt = now
-                      }
-                    pure FanClubMemoryReportDTO
-                      { fcmrId = fromSqlKey rid
-                      , fcmrReporterId = fromSqlKey (auPartyId user)
-                      , fcmrMemoryId = memoryId
-                      , fcmrReason = fcmrReqReason req
-                      , fcmrCreatedAt = now
-                      }
+                    if fanClubMemberProfileClubId mp /= cid
+                      then pure Nothing
+                      else do
+                        now <- liftIO getCurrentTime
+                        rid <- insert FanClubMemoryReport
+                          { fanClubMemoryReportReporterId = auPartyId user
+                          , fanClubMemoryReportMemoryId = memoryKey
+                          , fanClubMemoryReportReason = fcmrReqReason req
+                          , fanClubMemoryReportCreatedAt = now
+                          }
+                        pure $ Just (rid, now)
+          case mResult of
+            Nothing -> throwError err404 { errBody = "Memory no encontrado" }
+            Just (rid, now) -> pure FanClubMemoryReportDTO
+              { fcmrId = fromSqlKey rid
+              , fcmrReporterId = fromSqlKey (auPartyId user)
+              , fcmrMemoryId = memoryId
+              , fcmrReason = fcmrReqReason req
+              , fcmrCreatedAt = now
+              }
 
     listMemberProfiles aId = do
       artistKey <- requireArtistKey aId
@@ -691,33 +697,36 @@ fanClubSecureArtistHandlers user artistId =
 
     getMyMemberProfile aId = do
       artistKey <- requireArtistKey aId
-      runDB $ do
+      mResult <- runDB $ do
         mClub <- getBy (UniqueFanClubArtist artistKey)
         case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
+          Nothing -> pure Nothing
           Just (Entity cid _) -> do
             mProfile <- getBy (UniqueFanClubMemberProfile (auPartyId user) cid)
             case mProfile of
-              Nothing -> throwError err404 { errBody = "Perfil de miembro no encontrado" }
+              Nothing -> pure Nothing
               Just (Entity pid p) -> do
                 author <- getAuthorDTO (fanClubMemberProfilePartyId p)
-                pure FanClubMemberProfileDTO
-                  { fcmpId = fromSqlKey pid
-                  , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
-                  , fcmpClubId = fromSqlKey cid
-                  , fcmpHandle = fanClubMemberProfileHandle p
-                  , fcmpBio = fanClubMemberProfileBio p
-                  , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
-                  , fcmpDisplayName = sppDisplayName author
-                  , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
-                  }
+                pure $ Just (cid, pid, p, author)
+      case mResult of
+        Nothing -> throwError err404 { errBody = "Perfil de miembro no encontrado" }
+        Just (cid, pid, p, author) -> pure FanClubMemberProfileDTO
+          { fcmpId = fromSqlKey pid
+          , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
+          , fcmpClubId = fromSqlKey cid
+          , fcmpHandle = fanClubMemberProfileHandle p
+          , fcmpBio = fanClubMemberProfileBio p
+          , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
+          , fcmpDisplayName = sppDisplayName author
+          , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
+          }
 
     updateMyMemberProfile aId req = do
       artistKey <- requireArtistKey aId
-      runDB $ do
+      mResult <- runDB $ do
         mClub <- getBy (UniqueFanClubArtist artistKey)
         case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
+          Nothing -> pure Nothing
           Just (Entity cid _) -> do
             now <- liftIO getCurrentTime
             mProfile <- getBy (UniqueFanClubMemberProfile (auPartyId user) cid)
@@ -740,19 +749,22 @@ fanClubSecureArtistHandlers user artistId =
                   }
             mUpdated <- get profileId
             case mUpdated of
-              Nothing -> throwError err404 { errBody = "Perfil no encontrado" }
+              Nothing -> pure Nothing
               Just p -> do
                 author <- getAuthorDTO (fanClubMemberProfilePartyId p)
-                pure FanClubMemberProfileDTO
-                  { fcmpId = fromSqlKey profileId
-                  , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
-                  , fcmpClubId = fromSqlKey cid
-                  , fcmpHandle = fanClubMemberProfileHandle p
-                  , fcmpBio = fanClubMemberProfileBio p
-                  , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
-                  , fcmpDisplayName = sppDisplayName author
-                  , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
-                  }
+                pure $ Just (cid, profileId, p, author)
+      case mResult of
+        Nothing -> throwError err404 { errBody = "Perfil no encontrado" }
+        Just (cid, profileId, p, author) -> pure FanClubMemberProfileDTO
+          { fcmpId = fromSqlKey profileId
+          , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
+          , fcmpClubId = fromSqlKey cid
+          , fcmpHandle = fanClubMemberProfileHandle p
+          , fcmpBio = fanClubMemberProfileBio p
+          , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
+          , fcmpDisplayName = sppDisplayName author
+          , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
+          }
 
     requireArtistKey :: Int64 -> AppM PartyId
     requireArtistKey =

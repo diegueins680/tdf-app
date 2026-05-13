@@ -111,6 +111,7 @@ export type AdminConsoleCard = {
   cardId: string;
   title: string;
   body: string[];
+  implemented?: boolean;
 };
 
 export type AdminConsoleView = {
