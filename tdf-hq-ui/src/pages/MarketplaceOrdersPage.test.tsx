@@ -446,6 +446,46 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('promotes contact to buyer identity when a marketplace order has no buyer name', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-email-only',
+        moBuyerName: '   ',
+        moBuyerEmail: 'buyer@example.com',
+        moBuyerPhone: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const summary = container.querySelector<HTMLElement>('[data-testid="marketplace-single-order-summary"]');
+
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).toContain('Comprador: buyer@example.com');
+        expect(summary?.textContent).not.toContain('Email:');
+        expect(summary?.textContent?.match(/buyer@example\.com/g) ?? []).toHaveLength(1);
+        expect(summary?.textContent).not.toContain('Comprador:  ');
+      });
+
+      await clickActionByText(container, 'Abrir orden');
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Comprador: buyer@example.com');
+        expect(dialog?.textContent).not.toContain('Email:');
+        expect(dialog?.textContent?.match(/buyer@example\.com/g) ?? []).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('restores the refresh action once the page has a real order list to revisit', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

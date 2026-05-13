@@ -117,6 +117,32 @@ const normalizeBuyerPhoneValue = (value?: string | null) => value?.trim() ?? '';
 const normalizeBuyerPhoneDigits = (value?: string | null) => normalizeBuyerPhoneValue(value).replace(/\D/g, '');
 const normalizeEmailValue = (value?: string | null) => value?.trim() ?? '';
 const normalizeEmailComparisonValue = (value?: string | null) => normalizeEmailValue(value).toLowerCase();
+const getOrderBuyerIdentity = (
+  order: Pick<MarketplaceOrderDTO, 'moBuyerName' | 'moBuyerEmail' | 'moBuyerPhone'>,
+) => {
+  const name = order.moBuyerName.trim();
+  if (name) return name;
+
+  const email = normalizeEmailValue(order.moBuyerEmail);
+  if (email) return email;
+
+  const phone = normalizeBuyerPhoneValue(order.moBuyerPhone);
+  if (phone) return phone;
+
+  return 'Sin comprador identificado';
+};
+const shouldShowBuyerEmailDetail = (
+  email: string,
+  buyerIdentity: string,
+) => Boolean(email) && normalizeEmailComparisonValue(email) !== normalizeEmailComparisonValue(buyerIdentity);
+const shouldShowBuyerPhoneDetail = (
+  phone: string,
+  buyerIdentity: string,
+) => {
+  if (!phone) return false;
+  const identityDigits = normalizeBuyerPhoneDigits(buyerIdentity);
+  return !identityDigits || normalizeBuyerPhoneDigits(phone) !== identityDigits;
+};
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MIN_DEFAULT_CSV_EXPORT_ORDERS = 8;
 const formatPaymentProvider = (value?: string | null) => (
@@ -375,8 +401,17 @@ export default function MarketplaceOrdersPage() {
     !showFirstOrderEmptyState && !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 0;
   const showFilteredSingleOrderSummary = showSingleVisibleOrderSummary && !showSingleOrderFocusedState;
   const singleVisibleOrder = showSingleVisibleOrderSummary ? (filtered[0] ?? null) : null;
+  const singleVisibleBuyerIdentity = singleVisibleOrder ? getOrderBuyerIdentity(singleVisibleOrder) : '';
   const singleVisibleBuyerEmail = singleVisibleOrder ? normalizeEmailValue(singleVisibleOrder.moBuyerEmail) : '';
   const singleVisibleBuyerPhone = singleVisibleOrder ? normalizeBuyerPhoneValue(singleVisibleOrder.moBuyerPhone) : '';
+  const showSingleVisibleBuyerEmail = shouldShowBuyerEmailDetail(
+    singleVisibleBuyerEmail,
+    singleVisibleBuyerIdentity,
+  );
+  const showSingleVisibleBuyerPhone = shouldShowBuyerPhoneDetail(
+    singleVisibleBuyerPhone,
+    singleVisibleBuyerIdentity,
+  );
   const showSingleVisibleContactEmptyState = Boolean(
     singleVisibleOrder && !singleVisibleBuyerEmail && !singleVisibleBuyerPhone,
   );
@@ -580,12 +615,15 @@ export default function MarketplaceOrdersPage() {
   };
 
   const copyOrderSummary = async (order: MarketplaceOrderDTO) => {
+    const buyerIdentity = getOrderBuyerIdentity(order);
+    const buyerEmail = normalizeEmailValue(order.moBuyerEmail);
+    const buyerEmailDetail = shouldShowBuyerEmailDetail(buyerEmail, buyerIdentity) ? ` (${buyerEmail})` : '';
     const summaryLines = [
       `Pedido: ${order.moOrderId}`,
       `Estado: ${statusLabel(order.moStatus)}`,
       `Total: ${order.moTotalDisplay} (${order.moCurrency.toUpperCase()})`,
       `Pago: ${formatPaymentProvider(order.moPaymentProvider)}`,
-      `Comprador: ${order.moBuyerName} (${order.moBuyerEmail ?? 'sin email'})`,
+      `Comprador: ${buyerIdentity}${buyerEmailDetail}`,
       `Items: ${summarizeItems(order.moItems)}`,
     ];
     try {
@@ -643,8 +681,11 @@ export default function MarketplaceOrdersPage() {
     ? 'Requerido antes de marcar una orden como pagada.'
     : undefined;
   const showMarkPaidShortcut = Boolean(selectedOrder) && !isPaidOrderStatus(effectiveStatus) && Boolean(effectiveProvider);
+  const selectedBuyerIdentity = selectedOrder ? getOrderBuyerIdentity(selectedOrder) : '';
   const selectedBuyerEmail = selectedOrder ? normalizeEmailValue(selectedOrder.moBuyerEmail) : '';
   const selectedBuyerPhone = selectedOrder ? normalizeBuyerPhoneValue(selectedOrder.moBuyerPhone) : '';
+  const showSelectedBuyerEmail = shouldShowBuyerEmailDetail(selectedBuyerEmail, selectedBuyerIdentity);
+  const showSelectedBuyerPhone = shouldShowBuyerPhoneDetail(selectedBuyerPhone, selectedBuyerIdentity);
   const selectedCartId = selectedOrder?.moCartId?.trim() ?? '';
   const selectedPaypalOrderId = selectedOrder?.moPaypalOrderId?.trim() ?? '';
   const selectedStatusHistory = selectedOrder?.moStatusHistory ?? [];
@@ -982,14 +1023,14 @@ export default function MarketplaceOrdersPage() {
                 <Box component="span" sx={{ fontWeight: 600 }}>Pedido:</Box> {singleVisibleOrder.moOrderId}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Comprador:</Box> {singleVisibleOrder.moBuyerName}
+                <Box component="span" sx={{ fontWeight: 600 }}>Comprador:</Box> {singleVisibleBuyerIdentity}
               </Typography>
-              {singleVisibleBuyerEmail && (
+              {showSingleVisibleBuyerEmail && (
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Email:</Box> {singleVisibleBuyerEmail}
                 </Typography>
               )}
-              {singleVisibleBuyerPhone && (
+              {showSingleVisibleBuyerPhone && (
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Teléfono:</Box> {singleVisibleBuyerPhone}
                 </Typography>
@@ -1061,6 +1102,9 @@ export default function MarketplaceOrdersPage() {
                   const itemCountLabel = formatItemCountLabel(order.moItems);
                   const itemSummary = summarizeItems(order.moItems);
                   const paypalPayerEmail = getDistinctPaypalPayerEmail(order);
+                  const buyerIdentity = getOrderBuyerIdentity(order);
+                  const buyerEmail = normalizeEmailValue(order.moBuyerEmail);
+                  const showBuyerEmail = shouldShowBuyerEmailDetail(buyerEmail, buyerIdentity);
 
                   return (
                     <TableRow
@@ -1085,17 +1129,17 @@ export default function MarketplaceOrdersPage() {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={600}>
-                          {order.moBuyerName}
+                          {buyerIdentity}
                         </Typography>
-                        {order.moBuyerEmail ? (
+                        {showBuyerEmail ? (
                           <Link
-                            href={`mailto:${order.moBuyerEmail}`}
+                            href={`mailto:${buyerEmail}`}
                             underline="hover"
                             variant="caption"
                             color="text.secondary"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {order.moBuyerEmail}
+                            {buyerEmail}
                           </Link>
                         ) : (
                           <Typography variant="caption" color="text.secondary">
@@ -1196,14 +1240,14 @@ export default function MarketplaceOrdersPage() {
                     <CardContent>
                       <Stack spacing={1}>
                         <Typography variant="body2">
-                          <strong>Comprador:</strong> {selectedOrder.moBuyerName}
+                          <strong>Comprador:</strong> {selectedBuyerIdentity}
                         </Typography>
-                        {selectedBuyerEmail && (
+                        {showSelectedBuyerEmail && (
                           <Typography variant="body2">
                             <strong>Email:</strong> {selectedBuyerEmail}
                           </Typography>
                         )}
-                        {selectedBuyerPhone && (
+                        {showSelectedBuyerPhone && (
                           <Typography variant="body2">
                             <strong>Teléfono:</strong> {selectedBuyerPhone}
                           </Typography>
