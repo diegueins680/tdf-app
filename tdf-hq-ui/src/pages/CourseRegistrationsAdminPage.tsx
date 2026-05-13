@@ -1307,6 +1307,10 @@ const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
   const bracketedTitle = /^\[([^[\]]+)\]$/.exec(trimmedTitle);
   if (bracketedTitle?.[1]?.trim()) return bracketedTitle[1].trim();
 
+  const quotedTitle = /^(?:"([^"\n]+)"|'([^'\n]+)'|“([^”\n]+)”|‘([^’\n]+)’|«([^»\n]+)»)$/.exec(trimmedTitle);
+  const unquotedTitle = quotedTitle?.slice(1).find(Boolean)?.trim();
+  if (unquotedTitle) return unquotedTitle;
+
   return trimmedTitle;
 };
 
@@ -1516,12 +1520,13 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
   );
-  if (!strippedLabel) return fallbackLabel;
-  if (normalizeCohortLabelKey(strippedLabel) === normalizeCohortLabelKey(slug)) {
-    if (hasCohortTitleFormattingWorthPreserving(strippedLabel)) return strippedLabel;
+  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(strippedLabel);
+  if (!displayLabel) return fallbackLabel;
+  if (normalizeCohortLabelKey(displayLabel) === normalizeCohortLabelKey(slug)) {
+    if (hasCohortTitleFormattingWorthPreserving(displayLabel)) return displayLabel;
     return fallbackLabel;
   }
-  return strippedLabel;
+  return displayLabel;
 };
 
 const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
