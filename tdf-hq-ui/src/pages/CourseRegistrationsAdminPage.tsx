@@ -137,6 +137,14 @@ const buildInitialEmptyStateMultiCohortActionTitle = (count: number, labels: rea
   return `Elegir entre ${formsLabel}: ${formatInitialCohortActionTitleList(uniqueLabels)}.`;
 };
 
+const buildInitialEmptyStateSingleCourseVariantActionTitle = (count: number, labels: readonly string[] = []) => {
+  const [label] = uniqueInitialCohortLabels(labels);
+  if (!label) return initialEmptyStateSingleCourseVariantActionAriaLabel;
+
+  const variantsLabel = `${count} variante${count === 1 ? '' : 's'} pública${count === 1 ? '' : 's'}`;
+  return `Elegir entre ${variantsLabel} para ${label}.`;
+};
+
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
   const preview = formatInitialCohortPreview(labels);
   if (preview) {
@@ -149,6 +157,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
 };
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante pública';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
@@ -156,6 +165,7 @@ const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curs
 const initialCohortRetryLabel = 'Reintentar formularios';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
+const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver variantes públicas para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
@@ -3814,6 +3824,8 @@ export default function CourseRegistrationsAdminPage() {
       : showSystemEmailsLabel;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
   const configuredCohortFirstRunLabels = configuredCohortOptions.map((option) => option.firstRunLabel);
+  const hasSingleCourseFirstRunVariants =
+    hasMultipleAvailableCohorts && countInitialCohortPreviewLabels(configuredCohortFirstRunLabels) === 1;
   const initialEmptyStateMessage = firstRunCohort
     ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
     : hasMultipleAvailableCohorts
@@ -3832,19 +3844,28 @@ export default function CourseRegistrationsAdminPage() {
       rel: 'noreferrer',
     }
     : {
-      label: hasMultipleAvailableCohorts
-        ? initialEmptyStateMultiCohortActionLabel
-        : initialEmptyStateConfigActionLabel,
+      label: hasSingleCourseFirstRunVariants
+        ? initialEmptyStateSingleCourseVariantActionLabel
+        : hasMultipleAvailableCohorts
+          ? initialEmptyStateMultiCohortActionLabel
+          : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
-      ariaLabel: hasMultipleAvailableCohorts
-        ? initialEmptyStateMultiCohortActionAriaLabel
-        : initialEmptyStateConfigActionAriaLabel,
-      title: hasMultipleAvailableCohorts
-        ? buildInitialEmptyStateMultiCohortActionTitle(
+      ariaLabel: hasSingleCourseFirstRunVariants
+        ? initialEmptyStateSingleCourseVariantActionAriaLabel
+        : hasMultipleAvailableCohorts
+          ? initialEmptyStateMultiCohortActionAriaLabel
+          : initialEmptyStateConfigActionAriaLabel,
+      title: hasSingleCourseFirstRunVariants
+        ? buildInitialEmptyStateSingleCourseVariantActionTitle(
           configuredCohortOptions.length,
           configuredCohortFirstRunLabels,
         )
-        : initialEmptyStateConfigActionAriaLabel,
+        : hasMultipleAvailableCohorts
+          ? buildInitialEmptyStateMultiCohortActionTitle(
+            configuredCohortOptions.length,
+            configuredCohortFirstRunLabels,
+          )
+          : initialEmptyStateConfigActionAriaLabel,
       target: undefined,
       rel: undefined,
     };

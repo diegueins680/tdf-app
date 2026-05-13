@@ -266,9 +266,12 @@ const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante pública';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
+const initialEmptyStateSingleCourseVariantActionAriaLabel =
+  'Ver variantes públicas para elegir cuál compartir primero';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
@@ -17240,11 +17243,16 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
         'Hay 3 formularios públicos para Beatmaking 101 listos para recibir la primera inscripción.',
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
+      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 variantes públicas para Beatmaking 101.');
       expect(emptyState?.textContent).not.toContain(
         'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101.',
       );
