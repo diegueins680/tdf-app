@@ -5808,10 +5808,14 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Agregar primer comprobante',
         ),
       ).toBe(false);
+      expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
+      expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
+      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
+      expect(countButtonsByText(document.body, markPaidOptionalFollowUpActionLabel)).toBe(0);
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeGreaterThan(-1);
-      expect(dialogHeadings.indexOf('Notas internas (opcional)')).toBeGreaterThan(-1);
-      expect(dialogHeadings.indexOf('Comprobantes de pago')).toBeLessThan(dialogHeadings.indexOf('Notas internas (opcional)'));
+      expect(dialogHeadings).not.toContain('Notas internas (opcional)');
+      expect(dialogHeadings).not.toContain('Seguimiento (opcional)');
     });
 
     await act(async () => {
@@ -5963,7 +5967,7 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('keeps empty notes secondary in the mark-paid flow until the admin explicitly needs them', async () => {
+  it('keeps optional notes hidden while the first payment receipt is still missing', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -5989,8 +5993,13 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain(markPaidEmptyNotesHelperText);
-      expect(getButtonByText(document.body, 'Agregar nota')).toBeTruthy();
+      expect(document.body.textContent).toContain('Registrar pago de inscripción');
+      expect(document.body.textContent).toContain(
+        'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.',
+      );
+      expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
+      expect(hasExactText(document.body, 'Notas internas (opcional)')).toBe(false);
+      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar primera nota')).toBe(0);
       expect(document.body.textContent).not.toContain(
         'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.',
@@ -5998,25 +6007,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Notas internas')).toBe(false);
     });
 
-    await act(async () => {
-      clickButton(getButtonByText(document.body, 'Agregar nota'));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
-      expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
-      expect(document.body.textContent).not.toContain(markPaidEmptyNotesHelperText);
-    });
-
     await cleanup();
   });
 
-  it('keeps empty follow-up secondary in the mark-paid flow until the admin explicitly needs it', async () => {
+  it('keeps optional follow-up hidden while the first payment receipt is still missing', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -6042,30 +6036,14 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(hasExactText(document.body, 'Seguimiento (opcional)')).toBe(true);
-      expect(document.body.textContent).toContain(markPaidEmptyFollowUpHelperText);
-      const followUpAction = getButtonByText(document.body, markPaidOptionalFollowUpActionLabel);
-      expect(followUpAction).toBeTruthy();
-      expect(followUpAction.getAttribute('aria-label')).toBe(markPaidOptionalFollowUpAccessibleLabel);
-      expect(followUpAction.getAttribute('title')).toBe(markPaidOptionalFollowUpAccessibleLabel);
+      expect(document.body.textContent).toContain('Registrar pago de inscripción');
+      expect(hasExactText(document.body, 'Seguimiento (opcional)')).toBe(false);
+      expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
+      expect(countButtonsByText(document.body, markPaidOptionalFollowUpActionLabel)).toBe(0);
       expect(countButtonsByText(document.body, markPaidOptionalFollowUpAccessibleLabel)).toBe(0);
       expect(countButtonsByText(document.body, 'Registrar primer seguimiento')).toBe(0);
       expect(document.body.textContent).not.toContain(emptyFollowUpAlertMessage);
       expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(false);
-    });
-
-    await act(async () => {
-      clickButton(getButtonByText(document.body, markPaidOptionalFollowUpActionLabel));
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(hasExactText(document.body, 'Primer seguimiento')).toBe(true);
-      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
-      expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
-      expect(countButtonsByText(document.body, markPaidOptionalFollowUpActionLabel)).toBe(0);
-      expect(document.body.textContent).not.toContain(markPaidEmptyFollowUpHelperText);
     });
 
     await cleanup();

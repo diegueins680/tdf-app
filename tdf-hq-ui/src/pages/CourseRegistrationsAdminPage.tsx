@@ -4629,10 +4629,14 @@ export default function CourseRegistrationsAdminPage() {
 
   const isConfirmMarkPaidFlow = isMarkPaidIntent && (showMarkPaidAction || hasMarkedPaidInCurrentDossier);
   const showNotesSection = isMarkPaidIntent
-    ? (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
+    ? isMarkPaidFirstReceiptFlow
+      ? hasSavedNotes || showNotesComposer
+      : (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
     : (hasSavedNotes || showNotesComposer);
   const showFollowUpSection = isMarkPaidIntent
-    ? (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
+    ? isMarkPaidFirstReceiptFlow
+      ? followUps.length > 0 || showFollowUpComposer
+      : (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
     : (followUps.length > 0 || showFollowUpComposer);
   const prioritizePaymentSection = isMarkPaidIntent;
   const hasVisibleDossierComposer = hasOpenDossierComposer && !dossierQuery.isLoading && !dossierQuery.isError;
