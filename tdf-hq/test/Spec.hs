@@ -10698,6 +10698,8 @@ main = hspec $ do
                 (Data.Text.replicate 161 "a" <> ".pdf")
                 "rider file name must be 160 characters or fewer"
             assertInvalid "___" "rider file name must include a usable name"
+            assertInvalid "stage-setup.sh" "rider file name extension is not allowed"
+            assertInvalid "stage-plot.HTML" "rider file name extension is not allowed"
 
     describe "validateLiveSessionRiderFileSize" $ do
         it "rejects empty, invalid, or oversized rider uploads before writing them" $ do

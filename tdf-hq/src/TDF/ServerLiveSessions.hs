@@ -469,6 +469,8 @@ validateLiveSessionRiderFileName rawName
         }
   | sanitized == "rider" && trimmed /= "rider" =
       Left err400 { errBody = "rider file name must include a usable name" }
+  | hasDisallowedLiveSessionRiderExtension sanitized =
+      Left err400 { errBody = "rider file name extension is not allowed" }
   | otherwise =
       Right sanitized
   where
@@ -481,6 +483,32 @@ isUnsafeRiderFileNameChar ch =
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasDisallowedLiveSessionRiderExtension :: Text -> Bool
+hasDisallowedLiveSessionRiderExtension name =
+  any (`T.isSuffixOf` loweredName) disallowedLiveSessionRiderExtensions
+  where
+    loweredName = T.toLower name
+
+disallowedLiveSessionRiderExtensions :: [Text]
+disallowedLiveSessionRiderExtensions =
+  [ ".bat"
+  , ".cmd"
+  , ".com"
+  , ".exe"
+  , ".htm"
+  , ".html"
+  , ".jar"
+  , ".js"
+  , ".mjs"
+  , ".php"
+  , ".ps1"
+  , ".scr"
+  , ".sh"
+  , ".svg"
+  , ".svgz"
+  , ".xhtml"
+  ]
 
 sanitizeLiveSessionRiderFileName :: Text -> Text
 sanitizeLiveSessionRiderFileName rawName =
