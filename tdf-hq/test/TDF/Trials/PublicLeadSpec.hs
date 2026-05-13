@@ -714,6 +714,19 @@ spec = do
         Right _ ->
           expectationFailure "Expected blank interest type to be rejected"
 
+    it
+      "rejects system-managed interest types before anonymous fallback rows can masquerade as another lead source"
+      $ do
+      let assertRejected rawInterestType =
+            case validatePublicInterestInput (InterestIn rawInterestType Nothing Nothing Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "interestType is reserved for system-managed lead flows"
+              Right _ ->
+                expectationFailure "Expected reserved interestType to be rejected"
+      mapM_ assertRejected ["ad_inquiry", " Ad_Inquiry ", "signup"]
+
     it "rejects oversized or control-character interest types before storing fallback lead rows" $ do
       let assertRejected rawInterestType expectedMessage =
             case validatePublicInterestInput (InterestIn rawInterestType Nothing Nothing Nothing) of

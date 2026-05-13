@@ -988,12 +988,20 @@ validatePublicInterestType rawInterestType =
     Nothing ->
       Left err400 { errBody = "interestType is required" }
     Just interestTypeVal
+      | T.toLower interestTypeVal `elem` reservedPublicInterestTypes ->
+          Left err400 { errBody = "interestType is reserved for system-managed lead flows" }
       | T.length interestTypeVal > 80 ->
           Left err400 { errBody = "interestType must be 1-80 characters" }
       | T.any invalidPublicTextChar interestTypeVal ->
           Left (badRequestText (publicTextCharacterMessage "interestType"))
       | otherwise ->
           Right interestTypeVal
+
+reservedPublicInterestTypes :: [Text]
+reservedPublicInterestTypes =
+  [ "signup"
+  , "ad_inquiry"
+  ]
 
 validatePublicInterestDetails :: Maybe Text -> Either ServerError (Maybe Text)
 validatePublicInterestDetails rawDetails =
