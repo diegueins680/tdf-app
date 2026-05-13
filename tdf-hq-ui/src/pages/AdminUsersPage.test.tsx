@@ -2152,6 +2152,10 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios activos en esta vista.',
         );
+        const showInactiveListButton = getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!;
+        expect(showInactiveListButton.getAttribute('title')).toBe(
+          'Usuarios inactivos ocultos: 1 pendiente de contacto.',
+        );
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
         expect(getPageGuidance(container)).not.toContain('usuario inactivo oculto');
         expect(container.textContent).not.toContain('3 usuarios en esta vista.');

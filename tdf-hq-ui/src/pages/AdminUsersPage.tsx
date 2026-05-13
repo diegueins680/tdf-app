@@ -558,6 +558,27 @@ const buildUserRowAccessSummary = ({
 const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
   getUserAccessSummary(user.roles) === '' && getUserAccessSummary(user.modules) === '';
 
+const buildCollapsedInactiveUsersToggleTitle = (users: readonly AdminUser[]) => {
+  const noAccessCount = users.filter(hasNoAccessAssigned).length;
+  const pendingProfileCount = users.filter((user) => !hasLinkedAdminUserProfile(user)).length;
+  const pendingWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'contact-ready').length;
+  const pendingContactCount = users.filter((user) => getUserContactReadiness(user) === 'missing-contact').length;
+  const contactStateSummary = buildContactStateSummary({
+    readyForWhatsAppCount: 0,
+    pendingWhatsAppCount,
+    pendingContactCount,
+  });
+  const parts = [
+    noAccessCount > 0 ? `${noAccessCount} sin acceso asignado` : '',
+    pendingProfileCount > 0 ? `${pendingProfileCount} sin perfil vinculado` : '',
+    contactStateSummary,
+  ].filter(Boolean);
+
+  return parts.length > 0
+    ? `Usuarios inactivos ocultos: ${joinSpanishSummaryParts(parts)}.`
+    : undefined;
+};
+
 const getUserAccessStateSearchValues = (user: Pick<AdminUser, 'modules' | 'roles'>) => (
   hasNoAccessAssigned(user)
     ? ['sin acceso', 'sin acceso asignado', 'sin permisos', 'acceso pendiente']
@@ -1106,6 +1127,10 @@ export default function AdminUsersPage() {
     () => buildCollapsedInactiveUsersToggleLabel(inactiveVisibleUsers),
     [inactiveVisibleUsers],
   );
+  const collapsedInactiveUsersToggleTitle = useMemo(
+    () => buildCollapsedInactiveUsersToggleTitle(inactiveVisibleUsers),
+    [inactiveVisibleUsers],
+  );
   const expandedInactiveUsersToggleLabel = useMemo(
     () => buildExpandedInactiveUsersToggleLabel(inactiveVisibleUsers),
     [inactiveVisibleUsers],
@@ -1594,6 +1619,7 @@ export default function AdminUsersPage() {
                           aria-label={showInactiveUsers
                             ? `Ocultar ${inactiveUsersToggleTarget}`
                             : `Ver ${inactiveUsersToggleTarget}`}
+                          title={showInactiveUsers ? undefined : collapsedInactiveUsersToggleTitle}
                         >
                           {showInactiveUsers
                             ? expandedInactiveUsersToggleLabel
