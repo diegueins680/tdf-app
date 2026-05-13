@@ -16381,8 +16381,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - sign up here',
       'Inscríbete ahora - Beatmaking 101',
       'Regístrate aquí - Beatmaking 101',
+      'Register for Beatmaking 101',
+      'Register for the course - Beatmaking 101',
+      'Inscríbete al curso - Beatmaking 101',
       'Beatmaking 101 - regístrate ahora',
       'Beatmaking 101 - inscríbete aquí',
+      'Beatmaking 101 - regístrate al curso',
     ];
 
     for (const title of titles) {
@@ -16399,7 +16403,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /apply now|register here|enroll now|sign up here|inscr[ií]bete ahora|reg[ií]strate aqu[ií]|reg[ií]strate ahora|inscr[ií]bete aqu[ií]/i,
+          /apply now|register here|register for|enroll now|sign up here|inscr[ií]bete ahora|inscr[ií]bete al curso|reg[ií]strate aqu[ií]|reg[ií]strate ahora|reg[ií]strate al curso|inscr[ií]bete aqu[ií]|the course/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
