@@ -193,6 +193,8 @@ fanClubSecureArtistHandlers user artistId =
         Just (Entity cid club) -> runDB $ do
           officers <- loadOfficersDTO cid
           followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
+          mArtistProfile <- getBy (UniqueArtistProfile artistKey)
+          let artistImage = mArtistProfile >>= artistProfileHeroImageUrl . entityVal
           pure FanClubDTO
             { fcId = fromSqlKey cid
             , fcArtistId = fromSqlKey artistKey
@@ -200,6 +202,7 @@ fanClubSecureArtistHandlers user artistId =
             , fcDescription = fanClubDescription club
             , fcOfficers = officers
             , fcFollowerCount = fromIntegral followerCount
+            , fcArtistImageUrl = artistImage
             }
 
     listClubFeed aId = do

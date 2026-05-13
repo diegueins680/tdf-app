@@ -7,7 +7,7 @@ const session = {
   username: 'admin',
   displayName: 'Admin',
   roles: ['admin'],
-  modules: ['admin', 'ops'],
+  modules: ['admin', 'crm', 'ops'],
 };
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -58,6 +58,7 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
               element={<main>Course registrations admin body</main>}
             />
             <Route path="/configuracion/usuarios-admin" element={<main>Admin users body</main>} />
+            <Route path="/social/inbox" element={<main>Social inbox admin body</main>} />
             <Route path="/configuracion/estado" element={<main>System status body</main>} />
             <Route path="/inicio" element={<main>Home body</main>} />
           </Route>
@@ -110,6 +111,20 @@ describe('Shell', () => {
 
     try {
       expect(container.textContent).toContain('Admin users body');
+      expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
+      expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides global floating helpers on the dense social inbox admin page', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/social/inbox?review=1');
+
+    try {
+      expect(container.textContent).toContain('Social inbox admin body');
       expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
       expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
     } finally {

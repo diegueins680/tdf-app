@@ -96,6 +96,20 @@ export default function FanClubPage() {
           <Card>
             <CardContent>
               <Stack spacing={2}>
+                {club.fcArtistImageUrl && (
+                  <Box
+                    component="img"
+                    src={club.fcArtistImageUrl}
+                    alt={club.fcName}
+                    sx={{
+                      width: '100%',
+                      height: 280,
+                      objectFit: 'cover',
+                      borderRadius: 2,
+                      mb: 1,
+                    }}
+                  />
+                )}
                 <Typography variant="h5" fontWeight={600}>{club.fcName}</Typography>
                 {club.fcDescription && (
                   <Typography variant="body1" color="text.secondary">{club.fcDescription}</Typography>

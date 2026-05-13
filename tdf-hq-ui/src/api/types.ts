@@ -740,6 +740,7 @@ export interface FanClubDTO {
   fcDescription?: string | null;
   fcOfficers: FanClubOfficerDTO[];
   fcFollowerCount: number;
+  fcArtistImageUrl?: string | null;
 }
 
 export interface FanClubOfficerDTO {
