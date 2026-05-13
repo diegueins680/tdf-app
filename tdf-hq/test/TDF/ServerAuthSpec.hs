@@ -37,6 +37,7 @@ import TDF.ServerAuth
   , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
   , validateSignupDisplayName
+  , validateSignupGoogleIdToken
   , validateOptionalSignupPhone
   )
 
@@ -50,6 +51,7 @@ spec = do
   tokenLabelUsernameSpec
   signupRoleSpec
   signupDisplayNameSpec
+  signupGoogleIdTokenSpec
   signupPhoneSpec
   signupArtistClaimEmailSpec
   passwordResetTokenSpec
@@ -267,6 +269,20 @@ signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
       validateSignupDisplayName ("Ada" <> hiddenFormat) "Lovelace"
     assertRejected "lastName" $
       validateSignupDisplayName "Ada" ("Love" <> hiddenFormat <> "lace")
+
+signupGoogleIdTokenSpec :: Spec
+signupGoogleIdTokenSpec = describe "validateSignupGoogleIdToken" $ do
+  it "rejects Google id tokens on password signup instead of silently ignoring them" $ do
+    validateSignupGoogleIdToken Nothing `shouldBe` Right ()
+    validateSignupGoogleIdToken (Just "   ") `shouldBe` Right ()
+    case validateSignupGoogleIdToken (Just "header.payload.signature") of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err)
+          `shouldContain` "googleIdToken is not supported on password signup"
+      Right value ->
+        expectationFailure
+          ("Expected password signup googleIdToken to be rejected, got " <> show value)
 
 signupPhoneSpec :: Spec
 signupPhoneSpec = describe "validateOptionalSignupPhone" $ do

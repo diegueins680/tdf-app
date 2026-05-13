@@ -34,6 +34,7 @@ module TDF.ServerAuth
   , validateCurrentPasswordInput
   , validatePasswordResetToken
   , validateSignupDisplayName
+  , validateSignupGoogleIdToken
   , validateRequestedSignupRoles
   , validateSignupArtistClaimIntent
   , validateSignupArtistClaimEmail
@@ -467,6 +468,17 @@ validateOptionalSignupPhone (Just rawPhone) =
                   (TE.encodeUtf8 "phone must be a valid phone number")
             }
 
+validateSignupGoogleIdToken :: Maybe Text -> Either ServerError ()
+validateSignupGoogleIdToken Nothing = Right ()
+validateSignupGoogleIdToken (Just rawToken)
+  | T.null (T.strip rawToken) = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "googleIdToken is not supported on password signup; use Google login")
+        }
+
 normalizeAuthPhoneNumber :: Text -> Maybe Text
 normalizeAuthPhoneNumber raw =
   let trimmed = T.strip raw
@@ -580,6 +592,7 @@ signup SignupRequest
   , email = rawEmail
   , phone = rawPhone
   , password = rawPassword
+  , googleIdToken = rawGoogleIdToken
   , roles = requestedRoles
   , fanArtistIds = requestedFanArtistIds
   , claimArtistId = rawClaimArtistId
@@ -594,6 +607,7 @@ signup SignupRequest
       internshipAreasClean = cleanOptional rawInternshipAreas
   when (T.null emailInput) $ throwBadRequest "Email is required"
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
+  either throwError pure (validateSignupGoogleIdToken rawGoogleIdToken)
   passwordClean <- either throwError pure (validateAuthPassword "Password" rawPassword)
   displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
