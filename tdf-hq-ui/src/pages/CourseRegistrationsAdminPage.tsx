@@ -180,6 +180,8 @@ const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; el menú de estado incluye Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; el menú de estado abre acciones rápidas.`;
+const buildCustomStatusNormalizationScopeHint = (targetLabel: string) =>
+  `Usa ${targetLabel} para abrir expediente; el menú de estado ofrece normalizar a pendiente o cancelado.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
 const buildPaidRecoveryScopeHint = (targetLabel: string) =>
@@ -3105,12 +3107,16 @@ export default function CourseRegistrationsAdminPage() {
       reg.crStatus,
       allVisibleRowsUseBusyListPaidRecoveryAction,
     ));
+  const allVisibleRowsUseCustomStatusActions = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => !normalizeKnownRegistrationStatus(reg.crStatus));
   const localSearchOnboardingActionText = allVisibleRowsUseDirectPendingRecoveryAction
     ? allVisibleRowsUseBusyListPaidRecoveryAction
       ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
       : buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
     : allVisibleRowsCanOpenPaymentWorkflow
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseCustomStatusActions
+        ? buildCustomStatusNormalizationScopeHint(dossierIdentityTargetLabel)
       : statusAlreadyVisibleInBusySearchOnboarding
         ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
         : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
@@ -3137,6 +3143,8 @@ export default function CourseRegistrationsAdminPage() {
           ? buildPaidRecoveryScopeHint(localSearchSingleResultTargetLabel)
         : canOpenPaymentWorkflowFromStatus(localSearchSingleResult.crStatus)
           ? buildPaymentWorkflowScopeHint(localSearchSingleResultTargetLabel)
+        : !localSearchSingleResultKnownStatus
+          ? buildCustomStatusNormalizationScopeHint(localSearchSingleResultTargetLabel)
           : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
     }`
     : '';
@@ -3450,6 +3458,8 @@ export default function CourseRegistrationsAdminPage() {
       ? buildDossierLinkScopeHint(dossierIdentityTargetLabel)
       : allVisibleRowsCanOpenPaymentWorkflow
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseCustomStatusActions
+      ? buildCustomStatusNormalizationScopeHint(dossierIdentityTargetLabel)
       : useCompactStatusActionLabel
       ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
       : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),

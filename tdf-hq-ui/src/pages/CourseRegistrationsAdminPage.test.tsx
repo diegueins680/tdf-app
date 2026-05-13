@@ -234,6 +234,8 @@ const paymentWorkflowDossierScopeHint =
   'Usa el nombre para abrir expediente; el menú de estado incluye Registrar pago.';
 const dossierOnlyScopeHint =
   'Usa el nombre para abrir expediente; el menú de estado abre acciones rápidas.';
+const customStatusNormalizationScopeHint =
+  'Usa el nombre para abrir expediente; el menú de estado ofrece normalizar a pendiente o cancelado.';
 const pendingRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
 const paidRecoveryScopeHint =
@@ -3747,6 +3749,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
 
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o estado');
+      expect(container.textContent).toContain(customStatusNormalizationScopeHint);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(customStatusSummary).toBeNull();
       expect(container.textContent).not.toContain('Sin filtros de estado');
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
@@ -3768,6 +3772,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).not.toContain('Ada Lovelace');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain(customStatusNormalizationScopeHint);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -3800,7 +3806,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.textContent).toContain(
-        `Manual Review. Busca dentro de las 9 inscripciones cargadas. ${dossierOnlyScopeHint}`,
+        `Manual Review. Busca dentro de las 9 inscripciones cargadas. ${customStatusNormalizationScopeHint}`,
       );
       expect(container.textContent).not.toContain('Estado no estándar');
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
