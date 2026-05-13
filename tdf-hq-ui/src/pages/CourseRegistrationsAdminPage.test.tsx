@@ -14262,7 +14262,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Campaña de inscripción - Beatmaking 101',
       'Facebook ad campaign for Beatmaking 101',
+      'Email campaign landing page - Beatmaking 101',
+      'Campaña de email para Beatmaking 101',
       'Beatmaking 101 - campaign landing page',
+      'Beatmaking 101 - newsletter campaign',
       'Beatmaking 101 - campaña de leads',
     ];
 
@@ -14279,7 +14282,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/campaña|campaign|ad campaign/i);
+        expect(emptyState?.textContent).not.toMatch(/campaña|campaign|ad campaign|newsletter/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
