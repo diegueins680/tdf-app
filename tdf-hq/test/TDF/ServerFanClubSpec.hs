@@ -2,23 +2,28 @@
 
 module TDF.ServerFanClubSpec (spec) where
 
+import Control.Monad.Trans.Reader (runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..))
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
-import Servant (ServerError (errBody, errHTTPCode))
+import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
+import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models
   ( ElectionStatus (Upcoming)
   , FanClubCandidacy (..)
   , FanClubElection (..)
   , FanClubOfficerRole (Coordinator, Secretary)
   , FanClubPost (..)
+  , RoleEnum (Customer, Fan)
   )
 import TDF.ServerFanClub
-  ( validateFanClubArtistPathId
+  ( fanClubSecureArtistHandlers
+  , validateFanClubArtistPathId
   , validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
@@ -41,6 +46,22 @@ spec = do
         validateFanClubArtistPathId 0
       assertRejected 400 "Invalid fan club artist id" $
         validateFanClubArtistPathId (-7)
+
+  describe "secure fan club artist routes" $
+    it "rejects malformed artist ids before authorization or DB fallback" $ do
+      let getClubDetail :<|> _ =
+            fanClubSecureArtistHandlers fanClubUser 0
+      result <-
+        runHandler $
+          runReaderT
+            getClubDetail
+            (error "fan club artist id validation should not read Env")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid fan club artist id"
+        Right _ ->
+          expectationFailure "Expected malformed secure fan club artist id to be rejected"
 
   describe "fan club election path validation" $ do
     it "rejects malformed election and candidacy ids before DB fallback lookup" $ do
@@ -199,3 +220,11 @@ unexpectedRejection err =
     <> show (errHTTPCode err)
     <> " "
     <> BL8.unpack (errBody err)
+
+fanClubUser :: AuthedUser
+fanClubUser =
+  AuthedUser
+    { auPartyId = toSqlKey 99
+    , auRoles = [Fan, Customer]
+    , auModules = modulesForRoles [Fan, Customer]
+    }

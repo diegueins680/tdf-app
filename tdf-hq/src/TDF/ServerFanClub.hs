@@ -154,7 +154,7 @@ fanClubSecureArtistHandlers user artistId =
   :<|> castVote artistId
   where
     getClubDetail aId = do
-      let artistKey = toSqlKey aId
+      artistKey <- requireArtistKey aId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
@@ -163,30 +163,31 @@ fanClubSecureArtistHandlers user artistId =
           followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
           pure FanClubDTO
             { fcId = fromSqlKey cid
-            , fcArtistId = aId
+            , fcArtistId = fromSqlKey artistKey
             , fcName = fanClubName club
             , fcDescription = fanClubDescription club
             , fcOfficers = officers
             , fcFollowerCount = fromIntegral followerCount
             }
 
-    listClubPosts aId = runDB $ do
-      let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
-      case mClub of
-        Nothing -> pure []
-        Just (Entity cid _) -> do
-          posts <- selectList
-            [ M.FanClubPostClubId ==. cid
-            , M.FanClubPostParentId ==. Nothing
-            ] [Desc M.FanClubPostIsPinned, Desc M.FanClubPostCreatedAt]
-          forM posts $ \(Entity pid p) -> do
-            replies <- count [M.FanClubPostParentId ==. Just pid]
-            author <- getAuthorDTO (fanClubPostFanPartyId p)
-            pure $ postToDTO pid p (fromIntegral replies) author
+    listClubPosts aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            posts <- selectList
+              [ M.FanClubPostClubId ==. cid
+              , M.FanClubPostParentId ==. Nothing
+              ] [Desc M.FanClubPostIsPinned, Desc M.FanClubPostCreatedAt]
+            forM posts $ \(Entity pid p) -> do
+              replies <- count [M.FanClubPostParentId ==. Just pid]
+              author <- getAuthorDTO (fanClubPostFanPartyId p)
+              pure $ postToDTO pid p (fromIntegral replies) author
 
     createClubPost aId req = do
-      let artistKey = toSqlKey aId
+      artistKey <- requireArtistKey aId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -242,25 +243,27 @@ fanClubSecureArtistHandlers user artistId =
       pure NoContent
 
     requirePostOfficerTarget aId rawPostId = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
+      artistKey <- requireArtistKey aId
+      isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       postKey <- either throwError pure (validateFanClubPostPathId rawPostId)
-      target <- runDB $ lookupFanClubPostMutationTarget aId postKey
+      target <- runDB $ lookupFanClubPostMutationTarget artistKey postKey
       either throwError pure target
 
-    listClubEvents aId = runDB $ do
-      let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
-      case mClub of
-        Nothing -> pure []
-        Just (Entity cid _) -> do
-          events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
-          pure (map eventToDTO events)
+    listClubEvents aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
+            pure (map eventToDTO events)
 
     createClubEvent aId req = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
+      artistKey <- requireArtistKey aId
+      isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear eventos" }
-      let artistKey = toSqlKey aId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -288,36 +291,37 @@ fanClubSecureArtistHandlers user artistId =
             , fceCreatedBy = Just (fromSqlKey (auPartyId user))
             }
 
-    listClubElections aId = runDB $ do
-      let artistKey = toSqlKey aId
-      mClub <- getBy (UniqueFanClubArtist artistKey)
-      case mClub of
-        Nothing -> pure []
-        Just (Entity cid _) -> do
-          elections <- selectList [M.FanClubElectionClubId ==. cid] [Desc M.FanClubElectionYear]
-          forM elections $ \(Entity eid el) -> do
-            allCands <- selectList [] []
-            let myCands = filter (\(Entity _ c) -> fanClubCandidacyElectionId c == eid && fanClubCandidacyFanPartyId c == auPartyId user) allCands
-            allVotes <- selectList [] []
-            let myVotes = filter (\(Entity _ v) -> fanClubVoteElectionId v == eid && fanClubVoteFanPartyId v == auPartyId user) allVotes
-            let cands = map candidacyToDTO myCands
-            let votes = map voteToDTO myVotes
-            pure $ FanClubElectionDTO
-              { fceElectionId = fromSqlKey eid
-              , fceYear = fanClubElectionYear el
-              , fceStatus = T.pack (show (fanClubElectionStatus el))
-              , fceCandidacyStartsAt = fanClubElectionCandidacyStartsAt el
-              , fceCandidacyEndsAt = fanClubElectionCandidacyEndsAt el
-              , fceVotingStartsAt = fanClubElectionVotingStartsAt el
-              , fceVotingEndsAt = fanClubElectionVotingEndsAt el
-              , fceMyCandidacies = cands
-              , fceMyVotes = votes
-              }
+    listClubElections aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            elections <- selectList [M.FanClubElectionClubId ==. cid] [Desc M.FanClubElectionYear]
+            forM elections $ \(Entity eid el) -> do
+              allCands <- selectList [] []
+              let myCands = filter (\(Entity _ c) -> fanClubCandidacyElectionId c == eid && fanClubCandidacyFanPartyId c == auPartyId user) allCands
+              allVotes <- selectList [] []
+              let myVotes = filter (\(Entity _ v) -> fanClubVoteElectionId v == eid && fanClubVoteFanPartyId v == auPartyId user) allVotes
+              let cands = map candidacyToDTO myCands
+              let votes = map voteToDTO myVotes
+              pure $ FanClubElectionDTO
+                { fceElectionId = fromSqlKey eid
+                , fceYear = fanClubElectionYear el
+                , fceStatus = T.pack (show (fanClubElectionStatus el))
+                , fceCandidacyStartsAt = fanClubElectionCandidacyStartsAt el
+                , fceCandidacyEndsAt = fanClubElectionCandidacyEndsAt el
+                , fceVotingStartsAt = fanClubElectionVotingStartsAt el
+                , fceVotingEndsAt = fanClubElectionVotingEndsAt el
+                , fceMyCandidacies = cands
+                , fceMyVotes = votes
+                }
 
     createClubElection aId req = do
-      isOfficer <- runDB $ checkIsOfficer aId (auPartyId user)
+      artistKey <- requireArtistKey aId
+      isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear elecciones" }
-      let artistKey = toSqlKey aId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -351,8 +355,9 @@ fanClubSecureArtistHandlers user artistId =
                 }
 
     createCandidacy aId electionId req = do
+      artistKey <- requireArtistKey aId
       electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
-      targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
+      targetElection <- runDB $ lookupFanClubElectionMutationTarget artistKey electionKey
       _ <- either throwError pure targetElection
       role <- either throwError pure (validateFanClubOfficerRoleInput (fccrRole req))
       mCid <- runDB $ do
@@ -379,8 +384,9 @@ fanClubSecureArtistHandlers user artistId =
             }
 
     castVote aId electionId req = do
+      artistKey <- requireArtistKey aId
       electionKey <- either throwError pure (validateFanClubElectionPathId electionId)
-      targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
+      targetElection <- runDB $ lookupFanClubElectionMutationTarget artistKey electionKey
       _ <- either throwError pure targetElection
       candidacyKeys <- either throwError pure $
         validateFanClubVoteSelectionIds (fcvCandidacyIds req)
@@ -398,6 +404,10 @@ fanClubSecureArtistHandlers user artistId =
             , fanClubVoteCreatedAt = now
             }
       pure NoContent
+
+    requireArtistKey :: Int64 -> AppM PartyId
+    requireArtistKey =
+      either throwError pure . validateFanClubArtistPathId
 
 -- ============================================================================
 -- DTO Builders
@@ -502,9 +512,8 @@ validateFanClubOfficerRoleInput rawRole =
             "role must be one of: presidente, vicepresidente, secretario, tesorero, coordinador"
         }
 
-checkIsOfficer :: Int64 -> PartyId -> SqlPersistT IO Bool
-checkIsOfficer artistId fanId = do
-  let artistKey = toSqlKey artistId
+checkIsOfficer :: PartyId -> PartyId -> SqlPersistT IO Bool
+checkIsOfficer artistKey fanId = do
   mClub <- getBy (UniqueFanClubArtist artistKey)
   case mClub of
     Nothing -> pure False
@@ -524,11 +533,10 @@ validateFanClubPostPathId rawPostId
   | otherwise = Right (toSqlKey rawPostId)
 
 lookupFanClubPostMutationTarget
-  :: Int64
+  :: PartyId
   -> FanClubPostId
   -> SqlPersistT IO (Either ServerError FanClubPostId)
-lookupFanClubPostMutationTarget artistId postId = do
-  let artistKey = toSqlKey artistId
+lookupFanClubPostMutationTarget artistKey postId = do
   mClub <- getBy (UniqueFanClubArtist artistKey)
   case mClub of
     Nothing -> pure (Left fanClubPostNotFound)
@@ -570,11 +578,10 @@ validateFanClubElectionPathId rawElectionId
   | otherwise = Right (toSqlKey rawElectionId)
 
 lookupFanClubElectionMutationTarget
-  :: Int64
+  :: PartyId
   -> FanClubElectionId
   -> SqlPersistT IO (Either ServerError FanClubElectionId)
-lookupFanClubElectionMutationTarget artistId electionId = do
-  let artistKey = toSqlKey artistId
+lookupFanClubElectionMutationTarget artistKey electionId = do
   mClub <- getBy (UniqueFanClubArtist artistKey)
   case mClub of
     Nothing -> pure (Left fanClubElectionNotFound)
