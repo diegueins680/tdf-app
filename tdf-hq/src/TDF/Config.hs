@@ -492,6 +492,7 @@ loadConfig = do
   sdbEnv     <- lookupEnv "SEED_DB"
   migEnv     <- lookupEnv "RUN_MIGRATIONS"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
+  seedRuntimeEnv <- lookupSeedRuntimeEnv
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
@@ -622,7 +623,7 @@ loadConfig = do
   cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
-  seedToken <- validateSeedTriggerToken seedEnv
+  seedToken <- validateSeedTriggerToken seedRuntimeEnv seedEnv
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -741,13 +742,63 @@ loadConfig = do
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed
+    lookupSeedRuntimeEnv =
+      mapM
+        (\key -> do
+          value <- lookupEnv key
+          pure (key, value))
+        seedRuntimeEnvKeys
+    seedRuntimeEnvKeys =
+      [ "FLY_APP_NAME"
+      , "KOYEB_APP_NAME"
+      , "RENDER"
+      , "RAILWAY_ENVIRONMENT"
+      , "HEROKU_APP_NAME"
+      , "VERCEL"
+      , "CF_PAGES"
+      , "K_SERVICE"
+      , "APP_ENV"
+      , "ENVIRONMENT"
+      , "NODE_ENV"
+      , "RUNTIME_ENV"
+      ]
+    seedTriggerAllowedInRuntime runtimeEnv =
+      not (hasHostedRuntimeEnv || hasProductionEnv)
+      where
+        hasHostedRuntimeEnv =
+          any
+            hasNonEmptyEnv
+            [ "FLY_APP_NAME"
+            , "KOYEB_APP_NAME"
+            , "RENDER"
+            , "RAILWAY_ENVIRONMENT"
+            , "HEROKU_APP_NAME"
+            , "VERCEL"
+            , "CF_PAGES"
+            , "K_SERVICE"
+            ]
+        hasProductionEnv =
+          any
+            (maybe False isProductionValue . lookupNonEmptyEnv)
+            [ "APP_ENV"
+            , "ENVIRONMENT"
+            , "NODE_ENV"
+            , "RUNTIME_ENV"
+            ]
+        hasNonEmptyEnv key = maybe False (const True) (lookupNonEmptyEnv key)
+        lookupNonEmptyEnv key =
+          case lookup key runtimeEnv of
+            Just (Just raw) | not (T.null (T.strip (T.pack raw))) -> Just raw
+            _ -> Nothing
+        isProductionValue raw =
+          T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
     asBool v = case fmap toLower v of
       "true"  -> True
       "1"     -> True
       "yes"   -> True
       "on"    -> True
       _       -> False
-    validateSeedTriggerToken mVal =
+    validateSeedTriggerToken runtimeEnv mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> pure Nothing
         Just txt
@@ -760,6 +811,8 @@ loadConfig = do
               fail "SEED_TRIGGER_TOKEN must be at least 16 characters"
           | T.length txt > 512 ->
               fail "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
+          | not (seedTriggerAllowedInRuntime runtimeEnv) ->
+              fail "SEED_TRIGGER_TOKEN must be unset in hosted or production runtimes"
           | otherwise -> pure (Just txt)
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
       let host = normalizeRequiredSmtpValue mHost

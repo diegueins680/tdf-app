@@ -425,6 +425,24 @@ clearRagEnv =
         , "RAG_EMBED_BATCH_SIZE"
         ]
 
+clearSeedRuntimeEnv :: [(String, Maybe String)]
+clearSeedRuntimeEnv =
+    map
+        (\key -> (key, Nothing))
+        [ "FLY_APP_NAME"
+        , "KOYEB_APP_NAME"
+        , "RENDER"
+        , "RAILWAY_ENVIRONMENT"
+        , "HEROKU_APP_NAME"
+        , "VERCEL"
+        , "CF_PAGES"
+        , "K_SERVICE"
+        , "APP_ENV"
+        , "ENVIRONMENT"
+        , "NODE_ENV"
+        , "RUNTIME_ENV"
+        ]
+
 clearWhatsAppProviderCredentialEnv :: [(String, Maybe String)]
 clearWhatsAppProviderCredentialEnv =
     [ ("WA_TOKEN", Nothing)
@@ -885,14 +903,14 @@ main = hspec $ do
 
         it "rejects malformed seed trigger tokens before enabling seed endpoints" $ do
             withEnvOverrides
-                [ ("SEED_TRIGGER_TOKEN", Just " seed-token_123456 ") ]
+                (clearSeedRuntimeEnv <> [("SEED_TRIGGER_TOKEN", Just " seed-token_123456 ")])
                 $ do
                     cfg <- loadConfig
                     seedTriggerToken cfg `shouldBe` Just "seed-token_123456"
 
             let assertInvalid rawToken expectedMessage =
                     withEnvOverrides
-                        [ ("SEED_TRIGGER_TOKEN", Just rawToken) ]
+                        (clearSeedRuntimeEnv <> [("SEED_TRIGGER_TOKEN", Just rawToken)])
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
             assertInvalid
@@ -910,6 +928,20 @@ main = hspec $ do
             assertInvalid
                 (replicate 513 'a')
                 "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
+
+        it "rejects seed trigger tokens in hosted or production runtimes before enabling unauthenticated seed endpoints" $ do
+            let assertBlocked runtimeOverride =
+                    withEnvOverrides
+                        ( clearSeedRuntimeEnv
+                            <> [ ("SEED_TRIGGER_TOKEN", Just "seed-token_123456")
+                               , runtimeOverride
+                               ]
+                        )
+                        $ loadConfig `shouldThrow` \err ->
+                            "SEED_TRIGGER_TOKEN must be unset in hosted or production runtimes"
+                                `isInfixOf` show (err :: IOException)
+            assertBlocked ("APP_ENV", Just "production")
+            assertBlocked ("KOYEB_APP_NAME", Just "tdf-hq")
 
         it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
             withEnvOverrides
