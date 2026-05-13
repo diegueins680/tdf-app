@@ -1073,6 +1073,13 @@ spec = do
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+1234567890123456\"}"
                 `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout (BL8.concat
+                [ "{\"mcrBuyerName\":\"Ada Lovelace\""
+                , ",\"mcrBuyerEmail\":\"ada@example.com\""
+                , ",\"mcrBuyerPhone\":\"+\\u0665\\u0669\\u0663"
+                , "\\u0669\\u0669\\u0661\\u0662\\u0663\\u0664\\u0665\"}"
+                ])
+                `shouldSatisfy` isLeft
 
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $

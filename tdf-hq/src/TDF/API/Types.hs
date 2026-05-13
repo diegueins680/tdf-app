@@ -521,13 +521,13 @@ normalizeMarketplaceOptionalPhoneField rawPhone =
 normalizeMarketplacePhone :: Text -> Maybe Text
 normalizeMarketplacePhone raw =
   let trimmed = T.strip raw
-      onlyDigits = T.filter isDigit trimmed
+      onlyDigits = T.filter isMarketplacePhoneDigit trimmed
       digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isDigit trimmed
+      firstDigitIndex = T.findIndex isMarketplacePhoneDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
+        isMarketplacePhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -544,6 +544,9 @@ normalizeMarketplacePhone raw =
         || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isMarketplacePhoneDigit :: Char -> Bool
+isMarketplacePhoneDigit ch = ch >= '0' && ch <= '9'
 
 isValidMarketplaceBuyerEmail :: Text -> Bool
 isValidMarketplaceBuyerEmail candidate =
