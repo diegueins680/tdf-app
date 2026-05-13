@@ -10121,6 +10121,70 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats placeholder source values as empty source noise in busy lists', async () => {
+    const placeholderSources = [
+      'unknown',
+      'UNKNOWN',
+      'n/a',
+      'not_set',
+      'sin_fuente',
+      'none',
+      'null',
+      'undefined',
+      '-',
+    ] as const;
+    const hiddenSourceLabels = [
+      'unknown',
+      'UNKNOWN',
+      'N a',
+      'Not set',
+      'Sin fuente',
+      'none',
+      'null',
+      'undefined',
+      '-',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(placeholderSources.length, (index) => ({
+        crSource: placeholderSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(placeholderSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'unknown');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "unknown" en las ${placeholderSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats generic intake and admissions sources as default form traffic', async () => {
     const defaultSources = [
       'intake_form',
