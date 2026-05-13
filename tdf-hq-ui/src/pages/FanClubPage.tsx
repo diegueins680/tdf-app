@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
   Divider, Grid, IconButton, Stack, Tab, Tabs, TextField, Typography,
-  Avatar, Tooltip,
+  Avatar, Tooltip, ImageList, ImageListItem,
 } from '@mui/material';
 import {
   PushPin as PushPinIcon,
@@ -16,12 +16,14 @@ import {
   Forum as ForumIcon,
   Groups as GroupsIcon,
   Add as AddIcon,
+  PhotoLibrary as PhotoLibraryIcon,
+  Report as ReportIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
-import DataTable from '../components/DataTable';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
-import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO } from '../api/types';
+import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO } from '../api/types';
 
 export default function FanClubPage() {
   const { artistId } = useParams<{ artistId: string }>();
@@ -36,22 +38,40 @@ export default function FanClubPage() {
     enabled: artistIdNum > 0,
   });
 
+  const feedQuery = useQuery({
+    queryKey: ['fan-club-feed', artistIdNum],
+    queryFn: () => Fans.listClubFeed(artistIdNum),
+    enabled: artistIdNum > 0 && tab === 0,
+  });
+
   const postsQuery = useQuery({
     queryKey: ['fan-club-posts', artistIdNum],
     queryFn: () => Fans.listClubPosts(artistIdNum),
     enabled: artistIdNum > 0 && tab === 1,
   });
 
+  const memoriesQuery = useQuery({
+    queryKey: ['fan-club-memories', artistIdNum],
+    queryFn: () => Fans.listClubMemories(artistIdNum),
+    enabled: artistIdNum > 0 && tab === 2,
+  });
+
   const eventsQuery = useQuery({
     queryKey: ['fan-club-events', artistIdNum],
     queryFn: () => Fans.listClubEvents(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 2,
+    enabled: artistIdNum > 0 && tab === 3,
   });
 
   const electionsQuery = useQuery({
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 3,
+    enabled: artistIdNum > 0 && tab === 4,
+  });
+
+  const memberProfilesQuery = useQuery({
+    queryKey: ['fan-club-member-profiles', artistIdNum],
+    queryFn: () => Fans.listClubMemberProfiles(artistIdNum),
+    enabled: artistIdNum > 0,
   });
 
   const club = clubQuery.data;
@@ -81,7 +101,17 @@ export default function FanClubPage() {
                   <Typography variant="body1" color="text.secondary">{club.fcDescription}</Typography>
                 )}
                 <Divider />
-                <Typography variant="subtitle2" fontWeight={600}>Directiva</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="subtitle2" fontWeight={600}>Directiva</Typography>
+                  <Button
+                    component={RouterLink}
+                    to={`/fans/clubs/${artistIdNum}/members`}
+                    size="small"
+                    startIcon={<PersonIcon />}
+                  >
+                    Ver miembros
+                  </Button>
+                </Stack>
                 <Stack direction="row" spacing={2} flexWrap="wrap">
                   {club.fcOfficers.length === 0 && (
                     <Typography variant="body2" color="text.secondary">Aún no hay directiva electa.</Typography>
@@ -102,18 +132,95 @@ export default function FanClubPage() {
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+              <Tab icon={<ForumIcon />} label="Feed" />
               <Tab icon={<ForumIcon />} label="Foro" />
+              <Tab icon={<PhotoLibraryIcon />} label="Recuerdos" />
               <Tab icon={<CalendarMonthIcon />} label="Calendario" />
               <Tab icon={<HowToVoteIcon />} label="Elecciones" />
             </Tabs>
           </Box>
 
-          {tab === 0 && <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={isOfficer} loading={postsQuery.isLoading} />}
-          {tab === 1 && <ClubCalendar artistId={artistIdNum} events={eventsQuery.data ?? []} isOfficer={isOfficer} loading={eventsQuery.isLoading} />}
-          {tab === 2 && <ClubElections artistId={artistIdNum} elections={electionsQuery.data ?? []} />}
+          {tab === 0 && <ClubFeed artistId={artistIdNum} feed={feedQuery.data ?? []} isOfficer={isOfficer} loading={feedQuery.isLoading} />}
+          {tab === 1 && <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={isOfficer} loading={postsQuery.isLoading} />}
+          {tab === 2 && <ClubMemories artistId={artistIdNum} memories={memoriesQuery.data ?? []} isOfficer={isOfficer} loading={memoriesQuery.isLoading} />}
+          {tab === 3 && <ClubCalendar artistId={artistIdNum} events={eventsQuery.data ?? []} isOfficer={isOfficer} loading={eventsQuery.isLoading} />}
+          {tab === 4 && <ClubElections artistId={artistIdNum} elections={electionsQuery.data ?? []} />}
         </Stack>
       )}
     </PageShell>
+  );
+}
+
+function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; feed: FanClubFeedItemDTO[]; isOfficer: boolean; loading: boolean }) {
+  const qc = useQueryClient();
+
+  const hideMut = useMutation({
+    mutationFn: ({ itemId, kind, hide }: { itemId: number; kind: string; hide: boolean }) => {
+      if (kind === 'post') {
+        return hide ? Fans.hideClubPost(artistId, itemId) : Fans.unhideClubPost(artistId, itemId);
+      } else {
+        return hide ? Fans.hideClubMemory(artistId, itemId) : Fans.unhideClubMemory(artistId, itemId);
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+    },
+  });
+
+  if (loading) return <SkeletonCards count={3} />;
+
+  const visibleItems = feed.filter(item => !item.fcfIsHidden);
+
+  return (
+    <Stack spacing={2}>
+      {visibleItems.length === 0 && (
+        <EmptyState icon={<ForumIcon fontSize="large" />} title="Feed vacío" description="Sé el primero en publicar o compartir un recuerdo." />
+      )}
+
+      {visibleItems.map(item => (
+        <Card key={`${item.fcfKind}-${item.fcfId}`}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Avatar src={item.fcfAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
+                {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
+                {item.fcfIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
+                <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
+                <Box flexGrow={1} />
+                {isOfficer && (
+                  <Tooltip title={item.fcfIsHidden ? 'Mostrar' : 'Ocultar'}>
+                    <IconButton
+                      size="small"
+                      aria-label={item.fcfIsHidden ? 'Mostrar elemento del feed' : 'Ocultar elemento del feed'}
+                      onClick={() => hideMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, hide: !item.fcfIsHidden })}
+                    >
+                      {item.fcfIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Stack>
+              {item.fcfTitle && <Typography variant="h6">{item.fcfTitle}</Typography>}
+              <Typography variant="body1">{item.fcfContent}</Typography>
+              {item.fcfMediaUrls.length > 0 && (
+                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                  {item.fcfMediaUrls.map((url, idx) => (
+                    <ImageListItem key={idx}>
+                      <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              )}
+              <Typography variant="caption" color="text.secondary">
+                {new Date(item.fcfCreatedAt).toLocaleString()}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
+    </Stack>
   );
 }
 
@@ -127,6 +234,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
     mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
       setOpen(false);
       setTitle('');
       setContent('');
@@ -142,7 +250,10 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
   const hideMut = useMutation({
     mutationFn: ({ postId, hide }: { postId: number; hide: boolean }) =>
       hide ? Fans.hideClubPost(artistId, postId) : Fans.unhideClubPost(artistId, postId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+    },
   });
 
   if (loading) return <SkeletonCards count={3} />;
@@ -215,6 +326,187 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={() => createPost.mutate()} disabled={!content.trim() || createPost.isPending}>
             Publicar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Stack>
+  );
+}
+
+function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: number; memories: FanClubMemoryDTO[]; isOfficer: boolean; loading: boolean }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [mediaUrls, setMediaUrls] = useState('');
+  const [reportOpen, setReportOpen] = useState<number | null>(null);
+  const [reportReason, setReportReason] = useState('');
+
+  const createMemory = useMutation({
+    mutationFn: () => Fans.createClubMemory(artistId, {
+      fcmReqTitle: title,
+      fcmReqDescription: description || null,
+      fcmReqMediaUrls: mediaUrls.split('\n').filter(u => u.trim()),
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      setOpen(false);
+      setTitle('');
+      setDescription('');
+      setMediaUrls('');
+    },
+  });
+
+  const hideMut = useMutation({
+    mutationFn: ({ memoryId, hide }: { memoryId: number; hide: boolean }) =>
+      hide ? Fans.hideClubMemory(artistId, memoryId) : Fans.unhideClubMemory(artistId, memoryId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (memoryId: number) => Fans.deleteClubMemory(artistId, memoryId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+    },
+  });
+
+  const reportMut = useMutation({
+    mutationFn: ({ memoryId, reason }: { memoryId: number; reason: string }) =>
+      Fans.reportClubMemory(artistId, memoryId, { fcmrReqReason: reason }),
+    onSuccess: () => {
+      setReportOpen(null);
+      setReportReason('');
+    },
+  });
+
+  if (loading) return <SkeletonCards count={3} />;
+
+  const visibleMemories = memories.filter(m => !m.fcmIsHidden && !m.fcmIsDeleted);
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" justifyContent="flex-end">
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+          Nuevo recuerdo
+        </Button>
+      </Stack>
+
+      {visibleMemories.length === 0 && (
+        <EmptyState icon={<PhotoLibraryIcon fontSize="large" />} title="Sin recuerdos" description="Comparte fotos o videos de conciertos y momentos con el artista." />
+      )}
+
+      {visibleMemories.map(memory => (
+        <Card key={memory.fcmId}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Avatar src={memory.fcmMemberAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
+                <Box flexGrow={1} />
+                {isOfficer && (
+                  <>
+                    <Tooltip title={memory.fcmIsHidden ? 'Mostrar' : 'Ocultar'}>
+                      <IconButton
+                        size="small"
+                        aria-label={memory.fcmIsHidden ? 'Mostrar recuerdo' : 'Ocultar recuerdo'}
+                        onClick={() => hideMut.mutate({ memoryId: memory.fcmId, hide: !memory.fcmIsHidden })}
+                      >
+                        {memory.fcmIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar">
+                      <IconButton
+                        size="small"
+                        aria-label="Eliminar recuerdo"
+                        onClick={() => deleteMut.mutate(memory.fcmId)}
+                      >
+                        <VisibilityOffIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+                <Tooltip title="Reportar">
+                  <IconButton
+                    size="small"
+                    aria-label="Reportar recuerdo"
+                    onClick={() => setReportOpen(memory.fcmId)}
+                  >
+                    <ReportIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+              <Typography variant="h6">{memory.fcmTitle}</Typography>
+              {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
+              {memory.fcmMediaUrls.length > 0 && (
+                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                  {memory.fcmMediaUrls.map((url, idx) => (
+                    <ImageListItem key={idx}>
+                      <img src={url} alt={`Memory ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              )}
+              <Typography variant="caption" color="text.secondary">
+                {new Date(memory.fcmCreatedAt).toLocaleString()}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Nuevo recuerdo</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField label="Título" value={title} onChange={e => setTitle(e.target.value)} fullWidth required />
+            <TextField label="Descripción" value={description} onChange={e => setDescription(e.target.value)} multiline rows={3} fullWidth />
+            <TextField
+              label="URLs de fotos/videos (una por línea)"
+              value={mediaUrls}
+              onChange={e => setMediaUrls(e.target.value)}
+              multiline
+              rows={4}
+              fullWidth
+              placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={() => createMemory.mutate()} disabled={!title.trim() || createMemory.isPending}>
+            Publicar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={reportOpen !== null} onClose={() => setReportOpen(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Reportar recuerdo</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Motivo del reporte"
+              value={reportReason}
+              onChange={e => setReportReason(e.target.value)}
+              multiline
+              rows={3}
+              fullWidth
+              required
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReportOpen(null)}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={() => reportOpen !== null && reportMut.mutate({ memoryId: reportOpen, reason: reportReason })}
+            disabled={!reportReason.trim() || reportMut.isPending}
+          >
+            Reportar
           </Button>
         </DialogActions>
       </Dialog>

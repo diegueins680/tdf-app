@@ -16,6 +16,13 @@ import type {
   FanClubCreateElectionReq,
   FanClubCreateCandidacyReq,
   FanClubVoteReq,
+  FanClubFeedItemDTO,
+  FanClubMemoryDTO,
+  FanClubMemoryReportDTO,
+  FanClubCreateMemoryReq,
+  FanClubMemoryReportReq,
+  FanClubMemberProfileDTO,
+  FanClubMemberProfileUpdate,
 } from './types';
 
 export const Fans = {
@@ -57,4 +64,26 @@ export const Fans = {
     post<FanClubCandidacyDTO>(`/fans/me/clubs/${artistId}/elections/${electionId}/candidacy`, payload),
   castVote: (artistId: number, electionId: number, payload: FanClubVoteReq) =>
     post<void>(`/fans/me/clubs/${artistId}/elections/${electionId}/vote`, payload),
+
+  // Fan Club Feed
+  listClubFeed: (artistId: number) => get<FanClubFeedItemDTO[]>(`/fans/me/clubs/${artistId}/feed`),
+
+  // Fan Club Memories
+  listClubMemories: (artistId: number) => get<FanClubMemoryDTO[]>(`/fans/me/clubs/${artistId}/memories`),
+  createClubMemory: (artistId: number, payload: FanClubCreateMemoryReq) =>
+    post<FanClubMemoryDTO>(`/fans/me/clubs/${artistId}/memories`, payload),
+  hideClubMemory: (artistId: number, memoryId: number) =>
+    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/hide`, {}),
+  unhideClubMemory: (artistId: number, memoryId: number) =>
+    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/unhide`, {}),
+  deleteClubMemory: (artistId: number, memoryId: number) =>
+    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/delete`, {}),
+  reportClubMemory: (artistId: number, memoryId: number, payload: FanClubMemoryReportReq) =>
+    post<FanClubMemoryReportDTO>(`/fans/me/clubs/${artistId}/memories/${memoryId}/report`, payload),
+
+  // Fan Club Member Profiles
+  listClubMemberProfiles: (artistId: number) => get<FanClubMemberProfileDTO[]>(`/fans/me/clubs/${artistId}/member-profiles`),
+  getMyClubMemberProfile: (artistId: number) => get<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`),
+  updateMyClubMemberProfile: (artistId: number, payload: FanClubMemberProfileUpdate) =>
+    put<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`, payload),
 };

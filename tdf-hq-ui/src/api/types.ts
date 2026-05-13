@@ -834,3 +834,66 @@ export interface FanClubCreateCandidacyReq {
 export interface FanClubVoteReq {
   fcvCandidacyIds: number[];
 }
+
+export interface FanClubMemberProfileDTO {
+  fcmpId: number;
+  fcmpPartyId: number;
+  fcmpClubId: number;
+  fcmpHandle?: string | null;
+  fcmpBio?: string | null;
+  fcmpAvatarUrl?: string | null;
+  fcmpDisplayName: string;
+  fcmpJoinedAt: string;
+}
+
+export interface FanClubMemoryDTO {
+  fcmId: number;
+  fcmMemberProfileId: number;
+  fcmMemberName: string;
+  fcmMemberAvatarUrl?: string | null;
+  fcmTitle: string;
+  fcmDescription?: string | null;
+  fcmMediaUrls: string[];
+  fcmIsHidden: boolean;
+  fcmIsDeleted: boolean;
+  fcmCreatedAt: string;
+}
+
+export interface FanClubMemoryReportDTO {
+  fcmrId: number;
+  fcmrReporterId: number;
+  fcmrMemoryId: number;
+  fcmrReason: string;
+  fcmrCreatedAt: string;
+}
+
+export interface FanClubFeedItemDTO {
+  fcfId: number;
+  fcfKind: string;
+  fcfTitle?: string | null;
+  fcfContent: string;
+  fcfAuthorId: number;
+  fcfAuthorName: string;
+  fcfAvatarUrl?: string | null;
+  fcfMediaUrls: string[];
+  fcfIsPinned: boolean;
+  fcfIsOfficer: boolean;
+  fcfIsHidden: boolean;
+  fcfCreatedAt: string;
+}
+
+export interface FanClubCreateMemoryReq {
+  fcmReqTitle: string;
+  fcmReqDescription?: string | null;
+  fcmReqMediaUrls: string[];
+}
+
+export interface FanClubMemoryReportReq {
+  fcmrReqReason: string;
+}
+
+export interface FanClubMemberProfileUpdate {
+  fcmpuHandle?: string | null;
+  fcmpuBio?: string | null;
+  fcmpuAvatarUrl?: string | null;
+}

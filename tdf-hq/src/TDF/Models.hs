@@ -795,4 +795,4 @@ FanClubMemoryReport
     reason           Text
     createdAt        UTCTime default=now()
     deriving Show Generic
-|]},{
+|]

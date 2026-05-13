@@ -11,6 +11,7 @@ module TDF.Server.SocialSync
   , validateSocialSyncIngestSource
   , validateSocialSyncCaption
   , validateSocialSyncPermalink
+  , validateSocialSyncPermalinkForPlatform
   , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
   , validateSocialSyncTagFilter
@@ -265,7 +266,7 @@ validateSocialSyncPostPayload payload = do
   externalPostId <- validateSocialSyncExternalPostId (sspExternalPostId payload)
   ingestSrc <- validateSocialSyncIngestSource (sspIngestSource payload)
   caption <- validateSocialSyncCaption (sspCaption payload)
-  permalink <- validateSocialSyncPermalink (sspPermalink payload)
+  permalink <- validateSocialSyncPermalinkForPlatform platform (sspPermalink payload)
   mediaUrls <- validateSocialSyncMediaUrls (sspMediaUrls payload)
   validateSocialSyncMetricCounts payload
   artistPartyId <- traverse validateSocialSyncArtistPartyKey (sspArtistPartyId payload)
@@ -477,6 +478,48 @@ validateSocialSyncPermalink (Just rawUrl) =
                 BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public https URL")
             }
       | otherwise -> Right (Just url)
+
+validateSocialSyncPermalinkForPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncPermalinkForPlatform rawPlatform rawPermalink = do
+  platform <- validateSocialSyncPlatform rawPlatform
+  permalink <- validateSocialSyncPermalink rawPermalink
+  validateSocialSyncPermalinkPlatform platform permalink
+
+validateSocialSyncPermalinkPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncPermalinkPlatform _ Nothing = Right Nothing
+validateSocialSyncPermalinkPlatform platform (Just url)
+  | permalinkMatchesSocialSyncPlatform platform url = Right (Just url)
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "permalink must match the declared platform domain")
+        }
+
+permalinkMatchesSocialSyncPlatform :: Text -> Text -> Bool
+permalinkMatchesSocialSyncPlatform platform url =
+  case socialSyncPublicHttpsHost url of
+    Nothing -> False
+    Just host ->
+      case platform of
+        "instagram" -> hostMatches "instagram.com" host
+        "facebook"  -> hostMatches "facebook.com" host || hostMatches "fb.watch" host
+        _           -> False
+
+hostMatches :: Text -> Text -> Bool
+hostMatches root host =
+  host == root || ("." <> root) `T.isSuffixOf` host
+
+socialSyncPublicHttpsHost :: Text -> Maybe Text
+socialSyncPublicHttpsHost rawUrl =
+  let trimmed = T.strip rawUrl
+      lowerUrl = T.toLower trimmed
+  in case T.stripPrefix "https://" lowerUrl of
+       Nothing -> Nothing
+       Just remainder ->
+         let authority = T.takeWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') remainder
+             host = T.takeWhile (/= ':') authority
+         in if T.null host then Nothing else Just host
 
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing

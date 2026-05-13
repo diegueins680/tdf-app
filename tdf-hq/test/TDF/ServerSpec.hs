@@ -11519,6 +11519,31 @@ spec = describe "TDF.Server helpers" $ do
                     (Just ["http://cdn.example.com/post.jpg"])
                 )
 
+        it "keeps social sync permalinks tied to the declared platform domain" $ do
+            SocialSync.validateSocialSyncPermalinkForPlatform
+                "instagram"
+                (Just " https://www.instagram.com/p/post42/ ")
+                `shouldBe` Right (Just "https://www.instagram.com/p/post42/")
+            SocialSync.validateSocialSyncPermalinkForPlatform
+                "facebook"
+                (Just "https://fb.watch/post42/")
+                `shouldBe` Right (Just "https://fb.watch/post42/")
+
+            let assertInvalid platform rawUrl =
+                    case SocialSync.validateSocialSyncPermalinkForPlatform platform (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "permalink must match the declared platform domain"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected cross-platform social sync permalink to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "instagram" "https://www.facebook.com/tdf/posts/42"
+            assertInvalid "facebook" "https://www.instagram.com/p/post42/"
+            assertInvalid "instagram" "https://instagram.com.evil.example/p/post42/"
+
     describe "hasSocialSyncAccess" $ do
         it "denies baseline and non-admin staff sessions" $ do
             hasSocialSyncAccess (mkUser [Fan, Customer]) `shouldBe` False
