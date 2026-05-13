@@ -943,6 +943,27 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
   return strippedTitle === normalizedTitle ? trimmedTitle : strippedTitle || trimmedSlug;
 };
 
+const dedupeRepeatedCohortTitleSegments = (title: string) => {
+  const trimmedTitle = title.trim();
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const parts = normalizedTitle
+    .split(/\s*(?:[-:/|])\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length < 2) return trimmedTitle;
+
+  const uniqueParts: string[] = [];
+  parts.forEach((part) => {
+    const partKey = normalizeCohortLabelKey(part);
+    if (!partKey || uniqueParts.some((uniquePart) => normalizeCohortLabelKey(uniquePart) === partKey)) return;
+    uniqueParts.push(part);
+  });
+
+  if (uniqueParts.length === parts.length) return trimmedTitle;
+  return uniqueParts.join(' - ');
+};
+
 const firstRunApplicationDescriptorPrefixPattern =
   /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|(?:student\s+|course\s+)?admissions?\s+packets?|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n|admisi[oó]n|admisiones|ingreso)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1535,7 +1556,7 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const fallbackLabel = readableCohortFallbackLabel(slug);
   if (!title) return fallbackLabel;
 
-  const strippedTitle = stripTrailingCohortSlug(title, slug);
+  const strippedTitle = dedupeRepeatedCohortTitleSegments(stripTrailingCohortSlug(title, slug));
   const displayTitle = strippedTitle || fallbackLabel;
   if (!slug) return displayTitle;
 
@@ -1559,7 +1580,7 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
   );
-  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(strippedLabel);
+  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(dedupeRepeatedCohortTitleSegments(strippedLabel));
   if (!displayLabel) return fallbackLabel;
   if (normalizeCohortLabelKey(displayLabel) === normalizeCohortLabelKey(slug)) {
     if (hasCohortTitleFormattingWorthPreserving(displayLabel)) return displayLabel;

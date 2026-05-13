@@ -19,6 +19,7 @@ module TDF.ServerFanClub
   , validateFanClubVoteCandidacyTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubOfficerRoleInput
+  , validateFanClubMemoryPathId
   ) where
 
 import           Control.Monad          (forM, forM_, when, unless, void)
@@ -26,8 +27,11 @@ import           Control.Monad.Except   (MonadError, throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ask)
 import           Data.Int               (Int64)
-import           Data.List              (nub)
-import           Data.Maybe             (isJust, mapMaybe)
+import           Data.List              (nub, sortOn)
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Maybe             (isJust, mapMaybe, catMaybes, fromMaybe)
+import           Data.Ord               (Down(..))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
@@ -52,6 +56,7 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , FanClubCandidacy(..), FanClubVote(..), FanClubPost(..), FanClubPostId
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
                                          , Party(..), PartyId, FanFollow(..), FanProfile(..)
+                                         , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryReport(..)
                                          , Unique(..), FanClubElectionId, FanClubCandidacyId)
 import qualified TDF.Models             as M
 
@@ -125,6 +130,7 @@ fanClubSecureListMyClubs user = runDB $ do
 
 fanClubSecureArtistHandlers :: AuthedUser -> Int64 ->
   ( AppM FanClubDTO
+  :<|> AppM [FanClubFeedItemDTO]
   :<|> AppM [FanClubPostDTO]
   :<|> (FanClubCreatePostReq -> AppM FanClubPostDTO)
   :<|> (Int64 -> AppM NoContent)
@@ -137,9 +143,19 @@ fanClubSecureArtistHandlers :: AuthedUser -> Int64 ->
   :<|> (FanClubCreateElectionReq -> AppM FanClubElectionDTO)
   :<|> (Int64 -> FanClubCreateCandidacyReq -> AppM FanClubCandidacyDTO)
   :<|> (Int64 -> FanClubVoteReq -> AppM NoContent)
+  :<|> AppM [FanClubMemoryDTO]
+  :<|> (FanClubCreateMemoryReq -> AppM FanClubMemoryDTO)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> FanClubMemoryReportReq -> AppM FanClubMemoryReportDTO)
+  :<|> AppM [FanClubMemberProfileDTO]
+  :<|> AppM FanClubMemberProfileDTO
+  :<|> (FanClubMemberProfileUpdate -> AppM FanClubMemberProfileDTO)
   )
 fanClubSecureArtistHandlers user artistId =
        getClubDetail artistId
+  :<|> listClubFeed artistId
   :<|> listClubPosts artistId
   :<|> createClubPost artistId
   :<|> pinPost artistId
@@ -152,6 +168,15 @@ fanClubSecureArtistHandlers user artistId =
   :<|> createClubElection artistId
   :<|> createCandidacy artistId
   :<|> castVote artistId
+  :<|> listClubMemories artistId
+  :<|> createClubMemory artistId
+  :<|> hideMemory artistId
+  :<|> unhideMemory artistId
+  :<|> deleteMemory artistId
+  :<|> reportMemory artistId
+  :<|> listMemberProfiles artistId
+  :<|> getMyMemberProfile artistId
+  :<|> updateMyMemberProfile artistId
   where
     getClubDetail aId = do
       artistKey <- requireArtistKey aId
@@ -169,6 +194,71 @@ fanClubSecureArtistHandlers user artistId =
             , fcOfficers = officers
             , fcFollowerCount = fromIntegral followerCount
             }
+
+    listClubFeed aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            officers <- selectList [M.FanClubOfficerClubId ==. cid] []
+            let officerIds = map (fromSqlKey . fanClubOfficerFanPartyId . entityVal) officers
+            posts <- selectList
+              [ M.FanClubPostClubId ==. cid
+              , M.FanClubPostParentId ==. Nothing
+              ] [Desc M.FanClubPostCreatedAt]
+            memories <- selectList
+              [ M.FanClubMemoryIsDeleted ==. False
+              ] [Desc M.FanClubMemoryCreatedAt]
+            let memoryMemberIds = map (fanClubMemoryMemberProfileId . entityVal) memories
+            memberProfiles <- selectList [M.FanClubMemberProfileId <-. memoryMemberIds] []
+            let memberProfileMap = foldl (\m (Entity mpid mp) -> Map.insert mpid mp m) Map.empty memberProfiles
+            let validMemories = filter (\(Entity _ m) ->
+                  case Map.lookup (fanClubMemoryMemberProfileId m) memberProfileMap of
+                    Just mp -> fanClubMemberProfileClubId mp == cid
+                    Nothing -> False
+                  ) memories
+            postItems <- forM posts $ \(Entity pid p) -> do
+              author <- getAuthorDTO (fanClubPostFanPartyId p)
+              let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
+              pure FanClubFeedItemDTO
+                { fcfId = fromSqlKey pid
+                , fcfKind = "post"
+                , fcfTitle = fanClubPostTitle p
+                , fcfContent = fanClubPostContent p
+                , fcfAuthorId = fromSqlKey (fanClubPostFanPartyId p)
+                , fcfAuthorName = sppDisplayName author
+                , fcfAvatarUrl = sppAvatarUrl author
+                , fcfMediaUrls = []
+                , fcfIsPinned = fanClubPostIsPinned p
+                , fcfIsOfficer = isOfficer
+                , fcfIsHidden = fanClubPostIsHidden p
+                , fcfCreatedAt = fanClubPostCreatedAt p
+                }
+            memoryItems <- forM validMemories $ \(Entity mid m) -> do
+              let mprofile = Map.lookup (fanClubMemoryMemberProfileId m) memberProfileMap
+              case mprofile of
+                Nothing -> pure Nothing
+                Just mp -> do
+                  author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
+                  let isOfficer = fromSqlKey (fanClubMemberProfilePartyId mp) `elem` officerIds
+                  pure $ Just FanClubFeedItemDTO
+                    { fcfId = fromSqlKey mid
+                    , fcfKind = "memory"
+                    , fcfTitle = Just (fanClubMemoryTitle m)
+                    , fcfContent = fromMaybe "" (fanClubMemoryDescription m)
+                    , fcfAuthorId = fromSqlKey (fanClubMemberProfilePartyId mp)
+                    , fcfAuthorName = sppDisplayName author
+                    , fcfAvatarUrl = sppAvatarUrl author
+                    , fcfMediaUrls = maybe [] (T.splitOn ",") (fanClubMemoryMediaUrls m)
+                    , fcfIsPinned = False
+                    , fcfIsOfficer = isOfficer
+                    , fcfIsHidden = fanClubMemoryIsHidden m
+                    , fcfCreatedAt = fanClubMemoryCreatedAt m
+                    }
+            let allItems = postItems ++ catMaybes memoryItems
+            pure $ sortOn (Down . fcfIsOfficer &&& Down . fcfCreatedAt) allItems
 
     listClubPosts aId = do
       artistKey <- requireArtistKey aId

@@ -768,4 +768,31 @@ FanClubEvent
     createdByPartyId  PartyId Maybe
     createdAt         UTCTime default=now()
     deriving Show Generic
-|]
+
+FanClubMemberProfile
+    partyId          PartyId
+    clubId           FanClubId
+    handle           Text Maybe
+    bio              Text Maybe
+    avatarUrl        Text Maybe
+    joinedAt         UTCTime default=now()
+    UniqueFanClubMemberProfile partyId clubId
+    deriving Show Generic
+
+FanClubMemory
+    memberProfileId  FanClubMemberProfileId
+    title            Text
+    description      Text Maybe
+    mediaUrls        Text Maybe
+    isHidden         Bool default=False
+    isDeleted        Bool default=False
+    createdAt        UTCTime default=now()
+    deriving Show Generic
+
+FanClubMemoryReport
+    reporterId       PartyId
+    memoryId         FanClubMemoryId
+    reason           Text
+    createdAt        UTCTime default=now()
+    deriving Show Generic
+|]},{

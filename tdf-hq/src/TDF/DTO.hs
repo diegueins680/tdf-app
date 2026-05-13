@@ -820,6 +820,79 @@ data FanClubVoteDTO = FanClubVoteDTO
   } deriving (Show, Generic)
 instance ToJSON FanClubVoteDTO
 
+data FanClubMemberProfileDTO = FanClubMemberProfileDTO
+  { fcmpId          :: Int64
+  , fcmpPartyId     :: Int64
+  , fcmpClubId      :: Int64
+  , fcmpHandle      :: Maybe Text
+  , fcmpBio         :: Maybe Text
+  , fcmpAvatarUrl   :: Maybe Text
+  , fcmpDisplayName :: Text
+  , fcmpJoinedAt    :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemberProfileDTO
+
+data FanClubMemoryDTO = FanClubMemoryDTO
+  { fcmId          :: Int64
+  , fcmMemberProfileId :: Int64
+  , fcmMemberName  :: Text
+  , fcmMemberAvatarUrl :: Maybe Text
+  , fcmTitle       :: Text
+  , fcmDescription :: Maybe Text
+  , fcmMediaUrls   :: [Text]
+  , fcmIsHidden    :: Bool
+  , fcmIsDeleted   :: Bool
+  , fcmCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemoryDTO
+
+data FanClubMemoryReportDTO = FanClubMemoryReportDTO
+  { fcmrId       :: Int64
+  , fcmrReporterId :: Int64
+  , fcmrMemoryId :: Int64
+  , fcmrReason   :: Text
+  , fcmrCreatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemoryReportDTO
+
+data FanClubFeedItemDTO = FanClubFeedItemDTO
+  { fcfId          :: Int64
+  , fcfKind        :: Text
+  , fcfTitle       :: Maybe Text
+  , fcfContent     :: Text
+  , fcfAuthorId    :: Int64
+  , fcfAuthorName  :: Text
+  , fcfAvatarUrl   :: Maybe Text
+  , fcfMediaUrls   :: [Text]
+  , fcfIsPinned    :: Bool
+  , fcfIsOfficer   :: Bool
+  , fcfIsHidden    :: Bool
+  , fcfCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubFeedItemDTO
+
+data FanClubCreateMemoryReq = FanClubCreateMemoryReq
+  { fcmReqTitle       :: Text
+  , fcmReqDescription :: Maybe Text
+  , fcmReqMediaUrls   :: [Text]
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateMemoryReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubMemoryReportReq = FanClubMemoryReportReq
+  { fcmrReqReason :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubMemoryReportReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubMemberProfileUpdate = FanClubMemberProfileUpdate
+  { fcmpuHandle    :: Maybe Text
+  , fcmpuBio       :: Maybe Text
+  , fcmpuAvatarUrl :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubMemberProfileUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
 data FanClubCreatePostReq = FanClubCreatePostReq
   { fcpReqTitle   :: Maybe Text
   , fcpReqContent :: Text

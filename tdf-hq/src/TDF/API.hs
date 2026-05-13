@@ -361,6 +361,7 @@ type FanSecureAPI =
   :<|> "me" :> "clubs" :> Get '[JSON] [FanClubDTO]
   :<|> "me" :> "clubs" :> Capture "artistId" Int64 :>
          ( Get '[JSON] FanClubDTO
+      :<|> "feed" :> Get '[JSON] [FanClubFeedItemDTO]
       :<|> "posts" :> Get '[JSON] [FanClubPostDTO]
       :<|> "posts" :> ReqBody '[JSON] FanClubCreatePostReq :> Post '[JSON] FanClubPostDTO
       :<|> "posts" :> Capture "postId" Int64 :> "pin" :> Post '[JSON] NoContent
@@ -373,6 +374,15 @@ type FanSecureAPI =
       :<|> "elections" :> ReqBody '[JSON] FanClubCreateElectionReq :> Post '[JSON] FanClubElectionDTO
       :<|> "elections" :> Capture "electionId" Int64 :> "candidacy" :> ReqBody '[JSON] FanClubCreateCandidacyReq :> Post '[JSON] FanClubCandidacyDTO
       :<|> "elections" :> Capture "electionId" Int64 :> "vote" :> ReqBody '[JSON] FanClubVoteReq :> Post '[JSON] NoContent
+      :<|> "memories" :> Get '[JSON] [FanClubMemoryDTO]
+      :<|> "memories" :> ReqBody '[JSON] FanClubCreateMemoryReq :> Post '[JSON] FanClubMemoryDTO
+      :<|> "memories" :> Capture "memoryId" Int64 :> "hide" :> Post '[JSON] NoContent
+      :<|> "memories" :> Capture "memoryId" Int64 :> "unhide" :> Post '[JSON] NoContent
+      :<|> "memories" :> Capture "memoryId" Int64 :> "delete" :> Post '[JSON] NoContent
+      :<|> "memories" :> Capture "memoryId" Int64 :> "report" :> ReqBody '[JSON] FanClubMemoryReportReq :> Post '[JSON] FanClubMemoryReportDTO
+      :<|> "member-profiles" :> Get '[JSON] [FanClubMemberProfileDTO]
+      :<|> "member-profiles" :> "me" :> Get '[JSON] FanClubMemberProfileDTO
+      :<|> "member-profiles" :> "me" :> ReqBody '[JSON] FanClubMemberProfileUpdate :> Put '[JSON] FanClubMemberProfileDTO
          )
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent

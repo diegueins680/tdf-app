@@ -17375,6 +17375,34 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates repeated first-run course title segments before showing the empty state', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101 - Beatmaking 101' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Beatmaking 101 - Beatmaking 101');
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(publicFormAction?.getAttribute('title')).toBe(
+        'Abrir formulario público de Beatmaking 101 en una pestaña nueva',
+      );
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the minimal single-result view focused on row actions instead of a standalone list refresh', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
