@@ -604,6 +604,10 @@ loadConfig = do
       "INSTAGRAM_MESSAGING_API_BASE"
       "https://graph.facebook.com/v20.0"
       igMsgBaseEnv
+  igAppToken <-
+    validateConfiguredGraphAccessToken "INSTAGRAM_APP_TOKEN" igTokenEnv
+  igMsgToken <-
+    validateConfiguredGraphAccessToken "INSTAGRAM_MESSAGING_TOKEN" igMsgTokenEnv
   igMsgAccountId <-
     validateConfiguredGraphNodeId
       (fmap (\value -> ("INSTAGRAM_MESSAGING_ACCOUNT_ID", value)) igMsgAccountEnv)
@@ -663,12 +667,10 @@ loadConfig = do
     , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
     , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
-    , instagramAppToken = igTokenEnv >>= nonEmpty . T.pack
+    , instagramAppToken = igAppToken
     , instagramGraphBase = igGraphBase
     , instagramMessagingToken =
-        case igMsgTokenEnv >>= nonEmpty . T.pack of
-          Just val -> Just val
-          Nothing -> igTokenEnv >>= nonEmpty . T.pack
+        igMsgToken <|> igAppToken
     , instagramMessagingAccountId = igMsgAccountId
     , instagramMessagingApiBase = igMsgBase
     , instagramVerifyToken = igVerifyTokenVal
@@ -1117,6 +1119,13 @@ validateConfiguredMetaVerifyToken (Just (envName, rawToken)) =
     Left msg -> fail msg
     Right token -> pure token
 
+validateConfiguredGraphAccessToken :: String -> Maybe String -> IO (Maybe Text)
+validateConfiguredGraphAccessToken _ Nothing = pure Nothing
+validateConfiguredGraphAccessToken envName (Just rawToken) =
+  case normalizeConfiguredGraphAccessToken envName rawToken of
+    Left msg -> fail msg
+    Right token -> pure token
+
 validateConfiguredOpenAiModel :: Maybe String -> IO Text
 validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
 validateConfiguredOpenAiModel (Just rawModel) =
@@ -1288,6 +1297,22 @@ normalizeConfiguredMetaVerifyToken envName rawToken
   | otherwise = Right (Just token)
   where
     token = T.strip (T.pack rawToken)
+
+normalizeConfiguredGraphAccessToken :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredGraphAccessToken envName rawToken
+  | T.null token = Right Nothing
+  | T.length token > 4096 =
+      Left (envName <> " must be 4096 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) token =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar token =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) token =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just token)
+  where
+    token = T.strip (T.pack rawToken)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl

@@ -2968,6 +2968,35 @@ main = hspec $ do
                     instagramAppToken cfg `shouldBe` Nothing
                     instagramMessagingToken cfg `shouldBe` Nothing
 
+        it "rejects malformed configured Instagram token fallbacks at startup" $ do
+            let assertInvalid envName rawToken expectedMessage =
+                    withEnvOverrides
+                        [ ( "INSTAGRAM_APP_TOKEN"
+                          , if envName == "INSTAGRAM_APP_TOKEN"
+                              then Just rawToken
+                              else Nothing
+                          )
+                        , ( "INSTAGRAM_MESSAGING_TOKEN"
+                          , if envName == "INSTAGRAM_MESSAGING_TOKEN"
+                              then Just rawToken
+                              else Nothing
+                          )
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "INSTAGRAM_APP_TOKEN"
+                "app token"
+                "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+                "INSTAGRAM_APP_TOKEN"
+                ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+                "INSTAGRAM_MESSAGING_TOKEN"
+                "tokené"
+                "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+
         it "falls back to configured Instagram sync tokens only after blank stored tokens are ignored" $ do
             selectInstagramSyncAccessToken (Just " account-token ") (Just " configured-token ")
                 `shouldBe` Just "account-token"
@@ -3095,7 +3124,7 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
 
-        it "rejects oversized configured fallback tokens before building Graph authorization headers" $
+        it "rejects oversized configured fallback tokens at startup" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)
                 , ( "INSTAGRAM_MESSAGING_TOKEN"
@@ -3104,32 +3133,20 @@ main = hspec $ do
                 , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
                 , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
                 ]
-                $ do
-                    cfg <- loadConfig
-                    sendInstagramTextWithContext
-                        cfg
-                        Nothing
-                        Nothing
-                        "recipient-1"
-                        "hola"
-                        `shouldReturn` Left "INSTAGRAM_MESSAGING_TOKEN must be 4096 characters or fewer"
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_MESSAGING_TOKEN must be 4096 characters or fewer"
+                        `isInfixOf` show (err :: IOException)
 
-        it "rejects hidden-format configured fallback tokens before building Graph authorization headers" $
+        it "rejects hidden-format configured fallback tokens at startup" $
             withEnvOverrides
                 [ ("INSTAGRAM_APP_TOKEN", Nothing)
                 , ("INSTAGRAM_MESSAGING_TOKEN", Just ("configured" <> ['\x202E'] <> "token"))
                 , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
                 , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
                 ]
-                $ do
-                    cfg <- loadConfig
-                    sendInstagramTextWithContext
-                        cfg
-                        Nothing
-                        Nothing
-                        "recipient-1"
-                        "hola"
-                        `shouldReturn` Left "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_MESSAGING_TOKEN must not contain hidden formatting characters"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed targeted Instagram context instead of falling back to configured credentials" $
             withEnvOverrides
