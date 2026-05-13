@@ -6405,6 +6405,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Acciones rápidas')).not.toBeInTheDocument();
   });
 
+  it('ignores no-action-required fallback cards so first-run users only open actionable modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-no-action',
+          title: 'Integraciones',
+          body: ['No action required.'],
+        },
+        {
+          cardId: 'credenciales-sin-accion',
+          title: 'Credenciales externas',
+          body: ['No se requiere acción administrativa.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No action required/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No se requiere acción administrativa/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
