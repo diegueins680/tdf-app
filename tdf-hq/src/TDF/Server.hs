@@ -26,7 +26,7 @@ import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_)
 import           Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAscii
   , isControl
@@ -5144,6 +5144,7 @@ isUnsafeMarketplaceBuyerNameChar :: Char -> Bool
 isUnsafeMarketplaceBuyerNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 validateCourseRegistrationUrlField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCourseRegistrationUrlField _ Nothing = Right Nothing

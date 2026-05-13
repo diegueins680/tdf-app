@@ -8830,6 +8830,9 @@ spec = describe "TDF.Server helpers" $ do
                 ("Ada" <> T.singleton '\x200B' <> "Lovelace")
                 "Unicode formatting/separator characters"
             assertInvalid
+                ("Ada" <> T.singleton '\x00A0' <> "Lovelace")
+                "Unicode formatting/separator characters"
+            assertInvalid
                 ("Ada" <> T.singleton '\x202E' <> "ecalevoL")
                 "Unicode formatting/separator characters"
             assertInvalid
