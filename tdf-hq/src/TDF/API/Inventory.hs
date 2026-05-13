@@ -19,7 +19,7 @@ import           Servant.Multipart ( FileData
                                     , fdFileName
                                     , fdFileCType
                                     )
-import           Data.Char         ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+import           Data.Char         ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
                                     , generalCategory
                                     , isControl
                                     )
@@ -55,7 +55,7 @@ normalizeUploadName (Just rawValue) =
 validateUploadName :: Text -> Either Text (Maybe Text)
 validateUploadName rawName
   | T.any isUnsafeUploadNameChar rawName =
-      Left "Asset upload name must not contain control characters or Unicode formatting marks"
+      Left "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
   | T.any isPathSeparator rawName =
       Left "Asset upload name must not contain path separators"
   | T.null (imageExtension rawName) =
@@ -77,7 +77,7 @@ validateBrowserFileName :: FileData Tmp -> Either Text ()
 validateBrowserFileName file =
   let fileName = T.strip (fdFileName file)
   in if T.any isUnsafeUploadNameChar fileName
-       then Left "Uploaded file name must not contain control characters or Unicode formatting marks"
+       then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
        else if T.any isPathSeparator fileName
          then Left "Uploaded file name must not contain path separators"
          else Right ()
@@ -86,6 +86,7 @@ isUnsafeUploadNameChar :: Char -> Bool
 isUnsafeUploadNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 validateImageUpload :: Maybe Text -> FileData Tmp -> Either Text ()
 validateImageUpload nameTxt file = do
@@ -108,7 +109,7 @@ validateImageUpload nameTxt file = do
 allowedImageExtensions :: Text -> Either Text [Text]
 allowedImageExtensions rawContentType
   | T.any isUnsafeUploadNameChar rawContentType =
-      Left "Asset upload MIME type must not contain control characters or Unicode formatting marks"
+      Left "Asset upload MIME type must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
   | otherwise =
       case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
         "image/jpeg" -> Right [".jpg", ".jpeg"]

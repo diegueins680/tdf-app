@@ -35,6 +35,7 @@ import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRe
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
@@ -6504,6 +6505,47 @@ main = hspec $ do
                     err `shouldContain` "unknown fields"
                 Right parsed ->
                     expectationFailure ("Expected unexpected moment comment key to be rejected, got " <> show parsed)
+
+    describe "inventory asset image upload multipart parsing" $ do
+        it "rejects Unicode space lookalikes before storage filename fallbacks sanitize them" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String Inventory.AssetUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected invalid inventory asset upload metadata, got: "
+                                    <> Data.Text.unpack (fdFileName (Inventory.aufFile parsed))
+                                )
+
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "Front panel.png")]
+                    [mkEventImageFile "file" "front-panel.png"])
+                :: Either String Inventory.AssetUploadForm of
+                Left err ->
+                    expectationFailure ("Expected canonical asset upload form to parse, got: " <> err)
+                Right parsed ->
+                    Inventory.aufName parsed `shouldBe` Just "Front panel.png"
+
+            assertInvalid
+                "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    [("name", "front" <> Data.Text.singleton '\x00A0' <> "panel.png")]
+                    [mkEventImageFile "file" "front-panel.png"])
+            assertInvalid
+                "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" ("front" <> Data.Text.singleton '\x2007' <> "panel.png")])
+            assertInvalid
+                "Asset upload MIME type must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "front-panel.png")
+                        { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
+                    ])
 
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
