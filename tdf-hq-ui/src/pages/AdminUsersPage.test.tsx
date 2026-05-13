@@ -28,6 +28,7 @@ const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
 const ADMIN_USERS_AMBIGUOUS_EMPTY_STATE =
   'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION = 'Ver si hay cuentas inactivas';
+const ADMIN_USERS_RETURN_TO_ACTIVE_ACTION = 'Volver a usuarios activos';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -282,7 +283,8 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(container.textContent).not.toContain(ADMIN_USERS_EMPTY_STATE);
         expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
-        expect(container.textContent).toContain('Inactivos incluidos');
+        expect(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)).toHaveLength(1);
+        expect(container.textContent).not.toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario inactivo por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
@@ -290,6 +292,16 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).not.toContain('Cuando la lista crezca');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([201]);
+      });
+
+      await clickButton(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(false);
+        expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(1);
+        expect(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)).toHaveLength(0);
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -2525,6 +2537,9 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. Vista actual: solo usuarios inactivos.',
         );
+        expect(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)).toHaveLength(1);
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Ver 2 usuarios inactivos"]')).toBeNull();

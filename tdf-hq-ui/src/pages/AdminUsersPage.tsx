@@ -406,6 +406,7 @@ const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
 const INCLUDE_INACTIVE_SEARCH_FILTER_LABEL = 'Buscar también en inactivos';
 const INACTIVE_SEARCH_FILTER_ACTIVE_LABEL = 'Buscando en inactivos';
+const RETURN_TO_ACTIVE_USERS_ACTION = 'Volver a usuarios activos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -1084,7 +1085,9 @@ export default function AdminUsersPage() {
     && !hasStatusSearch
     && !hasConfirmedNoInactiveUsers
     && !hasConfirmedNoInactiveSearchMatches
+    && !showOnlyInactiveUsers
     && (hasMultipleUsers || (includeInactive && hasUsers));
+  const showReturnToActiveUsersAction = showOnlyInactiveUsers;
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
   const showReviewInactiveSingleUserAction =
@@ -1095,7 +1098,7 @@ export default function AdminUsersPage() {
     && hasUsers
     && !showSearchEmptyState
     && usersInCurrentSummary.length >= MIN_USERS_FOR_REFRESH;
-  const showHeaderActions = showInactiveFilterAction || showRefreshAction;
+  const showHeaderActions = showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
@@ -1475,6 +1478,11 @@ export default function AdminUsersPage() {
                     )}
                     label={inactiveFilterLabel}
                   />
+                )}
+                {showReturnToActiveUsersAction && (
+                  <Button size="small" variant="outlined" onClick={() => setIncludeInactive(false)}>
+                    {RETURN_TO_ACTIVE_USERS_ACTION}
+                  </Button>
                 )}
                 {showRefreshAction && (
                   <Tooltip title="Refrescar">
