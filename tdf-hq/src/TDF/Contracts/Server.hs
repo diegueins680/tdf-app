@@ -262,12 +262,24 @@ validateContractPayload _ =
 
 validateContractPayloadForPdf :: A.Value -> Either ServerError ()
 validateContractPayloadForPdf payload
+  | BL.length (A.encode payload) > fromIntegral maxContractPayloadBytes =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                "Contract payload must be "
+                  <> T.pack (show maxContractPayloadBytes)
+                  <> " bytes or fewer"
+        }
   | containsLatexVerbatimTerminator payload =
       Left err400
         { errBody = "Contract payload text must not include the LaTeX verbatim terminator"
         }
   | otherwise =
       Right ()
+
+maxContractPayloadBytes :: Int
+maxContractPayloadBytes = 256 * 1024
 
 containsLatexVerbatimTerminator :: A.Value -> Bool
 containsLatexVerbatimTerminator (A.String value) =

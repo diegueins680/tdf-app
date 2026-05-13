@@ -8742,6 +8742,20 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected unsafe contract payload key to be rejected, got: " <> show value)
 
+        it "rejects oversized contract payloads before storage or PDF rendering" $
+            case validateContractPayload
+                (A.object
+                    [ "kind" .= ("generic" :: Text)
+                    , "body" .= Data.Text.replicate (256 * 1024) "a"
+                    ]
+                ) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contract payload must be 262144 bytes or fewer"
+                Right value ->
+                    expectationFailure ("Expected oversized contract payload to be rejected, got: " <> show value)
+
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $
             validateContractSendPayload (A.object ["email" .= (" Sales@Example.com " :: Text)])
