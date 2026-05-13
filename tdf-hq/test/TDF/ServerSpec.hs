@@ -1074,7 +1074,7 @@ spec = describe "TDF.Server helpers" $ do
                     ]
 
     describe "parseMcpRequest" $ do
-        it "accepts canonical JSON-RPC 2.0 MCP requests" $
+        it "accepts canonical JSON-RPC 2.0 MCP requests" $ do
             case parseMcpRequest
                 ( object
                     [ "jsonrpc" .= ("2.0" :: T.Text)
@@ -1084,6 +1084,14 @@ spec = describe "TDF.Server helpers" $ do
                 ) of
                 Just _ -> pure ()
                 Nothing -> expectationFailure "Expected canonical MCP request to parse"
+            case parseMcpRequest
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("initialized" :: T.Text)
+                    ]
+                ) of
+                Just _ -> pure ()
+                Nothing -> expectationFailure "Expected initialized MCP notification to parse"
 
         it "rejects malformed JSON-RPC envelopes before MCP method fallback handling" $ do
             let assertInvalid payload =
@@ -1093,6 +1101,12 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure
                                 ("Expected malformed MCP request to be rejected, got: " <> show value)
             assertInvalid (object ["method" .= ("tools/list" :: T.Text)])
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
             assertInvalid
                 ( object
                     [ "jsonrpc" .= ("1.0" :: T.Text)

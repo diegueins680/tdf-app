@@ -451,16 +451,22 @@ parseMcpRequest = parseMaybe $ withObject "McpRequest" $ \o -> do
   version <- o .: "jsonrpc"
   when (version /= ("2.0" :: Text)) $
     fail "jsonrpc must be 2.0"
+  method <- o .: "method" >>= validateMcpNameField "method"
   reqId <- case AKeyMap.lookup "id" o of
-    Nothing -> pure Nothing
+    Nothing
+      | mcpMethodAllowsNotification method -> pure Nothing
+      | otherwise -> fail "id is required for MCP requests"
     Just Null -> fail "id must be omitted for notifications or a string/integral number for requests"
     Just value -> validateMcpIdValue value *> pure (Just value)
-  method <- o .: "method" >>= validateMcpNameField "method"
   mParams <- o .:? "params"
   case mParams of
     Nothing -> pure (McpRequest reqId method Nothing)
     Just value@(Object _) -> pure (McpRequest reqId method (Just value))
     Just _ -> fail "params must be an object"
+
+mcpMethodAllowsNotification :: Text -> Bool
+mcpMethodAllowsNotification "initialized" = True
+mcpMethodAllowsNotification _ = False
 
 validateMcpIdValue :: Value -> Parser ()
 validateMcpIdValue (Object _) = fail "id must be a string or integral number"
