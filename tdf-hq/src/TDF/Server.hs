@@ -965,15 +965,26 @@ whatsappWebhookServer =
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
-              _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
-                { fullName = Nothing
-                , email = Nothing
-                , phoneE164 = Just phone
-                , source = "whatsapp"
-                , howHeard = Just "whatsapp"
-                , utm = Nothing
-                }
-              let incomingMsg = entityVal incomingEntity
+              now <- liftIO getCurrentTime
+              let oneHourAgo = addUTCTime (-3600) now
+              recentCount <- liftIO $ flip runSqlPool envPool $
+                count
+                  [ ME.CourseRegistrationPhoneE164 ==. Just phone
+                  , ME.CourseRegistrationSource ==. "whatsapp"
+                  , ME.CourseRegistrationCreatedAt >=. oneHourAgo
+                  ]
+              if recentCount >= 3
+                then pure ()
+                else do
+                  _ <- createOrUpdateRegistration (productionCourseSlug envConfig) CourseRegistrationRequest
+                    { fullName = Nothing
+                    , email = Nothing
+                    , phoneE164 = Just phone
+                    , source = "whatsapp"
+                    , howHeard = Just "whatsapp"
+                    , utm = Nothing
+                    }
+                  let incomingMsg = entityVal incomingEntity
               (replyTxt, replyRes) <- sendWhatsappReply cfg phone
               liftIO $ flip runSqlPool envPool $ do
                 _ <- recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
