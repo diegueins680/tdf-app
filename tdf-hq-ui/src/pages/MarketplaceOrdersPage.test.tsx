@@ -2247,6 +2247,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'La búsqueda dejó una sola orden visible. Revísala aquí y usa Limpiar dentro del campo para volver a comparar pedidos.',
         );
+        expect(container.textContent).not.toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
         expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.textContent).toContain('Pedido: order-2');
         expect(container.textContent).toContain('Comprador: Grace Hopper');

@@ -406,7 +406,9 @@ export default function MarketplaceOrdersPage() {
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && !hasSearchInput && (orders.length > 1 || filtersDirty));
   const showPermissionNotice =
-    !ordersQuery.isLoading && !showFirstOrderEmptyState && !showSingleOrderFocusedState;
+    !ordersQuery.isLoading
+    && !showFirstOrderEmptyState
+    && !showSingleVisibleOrderSummary;
   const emptyOrdersMessage = showSearchOwnedFilterHelper
     ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
     : showSearchWithExtraFilters
