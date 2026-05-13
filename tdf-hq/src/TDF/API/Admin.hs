@@ -19,6 +19,7 @@ import           TDF.API.Types ( DropdownOptionCreate
                                 , UserAccountUpdate
                                 )
 import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, rejectUnknownFields, withObject, (.:!), (.:?))
+import           Data.Aeson.Types (Parser)
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KeyMap
 import           Data.Char      ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -172,10 +173,16 @@ data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
   } deriving (Show, Generic)
 
 instance FromJSON AdminWhatsAppSendRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 4
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    rejectNullOptionalField
+      "AdminWhatsAppSendRequest"
+      "replyToMessageId"
+      "replyToMessageId must be omitted instead of null"
+      value
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 4
+      , rejectUnknownFields = True
+      } value
 
 data AdminWhatsAppResendRequest = AdminWhatsAppResendRequest
   { awrrMessage :: Maybe Text
@@ -183,6 +190,11 @@ data AdminWhatsAppResendRequest = AdminWhatsAppResendRequest
 
 instance FromJSON AdminWhatsAppResendRequest where
   parseJSON value = do
+    rejectNullOptionalField
+      "AdminWhatsAppResendRequest"
+      "message"
+      "message must be omitted instead of null"
+      value
     request <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 4
       , rejectUnknownFields = True
@@ -195,6 +207,13 @@ instance FromJSON AdminWhatsAppResendRequest where
         in if T.null trimmedMessage
              then fail "message cannot be blank; omit message to resend the original text"
              else pure trimmedMessage
+
+rejectNullOptionalField :: String -> Text -> String -> Value -> Parser ()
+rejectNullOptionalField objectName fieldName message =
+  withObject objectName $ \o ->
+    case KeyMap.lookup (Key.fromText fieldName) o of
+      Just Null -> fail message
+      _         -> pure ()
 
 data WhatsAppMessageAdminDTO = WhatsAppMessageAdminDTO
   { wmdId                :: Int64

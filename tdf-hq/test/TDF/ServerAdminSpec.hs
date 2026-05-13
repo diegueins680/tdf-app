@@ -466,6 +466,13 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeWhatsAppSend
                 "{\"message\":\"Hola\",\"mode\":\"notify\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            case decodeWhatsAppSend
+                "{\"message\":\"Hola\",\"mode\":\"notify\",\"replyToMessageId\":null}" of
+                Left err ->
+                    err `shouldContain` "replyToMessageId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null reply target to be rejected, got: " <> show payload)
 
     describe "AdminWhatsAppResendRequest FromJSON" $ do
         it "accepts canonical admin wire keys for WhatsApp resends" $
@@ -477,6 +484,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
 
         it "rejects blank, prefixed, or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
             decodeWhatsAppResend "{\"message\":\"   \"}" `shouldSatisfy` isLeft
+            case decodeWhatsAppResend "{\"message\":null}" of
+                Left err ->
+                    err `shouldContain` "message must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null resend message to be rejected, got: " <> show payload)
             decodeWhatsAppResend "{\"awrrMessage\":\"Hola\"}" `shouldSatisfy` isLeft
             decodeWhatsAppResend "{\"message\":\"Hola\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
