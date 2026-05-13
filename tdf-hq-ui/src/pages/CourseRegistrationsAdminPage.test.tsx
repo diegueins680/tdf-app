@@ -16252,9 +16252,13 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips apply-now wrappers from first-run cohort copy', async () => {
     const titles = [
       'Apply now - Beatmaking 101',
+      'Register here - Beatmaking 101',
       'Beatmaking 101 - enroll now',
+      'Beatmaking 101 - sign up here',
       'Inscríbete ahora - Beatmaking 101',
+      'Regístrate aquí - Beatmaking 101',
       'Beatmaking 101 - regístrate ahora',
+      'Beatmaking 101 - inscríbete aquí',
     ];
 
     for (const title of titles) {
@@ -16270,7 +16274,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/apply now|enroll now|inscr[ií]bete ahora|reg[ií]strate ahora/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /apply now|register here|enroll now|sign up here|inscr[ií]bete ahora|reg[ií]strate aqu[ií]|reg[ií]strate ahora|inscr[ií]bete aqu[ií]/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
