@@ -5166,6 +5166,67 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No hay datos para mostrar/i)).not.toBeInTheDocument();
   });
 
+  it('ignores item-empty fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'integrations-items-empty',
+          title: 'Integraciones',
+          body: ['No items to display.'],
+        },
+        {
+          cardId: 'service-keys-empty',
+          title: 'Service keys',
+          body: ['No items to show yet.'],
+        },
+        {
+          cardId: 'credenciales-sin-elementos',
+          title: 'Credenciales externas',
+          body: ['No hay elementos para mostrar.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 4 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service keys')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No items to display/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No items to show/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay elementos para mostrar/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Service keys')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+  });
+
   it('ignores terse no-data fallback cards without hiding actionable setup copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
