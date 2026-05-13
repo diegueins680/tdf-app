@@ -945,13 +945,31 @@ const stripTrailingCohortSlug = (title: string, slug: string) => {
 
 const dedupeRepeatedCohortTitleSegments = (title: string) => {
   const trimmedTitle = title.trim();
-  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const trailingWrappedSegment = /^(.*?)\s*(?:\(|\[)\s*([^)\]]+)\s*(?:\)|\])$/.exec(trimmedTitle);
+  const leadingWrappedSegment = /^(?:\(|\[)\s*([^)\]]+)\s*(?:\)|\])\s*(.*)$/.exec(trimmedTitle);
+  let unwrappedTitle = trimmedTitle;
+
+  if (
+    trailingWrappedSegment
+    && normalizeCohortLabelKey(trailingWrappedSegment[1] ?? '')
+      === normalizeCohortLabelKey(trailingWrappedSegment[2] ?? '')
+  ) {
+    unwrappedTitle = (trailingWrappedSegment[1] ?? '').trim();
+  } else if (
+    leadingWrappedSegment
+    && normalizeCohortLabelKey(leadingWrappedSegment[1] ?? '')
+      === normalizeCohortLabelKey(leadingWrappedSegment[2] ?? '')
+  ) {
+    unwrappedTitle = (leadingWrappedSegment[2] ?? '').trim();
+  }
+
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(unwrappedTitle);
   const parts = normalizedTitle
     .split(/\s*(?:[-:/|])\s*/)
     .map((part) => part.trim())
     .filter(Boolean);
 
-  if (parts.length < 2) return trimmedTitle;
+  if (parts.length < 2) return unwrappedTitle;
 
   const uniqueParts: string[] = [];
   parts.forEach((part) => {
@@ -960,7 +978,7 @@ const dedupeRepeatedCohortTitleSegments = (title: string) => {
     uniqueParts.push(part);
   });
 
-  if (uniqueParts.length === parts.length) return trimmedTitle;
+  if (uniqueParts.length === parts.length) return unwrappedTitle;
   return uniqueParts.join(' - ');
 };
 
