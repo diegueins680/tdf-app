@@ -1138,6 +1138,7 @@ export default function AdminUsersPage() {
   const showInactiveUsersGroupLabel = showInactiveUsersList
     && !shouldCollapseInactiveUsers
     && !showInactiveOnlyScopeSummary;
+  const showInactiveUsersGroupHeader = showInactiveUsersGroupLabel || shouldCollapseInactiveUsers;
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
@@ -1594,39 +1595,42 @@ export default function AdminUsersPage() {
                 ))}
                 {showInactiveUsersGroup ? (
                   <>
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={1}
-                      justifyContent="space-between"
-                      alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    >
-                      {showInactiveUsersGroupLabel && (
-                        <Typography
-                          data-testid="admin-users-inactive-group-label"
-                          variant="overline"
-                          color="text.secondary"
-                        >
-                          {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
-                        </Typography>
-                      )}
-                      {shouldCollapseInactiveUsers && (
-                        <Button
-                          size="small"
-                          variant="text"
-                          onClick={() => setShowInactiveUsers((current) => !current)}
-                          aria-controls="admin-users-inactive-list"
-                          aria-expanded={showInactiveUsers}
-                          aria-label={showInactiveUsers
-                            ? `Ocultar ${inactiveUsersToggleTarget}`
-                            : `Ver ${inactiveUsersToggleTarget}`}
-                          title={showInactiveUsers ? undefined : collapsedInactiveUsersToggleTitle}
-                        >
-                          {showInactiveUsers
-                            ? expandedInactiveUsersToggleLabel
-                            : collapsedInactiveUsersToggleLabel}
-                        </Button>
-                      )}
-                    </Stack>
+                    {showInactiveUsersGroupHeader && (
+                      <Stack
+                        data-testid="admin-users-inactive-group-header"
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      >
+                        {showInactiveUsersGroupLabel && (
+                          <Typography
+                            data-testid="admin-users-inactive-group-label"
+                            variant="overline"
+                            color="text.secondary"
+                          >
+                            {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
+                          </Typography>
+                        )}
+                        {shouldCollapseInactiveUsers && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setShowInactiveUsers((current) => !current)}
+                            aria-controls="admin-users-inactive-list"
+                            aria-expanded={showInactiveUsers}
+                            aria-label={showInactiveUsers
+                              ? `Ocultar ${inactiveUsersToggleTarget}`
+                              : `Ver ${inactiveUsersToggleTarget}`}
+                            title={showInactiveUsers ? undefined : collapsedInactiveUsersToggleTitle}
+                          >
+                            {showInactiveUsers
+                              ? expandedInactiveUsersToggleLabel
+                              : collapsedInactiveUsersToggleLabel}
+                          </Button>
+                        )}
+                      </Stack>
+                    )}
                     {showInactiveUsersList && (
                       <Stack id="admin-users-inactive-list" spacing={1.5}>
                         {inactiveVisibleUsers.map((user) => (

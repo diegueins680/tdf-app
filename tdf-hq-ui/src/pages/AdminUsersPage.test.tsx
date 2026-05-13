@@ -2544,6 +2544,7 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)).toHaveLength(1);
         expect(container.textContent).not.toContain('Inactivos incluidos');
         expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-header"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 2 usuarios inactivos')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Ver 2 usuarios inactivos"]')).toBeNull();
@@ -2602,6 +2603,7 @@ describe('AdminUsersPage', () => {
         );
         expect(getPageGuidance(container)).not.toContain('Cuando la lista crezca');
         expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-header"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(0);
         expect(container.querySelector('button[aria-label="Ver 1 usuario inactivo"]')).toBeNull();
@@ -2728,6 +2730,7 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
         );
+        expect(container.querySelector('[data-testid="admin-users-inactive-group-header"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
