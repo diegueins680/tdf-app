@@ -23,7 +23,7 @@ module TDF.API.SocialEventsAPI
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAlphaNum
   , isAscii
@@ -149,7 +149,11 @@ validateUploadName :: Text -> Text -> Either Text ()
 validateUploadName label rawName
   | T.null (T.strip rawName) = Right ()
   | T.any isUnsafeUploadNameChar rawName =
-      Left (label <> " must not contain control characters or Unicode formatting marks")
+      Left
+        ( label
+            <> " must not contain control characters or Unicode formatting marks"
+            <> ", or non-ASCII spaces"
+        )
   | T.any isPathSeparator rawName =
       Left (label <> " must not contain path separators")
   | not (hasNonEmptyUploadBaseName rawName) =
@@ -168,6 +172,7 @@ isUnsafeUploadNameChar :: Char -> Bool
 isUnsafeUploadNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 hasNonEmptyUploadBaseName :: Text -> Bool
 hasNonEmptyUploadBaseName rawName =
@@ -188,7 +193,7 @@ validateImageUploadMetadata mName file
   | T.any isUnsafeUploadNameChar (fdFileCType file) =
       Left
         ( "Uploaded image MIME type must not contain control characters "
-            <> "or Unicode formatting marks"
+            <> "or Unicode formatting marks, or non-ASCII spaces"
         )
   | otherwise =
       let uploadMimeType = normalizeUploadMimeType (fdFileCType file)

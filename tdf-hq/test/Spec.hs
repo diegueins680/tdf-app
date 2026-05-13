@@ -6710,6 +6710,13 @@ main = hspec $ do
                     [("name", "poster\x202E\&final.png")]
                     [mkEventImageFile "file" "poster.png"])
             assertInvalid
+                ( "Uploaded image name must not contain control characters or Unicode formatting marks"
+                    <> ", or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    [("name", "poster" <> Data.Text.singleton '\x00A0' <> "final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
                 "Uploaded browser file name must not contain path separators"
                 (mkEventImageMultipart
                     []
@@ -6724,6 +6731,16 @@ main = hspec $ do
                 (mkEventImageMultipart
                     []
                     [mkEventImageFile "file" "poster\x200B\&final.png"])
+            assertInvalid
+                ( "Uploaded browser file name must not contain control characters or Unicode formatting marks"
+                    <> ", or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    []
+                    [ mkEventImageFile
+                        "file"
+                        ("poster" <> Data.Text.singleton '\x2007' <> "final.png")
+                    ])
             assertInvalid
                 "Uploaded image name must include a non-empty base name"
                 (mkEventImageMultipart
@@ -6780,6 +6797,15 @@ main = hspec $ do
                     []
                     [ (mkEventImageFile "file" "poster.png")
                         { fdFileCType = "image/png\n" }
+                    ])
+            assertInvalid
+                ( "Uploaded image MIME type must not contain control characters "
+                    <> "or Unicode formatting marks, or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
                     ])
             assertInvalid
                 "Uploaded image file name must include a supported image extension"
