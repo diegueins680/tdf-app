@@ -356,6 +356,7 @@ import TDF.Config
       instagramMessagingToken,
       instagramVerifyToken,
       loadConfig,
+      openAiApiKey,
       openAiEmbedModel,
       openAiModel,
       ragAvailabilityDays,
@@ -1449,6 +1450,34 @@ main = hspec $ do
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 257 "a"))
                 "OPENAI_MODEL must be 256 characters or fewer"
+
+        it "rejects malformed OpenAI API keys before bearer requests are built" $ do
+            withEnvOverrides
+                [ ("OPENAI_API_KEY", Just " sk-test_123 ") ]
+                $ do
+                    cfg <- loadConfig
+                    openAiApiKey cfg `shouldBe` Just "sk-test_123"
+
+            let assertInvalid rawKey expectedMessage =
+                    withEnvOverrides
+                        [ ("OPENAI_API_KEY", Just rawKey) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "sk test"
+                "OPENAI_API_KEY must not contain whitespace or control characters"
+            assertInvalid
+                "sk-test\nInjected: value"
+                "OPENAI_API_KEY must not contain whitespace or control characters"
+            assertInvalid
+                ("sk-test" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "OPENAI_API_KEY must not contain hidden formatting characters"
+            assertInvalid
+                "sk-tést"
+                "OPENAI_API_KEY must contain visible ASCII characters only"
+            assertInvalid
+                (Data.Text.unpack (Data.Text.replicate 4097 "a"))
+                "OPENAI_API_KEY must be 4096 characters or fewer"
 
         it "does not hide OpenAI billing failures behind model fallback retries" $ do
             shouldRetryWithFallbackModel

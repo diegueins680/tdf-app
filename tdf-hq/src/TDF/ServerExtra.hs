@@ -2642,7 +2642,9 @@ validatePageParams mPage mPageSize = do
     Just n
       | n < 1 || n > 100 -> Left err400 { errBody = "pageSize must be between 1 and 100" }
       | otherwise -> Right n
-  pure (pageNum, pageSize)
+  if pageNum - 1 > (maxBound :: Int) `div` pageSize
+    then Left err400 { errBody = "page is too large" }
+    else pure (pageNum, pageSize)
 
 validateInventoryPageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
 validateInventoryPageParams = validatePageParams

@@ -559,6 +559,8 @@ loadConfig = do
     validateConfiguredOpenAiModel openAiModelEnv
   openAiEmbedModelVal <-
     validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
+  openAiApiKeyVal <-
+    validateConfiguredOpenAiApiKey openAiKeyEnv
   ragTopKVal <- validatePositiveIntEnv "RAG_TOP_K" 8 ragTopKEnv
   ragChunkWordsVal <- validatePositiveIntEnv "RAG_CHUNK_WORDS" 220 ragChunkWordsEnv
   let ragChunkOverlapDefault = min 40 (ragChunkWordsVal - 1)
@@ -638,7 +640,7 @@ loadConfig = do
     , courseDefaultSlug = courseDefaultSlugVal
     , courseDefaultMapUrl = courseMapUrl
     , courseDefaultInstructorAvatar = courseInstructorAvatar
-    , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
+    , openAiApiKey = openAiApiKeyVal
     , openAiModel = openAiModelVal
     , openAiEmbedModel = openAiEmbedModelVal
     , chatKitWorkflowId = chatKitWorkflowIdVal
@@ -1076,11 +1078,34 @@ validateConfiguredOpenAiEmbedModel (Just rawModel)
   where
     model = T.toLower (T.strip (T.pack rawModel))
 
+validateConfiguredOpenAiApiKey :: Maybe String -> IO (Maybe Text)
+validateConfiguredOpenAiApiKey Nothing = pure Nothing
+validateConfiguredOpenAiApiKey (Just rawKey) =
+  case normalizeConfiguredOpenAiApiKey "OPENAI_API_KEY" rawKey of
+    Left msg -> fail msg
+    Right apiKey -> pure apiKey
+
 defaultOpenAiEmbedModel :: Text
 defaultOpenAiEmbedModel = "text-embedding-3-small"
 
 defaultOpenAiModel :: Text
 defaultOpenAiModel = "gpt-5-chat-latest"
+
+normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredOpenAiApiKey envName rawKey
+  | T.null apiKey = Right Nothing
+  | T.length apiKey > 4096 =
+      Left (envName <> " must be 4096 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) apiKey =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar apiKey =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) apiKey =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just apiKey)
+  where
+    apiKey = T.strip (T.pack rawKey)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
 
 normalizeConfiguredOpenAiModel :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiModel envName rawModel

@@ -1040,6 +1040,7 @@ spec = do
       assertInvalid "page must be greater than or equal to 1" (validatePageParams (Just (-2)) Nothing)
       assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 0))
       assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 101))
+      assertInvalid "page is too large" (validatePageParams (Just maxBound) (Just 100))
 
   describe "asset name/category normalization" $ do
     it "trims meaningful asset names and categories on create and update" $ do
