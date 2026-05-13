@@ -4539,6 +4539,23 @@ main = hspec $ do
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
 
+        it "rejects malformed optional Google Calendar text fields before sync can silently skip events" $ do
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"summary\":7}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"description\":\"ok\\u0000bad\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"location\":\"Sala\\u202E1\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+
         it "rejects duplicate Google Calendar event ids before sync fallback upserts" $
             ( eitherDecode
                 ( "{\"items\":[{\"id\":\"event-123\"},{\"id\":\" event-123 \"}]"

@@ -39,7 +39,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -303,6 +303,8 @@ validateGoogleCalendarPageItem idx (Object eventObj) = do
         (validateGoogleCalendarEventStatus rawStatus)
     Just _ ->
       fail (googleItemFieldLabel "status" <> " must be a string")
+  forM_ googleCalendarPageTextFields $
+    validateGoogleCalendarPageTextField idx eventObj
   pure eventId
   where
     googleItemFieldLabel fieldName =
@@ -311,6 +313,32 @@ validateGoogleCalendarPageItem idx (Object eventObj) = do
       googleItemFieldLabel fieldName <> ": " <> T.unpack msg
 validateGoogleCalendarPageItem idx _ =
   fail ("items[" <> show idx <> "] must be an event object")
+
+googleCalendarPageTextFields :: [Text]
+googleCalendarPageTextFields =
+  ["summary", "description", "location", "htmlLink"]
+
+validateGoogleCalendarPageTextField :: Int -> Object -> Text -> Parser ()
+validateGoogleCalendarPageTextField idx eventObj fieldName =
+  case AKeyMap.lookup (AKey.fromText fieldName) eventObj of
+    Nothing -> pure ()
+    Just Null -> pure ()
+    Just (String rawText)
+      | T.any isUnsupportedGoogleCalendarPageTextChar rawText ->
+          fail
+            ( fieldLabel
+                <> " must not contain unsupported control or formatting characters"
+            )
+      | otherwise -> pure ()
+    Just _ ->
+      fail (fieldLabel <> " must be a string")
+  where
+    fieldLabel = "items[" <> show idx <> "]." <> T.unpack fieldName
+
+isUnsupportedGoogleCalendarPageTextChar :: Char -> Bool
+isUnsupportedGoogleCalendarPageTextChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 data ParsedEvent = ParsedEvent
   { peGoogleId   :: Text
