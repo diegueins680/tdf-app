@@ -4464,12 +4464,27 @@ resolveMetaSenderLabels cfg channel senderIds = do
     Nothing -> pure Map.empty
     Just tok -> do
       manager <- pure sharedTlsManager
-      let uniqueIds = take 25 (Set.toList (Set.fromList (map T.strip senderIds)))
+      let uniqueIds = normalizeMetaSenderLabelIds senderIds
       pairs <- mapM (\sid -> do
         mLabel <- fetchMetaProfileLabel manager base tok channel sid
         pure (sid, mLabel)
         ) uniqueIds
       pure $ Map.fromList [ (sid, label) | (sid, Just label) <- pairs, not (T.null (T.strip label)) ]
+
+maxMetaSenderLabelIds :: Int
+maxMetaSenderLabelIds = 25
+
+normalizeMetaSenderLabelIds :: [Text] -> [Text]
+normalizeMetaSenderLabelIds =
+  take maxMetaSenderLabelIds . go Set.empty
+  where
+    go _ [] = []
+    go seen (rawSenderId : rest)
+      | T.null senderId = go seen rest
+      | senderId `Set.member` seen = go seen rest
+      | otherwise = senderId : go (Set.insert senderId seen) rest
+      where
+        senderId = T.strip rawSenderId
 
 validateSocialLimit :: Maybe Int -> Either ServerError Int
 validateSocialLimit Nothing = Right 100

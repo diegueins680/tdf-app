@@ -135,6 +135,7 @@ import TDF.ServerExtra (
     validateAssetPhotoUrlUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
+    normalizeMetaSenderLabelIds,
     validateSocialLimit,
     metaWebhookVerifyTokenCandidates,
     verifyMetaWebhook,
@@ -5070,6 +5071,22 @@ spec = do
                 expectationFailure ("Expected invalid social inbox limit error, got " <> show value)
       assertInvalid 0
       assertInvalid 201
+
+  describe "normalizeMetaSenderLabelIds" $
+    it "drops blank sender ids and preserves first-seen order before capped profile fallback lookups" $ do
+      let normalized =
+            normalizeMetaSenderLabelIds $
+              [ " z-last "
+              , "   "
+              , "a-first"
+              , "z-last"
+              ]
+                <> map (\n -> "id-" <> T.pack (show (n :: Int))) [1 .. 30]
+      take 3 normalized `shouldBe` ["z-last", "a-first", "id-1"]
+      length normalized `shouldBe` 25
+      last normalized `shouldBe` "id-23"
+      normalized `shouldSatisfy` all (not . T.null)
+      filter (== "z-last") normalized `shouldBe` ["z-last"]
 
   describe "social reply identifier validation" $ do
     it "normalizes omitted and explicit reply ids without inventing fallbacks" $ do
