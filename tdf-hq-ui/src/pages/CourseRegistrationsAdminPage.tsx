@@ -179,6 +179,7 @@ const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambi
 const markPaidOptionalFollowUpActionLabel = 'Agregar seguimiento';
 const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const paymentStatusMenuButtonLabel = 'Pago y estado';
 const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
 const customStatusFilterUnavailableMessage = 'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
@@ -657,6 +658,9 @@ const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: strin
     ? `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`
     : `Cambiar estado para ${targetLabel}`
 );
+
+const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
+  `Abrir opciones de pago y estado para ${targetLabel}`;
 
 const shouldUseDirectPendingRecoveryAction = (
   currentStatus: string,
@@ -5769,6 +5773,8 @@ export default function CourseRegistrationsAdminPage() {
                       && hasOnlyPendingRecoveryStatusAction(reg.crStatus)
                     );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
+                  const usePaymentStatusMenuLabel =
+                    showInlinePaymentWorkflowRowLabel && canOpenPaymentWorkflowFromStatus(reg.crStatus);
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
@@ -5890,6 +5896,8 @@ export default function CourseRegistrationsAdminPage() {
                           aria-label={
                             useDirectPendingRecoveryAction
                               ? `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`
+                              : usePaymentStatusMenuLabel
+                              ? paymentStatusMenuButtonAriaLabel(rowActionTarget)
                               : `Cambiar estado para ${rowActionTarget}`
                           }
                           aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
@@ -5906,8 +5914,8 @@ export default function CourseRegistrationsAdminPage() {
                         >
                           {useDirectPendingRecoveryAction
                             ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
-                            : showInlinePaymentWorkflowRowLabel && canOpenPaymentWorkflowFromStatus(reg.crStatus)
-                            ? openPaymentWorkflowLabel
+                            : usePaymentStatusMenuLabel
+                            ? paymentStatusMenuButtonLabel
                             : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
                         </Button>
                       )}

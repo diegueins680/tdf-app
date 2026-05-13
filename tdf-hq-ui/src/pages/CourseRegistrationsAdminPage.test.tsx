@@ -253,6 +253,9 @@ const mixedIdentityPaymentWorkflowDossierScopeHint =
 const mixedIdentityDossierLinkScopeHint =
   'Usa el nombre, el contacto o el número de registro para abrir expediente.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
+const paymentStatusMenuButtonLabel = 'Pago y estado';
+const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
+  `Abrir opciones de pago y estado para ${targetLabel}`;
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
 const initialEmptyStateMultiCohortMessage =
@@ -886,19 +889,21 @@ describe('CourseRegistrationsAdminPage', () => {
         dossierLinkScopeHint,
       )).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(0);
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countButtonsByText(container, 'Cambiar')).toBe(0);
       expect(countButtonsByText(container, 'Estado')).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Estado: Pendiente de pago');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper').textContent?.trim()).toBe('Grace Hopper');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe(openPaymentWorkflowLabel);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe(openPaymentWorkflowLabel);
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ada Lovelace')).textContent?.trim()).toBe(paymentStatusMenuButtonLabel);
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper')).textContent?.trim()).toBe(paymentStatusMenuButtonLabel);
     });
 
     await cleanup();
@@ -960,7 +965,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ada Lovelace')));
       await flushPromises();
       await flushPromises();
     });
@@ -1082,7 +1087,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ada Lovelace')));
       await flushPromises();
       await flushPromises();
     });
@@ -1603,8 +1608,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(countOccurrences(container, 'Sin nombre')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de registro #"]')).toHaveLength(2);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para registro #"]')).toHaveLength(2);
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para registro #"]')).toHaveLength(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
     });
 
     await act(async () => {
@@ -1704,7 +1710,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(3);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(3);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(3);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
     });
 
     await cleanup();
@@ -1737,7 +1745,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(countOccurrences(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(2);
     });
 
     await act(async () => {
@@ -1791,7 +1799,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Contacto pendiente en todas las inscripciones visibles.');
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
-      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(3);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(3);
     });
 
     await cleanup();
@@ -1832,16 +1840,16 @@ describe('CourseRegistrationsAdminPage', () => {
         getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.primary@example.com)'),
       ).toBeTruthy();
       expect(
-        getButtonByAriaLabel(container, 'Cambiar estado para Ana Torres (ana.primary@example.com)'),
+        getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ana Torres (ana.primary@example.com)')),
       ).toBeTruthy();
       expect(
         getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.alt@example.com · +593999000222)'),
       ).toBeTruthy();
       expect(
-        getButtonByAriaLabel(container, 'Cambiar estado para Ana Torres (ana.alt@example.com · +593999000222)'),
+        getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ana Torres (ana.alt@example.com · +593999000222)')),
       ).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper'))).toBeTruthy();
       expect(countOccurrences(container, 'Registro #101')).toBe(0);
       expect(countOccurrences(container, 'Registro #102')).toBe(0);
       expect(countOccurrences(container, 'Registro #103')).toBe(0);
@@ -1895,7 +1903,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         getButtonByAriaLabel(
           container,
-          'Cambiar estado para Ana Torres (ana.shared@example.com · +593999000222 · registro #101)',
+          paymentStatusMenuButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #101)'),
         ),
       ).toBeTruthy();
       expect(
@@ -1907,11 +1915,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         getButtonByAriaLabel(
           container,
-          'Cambiar estado para Ana Torres (ana.shared@example.com · +593999000222 · registro #102)',
+          paymentStatusMenuButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #102)'),
         ),
       ).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper'))).toBeTruthy();
       expect(countOccurrences(container, 'Registro #101')).toBe(1);
       expect(countOccurrences(container, 'Registro #102')).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(0);
@@ -8411,7 +8419,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain(`Creado: ${formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-')}`);
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
@@ -8445,9 +8454,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(contextSummary?.textContent).toContain(dossierLinkScopeHint);
       expect(contextSummary?.textContent).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Ada Lovelace"]')).toHaveLength(1);
-      expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
+      expect(container.querySelectorAll(`button[aria-label="${paymentStatusMenuButtonAriaLabel('Ada Lovelace')}"]`)).toHaveLength(1);
       expect(container.querySelectorAll('button[aria-label="Abrir expediente de Grace Hopper"]')).toHaveLength(1);
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Ada Lovelace')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
@@ -8494,7 +8504,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Registro #101')).toBe(0);
       expect(container.textContent).toContain('ada@example.com · +593999000111');
       expect(container.textContent).toContain('Fuente: instagram · Notas internas');
-      expect(container.querySelectorAll('button[aria-label="Cambiar estado para Ada Lovelace"]')).toHaveLength(1);
+      expect(container.querySelectorAll(`button[aria-label="${paymentStatusMenuButtonAriaLabel('Ada Lovelace')}"]`)).toHaveLength(1);
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
     });
 
@@ -11554,12 +11564,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ada Lovelace'))).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper'))).toBeTruthy();
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ada Lovelace')));
       await flushPromises();
       await flushPromises();
     });
@@ -11579,7 +11589,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper')));
       await flushPromises();
       await flushPromises();
     });
@@ -16858,7 +16868,8 @@ describe('CourseRegistrationsAdminPage', () => {
       ).not.toContain(paymentWorkflowDossierScopeHint);
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
-      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
     });
 
     await act(async () => {
