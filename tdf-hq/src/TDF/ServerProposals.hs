@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 module TDF.ServerProposals
   ( proposalsServer
@@ -53,7 +52,7 @@ import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool
 import           Servant
 import           System.Directory           (doesFileExist)
 import           System.FilePath            ((</>))
-import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
+import           Web.PathPieces             (fromPathPiece, toPathPiece)
 
 import           TDF.API.Proposals
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
@@ -101,7 +100,7 @@ proposalsServer user =
 
     getProposalH rawId = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
         Nothing -> throwError proposalNotFound
@@ -158,7 +157,7 @@ proposalsServer user =
 
     updateProposalH rawId ProposalUpdate{..} = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
         Nothing -> throwError proposalNotFound
@@ -209,7 +208,7 @@ proposalsServer user =
 
     listVersionsH rawId = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       ensureProposalExists proposalKey
       versions <- withPool $ selectList
         [ ME.ProposalVersionProposalId ==. proposalKey ]
@@ -218,7 +217,7 @@ proposalsServer user =
 
     createVersionH rawId ProposalVersionCreate{..} = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       _ <- ensureProposalExists proposalKey
       latex <- resolveLatex pvcLatex pvcTemplateKey
       notesVal <- either throwError pure (validateOptionalProposalNotes "notes" pvcNotes)
@@ -241,7 +240,7 @@ proposalsServer user =
 
     getVersionH rawId versionNumber = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       validVersionNumber <- either throwError pure (validateProposalVersionNumber versionNumber)
       ensureProposalExists proposalKey
       mVersion <- withPool $ selectFirst
@@ -253,7 +252,7 @@ proposalsServer user =
 
     proposalPdfH rawId mVersion = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       validVersion <- traverse (either throwError pure . validateProposalVersionNumber) mVersion
       mProposal <- withPool $ getEntity proposalKey
       case mProposal of
@@ -637,15 +636,23 @@ isSentStatus =
   where
     isSpace c = c == ' ' || c == '_' || c == '-'
 
-parseKey
-  :: forall record m.
-     ( PathPiece (Key record)
-     , MonadError ServerError m
-     )
+parseProposalKey
+  :: MonadError ServerError m
   => Text
-  -> m (Key record)
-parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  -> m (Key ME.Proposal)
+parseProposalKey raw =
+  case fromPathPiece raw of
+    Just key
+      | toPathPiece key == raw
+      , raw /= nilUuidPathPiece -> pure key
+    _ -> throwError invalidProposalIdentifier
+
+nilUuidPathPiece :: Text
+nilUuidPathPiece = "00000000-0000-0000-0000-000000000000"
+
+invalidProposalIdentifier :: ServerError
+invalidProposalIdentifier =
+  err400 { errBody = "Invalid proposal identifier" }
 
 withPool
   :: (MonadReader Env m, MonadIO m)

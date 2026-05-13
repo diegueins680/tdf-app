@@ -3,6 +3,7 @@
 
 module TDF.ServerProposalsSpec (spec) where
 
+import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
@@ -29,6 +30,26 @@ type ProposalTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
 spec = describe "TDF.ServerProposals proposal versions" $ do
+  it "rejects malformed, nil, or non-canonical proposal ids before proposal lookups" $
+    forM_
+      [ "not-a-uuid"
+      , "00000000-0000-0000-0000-000000000000"
+      , "550E8400-E29B-41D4-A716-446655440000"
+      ] $ \rawId -> do
+        result <-
+          runProposalTest $
+            listVersionsHandlerFor
+              (mkUser [Admin])
+              rawId
+
+        case result of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` "Invalid proposal identifier"
+          Right versions ->
+            expectationFailure
+              ("Expected invalid proposal id lookup to fail, got versions: " <> show versions)
+
   it "rejects missing proposals instead of returning an empty version list" $ do
     result <-
       runProposalTest $
