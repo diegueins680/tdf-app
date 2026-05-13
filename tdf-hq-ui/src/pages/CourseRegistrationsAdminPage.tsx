@@ -151,7 +151,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   const preview = formatInitialCohortPreview(labels);
   if (preview) {
     if (count > 1 && countInitialCohortPreviewLabels(labels) === 1) {
-      return `Hay ${count} formularios públicos para ${preview} listos para recibir la primera inscripción.`;
+      return `Hay ${count} variantes públicas de ${preview} listas para recibir la primera inscripción.`;
     }
     return `Hay ${count} formularios públicos listos para recibir la primera inscripción: ${preview}.`;
   }
@@ -159,7 +159,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
 };
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
-const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante pública';
+const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
