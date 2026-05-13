@@ -353,6 +353,7 @@ import TDF.Server
     , resolveDriveUploadMimeType
     , validateDriveUploadFileSize
     , formatDriveUploadFailure
+    , formatGoogleOAuthFailure
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , openAIChatRequestErrorMessage
@@ -5332,6 +5333,25 @@ spec = describe "TDF.Server helpers" $ do
                                 )
                         )
             formatted `shouldContain` "Drive upload failed with status 500. bad detail hidden"
+            formatted `shouldContain` "[truncated]"
+            formatted `shouldSatisfy` (notElem '\NUL')
+            formatted `shouldSatisfy` (notElem '\x202E')
+            formatted `shouldSatisfy` (notElem '\n')
+            length formatted `shouldSatisfy` (<= 560)
+
+    describe "formatGoogleOAuthFailure" $ do
+        it "bounds and sanitizes upstream OAuth failures before Drive or Calendar fallback handling" $ do
+            let formatted =
+                    formatGoogleOAuthFailure
+                        400
+                        ( BL.fromStrict $
+                            TE.encodeUtf8
+                                ( "invalid_grant\NULdetail\x202Ehidden\n"
+                                    <> T.replicate 700 "x"
+                                    :: Text
+                                )
+                        )
+            formatted `shouldContain` "Solicitud OAuth falló (400). invalid_grant detail hidden"
             formatted `shouldContain` "[truncated]"
             formatted `shouldSatisfy` (notElem '\NUL')
             formatted `shouldSatisfy` (notElem '\x202E')

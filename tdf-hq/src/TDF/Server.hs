@@ -2520,18 +2520,23 @@ requestGoogleToken manager form = do
     Right ok -> pure ok
   let codeStatus = statusCode (responseStatus resp)
   when (codeStatus >= 400) $ do
-    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
-        suffix = if null bodySnippet then "" else " " <> bodySnippet
     throwError err502
-      { errBody =
-          BL8.pack
-            ("Solicitud OAuth falló (" <> show codeStatus <> ")." <> suffix)
+      { errBody = BL8.pack (formatGoogleOAuthFailure codeStatus (responseBody resp))
       }
   token <- case eitherDecode (responseBody resp) of
     Left err ->
       throwError err502 { errBody = BL8.pack ("No se pudo parsear token: " <> err) }
     Right tok -> pure (tok :: GoogleToken)
   pure token
+
+formatGoogleOAuthFailure :: Int -> BL.ByteString -> String
+formatGoogleOAuthFailure oauthStatus responseBodyBytes =
+  "Solicitud OAuth falló (" <> show oauthStatus <> ")." <> suffix
+  where
+    rawSnippet =
+      T.take 2000 (TE.decodeUtf8With TEE.lenientDecode (BL.toStrict responseBodyBytes))
+    suffix =
+      maybe "" ((" " <>) . T.unpack) (sanitizeApiErrorMessage rawSnippet)
 
 loadDriveClientCreds :: AppM (Text, Text)
 loadDriveClientCreds = do
