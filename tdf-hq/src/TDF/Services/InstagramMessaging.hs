@@ -15,8 +15,8 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
-import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
+import           TDF.DB (sharedTlsManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
@@ -47,7 +47,7 @@ sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId b
         Left err ->
           pure (Left err)
         Right attempts -> do
-          manager <- newManager tlsManagerSettings
+          manager <- pure sharedTlsManager
           runAttempts manager cleanRecipientId cleanBody attempts []
 
 nonEmptyText :: Text -> Maybe Text

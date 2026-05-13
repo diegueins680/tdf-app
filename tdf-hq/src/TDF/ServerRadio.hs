@@ -49,9 +49,8 @@ import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc
                                          selectList, selectFirst, update)
 import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, errBody, throwError, (:<|>)(..))
-import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, newManager, parseRequest, responseBody,
+import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Data.UUID              (toText)
 import           Data.UUID.V4           (nextRandom)
 
@@ -62,7 +61,7 @@ import           TDF.API.Types          (RadioStreamDTO(..), RadioStreamUpsert(.
                                          RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
 import           TDF.Auth               (AuthedUser(..))
-import           TDF.DB                 (Env(..))
+import           TDF.DB                 (Env(..), sharedTlsManager)
 import           TDF.Models
 
 data StreamMetadata = StreamMetadata
@@ -791,7 +790,7 @@ radioServer user =
     importStreams RadioImportRequest{..} = do
       cleanedSources <- either throwError pure (validateRadioImportSources rirSources)
       cap <- either throwError pure (validateRadioImportLimit rirLimit)
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       fetchedResults <- liftIO $
         forM cleanedSources $ \src -> do
           res <- try (fetchSource manager src)
@@ -836,7 +835,7 @@ radioServer user =
               if onlyMissing
                 then filter (\(Entity _ RadioStream{..}) -> isNothing radioStreamName || isNothing radioStreamGenre) rows
                 else rows
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       results <- forM candidates $ \(Entity sid stream) -> do
         metaResult <- liftIO $ fetchStreamMetadata manager (radioStreamStreamUrl stream)
         case metaResult of
@@ -865,7 +864,7 @@ radioServer user =
     nowPlaying :: RadioNowPlayingRequest -> m RadioNowPlayingResult
     nowPlaying RadioNowPlayingRequest{..} = do
       streamUrl <- either throwError pure (validateRadioStreamUrl rnpStreamUrl)
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       result <- liftIO $ fetchNowPlaying manager streamUrl
       either throwError pure (resolveRadioNowPlayingFetchResult result)
 

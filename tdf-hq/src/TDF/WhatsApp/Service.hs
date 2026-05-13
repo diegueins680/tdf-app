@@ -15,8 +15,8 @@ import Data.Aeson (Value, object, (.=))
 import Data.Text (Text)
 import qualified Data.Text as T
 import System.Environment (lookupEnv)
-import Network.HTTP.Client (Manager, newManager)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Client (Manager)
+import TDF.DB (sharedTlsManager)
 import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
 import qualified TDF.Config as Config
@@ -46,7 +46,7 @@ data WhatsAppService = WhatsAppService
 
 mkWhatsAppService :: IO WhatsAppService
 mkWhatsAppService = do
-  mgr <- newManager tlsManagerSettings
+  mgr <- pure sharedTlsManager
   cfg <- loadWhatsAppConfig
   pure $ WhatsAppService mgr cfg
 

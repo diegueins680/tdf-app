@@ -198,8 +198,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
                                       )
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 import           TDF.RagStore        (retrieveRagContext)
-import           Network.HTTP.Client (Manager, RequestBody(..), Response, newManager, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Manager, RequestBody(..), Response, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
 import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
@@ -1906,7 +1905,7 @@ metaBackfillServer user payload = do
   unless (hasRole Admin user) $ throwError err403
   opts <- either throwError pure (validateMetaBackfillOptions payload)
   Env{envConfig} <- ask
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   rows <- runDB $
     selectList
       [ SocialSyncAccountPlatform ==. "instagram"
@@ -2052,7 +2051,7 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   fileSize <- liftIO (getFileSize (fdPayload duFile))
   either throwError pure (validateDriveUploadFileSize fileSize)
   mimeType <- either throwError pure (resolveDriveUploadMimeType (fdFileCType duFile))
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
@@ -2310,7 +2309,7 @@ driveTokenExchangeServer :: AuthedUser -> DriveTokenExchangeRequest -> AppM Driv
 driveTokenExchangeServer user payload = do
   either throwError pure (validateDriveAccess user)
   Env{envConfig} <- ask
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   (cid, secret) <- loadDriveClientCreds
   (codeVal, codeVerifierVal, redirectResolved) <-
     either throwError pure (validateDriveTokenExchangeRequest envConfig payload)
@@ -2328,7 +2327,7 @@ driveTokenRefreshServer :: AuthedUser -> DriveTokenRefreshRequest -> AppM DriveT
 driveTokenRefreshServer user payload = do
   either throwError pure (validateDriveAccess user)
   refreshTokenVal <- either throwError pure (validateDriveTokenRefreshRequest payload)
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   (cid, secret) <- loadDriveClientCreds
   token <- requestGoogleToken manager
     [ ("client_id", TE.encodeUtf8 cid)
@@ -2965,7 +2964,7 @@ calendarServer user =
       requireAdmin
       codeVal <- either throwError pure (validateCalendarAuthorizationCode code)
       (cid, sec, redirect) <- loadGoogleEnv redirectUri
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       token <- requestGoogleToken manager
         [ ("code", TE.encodeUtf8 codeVal)
         , ("client_id", TE.encodeUtf8 cid)
@@ -3103,7 +3102,7 @@ calendarServer user =
 
     refreshAccessToken :: Text -> Text -> Text -> Cal.GoogleCalendarConfig -> Text -> UTCTime -> AppM Cal.GoogleCalendarConfig
     refreshAccessToken cid sec redirect cfg rt now = do
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       token <- requestGoogleToken manager
         [ ("client_id", TE.encodeUtf8 cid)
         , ("client_secret", TE.encodeUtf8 sec)
@@ -3134,7 +3133,7 @@ calendarServer user =
 
     syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
     syncFromGoogle cfg fromTs toTs now = do
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       let token = Cal.googleCalendarConfigAccessToken cfg
       case token of
         Nothing -> throwError err401 { errBody = "No hay access_token para Google Calendar." }
@@ -9927,7 +9926,7 @@ callOpenAIChat cfg messages =
   case openAiApiKey cfg of
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
-      manager <- newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       reqBase <- parseRequest "https://api.openai.com/v1/chat/completions"
       let models = openAIChatModelCandidates (openAiModel cfg)
       tryModels manager reqBase key models Nothing
@@ -10096,7 +10095,7 @@ tidalAgentServer user TidalAgentRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest "https://api.openai.com/v1/chat/completions"
   let body = encode $ object
         [ "model" .= model
@@ -10149,7 +10148,7 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
     Just key -> pure key
   let userId = T.pack (show (fromSqlKey (auPartyId user)))
       apiBase = normalizeChatKitBase (chatKitApiBase cfg)
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chatkit/sessions"))
   let body = encode $ object
         [ "workflow" .= object ["id" .= workflowId]
@@ -10951,7 +10950,7 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
   totalCents <-
     either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
   (cid, sec, baseUrl) <- loadPaypalEnv
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   (ppOrderId, approvalUrl) <- createPaypalOrderRemote manager cid sec baseUrl totalCents currency nameTxt emailTxt
   orderId <- liftIO $ flip runSqlPool envPool $ do
     oid <- insert ME.MarketplaceOrder
@@ -11009,7 +11008,7 @@ capturePaypalOrder PaypalCaptureReq{..} = do
           (ME.marketplaceOrderPaypalOrderId order)
           paypalOrderId
       (cid, sec, baseUrl) <- loadPaypalEnv
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       PayPalCaptureOutcome statusTxt payerEmail <-
         capturePaypalOrderRemote manager cid sec baseUrl paypalOrderIdForCapture
       now <- liftIO getCurrentTime
@@ -11032,7 +11031,7 @@ capturePaypalOrder PaypalCaptureReq{..} = do
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastEnv
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   let amountTxt = T.pack (printf "%.2f" (fromIntegral totalCents / 100 :: Double))
       currencyTxt = T.toUpper (T.strip currency)
       (givenName, surname) = splitName name
@@ -11077,7 +11076,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
 datafastPaymentStatus :: DatafastEnv -> Text -> AppM DFPaymentStatus
 datafastPaymentStatus dfEnv resourcePathTxt = do
   resourcePath <- either throwError pure (validateDatafastResourcePath (Just resourcePathTxt))
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   let rp = T.unpack resourcePath
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
       basePath = baseUrlClean ++ rp

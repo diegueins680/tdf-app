@@ -10,8 +10,8 @@ module TDF.WhatsApp.Transport
 import           Data.Maybe (fromMaybe, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Network.HTTP.Client (Manager, newManager)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Manager)
+import           TDF.DB (sharedTlsManager)
 import           System.Environment (lookupEnv)
 
 import           TDF.WhatsApp.Client
@@ -36,7 +36,7 @@ data WhatsAppEnv = WhatsAppEnv
 
 loadWhatsAppEnv :: IO WhatsAppEnv
 loadWhatsAppEnv = do
-  manager <- newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   token <-
     validateOptionalEnvText normalizeWhatsAppAccessToken
       =<< firstNonEmptyAliasText "WhatsApp access token" ["WHATSAPP_TOKEN", "WA_TOKEN"]

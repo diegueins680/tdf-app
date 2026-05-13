@@ -55,8 +55,7 @@ import           System.IO                  (hPutStrLn, stderr)
 import           Text.Read                  (readMaybe)
 import           Database.Persist        hiding (Active)
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Header  (hAuthorization)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (urlEncode)
@@ -83,7 +82,7 @@ import           TDF.Auth
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
-import           TDF.DB                     (Env(..))
+import           TDF.DB                     (Env(..), sharedTlsManager)
 import           TDF.Config                 (AppConfig, assetsRootDir, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
 import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
@@ -4462,7 +4461,7 @@ resolveMetaSenderLabels cfg channel senderIds = do
   case mToken of
     Nothing -> pure Map.empty
     Just tok -> do
-      manager <- newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
       let uniqueIds = take 25 (Set.toList (Set.fromList (map T.strip senderIds)))
       pairs <- mapM (\sid -> do
         mLabel <- fetchMetaProfileLabel manager base tok channel sid

@@ -41,8 +41,7 @@ import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
 import           Database.Persist.Sql       (runSqlPool)
 import           GHC.Generics               (Generic)
-import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (renderSimpleQuery)
 import           Servant
@@ -55,7 +54,7 @@ import           TDF.Config
   , normalizeConfiguredBaseUrl
   , resolveConfiguredAppBase
   )
-import           TDF.DB                     (Env(..))
+import           TDF.DB                     (Env(..), sharedTlsManager)
 import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
 
 data FacebookAccessToken = FacebookAccessToken
@@ -267,7 +266,7 @@ instagramOAuthServer user = exchangeHandler
       Env{envConfig, envPool} <- asks id
       (appId, appSecret) <- loadFacebookCreds envConfig
       redirectUri <- either throwError pure (resolveInstagramRedirectUri envConfig ioeRedirectUri)
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
 
       shortToken <- requestFacebookToken manager envConfig appId appSecret redirectUri ioeCode
       longToken <- requestLongLivedToken manager envConfig appId appSecret (fatAccessToken shortToken)

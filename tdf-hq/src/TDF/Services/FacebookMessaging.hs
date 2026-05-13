@@ -18,8 +18,8 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
-import           Network.HTTP.Client (Request(..), RequestBody(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
+import           TDF.DB (sharedTlsManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
@@ -33,7 +33,7 @@ sendFacebookText cfg recipientId body =
       case validateFacebookMessagingContext cfg of
         Left err -> pure (Left err)
         Right (token, pageId) -> do
-          manager <- newManager tlsManagerSettings
+          manager <- pure sharedTlsManager
           let base = T.dropWhileEnd (== '/') (facebookMessagingApiBase cfg)
               urlTxt = base <> "/" <> pageId <> "/messages"
           reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)

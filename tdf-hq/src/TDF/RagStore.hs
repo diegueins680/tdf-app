@@ -39,8 +39,7 @@ import           Data.Time.Format       (defaultTimeLocale, formatTime)
 import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
 import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
-import           Network.HTTP.Client    (Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus, RequestBody(..))
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
 import           System.IO              (hPutStrLn, stderr)
@@ -48,7 +47,7 @@ import           Text.Read              (readMaybe)
 import           Web.PathPieces         (toPathPiece)
 
 import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
-import           TDF.DB                 (ConnectionPool)
+import           TDF.DB                 (ConnectionPool, sharedTlsManager)
 import qualified TDF.Models             as M
 import qualified TDF.ModelsExtra        as ME
 import qualified TDF.Trials.Models      as Trials
@@ -806,7 +805,7 @@ hashToken dim token =
 callOpenAIEmbeddings :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 callOpenAIEmbeddings cfg inputs =
   callOpenAIEmbeddingsWith (\req -> do
-    manager <- newManager tlsManagerSettings
+    manager <- pure sharedTlsManager
     httpLbs req manager
   ) cfg inputs
 

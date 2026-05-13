@@ -77,8 +77,7 @@ import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, in
 import Database.PostgreSQL.Simple (SqlError (..))
 import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
-import Network.HTTP.Client (Manager, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
 import Network.HTTP.Types.URI (urlEncode)
 import Servant
@@ -97,7 +96,7 @@ import TDF.Auth (
     sessionCookieHeader,
   )
 import TDF.Config (AppConfig (..))
-import TDF.DB (Env (..))
+import TDF.DB (Env (..), sharedTlsManager)
 import TDF.DTO
 import qualified TDF.Email.Service as EmailSvc
 import qualified TDF.LogBuffer as LogBuf
@@ -563,7 +562,7 @@ googleLogin GoogleLoginRequest{..} = do
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
     throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Google Sign-In is not configured") }
-  manager <- liftIO $ newManager tlsManagerSettings
+  manager <- pure sharedTlsManager
   verification <- liftIO $ verifyGoogleIdToken manager tokenClean mClientId
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
