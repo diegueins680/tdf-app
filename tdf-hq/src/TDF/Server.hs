@@ -468,10 +468,17 @@ validateMcpIdValue (Array _)  = fail "id must be a string or integral number"
 validateMcpIdValue (Bool _)   = fail "id must be a string or integral number"
 validateMcpIdValue (String ident) = validateMcpIdString ident
 validateMcpIdValue (Number n)
-  | Sci.isInteger n = pure ()
-  | otherwise = fail "id number must be integral"
+  | not (Sci.isInteger n) = fail "id number must be integral"
+  | Just intValue <- (Sci.toBoundedInteger n :: Maybe Int64)
+  , intValue >= negate mcpMaxSafeIntegerId && intValue <= mcpMaxSafeIntegerId =
+      pure ()
+  | otherwise =
+      fail "id number must be within the JSON safe-integer range"
 validateMcpIdValue Null =
   fail "id must be omitted for notifications or a string/integral number for requests"
+
+mcpMaxSafeIntegerId :: Int64
+mcpMaxSafeIntegerId = 9007199254740991
 
 validateMcpIdString :: Text -> Parser ()
 validateMcpIdString ident = do

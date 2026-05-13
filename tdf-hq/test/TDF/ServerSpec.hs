@@ -1131,6 +1131,13 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ( object
                     [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "id" .= (9007199254740992 :: Integer)
+                    , "method" .= ("tools/list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
                     , "id" .= ("   " :: T.Text)
                     , "method" .= ("tools/list" :: T.Text)
                     ]
