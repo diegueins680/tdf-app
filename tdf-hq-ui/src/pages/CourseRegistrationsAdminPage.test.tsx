@@ -17176,6 +17176,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates first-run form labels that only add trailing punctuation', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101-main', ccTitle: 'Beatmaking 101.' },
+      { ccSlug: 'beatmaking-101-alt', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp-main', ccTitle: 'Mixing Bootcamp:' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Beatmaking 101.');
+      expect(emptyState?.textContent).not.toContain('Mixing Bootcamp:');
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps duplicate multi-cohort form variants out of the first-run preview', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

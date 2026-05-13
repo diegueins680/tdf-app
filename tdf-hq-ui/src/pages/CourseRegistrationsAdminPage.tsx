@@ -62,8 +62,10 @@ const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
+const cleanInitialCohortPreviewLabel = (label: string) =>
+  label.trim().replace(/\s*[.:;]+$/g, '').trim();
 const normalizeInitialCohortPreviewKey = (label: string) =>
-  label
+  cleanInitialCohortPreviewLabel(label)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
@@ -74,7 +76,7 @@ const uniqueInitialCohortLabels = (labels: readonly string[]) => {
   const uniqueLabelsByKey = new Map<string, string>();
 
   labels.forEach((label) => {
-    const trimmedLabel = label.trim();
+    const trimmedLabel = cleanInitialCohortPreviewLabel(label);
     if (!trimmedLabel) return;
 
     const labelKey = normalizeInitialCohortPreviewKey(trimmedLabel);
