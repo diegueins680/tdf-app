@@ -15,7 +15,9 @@ module TDF.ServerFanClub
   , validateFanClubElectionPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubCandidacyPathId
+  , validateFanClubVoteSelectionIds
   , validateFanClubVoteCandidacyTarget
+  , validateFanClubVoteCandidacyTargets
   , validateFanClubOfficerRoleInput
   ) where
 
@@ -24,6 +26,7 @@ import           Control.Monad.Except   (MonadError, throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ask)
 import           Data.Int               (Int64)
+import           Data.List              (nub)
 import           Data.Maybe             (isJust, mapMaybe)
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -380,9 +383,10 @@ fanClubSecureArtistHandlers user artistId =
       targetElection <- runDB $ lookupFanClubElectionMutationTarget aId electionKey
       _ <- either throwError pure targetElection
       candidacyKeys <- either throwError pure $
-        traverse validateFanClubCandidacyPathId (fcvCandidacyIds req)
+        validateFanClubVoteSelectionIds (fcvCandidacyIds req)
       candidacies <- runDB $ traverse (lookupFanClubVoteCandidacyTarget electionKey) candidacyKeys
-      resolvedCandidacies <- either throwError pure (sequence candidacies)
+      resolvedCandidacies <- either throwError pure $
+        sequence candidacies >>= validateFanClubVoteCandidacyTargets
       runDB $ do
         now <- liftIO getCurrentTime
         forM_ resolvedCandidacies $ \(cKey, cand) ->
@@ -599,6 +603,20 @@ validateFanClubCandidacyPathId rawCandidacyId
   | rawCandidacyId <= 0 = Left err400 { errBody = "Invalid fan club candidacy id" }
   | otherwise = Right (toSqlKey rawCandidacyId)
 
+validateFanClubVoteSelectionIds :: [Int64] -> Either ServerError [FanClubCandidacyId]
+validateFanClubVoteSelectionIds rawCandidacyIds
+  | null rawCandidacyIds =
+      Left err400 { errBody = "Fan club vote requires at least one candidacy id" }
+  | length rawCandidacyIds > maxFanClubVoteSelections =
+      Left err400 { errBody = "Fan club vote can include at most 5 candidacy ids" }
+  | length rawCandidacyIds /= length (nub rawCandidacyIds) =
+      Left err400 { errBody = "Fan club vote must not include duplicate candidacy ids" }
+  | otherwise =
+      traverse validateFanClubCandidacyPathId rawCandidacyIds
+
+maxFanClubVoteSelections :: Int
+maxFanClubVoteSelections = 5
+
 lookupFanClubVoteCandidacyTarget
   :: FanClubElectionId
   -> FanClubCandidacyId
@@ -620,6 +638,18 @@ validateFanClubVoteCandidacyTarget
 validateFanClubVoteCandidacyTarget electionId (Entity candidacyId candidacy)
   | fanClubCandidacyElectionId candidacy == electionId = Right candidacyId
   | otherwise = Left fanClubCandidacyNotFound
+
+validateFanClubVoteCandidacyTargets
+  :: [(FanClubCandidacyId, FanClubCandidacy)]
+  -> Either ServerError [(FanClubCandidacyId, FanClubCandidacy)]
+validateFanClubVoteCandidacyTargets targets
+  | length roles /= length (nub roles) =
+      Left err400
+        { errBody = "Fan club vote must select at most one candidacy per officer role" }
+  | otherwise =
+      Right targets
+  where
+    roles = map (fanClubCandidacyRole . snd) targets
 
 fanClubCandidacyNotFound :: ServerError
 fanClubCandidacyNotFound =

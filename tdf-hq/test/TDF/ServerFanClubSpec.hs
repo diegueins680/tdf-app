@@ -24,7 +24,9 @@ import TDF.ServerFanClub
   , validateFanClubElectionPathId
   , validateFanClubOfficerRoleInput
   , validateFanClubReplyParentTarget
+  , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
+  , validateFanClubVoteSelectionIds
   )
 
 spec :: Spec
@@ -80,6 +82,36 @@ spec = do
           (toSqlKey 21)
           (Entity (toSqlKey 30) (mkCandidacy 20))
 
+  describe "fan club vote ballot validation" $ do
+    it "requires a non-empty, deduplicated candidacy list before vote fallback inserts" $ do
+      fmap (map fromSqlKey) (validateFanClubVoteSelectionIds [30, 31])
+        `shouldBe` Right ([30, 31] :: [Int64])
+
+      assertRejected 400 "requires at least one candidacy id" $
+        validateFanClubVoteSelectionIds []
+      assertRejected 400 "duplicate candidacy ids" $
+        validateFanClubVoteSelectionIds [30, 30]
+      assertRejected 400 "at most 5 candidacy ids" $
+        validateFanClubVoteSelectionIds [1, 2, 3, 4, 5, 6]
+
+    it "rejects same-role ballot collisions before insertUnique can hide intent" $ do
+      let target candidacyId role =
+            (toSqlKey candidacyId, mkCandidacyWithRole 20 role)
+      case validateFanClubVoteCandidacyTargets
+        [ target 30 Coordinator
+        , target 31 Secretary
+        ] of
+          Right targets ->
+            map (fromSqlKey . fst) targets `shouldBe` ([30, 31] :: [Int64])
+          Left err ->
+            expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "at most one candidacy per officer role" $
+        validateFanClubVoteCandidacyTargets
+          [ target 30 Coordinator
+          , target 31 Coordinator
+          ]
+
   describe "validateFanClubReplyParentTarget" $ do
     it "requires reply parents to be top-level posts in the requested club" $ do
       case validateFanClubReplyParentTarget
@@ -123,10 +155,14 @@ mkElection clubId =
 
 mkCandidacy :: Int64 -> FanClubCandidacy
 mkCandidacy electionId =
+  mkCandidacyWithRole electionId Coordinator
+
+mkCandidacyWithRole :: Int64 -> FanClubOfficerRole -> FanClubCandidacy
+mkCandidacyWithRole electionId role =
   FanClubCandidacy
     { fanClubCandidacyElectionId = toSqlKey electionId
     , fanClubCandidacyFanPartyId = toSqlKey 40
-    , fanClubCandidacyRole = Coordinator
+    , fanClubCandidacyRole = role
     , fanClubCandidacyManifesto = Nothing
     , fanClubCandidacyCreatedAt = testTime
     }
