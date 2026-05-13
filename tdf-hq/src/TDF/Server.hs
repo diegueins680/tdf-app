@@ -6365,8 +6365,7 @@ listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
 listParties user mLimit mOffset = do
   requireModule user ModuleCRM
   Env pool _ <- ask
-  let limit = max 1 (min 500 (fromMaybe 200 mLimit))
-      offset = max 0 (fromMaybe 0 mOffset)
+  (limit, offset) <- either throwError pure (validatePartyListPagination mLimit mOffset)
   (entities, accountIds) <- liftIO $ flip runSqlPool pool $ do
     parts <- selectList [] [Asc PartyId, LimitTo limit, OffsetBy offset]
     let partyIds = map entityKey parts
@@ -7446,6 +7445,34 @@ normalizeOptionalInput Nothing = Nothing
 normalizeOptionalInput (Just raw) =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
+
+validatePartyListPagination :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
+validatePartyListPagination mLimit mOffset =
+  (,) <$> validatePartyListLimit mLimit <*> validatePartyListOffset mOffset
+
+validatePartyListLimit :: Maybe Int -> Either ServerError Int
+validatePartyListLimit Nothing = Right 200
+validatePartyListLimit (Just rawLimit)
+  | rawLimit < 1 || rawLimit > maxPartyListLimit =
+      Left err400 { errBody = "limit must be between 1 and 500" }
+  | otherwise =
+      Right rawLimit
+
+validatePartyListOffset :: Maybe Int -> Either ServerError Int
+validatePartyListOffset Nothing = Right 0
+validatePartyListOffset (Just rawOffset)
+  | rawOffset < 0 =
+      Left err400 { errBody = "offset must be greater than or equal to 0" }
+  | rawOffset > maxPartyListOffset =
+      Left err400 { errBody = "offset must be 10000 or fewer" }
+  | otherwise =
+      Right rawOffset
+
+maxPartyListLimit :: Int
+maxPartyListLimit = 500
+
+maxPartyListOffset :: Int
+maxPartyListOffset = 10000
 
 validatePositiveIdField :: Text -> Int64 -> Either ServerError Int64
 validatePositiveIdField fieldName rawId

@@ -152,6 +152,7 @@ import TDF.Server
     , validateUpdateBookingRequestHasChanges
     , validatePartyDisplayName
     , validatePartyDisplayNameUpdate
+    , validatePartyListPagination
     , validatePartyPrimaryEmail
     , validatePartyPrimaryEmailUpdate
     , validatePublicBookingDurationMinutes
@@ -890,6 +891,43 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid user-role id to be rejected, got: " <> show value)
             assertInvalid 0
             assertInvalid (-1)
+
+    describe "validatePartyListPagination" $ do
+        it "keeps CRM party list defaults only when pagination is omitted" $ do
+            validatePartyListPagination Nothing Nothing `shouldBe` Right (200, 0)
+            validatePartyListPagination (Just 1) (Just 0) `shouldBe` Right (1, 0)
+            validatePartyListPagination (Just 500) (Just 10000)
+                `shouldBe` Right (500, 10000)
+
+        it "rejects explicit out-of-range pagination instead of silently clamping CRM party queries" $ do
+            let assertLimitInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "limit must be between 1 and 500"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid party list limit to be rejected, got: " <> show value)
+                assertOffsetInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "offset must be greater than or equal to 0"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid party list offset to be rejected, got: " <> show value)
+                assertDeepOffsetInvalid result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "offset must be 10000 or fewer"
+                    Right value ->
+                        expectationFailure
+                            ("Expected deep party list offset to be rejected, got: " <> show value)
+            assertLimitInvalid (validatePartyListPagination (Just 0) Nothing)
+            assertLimitInvalid (validatePartyListPagination (Just 501) Nothing)
+            assertOffsetInvalid (validatePartyListPagination Nothing (Just (-1)))
+            assertDeepOffsetInvalid (validatePartyListPagination Nothing (Just 10001))
 
     describe "validateSessionInputLookup" $ do
         it "accepts exactly one public input-list session selector" $ do
