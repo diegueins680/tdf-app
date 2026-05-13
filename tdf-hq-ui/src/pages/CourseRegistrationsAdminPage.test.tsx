@@ -13743,9 +13743,14 @@ describe('CourseRegistrationsAdminPage', () => {
       'Course website - Beatmaking 101',
       'Course website for Beatmaking 101',
       'Beatmaking 101 - course website',
+      'Course microsite - Beatmaking 101',
+      'Microsite for Beatmaking 101',
+      'Beatmaking 101 - course microsite',
       'Página web del curso - Beatmaking 101',
       'Sitio web para Beatmaking 101',
+      'Micrositio del curso - Beatmaking 101',
       'Beatmaking 101 - sitio web del curso',
+      'Beatmaking 101 - micrositio del curso',
     ];
 
     for (const title of titles) {
@@ -13761,7 +13766,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/course website|p[aá]gina web|sitio web/i);
+        expect(emptyState?.textContent).not.toMatch(/course website|course microsite|microsite|micrositio|p[aá]gina web|sitio web/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
