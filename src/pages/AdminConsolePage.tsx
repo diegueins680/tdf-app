@@ -467,6 +467,7 @@ const BUILT_IN_ADMIN_CARD_TITLES = [
 const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'estamos trabajando en esta vista',
   'proximamente encontraras la funcionalidad completa aqui',
+  'proximamente aqui se podra',
   'si necesitas priorizar esta seccion',
   'comparte los requisitos con el equipo de producto',
   'working on this view',

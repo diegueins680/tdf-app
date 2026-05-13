@@ -6641,6 +6641,43 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('strips roadmap-only fallback filler from otherwise useful preview cards', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+            'Próximamente aquí se podrá crear usuarios de servicio y tokens API.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(
+      await screen.findByText(
+        /Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Próximamente aquí se podrá crear usuarios de servicio y tokens API\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('ignores generated dummy-copy fallback cards while keeping real first-run modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
