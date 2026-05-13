@@ -4619,10 +4619,14 @@ extractWhatsAppInbound WAMetaWebhook{entry} =
     cleanWhatsAppWebhookExternalId rawExternalId =
       cleanOptional rawExternalId >>= \externalId ->
         if T.length externalId <= 256
-            && not (T.any isSpace externalId)
-            && not (T.any isControl externalId)
+            && not (T.any isUnsafeWebhookExternalIdChar externalId)
           then Just externalId
           else Nothing
+
+    isUnsafeWebhookExternalIdChar ch =
+      isSpace ch
+        || isControl ch
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
     whatsAppWebhookFallbackExternalId senderId msg =
       let timestampToken =

@@ -3057,7 +3057,10 @@ spec = describe "TDF.Server helpers" $ do
                                         [ message (Just "wamid with spaces") (Just "1713715203")
                                         , message (Just "wamid\nwith-control") (Just "1713715204")
                                         , message (Just (T.replicate 257 "a")) (Just "1713715205")
-                                        , message (Just "wamid.valid") (Just "1713715206")
+                                        , message
+                                            (Just ("wamid.valid" <> T.singleton '\x202E' <> "fdp"))
+                                            (Just "1713715206")
+                                        , message (Just "wamid.valid") (Just "1713715207")
                                         ])
                                     Nothing
                                     Nothing
@@ -3066,13 +3069,15 @@ spec = describe "TDF.Server helpers" $ do
                         ]
 
             case map waInboundExternalId (extractWhatsAppInbound payload) of
-                [spaceFallback, controlFallback, oversizeFallback, validId] -> do
+                [spaceFallback, controlFallback, oversizeFallback, hiddenFallback, validId] -> do
                     spaceFallback
                         `shouldSatisfy` T.isPrefixOf "+593991234567-1713715203-"
                     controlFallback
                         `shouldSatisfy` T.isPrefixOf "+593991234567-1713715204-"
                     oversizeFallback
                         `shouldSatisfy` T.isPrefixOf "+593991234567-1713715205-"
+                    hiddenFallback
+                        `shouldSatisfy` T.isPrefixOf "+593991234567-1713715206-"
                     validId `shouldBe` "wamid.valid"
                 rows ->
                     expectationFailure
