@@ -5045,6 +5045,10 @@ spec = describe "TDF.Server helpers" $ do
                 "CHATKIT_WORKFLOW_ID must not contain whitespace"
                 (resolveWorkflowId Nothing (Just "wf default"))
             assertInvalid
+                500
+                "CHATKIT_WORKFLOW_ID cannot be blank"
+                (resolveWorkflowId Nothing (Just "   "))
+            assertInvalid
                 400
                 "workflowId must use only ASCII letters"
                 (resolveWorkflowId (Just "wf/override?preview=1") (Just "wf_default"))

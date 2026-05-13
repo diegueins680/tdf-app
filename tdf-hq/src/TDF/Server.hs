@@ -10257,7 +10257,7 @@ resolveWorkflowId primary fallback =
     Just rawWorkflowId ->
       toServerError err400 (normalizeChatKitWorkflowId "workflowId" rawWorkflowId)
     Nothing ->
-      case fallback >>= nonEmptyText of
+      case fallback of
         Just rawWorkflowId ->
           toServerError err500 (normalizeChatKitWorkflowId "CHATKIT_WORKFLOW_ID" rawWorkflowId)
         Nothing ->
