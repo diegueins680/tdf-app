@@ -413,7 +413,10 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     describe "SocialUnholdRequest FromJSON" $ do
         it "accepts canonical admin wire keys for social unhold lookups" $
             case eitherDecode
-                "{\"channel\":\"whatsapp\",\"senderId\":\"  wa:+593999000111  \",\"note\":\"retry latest reply\"}" of
+                ( "{\"channel\":\" WhatsApp \","
+                    <> "\"senderId\":\"  wa:+593999000111  \","
+                    <> "\"note\":\"retry latest reply\"}"
+                ) of
                 Left err ->
                     expectationFailure ("Expected canonical social unhold payload to decode, got: " <> err)
                 Right payload -> do
@@ -425,6 +428,20 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "rejects prefixed or unexpected keys instead of silently accepting malformed admin payloads" $ do
             decodeSocialUnhold "{\"surChannel\":\"whatsapp\",\"surSenderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
             decodeSocialUnhold "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
+        it "rejects malformed channels before the handler chooses a social backend" $ do
+            decodeSocialUnhold
+                "{\"channel\":\"   \",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"telegram\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\\n\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whats\\u202eapp\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
 
         it "rejects missing or ambiguous lookup keys before the unhold handler chooses a fallback path" $ do
             decodeSocialUnhold "{\"channel\":\"whatsapp\"}" `shouldSatisfy` isLeft

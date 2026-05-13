@@ -21,7 +21,11 @@ import           TDF.API.Types ( DropdownOptionCreate
 import           Data.Aeson (FromJSON(..), ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, rejectUnknownFields, withObject, (.:!), (.:?))
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KeyMap
-import           Data.Char      (toLower)
+import           Data.Char      ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+                                , generalCategory
+                                , isControl
+                                , toLower
+                                )
 import           GHC.Generics (Generic)
 import           Data.Int      (Int64)
 import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
@@ -117,15 +121,21 @@ instance FromJSON SocialUnholdRequest where
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True
       } value
-    case (normalizeLookupField (surExternalId request), normalizeLookupField (surSenderId request)) of
+    channel <- normalizeSocialUnholdChannel (surChannel request)
+    case
+      ( normalizeLookupField (surExternalId request)
+      , normalizeLookupField (surSenderId request)
+      ) of
       (Just externalId, Nothing) ->
         pure request
-          { surExternalId = Just externalId
+          { surChannel = channel
+          , surExternalId = Just externalId
           , surSenderId = Nothing
           }
       (Nothing, Just senderId) ->
         pure request
-          { surExternalId = Nothing
+          { surChannel = channel
+          , surExternalId = Nothing
           , surSenderId = Just senderId
           }
       (Nothing, Nothing) ->
@@ -137,6 +147,23 @@ instance FromJSON SocialUnholdRequest where
         case T.strip <$> rawValue of
           Just lookupValue | not (T.null lookupValue) -> Just lookupValue
           _ -> Nothing
+
+      normalizeSocialUnholdChannel rawChannel
+        | T.null channel =
+            fail "SocialUnholdRequest channel is required"
+        | T.any isControl rawChannel =
+            fail "SocialUnholdRequest channel must not contain control characters"
+        | T.any isHiddenChannelChar rawChannel =
+            fail "SocialUnholdRequest channel must not contain hidden formatting characters"
+        | channel `elem` ["instagram", "facebook", "whatsapp"] =
+            pure channel
+        | otherwise =
+            fail "SocialUnholdRequest channel must be one of: instagram, facebook, whatsapp"
+        where
+          channel = T.toLower (T.strip rawChannel)
+
+      isHiddenChannelChar ch =
+        generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 data AdminWhatsAppSendRequest = AdminWhatsAppSendRequest
   { awsrMessage          :: Text
