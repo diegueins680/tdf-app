@@ -10335,6 +10335,23 @@ main = hspec $ do
                     <> "\"dryrun\":false}"
             isLeft (eitherDecode payload :: Either String AdminEmailBroadcastRequest) `shouldBe` True
 
+        it "rejects null send controls instead of silently falling back to live defaults" $ do
+            let assertInvalid payload expectedMessage =
+                    case eitherDecode payload :: Either String AdminEmailBroadcastRequest of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected null broadcast control to be rejected, got " <> show value)
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"dryRun\":null}"
+                "dryRun must be omitted instead of null"
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"limit\":null}"
+                "limit must be omitted instead of null"
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"includeInactive\":null}"
+                "includeInactive must be omitted instead of null"
+
     describe "FanProfileUpdate" $ do
         it "accepts canonical fan profile update payloads and rejects typoed keys" $ do
             case eitherDecode

@@ -228,10 +228,25 @@ data AdminEmailBroadcastRequest = AdminEmailBroadcastRequest
   } deriving (Show, Generic)
 
 instance FromJSON AdminEmailBroadcastRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 4
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    case value of
+      Object o ->
+        mapM_ (rejectNull o) ["dryRun", "limit", "includeInactive"]
+      _ ->
+        pure ()
+    genericParseJSON broadcastRequestOptions value
+    where
+      rejectNull o fieldName =
+        case KeyMap.lookup (Key.fromText fieldName) o of
+          Just Null ->
+            fail (T.unpack fieldName <> " must be omitted instead of null")
+          _ ->
+            pure ()
+      broadcastRequestOptions =
+        defaultOptions
+          { fieldLabelModifier = camelDrop 4
+          , rejectUnknownFields = True
+          }
 
 data AdminEmailBroadcastRecipientDTO = AdminEmailBroadcastRecipientDTO
   { aerdEmail   :: Text
