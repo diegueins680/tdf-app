@@ -6912,6 +6912,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps saved follow-up menus hidden while a new follow-up form owns the actions', async () => {
+    getRegistrationDossierMock.mockResolvedValue(
+      buildDossier({
+        crdFollowUps: [
+          buildFollowUp(),
+          buildFollowUp({
+            crfId: 402,
+            crfSubject: 'Pidió factura',
+            crfNotes: 'Quiere factura a nombre de empresa.',
+          }),
+        ],
+      }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(
+        document.body.querySelectorAll('button[aria-label^="Abrir acciones para seguimiento "]'),
+      ).toHaveLength(2);
+      expect(getButtonByText(document.body, 'Agregar seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar seguimiento'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
+      expect(hasLabel(document.body, 'Nota de seguimiento')).toBe(true);
+      expect(
+        document.body.querySelectorAll('button[aria-label^="Abrir acciones para seguimiento "]'),
+      ).toHaveLength(0);
+      expect(document.body.querySelector('button[aria-label^="Editar seguimiento "]')).toBeNull();
+      expect(document.body.querySelector('button[aria-label^="Eliminar seguimiento "]')).toBeNull();
+      expect(document.body.textContent).toContain('Dijo que enviará el comprobante hoy.');
+      expect(document.body.textContent).toContain('Quiere factura a nombre de empresa.');
+      expect(hasExactText(document.body, 'En edición')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('falls back to follow-up type and date when a saved follow-up subject is blank', async () => {
     const createdAt = '2030-02-05T10:30:00.000Z';
     const fallbackActionLabel = `Abrir acciones para seguimiento Llamada del ${formatTimestampForDisplay(createdAt, '-')}`;

@@ -6642,7 +6642,7 @@ export default function CourseRegistrationsAdminPage() {
                                         <Typography variant="body2" color="text.secondary">
                                           En edición
                                         </Typography>
-                                      ) : (
+                                      ) : !showFollowUpComposer ? (
                                         <IconButton
                                           size="small"
                                           title="Opciones del seguimiento"
@@ -6652,7 +6652,7 @@ export default function CourseRegistrationsAdminPage() {
                                         >
                                           <MoreVertIcon fontSize="small" />
                                         </IconButton>
-                                      )}
+                                      ) : null}
                                     </Stack>
                                     {followUpSubject && (
                                       <Typography variant="subtitle2">{followUpSubject}</Typography>
