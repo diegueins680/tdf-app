@@ -437,6 +437,9 @@ const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
 const makeSingleUserInactiveGuidance = (guidance: string) =>
   guidance
     .replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.');
+const makeSingleSearchResultInactiveGuidance = (guidance: string) =>
+  guidance
+    .replace('Resultado único.', 'Resultado único inactivo.');
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
@@ -1188,7 +1191,11 @@ export default function AdminUsersPage() {
   const inactiveScopeSummary = showNoInactiveScopeSummary
     ? 'No hay usuarios inactivos.'
     : '';
-  const inactiveOnlyScopeSummary = showInactiveOnlyScopeSummary && !showSingleUserGuidance
+  const inactiveOnlyScopeSummary = (
+    showInactiveOnlyScopeSummary
+    && !showSingleUserGuidance
+    && !showSingleSearchResultGuidance
+  )
     ? 'Vista actual: solo usuarios inactivos.'
     : '';
   const inactiveSearchScopeSummary = hasConfirmedNoInactiveSearchMatches
@@ -1371,19 +1378,20 @@ export default function AdminUsersPage() {
   const singleUserGuidance = showOnlyInactiveUsers
     ? makeSingleUserInactiveGuidance(baseSingleUserGuidance)
     : baseSingleUserGuidance;
+  const baseSingleSearchResultGuidance = singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
+    ? buildPendingProfileGuidance({
+        scope: 'single-result',
+        readiness: singleSearchResultReadiness ?? 'missing-contact',
+      })
+    : singleSearchResultReadiness === 'whatsapp-ready'
+      ? SINGLE_SEARCH_RESULT_GUIDANCE
+      : singleSearchResultReadiness === 'contact-ready'
+        ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
+        : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE;
   const singleSearchResultGuidance = showSingleSearchResultGuidance
-    ? (
-      singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
-        ? buildPendingProfileGuidance({
-            scope: 'single-result',
-            readiness: singleSearchResultReadiness ?? 'missing-contact',
-          })
-        : singleSearchResultReadiness === 'whatsapp-ready'
-          ? SINGLE_SEARCH_RESULT_GUIDANCE
-          : singleSearchResultReadiness === 'contact-ready'
-            ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
-            : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
-    )
+    ? showOnlyInactiveSearchResults
+      ? makeSingleSearchResultInactiveGuidance(baseSingleSearchResultGuidance)
+      : baseSingleSearchResultGuidance
     : '';
   const singleSearchResultAccessSummary = useMemo(
     () => buildNonDefaultUserAccessSummaryCopy(singleSearchResult),

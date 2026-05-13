@@ -2728,8 +2728,9 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
+          'Resultado único inactivo. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
         );
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(container.querySelector('[data-testid="admin-users-inactive-group-header"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-inactive-group-label"]')).toBeNull();
         expect(getRenderedRowUserIds(container)).toEqual([102]);
@@ -4923,8 +4924,9 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getRenderedRowUserIds(container)).toEqual([104]);
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
+          'Resultado único inactivo. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
         );
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(hasExactText(container, 'Buscando en inactivos')).toBe(false);
         expect(hasExactText(container, 'Buscar también en inactivos')).toBe(false);
         expect(hasExactText(container, 'Inactivos incluidos')).toBe(false);
@@ -5076,7 +5078,7 @@ describe('AdminUsersPage', () => {
 
       await waitForExpectation(() => {
         expect(getPageGuidance(container)).toBe(
-          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Vista actual: solo usuarios inactivos.',
+          'Resultado único inactivo. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
         );
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
@@ -5087,7 +5089,8 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "inactivos".');
-        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(getPageGuidance(container)).toContain('Resultado único inactivo.');
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
@@ -5097,7 +5100,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "desactivada".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(getPageGuidance(container)).toContain('Resultado único inactivo.');
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
@@ -5107,7 +5111,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "archivada".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(getPageGuidance(container)).toContain('Resultado único inactivo.');
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
 
@@ -5117,7 +5122,8 @@ describe('AdminUsersPage', () => {
         expect(getRenderedRowUserIds(container)).toEqual([102]);
         expect(container.textContent).not.toContain('No hay coincidencias para "suspendida".');
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(getPageGuidance(container)).toContain('Vista actual: solo usuarios inactivos.');
+        expect(getPageGuidance(container)).toContain('Resultado único inactivo.');
+        expect(getPageGuidance(container)).not.toContain('Vista actual: solo usuarios inactivos.');
         expect(hasExactText(getRowByUserId(container, 102), 'Inactivo')).toBe(false);
       });
     } finally {
