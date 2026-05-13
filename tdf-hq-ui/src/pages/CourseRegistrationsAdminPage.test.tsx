@@ -10147,6 +10147,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'wix_forms',
       'forms_app',
       'forms.app_form',
+      'formspree_form',
+      'formsite_form',
+      '123_form_builder_form',
+      '123formbuilder_form',
     ] as const;
     const hiddenSourceLabels = [
       'Google forms',
@@ -10190,6 +10194,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Wix forms',
       'Forms app',
       'Forms app form',
+      'Formspree form',
+      'Formsite form',
+      '123 form builder form',
+      '123formbuilder form',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
@@ -13553,6 +13561,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Cognito Forms',
       'Forms.app registration form - Beatmaking 101',
       'Beatmaking 101 - Forms.app form',
+      'Formspree form - Beatmaking 101',
+      'Formulario de Formspree para Beatmaking 101',
+      'Beatmaking 101 - Formsite form',
+      '123FormBuilder - Beatmaking 101',
+      'Beatmaking 101 - 123 Forms Builder',
       'Wufoo form for Beatmaking 101',
       'Formstack - Beatmaking 101',
       'Zoho Forms for Beatmaking 101',
@@ -13604,6 +13617,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Fillout');
         expect(emptyState?.textContent).not.toContain('Cognito');
         expect(emptyState?.textContent).not.toContain('Forms.app');
+        expect(emptyState?.textContent).not.toContain('Formspree');
+        expect(emptyState?.textContent).not.toContain('Formsite');
+        expect(emptyState?.textContent).not.toMatch(/123\s*Forms?\s*Builder/i);
         expect(emptyState?.textContent).not.toContain('Wufoo');
         expect(emptyState?.textContent).not.toContain('Formstack');
         expect(emptyState?.textContent).not.toContain('Zoho');
