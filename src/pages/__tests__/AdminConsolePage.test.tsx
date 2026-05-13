@@ -7572,6 +7572,8 @@ describe('AdminConsolePage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Asignar roles de Ada Lovelace' }));
 
+    expect(await screen.findByRole('heading', { name: 'Asignar roles · Ada Lovelace' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Editar roles · Ada Lovelace' })).not.toBeInTheDocument();
     expect(
       await screen.findByText(
         /Roles actuales: Sin roles\. Ajusta la selección para abrir o retirar módulos en esta cuenta\./i,

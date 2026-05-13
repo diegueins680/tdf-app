@@ -2252,6 +2252,7 @@ export default function AdminConsolePage() {
     if (!editingUser) return '';
     return editingUser.displayName?.trim() || editingUser.username;
   }, [editingUser]);
+  const editingActionLabel = editingUser ? buildAdminUserRoleActionLabel(editingUser.roles) : 'Editar roles';
   const currentRoleSummary = useMemo(() => (
     editingUser ? formatEditableRoleList(editingUser.roles) : 'Sin roles'
   ), [editingUser]);
@@ -2956,7 +2957,7 @@ export default function AdminConsolePage() {
       )}
 
       <Dialog open={!!editingUser} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Editar roles · {editingTitle}</DialogTitle>
+        <DialogTitle>{editingActionLabel} · {editingTitle}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" paragraph>
             Roles actuales: {currentRoleSummary}. Ajusta la selección para abrir o retirar módulos en esta cuenta.
