@@ -3127,16 +3127,18 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
-        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(getButtonsByText(container, 'Revisar inactivos')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
+      await clickButton(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(getCheckboxByLabelText(container, 'Inactivos incluidos').checked).toBe(true);
         expect(container.textContent).toContain('Inactivos incluidos');
@@ -3172,18 +3174,20 @@ describe('AdminUsersPage', () => {
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
-        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
       });
 
-      await clickButton(getButtonsByText(container, 'Revisar cuentas inactivas')[0]!);
+      await clickButton(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)[0]!);
 
       await waitForExpectation(() => {
         expect(listUsersMock).toHaveBeenLastCalledWith(true);
         expect(getPageGuidance(container)).toBe(
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. No hay usuarios inactivos.',
         );
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
         expect(container.textContent).not.toContain('Inactivos incluidos');
