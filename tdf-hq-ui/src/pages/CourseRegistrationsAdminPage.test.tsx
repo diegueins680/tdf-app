@@ -10467,6 +10467,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats checkout and payment source wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'stripe_checkout',
+      'datafast_payment_link',
+      'kushki_payment_link',
+      'paymentez_checkout',
+      'deuna_payment_link',
+      'payphone_payment_button',
+      'online_payment_form',
+      'checkout_portal',
+      'formulario_de_pago',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Stripe checkout',
+      'Datafast payment link',
+      'Kushki payment link',
+      'Paymentez checkout',
+      'Deuna payment link',
+      'Payphone payment button',
+      'Online payment form',
+      'Checkout portal',
+      'Formulario de pago',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'payment link');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "payment link" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
