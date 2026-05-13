@@ -1227,6 +1227,12 @@ const firstRunCourseWebsiteDescriptorPrefixPattern =
 const firstRunCourseWebsiteDescriptorSuffixPattern =
   /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site)|course\s+portal|web\s+portal|(?:p[aá]gina|sitio|portal)\s+web))\s*$/i;
 
+const firstRunLearningPortalDescriptorPrefixPattern =
+  /^(?:(?:student|learner|member|learning|lms)\s+(?:portal|dashboard|hub|area)|(?:portal|dashboard|hub|area)\s+(?:for\s+)?(?:students?|learners?|members?)|(?:campus|aula|sal[oó]n)\s+virtual|portal\s+(?:de\s+)?(?:estudiantes|alumnos|miembros|aprendizaje))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLearningPortalDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:student|learner|member|learning|lms)\s+(?:portal|dashboard|hub|area)|(?:portal|dashboard|hub|area)\s+(?:for\s+)?(?:students?|learners?|members?)|(?:campus|aula|sal[oó]n)\s+virtual|portal\s+(?:de\s+)?(?:estudiantes|alumnos|miembros|aprendizaje))\s*$/i;
+
 const firstRunCourseCatalogDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1347,6 +1353,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
     .replace(firstRunBioLinkDescriptorPrefixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
+    .replace(firstRunLearningPortalDescriptorPrefixPattern, '')
     .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
@@ -1433,6 +1440,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
     .replace(firstRunBioLinkDescriptorSuffixPattern, '')
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
+    .replace(firstRunLearningPortalDescriptorSuffixPattern, '')
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
