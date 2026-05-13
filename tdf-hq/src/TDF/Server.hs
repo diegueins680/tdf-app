@@ -6354,14 +6354,17 @@ partyServer user = listParties user :<|> createParty user :<|> partyById
   where
     partyById pid = getParty user pid :<|> updateParty user pid :<|> addRole user pid :<|> partyRelated user pid
 
-listParties :: AuthedUser -> AppM [PartyDTO]
-listParties user = do
+listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
+listParties user mLimit mOffset = do
   requireModule user ModuleCRM
   Env pool _ <- ask
+  let limit = max 1 (min 500 (fromMaybe 200 mLimit))
+      offset = max 0 (fromMaybe 0 mOffset)
   (entities, accountIds) <- liftIO $ flip runSqlPool pool $ do
-    creds <- selectList [] []
+    parts <- selectList [] [Asc PartyId, LimitTo limit, OffsetBy offset]
+    let partyIds = map entityKey parts
+    creds <- selectList [UserCredentialPartyId <-. partyIds] []
     let accountSet = Set.fromList (map (userCredentialPartyId . entityVal) creds)
-    parts <- selectList [] [Asc PartyId]
     pure (parts, accountSet)
   pure (map (\ent -> toPartyDTO (Set.member (entityKey ent) accountIds) ent) entities)
 

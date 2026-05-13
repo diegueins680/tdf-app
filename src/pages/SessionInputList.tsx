@@ -33,7 +33,7 @@ export default function SessionInputList({ sessionId = 1 }: Props) {
           </tr>
         </thead>
         <tbody>
-          {q.data!.map((r) => (
+          {(q.data ?? []).map((r) => (
             <tr key={r.id} style={{ background: r.ch % 2 ? '#f6f6f6' : '#fff' }}>
               <td>{r.ch}</td>
               <td>{r.source}</td>

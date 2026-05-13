@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
 """Change all La Cuadra events to Domo del Pululahua venue."""
 
+import os
+import sys
 import requests
 
-BASE = "https://tdf-hq.fly.dev"
-LOGIN = {"username": "admin", "password": "password123"}
-DOMO_VENUE_ID = "7"
-LA_CUADRA_IDS = {"1", "6"}
+BASE = os.environ.get("TDF_API_BASE", "https://tdf-hq.fly.dev")
+LOGIN = {
+    "username": os.environ.get("TDF_ADMIN_USER", ""),
+    "password": os.environ.get("TDF_ADMIN_PASSWORD", ""),
+}
+DOMO_VENUE_ID = os.environ.get("DOMO_VENUE_ID", "7")
+LA_CUADRA_IDS = set(os.environ.get("LA_CUADRA_IDS", "1,6").split(","))
+DRY_RUN = os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes")
 
 
 def login():
+    if not LOGIN["username"] or not LOGIN["password"]:
+        print("ERROR: Set TDF_ADMIN_USER and TDF_ADMIN_PASSWORD environment variables.", file=sys.stderr)
+        sys.exit(1)
     r = requests.post(f"{BASE}/login", json=LOGIN, timeout=15)
     r.raise_for_status()
     return r.json()["token"]
@@ -21,9 +30,9 @@ def auth(token):
 
 def get_all_events(token):
     events = []
-    for offset in range(0, 100, 10):
+    for offset in range(0, 1000, 50):
         r = requests.get(
-            f"{BASE}/social-events/events?limit=10&offset={offset}",
+            f"{BASE}/social-events/events?limit=50&offset={offset}",
             headers=auth(token),
             timeout=30,
         )
@@ -67,6 +76,9 @@ def update_event(token, event):
         ],
     }
 
+    if DRY_RUN:
+        return 200, "dry-run"
+
     r = requests.put(
         f"{BASE}/social-events/events/{event_id}",
         headers=auth(token),
@@ -77,6 +89,13 @@ def update_event(token, event):
 
 
 def main():
+    if DRY_RUN:
+        print("=== DRY RUN mode — no changes will be written ===\n")
+    elif "--confirm" not in sys.argv:
+        print("ERROR: This script modifies production event data.", file=sys.stderr)
+        print("Run with --confirm to execute writes, or set DRY_RUN=1 to preview.", file=sys.stderr)
+        sys.exit(1)
+
     print("Authenticating...")
     token = login()
     print("Fetching all events...")
@@ -88,7 +107,6 @@ def main():
 
     updated = 0
     errors = 0
-    skipped = 0
 
     for i, e in enumerate(cuadra_events, 1):
         print(f"[{i}/{len(cuadra_events)}] Updating event {e['eventId']}: {e['eventTitle'][:60]}...")

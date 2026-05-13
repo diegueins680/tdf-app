@@ -95,7 +95,7 @@ import TDF.API.Types
   , RoomUpdate (..)
   , SessionInputRow (SessionInputRow)
   )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), ModuleAccess (..), modulesForRoles)
 import TDF.Config (AppConfig (..))
 import qualified TDF.Config as Config
 import TDF.DB (Env (..))
@@ -185,6 +185,7 @@ import TDF.ServerExtra (
     validateServiceCatalogBillingUnitUpdate,
     validateServiceCatalogTaxBps,
     validateServiceCatalogTaxBpsUpdate,
+    ensureModule,
     validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
     validatePageParams,
@@ -5440,6 +5441,37 @@ spec = do
     it "marks successful manual sends as sent rows without a reply error" $
       socialReplyOutcomeFields (Right (A.object ["ok" .= True]) :: Either Text A.Value)
         `shouldBe` ("sent", Nothing)
+
+  describe "ensureModule" $ do
+    it "rejects stale role/module grants before backend handlers run" $ do
+      let missingModuleUser =
+            inventoryUser
+              { auRoles = [M.Fan]
+              , auModules = modulesForRoles [M.Fan]
+              }
+          staleModuleUser =
+            inventoryUser
+              { auRoles = [M.Fan, M.Customer]
+              , auModules = modulesForRoles [M.Admin]
+              }
+          duplicatedRoleUser =
+            inventoryUser
+              { auRoles = [M.Reception, M.Reception]
+              , auModules = modulesForRoles [M.Reception]
+              }
+          assertRejected expected user = do
+            result <- runExceptT (ensureModule ModuleScheduling user)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err) `shouldContain` expected
+              Right () ->
+                expectationFailure "Expected module access to be rejected"
+
+      runExceptT (ensureModule ModuleScheduling inventoryUser) `shouldReturn` Right ()
+      assertRejected "Missing required module access" missingModuleUser
+      assertRejected "Module grants must match roles" staleModuleUser
+      assertRejected "Role grants must be unique" duplicatedRoleUser
 
   describe "normalizeServiceCatalogName" $ do
     it "normalizes bounded service catalog names before create/update persistence" $ do

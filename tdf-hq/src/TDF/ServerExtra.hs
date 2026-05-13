@@ -72,7 +72,14 @@ import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Services           (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess)
+import           TDF.Auth
+  ( AuthedUser(..)
+  , ModuleAccess(..)
+  , hasOperationsAccess
+  , hasSocialInboxAccess
+  , moduleName
+  , validateModuleAccess
+  )
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
@@ -3001,8 +3008,16 @@ ensureModule
   -> AuthedUser
   -> m ()
 ensureModule moduleTag user =
-  unless (hasModuleAccess moduleTag user) $
-    throwError err403 { errBody = "Missing required module access" }
+  case validateModuleAccess moduleTag user of
+    Right () -> pure ()
+    Left err
+      | errBody err == missingModuleBody ->
+          throwError err403 { errBody = "Missing required module access" }
+      | otherwise ->
+          throwError err
+  where
+    missingModuleBody =
+      BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
 
 -- Basic payments server (manual payouts / honorarios)
 paymentsServer

@@ -110,7 +110,7 @@ type CmsAdminAPI =
          )
 
 type PartyAPI =
-       Get '[JSON] [PartyDTO]
+       QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [PartyDTO]
   :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
       :<|> Capture "partyId" Int64 :> (
            Get '[JSON] PartyDTO
