@@ -5366,6 +5366,79 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('ignores registered-user and registered-audit empty cards without hiding invite setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'registered-users-empty',
+          title: 'Usuarios registrados',
+          body: ['No registered users yet.'],
+        },
+        {
+          cardId: 'usuarios-registrados-empty',
+          title: 'Registro de usuarios',
+          body: ['No hay usuarios registrados.'],
+        },
+        {
+          cardId: 'audit-registered-empty',
+          title: 'Eventos registrados',
+          body: ['No registered audit events yet.'],
+        },
+        {
+          cardId: 'eventos-registrados-empty',
+          title: 'Bitácora registrada',
+          body: ['Aún no hay eventos registrados.'],
+        },
+        {
+          cardId: 'invite-setup',
+          title: 'Invitación segura',
+          body: [
+            'No hay usuarios registrados en este flujo. Invita al responsable antes de activar accesos compartidos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 5 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios registrados')).not.toBeInTheDocument();
+    expect(screen.queryByText('Registro de usuarios')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eventos registrados')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora registrada')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No registered users yet\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No hay usuarios registrados\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No registered audit events yet\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Aún no hay eventos registrados\.$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Invitación segura')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /No hay usuarios registrados en este flujo\. Invita al responsable antes de activar accesos compartidos\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Usuarios registrados')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eventos registrados')).not.toBeInTheDocument();
+  });
+
   it('ignores terse activity-empty fallback cards without hiding actionable setup copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
