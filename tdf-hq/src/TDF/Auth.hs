@@ -355,11 +355,12 @@ extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCooki
 parseBearerAuthorizationHeader :: Text -> Either Text Text
 parseBearerAuthorizationHeader rawHeader =
   let header = stripAsciiSpaces rawHeader
-      (scheme, rest) = T.breakOn " " header
-      token = T.dropWhile (== ' ') rest
-  in if T.toLower scheme == "bearer" && not (T.null rest) && not (T.null token)
-       then Right token
-       else Left "Invalid Authorization header"
+  in case T.splitOn " " header of
+       [scheme, token]
+         | T.toLower scheme == "bearer" && not (T.null token) ->
+             Right token
+       _ ->
+         Left "Invalid Authorization header"
 
 stripAsciiSpaces :: Text -> Text
 stripAsciiSpaces =

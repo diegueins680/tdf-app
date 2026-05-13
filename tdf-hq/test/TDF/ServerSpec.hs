@@ -3682,6 +3682,18 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 `shouldBe` Left "Invalid Authorization header"
 
+        it "rejects ambiguous bearer token segments before protected-route token lookup" $ do
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer  header-token")
+                Nothing
+                `shouldBe` Left "Invalid Authorization header"
+            extractTokenFromHeaders
+                (marketplaceTestConfig False)
+                (Just "Bearer header-token extra")
+                Nothing
+                `shouldBe` Left "Invalid Authorization header"
+
         it "rejects non cookie-safe auth token characters before database lookup" $ do
             extractTokenFromHeaders
                 (marketplaceTestConfig False)
