@@ -8,7 +8,12 @@ module TDF.Pipelines
   , defaultStage
   ) where
 
-import           Data.Char      (isAlphaNum)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isControl
+  )
 import           Data.List      (find)
 import           Data.Text      (Text)
 import qualified Data.Text      as T
@@ -75,23 +80,29 @@ pipelineTypeSlug EventProduction = "eventproduction"
 parsePipelineType :: Text -> Maybe ServiceKind
 parsePipelineType raw =
   case normalise raw of
-    "recording"       -> Just Recording
-    "mixing"          -> Just Mixing
-    "mastering"       -> Just Mastering
-    "rehearsal"       -> Just Rehearsal
-    "classes"         -> Just Classes
-    "eventproduction" -> Just EventProduction
-    _                 -> Nothing
-  where
-    normalise = T.toLower . T.filter isAlphaNum
+    Nothing                -> Nothing
+    Just "recording"       -> Just Recording
+    Just "mixing"          -> Just Mixing
+    Just "mastering"       -> Just Mastering
+    Just "rehearsal"       -> Just Rehearsal
+    Just "classes"         -> Just Classes
+    Just "eventproduction" -> Just EventProduction
+    _                      -> Nothing
 
 canonicalStage :: ServiceKind -> Text -> Maybe Text
-canonicalStage kind raw =
-  let target = normalise raw
-  in fmap fst . find (\(_, norm) -> norm == target) $
-       map (\stage -> (stage, normalise stage)) (pipelineStages kind)
-  where
-    normalise = T.toLower . T.filter isAlphaNum
+canonicalStage kind raw = do
+  target <- normalise raw
+  fmap fst . find (\(_, norm) -> norm == target) $
+    map (\stage -> (stage, T.toLower (T.filter isAlphaNum stage))) (pipelineStages kind)
+
+normalise :: Text -> Maybe Text
+normalise raw
+  | T.any isUnsafePipelineCanonicalChar raw = Nothing
+  | otherwise = Just (T.toLower (T.filter isAlphaNum raw))
+
+isUnsafePipelineCanonicalChar :: Char -> Bool
+isUnsafePipelineCanonicalChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 defaultStage :: ServiceKind -> Text
 defaultStage kind =

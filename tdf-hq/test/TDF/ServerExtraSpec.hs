@@ -1517,6 +1517,69 @@ spec = do
         Right value ->
           expectationFailure ("Expected hidden-format pipeline card patch title to fail, got " <> show value)
 
+    it "rejects non-printing pipeline aliases before canonical matching can erase them" $ do
+      let hiddenFormat = T.singleton '\x200B'
+      typeResult <- runPipelineCreateHandler
+        (pure ())
+        ("rec" <> hiddenFormat <> "ording")
+        (PipelineCardCreate "Demo Lead" Nothing Nothing Nothing Nothing)
+      case typeResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Unknown pipeline type"
+        Right value ->
+          expectationFailure
+            ("Expected hidden-format pipeline type to fail, got " <> show value)
+
+      createResult <- runPipelineCreateHandler
+        (pure ())
+        pipelineType
+        (PipelineCardCreate
+          "Demo Lead"
+          Nothing
+          (Just ("In" <> hiddenFormat <> "quiry"))
+          Nothing
+          Nothing)
+      case createResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid stage for pipeline"
+        Right value ->
+          expectationFailure
+            ("Expected hidden-format pipeline card create stage to fail, got " <> show value)
+
+      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
+      patchResult <- runPipelinePatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey existingKey ME.PipelineCard
+              { ME.pipelineCardServiceKind = M.Recording
+              , ME.pipelineCardTitle = "Initial lead"
+              , ME.pipelineCardArtist = Nothing
+              , ME.pipelineCardStage = "Inquiry"
+              , ME.pipelineCardSortOrder = 0
+              , ME.pipelineCardNotes = Nothing
+              , ME.pipelineCardCreatedAt = now
+              , ME.pipelineCardUpdatedAt = now
+              })
+        pipelineType
+        existingPipelineCardId
+        (PipelineCardUpdate
+          Nothing
+          Nothing
+          (Just ("In" <> hiddenFormat <> " Session"))
+          Nothing
+          Nothing)
+      case patchResult of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid stage for pipeline"
+        Right value ->
+          expectationFailure
+            ("Expected hidden-format pipeline card patch stage to fail, got " <> show value)
+
     it "rejects negative sort orders before Kanban ordering is persisted" $ do
       createResult <- runPipelineCreateHandler
         (pure ())
