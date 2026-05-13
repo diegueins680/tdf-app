@@ -28,6 +28,7 @@ module TDF.ServerAuth
   , selectUniquePasswordResetCredential
   , signupEmailExists
   , validateLoginRequest
+  , validateGoogleIdTokenInput
   , validateGoogleIdTokenInfo
   , validateAuthPassword
   , validateCurrentPasswordInput
@@ -56,6 +57,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAscii
   , isAsciiLower
   , isControl
   , isDigit
@@ -556,8 +558,7 @@ login rawRequest = do
 
 googleLogin :: GoogleLoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 googleLogin GoogleLoginRequest{..} = do
-  let tokenClean = T.strip idToken
-  when (T.null tokenClean) $ throwBadRequest "Google idToken is required"
+  tokenClean <- either throwError pure (validateGoogleIdTokenInput idToken)
   Env pool cfg <- ask
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
@@ -719,6 +720,48 @@ invalidPasswordChangeAuthTokenChar ch =
   isSpace ch
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateGoogleIdTokenInput :: Text -> Either ServerError Text
+validateGoogleIdTokenInput rawToken
+  | T.null token =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "Google idToken is required")
+        }
+  | T.length token > maxGoogleIdTokenChars =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Google idToken must be 4096 characters or fewer")
+        }
+  | T.any isSpace token =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "Google idToken must not contain whitespace")
+        }
+  | T.any isControl token =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 "Google idToken must not contain control characters")
+        }
+  | T.any isHiddenPasswordFormattingChar token =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Google idToken must not contain hidden formatting characters")
+        }
+  | T.any (not . isAscii) token =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Google idToken must contain only ASCII characters")
+        }
+  | otherwise =
+      Right token
+  where
+    token = T.strip rawToken
+
+maxGoogleIdTokenChars :: Int
+maxGoogleIdTokenChars = 4096
 
 validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
 validateLoginRequest (LoginRequest rawUsername rawPassword)

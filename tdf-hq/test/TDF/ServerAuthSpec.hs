@@ -30,6 +30,7 @@ import TDF.ServerAuth
   , selectUniqueLoginEmailCredential
   , selectUniquePasswordResetCredential
   , validateCurrentPasswordInput
+  , validateGoogleIdTokenInput
   , validateLoginRequest
   , validateGoogleIdTokenInfo
   , validatePasswordResetToken
@@ -52,6 +53,7 @@ spec = do
   signupPhoneSpec
   signupArtistClaimEmailSpec
   passwordResetTokenSpec
+  googleIdTokenInputSpec
   googleTokenInfoSpec
   loginEmailFallbackSpec
   googleLoginEmailFallbackSpec
@@ -344,6 +346,35 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
         BL8.unpack (errBody err) `shouldContain` "Token format is invalid"
       Right value ->
         expectationFailure ("Expected malformed reset token to be rejected, got " <> show value)
+
+googleIdTokenInputSpec :: Spec
+googleIdTokenInputSpec = describe "validateGoogleIdTokenInput" $ do
+  it "trims canonical Google id tokens before tokeninfo verification" $
+    validateGoogleIdTokenInput "  header.payload.signature  "
+      `shouldBe` Right "header.payload.signature"
+
+  it "rejects malformed Google id tokens before tokeninfo fallback verification" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertRejected expectedMessage rawToken =
+          case validateGoogleIdTokenInput rawToken of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure
+                ("Expected invalid Google idToken to be rejected, got " <> show value)
+    assertRejected "Google idToken is required" "   "
+    assertRejected "Google idToken must not contain whitespace" "header.payload signature"
+    assertRejected
+      "Google idToken must not contain control characters"
+      "header.payload\NULsignature"
+    assertRejected
+      "Google idToken must not contain hidden formatting"
+      ("header" <> hiddenFormat <> ".payload")
+    assertRejected "Google idToken must contain only ASCII characters" "header.páyload.signature"
+    assertRejected
+      "Google idToken must be 4096 characters or fewer"
+      (T.replicate 4097 "a")
 
 googleTokenInfoSpec :: Spec
 googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
