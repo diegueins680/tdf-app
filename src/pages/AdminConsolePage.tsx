@@ -1528,6 +1528,10 @@ function adminUserStatusNeedsAttention(status?: AdminUserStatus | null) {
   return status != null && status !== 'ACTIVE';
 }
 
+function adminUserNeedsAccessAttention(user: Pick<AdminUserDTO, 'roles' | 'status'>) {
+  return adminUserStatusNeedsAttention(user.status) || normalizeRoleSelection(user.roles).length === 0;
+}
+
 function normalizeHealthIndicator(value?: string | null) {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -2061,7 +2065,7 @@ export default function AdminConsolePage() {
   const hiddenAdminUsers = showAllAdminUsers ? [] : users.slice(ADMIN_USERS_VISIBLE_LIMIT);
   const hiddenAdminUserCount = Math.max(users.length - visibleAdminUsers.length, 0);
   const hiddenAdminUserAttentionCount = hiddenAdminUsers.filter((user) =>
-    adminUserStatusNeedsAttention(user.status),
+    adminUserNeedsAccessAttention(user),
   ).length;
   const hiddenAdminUserAttentionSuffix = hiddenAdminUserAttentionCount > 0
     ? ` (${hiddenAdminUserAttentionCount} ${hiddenAdminUserAttentionCount === 1 ? 'requiere' : 'requieren'} atención)`
