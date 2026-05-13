@@ -146,6 +146,7 @@ import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , loadArtistProfileDTO
                                      , loadOrCreateArtistProfileDTO
                                      , upsertArtistProfileRecord
+                                     , validateArtistProfileUpsert
                                      )
 import           TDF.Routes.Academy ( AcademyAPI
                                     , EnrollReq(..)
@@ -6084,9 +6085,10 @@ artistUpdateOwnProfile user payload = do
   requireArtistAccess user
   let artistKey = auPartyId user
       sanitized = payload { apuArtistId = fromSqlKey artistKey }
+  validated <- either throwBadRequest pure (validateArtistProfileUpsert sanitized)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
-  liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey sanitized now
+  liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey validated now
 
 loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
 loadFanProfileDTO fanId = do

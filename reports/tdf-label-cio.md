@@ -1,4 +1,14 @@
 
+## 2026-05-13 13:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (2× consecutive fresh-install Detox PASS). Google OAuth full e2e UNPROVEN — simulator-realistic proven (ASWebAuthenticationSession dialog presents), but web sign-in → token → callback → post-login screen never demonstrated on device. Exact blocker: **physical device manual test** (`tdf-mobile/docs/google-oauth-manual-test.md`) or EAS preview build for TestFlight internal testing. No login-related commits since 11:40Z. `EAS_IOS_CREDENTIALS_MISSING` still blocks preview/ad-hoc distribution. `EXPO_DEV_CLIENT_MISSING`: RESOLVED.
+- **Packet B:** `GATED` — strictly sequenced after Packet A full proof for production/store publish. No store-publish motion until Google OAuth device proof complete.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~1d06h). Child PID 11429 alive (elapsed ~8m, STAT S), actively implementing iteration 1 since ~13:32Z. Heartbeat fresh at 2026-05-13T13:40:15Z. restartCount 110 over ~4 days with 60s restart delay — normal iteration cycling, not failure loop. lastError stale git `index.lock` (auto-resolved, lastExitCode 0). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A partially proven (Google OAuth device test remains sole open ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 11429, heartbeat 13:40Z), systems lane paused.
+
 ## 2026-05-13 11:40 UTC — CIO checkpoint
 
 - **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (2× consecutive fresh-install Detox PASS). Google OAuth full e2e UNPROVEN — simulator-realistic proven (ASWebAuthenticationSession dialog presents), but web sign-in → token → callback → post-login screen never demonstrated on device. Exact blocker: **physical device manual test** (`tdf-mobile/docs/google-oauth-manual-test.md`) or EAS preview build for TestFlight internal testing. No login-related commits since 07:40Z. `EAS_IOS_CREDENTIALS_MISSING` still blocks preview/ad-hoc distribution. `EXPO_DEV_CLIENT_MISSING`: RESOLVED.

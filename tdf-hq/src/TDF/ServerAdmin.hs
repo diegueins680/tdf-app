@@ -150,6 +150,7 @@ import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
+                                        , validateArtistProfileUpsert
                                         )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
@@ -616,12 +617,15 @@ adminServer user =
       ensureModule ModuleAdmin user
       artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" apuArtistId)
       let artistKey = toSqlKey artistId
+      validated <-
+        either (throwError . artistProfileValidationError) pure
+          (validateArtistProfileUpsert payload)
       mParty <- withPool $ get artistKey
       case mParty of
         Nothing -> throwError err404
         Just _ -> do
           now <- liftIO getCurrentTime
-          dto <- withPool $ upsertArtistProfileRecord artistKey payload now
+          dto <- withPool $ upsertArtistProfileRecord artistKey validated now
           pure dto
 
     createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
@@ -1282,6 +1286,10 @@ validatePositiveAdminLookupId fieldName rawId
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
   | otherwise = Right rawId
+
+artistProfileValidationError :: Text -> ServerError
+artistProfileValidationError msg =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 validateBrainEntryId :: Int64 -> Either ServerError Int64
 validateBrainEntryId =

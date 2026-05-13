@@ -3,6 +3,7 @@
 
 module TDF.Profiles.Artist
   ( upsertArtistProfileRecord
+  , validateArtistProfileUpsert
   , loadArtistProfileDTO
   , loadOrCreateArtistProfileDTO
   , loadAllArtistProfilesDTO
@@ -13,6 +14,7 @@ module TDF.Profiles.Artist
   ) where
 
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
+import           Data.Char                 (isAsciiLower, isDigit)
 import qualified Data.Map.Strict           as Map
 import qualified Data.Set                  as Set
 import           Data.List                 (foldl')
@@ -35,6 +37,42 @@ cleanOptionalText = (>>= nonBlank)
     nonBlank txt =
       let trimmed = T.strip txt
       in if T.null trimmed then Nothing else Just trimmed
+
+validateArtistProfileUpsert :: ArtistProfileUpsert -> Either Text ArtistProfileUpsert
+validateArtistProfileUpsert payload@ArtistProfileUpsert{..} = do
+  normalizedSlug <- validateArtistProfileSlug apuSlug
+  pure payload { apuSlug = normalizedSlug }
+
+validateArtistProfileSlug :: Maybe Text -> Either Text (Maybe Text)
+validateArtistProfileSlug Nothing = Right Nothing
+validateArtistProfileSlug (Just rawSlug) =
+  case cleanOptionalText (Just rawSlug) of
+    Nothing -> Right Nothing
+    Just slugVal
+      | T.length normalizedSlug > maxArtistProfileSlugChars ->
+          Left "artist profile slug must be 96 characters or fewer"
+      | isValidArtistProfileSlug normalizedSlug ->
+          Right (Just normalizedSlug)
+      | otherwise ->
+          Left "artist profile slug must contain only lowercase ASCII letters, numbers, and hyphens"
+      where
+        normalizedSlug = T.toLower slugVal
+
+maxArtistProfileSlugChars :: Int
+maxArtistProfileSlugChars = 96
+
+isValidArtistProfileSlug :: Text -> Bool
+isValidArtistProfileSlug slugVal =
+  T.any isArtistProfileSlugAtom slugVal
+    && T.all isArtistProfileSlugChar slugVal
+    && T.head slugVal /= '-'
+    && T.last slugVal /= '-'
+
+isArtistProfileSlugChar :: Char -> Bool
+isArtistProfileSlugChar ch = isArtistProfileSlugAtom ch || ch == '-'
+
+isArtistProfileSlugAtom :: Char -> Bool
+isArtistProfileSlugAtom ch = isAsciiLower ch || isDigit ch
 
 upsertArtistProfileRecord
   :: MonadIO m

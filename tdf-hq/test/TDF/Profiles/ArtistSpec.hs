@@ -20,6 +20,7 @@ import TDF.Models
 import TDF.Profiles.Artist (
     loadOrCreateArtistProfileDTO,
     upsertArtistProfileRecord,
+    validateArtistProfileUpsert,
  )
 
 spec :: Spec
@@ -48,6 +49,29 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "Artist profile helpers" $ do
+        it "normalizes path-safe profile slugs before artist profile writes persist them" $ do
+            fmap apuSlug
+                (validateArtistProfileUpsert
+                    (baseProfileUpsert { apuSlug = Just "  Mentores-Del-Aire  " }))
+                `shouldBe` Right (Just "mentores-del-aire")
+            fmap apuSlug
+                (validateArtistProfileUpsert (baseProfileUpsert { apuSlug = Just "   " }))
+                `shouldBe` Right Nothing
+
+        it "rejects path-ambiguous profile slugs before profile writes can miss public lookups" $ do
+            let assertInvalid rawSlug expectedMessage =
+                    case validateArtistProfileUpsert
+                        (baseProfileUpsert { apuSlug = Just rawSlug }) of
+                        Left err -> T.unpack err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid profile slug error, got " <> show value)
+            assertInvalid "mentores del aire" "only lowercase ASCII letters"
+            assertInvalid "mentores/del-aire" "only lowercase ASCII letters"
+            assertInvalid "mentores?draft=true" "only lowercase ASCII letters"
+            assertInvalid "-mentores" "only lowercase ASCII letters"
+            assertInvalid ("mentores" <> T.singleton '\x202E') "only lowercase ASCII letters"
+            assertInvalid (T.replicate 97 "a") "96 characters or fewer"
+
         it "returns an initialized profile when none exists" $ do
             dto <- runInMemory $ do
                 partyId <- insertParty "Aurora"
@@ -125,6 +149,25 @@ spec = do
             apHighlights dto `shouldBe` Nothing
 
 -- Helpers
+
+baseProfileUpsert :: ArtistProfileUpsert
+baseProfileUpsert =
+    ArtistProfileUpsert
+        { apuArtistId = 42
+        , apuDisplayName = Just "Los Mentores"
+        , apuSlug = Nothing
+        , apuBio = Nothing
+        , apuCity = Nothing
+        , apuHeroImageUrl = Nothing
+        , apuSpotifyArtistId = Nothing
+        , apuSpotifyUrl = Nothing
+        , apuYoutubeChannelId = Nothing
+        , apuYoutubeUrl = Nothing
+        , apuWebsiteUrl = Nothing
+        , apuFeaturedVideoUrl = Nothing
+        , apuGenres = Nothing
+        , apuHighlights = Nothing
+        }
 
 runInMemory :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runInMemory action =
