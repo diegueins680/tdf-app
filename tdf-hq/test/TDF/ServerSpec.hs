@@ -229,6 +229,7 @@ import TDF.Server
     , validatePayPalTokenResponse
     , resolvePayPalApprovalUrl
     , resolvePayPalApprovalUrlForBase
+    , validatePayPalApprovalUrlOrderToken
     , extractPayPalCaptureStatus
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
@@ -8059,6 +8060,25 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
             assertWrongEnvironment "https://api-m.sandbox.paypal.com" liveLinks
             assertWrongEnvironment "https://api-m.paypal.com" sandboxLinks
+
+        it "rejects approval URLs whose token does not match the created order id" $ do
+            validatePayPalApprovalUrlOrderToken
+                "ORDER-123"
+                "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+                `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123"
+
+            case validatePayPalApprovalUrlOrderToken
+                    "ORDER-123"
+                    "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-456" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 502
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "PayPal approval URL token does not match created order id"
+                Right approvalUrl ->
+                    expectationFailure
+                        ( "Expected mismatched PayPal approval URL token to be rejected, got: "
+                            <> show approvalUrl
+                        )
 
         it "rejects missing or duplicate approval links instead of silently choosing one" $ do
             let assertInvalid expectedMessage links =

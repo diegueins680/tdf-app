@@ -12210,7 +12210,10 @@ createPaypalOrderRemote manager cid sec baseUrl totalCents currency buyerName bu
   ppOrderId <-
     either throwError pure $
       validatePayPalCreateOrderIdField (pcrId resObj)
-  pure (ppOrderId, Just approval)
+  matchedApproval <-
+    either throwError pure $
+      validatePayPalApprovalUrlOrderToken ppOrderId approval
+  pure (ppOrderId, Just matchedApproval)
 
 resolvePayPalApprovalUrl :: [PayPalLink] -> Either ServerError Text
 resolvePayPalApprovalUrl links =
@@ -12256,20 +12259,11 @@ expectedPayPalApprovalHost baseUrl
       Nothing
 
 payPalApprovalHost :: Text -> Maybe Text
-payPalApprovalHost rawApprovalUrl
-  | "https://" `T.isPrefixOf` T.toLower rawApprovalUrl =
-      let afterScheme = T.drop 8 rawApprovalUrl
-          authority =
-            T.takeWhile
-              (\c -> c /= '/' && c /= '?' && c /= '#')
-              afterScheme
-          (host, portSuffix) = T.breakOn ":" authority
-          normalizedHost = T.toLower host
-      in if T.null normalizedHost || not (T.null portSuffix)
-           then Nothing
-           else Just normalizedHost
-  | otherwise =
-      Nothing
+payPalApprovalHost rawApprovalUrl =
+  case payPalApprovalUrlParts rawApprovalUrl of
+    Just (host, portSuffix, _)
+      | T.null portSuffix -> Just host
+    _ -> Nothing
 
 validatePayPalApprovalUrl :: Maybe Text -> Either ServerError Text
 validatePayPalApprovalUrl Nothing =
@@ -12295,12 +12289,28 @@ validatePayPalApprovalUrl (Just rawUrl)
             && T.null portSuffix
             && "/checkoutnow?" `T.isPrefixOf` pathAndQuery
             && not ("#" `T.isInfixOf` pathAndQuery)
-            && hasSingleValidTokenParam (T.drop 13 pathAndQuery)
+            && isJust (payPalApprovalUrlToken rawApprovalUrl)
         Nothing ->
           False
 
-    paypalApprovalUrlParts rawApprovalUrl =
-      let afterScheme = T.drop 8 rawApprovalUrl
+invalidPayPalApprovalUrl :: Either ServerError a
+invalidPayPalApprovalUrl =
+  Left err502 { errBody = "PayPal returned an invalid approval URL" }
+
+validatePayPalApprovalUrlOrderToken :: Text -> Text -> Either ServerError Text
+validatePayPalApprovalUrlOrderToken expectedOrderId rawApprovalUrl = do
+  approvalUrl <- validatePayPalApprovalUrl (Just rawApprovalUrl)
+  case payPalApprovalUrlToken approvalUrl of
+    Just token | token == expectedOrderId -> Right approvalUrl
+    _ ->
+      Left err502
+        { errBody = "PayPal approval URL token does not match created order id"
+        }
+
+payPalApprovalUrlParts :: Text -> Maybe (Text, Text, Text)
+payPalApprovalUrlParts rawApprovalUrl
+  | "https://" `T.isPrefixOf` T.toLower url =
+      let afterScheme = T.drop 8 url
           authority =
             T.takeWhile
               (\c -> c /= '/' && c /= '?' && c /= '#')
@@ -12311,21 +12321,22 @@ validatePayPalApprovalUrl (Just rawUrl)
       in if T.null normalizedHost
            then Nothing
            else Just (normalizedHost, portSuffix, pathAndQuery)
+  | otherwise =
+      Nothing
+  where
+    url = T.strip rawApprovalUrl
 
-    hasSingleValidTokenParam query =
-      case T.splitOn "&" query of
-        [param] ->
-          case tokenValue param of
-            Just token -> isValidPayPalOrderId token
-            Nothing -> False
-        _ -> False
-
-    tokenValue param =
-      T.stripPrefix "token=" param
-
-invalidPayPalApprovalUrl :: Either ServerError a
-invalidPayPalApprovalUrl =
-  Left err502 { errBody = "PayPal returned an invalid approval URL" }
+payPalApprovalUrlToken :: Text -> Maybe Text
+payPalApprovalUrlToken rawApprovalUrl = do
+  (_, _, pathAndQuery) <- payPalApprovalUrlParts rawApprovalUrl
+  query <- T.stripPrefix "/checkoutnow?" pathAndQuery
+  case T.splitOn "&" query of
+    [param] -> do
+      token <- T.stripPrefix "token=" param
+      if isValidPayPalOrderId token
+        then Just token
+        else Nothing
+    _ -> Nothing
 
 capturePaypalOrderRemote
   :: Manager
