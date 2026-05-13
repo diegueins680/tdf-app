@@ -754,6 +754,20 @@ spec = do
                 "{\"code\":\"oauth-code-\\u0000\",\"calendarId\":\"primary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
+                "{\"code\":\"oauth code 123\",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-\\u202E\",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\""
+                    , BL8.pack (replicate 4097 'a')
+                    , "\",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"pri\\nmary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange

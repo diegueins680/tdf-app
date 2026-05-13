@@ -1427,10 +1427,10 @@ main = hspec $ do
 
         it "normalizes configured OpenAI chat models before fallback requests are built" $
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just " gpt-4.1-mini ") ]
+                [ ("OPENAI_MODEL", Just " kimi-latest ") ]
                 $ do
                     cfg <- loadConfig
-                    openAiModel cfg `shouldBe` "gpt-4.1-mini"
+                    openAiModel cfg `shouldBe` "kimi-latest"
 
         it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
             let assertInvalid rawModel expectedMessage =
@@ -1442,7 +1442,7 @@ main = hspec $ do
                 "gpt 4.1"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
-                "gpt-4.1\nsource"
+                "kimi-latest\nsource"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"

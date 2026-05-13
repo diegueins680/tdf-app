@@ -10005,12 +10005,11 @@ openAIChatModelCandidates primaryModel =
   nub $
     filter (not . T.null)
       [ T.strip primaryModel
-      , "gpt-4.1-mini"
-      , "gpt-4.1-nano"
+      , "kimi-latest"
       , "gpt-4o-mini"
       , "gpt-3.5-turbo"
       , "gpt-4-turbo"
-      , "gpt-4.1"
+      , "kimi-latest"
       ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool

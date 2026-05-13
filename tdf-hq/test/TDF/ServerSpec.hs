@@ -4887,7 +4887,7 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
-            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model gpt-4.1"
+            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model kimi-latest"
                 `shouldBe` False
             shouldRetryWithFallbackModel 400 "Invalid model response format"
                 `shouldBe` False

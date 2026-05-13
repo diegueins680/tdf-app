@@ -23,14 +23,23 @@ import           GHC.Generics (Generic)
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
 
-requiredNonBlank :: String -> Text -> Parser Text
-requiredNonBlank fieldName raw =
+requiredAuthorizationCode :: String -> Text -> Parser Text
+requiredAuthorizationCode fieldName raw =
   let trimmed = T.strip raw
   in if T.null trimmed
        then fail (fieldName <> " must not be blank")
        else if T.any isControl trimmed
          then fail (fieldName <> " must not contain control characters")
-         else pure trimmed
+       else if T.any isHiddenCalendarIdChar trimmed
+         then fail (fieldName <> " must not contain hidden formatting characters")
+       else if T.any isSpace trimmed
+         then fail (fieldName <> " must not contain whitespace")
+       else if T.length trimmed > maxCalendarAuthorizationCodeChars
+         then fail (fieldName <> " must be 4096 characters or fewer")
+       else pure trimmed
+
+maxCalendarAuthorizationCodeChars :: Int
+maxCalendarAuthorizationCodeChars = 4096
 
 normalizeCalendarId :: Text -> Either Text Text
 normalizeCalendarId raw =
@@ -74,7 +83,7 @@ instance FromJSON TokenExchangeIn where
     TokenExchangeIn rawCode rawRedirectUri rawCalendarId <-
       genericParseJSON strictObjectOptions value
     TokenExchangeIn
-      <$> requiredNonBlank "code" rawCode
+      <$> requiredAuthorizationCode "code" rawCode
       <*> pure (optionalNonBlank rawRedirectUri)
       <*> requiredCalendarId rawCalendarId
 

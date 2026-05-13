@@ -1089,7 +1089,7 @@ defaultOpenAiEmbedModel :: Text
 defaultOpenAiEmbedModel = "text-embedding-3-small"
 
 defaultOpenAiModel :: Text
-defaultOpenAiModel = "gpt-5-chat-latest"
+defaultOpenAiModel = "kimi-latest"
 
 normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiApiKey envName rawKey
