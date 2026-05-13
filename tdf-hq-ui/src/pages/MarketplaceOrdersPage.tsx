@@ -321,6 +321,12 @@ export default function MarketplaceOrdersPage() {
     || (visiblePaymentProviderSet.size === 1 && (filtered.length === 1 || hasVisibleOrdersWithoutPaymentProvider));
   const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
+  const visibleStatusLabelSet = useMemo(
+    () => new Set(filtered.map((order) => statusLabel(order.moStatus))),
+    [filtered],
+  );
+  const allVisibleOrdersShareStatus = filtered.length > 1 && visibleStatusLabelSet.size === 1;
+  const showStatusColumn = !allVisibleOrdersShareStatus || (showStatusFilter && statusFilter === 'all');
 
   const filtersDirty =
     statusFilter !== 'all'
@@ -1039,7 +1045,7 @@ export default function MarketplaceOrdersPage() {
                     <TableCell>Pedido</TableCell>
                     <TableCell>Cliente</TableCell>
                     {showBuyerPhoneColumn && <TableCell>Contacto</TableCell>}
-                    <TableCell>Estado</TableCell>
+                    {showStatusColumn && <TableCell>Estado</TableCell>}
                     <TableCell align="right">Total</TableCell>
                     {showPaymentProviderColumn && <TableCell>Pago</TableCell>}
                     <TableCell>Creado</TableCell>
@@ -1112,9 +1118,11 @@ export default function MarketplaceOrdersPage() {
                           )}
                         </TableCell>
                       )}
-                      <TableCell>
-                        <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
-                      </TableCell>
+                      {showStatusColumn && (
+                        <TableCell>
+                          <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
+                        </TableCell>
+                      )}
                       <TableCell align="right">{order.moTotalDisplay}</TableCell>
                       {showPaymentProviderColumn && (
                         <TableCell>

@@ -523,6 +523,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
         expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(getTableHeaders(container)).toContain('Estado');
       });
 
       await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
@@ -531,6 +532,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
         expect(container.textContent).toContain('Estado: Pagado');
+        expect(getTableHeaders(container)).not.toContain('Estado');
         expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
       });
     } finally {
@@ -841,6 +843,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'Todos los pedidos visibles comparten el estado Pendiente. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.',
         );
+        expect(getTableHeaders(container)).not.toContain('Estado');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {
