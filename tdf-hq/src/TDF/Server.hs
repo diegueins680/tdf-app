@@ -4956,6 +4956,8 @@ validatePublicBookingFullName rawName =
     Just nameVal
       | T.length nameVal > 160 ->
           Left err400 { errBody = "nombre debe tener 160 caracteres o menos" }
+      | not (hasPublicBookingLabelContent nameVal) ->
+          Left err400 { errBody = "nombre debe incluir letras o números" }
       | T.any isUnsafePublicBookingLabelChar nameVal ->
           Left err400
             { errBody =
@@ -4971,6 +4973,8 @@ validatePublicBookingServiceType rawServiceType =
     Just serviceTypeVal
       | T.length serviceTypeVal > 120 ->
           Left err400 { errBody = "serviceType debe tener 120 caracteres o menos" }
+      | not (hasPublicBookingLabelContent serviceTypeVal) ->
+          Left err400 { errBody = "serviceType debe incluir letras o números" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
@@ -4999,6 +5003,9 @@ isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+hasPublicBookingLabelContent :: Text -> Bool
+hasPublicBookingLabelContent = T.any isAlphaNum
 
 validateRequiredBookingTitle :: Text -> Either ServerError Text
 validateRequiredBookingTitle rawTitle =

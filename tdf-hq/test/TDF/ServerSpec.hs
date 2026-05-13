@@ -9071,6 +9071,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("Ana" <> T.singleton '\x2028' <> "Perez")
                 "marcas Unicode invisibles"
+            assertInvalid "---" "nombre debe incluir letras o números"
             assertInvalid (T.replicate 161 "A") "nombre debe tener 160 caracteres o menos"
 
     describe "validatePublicBookingServiceType" $ do
@@ -9093,6 +9094,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("mixing" <> T.singleton '\x2029')
                 "marcas Unicode invisibles"
+            assertInvalid "---" "serviceType debe incluir letras o números"
             assertInvalid (T.replicate 121 "A") "serviceType debe tener 120 caracteres o menos"
 
     describe "validateOptionalBookingServiceType" $ do
