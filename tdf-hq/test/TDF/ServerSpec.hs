@@ -463,7 +463,7 @@ firstFutureAdminConsole user =
             :<|> _inventory
             :<|> adminStubs
             :<|> _experience = futureServer user
-        _seed :<|> adminConsole = adminStubs
+        _seedPolicy :<|> adminConsole = adminStubs
     in adminConsole
 
 allFutureStubs :: AuthedUser -> [Either ServerError StubResponse]
@@ -493,7 +493,7 @@ allFutureStubs user =
         inventoryAssetsMetadata
             :<|> inventoryAssetsWorkflow
             :<|> inventoryStock = inventoryStubs
-        adminSeed :<|> _adminConsole = adminStubs
+        adminSeedPolicy :<|> _adminConsole = adminStubs
         experienceNavigation
             :<|> experienceFeedback
             :<|> experienceOffline
@@ -515,7 +515,7 @@ allFutureStubs user =
        , inventoryAssetsMetadata
        , inventoryAssetsWorkflow
        , inventoryStock
-       , adminSeed
+       , adminSeedPolicy
        , experienceNavigation
        , experienceFeedback
        , experienceOffline
@@ -10694,6 +10694,15 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected valid fallback discovery catalog entry, got: " <> show serverErr)
 
+            case validateFutureStubCatalogEntry ("admin", "seed-policy") of
+                Right value ->
+                    value `shouldBe` ("admin", "seed-policy")
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected policy-named admin fallback discovery entry, got: "
+                            <> show serverErr
+                        )
+
             case validateFutureStubCatalogEntry ("crm", "parties/detail/tabs") of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 500
@@ -10722,6 +10731,18 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ( "Expected reserved console route to stay out of the "
+                            <> "generic stub catalog, got: "
+                            <> show value
+                        )
+
+            case validateFutureStubCatalogEntry ("admin", "seed") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future stub metadata"
+                Right value ->
+                    expectationFailure
+                        ( "Expected action-named admin seed route to stay out of the "
                             <> "generic stub catalog, got: "
                             <> show value
                         )

@@ -78,7 +78,7 @@ futureServer user = futureCatalog
                 :<|> adminStubEntry inventoryAssetsWorkflowStub
                 :<|> adminStubEntry inventoryStockStub
 
-    adminStubs =     adminStubEntry adminSeedStub
+    adminStubs =     adminStubEntry adminSeedPolicyStub
                 :<|> adminConsole
 
     adminConsole = do
@@ -237,6 +237,7 @@ validateFutureStubCatalogAreaOrder catalog = do
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =
   [ ("admin", "console")
+  , ("admin", "seed")
   ]
 
 validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
@@ -524,8 +525,8 @@ inventoryAssetsMetadataStub = ("inventory", "assets/metadata")
 inventoryAssetsWorkflowStub = ("inventory", "assets/workflow")
 inventoryStockStub = ("inventory", "stock")
 
-adminSeedStub :: (Text, Text)
-adminSeedStub = ("admin", "seed")
+adminSeedPolicyStub :: (Text, Text)
+adminSeedPolicyStub = ("admin", "seed-policy")
 
 experienceNavigationStub, experienceFeedbackStub, experienceOfflineStub
   :: (Text, Text)
@@ -555,7 +556,7 @@ allowedFutureStubMetadata =
   , inventoryAssetsMetadataStub
   , inventoryAssetsWorkflowStub
   , inventoryStockStub
-  , adminSeedStub
+  , adminSeedPolicyStub
   , experienceNavigationStub
   , experienceFeedbackStub
   , experienceOfflineStub

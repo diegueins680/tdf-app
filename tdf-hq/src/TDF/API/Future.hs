@@ -118,7 +118,7 @@ type InventoryStubAPI =
 
 -- Admin and platform discovery endpoints
 type AdminStubAPI =
-       "seed"    :> Get '[JSON] StubResponse
+       "seed-policy" :> Get '[JSON] StubResponse
   :<|> "console" :> Get '[JSON] AdminConsoleView
 
 -- Cross-cutting UI considerations
