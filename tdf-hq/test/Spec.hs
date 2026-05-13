@@ -210,7 +210,8 @@ import TDF.ServerInstagramOAuth
       resolveInstagramRedirectUri,
       sanitizeFacebookGraphErrorMessage,
       selectPrimaryInstagramCandidate,
-      validateInstagramRedirectUri )
+      validateInstagramRedirectUri,
+      validateInstagramUsername )
 import TDF.Server
     ( buildWhatsappCtaFor,
       DriveApiResp (..),
@@ -4380,6 +4381,29 @@ main = hspec $ do
                         <> "]}"
                 )
                 "Facebook page list must not contain duplicate page ids"
+
+        it "normalizes Instagram usernames before OAuth page handles are persisted" $ do
+            validateInstagramUsername " TDF.Studio_01 "
+                `shouldBe` Right "tdf.studio_01"
+
+            let assertInvalid rawUsername expectedMessage =
+                    case validateInstagramUsername rawUsername of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expectedMessage
+                        Right username ->
+                            expectationFailure
+                                ( "Expected invalid Instagram username to fail, got: "
+                                    <> Data.Text.unpack username
+                                )
+            assertInvalid "   " "must not be blank"
+            assertInvalid "tdf studio" "must not contain whitespace"
+            assertInvalid
+                ("tdf" <> "\NUL" <> "studio")
+                "must not contain whitespace"
+            assertInvalid ("tdf" <> "\x202E" <> "studio") "hidden formatting"
+            assertInvalid "---" "at least one ASCII letter or digit"
+            assertInvalid "tdf/studio" "only ASCII letters"
+            assertInvalid (Data.Text.replicate 65 "a") "64 characters or fewer"
 
         it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
             let sanitized =

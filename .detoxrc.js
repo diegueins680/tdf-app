@@ -15,6 +15,11 @@ module.exports = {
       binaryPath: 'tdf-mobile/ios/build/Build/Products/Debug-iphonesimulator/TDFRecords.app',
       build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Debug -sdk iphonesimulator -derivedDataPath build -jobs 1',
     },
+    'ios.release': {
+      type: 'ios.app',
+      binaryPath: 'tdf-mobile/ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app',
+      build: 'cd tdf-mobile/ios && xcodebuild -workspace TDFRecords.xcworkspace -scheme TDFRecords -configuration Release -sdk iphonesimulator -derivedDataPath build -jobs 1',
+    },
   },
   devices: {
     simulator: {
@@ -29,6 +34,10 @@ module.exports = {
     'ios.sim.debug': {
       device: 'simulator',
       app: 'ios.debug',
+    },
+    'ios.sim.release': {
+      device: 'simulator',
+      app: 'ios.release',
     },
   },
 };

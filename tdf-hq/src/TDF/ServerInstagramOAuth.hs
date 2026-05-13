@@ -13,6 +13,7 @@ module TDF.ServerInstagramOAuth
   , sanitizeFacebookGraphErrorMessage
   , selectPrimaryInstagramCandidate
   , validateInstagramRedirectUri
+  , validateInstagramUsername
   ) where
 
 import           Control.Exception          (SomeException, displayException, try)
@@ -220,7 +221,48 @@ data InstagramUser = InstagramUser
 instance FromJSON InstagramUser where
   parseJSON = withObject "InstagramUser" $ \o ->
     InstagramUser <$> (normalizeFacebookGraphId "Instagram user id" =<< o .: "id")
-                  <*> o .:? "username"
+                  <*> ((o .:? "username") >>= traverse parseInstagramUsername)
+
+parseInstagramUsername :: Text -> Parser Text
+parseInstagramUsername rawUsername =
+  either (fail . T.unpack) pure (validateInstagramUsername rawUsername)
+
+validateInstagramUsername :: Text -> Either Text Text
+validateInstagramUsername rawUsername
+  | T.null username =
+      Left "Instagram username must not be blank"
+  | T.length username > maxInstagramUsernameChars =
+      Left $
+        "Instagram username must be "
+          <> T.pack (show maxInstagramUsernameChars)
+          <> " characters or fewer"
+  | T.any isUnsafeInstagramUsernameChar username =
+      Left $
+        "Instagram username must not contain whitespace, control, "
+          <> "or hidden formatting characters"
+  | not (T.any isInstagramUsernameAtom username) =
+      Left "Instagram username must contain at least one ASCII letter or digit"
+  | not (T.all isInstagramUsernameChar username) =
+      Left "Instagram username must contain only ASCII letters, digits, '.', or '_'"
+  | otherwise =
+      Right username
+  where
+    username = T.toLower (T.strip rawUsername)
+
+maxInstagramUsernameChars :: Int
+maxInstagramUsernameChars = 64
+
+isUnsafeInstagramUsernameChar :: Char -> Bool
+isUnsafeInstagramUsernameChar ch =
+  isSpace ch || isControl ch || generalCategory ch == Format
+
+isInstagramUsernameAtom :: Char -> Bool
+isInstagramUsernameAtom ch =
+  (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+
+isInstagramUsernameChar :: Char -> Bool
+isInstagramUsernameChar ch =
+  isInstagramUsernameAtom ch || ch == '.' || ch == '_'
 
 data InstagramMedia = InstagramMedia
   { imId        :: Text
