@@ -1054,9 +1054,18 @@ normalizeSessionCookiePath (Just rawPath)
       Right path
   where
     path = T.strip (T.pack rawPath)
-    invalid = Left "SESSION_COOKIE_PATH must start with / and contain no whitespace, semicolons, commas, or control characters"
+    invalid =
+      Left
+        ( "SESSION_COOKIE_PATH must start with / and contain no whitespace, "
+            <> "semicolons, commas, or control characters; hidden formatting "
+            <> "characters are also rejected"
+        )
     invalidPathChar ch =
-      isControl ch || isSpace ch || ch == ';' || ch == ','
+      isControl ch
+        || isSpace ch
+        || isHiddenConnectionUrlChar ch
+        || ch == ';'
+        || ch == ','
 
 validateConfiguredHttpsUrl :: String -> Maybe String -> IO (Maybe Text)
 validateConfiguredHttpsUrl _ Nothing = pure Nothing

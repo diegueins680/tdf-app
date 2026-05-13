@@ -1121,6 +1121,8 @@ main = hspec $ do
             assertInvalid "/hq; Secure"
             assertInvalid "/hq admin"
             assertInvalid "/hq,admin"
+            assertInvalid ("/hq" <> ['\x200B'])
+            assertInvalid ("/hq" <> ['\x202E'] <> "admin")
 
         it "rejects malformed session cookie max-age values instead of silently using the default" $ do
             withEnvOverrides
