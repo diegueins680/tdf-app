@@ -379,6 +379,15 @@ selectPrimaryInstagramPage preferredIds contexts =
 selectPrimaryInstagramCandidate :: [Text] -> [(Text, a)] -> Either ServerError (Maybe a)
 selectPrimaryInstagramCandidate preferredIds candidates = do
   preferredIdsClean <- validatePreferredInstagramCandidateIds preferredIds
+  candidatesClean <- validateInstagramCandidateIds candidates
+  let candidateIds = map fst candidatesClean
+      hasDuplicateCandidateIds =
+        length candidateIds /= length (nub candidateIds)
+      go [] = Nothing
+      go (pid:rest) =
+        case find (\(candidateId, _) -> candidateId == pid) candidatesClean of
+          Just (_, candidate) -> Just candidate
+          Nothing -> go rest
   if hasDuplicateCandidateIds
     then
       Left err409
@@ -390,7 +399,7 @@ selectPrimaryInstagramCandidate preferredIds candidates = do
       case go preferredIdsClean of
         Just candidate -> Right (Just candidate)
         Nothing ->
-          case candidates of
+          case candidatesClean of
             [] -> Right Nothing
             [(_, candidate)] -> Right (Just candidate)
             _ ->
@@ -399,16 +408,23 @@ selectPrimaryInstagramCandidate preferredIds candidates = do
                     "Instagram OAuth primary page fallback is ambiguous; reconnect from an existing "
                       <> "account or keep only one Instagram page connected."
                 }
-  where
-    candidateIds = map fst candidates
-    hasDuplicateCandidateIds =
-      length candidateIds /= length (nub candidateIds)
 
-    go [] = Nothing
-    go (pid:rest) =
-      case find (\(candidateId, _) -> candidateId == pid) candidates of
-        Just (_, candidate) -> Just candidate
-        Nothing -> go rest
+validateInstagramCandidateIds :: [(Text, a)] -> Either ServerError [(Text, a)]
+validateInstagramCandidateIds candidates =
+  case traverse validateCandidate candidates of
+    Left _ ->
+      Left err409
+        { errBody =
+            "Instagram OAuth candidate page ids are malformed; reconnect "
+              <> "from Facebook and try again."
+        }
+    Right cleanCandidates -> Right cleanCandidates
+  where
+    validateCandidate (rawId, candidate) =
+      case parseEither (normalizeFacebookGraphId "Instagram candidate account id") rawId of
+        Right cleanId
+          | cleanId == rawId -> Right (cleanId, candidate)
+        _ -> Left ("invalid Instagram candidate account id" :: String)
 
 validatePreferredInstagramCandidateIds :: [Text] -> Either ServerError [Text]
 validatePreferredInstagramCandidateIds preferredIds =

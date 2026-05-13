@@ -4316,6 +4316,16 @@ main = hspec $ do
                     expectationFailure
                         ("Expected duplicate Instagram candidate ids to fail, got " <> show value)
 
+            forM_ [" ig-1", "ig 1", "ig-1\x202E"] $ \candidateId ->
+                case selectPrimaryInstagramCandidate [] [(candidateId, "page-malformed" :: Text)] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 409
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "candidate page ids are malformed"
+                    Right value ->
+                        expectationFailure
+                            ("Expected malformed Instagram candidate id to fail, got " <> show value)
+
             forM_ [" ig-1", "ig 1", "ig-1\x202E"] $ \storedId ->
                 case selectPrimaryInstagramCandidate [storedId] [firstPage] of
                     Left serverErr -> do
