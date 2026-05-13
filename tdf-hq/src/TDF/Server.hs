@@ -2088,8 +2088,9 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
           mAccessTokenEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_ACCESS_TOKEN"
           case mRefreshToken of
             Just rt -> do
+              refreshToken <- either throwError pure (validateConfiguredDriveRefreshToken rt)
               (cid, secret) <- loadDriveClientCreds
-              refreshDriveAccessToken manager cid secret rt `catchError` \err ->
+              refreshDriveAccessToken manager cid secret refreshToken `catchError` \err ->
                 handleRefreshError err mAccessTokenEnv
             Nothing -> do
               maybe
@@ -2363,23 +2364,35 @@ validateDriveTokenExchangeRequest cfg DriveTokenExchangeRequest{..} = do
 
 validateDriveTokenRefreshRequest :: DriveTokenRefreshRequest -> Either ServerError Text
 validateDriveTokenRefreshRequest DriveTokenRefreshRequest{refreshToken = rawToken} =
-  validateDriveRefreshToken rawToken
+  validateDriveRefreshTokenWith err400 "refreshToken" rawToken
 
 validateDriveRefreshToken :: Text -> Either ServerError Text
-validateDriveRefreshToken rawToken =
-  let tokenVal = T.strip rawToken
-  in if T.null tokenVal
-       then Left err400 { errBody = "refreshToken is required" }
-       else
-         if T.any isControl tokenVal
-           then Left err400 { errBody = "refreshToken must not contain control characters" }
-           else if T.any isHiddenDriveOAuthTokenChar tokenVal
-             then Left err400 { errBody = "refreshToken must not contain hidden formatting characters" }
-           else if T.any isSpace tokenVal
-           then Left err400 { errBody = "refreshToken must not contain whitespace" }
-           else if T.length tokenVal > maxDriveOAuthTokenChars
-           then Left err400 { errBody = "refreshToken must be 4096 characters or fewer" }
-           else Right tokenVal
+validateDriveRefreshToken =
+  validateDriveRefreshTokenWith err400 "refreshToken"
+
+validateConfiguredDriveRefreshToken :: Text -> Either ServerError Text
+validateConfiguredDriveRefreshToken =
+  validateDriveRefreshTokenWith err503 "DRIVE_REFRESH_TOKEN"
+
+validateDriveRefreshTokenWith :: ServerError -> Text -> Text -> Either ServerError Text
+validateDriveRefreshTokenWith baseError fieldName rawToken
+  | T.null tokenVal =
+      invalid " is required"
+  | T.any isControl tokenVal =
+      invalid " must not contain control characters"
+  | T.any isHiddenDriveOAuthTokenChar tokenVal =
+      invalid " must not contain hidden formatting characters"
+  | T.any isSpace tokenVal =
+      invalid " must not contain whitespace"
+  | T.length tokenVal > maxDriveOAuthTokenChars =
+      invalid " must be 4096 characters or fewer"
+  | otherwise =
+      Right tokenVal
+  where
+    tokenVal = T.strip rawToken
+    invalid suffix =
+      Left baseError
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> suffix)) }
 
 validateDriveAuthorizationCode :: Text -> Either ServerError Text
 validateDriveAuthorizationCode rawCode =

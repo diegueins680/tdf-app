@@ -233,6 +233,7 @@ import TDF.Server
       validateDatafastCredential,
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
+      validateConfiguredDriveRefreshToken,
       validateDriveRedirectUri,
       validateCalendarRedirectUri,
       validateCalendarEventListQuery,
@@ -5501,6 +5502,35 @@ main = hspec $ do
                 (Just (Data.Text.replicate 4097 "a"))
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
+
+    describe "validateConfiguredDriveRefreshToken" $ do
+        it "rejects malformed configured refresh tokens before upload fallback refreshes OAuth" $ do
+            validateConfiguredDriveRefreshToken " 1//refresh-token_123 "
+                `shouldBe` Right "1//refresh-token_123"
+
+            let assertInvalid rawToken expectedMessage =
+                    case validateConfiguredDriveRefreshToken rawToken of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 503
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed configured Drive refresh token, got "
+                                    <> show value
+                                )
+            assertInvalid "   " "DRIVE_REFRESH_TOKEN is required"
+            assertInvalid
+                "refresh token"
+                "DRIVE_REFRESH_TOKEN must not contain whitespace"
+            assertInvalid
+                "refresh\ntoken"
+                "DRIVE_REFRESH_TOKEN must not contain control characters"
+            assertInvalid
+                ("refresh" <> Data.Text.singleton '\x202E' <> "token")
+                "DRIVE_REFRESH_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 4097 "a")
+                "DRIVE_REFRESH_TOKEN must be 4096 characters or fewer"
 
     describe "resolveDrivePublicUrl" $ do
         it "rejects view-only links in Drive webContentLink responses" $ do
