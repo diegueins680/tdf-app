@@ -1175,7 +1175,7 @@ const firstRunMessagingAutomationDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
-const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:whats\s*app|discord|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|telegram|facebook|fb))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat))|(?:(?:group\s+chat|chat\s+group|community|group|chat)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
+const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:whats\s*app|discord|slack|telegram|facebook|fb)\s+(?:community|comunidad|group|grupo|chat))|(?:(?:community|comunidad|group|grupo|chat)\s+(?:de\s+)?(?:whats\s*app|discord|slack|telegram|facebook|fb))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat))|(?:(?:group\s+chat|chat\s+group|community|group|chat)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
 
 const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunCommunityGroupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
