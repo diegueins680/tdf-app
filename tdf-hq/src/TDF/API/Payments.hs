@@ -11,6 +11,7 @@ import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), ToJSON, defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields)
+import           Data.Aeson.Types (Parser)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -29,7 +30,26 @@ data PaymentCreate = PaymentCreate
   } deriving (Show, Generic)
 
 instance FromJSON PaymentCreate where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON value = do
+    payload <- genericParseJSON defaultOptions { rejectUnknownFields = True } value
+    validatePositiveInt64Field "pcPartyId" (pcPartyId payload)
+    maybe (pure ()) (validatePositiveInt64Field "pcOrderId") (pcOrderId payload)
+    maybe (pure ()) (validatePositiveInt64Field "pcInvoiceId") (pcInvoiceId payload)
+    validatePositiveIntField "pcAmountCents" (pcAmountCents payload)
+    pure payload
+
+validatePositiveInt64Field :: String -> Int64 -> Parser ()
+validatePositiveInt64Field fieldName rawValue =
+  if rawValue > 0
+    then pure ()
+    else fail (fieldName <> " must be a positive integer")
+
+validatePositiveIntField :: String -> Int -> Parser ()
+validatePositiveIntField fieldName rawValue =
+  if rawValue > 0
+    then pure ()
+    else fail (fieldName <> " must be a positive integer")
+
 instance MimeUnrender LooseJSON PaymentCreate where
   mimeUnrender _ = eitherDecode
 

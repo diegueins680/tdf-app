@@ -242,6 +242,27 @@ spec = do
           :: Either String PaymentCreate)
         `shouldSatisfy` isLeft
 
+    it "rejects non-positive ids and amounts before manual payment handler fallbacks" $ do
+      let assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        "{\"pcPartyId\":0,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcPartyId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcOrderId\":0,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcOrderId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcInvoiceId\":-7,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcInvoiceId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcAmountCents\":0,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcAmountCents must be a positive integer"
+
   describe "inventory checkout/check-in request JSON" $ do
     it "accepts canonical asset create and patch keys used by current clients" $ do
       case A.eitherDecode
