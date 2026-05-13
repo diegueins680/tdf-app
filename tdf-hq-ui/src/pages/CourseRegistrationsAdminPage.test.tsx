@@ -238,10 +238,12 @@ const pendingRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
 const paidRecoveryScopeHint =
   'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.';
-const contactDossierScopeHint =
-  'Usa el contacto para abrir expediente; el menú de estado muestra acciones.';
-const contactPaymentWorkflowDossierScopeHint =
-  'Usa el contacto para abrir expediente; el menú de estado incluye Registrar pago.';
+const emailDossierScopeHint =
+  'Usa el correo para abrir expediente; el menú de estado muestra acciones.';
+const emailPaymentWorkflowDossierScopeHint =
+  'Usa el correo para abrir expediente; el menú de estado incluye Registrar pago.';
+const phonePaymentWorkflowDossierScopeHint =
+  'Usa el teléfono para abrir expediente; el menú de estado incluye Registrar pago.';
 const recordDossierScopeHint =
   'Usa el número de registro para abrir expediente; el menú de estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
@@ -249,9 +251,9 @@ const recordPaymentWorkflowDossierScopeHint =
 const recordDossierLinkScopeHint =
   'Usa el número de registro para abrir expediente.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Usa el nombre, el contacto o el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Usa el nombre, el correo o el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
 const mixedIdentityDossierLinkScopeHint =
-  'Usa el nombre, el contacto o el número de registro para abrir expediente.';
+  'Usa el nombre, el correo o el número de registro para abrir expediente.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
@@ -1533,7 +1535,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses the best available contact as the visible identity when the registration name is blank', async () => {
+  it('names the visible email identity in first-time dossier guidance when the registration name is blank', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crFullName: '   ',
@@ -1548,10 +1550,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        contactPaymentWorkflowDossierScopeHint,
+        emailPaymentWorkflowDossierScopeHint,
       );
       expect(container.textContent).not.toContain(dossierScopeHint);
-      expect(container.textContent).not.toContain(contactDossierScopeHint);
+      expect(container.textContent).not.toContain(emailDossierScopeHint);
       expect(hasExactText(container, 'sin-nombre@example.com')).toBe(true);
       expect(hasExactText(container, '+593999000777')).toBe(true);
       expect(countOccurrences(container, 'sin-nombre@example.com')).toBe(1);
@@ -1571,6 +1573,33 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(dialog?.textContent).toContain('sin-nombre@example.com');
       expect(dialog?.textContent).toContain('+593999000777');
       expect(dialog?.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
+  it('names the visible phone identity in first-time dossier guidance when it is the only contact', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crFullName: '   ',
+        crEmail: '   ',
+        crPhoneE164: '+593999000777',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        phonePaymentWorkflowDossierScopeHint,
+      );
+      expect(container.textContent).not.toContain('Usa el contacto para abrir expediente');
+      expect(hasExactText(container, '+593999000777')).toBe(true);
+      expect(container.textContent).not.toContain('Sin nombre');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de +593999000777')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para +593999000777')).toBeTruthy();
     });
 
     await cleanup();
@@ -1702,7 +1731,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(contextSummary?.textContent).not.toContain(mixedIdentityPaymentWorkflowDossierScopeHint);
       expect(countOccurrences(container, mixedIdentityDossierLinkScopeHint)).toBe(1);
       expect(container.textContent).not.toContain(dossierScopeHint);
-      expect(container.textContent).not.toContain(contactDossierScopeHint);
+      expect(container.textContent).not.toContain(emailDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
       expect(container.textContent).not.toContain('dato principal de cada fila');
       expect(countOccurrences(container, 'para abrir expediente')).toBe(1);
@@ -11488,7 +11517,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
-      expect(container.textContent).toContain(contactPaymentWorkflowDossierScopeHint);
+      expect(container.textContent).toContain(emailPaymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain(mixedBusySearchHint);
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);

@@ -147,7 +147,7 @@ const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por 
 const emptyCohortFilterMessage = 'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
-type RegistrationIdentityKind = 'name' | 'contact' | 'record';
+type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Usa ${targetLabel} para abrir expediente; el menú de estado muestra acciones.`;
 const buildDossierLinkScopeHint = (targetLabel: string) =>
@@ -2056,7 +2056,8 @@ const registrationIdentityKind = (
   reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ): RegistrationIdentityKind => {
   if (reg.crFullName?.trim()) return 'name';
-  if (reg.crEmail?.trim() || reg.crPhoneE164?.trim()) return 'contact';
+  if (reg.crEmail?.trim()) return 'email';
+  if (reg.crPhoneE164?.trim()) return 'phone';
   return 'record';
 };
 
@@ -2093,10 +2094,11 @@ const formatVisibleMissingContactSummary = (missingContactCount: number, visible
 
 const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
   const identityKinds = new Set(registrations.map(registrationIdentityKind));
-  const orderedTargetLabels = (['name', 'contact', 'record'] as const)
+  const orderedTargetLabels = (['name', 'email', 'phone', 'record'] as const)
     .filter((kind) => identityKinds.has(kind))
     .map((kind) => {
-      if (kind === 'contact') return 'el contacto';
+      if (kind === 'email') return 'el correo';
+      if (kind === 'phone') return 'el teléfono';
       if (kind === 'record') return 'el número de registro';
       return 'el nombre';
     });
