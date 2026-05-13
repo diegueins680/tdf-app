@@ -5692,6 +5692,50 @@ fanFollowArtist user artistId = do
       , fanFollowArtistPartyId = targetKey
       , fanFollowCreatedAt     = now
       }
+    -- Auto-follow club members
+    mClub <- getBy (UniqueFanClubArtist targetKey)
+    case mClub of
+      Nothing -> pure ()
+      Just (Entity cid _) -> do
+        -- Get existing member profiles (excluding self)
+        existingProfiles <- selectList
+          [ M.FanClubMemberProfileClubId ==. cid
+          , M.FanClubMemberProfilePartyId !=. fanKey
+          ] []
+        let existingMemberIds = map (fanClubMemberProfilePartyId . entityVal) existingProfiles
+        -- Create member profile for new fan if not exists
+        mExistingProfile <- getBy (UniqueFanClubMemberProfile fanKey cid)
+        case mExistingProfile of
+          Just _ -> pure ()
+          Nothing -> do
+            mFanProfile <- getBy (UniqueFanProfile fanKey)
+            let avatarUrl = case mFanProfile of
+                  Just (Entity _ fp) -> fanProfileAvatarUrl fp
+                  Nothing -> Nothing
+            insert_ FanClubMemberProfile
+              { fanClubMemberProfilePartyId = fanKey
+              , fanClubMemberProfileClubId = cid
+              , fanClubMemberProfileHandle = Nothing
+              , fanClubMemberProfileBio = Nothing
+              , fanClubMemberProfileAvatarUrl = avatarUrl
+              , fanClubMemberProfileJoinedAt = now
+              }
+        -- Auto-follow: new fan follows existing members
+        forM_ existingMemberIds $ \memberId ->
+          void $ insertUnique PartyFollow
+            { partyFollowFollowerPartyId = fanKey
+            , partyFollowFollowingPartyId = memberId
+            , partyFollowViaNfc = False
+            , partyFollowCreatedAt = now
+            }
+        -- Auto-follow: existing members follow new fan
+        forM_ existingMemberIds $ \memberId ->
+          void $ insertUnique PartyFollow
+            { partyFollowFollowerPartyId = memberId
+            , partyFollowFollowingPartyId = fanKey
+            , partyFollowViaNfc = False
+            , partyFollowCreatedAt = now
+            }
     loadFanFollowDTO fanKey targetKey
   maybe (throwError err404) pure mDto
 

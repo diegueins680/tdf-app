@@ -495,6 +495,265 @@ fanClubSecureArtistHandlers user artistId =
             }
       pure NoContent
 
+    listClubMemories aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            memories <- selectList [M.FanClubMemoryIsDeleted ==. False] [Desc M.FanClubMemoryCreatedAt]
+            let memberIds = map (fanClubMemoryMemberProfileId . entityVal) memories
+            memberProfiles <- selectList [M.FanClubMemberProfileId <-. memberIds] []
+            let profileMap = foldl (\m (Entity mpid mp) -> Map.insert mpid mp m) Map.empty memberProfiles
+            let validMemories = filter (\(Entity _ mem) ->
+                  case Map.lookup (fanClubMemoryMemberProfileId mem) profileMap of
+                    Just mp -> fanClubMemberProfileClubId mp == cid
+                    Nothing -> False
+                  ) memories
+            forM validMemories $ \(Entity mid m) -> do
+              let Just mp = Map.lookup (fanClubMemoryMemberProfileId m) profileMap
+              author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
+              pure FanClubMemoryDTO
+                { fcmId = fromSqlKey mid
+                , fcmMemberProfileId = fromSqlKey (fanClubMemoryMemberProfileId m)
+                , fcmMemberName = sppDisplayName author
+                , fcmMemberAvatarUrl = sppAvatarUrl author
+                , fcmTitle = fanClubMemoryTitle m
+                , fcmDescription = fanClubMemoryDescription m
+                , fcmMediaUrls = maybe [] (T.splitOn ",") (fanClubMemoryMediaUrls m)
+                , fcmIsHidden = fanClubMemoryIsHidden m
+                , fcmIsDeleted = fanClubMemoryIsDeleted m
+                , fcmCreatedAt = fanClubMemoryCreatedAt m
+                }
+
+    createClubMemory aId req = do
+      artistKey <- requireArtistKey aId
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> runDB $ do
+          now <- liftIO getCurrentTime
+          mProfile <- getBy (UniqueFanClubMemberProfile (auPartyId user) cid)
+          profileId <- case mProfile of
+            Just (Entity pid _) -> pure pid
+            Nothing -> do
+              mFanProfile <- getBy (UniqueFanProfile (auPartyId user))
+              let displayName = case mFanProfile of
+                    Just (Entity _ fp) -> fanProfileDisplayName fp
+                    Nothing -> Nothing
+              let avatarUrl = case mFanProfile of
+                    Just (Entity _ fp) -> fanProfileAvatarUrl fp
+                    Nothing -> Nothing
+              insert FanClubMemberProfile
+                { fanClubMemberProfilePartyId = auPartyId user
+                , fanClubMemberProfileClubId = cid
+                , fanClubMemberProfileHandle = Nothing
+                , fanClubMemberProfileBio = Nothing
+                , fanClubMemberProfileAvatarUrl = avatarUrl
+                , fanClubMemberProfileJoinedAt = now
+                }
+          mid <- insert FanClubMemory
+            { fanClubMemoryMemberProfileId = profileId
+            , fanClubMemoryTitle = fcmReqTitle req
+            , fanClubMemoryDescription = fcmReqDescription req
+            , fanClubMemoryMediaUrls = if null (fcmReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcmReqMediaUrls req))
+            , fanClubMemoryIsHidden = False
+            , fanClubMemoryIsDeleted = False
+            , fanClubMemoryCreatedAt = now
+            }
+          author <- getAuthorDTO (auPartyId user)
+          pure FanClubMemoryDTO
+            { fcmId = fromSqlKey mid
+            , fcmMemberProfileId = fromSqlKey profileId
+            , fcmMemberName = sppDisplayName author
+            , fcmMemberAvatarUrl = sppAvatarUrl author
+            , fcmTitle = fcmReqTitle req
+            , fcmDescription = fcmReqDescription req
+            , fcmMediaUrls = fcmReqMediaUrls req
+            , fcmIsHidden = False
+            , fcmIsDeleted = False
+            , fcmCreatedAt = now
+            }
+
+    hideMemory aId memoryId = do
+      artistKey <- requireArtistKey aId
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> do
+          isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
+          unless isOfficer $ throwError err403 { errBody = "No autorizado" }
+          memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
+          runDB $ do
+            mMem <- get memoryKey
+            case mMem of
+              Nothing -> pure ()
+              Just mem -> do
+                mProfile <- get (fanClubMemoryMemberProfileId mem)
+                case mProfile of
+                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsHidden =. True]
+                  _ -> pure ()
+          pure NoContent
+
+    unhideMemory aId memoryId = do
+      artistKey <- requireArtistKey aId
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> do
+          isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
+          unless isOfficer $ throwError err403 { errBody = "No autorizado" }
+          memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
+          runDB $ do
+            mMem <- get memoryKey
+            case mMem of
+              Nothing -> pure ()
+              Just mem -> do
+                mProfile <- get (fanClubMemoryMemberProfileId mem)
+                case mProfile of
+                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsHidden =. False]
+                  _ -> pure ()
+          pure NoContent
+
+    deleteMemory aId memoryId = do
+      artistKey <- requireArtistKey aId
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> do
+          isOfficer <- runDB $ checkIsOfficer artistKey (auPartyId user)
+          unless isOfficer $ throwError err403 { errBody = "No autorizado" }
+          memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
+          runDB $ do
+            mMem <- get memoryKey
+            case mMem of
+              Nothing -> pure ()
+              Just mem -> do
+                mProfile <- get (fanClubMemoryMemberProfileId mem)
+                case mProfile of
+                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsDeleted =. True]
+                  _ -> pure ()
+          pure NoContent
+
+    reportMemory aId memoryId req = do
+      artistKey <- requireArtistKey aId
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> do
+          memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
+          runDB $ do
+            mMem <- get memoryKey
+            case mMem of
+              Nothing -> throwError err404 { errBody = "Memory no encontrado" }
+              Just mem -> do
+                mProfile <- get (fanClubMemoryMemberProfileId mem)
+                case mProfile of
+                  Nothing -> throwError err404 { errBody = "Memory no encontrado" }
+                  Just mp -> do
+                    unless (fanClubMemberProfileClubId mp == cid) $ throwError err404 { errBody = "Memory no encontrado" }
+                    now <- liftIO getCurrentTime
+                    rid <- insert FanClubMemoryReport
+                      { fanClubMemoryReportReporterId = auPartyId user
+                      , fanClubMemoryReportMemoryId = memoryKey
+                      , fanClubMemoryReportReason = fcmrReqReason req
+                      , fanClubMemoryReportCreatedAt = now
+                      }
+                    pure FanClubMemoryReportDTO
+                      { fcmrId = fromSqlKey rid
+                      , fcmrReporterId = fromSqlKey (auPartyId user)
+                      , fcmrMemoryId = memoryId
+                      , fcmrReason = fcmrReqReason req
+                      , fcmrCreatedAt = now
+                      }
+
+    listMemberProfiles aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            profiles <- selectList [M.FanClubMemberProfileClubId ==. cid] [Asc M.FanClubMemberProfileJoinedAt]
+            forM profiles $ \(Entity pid p) -> do
+              author <- getAuthorDTO (fanClubMemberProfilePartyId p)
+              pure FanClubMemberProfileDTO
+                { fcmpId = fromSqlKey pid
+                , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
+                , fcmpClubId = fromSqlKey cid
+                , fcmpHandle = fanClubMemberProfileHandle p
+                , fcmpBio = fanClubMemberProfileBio p
+                , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
+                , fcmpDisplayName = sppDisplayName author
+                , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
+                }
+
+    getMyMemberProfile aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> throwError err404 { errBody = "Club no encontrado" }
+          Just (Entity cid _) -> do
+            mProfile <- getBy (UniqueFanClubMemberProfile (auPartyId user) cid)
+            case mProfile of
+              Nothing -> throwError err404 { errBody = "Perfil de miembro no encontrado" }
+              Just (Entity pid p) -> do
+                author <- getAuthorDTO (fanClubMemberProfilePartyId p)
+                pure FanClubMemberProfileDTO
+                  { fcmpId = fromSqlKey pid
+                  , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
+                  , fcmpClubId = fromSqlKey cid
+                  , fcmpHandle = fanClubMemberProfileHandle p
+                  , fcmpBio = fanClubMemberProfileBio p
+                  , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
+                  , fcmpDisplayName = sppDisplayName author
+                  , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
+                  }
+
+    updateMyMemberProfile aId req = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> throwError err404 { errBody = "Club no encontrado" }
+          Just (Entity cid _) -> do
+            now <- liftIO getCurrentTime
+            mProfile <- getBy (UniqueFanClubMemberProfile (auPartyId user) cid)
+            profileId <- case mProfile of
+              Just (Entity pid _) -> do
+                update pid
+                  [ M.FanClubMemberProfileHandle =. fcmpuHandle req
+                  , M.FanClubMemberProfileBio =. fcmpuBio req
+                  , M.FanClubMemberProfileAvatarUrl =. fcmpuAvatarUrl req
+                  ]
+                pure pid
+              Nothing -> do
+                insert FanClubMemberProfile
+                  { fanClubMemberProfilePartyId = auPartyId user
+                  , fanClubMemberProfileClubId = cid
+                  , fanClubMemberProfileHandle = fcmpuHandle req
+                  , fanClubMemberProfileBio = fcmpuBio req
+                  , fanClubMemberProfileAvatarUrl = fcmpuAvatarUrl req
+                  , fanClubMemberProfileJoinedAt = now
+                  }
+            mUpdated <- get profileId
+            case mUpdated of
+              Nothing -> throwError err404 { errBody = "Perfil no encontrado" }
+              Just p -> do
+                author <- getAuthorDTO (fanClubMemberProfilePartyId p)
+                pure FanClubMemberProfileDTO
+                  { fcmpId = fromSqlKey profileId
+                  , fcmpPartyId = fromSqlKey (fanClubMemberProfilePartyId p)
+                  , fcmpClubId = fromSqlKey cid
+                  , fcmpHandle = fanClubMemberProfileHandle p
+                  , fcmpBio = fanClubMemberProfileBio p
+                  , fcmpAvatarUrl = fanClubMemberProfileAvatarUrl p
+                  , fcmpDisplayName = sppDisplayName author
+                  , fcmpJoinedAt = fanClubMemberProfileJoinedAt p
+                  }
+
     requireArtistKey :: Int64 -> AppM PartyId
     requireArtistKey =
       either throwError pure . validateFanClubArtistPathId
@@ -586,6 +845,11 @@ getAuthorDTO pid = do
     , sppBio = Nothing
     , sppCity = Nothing
     }
+
+validateFanClubMemoryPathId :: Int64 -> Either ServerError (Key FanClubMemory)
+validateFanClubMemoryPathId rawMemoryId
+  | rawMemoryId <= 0 = Left err400 { errBody = "Invalid fan club memory id" }
+  | otherwise = Right (toSqlKey rawMemoryId)
 
 validateFanClubOfficerRoleInput :: Text -> Either ServerError FanClubOfficerRole
 validateFanClubOfficerRoleInput rawRole =
