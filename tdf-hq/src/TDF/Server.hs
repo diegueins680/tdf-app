@@ -12289,7 +12289,7 @@ validatePayPalApprovalUrl (Just rawUrl)
     url = T.strip rawUrl
 
     isPayPalCheckoutApprovalUrl rawApprovalUrl =
-      case paypalApprovalUrlParts rawApprovalUrl of
+      case payPalApprovalUrlParts rawApprovalUrl of
         Just (host, portSuffix, pathAndQuery) ->
           host `elem` ["www.paypal.com", "www.sandbox.paypal.com"]
             && T.null portSuffix

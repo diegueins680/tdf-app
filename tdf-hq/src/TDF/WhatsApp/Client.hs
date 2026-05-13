@@ -172,12 +172,17 @@ normalizeWhatsAppPhoneNumberId :: Text -> Either String Text
 normalizeWhatsAppPhoneNumberId rawPhoneId
   | T.null phoneId =
       Left "Invalid WhatsApp phone number id: id is required"
+  | T.length phoneId > maxWhatsAppPhoneNumberIdDigits =
+      Left "Invalid WhatsApp phone number id: id must be 64 digits or fewer"
   | T.all isAsciiDigit phoneId =
       Right phoneId
   | otherwise =
       Left "Invalid WhatsApp phone number id: expected digits only"
   where
     phoneId = T.strip rawPhoneId
+
+maxWhatsAppPhoneNumberIdDigits :: Int
+maxWhatsAppPhoneNumberIdDigits = 64
 
 normalizeWhatsAppRecipientPhone :: Text -> Either String Text
 normalizeWhatsAppRecipientPhone rawPhone =

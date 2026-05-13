@@ -128,6 +128,8 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
       normalizeWhatsAppPhoneNumberId "123?fields=id"
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
+      normalizeWhatsAppPhoneNumberId (T.replicate 65 "1")
+        `shouldBe` Left "Invalid WhatsApp phone number id: id must be 64 digits or fewer"
 
   describe "TDF.WhatsApp.Client outbound payload normalization" $ do
     it "normalizes recipient phones and message bodies before Graph request construction" $ do

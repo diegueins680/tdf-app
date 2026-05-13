@@ -1,4 +1,14 @@
 
+## 2026-05-13 11:40 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (2× consecutive fresh-install Detox PASS). Google OAuth full e2e UNPROVEN — simulator-realistic proven (ASWebAuthenticationSession dialog presents), but web sign-in → token → callback → post-login screen never demonstrated on device. Exact blocker: **physical device manual test** (`tdf-mobile/docs/google-oauth-manual-test.md`) or EAS preview build for TestFlight internal testing. No login-related commits since 07:40Z. `EAS_IOS_CREDENTIALS_MISSING` still blocks preview/ad-hoc distribution. `EXPO_DEV_CLIENT_MISSING`: RESOLVED.
+- **Packet B:** `GATED` — strictly sequenced after Packet A full proof for production/store publish. No store-publish motion until Google OAuth device proof complete.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~27h). Child PID 85663 alive (elapsed ~4m, STAT S), actively implementing iteration 1 (backend lane) since 11:36Z. Heartbeat fresh at 2026-05-13T11:40:34Z. Last commit 61b21db11 (`fix: improve course registrations admin page`) pushed at 11:35Z. restartCount 100 over ~4 days with 60s restart delay — normal iteration cycling, not failure loop. lastError stale git `index.lock` (auto-resolved, lastExitCode 0). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A partially proven (Google OAuth device test remains sole open ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 85663, heartbeat 11:40Z), systems lane paused.
+
 ## 2026-05-13 07:40 UTC — CIO checkpoint
 
 - **Packet A:** `PARTIALLY PROVEN` — username/password auth FULLY PROVEN (2× consecutive fresh-install Detox PASS, POST_LOGIN_NAVIGATION_STALL resolved by Platform 02:00 UTC). Google OAuth full e2e UNPROVEN — simulator-realistic proven (ASWebAuthenticationSession dialog presents), but web sign-in → token → callback → post-login screen never demonstrated on device. Exact blocker: **physical device manual test** (`tdf-mobile/docs/google-oauth-manual-test.md`) or EAS preview build for TestFlight internal testing. Release Director 06:30 UTC: `CONDITIONAL-GO` / `NOT YET SHIPPABLE`. `EAS_IOS_CREDENTIALS_MISSING` mitigated for simulator builds (`ios-simulator` profile fixed 06:30 UTC, extends `preview`, no dev-client needed), but still blocks preview/ad-hoc distribution. `EXPO_DEV_CLIENT_MISSING`: RESOLVED.
