@@ -88,6 +88,7 @@ export function Shell() {
     || location.pathname.startsWith('/marketplace')
     || location.pathname.startsWith('/configuracion/cursos')
     || location.pathname.startsWith('/configuracion/inscripciones-curso')
+    || location.pathname.startsWith('/configuracion/usuarios-admin')
     || location.pathname.startsWith('/configuracion/cms')
     || location.pathname.startsWith('/configuracion/roles-permisos')
     || location.pathname.startsWith('/escuela/clases')

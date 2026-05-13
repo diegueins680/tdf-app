@@ -57,6 +57,7 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
               path="/configuracion/inscripciones-curso"
               element={<main>Course registrations admin body</main>}
             />
+            <Route path="/configuracion/usuarios-admin" element={<main>Admin users body</main>} />
             <Route path="/configuracion/estado" element={<main>System status body</main>} />
             <Route path="/inicio" element={<main>Home body</main>} />
           </Route>
@@ -95,6 +96,20 @@ describe('Shell', () => {
 
     try {
       expect(container.textContent).toContain('Course registrations admin body');
+      expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
+      expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides global floating helpers on the dense admin users page', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/configuracion/usuarios-admin');
+
+    try {
+      expect(container.textContent).toContain('Admin users body');
       expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
       expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
     } finally {
