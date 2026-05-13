@@ -27,6 +27,7 @@ import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
   ( GeneralCategory(Format)
   , generalCategory
+  , isAlphaNum
   , isControl
   , isSpace
   )
@@ -727,7 +728,7 @@ maxFacebookGraphErrorChars = 500
 
 sanitizeFacebookGraphErrorMessage :: Text -> Text
 sanitizeFacebookGraphErrorMessage raw =
-  let compacted = T.unwords . T.words . T.map safeChar $ raw
+  let compacted = T.unwords . T.words . redactFacebookGraphSecrets . T.map safeChar $ raw
   in if T.length compacted > maxFacebookGraphErrorChars
        then T.take maxFacebookGraphErrorChars compacted <> " [truncated]"
        else compacted
@@ -736,3 +737,85 @@ sanitizeFacebookGraphErrorMessage raw =
       | isControl ch = ' '
       | generalCategory ch == Format = ' '
       | otherwise = ch
+
+redactFacebookGraphSecrets :: Text -> Text
+redactFacebookGraphSecrets = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveField previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveFacebookGraphFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+isSecretFieldBoundary :: Maybe Char -> Bool
+isSecretFieldBoundary Nothing = True
+isSecretFieldBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+sensitiveFacebookGraphFields :: [Text]
+sensitiveFacebookGraphFields =
+  [ "access_token"
+  , "fb_exchange_token"
+  , "client_secret"
+  , "code"
+  ]
+
+parseSensitiveField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || (separator == ':' && fieldName /= "code")
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+consumeOptionalQuote :: Text -> (Text, Text)
+consumeOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSecretValueEnd)
+
+isUnquotedSecretValueEnd :: Char -> Bool
+isUnquotedSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,}]" :: String)

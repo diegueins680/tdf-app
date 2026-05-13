@@ -4317,6 +4317,22 @@ main = hspec $ do
             longSanitized `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
             Data.Text.length longSanitized `shouldSatisfy` (<= 512)
 
+            let redacted =
+                    sanitizeFacebookGraphErrorMessage
+                        ( "GET /oauth/access_token?client_secret=app-secret&code=oauth-code"
+                            <> "&fb_exchange_token=short-token failed: "
+                            <> "{\"access_token\":\"page-token\",\"error\":{\"code\":190}}"
+                        )
+            redacted `shouldSatisfy` Data.Text.isInfixOf "client_secret=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "code=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "fb_exchange_token=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+            redacted `shouldSatisfy` Data.Text.isInfixOf "\"code\":190"
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "app-secret")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "oauth-code")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "short-token")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "page-token")
+
         it "rejects ambiguous, duplicate, or malformed Instagram page fallbacks before selecting one" $ do
             let firstPage = ("ig-1", "page-1" :: Text)
                 secondPage = ("ig-2", "page-2" :: Text)
