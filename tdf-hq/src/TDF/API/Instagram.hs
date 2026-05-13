@@ -1,22 +1,29 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
 
 module TDF.API.Instagram where
 
 import           Data.Aeson
   ( FromJSON(..)
+  , Object
   , Options
   , ToJSON(..)
   , Value
   , defaultOptions
   , fieldLabelModifier
-  , genericParseJSON
   , genericToJSON
-  , rejectUnknownFields
+  , withObject
+  , (.:)
+  , (.:?)
   )
+import qualified Data.Aeson.Key    as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types  (Parser)
 import           Data.Char (toLower)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
@@ -36,13 +43,58 @@ instagramReplyReqOptions =
         case drop 2 field of
           c:rest -> toLower c : rest
           [] -> []
-    , rejectUnknownFields = True
     }
 
 instance FromJSON InstagramReplyReq where
-  parseJSON = genericParseJSON instagramReplyReqOptions
+  parseJSON = parseInstagramReplyReq
 instance ToJSON InstagramReplyReq where
   toJSON = genericToJSON instagramReplyReqOptions
+
+parseInstagramReplyReq :: Value -> Parser InstagramReplyReq
+parseInstagramReplyReq =
+  withObject "InstagramReplyReq" $ \obj -> do
+    rejectUnknownInstagramReplyKeys obj
+    let hasCanonical = hasAnyKey instagramCanonicalReplyKeys obj
+        hasLegacy = hasAnyKey instagramLegacyReplyKeys obj
+    if hasCanonical && hasLegacy
+      then fail "Use either canonical Instagram reply keys or legacy ir* keys, not both"
+      else do
+        let (senderKey, messageKey, externalKey) =
+              if hasLegacy
+                then ("irSenderId", "irMessage", "irExternalId")
+                else ("senderId", "message", "externalId")
+        InstagramReplyReq
+          <$> obj .: AesonKey.fromText senderKey
+          <*> obj .: AesonKey.fromText messageKey
+          <*> obj .:? AesonKey.fromText externalKey
+
+rejectUnknownInstagramReplyKeys :: Object -> Parser ()
+rejectUnknownInstagramReplyKeys obj =
+  case filter (`notElem` allowedKeys) providedKeys of
+    [] -> pure ()
+    unexpected ->
+      fail ("Unexpected InstagramReplyReq keys: " <> show (map T.unpack unexpected))
+  where
+    allowedKeys = instagramCanonicalReplyKeys <> instagramLegacyReplyKeys
+    providedKeys = map AesonKey.toText (AesonKeyMap.keys obj)
+
+instagramCanonicalReplyKeys :: [Text]
+instagramCanonicalReplyKeys =
+  [ "senderId"
+  , "message"
+  , "externalId"
+  ]
+
+instagramLegacyReplyKeys :: [Text]
+instagramLegacyReplyKeys =
+  [ "irSenderId"
+  , "irMessage"
+  , "irExternalId"
+  ]
+
+hasAnyKey :: [Text] -> Object -> Bool
+hasAnyKey keys obj =
+  any (flip AesonKeyMap.member obj . AesonKey.fromText) keys
 
 type InstagramAPI =
        "instagram" :> "reply"   :> ReqBody '[JSON] InstagramReplyReq :> Post '[JSON] Value

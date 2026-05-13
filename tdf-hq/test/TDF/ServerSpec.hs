@@ -8429,11 +8429,15 @@ spec = describe "TDF.Server helpers" $ do
                     encoded `shouldContain` "\"message\""
                     encoded `shouldNotContain` "frSenderId"
 
-            ( eitherDecode "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\"}"
+            ( eitherDecode
+                ( "{\"senderId\":\"ig-sender\","
+                    <> "\"irSenderId\":\"ig-other\","
+                    <> "\"message\":\"Hola\"}"
+                )
                 :: Either String IG.InstagramReplyReq
               )
                 `shouldSatisfy` isLeft
-            ( eitherDecode "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\"}"
+            ( eitherDecode "{\"frSenderId\":\"fb-sender\",\"message\":\"Hola\"}"
                 :: Either String FB.FacebookReplyReq
               )
                 `shouldSatisfy` isLeft

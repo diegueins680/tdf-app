@@ -233,9 +233,9 @@ spec = do
             decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
     describe "social reply request FromJSON" $ do
-        it "accepts canonical manual reply payloads" $ do
+        it "accepts canonical and legacy manual reply payloads" $ do
             case decodeInstagramReply
-                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}"
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"ig-msg-1\"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical Instagram reply payload to decode, got: " <> err)
@@ -244,11 +244,31 @@ spec = do
                     messageVal `shouldBe` "Hola"
                     externalIdVal `shouldBe` Just "ig-msg-1"
 
+            case decodeInstagramReply
+                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected legacy Instagram reply payload to decode, got: " <> err)
+                Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "ig-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "ig-msg-1"
+
+            case decodeFacebookReply
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"fb-msg-1\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical Facebook reply payload to decode, got: " <> err)
+                Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "fb-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "fb-msg-1"
+
             case decodeFacebookReply
                 "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}"
              of
                 Left err ->
-                    expectationFailure ("Expected canonical Facebook reply payload to decode, got: " <> err)
+                    expectationFailure ("Expected legacy Facebook reply payload to decode, got: " <> err)
                 Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
                     senderVal `shouldBe` "fb-sender"
                     messageVal `shouldBe` "Hola"
