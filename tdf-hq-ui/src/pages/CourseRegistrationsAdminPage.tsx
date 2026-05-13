@@ -913,7 +913,8 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/`([^`\n]+)`/g, '$1')
     .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
     .replace(/<\/?(?:strong|b|em|i|span)[^>\n]*>/gi, '')
-    .replace(/^(?:TODO|FIXME)\s*(?::|-|\u2013|\u2014)\s*/g, '')
+    .replace(/^\[(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\]\s*/g, '')
+    .replace(/^(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\s*(?::|-|\u2013|\u2014)\s*/g, '')
     .trim();
 
 const humanizeCohortSlug = (slug: string) => {

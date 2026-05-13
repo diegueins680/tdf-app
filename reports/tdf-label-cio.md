@@ -17,7 +17,16 @@ FINAL_STATUS: done — Packet A partially proven (EAS env fix applied, build ver
 - **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
 - **No company-level blocker** to Lane C durability. No repair needed.
 
-FINAL_STATUS: done — Packet A partially proven (no change; Google OAuth device test remains production ship gate), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 31756, heartbeat 19:40Z), systems lane paused.
+## 2026-05-13 21:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — both login paths verified end-to-end via Detox on EAS ios-simulator build `8d91fabe-a01c-41d1-bc6b-b55dc9c689e9`. Username/password: PASS (22.5s). Google OAuth: PASS (35.9s, button → ASWebAuthenticationSession dialog). Release Director maintains `GO` / `TESTING VERSION READY`. No login-related commits since 15:40 UTC. Physical device full web-sign-in → callback → post-login remains recommended before production but is not a testing-version blocker.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` continues to block physical-device `preview` build and store publish. Simulator testing version is unblocked. Strict sequencing maintained: no store-publish motion until physical-device proof or credential resolution.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`). Child PID 7507 alive, phase `supervising`. Heartbeat fresh at 2026-05-13T21:40:10Z. restartCount 145 (up from 135 at 19:40 UTC), normal iteration cycling with 60s restart delay. lastError stale git `index.lock` (auto-resolved, lastExitCode 0, lock file absent at check time). lastIterationResult `ok`. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (EAS ios-simulator Detox PASS both auth paths, Release Director GO), Packet B gated on EAS_IOS_CREDENTIALS_MISSING for physical/store publish, Lane C live with launchd durability (supervisor 68059, child 7507, heartbeat 21:40Z), systems lane paused.
+
 
 ## 2026-05-13 15:40 UTC — CIO checkpoint
 
