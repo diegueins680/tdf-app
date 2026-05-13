@@ -6215,6 +6215,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Navigation shortcuts')).not.toBeInTheDocument();
   });
 
+  it('ignores quick-link fallback cards that duplicate first-run section anchors', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'quick-links',
+          title: 'Quick links',
+          body: ['Jump to service health, users, roles, and audit from this admin panel.'],
+        },
+        {
+          cardId: 'accesos-rapidos',
+          title: 'Accesos rápidos',
+          body: ['Salta a estado del servicio, usuarios y auditoría desde este panel.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Quick links')).not.toBeInTheDocument();
+    expect(screen.queryByText('Accesos rápidos')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Jump to service health/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Salta a estado del servicio/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Quick links')).not.toBeInTheDocument();
+    expect(screen.queryByText('Accesos rápidos')).not.toBeInTheDocument();
+  });
+
   it('strips placeholder filler from mixed preview cards so optional modules only show actionable copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
