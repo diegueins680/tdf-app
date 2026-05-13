@@ -373,6 +373,12 @@ googleIdTokenInputSpec = describe "validateGoogleIdTokenInput" $ do
       ("header" <> hiddenFormat <> ".payload")
     assertRejected "Google idToken must contain only ASCII characters" "header.páyload.signature"
     assertRejected
+      "Google idToken must be a JWT with three non-empty segments"
+      "header.payload"
+    assertRejected
+      "Google idToken must be a JWT with three non-empty segments"
+      "header..signature"
+    assertRejected
       "Google idToken must be 4096 characters or fewer"
       (T.replicate 4097 "a")
 

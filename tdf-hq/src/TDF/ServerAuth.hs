@@ -755,6 +755,12 @@ validateGoogleIdTokenInput rawToken
             BL.fromStrict
               (TE.encodeUtf8 "Google idToken must contain only ASCII characters")
         }
+  | not (hasGoogleIdTokenShape token) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Google idToken must be a JWT with three non-empty segments")
+        }
   | otherwise =
       Right token
   where
@@ -762,6 +768,14 @@ validateGoogleIdTokenInput rawToken
 
 maxGoogleIdTokenChars :: Int
 maxGoogleIdTokenChars = 4096
+
+hasGoogleIdTokenShape :: Text -> Bool
+hasGoogleIdTokenShape token =
+  case T.splitOn "." token of
+    [headerPart, payloadPart, signaturePart] ->
+      all (not . T.null) [headerPart, payloadPart, signaturePart]
+    _ ->
+      False
 
 validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
 validateLoginRequest (LoginRequest rawUsername rawPassword)
