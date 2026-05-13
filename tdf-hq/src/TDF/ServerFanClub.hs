@@ -84,6 +84,8 @@ fanClubPublicGetClub artistId = do
     Just (Entity cid club) -> runDB $ do
       officers <- loadOfficersDTO cid
       followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
+      mArtistProfile <- getBy (UniqueArtistProfile artistKey)
+      let artistImage = mArtistProfile >>= artistProfileHeroImageUrl . entityVal
       pure FanClubDTO
         { fcId = fromSqlKey cid
         , fcArtistId = fromSqlKey artistKey
@@ -91,6 +93,7 @@ fanClubPublicGetClub artistId = do
         , fcDescription = fanClubDescription club
         , fcOfficers = officers
         , fcFollowerCount = fromIntegral followerCount
+        , fcArtistImageUrl = artistImage
         }
 
 fanClubPublicGetEvents :: Int64 -> AppM [FanClubEventDTO]
@@ -119,6 +122,8 @@ fanClubSecureListMyClubs user = runDB $ do
       Just (Entity cid club) -> do
         officers <- loadOfficersDTO cid
         followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
+        mArtistProfile <- getBy (UniqueArtistProfile artistKey)
+        let artistImage = mArtistProfile >>= artistProfileHeroImageUrl . entityVal
         pure $ Just FanClubDTO
           { fcId = fromSqlKey cid
           , fcArtistId = fromSqlKey artistKey
@@ -126,6 +131,7 @@ fanClubSecureListMyClubs user = runDB $ do
           , fcDescription = fanClubDescription club
           , fcOfficers = officers
           , fcFollowerCount = fromIntegral followerCount
+          , fcArtistImageUrl = artistImage
           }
   pure (mapMaybe id clubs)
 

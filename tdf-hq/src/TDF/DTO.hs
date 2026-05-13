@@ -749,6 +749,7 @@ data FanClubDTO = FanClubDTO
   , fcDescription :: Maybe Text
   , fcOfficers    :: [FanClubOfficerDTO]
   , fcFollowerCount :: Int
+  , fcArtistImageUrl :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON FanClubDTO
 
