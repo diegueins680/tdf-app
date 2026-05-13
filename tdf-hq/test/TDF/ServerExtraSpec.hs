@@ -17,7 +17,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, utctDay)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Servant.Multipart
@@ -162,6 +162,7 @@ import TDF.ServerExtra (
     validatePaymentPeriod,
     validatePositivePaymentReferenceId,
     validateOptionalPositivePaymentReferenceId,
+    validatePaymentPartyFilter,
     normalizeServiceCatalogName,
     normalizeServiceCatalogNameUpdate,
     validateServiceCatalogId,
@@ -5083,6 +5084,31 @@ spec = do
       assertInvalid
         "hidden formatting characters"
         (validatePaymentPeriod (Just ("2026" <> "\x202E" <> "-04")))
+
+  describe "validatePaymentPartyFilter" $ do
+    it "rejects unknown party filters instead of returning ambiguous empty payment lists" $ do
+      now <- getCurrentTime
+      runPaymentValidationSql $ do
+        (partyId, _, _, _, _, _, _, _) <- seedPaymentReferenceFixture now
+        noFilter <- validatePaymentPartyFilter Nothing
+        existingFilter <- validatePaymentPartyFilter (Just (fromSqlKey partyId))
+        invalidShape <- validatePaymentPartyFilter (Just 0)
+        missingParty <- validatePaymentPartyFilter (Just 999999)
+        liftIO $ do
+          noFilter `shouldBe` Right Nothing
+          existingFilter `shouldBe` Right (Just (fromSqlKey partyId))
+          case invalidShape of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "partyId must be a positive integer"
+            Right value ->
+              expectationFailure ("Expected invalid party filter shape to fail, got " <> show value)
+          case missingParty of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "partyId references an unknown party"
+            Right value ->
+              expectationFailure ("Expected unknown party filter to fail, got " <> show value)
 
   describe "validatePaymentReferences" $ do
     it "accepts existing party, order, and invoice references when the invoice includes that order" $ do

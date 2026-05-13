@@ -3035,7 +3035,7 @@ paymentsServer user =
   where
     listPaymentsH mPartyId = do
       ensureModule ModuleAdmin user
-      partyIdFilter <- either throwError pure (validateOptionalPositivePaymentReferenceId "partyId" mPartyId)
+      partyIdFilter <- either throwError pure =<< withPool (validatePaymentPartyFilter mPartyId)
       let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) partyIdFilter
       recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
       pure (map toPaymentDTO recs)
@@ -3120,6 +3120,21 @@ validateOptionalPositivePaymentReferenceId :: Text -> Maybe Int64 -> Either Serv
 validateOptionalPositivePaymentReferenceId _ Nothing = Right Nothing
 validateOptionalPositivePaymentReferenceId fieldName (Just rawId) =
   Just <$> validatePositivePaymentReferenceId fieldName rawId
+
+validatePaymentPartyFilter
+  :: MonadIO m
+  => Maybe Int64
+  -> SqlPersistT m (Either ServerError (Maybe Int64))
+validatePaymentPartyFilter rawPartyId =
+  case validateOptionalPositivePaymentReferenceId "partyId" rawPartyId of
+    Left err -> pure (Left err)
+    Right Nothing -> pure (Right Nothing)
+    Right (Just partyId) -> do
+      mParty <- getEntity (toSqlKey partyId :: Key Party)
+      pure $
+        if isJust mParty
+          then Right (Just partyId)
+          else Left err400 { errBody = "partyId references an unknown party" }
 
 validatePaymentReferences
   :: MonadIO m
