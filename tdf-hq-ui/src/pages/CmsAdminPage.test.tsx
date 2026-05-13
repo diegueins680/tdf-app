@@ -490,7 +490,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain(
         'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
@@ -781,7 +781,10 @@ describe('CmsAdminPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(false);
+        expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+        expect(container.textContent).toContain(
+          'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+        );
       });
 
       await act(async () => {
@@ -821,11 +824,16 @@ describe('CmsAdminPage', () => {
         'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
       );
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
       expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload actual');
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
+      expect(container.textContent).toContain(
+        'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+      );
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
@@ -1217,6 +1225,16 @@ describe('CmsAdminPage', () => {
     let rendered = await renderPage(container);
 
     await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing actualizada');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
       expect(getButtonByText(container, 'Guardar borrador')).toBeTruthy();
       expect(container.textContent).toContain(
         'Guardará esta versión como borrador sin cambiar la página en vivo.',
@@ -1228,7 +1246,11 @@ describe('CmsAdminPage', () => {
 
     window.localStorage.setItem(
       'tdf-cms-admin:draft:records-public:es',
-      JSON.stringify({ status: 'published' }),
+      JSON.stringify({
+        title: 'Landing publicada',
+        payload: JSON.stringify({ heroTitle: 'Landing publicada' }, null, 2),
+        status: 'published',
+      }),
     );
 
     const secondContainer = document.createElement('div');

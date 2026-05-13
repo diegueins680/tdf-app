@@ -964,7 +964,6 @@ whatsappWebhookServer =
           case normalizePhone waInboundSenderId of
             Nothing -> pure ()
             Just phone -> do
-              now <- liftIO getCurrentTime
               let oneHourAgo = addUTCTime (-3600) now
               recentCount <- liftIO $ flip runSqlPool envPool $
                 count
@@ -6892,6 +6891,11 @@ releaseServiceMarketplaceEscrow user rawBookingId = do
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
     booking@(Entity bookingKey _) <- resolveServiceMarketplaceBookingEntity rawBookingId
+    -- Lock the escrow row to prevent concurrent double-release
+    _ <- rawSql
+      "SELECT id FROM service_escrow WHERE booking_id = ? FOR UPDATE"
+      [toPersistValue bookingKey] ::
+      SqlPersistT IO [Single (Key ServiceEscrow)]
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     Entity escrowKey escrow <-
       either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
