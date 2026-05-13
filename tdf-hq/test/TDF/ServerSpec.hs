@@ -352,6 +352,7 @@ import TDF.Server
     , resolveDriveUploadName
     , resolveDriveUploadMimeType
     , validateDriveUploadFileSize
+    , formatDriveUploadFailure
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , openAIChatRequestErrorMessage
@@ -5317,6 +5318,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-1) "Drive upload size is invalid"
             assertInvalid 0 "Drive upload must not be empty"
             assertInvalid (50 * 1024 * 1024 + 1) "Drive upload must be 50 MB or smaller"
+
+    describe "formatDriveUploadFailure" $ do
+        it "bounds and sanitizes upstream Drive upload failures before returning backend errors" $ do
+            let formatted =
+                    formatDriveUploadFailure
+                        500
+                        ( BL.fromStrict $
+                            TE.encodeUtf8
+                                ( "bad\NULdetail\x202Ehidden\n"
+                                    <> T.replicate 700 "x"
+                                    :: Text
+                                )
+                        )
+            formatted `shouldContain` "Drive upload failed with status 500. bad detail hidden"
+            formatted `shouldContain` "[truncated]"
+            formatted `shouldSatisfy` (notElem '\NUL')
+            formatted `shouldSatisfy` (notElem '\x202E')
+            formatted `shouldSatisfy` (notElem '\n')
+            length formatted `shouldSatisfy` (<= 560)
 
     describe "resolveDriveUploadMimeType" $ do
         it "defaults blank upload content types and canonicalizes safe MIME values" $ do

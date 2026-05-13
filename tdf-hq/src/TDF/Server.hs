@@ -46,6 +46,7 @@ import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEi
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Encoding.Error as TEE
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Base64 as B64
@@ -12960,9 +12961,7 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
   resp <- httpLbs req manager
   let uploadStatus = statusCode (responseStatus resp)
   when (uploadStatus >= 400) $ do
-    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
-        suffix = if null bodySnippet then "" else " " <> bodySnippet
-    fail ("Drive upload failed with status " <> show uploadStatus <> "." <> suffix)
+    fail (formatDriveUploadFailure uploadStatus (responseBody resp))
   driveResp <- case eitherDecode (responseBody resp) of
     Left err -> fail ("No pudimos interpretar la respuesta de Drive: " <> err)
     Right ok -> pure (ok :: DriveApiResp)
@@ -13013,6 +13012,15 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
     , duWebContentLink = darWebContentLink driveResp
     , duPublicUrl = publicUrl
     }
+
+formatDriveUploadFailure :: Int -> BL.ByteString -> String
+formatDriveUploadFailure uploadStatus responseBodyBytes =
+  "Drive upload failed with status " <> show uploadStatus <> "." <> suffix
+  where
+    rawSnippet =
+      T.take 2000 (TE.decodeUtf8With TEE.lenientDecode (BL.toStrict responseBodyBytes))
+    suffix =
+      maybe "" ((" " <>) . T.unpack) (sanitizeApiErrorMessage rawSnippet)
 
 resolveDrivePublicUrl :: Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
 resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey =
