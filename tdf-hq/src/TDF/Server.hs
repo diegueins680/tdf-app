@@ -9958,7 +9958,8 @@ callOpenAIChat cfg messages =
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
       manager <- pure sharedTlsManager
-      reqBase <- parseRequest "https://api.openai.com/v1/chat/completions"
+      let apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+      reqBase <- parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
       let models = openAIChatModelCandidates (openAiModel cfg)
       tryModels manager reqBase key models Nothing
   where
@@ -10125,8 +10126,9 @@ tidalAgentServer user TidalAgentRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
+      apiBase = normalizeChatKitBase (chatKitApiBase envConfig)
   manager <- pure sharedTlsManager
-  reqBase <- liftIO $ parseRequest "https://api.openai.com/v1/chat/completions"
+  reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
   let body = encode $ object
         [ "model" .= model
         , "messages" .=
@@ -10243,7 +10245,7 @@ resolveWorkflowId primary fallback =
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
   let trimmed = T.dropWhileEnd (== '/') (T.strip base)
-  in if T.null trimmed then "https://api.openai.com" else trimmed
+  in if T.null trimmed then "https://api.moonshot.cn" else trimmed
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =
