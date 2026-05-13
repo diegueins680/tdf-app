@@ -773,10 +773,10 @@ performCheckinWith
 performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   now <- liftIO getCurrentTime
   (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
+  either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
   checkoutEnt@(Entity checkoutId checkoutRecord) <- loadSingleOpenCheckout assetKey
   either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
   validateOpenCheckout checkoutEnt
-  either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
   notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
   recEnt <- withPool $ do
     let updates = catMaybes

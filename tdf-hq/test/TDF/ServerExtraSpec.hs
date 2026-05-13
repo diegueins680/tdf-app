@@ -2502,13 +2502,28 @@ spec = do
       result <- runInventoryCheckinHandler
         (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
         existingAssetId
-        request
+        (AssetCheckinRequest (Just "Returned OK") Nothing Nothing)
       case result of
         Left err -> do
           errHTTPCode err `shouldBe` 409
           BL8.unpack (errBody err) `shouldContain` "Asset is not currently checked out"
         Right value ->
           expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+
+    it "rejects blank check-ins before active-checkout fallback lookup" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl"
+        Right value ->
+          expectationFailure ("Expected blank check-in to fail before checkout lookup, got " <> show value)
 
     it "rejects assets with multiple active checkouts so check-in never silently resolves only the newest custody row" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
