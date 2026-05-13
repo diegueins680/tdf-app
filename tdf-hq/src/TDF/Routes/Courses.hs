@@ -148,7 +148,15 @@ data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationReceiptUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object _) = do
+    payload@(CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) <-
+      genericParseJSON strictObjectOptions value
+    case (fileUrlVal, fileNameVal, mimeTypeVal, notesVal) of
+      (Nothing, Nothing, Nothing, Nothing) ->
+        fail "CourseRegistrationReceiptUpdate must include at least one field"
+      _ ->
+        pure payload
+  parseJSON _ = fail "CourseRegistrationReceiptUpdate must be an object"
 instance ToJSON CourseRegistrationReceiptUpdate
 
 data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate

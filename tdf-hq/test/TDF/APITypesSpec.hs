@@ -524,6 +524,17 @@ spec = do
                     mimeTypeVal `shouldBe` Just "application/pdf"
                     notesVal `shouldBe` Just "Banco Pichincha"
 
+            case decodeCourseRegistrationReceiptUpdate
+                "{\"notes\":\"Comprobante actualizado\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical course receipt update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
+                    fileUrlVal `shouldBe` Nothing
+                    fileNameVal `shouldBe` Nothing
+                    mimeTypeVal `shouldBe` Nothing
+                    notesVal `shouldBe` Just "Comprobante actualizado"
+
             case decodeCourseUpsert
                 "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}"
              of
@@ -568,6 +579,12 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCourseUpsert
                 "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"extra\":\"typo\"}]}"
+                `shouldSatisfy` isLeft
+
+        it "rejects empty course receipt updates instead of accepting timestamp-only patches" $ do
+            decodeCourseRegistrationReceiptUpdate "{}" `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileUrl\":null,\"fileName\":null,\"mimeType\":null,\"notes\":null}"
                 `shouldSatisfy` isLeft
 
     describe "Proposal payload FromJSON" $ do
