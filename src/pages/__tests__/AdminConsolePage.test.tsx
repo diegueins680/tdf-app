@@ -5663,6 +5663,16 @@ describe('AdminConsolePage', () => {
           title: 'Tokens de servicio',
           body: ['Sin resultados.'],
         },
+        {
+          cardId: 'audit-search-empty',
+          title: 'Búsqueda de auditoría',
+          body: ['No matches found for the current filters.'],
+        },
+        {
+          cardId: 'users-search-empty',
+          title: 'Búsqueda de usuarios',
+          body: ['No hay coincidencias para esta búsqueda.'],
+        },
       ],
     });
 
@@ -5679,12 +5689,20 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Integraciones|Tokens de servicio/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /Integraciones|Tokens de servicio|Búsqueda de auditoría|Búsqueda de usuarios/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Búsqueda de auditoría')).not.toBeInTheDocument();
+    expect(screen.queryByText('Búsqueda de usuarios')).not.toBeInTheDocument();
     expect(screen.queryByText(/No results found/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Sin resultados/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No matches found/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No hay coincidencias/i)).not.toBeInTheDocument();
   });
 
   it('ignores no-information fallback cards so first-run users do not open dead-end modules', async () => {
