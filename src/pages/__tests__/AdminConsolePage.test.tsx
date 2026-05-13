@@ -465,6 +465,46 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('keeps optional first-run modules hidden until required admin data loads cleanly', async () => {
+    mockListUsers.mockRejectedValue(new Error('Usuarios no disponibles'));
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByText('Usuarios no disponibles')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Reintentar carga inicial/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Actualiza el panel para confirmar usuarios y auditoría antes de cargar datos de ejemplo\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver 1 módulo adicional/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos opcionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps first-run guidance focused when only optional admin preview modules fail', async () => {
     mockConsolePreview.mockRejectedValue(new Error('Vista dinámica no disponible'));
 

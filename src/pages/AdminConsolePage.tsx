@@ -2182,7 +2182,7 @@ export default function AdminConsolePage() {
     );
   const firstRunAdditionalModulesActionCopy = formatFirstRunAdditionalModulesActionCopy(consoleCards);
   const canShowFirstRunAdditionalModules =
-    showGettingStartedGuidance && showCompactHealthyServiceSummary;
+    showGettingStartedGuidance && showCompactHealthyServiceSummary && !hasFirstRunDataError;
   const shouldShowAdditionalModuleCards =
     consoleCards.length > 0
     && (!showGettingStartedGuidance || (canShowFirstRunAdditionalModules && showFirstRunAdditionalModules));
