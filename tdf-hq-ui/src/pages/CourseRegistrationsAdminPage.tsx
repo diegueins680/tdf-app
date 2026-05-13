@@ -1056,6 +1056,16 @@ const firstRunLeadMagnetDescriptorPrefixPattern =
 const firstRunLeadMagnetDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))\s*$/i;
 
+const firstRunDownloadableResourceDescriptorPattern = String.raw`(?:(?:free\s+)?(?:guide|e-?book|checklist|template|worksheet|resource)\s+(?:(?:download|request|opt[-\s]?in)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:download|request|opt[-\s]?in)\s+(?:forms?|pages?|links?|urls?|portals?)?\s*(?:for\s+)?(?:free\s+)?(?:guide|e-?book|checklist|template|worksheet|resource)|(?:formulario|p[aá]gina|enlace|link|url|portal|descarga|solicitud)\s+de\s+(?:gu[ií]a|e-?book|libro\s+electr[oó]nico|checklist|lista\s+de\s+verificaci[oó]n|plantilla|worksheet|hoja\s+de\s+trabajo|recurso)(?:\s+gratuit[oa])?)`;
+const firstRunDownloadableResourceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDownloadableResourceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunDownloadableResourceDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunDownloadableResourceDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCourseInfoAssetDescriptorPattern = String.raw`(?:(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)\s+(?:(?:download|request)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)|(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)\s+(?:del?\s+curso|de\s+curso)?(?:\s+(?:descarga|solicitud))?|(?:descarga|solicitud)\s+de\s+(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)(?:\s+(?:del?\s+curso|de\s+curso))?)`;
 const firstRunCourseInfoAssetDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunCourseInfoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -1314,6 +1324,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
+    .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
@@ -1399,6 +1410,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
+    .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')

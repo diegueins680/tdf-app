@@ -1191,7 +1191,7 @@ main = hspec $ do
 
         it "normalizes configured outbound API base URLs before building requests" $
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just " https://api.openai.com/ ")
+                [ ("CHATKIT_API_BASE", Just " https://api.moonshot.cn/ ")
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -1203,7 +1203,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    chatKitApiBase cfg `shouldBe` "https://api.openai.com"
+                    chatKitApiBase cfg `shouldBe` "https://api.moonshot.cn"
                     facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
                     facebookMessagingApiBase cfg
                         `shouldBe` "https://graph.facebook.com/v22.0"
@@ -1245,7 +1245,7 @@ main = hspec $ do
                 "CHATKIT_API_BASE is configured but blank; unset it to use the default"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com?proxy=1"
+                "https://api.moonshot.cn?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
                 "FACEBOOK_MESSAGING_API_BASE"
@@ -1257,7 +1257,7 @@ main = hspec $ do
                 "INSTAGRAM_GRAPH_BASE path must not start with // or contain backslashes"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com:0443"
+                "https://api.moonshot.cn:0443"
                 "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
