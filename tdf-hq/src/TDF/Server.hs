@@ -3333,16 +3333,20 @@ selectUniqueCalendarConfigFallback _ =
 validateStoredCalendarConfigFallback
   :: Entity Cal.GoogleCalendarConfig
   -> Either ServerError (Entity Cal.GoogleCalendarConfig)
-validateStoredCalendarConfigFallback cfg
-  | Right calendarIdVal <- CalAPI.normalizeCalendarId storedCalendarId
-  , calendarIdVal == storedCalendarId =
-      Right cfg
-  | otherwise =
+validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
+  calendarIdVal <-
+    case CalAPI.normalizeCalendarId storedCalendarId of
+      Right val -> Right val
+      Left _ -> invalidStoredCalendarId
+  unless (calendarIdVal == storedCalendarId) invalidStoredCalendarId
+  syncCursorVal <- validateGoogleCalendarSyncCursor (Cal.googleCalendarConfigSyncCursor cfg)
+  Right (Entity cfgId cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal })
+  where
+    storedCalendarId = Cal.googleCalendarConfigCalendarId cfg
+    invalidStoredCalendarId =
       Left err500
         { errBody = "Stored Google Calendar config calendarId is invalid"
         }
-  where
-    storedCalendarId = Cal.googleCalendarConfigCalendarId (entityVal cfg)
 
 encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =

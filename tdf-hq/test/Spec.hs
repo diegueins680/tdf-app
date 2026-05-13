@@ -35,6 +35,7 @@ import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRe
 import TDF.API.Feedback (FeedbackPayload (..))
 import TDF.API.Admin (AdminEmailBroadcastRequest)
 import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import TDF.API.LiveSessions
@@ -219,6 +220,7 @@ import TDF.Server
       resolveDriveRedirectUri,
       resolveDrivePublicUrl,
       resolveProvidedDriveAccessToken,
+      selectUniqueCalendarConfigFallback,
       sanitizeStoredCoursePublicUrl,
       validateContractsAccess,
       validateWhatsAppConsentDisplayName,
@@ -4595,6 +4597,42 @@ main = hspec $ do
             assertInvalid "https://[::1]:5173/configuracion/integraciones/calendario"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#token"
+
+    describe "Google Calendar config fallback discovery" $ do
+        it "validates stored sync cursors before returning the implicit config fallback" $ do
+            let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
+                calendarConfig syncCursor =
+                    Entity
+                        (toSqlKey 1 :: Cal.GoogleCalendarConfigId)
+                        Cal.GoogleCalendarConfig
+                            { Cal.googleCalendarConfigOwnerId = Nothing
+                            , Cal.googleCalendarConfigCalendarId = "primary"
+                            , Cal.googleCalendarConfigAccessToken = Nothing
+                            , Cal.googleCalendarConfigRefreshToken = Nothing
+                            , Cal.googleCalendarConfigTokenType = Nothing
+                            , Cal.googleCalendarConfigTokenExpiresAt = Nothing
+                            , Cal.googleCalendarConfigSyncCursor = syncCursor
+                            , Cal.googleCalendarConfigSyncedAt = Nothing
+                            , Cal.googleCalendarConfigCreatedAt = now
+                            , Cal.googleCalendarConfigUpdatedAt = now
+                            }
+
+            case selectUniqueCalendarConfigFallback [calendarConfig (Just " cursor-1 ")] of
+                Right (Just (Entity _ cfg)) ->
+                    Cal.googleCalendarConfigSyncCursor cfg `shouldBe` Just "cursor-1"
+                other ->
+                    expectationFailure
+                        ("Expected valid calendar fallback config, got: " <> show other)
+
+            case selectUniqueCalendarConfigFallback
+                [calendarConfig (Just ("cursor" <> Data.Text.singleton '\x202E'))] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar sync cursor is invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored sync cursor to fail, got: " <> show value)
 
     describe "Google Calendar event page decoding" $ do
         it "requires an items array instead of treating malformed pages as empty syncs" $ do
