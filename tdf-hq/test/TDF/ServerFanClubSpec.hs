@@ -18,7 +18,8 @@ import TDF.Models
   , FanClubPost (..)
   )
 import TDF.ServerFanClub
-  ( validateFanClubCandidacyPathId
+  ( validateFanClubArtistPathId
+  , validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
   , validateFanClubOfficerRoleInput
@@ -28,6 +29,17 @@ import TDF.ServerFanClub
 
 spec :: Spec
 spec = do
+  describe "fan club artist path validation" $
+    it "rejects malformed artist ids before public club lookups can look like missing clubs" $ do
+      case validateFanClubArtistPathId 42 of
+        Right artistId -> fromSqlKey artistId `shouldBe` 42
+        Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "Invalid fan club artist id" $
+        validateFanClubArtistPathId 0
+      assertRejected 400 "Invalid fan club artist id" $
+        validateFanClubArtistPathId (-7)
+
   describe "fan club election path validation" $ do
     it "rejects malformed election and candidacy ids before DB fallback lookup" $ do
       case validateFanClubElectionPathId 17 of

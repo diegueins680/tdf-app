@@ -8,6 +8,7 @@ module TDF.ServerFanClub
   , fanClubPublicGetEvents
   , fanClubSecureListMyClubs
   , fanClubSecureArtistHandlers
+  , validateFanClubArtistPathId
   , validateFanClubPostPathId
   , validateFanClubPostMutationTarget
   , validateFanClubReplyParentTarget
@@ -67,7 +68,7 @@ throwBadRequest msg = throwError Servant.err400 { errBody = BL.fromStrict (TE.en
 
 fanClubPublicGetClub :: Int64 -> AppM FanClubDTO
 fanClubPublicGetClub artistId = do
-  let artistKey = toSqlKey artistId
+  artistKey <- either throwError pure (validateFanClubArtistPathId artistId)
   mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
   case mClub of
     Nothing -> throwError err404 { errBody = "Club de fans no encontrado" }
@@ -76,7 +77,7 @@ fanClubPublicGetClub artistId = do
       followerCount <- count [M.FanFollowArtistPartyId ==. artistKey]
       pure FanClubDTO
         { fcId = fromSqlKey cid
-        , fcArtistId = artistId
+        , fcArtistId = fromSqlKey artistKey
         , fcName = fanClubName club
         , fcDescription = fanClubDescription club
         , fcOfficers = officers
@@ -84,14 +85,15 @@ fanClubPublicGetClub artistId = do
         }
 
 fanClubPublicGetEvents :: Int64 -> AppM [FanClubEventDTO]
-fanClubPublicGetEvents artistId = runDB $ do
-  let artistKey = toSqlKey artistId
-  mClub <- getBy (UniqueFanClubArtist artistKey)
-  case mClub of
-    Nothing -> pure []
-    Just (Entity cid _) -> do
-      events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
-      pure (map eventToDTO events)
+fanClubPublicGetEvents artistId = do
+  artistKey <- either throwError pure (validateFanClubArtistPathId artistId)
+  runDB $ do
+    mClub <- getBy (UniqueFanClubArtist artistKey)
+    case mClub of
+      Nothing -> pure []
+      Just (Entity cid _) -> do
+        events <- selectList [M.FanClubEventClubId ==. cid] [Asc M.FanClubEventStartsAt]
+        pure (map eventToDTO events)
 
 -- ============================================================================
 -- Secure handlers
@@ -506,6 +508,11 @@ checkIsOfficer artistId fanId = do
       mOfficer <- selectFirst
         [M.FanClubOfficerClubId ==. cid, M.FanClubOfficerFanPartyId ==. fanId] []
       pure (isJust mOfficer)
+
+validateFanClubArtistPathId :: Int64 -> Either ServerError PartyId
+validateFanClubArtistPathId rawArtistId
+  | rawArtistId <= 0 = Left err400 { errBody = "Invalid fan club artist id" }
+  | otherwise = Right (toSqlKey rawArtistId)
 
 validateFanClubPostPathId :: Int64 -> Either ServerError FanClubPostId
 validateFanClubPostPathId rawPostId
