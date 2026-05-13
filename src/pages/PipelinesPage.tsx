@@ -65,8 +65,12 @@ export default function PipelinesPage() {
     const card = findPipelineCard(draggableId);
     if (!card) return;
     updatePipelineCardStage(draggableId, to);
-    // Hook to backend (safe no-op if endpoint not present yet)
-    updateStage(card, to).catch(() => {});
+    try {
+      await updateStage(card, to);
+    } catch {
+      // Revert on failure so the card doesn't stay in the wrong stage
+      updatePipelineCardStage(draggableId, from);
+    }
   };
 
   return (

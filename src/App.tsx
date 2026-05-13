@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Route, Routes, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import Placeholder from './components/Placeholder';
 import PartiesPage from './pages/PartiesPage';
@@ -45,6 +45,11 @@ function RequireAuth() {
   }
 
   return <Outlet />;
+}
+
+function StudentRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/escuela/estudiantes/${id}`} replace />;
 }
 
 export default function App() {
@@ -174,7 +179,7 @@ export default function App() {
             <Route path="/metadata" element={<Navigate to="/label/metadata" replace />} />
 
             {/* Legacy routes for backward compatibility */}
-            <Route path="/students/:id" element={<Navigate to="/escuela/estudiantes/:id" replace />} />
+            <Route path="/students/:id" element={<StudentRedirect />} />
             <Route path="/students/:studentId/lessons" element={<StudentLessons />} />
             
             {/* Feature routes */}

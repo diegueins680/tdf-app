@@ -31,7 +31,17 @@ export default function SignupPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const onSubmit = async () => {
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+  const canSubmit =
+    form.firstName.trim().length > 0 &&
+    form.lastName.trim().length > 0 &&
+    isValidEmail(form.email) &&
+    form.password.length >= 6;
+
+  const onSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canSubmit) return;
     setLoading(true);
     setError(null);
     try {
@@ -58,7 +68,7 @@ export default function SignupPage() {
       <Typography variant="h4" gutterBottom>Crear cuenta</Typography>
       {ok && <Alert severity="success">¡Listo! Revisa tu email para verificar y completar tu registro.</Alert>}
       {error && <Alert severity="error" sx={{ mt: ok ? 2 : 0 }}>{error}</Alert>}
-      <Stack gap={2} mt={3}>
+      <Stack component="form" onSubmit={onSubmit} gap={2} mt={3}>
         <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}>
           <TextField
             label="Nombre"
@@ -103,7 +113,7 @@ export default function SignupPage() {
           )}
           label="Quiero recibir novedades por WhatsApp/email"
         />
-        <Button onClick={onSubmit} variant="contained" disabled={loading} size="large">
+        <Button type="submit" variant="contained" disabled={loading || !canSubmit} size="large">
           {loading ? 'Enviando…' : 'Crear cuenta'}
         </Button>
         <Box textAlign="center">

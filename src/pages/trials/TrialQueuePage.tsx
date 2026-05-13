@@ -23,8 +23,8 @@ export default function TrialQueuePage() {
 
   const assign = useMutation({
     mutationFn: (requestId: number) => {
-      if (!user?.partyId) {
-        throw new Error('Debes iniciar sesión para tomar la solicitud.');
+      if (!user?.partyId || user.partyId <= 0) {
+        throw new Error('Debes iniciar sesión con una cuenta válida para tomar la solicitud.');
       }
       return Trials.assignTrial(requestId, { teacherId: user.partyId });
     },
@@ -79,7 +79,7 @@ export default function TrialQueuePage() {
                     size="small"
                     variant="outlined"
                     onClick={() => assign.mutate(request.requestId)}
-                    disabled={!user?.partyId || assign.isPending || request.status !== 'Requested'}
+                    disabled={!user?.partyId || user.partyId <= 0 || assign.isPending || request.status !== 'Requested'}
                   >
                     Tomar
                   </Button>
