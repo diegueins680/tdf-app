@@ -13449,12 +13449,15 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
-  it('strips webinar and meeting registration wrappers from first-run cohort copy', async () => {
+  it('strips webinar, seminar, and meeting registration wrappers from first-run cohort copy', async () => {
     const titles = [
       'Zoom registration page - Beatmaking 101',
       'Beatmaking 101 - Zoom webinar registration',
+      'Seminar registration form - Beatmaking 101',
+      'Beatmaking 101 - seminar sign-up page',
       'Google Meet sign-up link for Beatmaking 101',
       'Formulario de registro para webinar - Beatmaking 101',
+      'Formulario de inscripción para seminario - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -13470,7 +13473,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Zoom|Google Meet|webinar registration|sign-up link/i);
+        expect(emptyState?.textContent).not.toMatch(/Zoom|Google Meet|webinar registration|seminar|seminario|sign-up link/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
