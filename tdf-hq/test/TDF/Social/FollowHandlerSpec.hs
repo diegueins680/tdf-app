@@ -208,6 +208,9 @@ spec = describe "social event handler helpers" $ do
             (eventWithMetadata (Just "{\"currency\":\"eur\",\"budgetCents\":2500}"))
             `shouldBe` Right ("EUR", Just 2500)
         assertInvalid (Just "not-json") "Stored event metadata is invalid JSON"
+        assertInvalid
+            (Just "{\"currency\":\"usd\",\"budgetCents\":2500,\"curency\":\"eur\"}")
+            "Stored event metadata contains unknown fields: curency"
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
 

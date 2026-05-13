@@ -72,6 +72,9 @@ import           Control.Monad (filterM, forM, forM_, replicateM, unless, when)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types (Object, Parser)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
@@ -199,7 +202,8 @@ instance Aeson.ToJSON EventMetadataDTO where
     ]
 
 instance Aeson.FromJSON EventMetadataDTO where
-  parseJSON = Aeson.withObject "EventMetadataDTO" $ \o ->
+  parseJSON = Aeson.withObject "EventMetadataDTO" $ \o -> do
+    rejectUnknownStoredEventMetadataFields o
     EventMetadataDTO
       <$> o Aeson..:? "ticketUrl"
       <*> o Aeson..:? "imageUrl"
@@ -208,6 +212,29 @@ instance Aeson.FromJSON EventMetadataDTO where
       <*> o Aeson..:? "eventStatus"
       <*> o Aeson..:? "currency"
       <*> o Aeson..:? "budgetCents"
+
+rejectUnknownStoredEventMetadataFields :: Object -> Parser ()
+rejectUnknownStoredEventMetadataFields obj =
+  case filter (`notElem` storedEventMetadataAllowedKeys) providedKeys of
+    [] -> pure ()
+    unexpected ->
+      fail
+        ( "Stored event metadata contains unknown fields: "
+            <> T.unpack (T.intercalate ", " unexpected)
+        )
+  where
+    providedKeys = map AesonKey.toText (AesonKeyMap.keys obj)
+
+storedEventMetadataAllowedKeys :: [T.Text]
+storedEventMetadataAllowedKeys =
+  [ "ticketUrl"
+  , "imageUrl"
+  , "isPublic"
+  , "eventType"
+  , "eventStatus"
+  , "currency"
+  , "budgetCents"
+  ]
 
 decodeEventMetadata :: Maybe T.Text -> EventMetadataDTO
 decodeEventMetadata mTxt = fromMaybe emptyEventMetadata $ do
@@ -3116,7 +3143,15 @@ decodeStoredEventMetadata (Just raw)
   | otherwise =
       case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
         Right metadata -> Right metadata
-        Left _ -> Left "Stored event metadata is invalid JSON"
+        Left err -> Left (storedEventMetadataDecodeError err)
+
+storedEventMetadataDecodeError :: String -> T.Text
+storedEventMetadataDecodeError rawError =
+  case T.breakOn unknownFieldsPrefix (T.pack rawError) of
+    (_, message) | not (T.null message) -> message
+    _ -> "Stored event metadata is invalid JSON"
+  where
+    unknownFieldsPrefix = "Stored event metadata contains unknown fields:"
 
 validateStoredEventFinanceMetadata :: SocialEvent -> Either T.Text (T.Text, Maybe Int)
 validateStoredEventFinanceMetadata eventRec = do
