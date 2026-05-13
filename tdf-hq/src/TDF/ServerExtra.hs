@@ -1070,8 +1070,16 @@ isValidCheckoutHolderEmail candidate =
         && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
+        && hasValidCheckoutHolderFinalDomainLabel domain
         && all isValidCheckoutHolderDomainLabel (T.splitOn "." domain)
     _ -> False
+
+hasValidCheckoutHolderFinalDomainLabel :: Text -> Bool
+hasValidCheckoutHolderFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 isValidCheckoutHolderEmailLocalPart :: Text -> Bool
 isValidCheckoutHolderEmailLocalPart localPart =

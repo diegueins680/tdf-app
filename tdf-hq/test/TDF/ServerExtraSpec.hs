@@ -1920,6 +1920,37 @@ spec = do
         "holderPhone must be a valid phone number"
         baseRequest { coHolderPhone = Just "call me maybe" }
 
+    it "rejects ambiguous holder email final domain labels before storing inventory custody records" $ do
+      let assertInvalid rawEmail =
+            case normalizeCheckoutRequest
+              (AssetCheckoutRequest
+                (Just "party")
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                (Just "loan")
+                Nothing
+                (Just rawEmail)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "holderEmail must be a valid email address"
+              Right value ->
+                value `seq` expectationFailure "Expected ambiguous holder email to be rejected"
+
+      assertInvalid "ops@example.123"
+      assertInvalid "ops@example.c"
+
     it "rejects payment references without payment types so checkout financial metadata stays unambiguous" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
