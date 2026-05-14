@@ -5672,9 +5672,9 @@ fanUpdateProfile user rawUpdate = do
     loadFanProfileDTO fanId
 
 validateFanProfileUpdate :: FanProfileUpdate -> Either ServerError FanProfileUpdate
-validateFanProfileUpdate update@FanProfileUpdate{..} = do
+validateFanProfileUpdate payload@FanProfileUpdate{..} = do
   displayNameVal <- validateOptionalFanProfileDisplayName fpuDisplayName
-  Right update { fpuDisplayName = displayNameVal }
+  Right payload { fpuDisplayName = displayNameVal }
 
 validateOptionalFanProfileDisplayName :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalFanProfileDisplayName rawDisplayName =
