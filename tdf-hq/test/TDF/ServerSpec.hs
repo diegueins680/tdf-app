@@ -410,6 +410,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
+    , validateFutureAdminConsoleRouteIn
     , validateFutureAdminConsoleView
     , validateFutureAdminConsoleViewWithCatalog
     , validateReservedFutureStubRoutes
@@ -10935,6 +10936,8 @@ spec = describe "TDF.Server helpers" $ do
         it "keeps non-stub fallback discovery routes reserved out of the generic catalog" $ do
             validateReservedFutureStubRoutes reservedFutureStubRoutes
                 `shouldBe` Right [("admin", "console"), ("admin", "seed")]
+            validateFutureAdminConsoleRouteIn reservedFutureStubRoutes
+                `shouldBe` Right ("admin", "console")
             validateFutureStubCatalogRouteBoundaries
                 reservedFutureStubRoutes
                 allowedFutureStubMetadata
@@ -10956,6 +10959,23 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [(" admin", "console")]
             assertInvalid [("admin", "console/preview/details")]
             assertInvalid [("access", "login-options")]
+
+            let assertInvalidAdminConsoleRoute routes =
+                    case validateFutureAdminConsoleRouteIn routes of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected admin console fallback route drift to fail, got: "
+                                    <> show value
+                                )
+
+            assertInvalidAdminConsoleRoute [("admin", "seed")]
+            assertInvalidAdminConsoleRoute [("admin", "console")]
+            assertInvalidAdminConsoleRoute
+                [("admin", "console-preview"), ("admin", "seed")]
 
             let assertBoundaryConflict catalog =
                     case validateFutureStubCatalogRouteBoundaries

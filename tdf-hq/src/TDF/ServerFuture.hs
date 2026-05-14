@@ -342,9 +342,11 @@ validateFutureStubPublishedId rawArea rawEndpoint rawId =
       | otherwise -> invalidFutureStubResponse
 
 validateFutureAdminConsolePublishedId :: Text -> Either ServerError Text
-validateFutureAdminConsolePublishedId rawId
-  | isFuturePublishedIdShape "admin" "console" rawId = Right rawId
-  | otherwise = invalidFutureAdminConsoleMetadata
+validateFutureAdminConsolePublishedId rawId = do
+  (area, endpoint) <- validateFutureAdminConsoleRoute
+  if isFuturePublishedIdShape area endpoint rawId
+    then Right rawId
+    else invalidFutureAdminConsoleMetadata
 
 isFuturePublishedIdShape :: Text -> Text -> Text -> Bool
 isFuturePublishedIdShape area endpoint rawId =
@@ -370,9 +372,28 @@ validateFutureStubPublishedPath rawArea rawEndpoint rawPath =
       | otherwise -> invalidFutureStubResponse
 
 validateFutureAdminConsolePublishedPath :: Text -> Either ServerError Text
-validateFutureAdminConsolePublishedPath rawPath
-  | isFuturePublishedPathShape "admin" "console" rawPath = Right rawPath
-  | otherwise = invalidFutureAdminConsoleMetadata
+validateFutureAdminConsolePublishedPath rawPath = do
+  (area, endpoint) <- validateFutureAdminConsoleRoute
+  if isFuturePublishedPathShape area endpoint rawPath
+    then Right rawPath
+    else invalidFutureAdminConsoleMetadata
+
+validateFutureAdminConsoleRoute :: Either ServerError (Text, Text)
+validateFutureAdminConsoleRoute =
+  validateFutureAdminConsoleRouteIn reservedFutureStubRoutes
+
+validateFutureAdminConsoleRouteIn
+  :: [(Text, Text)]
+  -> Either ServerError (Text, Text)
+validateFutureAdminConsoleRouteIn routes =
+  case validateReservedFutureStubRoutes routes of
+    Left _ -> invalidFutureAdminConsoleMetadata
+    Right reservedRoutes ->
+      if route `elem` reservedRoutes
+        then Right route
+        else invalidFutureAdminConsoleMetadata
+  where
+    route = ("admin", "console")
 
 isFuturePublishedPathShape :: Text -> Text -> Text -> Bool
 isFuturePublishedPathShape area endpoint rawPath =
