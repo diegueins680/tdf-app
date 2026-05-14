@@ -818,7 +818,8 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
   case openAiApiKey cfg of
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
-      reqBase <- parseRequest "https://api.openai.com/v1/embeddings"
+      let embedBase = T.dropWhileEnd (== '/') (chatKitApiBase cfg)
+      reqBase <- parseRequest (T.unpack (embedBase <> "/v1/embeddings"))
       let body = encode EmbeddingReq
             { model = openAiEmbedModel cfg
             , input = inputs

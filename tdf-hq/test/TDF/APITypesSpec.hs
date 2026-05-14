@@ -1567,6 +1567,25 @@ spec = do
                     emailVal `shouldBe` "ada@example.com"
                     codeVal `shouldBe` "REF-42"
 
+        it "rejects malformed academy platform values before enrollment persistence fallback" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"web\\nmobile\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"meta\\u202Eads\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"meta\\u00A0ads\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                ( BL8.pack
+                    ( "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\""
+                        <> replicate 81 'a'
+                        <> "\"}"
+                    )
+                )
+                `shouldSatisfy` isLeft
+
         it "rejects blank, malformed, or non-positive academy fields before ambiguous handler fallback" $ do
             decodeEnroll
                 "{\"email\":\"   \",\"role\":\"artist\"}"

@@ -13,13 +13,21 @@ module TDF.Routes.Academy
   , LessonDTO(..)
   , NextCohortDTO(..)
   , validateAcademyRole
+  , validateAcademyPlatform
   , validateAcademyReferralCode
   , validateAcademySlug
   ) where
 
 import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, defaultOptions, genericParseJSON)
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isAsciiLower, isControl, isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  , generalCategory
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -41,7 +49,7 @@ instance FromJSON EnrollReq where
     EnrollReq
       <$> requiredEmail "email" rawEmail
       <*> requiredAcademyRole rawRole
-      <*> pure (optionalNonBlank rawPlatform)
+      <*> optionalAcademyPlatform rawPlatform
       <*> optionalAcademyReferralCode rawReferralCode
 
 data ProgressReq = ProgressReq
@@ -138,6 +146,38 @@ validateAcademyRole raw =
 allowedAcademyRoles :: [Text]
 allowedAcademyRoles = ["artist", "manager"]
 
+optionalAcademyPlatform :: Maybe Text -> Parser (Maybe Text)
+optionalAcademyPlatform Nothing = pure Nothing
+optionalAcademyPlatform (Just raw)
+  | T.null (T.strip raw) && not (T.any isUnsafeAcademyPlatformChar raw) =
+      pure Nothing
+  | otherwise =
+      Just <$> requiredAcademyPlatform raw
+
+requiredAcademyPlatform :: Text -> Parser Text
+requiredAcademyPlatform raw =
+  either (fail . T.unpack) pure (validateAcademyPlatform raw)
+
+validateAcademyPlatform :: Text -> Either Text Text
+validateAcademyPlatform raw =
+  let platformValue = T.strip raw
+  in if T.any isUnsafeAcademyPlatformChar raw
+       then Left "platform must not contain control characters, hidden Unicode formatting marks, or non-ASCII spaces"
+       else if T.null platformValue
+         then Left "platform must not be blank"
+       else if T.length platformValue > maxAcademyPlatformChars
+         then Left "platform must be 80 characters or fewer"
+       else Right platformValue
+
+maxAcademyPlatformChars :: Int
+maxAcademyPlatformChars = 80
+
+isUnsafeAcademyPlatformChar :: Char -> Bool
+isUnsafeAcademyPlatformChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
 optionalAcademyReferralCode :: Maybe Text -> Parser (Maybe Text)
 optionalAcademyReferralCode Nothing = pure Nothing
 optionalAcademyReferralCode (Just raw)
@@ -195,19 +235,6 @@ isAcademySlugAtom ch = isAsciiLower ch || isDigit ch
 
 isAcademySlugChar :: Char -> Bool
 isAcademySlugChar ch = isAcademySlugAtom ch || ch == '-'
-
-requiredNonBlank :: String -> Text -> Parser Text
-requiredNonBlank fieldName raw =
-  let trimmed = T.strip raw
-  in if T.null trimmed
-       then fail (fieldName <> " must not be blank")
-       else pure trimmed
-
-optionalNonBlank :: Maybe Text -> Maybe Text
-optionalNonBlank raw =
-  case T.strip <$> raw of
-    Just trimmed | not (T.null trimmed) -> Just trimmed
-    _ -> Nothing
 
 requiredPositiveDay :: Int -> Parser Int
 requiredPositiveDay dayNumber =
