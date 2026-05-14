@@ -1218,6 +1218,17 @@ const firstRunProviderFormDescriptorPrefixPattern =
 const firstRunProviderFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|instant|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform(?:\s*\.?\s*com)?|many\s*chat|manychat|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|lead\s*pages?|notion|fillout|cognito\s+forms?|forms?\.app|form\s*spree|formsite|123\s*forms?\s*builder|123formbuilder)(?:\s+forms?)?)|typeform(?:\s*\.?\s*com)?|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable(?:\s+forms?)?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|lead\s*pages?(?:\s+(?:landing\s+)?pages?|forms?|portals?)?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?|forms?\.app(?:\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))?|form\s*spree(?:\s+forms?)?|formsite(?:\s+forms?)?|123\s*forms?\s*builder(?:\s+forms?)?|123formbuilder(?:\s+forms?)?)\s*$/i;
 
+const firstRunNoCodeLandingProviderPattern = String.raw`(?:carrd|framer|unbounce|instapage|landingi)`;
+const firstRunNoCodeLandingDescriptorPattern = String.raw`(?:(?:${firstRunNoCodeLandingProviderPattern})\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)|(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:${firstRunNoCodeLandingProviderPattern})|(?:formularios?|p[aá]ginas?|landings?|enlaces?|links?|urls?|portales?)\s+(?:de\s+)?(?:${firstRunNoCodeLandingProviderPattern}))`;
+const firstRunNoCodeLandingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunNoCodeLandingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunNoCodeLandingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunNoCodeLandingDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunEmailMarketingFormDescriptorPrefixPattern =
   /^(?:(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1477,6 +1488,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunGenericEventDescriptorPrefixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorPrefixPattern, '')
+    .replace(firstRunNoCodeLandingDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
@@ -1566,6 +1578,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunGenericEventDescriptorSuffixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorSuffixPattern, '')
+    .replace(firstRunNoCodeLandingDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
