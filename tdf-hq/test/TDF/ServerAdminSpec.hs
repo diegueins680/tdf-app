@@ -410,6 +410,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeEmailTest "{\"etrEmail\":\"ada@example.com\"}" `shouldSatisfy` isLeft
             decodeEmailTest "{\"email\":\"ada@example.com\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback fields so email-test defaults require omission" $ do
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"subject\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"body\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"name\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"ctaUrl\":null}" `shouldSatisfy` isLeft
+
     describe "SocialUnholdRequest FromJSON" $ do
         it "accepts canonical admin wire keys for social unhold lookups" $
             case eitherDecode

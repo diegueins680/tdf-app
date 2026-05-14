@@ -327,10 +327,19 @@ data EmailTestRequest = EmailTestRequest
   , etrCtaUrl  :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON EmailTestRequest where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    mapM_
+      (\fieldName ->
+        rejectNullOptionalField
+          "EmailTestRequest"
+          fieldName
+          (T.unpack fieldName <> " must be omitted instead of null")
+          value)
+      ["name", "subject", "body", "ctaUrl"]
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } value
 
 data EmailTestResponse = EmailTestResponse
   { status  :: Text
