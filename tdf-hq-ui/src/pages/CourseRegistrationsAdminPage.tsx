@@ -63,7 +63,7 @@ const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const cleanInitialCohortPreviewLabel = (label: string) =>
-  label.trim().replace(/\s*[.:;]+$/g, '').trim();
+  label.trim().replace(/\s*[.!:;]+$/g, '').trim();
 const normalizeInitialCohortPreviewKey = (label: string) =>
   cleanInitialCohortPreviewLabel(label)
     .normalize('NFD')

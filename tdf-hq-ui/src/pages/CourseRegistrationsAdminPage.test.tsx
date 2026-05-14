@@ -17365,7 +17365,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('deduplicates first-run form labels that only add trailing punctuation', async () => {
     listCohortsMock.mockResolvedValue([
-      { ccSlug: 'beatmaking-101-main', ccTitle: 'Beatmaking 101.' },
+      { ccSlug: 'beatmaking-101-main', ccTitle: 'Beatmaking 101!' },
       { ccSlug: 'beatmaking-101-alt', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp-main', ccTitle: 'Mixing Bootcamp:' },
     ]);
@@ -17384,7 +17384,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
-      expect(emptyState?.textContent).not.toContain('Beatmaking 101.');
+      expect(emptyState?.textContent).not.toContain('Beatmaking 101!');
       expect(emptyState?.textContent).not.toContain('Mixing Bootcamp:');
       expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
