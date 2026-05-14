@@ -233,10 +233,13 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubBoundaryRoute catalog
-  if any routesOverlap [ (reservedRoute, catalogRoute)
-                       | reservedRoute <- validatedReservedRoutes
-                       , catalogRoute <- validatedCatalog
-                       ]
+  if length validatedReservedRoutes /= length (nub validatedReservedRoutes)
+       || length validatedCatalog /= length (nub validatedCatalog)
+       || any routesOverlap
+            [ (reservedRoute, catalogRoute)
+            | reservedRoute <- validatedReservedRoutes
+            , catalogRoute <- validatedCatalog
+            ]
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
