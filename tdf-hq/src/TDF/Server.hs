@@ -2273,7 +2273,10 @@ validateDriveUploadName fieldName uploadName
         { errBody =
             BL.fromStrict
               (TE.encodeUtf8
-                (fieldName <> " must not contain control characters or Unicode formatting marks"))
+                ( fieldName
+                    <> " must not contain control characters or Unicode formatting marks"
+                    <> " or Unicode space separators"
+                ))
         }
   | T.any isPathSeparator uploadName =
       Left err400
@@ -2293,6 +2296,7 @@ isUnsafeDriveUploadNameChar :: Char -> Bool
 isUnsafeDriveUploadNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 maxDriveUploadBytes :: Integer
 maxDriveUploadBytes = 50 * 1024 * 1024

@@ -5411,6 +5411,12 @@ spec = describe "TDF.Server helpers" $ do
                 "fileName must not contain control characters or Unicode formatting marks"
                 (resolveDriveUploadName Nothing "browser\x202E\&fdp")
             assertInvalid
+                "name must not contain control characters or Unicode formatting marks or Unicode space separators"
+                (resolveDriveUploadName (Just "Contract\x00A0\&Final.pdf") "safe.pdf")
+            assertInvalid
+                "fileName must not contain control characters or Unicode formatting marks or Unicode space separators"
+                (resolveDriveUploadName Nothing "browser\x00A0\&name.pdf")
+            assertInvalid
                 "name must not contain path separators"
                 (resolveDriveUploadName (Just "folder/Contract.pdf") "safe.pdf")
             assertInvalid
