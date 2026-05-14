@@ -5767,6 +5767,63 @@ describe('AdminConsolePage', () => {
     ).toBeInTheDocument();
   });
 
+  it('ignores zero-count admin metric fallback cards without hiding actionable setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-metrics-empty',
+          title: 'Métricas administrativas',
+          body: ['Usuarios administrables: 0', 'Eventos de auditoría: 0'],
+        },
+        {
+          cardId: 'audit-counter-empty',
+          title: 'Audit counters',
+          body: ['0 audit events'],
+        },
+        {
+          cardId: 'secure-invites',
+          title: 'Invitación segura',
+          body: [
+            '0 usuarios invitados en este flujo. Invita al responsable antes de activar accesos compartidos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(screen.queryByText('Métricas administrativas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit counters')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Usuarios administrables: 0$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Eventos de auditoría: 0$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^0 audit events$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Invitación segura')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /0 usuarios invitados en este flujo\. Invita al responsable antes de activar accesos compartidos\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Métricas administrativas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit counters')).not.toBeInTheDocument();
+  });
+
   it('ignores registered-user and registered-audit empty cards without hiding invite setup copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

@@ -880,6 +880,25 @@ const ADMIN_CONSOLE_PLACEHOLDER_TITLE_EXACT_KEYS = new Set([
   'under construction',
   'work in progress',
 ]);
+const ADMIN_CONSOLE_ZERO_COUNT_SUBJECT_PATTERNS = [
+  'admin users?',
+  'administrative users?',
+  'audit',
+  'audit events?',
+  'audit logs?',
+  'auditoria',
+  'cambios recientes?',
+  'eventos de auditoria',
+  'recent changes?',
+  'registered users?',
+  'registros de auditoria',
+  'role assignments?',
+  'roles?',
+  'roles asignados',
+  'usuarios',
+  'usuarios administrables',
+  'usuarios registrados',
+] as const;
 const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'revisa el estado del sistema ajusta permisos y valida cambios recientes desde un solo lugar',
   'review system status adjust permissions and validate recent changes from one place',
@@ -1145,7 +1164,23 @@ function isPlaceholderAdminConsoleParagraph(paragraph: string) {
 
   return ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS.some((fragment) => (
     normalizedParagraph.includes(fragment)
-  ));
+  )) || isZeroCountAdminConsoleParagraph(paragraph);
+}
+
+function normalizeAdminConsoleMetricKey(value: string) {
+  return normalizeAdminConsoleParagraphKey(value)
+    .replace(/\b(?:cantidad|conteo|count|metric|metrica|metricas|number|numero|total)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isZeroCountAdminConsoleParagraph(paragraph: string) {
+  const metricKey = normalizeAdminConsoleMetricKey(paragraph);
+
+  return ADMIN_CONSOLE_ZERO_COUNT_SUBJECT_PATTERNS.some((subjectPattern) => {
+    const subjectRegex = new RegExp(`^(?:${subjectPattern})\\s+0$|^0\\s+(?:${subjectPattern})$`);
+    return subjectRegex.test(metricKey);
+  });
 }
 
 function isBuiltInAdminConsoleParagraph(paragraph: string) {
