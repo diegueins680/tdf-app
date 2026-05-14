@@ -905,6 +905,9 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\
 const normalizeFirstRunDescriptorSeparators = (value: string) =>
   value.replace(/\s*[\u00b7\u2022\u2013\u2014]\s*/g, ' - ');
 
+const firstRunDecorativeEdgeMarkerPattern =
+  /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
+
 const stripFirstRunCohortPresentationMarkers = (value: string) =>
   value
     .trim()
@@ -916,6 +919,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/<\/?(?:strong|b|em|i|span)[^>\n]*>/gi, '')
     .replace(/^\[(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\]\s*/g, '')
     .replace(/^(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\s*(?::|-|\u2013|\u2014)\s*/g, '')
+    .replace(firstRunDecorativeEdgeMarkerPattern, '')
     .trim();
 
 const humanizeCohortSlug = (slug: string) => {
