@@ -4092,6 +4092,76 @@ describe('AdminConsolePage', () => {
     expect(within(firstRunAlert).queryByText(/\/configuracion\/tokens/i)).not.toBeInTheDocument();
   });
 
+  it('strips HTML presentation tags and still filters built-in fallback sections', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-html-health',
+          title: '<strong>Service health</strong>',
+          body: [
+            '<span>Review API readiness before changing admin permissions.</span>',
+          ],
+        },
+        {
+          cardId: 'service-tokens',
+          title: '<strong>Tokens de servicio</strong>',
+          body: [
+            '<strong>Tokens de servicio:</strong> Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+            'Abre <a href="/configuracion/tokens"><strong>rotación semanal</strong></a> desde esta consola.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+    await screen.findByText('Primeros pasos');
+
+    const firstRunAlert = screen.getByText('Primeros pasos').closest('[role="alert"]');
+    if (!(firstRunAlert instanceof HTMLElement)) {
+      throw new Error('Expected first-run alert container to render');
+    }
+
+    await waitFor(() => {
+      expect(
+        within(firstRunAlert).getByRole(
+          'button',
+          { name: /^Opcional: ver 1 módulo adicional$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /^Opcional: ver 2 módulos adicionales$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Service health')).not.toBeInTheDocument();
+    expect(screen.queryByText(/<strong>Service health/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review API readiness before changing admin permissions\./i),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      within(firstRunAlert).getByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(await within(firstRunAlert).findAllByText('Tokens de servicio')).toHaveLength(1);
+    expect(
+      within(firstRunAlert).getByText(
+        /^Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\.$/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(firstRunAlert).getByText(/^Abre rotación semanal desde esta consola\.$/i),
+    ).toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/<strong>Tokens de servicio/i)).not.toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/<a href/i)).not.toBeInTheDocument();
+    expect(within(firstRunAlert).queryByText(/\/configuracion\/tokens/i)).not.toBeInTheDocument();
+  });
+
   it('strips generated fallback prefixes from unique optional module titles', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
