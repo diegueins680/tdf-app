@@ -27,7 +27,7 @@ import           Control.Exception (IOException, displayException, try)
 import           System.Directory (doesFileExist, makeAbsolute)
 import           System.Environment (lookupEnv)
 import           System.Exit (ExitCode(..))
-import           System.FilePath (isAbsolute, takeExtension)
+import           System.FilePath (isAbsolute, normalise, splitDirectories, takeExtension)
 import           System.Process (proc, readCreateProcessWithExitCode)
 
 import qualified Data.Aeson as Aeson
@@ -702,6 +702,8 @@ normalizeConfiguredScriptPath raw =
          then Left whitespaceConfiguredScriptMessage
        else if not (isAbsolute trimmed)
          then Left relativeConfiguredScriptMessage
+       else if hasAmbiguousConfiguredScriptPathSegments trimmed
+         then Left nonCanonicalConfiguredScriptMessage
        else Right trimmed
 
 invalidConfiguredScriptControlMessage :: Text
@@ -715,6 +717,15 @@ whitespaceConfiguredScriptMessage =
 relativeConfiguredScriptMessage :: Text
 relativeConfiguredScriptMessage =
   "SRI_INVOICE_SCRIPT must be an absolute path; unset it to use the default script discovery."
+
+nonCanonicalConfiguredScriptMessage :: Text
+nonCanonicalConfiguredScriptMessage =
+  "SRI_INVOICE_SCRIPT must be a normalized absolute file path without . or .. segments."
+
+hasAmbiguousConfiguredScriptPathSegments :: FilePath -> Bool
+hasAmbiguousConfiguredScriptPathSegments scriptPath =
+  normalise scriptPath /= scriptPath
+    || any (`elem` [".", ".."]) (splitDirectories scriptPath)
 
 firstExisting :: [FilePath] -> IO (Maybe FilePath)
 firstExisting [] = pure Nothing

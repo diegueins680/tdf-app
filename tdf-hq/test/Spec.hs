@@ -3921,6 +3921,27 @@ main = hspec $ do
                         expectationFailure
                             ("Expected relative SRI script path to fail, got: " <> show value)
 
+        it "rejects non-normalized SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            let expected = "SRI_INVOICE_SCRIPT must be a normalized absolute file path"
+            in forM_
+                   [ "/tmp/tdf-hq-sri/../tdf-sri-script.mjs"
+                   , "/tmp/tdf-hq-sri/./tdf-sri-script.mjs"
+                   , "/tmp//tdf-sri-script.mjs"
+                   ]
+                   $ \rawPath ->
+                       withEnvOverrides [("SRI_INVOICE_SCRIPT", Just rawPath)] $ do
+                           result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                           case result of
+                               Left err -> do
+                                   Data.Text.unpack err `shouldContain` expected
+                                   Data.Text.unpack err
+                                       `shouldNotContain` "does not point to an existing file"
+                               Right value ->
+                                   expectationFailure
+                                       ( "Expected non-normalized SRI script path to fail, got: "
+                                           <> show value
+                                       )
+
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
                 hClose handle
