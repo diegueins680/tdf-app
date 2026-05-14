@@ -377,13 +377,16 @@ const getResetViewLabel = ({
   hasCustomLimit,
   hasSlugFilter,
   hasStatusFilter,
+  hasUnconfiguredSlugFilter = false,
 }: {
   hasCustomLimit: boolean;
   hasSlugFilter: boolean;
   hasStatusFilter: boolean;
+  hasUnconfiguredSlugFilter?: boolean;
 }) => {
   if (hasCustomLimit && (hasSlugFilter || hasStatusFilter)) return 'Restablecer vista';
   if (hasCustomLimit) return 'Restablecer límite';
+  if (hasSlugFilter && !hasStatusFilter && hasUnconfiguredSlugFilter) return 'Quitar filtro de cohorte';
   if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todas las cohortes';
   if (!hasSlugFilter && hasStatusFilter) return 'Mostrar todos los estados';
   if (hasSlugFilter && hasStatusFilter) return 'Restablecer vista';
@@ -3164,6 +3167,10 @@ export default function CourseRegistrationsAdminPage() {
     && singleAvailableCohort?.value === selectedSlug,
   );
   const hasEffectiveSlugFilter = hasSlugFilter && !hasRedundantSingleCohortFilter;
+  const hasUnconfiguredSlugFilter = hasSlugFilter
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && selectedConfiguredCohort == null;
   const hasManualFilters = hasEffectiveSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
@@ -3548,6 +3555,7 @@ export default function CourseRegistrationsAdminPage() {
     hasCustomLimit,
     hasSlugFilter: hasEffectiveSlugFilter,
     hasStatusFilter,
+    hasUnconfiguredSlugFilter,
   });
   const showCohortFilterLoadingSummary = showCohortSelect
     && cohortsQuery.isLoading
@@ -3569,7 +3577,9 @@ export default function CourseRegistrationsAdminPage() {
       : 'con los filtros actuales'
     : 'con el límite actual';
   const filteredEmptyStateBaseMessage =
-    !hasManualFilters && hasCustomLimit
+    hasUnconfiguredSlugFilter && !hasStatusFilter && !hasCustomLimit
+      ? `No hay inscripciones para ${activeCohortLabel}.`
+      : !hasManualFilters && hasCustomLimit
       ? `No hay inscripciones con el límite actual de hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
       : activeFilterSummary
         ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}.`
