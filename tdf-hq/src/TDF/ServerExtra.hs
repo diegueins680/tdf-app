@@ -1039,8 +1039,11 @@ validateCheckoutHolderEmail rawValue =
                 BL.fromStrict
                   (TE.encodeUtf8 ("holderEmail must be " <> T.pack (show maxCheckoutHolderEmailChars) <> " characters or fewer"))
             }
-      | T.any isControl cleanValue ->
-          Left err400 { errBody = "holderEmail must not contain control characters" }
+      | T.any isUnsafeCheckoutContactChar cleanValue ->
+          Left err400
+            { errBody =
+                "holderEmail must not contain control characters or hidden formatting characters"
+            }
       | isValidCheckoutHolderEmail normalized ->
           Right (Just normalized)
       | otherwise ->
@@ -1059,8 +1062,11 @@ validateCheckoutHolderPhone rawValue =
                 BL.fromStrict
                   (TE.encodeUtf8 ("holderPhone must be " <> T.pack (show maxCheckoutHolderPhoneChars) <> " characters or fewer"))
             }
-      | T.any isControl cleanValue ->
-          Left err400 { errBody = "holderPhone must not contain control characters" }
+      | T.any isUnsafeCheckoutContactChar cleanValue ->
+          Left err400
+            { errBody =
+                "holderPhone must not contain control characters or hidden formatting characters"
+            }
       | otherwise ->
           maybe
             (Left err400 { errBody = "holderPhone must be a valid phone number" })
@@ -1122,6 +1128,10 @@ maxCheckoutHolderEmailDomainLabelChars = 63
 
 maxCheckoutHolderPhoneChars :: Int
 maxCheckoutHolderPhoneChars = 60
+
+isUnsafeCheckoutContactChar :: Char -> Bool
+isUnsafeCheckoutContactChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateCheckoutTermsField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutTermsField fieldName =

@@ -2029,6 +2029,44 @@ spec = do
       assertInvalid "ops@example.123"
       assertInvalid "ops@example.c"
 
+    it "rejects hidden-format holder contacts before generic checkout contact validation" $ do
+      let hidden = T.singleton '\x202E'
+          assertInvalid expectedMessage request =
+            case normalizeCheckoutRequest request of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                value `seq` expectationFailure "Expected unsafe holder contact to be rejected"
+
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "loan")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+
+      assertInvalid
+        "holderEmail must not contain control characters or hidden formatting characters"
+        baseRequest { coHolderEmail = Just ("ops" <> hidden <> "@example.com") }
+      assertInvalid
+        "holderPhone must not contain control characters or hidden formatting characters"
+        baseRequest { coHolderPhone = Just ("+593" <> hidden <> "991234567") }
+
     it "rejects payment references without payment types so checkout financial metadata stays unambiguous" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
