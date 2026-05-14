@@ -15,7 +15,7 @@ module TDF.API.Proposals
   ) where
 
 import           Data.Aeson (FromJSON (parseJSON), Options (rejectUnknownFields), ToJSON,
-                             defaultOptions, genericParseJSON)
+                             Value (Object), (.:!), defaultOptions, genericParseJSON)
 import           Data.Aeson.Types (Parser)
 import           Data.Int (Int64)
 import           Data.Text (Text)
@@ -94,7 +94,39 @@ data ProposalUpdate = ProposalUpdate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object o) = do
+    _ <- (genericParseJSON strictObjectOptions value :: Parser ProposalUpdate)
+    rawTitle <- o .:! "puTitle"
+    titleVal <- case rawTitle of
+      Nothing -> pure Nothing
+      Just Nothing -> fail "puTitle must be omitted instead of null"
+      Just (Just value') -> pure (Just value')
+    rawStatus <- o .:! "puStatus"
+    statusVal <- case rawStatus of
+      Nothing -> pure Nothing
+      Just Nothing -> fail "puStatus must be omitted instead of null"
+      Just (Just value') -> pure (Just value')
+    payload <-
+      ProposalUpdate
+        <$> pure titleVal
+        <*> pure statusVal
+        <*> o .:! "puServiceKind"
+        <*> o .:! "puClientPartyId"
+        <*> o .:! "puContactName"
+        <*> o .:! "puContactEmail"
+        <*> o .:! "puContactPhone"
+        <*> o .:! "puPipelineCardId"
+        <*> o .:! "puNotes"
+    validateProposalUpdateIntent payload
+    pure payload
+  parseJSON _ = fail "ProposalUpdate must be an object"
+
+validateProposalUpdateIntent :: ProposalUpdate -> Parser ()
+validateProposalUpdateIntent
+  (ProposalUpdate Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing) =
+  fail "ProposalUpdate must include at least one field"
+validateProposalUpdateIntent _ =
+  pure ()
 
 data ProposalVersionSummaryDTO = ProposalVersionSummaryDTO
   { versionId :: Text

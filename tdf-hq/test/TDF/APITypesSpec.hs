@@ -623,6 +623,27 @@ spec = do
                     templateKeyVal `shouldBe` Just "tdf_live_sessions"
                     notesVal `shouldBe` Just "Regenerated PDF"
 
+        it "distinguishes omitted nullable proposal patch fields from explicit clears" $
+            case decodeProposalUpdate
+                ( BL8.concat
+                    [ "{\"puClientPartyId\":null"
+                    , ",\"puContactEmail\":null"
+                    , ",\"puPipelineCardId\":null"
+                    , ",\"puNotes\":null}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected proposal clear patch payload to decode, got: " <> err)
+                Right
+                    ( Proposals.ProposalUpdate
+                        _ _ _ clientPartyIdVal _ contactEmailVal _ pipelineCardIdVal notesVal
+                      ) -> do
+                    clientPartyIdVal `shouldBe` Just Nothing
+                    contactEmailVal `shouldBe` Just Nothing
+                    pipelineCardIdVal `shouldBe` Just Nothing
+                    notesVal `shouldBe` Just Nothing
+
         it "rejects unexpected keys so malformed proposal writes fail explicitly" $ do
             decodeProposalCreate
                 "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":\"tdf_live_sessions\",\"unexpected\":true}"
@@ -633,6 +654,13 @@ spec = do
             decodeProposalVersionCreate
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
+
+        it "rejects empty proposal updates instead of accepting silent no-op patches" $
+            decodeProposalUpdate "{}" `shouldSatisfy` isLeft
+
+        it "rejects null proposal title or status updates instead of silently ignoring them" $ do
+            decodeProposalUpdate "{\"puTitle\":null}" `shouldSatisfy` isLeft
+            decodeProposalUpdate "{\"puStatus\":null}" `shouldSatisfy` isLeft
 
         it "rejects ambiguous proposal version content sources before handler fallback resolution" $ do
             decodeProposalVersionCreate
