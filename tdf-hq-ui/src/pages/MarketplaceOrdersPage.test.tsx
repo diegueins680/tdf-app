@@ -1192,6 +1192,41 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('does not repeat phone-only buyer identities in the contact column', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'phone-only',
+        moBuyerName: '   ',
+        moBuyerEmail: '   ',
+        moBuyerPhone: '+593 999 000 111',
+      }),
+      buildOrder({
+        moOrderId: 'named-phone',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: '+593 999 000 222',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).toContain('Contacto');
+        expect(getColumnTextsByHeader(container, 'Contacto')).toEqual(['+593 999 000 222', '—']);
+        expect((container.textContent?.match(/\+593 999 000 111/g) ?? [])).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows the paid-at column only when the visible order list includes a payment timestamp', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

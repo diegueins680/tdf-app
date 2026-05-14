@@ -345,7 +345,9 @@ export default function MarketplaceOrdersPage() {
     hasVisiblePayerEmail
     || visiblePaymentProviderSet.size > 1
     || (visiblePaymentProviderSet.size === 1 && (filtered.length === 1 || hasVisibleOrdersWithoutPaymentProvider));
-  const showBuyerPhoneColumn = filtered.some((order) => normalizeBuyerPhoneValue(order.moBuyerPhone) !== '');
+  const showBuyerPhoneColumn = filtered.some((order) => (
+    shouldShowBuyerPhoneDetail(normalizeBuyerPhoneValue(order.moBuyerPhone), getOrderBuyerIdentity(order))
+  ));
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
   const visibleStatusLabelSet = useMemo(
     () => new Set(filtered.map((order) => statusLabel(order.moStatus))),
@@ -1095,7 +1097,9 @@ export default function MarketplaceOrdersPage() {
                   const paypalPayerEmail = getDistinctPaypalPayerEmail(order);
                   const buyerIdentity = getOrderBuyerIdentity(order);
                   const buyerEmail = normalizeEmailValue(order.moBuyerEmail);
+                  const buyerPhone = normalizeBuyerPhoneValue(order.moBuyerPhone);
                   const showBuyerEmail = shouldShowBuyerEmailDetail(buyerEmail, buyerIdentity);
+                  const showBuyerPhone = shouldShowBuyerPhoneDetail(buyerPhone, buyerIdentity);
 
                   return (
                     <TableRow
@@ -1140,15 +1144,15 @@ export default function MarketplaceOrdersPage() {
                       </TableCell>
                       {showBuyerPhoneColumn && (
                         <TableCell>
-                          {normalizeBuyerPhoneValue(order.moBuyerPhone) ? (
+                          {showBuyerPhone ? (
                             <Link
-                              href={`tel:${normalizeBuyerPhoneValue(order.moBuyerPhone).replace(/\s+/g, '')}`}
+                              href={`tel:${buyerPhone.replace(/\s+/g, '')}`}
                               underline="hover"
                               color="text.primary"
                               variant="body2"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {normalizeBuyerPhoneValue(order.moBuyerPhone)}
+                              {buyerPhone}
                             </Link>
                           ) : (
                             '—'
