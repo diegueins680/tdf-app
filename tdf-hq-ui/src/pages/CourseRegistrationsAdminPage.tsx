@@ -918,7 +918,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/__([^_\n]+)__/g, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
     .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
-    .replace(/<\/?(?:strong|b|em|i|span)[^>\n]*>/gi, '')
+    .replace(/<\/?(?:strong|b|em|i|span|a)[^>\n]*>/gi, '')
     .replace(/^\[(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\]\s*/g, '')
     .replace(/^(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\s*(?::|-|\u2013|\u2014)\s*/g, '')
     .replace(firstRunDecorativeEdgeMarkerPattern, '')

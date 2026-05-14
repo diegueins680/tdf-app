@@ -16675,6 +16675,7 @@ describe('CourseRegistrationsAdminPage', () => {
       '<strong>Registration page - Beatmaking 101</strong>',
       '<span class="label">Formulario público - Beatmaking 101</span>',
       '<em>Beatmaking 101 - enrollment portal</em>',
+      '<a href="/inscripcion/beatmaking-101">Beatmaking 101</a>',
     ];
 
     for (const title of titles) {
@@ -16692,6 +16693,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('<strong>');
         expect(emptyState?.textContent).not.toContain('<span');
         expect(emptyState?.textContent).not.toContain('<em>');
+        expect(emptyState?.textContent).not.toContain('<a');
+        expect(emptyState?.textContent).not.toContain('</a>');
+        expect(emptyState?.textContent).not.toContain('href=');
         expect(emptyState?.textContent).not.toMatch(/registration page|enrollment portal/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
