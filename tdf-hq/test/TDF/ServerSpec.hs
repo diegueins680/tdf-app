@@ -5038,6 +5038,34 @@ spec = describe "TDF.Server helpers" $ do
             extractModelReplyText (chatPayload "system" "SEND: policy")
                 `shouldBe` Nothing
 
+        it "rejects unsafe or oversized model replies before downstream fallback handling" $ do
+            let chatPayload messageContent =
+                    object
+                        [ "choices" .=
+                            [ object
+                                [ "message" .= object
+                                    [ "role" .= ("assistant" :: Text)
+                                    , "content" .= (messageContent :: Text)
+                                    ]
+                                ]
+                            ]
+                        ]
+                responsesPayload messageContent =
+                    object ["output_text" .= (messageContent :: Text)]
+
+            extractModelReplyText (chatPayload "SEND: Hola\nNEED: email")
+                `shouldBe` Just "SEND: Hola\nNEED: email"
+            extractModelReplyText (chatPayload ("SEND: Ho" <> T.singleton '\NUL'))
+                `shouldBe` Nothing
+            extractModelReplyText (chatPayload ("SEND: Ho" <> T.singleton '\x202E'))
+                `shouldBe` Nothing
+            extractModelReplyText (chatPayload (T.replicate 8193 "a"))
+                `shouldBe` Nothing
+            extractModelReplyText (responsesPayload "SEND: limpio")
+                `shouldBe` Just "SEND: limpio"
+            extractModelReplyText (responsesPayload ("SEND:" <> T.singleton '\x2028' <> "unsafe"))
+                `shouldBe` Nothing
+
     describe "shouldRetryWithFallbackModel" $ do
         it "sanitizes OpenAI chat transport exceptions before fallback classification" $ do
             let msg =

@@ -10617,7 +10617,7 @@ extractChatCompletionText payload = do
     { choices = (ChatChoice OpenAIChatMessage{role = replyRole, content = reply} : _)
     } <- parseMaybe parseJSON payload
   if replyRole == "assistant"
-    then nonEmptyText reply
+    then validateModelReplyText reply
     else Nothing
 
 extractResponsesOutputText :: Value -> Maybe Text
@@ -10625,14 +10625,30 @@ extractResponsesOutputText payload = parseMaybe parsePayload payload
   where
     parsePayload = withObject "ResponsesPayload" $ \o -> do
       mOutputText <- o .:? "output_text"
-      case mOutputText >>= nonEmptyText of
+      case mOutputText >>= validateModelReplyText of
         Just txt -> pure txt
         Nothing -> do
           outputs <- o .:? "output" .!= ([] :: [Value])
           let fragments = concatMap extractOutputFragments outputs
-          case nonEmptyText (T.intercalate "\n" fragments) of
+          case validateModelReplyText (T.intercalate "\n" fragments) of
             Just txt -> pure txt
             Nothing -> fail "output text missing"
+
+maxModelReplyTextChars :: Int
+maxModelReplyTextChars = 8192
+
+validateModelReplyText :: Text -> Maybe Text
+validateModelReplyText rawReply = do
+  reply <- nonEmptyText rawReply
+  if T.length reply <= maxModelReplyTextChars
+      && not (T.any invalidModelReplyChar reply)
+    then Just reply
+    else Nothing
+
+invalidModelReplyChar :: Char -> Bool
+invalidModelReplyChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 extractOutputFragments :: Value -> [Text]
 extractOutputFragments value =
