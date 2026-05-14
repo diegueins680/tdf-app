@@ -11879,14 +11879,14 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
                 else updates ++ [ME.MarketplaceOrderUpdatedAt =. now]
         unless (null updatesWithTimestamp) $ update orderKey updatesWithTimestamp
         loadOrderDTO orderKey
-  maybe (throwError err404) pure mDto
+  either throwError pure (requireMarketplaceOrderLookupResult mDto)
 
 getOrder :: Text -> AppM MarketplaceOrderDTO
 getOrder rawId = do
   orderKey <- parseOrderId rawId
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-  maybe (throwError err404) pure mDto
+  either throwError pure (requireMarketplaceOrderLookupResult mDto)
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
 parseOrderId rawId = do
@@ -11935,6 +11935,16 @@ marketplaceCartNotFound =
 marketplaceListingNotFound :: ServerError
 marketplaceListingNotFound =
   err404 { errBody = "Marketplace listing not found" }
+
+marketplaceOrderNotFound :: ServerError
+marketplaceOrderNotFound =
+  err404 { errBody = "Marketplace order not found" }
+
+requireMarketplaceOrderLookupResult :: Maybe a -> Either ServerError a
+requireMarketplaceOrderLookupResult (Just value) =
+  Right value
+requireMarketplaceOrderLookupResult Nothing =
+  Left marketplaceOrderNotFound
 
 requireLoadedMarketplaceWriteResult :: Text -> Maybe a -> Either ServerError a
 requireLoadedMarketplaceWriteResult _ (Just value) =

@@ -214,6 +214,7 @@ import TDF.Server
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , validateMarketplacePublicListingActive
+    , requireMarketplaceOrderLookupResult
     , requireLoadedMarketplaceWriteResult
     , requireMarketplaceCartTotals
     , resolveMarketplaceCartCurrency
@@ -7670,6 +7671,21 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ( "Expected missing marketplace write result to be rejected, got: "
+                            <> show value
+                        )
+
+        it "turns missing marketplace order lookups into explicit not-found responses" $ do
+            requireMarketplaceOrderLookupResult (Just ("loaded" :: Text))
+                `shouldBe` Right "loaded"
+
+            case requireMarketplaceOrderLookupResult (Nothing :: Maybe Text) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 404
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Marketplace order not found"
+                Right value ->
+                    expectationFailure
+                        ( "Expected missing marketplace order lookup to be rejected, got: "
                             <> show value
                         )
 
