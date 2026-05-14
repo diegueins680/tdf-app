@@ -9777,6 +9777,59 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('matches natural plural status searches so admins avoid a false empty-search recovery', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crStatus: index % 2 === 0 ? 'pending_payment' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'pagadas');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).toContain('Nina Garcia');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Estado visible: Pagado.');
+      expect(container.textContent).not.toContain('No hay coincidencias para "pagadas"');
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('matches hyphenated registration names from spaced search so admins avoid a false empty recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => (
       index === 4

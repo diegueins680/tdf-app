@@ -564,8 +564,9 @@ const registrationStatusSearchValues = (status: string) => {
   const label = registrationStatusLabel(status);
   const knownStatus = normalizeKnownRegistrationStatus(status);
 
-  if (knownStatus === 'paid') return [label, 'Pagada'];
-  if (knownStatus === 'cancelled') return [label, 'Cancelada'];
+  if (knownStatus === 'paid') return [label, 'Pagada', 'Pagados', 'Pagadas'];
+  if (knownStatus === 'cancelled') return [label, 'Cancelada', 'Cancelados', 'Canceladas'];
+  if (knownStatus === 'pending_payment') return [label, 'Pendiente', 'Pendientes', 'Pagos pendientes'];
   return [label];
 };
 
