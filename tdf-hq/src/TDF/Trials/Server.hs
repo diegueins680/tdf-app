@@ -12,7 +12,7 @@ import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
 import           Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAlphaNum
   , isAsciiLower
@@ -529,11 +529,13 @@ validateOptionalPublicTextField fieldName maxChars rawValue =
 
 invalidPublicTextChar :: Char -> Bool
 invalidPublicTextChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 publicTextCharacterMessage :: Text -> Text
 publicTextCharacterMessage fieldName =
-  fieldName <> " must not contain control characters or hidden formatting characters"
+  fieldName <> " must not contain control characters, hidden formatting characters, or Unicode space lookalikes"
 
 validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
 validatePublicSignupInput

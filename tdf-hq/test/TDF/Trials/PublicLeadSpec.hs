@@ -149,6 +149,9 @@ spec = do
         ("Ada" <> T.singleton '\x202E')
         "displayName must not contain control characters or hidden formatting characters"
       assertRejected
+        ("Ada" <> T.singleton '\x00A0' <> "Lovelace")
+        "Unicode space lookalikes"
+      assertRejected
         (T.replicate 161 "a")
         "displayName must be 1-160 characters"
 
@@ -738,6 +741,7 @@ spec = do
       assertRejected (pack (replicate 81 'a')) "interestType must be 1-80 characters"
       assertRejected "workshop\nvip" "interestType must not contain control characters"
       assertRejected ("workshop" <> "\x202E" <> "vip") "hidden formatting characters"
+      assertRejected ("workshop" <> T.singleton '\x00A0' <> "vip") "Unicode space lookalikes"
 
     it "trims interest types and details, and drops blank optional fields" $ do
       case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "  Looking for info  ") (Just "  https://example.com/file  ")) of
