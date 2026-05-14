@@ -10,7 +10,7 @@ import           Data.Char
   , generalCategory
   , isControl
   )
-import           Data.List            (group, nub)
+import           Data.List            (group, isPrefixOf, nub)
 import qualified Data.Set             as Set
 import           Data.Text            (Text)
 import qualified Data.Text            as T
@@ -194,10 +194,11 @@ validateFutureStubMetadataIn catalog rawArea rawEndpoint = do
 
 validateFutureStubCatalog :: [(Text, Text)] -> Either ServerError [(Text, Text)]
 validateFutureStubCatalog catalog = do
-  _ <- validateReservedFutureStubRoutes reservedFutureStubRoutes
+  reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
   normalized <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
+  _ <- validateFutureStubCatalogRouteBoundaries reservedRoutes normalized
   _ <- validateFutureStubCatalogAreaOrder normalized
   if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
@@ -220,6 +221,26 @@ validateReservedFutureStubRoute (area, endpoint) = do
   areaClean <- validateFutureStubArea area
   endpointClean <- validateFutureStubEndpoint endpoint
   pure (areaClean, endpointClean)
+
+validateFutureStubCatalogRouteBoundaries
+  :: [(Text, Text)]
+  -> [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateFutureStubCatalogRouteBoundaries reservedRoutes catalog
+  | any routesOverlap [ (reservedRoute, catalogRoute)
+                      | reservedRoute <- reservedRoutes
+                      , catalogRoute <- catalog
+                      ] = invalidFutureStubCatalog
+  | otherwise = Right catalog
+  where
+    routesOverlap ((reservedArea, reservedEndpoint), (area, endpoint)) =
+      area == reservedArea
+        && ( reservedSegments `isPrefixOf` endpointSegments
+             || endpointSegments `isPrefixOf` reservedSegments
+           )
+      where
+        reservedSegments = T.splitOn "/" reservedEndpoint
+        endpointSegments = T.splitOn "/" endpoint
 
 validateFutureStubCatalogEntry :: (Text, Text) -> Either ServerError (Text, Text)
 validateFutureStubCatalogEntry (area, endpoint) = do

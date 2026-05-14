@@ -415,6 +415,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalogEntry
     , validateFutureStubCatalogResponseWithConsole
     , validateFutureStubCatalogResponses
+    , validateFutureStubCatalogRouteBoundaries
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
     , validateFutureStubPublishedId
@@ -10706,6 +10707,10 @@ spec = describe "TDF.Server helpers" $ do
         it "keeps non-stub fallback discovery routes reserved out of the generic catalog" $ do
             validateReservedFutureStubRoutes reservedFutureStubRoutes
                 `shouldBe` Right [("admin", "console"), ("admin", "seed")]
+            validateFutureStubCatalogRouteBoundaries
+                reservedFutureStubRoutes
+                allowedFutureStubMetadata
+                `shouldBe` Right allowedFutureStubMetadata
 
             let assertInvalid routes =
                     case validateReservedFutureStubRoutes routes of
@@ -10723,6 +10728,27 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [(" admin", "console")]
             assertInvalid [("admin", "console/preview/details")]
             assertInvalid [("access", "login-options")]
+
+            let assertBoundaryConflict catalog =
+                    case validateFutureStubCatalogRouteBoundaries
+                        [("admin", "console"), ("admin", "seed")]
+                        catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected reserved fallback route overlap to fail, got: "
+                                    <> show value
+                                )
+
+            assertBoundaryConflict [("admin", "console/settings")]
+            assertBoundaryConflict [("admin", "seed")]
+            validateFutureStubCatalogRouteBoundaries
+                [("admin", "seed")]
+                [("admin", "seed-policy"), ("crm", "console/settings")]
+                `shouldBe` Right [("admin", "seed-policy"), ("crm", "console/settings")]
 
         it "keeps fallback discovery areas grouped in mounted route order" $ do
             validateFutureStubCatalogAreaOrder allowedFutureStubMetadata
