@@ -6488,6 +6488,56 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/Requiere configuración antes de mostrar credenciales\./i)).not.toBeInTheDocument();
   });
 
+  it('ignores connector-required fallback cards so first-run users only open actionable modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-calendar-connection-required',
+          title: 'Connection required',
+          body: ['Connect an account to enable this module.'],
+        },
+        {
+          cardId: 'provider-not-connected',
+          title: 'Proveedor externo',
+          body: ['Conecta un proveedor para habilitar este flujo.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: ['Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Connection required')).not.toBeInTheDocument();
+    expect(screen.queryByText('Proveedor externo')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Connect an account to enable this module\./i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Conecta un proveedor para habilitar este flujo\./i)).not.toBeInTheDocument();
+  });
+
   it('ignores disabled and not-enabled fallback cards so first-run users only open actionable modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
