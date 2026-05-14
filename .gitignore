@@ -83,3 +83,6 @@ tmp-meta-*.json
 screencast/meta-app-review/frame-check/
 screencast/meta-app-review/output/[0-9a-f]*.webm
 screencast/meta-app-review/output/final.mp4
+
+# Cabal build artifacts
+.cabal/
