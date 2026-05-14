@@ -910,8 +910,45 @@ const normalizeFirstRunDescriptorSeparators = (value: string) =>
 const firstRunDecorativeEdgeMarkerPattern =
   /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
 
+const firstRunCohortHtmlEntities: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  gt: '>',
+  lt: '<',
+  nbsp: ' ',
+  quot: '"',
+};
+
+const decodeFirstRunCohortCodePoint = (entity: string, codePoint: number) => (
+  Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+    ? String.fromCodePoint(codePoint)
+    : `&${entity};`
+);
+
+const decodeFirstRunCohortHtmlEntity = (entity: string) => {
+  const namedEntity = firstRunCohortHtmlEntities[entity.toLocaleLowerCase('es')];
+  if (namedEntity != null) return namedEntity;
+
+  if (entity.startsWith('#x') || entity.startsWith('#X')) {
+    const codePoint = Number.parseInt(entity.slice(2), 16);
+    return decodeFirstRunCohortCodePoint(entity, codePoint);
+  }
+
+  if (entity.startsWith('#')) {
+    const codePoint = Number.parseInt(entity.slice(1), 10);
+    return decodeFirstRunCohortCodePoint(entity, codePoint);
+  }
+
+  return `&${entity};`;
+};
+
+const decodeFirstRunCohortHtmlEntities = (value: string) =>
+  value.replace(/&(amp|apos|gt|lt|nbsp|quot|#[0-9]+|#x[0-9a-f]+);/gi, (_, entity: string) =>
+    decodeFirstRunCohortHtmlEntity(entity),
+  );
+
 const stripFirstRunCohortPresentationMarkers = (value: string) =>
-  value
+  decodeFirstRunCohortHtmlEntities(value)
     .trim()
     .replace(/^#{1,6}\s+/, '')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')

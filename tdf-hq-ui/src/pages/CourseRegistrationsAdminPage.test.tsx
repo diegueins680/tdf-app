@@ -16753,6 +16753,55 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('decodes escaped provider title text before showing first-run course guidance', async () => {
+    const cases = [
+      {
+        slug: 'beatmaking-produccion',
+        title: 'Registration&nbsp;page - Beatmaking &amp; Producción',
+        label: 'Beatmaking & Producción',
+      },
+      {
+        slug: 'mezcla-mastering',
+        title: 'Formulario&nbsp;público - Mezcla &#38; Mastering',
+        label: 'Mezcla & Mastering',
+      },
+      {
+        slug: 'sintesis-y-samples',
+        title: '&lt;strong&gt;Registration&nbsp;page - Síntesis&#x20;y&#x20;Samples&lt;/strong&gt;',
+        label: 'Síntesis y Samples',
+      },
+    ];
+
+    for (const { label, slug, title } of cases) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: slug, ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const formAction = emptyState?.querySelector<HTMLAnchorElement>(`a[href="/inscripcion/${slug}"]`);
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(
+          `Todavía no hay inscripciones para ${label}. La página pública ya está lista para recibir la primera.`,
+        );
+        expect(emptyState?.textContent).not.toMatch(/&(?:amp|nbsp|#38|#x20|lt|gt);/i);
+        expect(emptyState?.textContent).not.toMatch(/registration page/i);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(countOccurrences(emptyState!, label)).toBe(1);
+        expect(formAction?.textContent?.trim()).toBe(initialEmptyStateFormActionLabel);
+        expect(formAction?.getAttribute('aria-label')).toBe(`Abrir formulario público de ${label}`);
+        expect(formAction?.getAttribute('title')).toBe(`Abrir formulario público de ${label} en una pestaña nueva`);
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips decorative emoji wrappers from first-run cohort copy', async () => {
     const titles = [
       '🎧 Beatmaking 101 ✨',
