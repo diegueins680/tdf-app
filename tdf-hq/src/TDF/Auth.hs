@@ -270,6 +270,7 @@ modulesForRole Webmaster  = Set.fromList [ModuleAdmin, ModuleCRM]
 modulesForRole Promotor   = Set.empty
 modulesForRole Promoter   = Set.empty
 modulesForRole Producer   = Set.fromList [ModuleCRM, ModuleScheduling]
+modulesForRole Agency     = Set.empty
 modulesForRole Songwriter = Set.empty
 modulesForRole DJ         = Set.empty
 modulesForRole Publicist  = Set.empty

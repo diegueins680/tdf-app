@@ -156,6 +156,7 @@ roleToText Webmaster     = "Webmaster"
 roleToText Promotor      = "Promotor"
 roleToText Promoter      = "Promoter"
 roleToText Producer      = "Producer"
+roleToText Agency        = "Agency"
 roleToText Songwriter    = "Songwriter"
 roleToText DJ            = "DJ"
 roleToText Publicist     = "Publicist"
@@ -199,6 +200,7 @@ roleFromText raw =
     "promotor"     -> Just Promotor
     "promoter"     -> Just Promoter
     "producer"     -> Just Producer
+    "agency"       -> Just Agency
     "songwriter"   -> Just Songwriter
     "dj"           -> Just DJ
     "publicist"    -> Just Publicist

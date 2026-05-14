@@ -20,7 +20,7 @@ import TDF.Auth
   , validateModuleAccess
   )
 import TDF.DTO (LoginRequest (..))
-import TDF.Models (RoleEnum (..), UserCredential (..))
+import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
@@ -116,6 +116,15 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
 
   it "allows coherent users with the required module grant" $
     validateModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` Right ()
+
+  it "keeps Agency as an explicit low-privilege role instead of falling through auth grants" $ do
+    roleToText Agency `shouldBe` "Agency"
+    roleFromText "agency" `shouldBe` Just Agency
+    modulesForRoles [Agency] `shouldBe` modulesForRoles []
+    hasModuleAccess ModuleAdmin (mkUser [Agency]) `shouldBe` False
+    assertRejected
+      "Missing access to module: Admin"
+      (validateModuleAccess ModuleAdmin (mkUser [Agency]))
 
   it "denies direct module checks for impossible party ids, stale grants, or duplicates" $ do
     hasModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` True
