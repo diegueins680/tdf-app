@@ -2304,10 +2304,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).toContain(
-        `Pendiente de pago · Fuente visible: instagram. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
+        `Pendiente de pago · Fuente visible: Instagram. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
-      expect(countOccurrences(container, 'Fuente visible: instagram')).toBe(1);
-      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(countOccurrences(container, 'Fuente visible: Instagram')).toBe(1);
+      expect(container.textContent).not.toContain('Fuente: Instagram');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(8);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
@@ -2336,8 +2336,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
-      expect(container.textContent).toContain('Beatmaking 101 · Fuente: instagram');
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
+      expect(container.textContent).toContain('Beatmaking 101 · Fuente: Instagram');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram.');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -2451,9 +2451,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
-      expect(container.textContent).toContain('Fuente visible: instagram.');
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
-      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(container.textContent).toContain('Fuente visible: Instagram.');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram.');
+      expect(container.textContent).not.toContain('Fuente: Instagram');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -2548,7 +2548,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const dialog = getDialog();
-      expect(dialog.textContent).toContain('Curso: Beatmaking 101 · Fuente: instagram');
+      expect(dialog.textContent).toContain('Curso: Beatmaking 101 · Fuente: Instagram');
       expect(dialog.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(dialog.textContent).not.toContain('Fuente: landing');
     });
@@ -2828,10 +2828,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countOccurrences(
         container,
-        'Mostrando una sola cohorte: Beatmaking 101. Fuente visible: instagram.',
+        'Mostrando una sola cohorte: Beatmaking 101. Fuente visible: Instagram.',
       )).toBe(1);
-      expect(container.textContent).not.toContain('Mostrando una sola fuente: instagram.');
-      expect(container.textContent).not.toContain('Fuente: instagram');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram.');
+      expect(container.textContent).not.toContain('Fuente: Instagram');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
@@ -2862,7 +2862,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Estado disponible');
-      expect(container.textContent).toContain('Pendiente de pago · Fuente: instagram');
+      expect(container.textContent).toContain('Pendiente de pago · Fuente: Instagram');
       expect(container.textContent).toContain('Cohorte: Beatmaking 101');
       expect(container.textContent).toContain('Cohorte: Mixing Bootcamp');
       expect(container.textContent).toContain('Ada Lovelace');
@@ -8607,7 +8607,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('button[aria-label="Abrir expediente de registro #101"]')).toBeNull();
       expect(countOccurrences(container, 'Registro #101')).toBe(0);
       expect(container.textContent).toContain('ada@example.com · +593999000111');
-      expect(container.textContent).toContain('Fuente: instagram · Notas internas');
+      expect(container.textContent).toContain('Fuente: Instagram · Notas internas');
       expect(container.querySelectorAll(`button[aria-label="${paymentStatusMenuButtonAriaLabel('Ada Lovelace')}"]`)).toHaveLength(1);
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
     });
@@ -8817,7 +8817,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(hasLabel(container, localSearchLabel)).toBe(true);
-      expect(container.textContent).toContain('Fuente: instagram');
+      expect(container.textContent).toContain('Fuente: Instagram');
       expect(container.textContent).toContain('Fuente: referral');
       expect(countOccurrences(container, 'Fuente:')).toBe(9);
       expect(countOccurrences(container, 'Creado:')).toBe(0);

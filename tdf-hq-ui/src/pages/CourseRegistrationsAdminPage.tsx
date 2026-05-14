@@ -1652,7 +1652,9 @@ const formatDelimitedSourceWord = (word: string, index: number) => {
 const humanizeDelimitedSourceLabel = (source: string) => {
   const hasDelimitedParts = /[_./-]/.test(source);
   const hasCamelCaseParts = /[a-z0-9][A-Z]/.test(source);
-  if (!hasDelimitedParts && !hasCamelCaseParts) return source;
+  if (!hasDelimitedParts && !hasCamelCaseParts) {
+    return sourceLabelSpecialWords.get(source.trim().toLocaleLowerCase('es')) ?? source;
+  }
   const normalized = source
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
