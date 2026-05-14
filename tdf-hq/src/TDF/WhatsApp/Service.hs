@@ -64,7 +64,10 @@ loadWhatsAppConfig = do
     =<< lookupFirstNonEmptyAliasEnv
       "WhatsApp verify token"
       ["WA_VERIFY_TOKEN", "WHATSAPP_VERIFY_TOKEN"]
-  mSlug <- lookupFirstNonEmptyEnv ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
+  mSlug <-
+    lookupFirstNonEmptyAliasEnv
+      "WhatsApp course slug"
+      ["COURSE_EDITION_SLUG", "COURSE_DEFAULT_SLUG"]
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
   mVersion <-
@@ -91,14 +94,6 @@ requireValidOptionalCredential normalizeCredential mRaw =
   case mRaw of
     Nothing -> pure ""
     Just raw -> either fail pure (normalizeCredential (T.pack raw))
-
-lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
-lookupFirstNonEmptyEnv [] = pure Nothing
-lookupFirstNonEmptyEnv (key:rest) = do
-  value <- lookupEnv key
-  case value >>= nonEmptyString of
-    Just normalized -> pure (Just normalized)
-    Nothing -> lookupFirstNonEmptyEnv rest
 
 lookupFirstNonEmptyAliasEnv :: String -> [String] -> IO (Maybe String)
 lookupFirstNonEmptyAliasEnv label keys = do

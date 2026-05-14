@@ -1826,6 +1826,19 @@ main = hspec $ do
                     WhatsAppService.appBaseUrl cfg `shouldBe` "https://hq.example.com/app/"
                     WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
 
+        it "rejects conflicting WhatsApp course slug aliases before enrollment fallback links" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("COURSE_EDITION_SLUG", Just "produccion-musical-may-2026")
+                , ("COURSE_DEFAULT_SLUG", Just "produccion-musical-june-2026")
+                , ("COURSE_REG_URL", Nothing)
+                , ("HQ_APP_URL", Just "https://hq.example.com/app/")
+                ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "WhatsApp course slug aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
         it "discovers canonical WhatsApp provider credential aliases before enrollment sends" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
