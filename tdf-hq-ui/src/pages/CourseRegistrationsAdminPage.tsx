@@ -1252,6 +1252,17 @@ const firstRunCrmFormDescriptorPrefixPattern =
 const firstRunCrmFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:crm|customer\s+relationship\s+management)\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+crm\s+(?:de\s+)?(?:leads?|prospectos?|contactos?|consultas?|(?:pre)?inscripci[oó]n(?:es)?|registro))\s*$/i;
 
+const firstRunCrmProviderPattern = String.raw`(?:wati|kommo|pipe\s*drive)`;
+const firstRunCrmProviderFormDescriptorPattern = String.raw`(?:(?:${firstRunCrmProviderPattern})\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?)\s+(?:de\s+)?(?:${firstRunCrmProviderPattern}))`;
+const firstRunCrmProviderFormDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCrmProviderFormDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCrmProviderFormDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCrmProviderFormDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunEmergingSocialLeadDescriptorPrefixPattern =
   /^(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1493,6 +1504,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunNoCodeLandingDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
     .replace(firstRunCrmFormDescriptorPrefixPattern, '')
+    .replace(firstRunCrmProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunInquiryDescriptorPrefixPattern, '')
     .replace(firstRunSurveyDescriptorPrefixPattern, '')
     .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
@@ -1583,6 +1595,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunNoCodeLandingDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
     .replace(firstRunCrmFormDescriptorSuffixPattern, '')
+    .replace(firstRunCrmProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunInquiryDescriptorSuffixPattern, '')
     .replace(firstRunSurveyDescriptorSuffixPattern, '')
     .replace(firstRunInfoSessionDescriptorSuffixPattern, '')

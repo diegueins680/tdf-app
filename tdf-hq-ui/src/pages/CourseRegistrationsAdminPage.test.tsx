@@ -14212,6 +14212,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'CRM registration page for Beatmaking 101',
       'Beatmaking 101 - CRM intake form',
       'Formulario CRM de leads - Beatmaking 101',
+      'WATI lead form - Beatmaking 101',
+      'Kommo registration page for Beatmaking 101',
+      'Beatmaking 101 - Pipedrive lead form',
+      'Formulario de WATI para Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -14256,6 +14260,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Notion form');
         expect(emptyState?.textContent).not.toMatch(/ConvertKit|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft/i);
         expect(emptyState?.textContent).not.toContain('CRM');
+        expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
