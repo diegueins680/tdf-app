@@ -12141,6 +12141,10 @@ spec = describe "TDF.Server helpers" $ do
                 (Just " https://www.instagram.com/p/post42/ ")
                 `shouldBe` Right (Just "https://www.instagram.com/p/post42/")
             SocialSync.validateSocialSyncPermalinkForPlatform
+                "instagram"
+                (Just "https://www.instagram.com:443/p/post42/")
+                `shouldBe` Right (Just "https://www.instagram.com:443/p/post42/")
+            SocialSync.validateSocialSyncPermalinkForPlatform
                 "facebook"
                 (Just "https://fb.watch/post42/")
                 `shouldBe` Right (Just "https://fb.watch/post42/")
@@ -12159,6 +12163,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "instagram" "https://www.facebook.com/tdf/posts/42"
             assertInvalid "facebook" "https://www.instagram.com/p/post42/"
             assertInvalid "instagram" "https://instagram.com.evil.example/p/post42/"
+            assertInvalid "instagram" "https://www.instagram.com:444/p/post42/"
 
     describe "hasSocialSyncAccess" $ do
         it "denies baseline and non-admin staff sessions" $ do

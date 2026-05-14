@@ -518,8 +518,10 @@ socialSyncPublicHttpsHost rawUrl =
        Nothing -> Nothing
        Just remainder ->
          let authority = T.takeWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') remainder
-             host = T.takeWhile (/= ':') authority
-         in if T.null host then Nothing else Just host
+             (host, portSuffix) = T.breakOn ":" authority
+         in if T.null host || not (T.null portSuffix || portSuffix == ":443")
+              then Nothing
+              else Just host
 
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing
