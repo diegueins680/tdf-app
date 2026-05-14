@@ -9,6 +9,7 @@ import           Data.Aeson (encode, object, (.=))
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAlphaNum
   , isControl
   , isSpace
   )
@@ -75,8 +76,11 @@ formatFacebookGraphHttpError status bodyBytes =
 
 sanitizeFacebookGraphBody :: BL.ByteString -> Text
 sanitizeFacebookGraphBody bodyBytes =
-  truncateGraphErrorBody . T.strip . T.map sanitizeGraphErrorChar $
-    decodeFacebookGraphBody bodyBytes
+  truncateGraphErrorBody
+    . redactFacebookGraphSecrets
+    . T.strip
+    . T.map sanitizeGraphErrorChar $
+      decodeFacebookGraphBody bodyBytes
 
 decodeFacebookGraphBody :: BL.ByteString -> Text
 decodeFacebookGraphBody =
@@ -86,6 +90,89 @@ truncateGraphErrorBody :: Text -> Text
 truncateGraphErrorBody bodyTxt
   | T.length bodyTxt <= maxFacebookGraphErrorBodyChars = bodyTxt
   | otherwise = T.take maxFacebookGraphErrorBodyChars bodyTxt <> "..."
+
+redactFacebookGraphSecrets :: Text -> Text
+redactFacebookGraphSecrets = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveFacebookGraphField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveFacebookGraphField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveFacebookGraphField previous textValue
+  | not (isFacebookSecretFieldBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveFacebookGraphFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveFacebookGraphField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+isFacebookSecretFieldBoundary :: Maybe Char -> Bool
+isFacebookSecretFieldBoundary Nothing = True
+isFacebookSecretFieldBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+sensitiveFacebookGraphFields :: [Text]
+sensitiveFacebookGraphFields =
+  [ "access_token"
+  , "fb_exchange_token"
+  , "client_secret"
+  , "appsecret_proof"
+  , "code"
+  ]
+
+parseSensitiveFacebookGraphField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveFacebookGraphField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || (separator == ':' && fieldName /= "code")
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+consumeOptionalQuote :: Text -> (Text, Text)
+consumeOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSecretValueEnd)
+
+isUnquotedSecretValueEnd :: Char -> Bool
+isUnquotedSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,}]" :: String)
 
 sanitizeGraphErrorChar :: Char -> Char
 sanitizeGraphErrorChar ch

@@ -95,3 +95,13 @@ FINAL_STATUS: done — Packet A partial (Google OAuth e2e sole remaining gate), 
 - **No company-level blocker** to Lane C durability. No repair needed (Lane C live, launchd durability present).
 
 FINAL_STATUS: done — Packet A partially proven (Google OAuth physical device test remains sole open ship gate; EAS_IOS_CREDENTIALS_MISSING persists), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 71827, heartbeat 04:44Z, one historical submodule error in main history not currently blocking iterations).
+
+## 2026-05-14 06:22 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — both login paths verified end-to-end via Detox on EAS Release build without Metro (3× consecutive PASSes: 2026-05-13 20:20 UTC, 2026-05-14 02:06 UTC, 2026-05-14 05:16 UTC per Release Director). Username/password: PASS. Google OAuth simulator-realistic: PASS (button → ASWebAuthenticationSession dialog). Physical-device full web-sign-in → callback → post-login remains recommended before production but is not a testing-version blocker. Release Director maintains `GO` / `TESTING VERSION READY`. No login-related commits since 2026-05-13 22:24 UTC.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`). Child PID 20219 alive, state `running`, phase `supervising`. Heartbeat fresh at 2026-05-14T06:23:04Z. restartCount 171 over ~5 days with 60s restart delay — normal iteration cycling. staleRestartCount 1 (within tolerance). `lastError` historical git submodule ref `7ecf27dbde842f990ce9f0cf6c54074a314175a1` (auto-recovered, `lastIterationResult` `ok`, `lastExitCode` 0). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (EAS Release Detox 3× PASS both auth paths, Release Director GO), Packet B gated on EAS_IOS_CREDENTIALS_MISSING for physical/store publish, Lane C live with launchd durability (supervisor 68059, child 20219, heartbeat 06:23Z), systems lane paused.

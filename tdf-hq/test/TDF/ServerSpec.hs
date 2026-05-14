@@ -8580,7 +8580,7 @@ spec = describe "TDF.Server helpers" $ do
                 ("hola" <> T.singleton '\NUL')
                 `shouldReturn` Left "Facebook message body must not contain control characters"
 
-    describe "formatFacebookGraphHttpError" $
+    describe "formatFacebookGraphHttpError" $ do
         it "bounds and sanitizes Graph error bodies without throwing on malformed UTF-8" $ do
             let rawBody =
                     BL.fromStrict
@@ -8597,6 +8597,24 @@ spec = describe "TDF.Server helpers" $ do
             formatted `shouldSatisfy` ((<= 1020) . T.length)
             formatted `shouldNotSatisfy` T.any (== '\NUL')
             formatted `shouldNotSatisfy` T.any (== '\x202E')
+
+        it "redacts Graph token fields before returning Facebook send failures" $ do
+            let formatted =
+                    formatFacebookGraphHttpError
+                        400
+                        ( BL8.pack
+                            ( "POST /messages?access_token=page-token"
+                                <> "&appsecret_proof=proof failed: "
+                                <> "{\"error\":{\"message\":\"client_secret=app-secret\","
+                                <> "\"code\":190}}"
+                            )
+                        )
+            formatted `shouldSatisfy` T.isInfixOf "access_token=[redacted]"
+            formatted `shouldSatisfy` T.isInfixOf "appsecret_proof=[redacted]"
+            formatted `shouldSatisfy` T.isInfixOf "client_secret=[redacted]"
+            formatted `shouldSatisfy` T.isInfixOf "\"code\":190"
+            formatted `shouldNotSatisfy` T.isInfixOf "page-token"
+            formatted `shouldNotSatisfy` T.isInfixOf "app-secret"
 
     describe "validateSocialReplyBody" $ do
         it "keeps Instagram/Facebook reply JSON on canonical API field names" $ do

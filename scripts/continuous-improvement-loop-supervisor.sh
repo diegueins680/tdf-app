@@ -120,6 +120,8 @@ if last_exit_code:
         data['lastExitCode'] = int(last_exit_code)
     except Exception:
         data['lastExitCode'] = last_exit_code
+if state in {'running', 'starting'}:
+    data.pop('lastError', None)
 if 'startedAt' not in data:
     data['startedAt'] = now
 tmp = status_file + '.tmp'
