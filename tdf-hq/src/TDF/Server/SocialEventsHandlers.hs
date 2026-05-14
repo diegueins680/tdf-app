@@ -2693,12 +2693,20 @@ validateVenueCreateUpdateFields
 validateVenueCreateUpdateFields rawName mLat mLng mCapacity
   | T.null (T.strip rawName) =
       Left err400 { errBody = "venue name is required" }
-  | T.any isControl rawName =
-      Left err400 { errBody = "venue name must not contain control characters" }
+  | T.any isUnsafeVenueNameChar rawName =
+      Left err400
+        { errBody =
+            "venue name must not contain control characters or hidden formatting characters"
+        }
   | maybe False (< 0) mCapacity =
       Left err400 { errBody = "venue capacity must be >= 0" }
   | otherwise =
       validateVenueCoordinatePair mLat mLng
+
+isUnsafeVenueNameChar :: Char -> Bool
+isUnsafeVenueNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateVenueCoordinatePair :: Maybe Double -> Maybe Double -> Either ServerError ()
 validateVenueCoordinatePair Nothing Nothing = Right ()

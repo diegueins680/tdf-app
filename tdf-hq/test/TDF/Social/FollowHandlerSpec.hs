@@ -6,6 +6,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Char (chr)
 import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
@@ -51,6 +52,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
     , validateStoredEventFinanceMetadata
+    , validateVenueCreateUpdateFields
     )
 
 mkEventImageUploadMultipart :: [(T.Text, T.Text)] -> [FileData Tmp] -> MultipartData Tmp
@@ -213,6 +215,24 @@ spec = describe "social event handler helpers" $ do
             "Stored event metadata contains unknown fields: curency"
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
+
+    it "rejects hidden venue name markers before venue create/update persistence" $ do
+        validateVenueCreateUpdateFields " Teatro TDF " Nothing Nothing (Just 250)
+            `shouldBe` Right ()
+
+        let hiddenFormat = T.singleton (chr 0x200D)
+            assertInvalid rawName =
+                case validateVenueCreateUpdateFields rawName Nothing Nothing Nothing of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err)
+                            `shouldContain` "hidden formatting characters"
+                    Right value ->
+                        expectationFailure
+                            ("Expected unsafe venue name to be rejected, got: " <> show value)
+
+        assertInvalid ("Teatro" <> hiddenFormat <> "TDF")
+        assertInvalid ("Teatro" <> T.singleton (chr 0x2028) <> "TDF")
 
     it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
