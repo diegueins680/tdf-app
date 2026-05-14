@@ -6343,6 +6343,19 @@ spec = describe "TDF.Server helpers" $ do
                             <> show (fmap (fromSqlKey . entityKey) value)
                         )
 
+        it "rejects impossible stored fallback config ids before publishing them" $
+            case selectUniqueCalendarConfigFallback
+                    [calendarConfigEntity 0 "primary"] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Stored Google Calendar config id is invalid"
+                Right value ->
+                    expectationFailure
+                        ( "Expected impossible Calendar config fallback id to fail, got: "
+                            <> show (fmap (fromSqlKey . entityKey) value)
+                        )
+
         it "surfaces malformed stored configs before ambiguous fallback conflicts" $
             case selectUniqueCalendarConfigFallback
                     [ calendarConfigEntity 1 "primary"

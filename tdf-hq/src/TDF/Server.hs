@@ -3482,6 +3482,7 @@ validateStoredCalendarConfigFallback
   :: Entity Cal.GoogleCalendarConfig
   -> Either ServerError (Entity Cal.GoogleCalendarConfig)
 validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
+  unless (fromSqlKey cfgId > 0) invalidStoredCalendarConfigId
   calendarIdVal <-
     case CalAPI.normalizeCalendarId storedCalendarId of
       Right val -> Right val
@@ -3491,6 +3492,10 @@ validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
   Right (Entity cfgId cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal })
   where
     storedCalendarId = Cal.googleCalendarConfigCalendarId cfg
+    invalidStoredCalendarConfigId =
+      Left err500
+        { errBody = "Stored Google Calendar config id is invalid"
+        }
     invalidStoredCalendarId =
       Left err500
         { errBody = "Stored Google Calendar config calendarId is invalid"
