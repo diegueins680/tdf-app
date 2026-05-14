@@ -17230,6 +17230,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips onboarding checklist wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Student onboarding checklist - Beatmaking 101',
+      'Checklist for course onboarding - Beatmaking 101',
+      'Beatmaking 101 - onboarding checklist',
+      'Checklist de bienvenida - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /student onboarding checklist|checklist for course onboarding|onboarding checklist|checklist de bienvenida/i,
+        );
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips early-bird offer descriptors from first-run cohort copy', async () => {
     const titles = [
       'Early bird registration form - Beatmaking 101',
