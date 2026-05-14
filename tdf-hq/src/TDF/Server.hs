@@ -10674,7 +10674,20 @@ validateChatKitSessionPayload payload =
 
     validateExpiresAfter value =
       case value of
-        Object _ -> pure value
+        Object expiresAfter -> do
+          rejectUnexpectedObjectFields
+            "ChatKit response expires_after"
+            ["anchor", "seconds"]
+            expiresAfter
+          rejectNullChatKitExpiryField "anchor" expiresAfter
+          rejectNullChatKitExpiryField "seconds" expiresAfter
+          mAnchor <- expiresAfter .:? "anchor"
+          mSeconds <- expiresAfter .:? "seconds"
+          when (isNothing mAnchor && isNothing mSeconds) $
+            fail "ChatKit response expires_after must include anchor or seconds"
+          for_ mAnchor validateChatKitExpiryAnchor
+          for_ mSeconds validateChatKitExpirySeconds
+          pure value
         _ -> fail "ChatKit response expires_after must be an object"
 
 validateChatKitClientSecret :: Text -> Maybe Text
@@ -10693,6 +10706,41 @@ invalidChatKitClientSecretChar ch =
   isSpace ch
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateChatKitExpiryAnchor :: Text -> Parser ()
+validateChatKitExpiryAnchor rawAnchor = do
+  let anchor = T.strip rawAnchor
+  when (T.null anchor) $
+    fail "ChatKit response expires_after.anchor is required when present"
+  when (rawAnchor /= anchor) $
+    fail "ChatKit response expires_after.anchor must not include surrounding whitespace"
+  when (T.length anchor > maxChatKitExpiryAnchorChars) $
+    fail "ChatKit response expires_after.anchor must be 64 characters or fewer"
+  when (T.any (not . isChatKitExpiryAnchorChar) anchor) $
+    fail "ChatKit response expires_after.anchor must use only ASCII letters, digits, '_' or '-'"
+
+maxChatKitExpiryAnchorChars :: Int
+maxChatKitExpiryAnchorChars = 64
+
+isChatKitExpiryAnchorChar :: Char -> Bool
+isChatKitExpiryAnchorChar ch =
+  isAscii ch && (isAlphaNum ch || ch `elem` ("_-" :: String))
+
+rejectNullChatKitExpiryField :: Text -> Object -> Parser ()
+rejectNullChatKitExpiryField fieldName expiresAfter =
+  case AKeyMap.lookup (AKey.fromText fieldName) expiresAfter of
+    Just Null ->
+      fail $
+        T.unpack $
+          "ChatKit response expires_after."
+            <> fieldName
+            <> " must be omitted instead of null"
+    _ -> pure ()
+
+validateChatKitExpirySeconds :: Int -> Parser ()
+validateChatKitExpirySeconds secondsValue =
+  when (secondsValue <= 0) $
+    fail "ChatKit response expires_after.seconds must be positive"
 
 extractApiErrorMessage :: Value -> Maybe Text
 extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do

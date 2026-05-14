@@ -5292,24 +5292,79 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Nothing
             extractChatKitSession (object [])
                 `shouldBe` Nothing
+            extractChatKitSession
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .=
+                        object
+                            [ "anchor" .= ("created_at" :: Text)
+                            , "seconds" .= (3600 :: Int)
+                            ]
+                    ])
+                `shouldBe` Just
+                    ( "session-secret"
+                    , Just
+                        (object
+                            [ "anchor" .= ("created_at" :: Text)
+                            , "seconds" .= (3600 :: Int)
+                            ])
+                    )
 
         it "rejects malformed ChatKit expiry metadata before returning sessions" $ do
-            let malformedExpiry =
-                    object
-                        [ "client_secret" .= ("session-secret" :: Text)
-                        , "expires_after" .= ("soon" :: Text)
-                        ]
+            let assertInvalid expected payload = do
+                    extractChatKitSession payload `shouldBe` Nothing
+                    case validateChatKitSessionPayload payload of
+                        Left msg -> msg `shouldSatisfy` T.isInfixOf expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed ChatKit expires_after to be rejected, got: "
+                                    <> show value
+                                )
 
-            extractChatKitSession malformedExpiry `shouldBe` Nothing
-            case validateChatKitSessionPayload malformedExpiry of
-                Left msg ->
-                    msg `shouldSatisfy`
-                        T.isInfixOf "ChatKit response expires_after must be an object"
-                Right value ->
-                    expectationFailure
-                        ( "Expected malformed ChatKit expires_after to be rejected, got: "
-                            <> show value
-                        )
+            assertInvalid
+                "ChatKit response expires_after must be an object"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .= ("soon" :: Text)
+                    ])
+            assertInvalid
+                "ChatKit response expires_after contains unexpected field"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .=
+                        object
+                            [ "anchor" .= ("created_at" :: Text)
+                            , "expiresAt" .= ("tomorrow" :: Text)
+                            ]
+                    ])
+            assertInvalid
+                "ChatKit response expires_after must include anchor or seconds"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .= object []
+                    ])
+            assertInvalid
+                "ChatKit response expires_after.anchor must be omitted instead of null"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .=
+                        object
+                            [ "anchor" .= A.Null
+                            , "seconds" .= (3600 :: Int)
+                            ]
+                    ])
+            assertInvalid
+                "ChatKit response expires_after.anchor must not include surrounding whitespace"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .= object ["anchor" .= (" created_at " :: Text)]
+                    ])
+            assertInvalid
+                "ChatKit response expires_after.seconds must be positive"
+                (object
+                    [ "client_secret" .= ("session-secret" :: Text)
+                    , "expires_after" .= object ["seconds" .= (0 :: Int)]
+                    ])
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do
