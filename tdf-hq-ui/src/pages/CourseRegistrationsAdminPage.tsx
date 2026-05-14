@@ -1778,6 +1778,38 @@ const sourceAliasKeyVariants = (sourceKey: string) => {
   return variants;
 };
 
+const placeholderMetadataValueKeys = new Set([
+  '-',
+  'unknown',
+  'desconocido',
+  'desconocida',
+  'sin dato',
+  'sin datos',
+  'sin fuente',
+  'sin origen',
+  'n/a',
+  'na',
+  'n.d.',
+  'nd',
+  'none',
+  'null',
+  'undefined',
+  'not set',
+  'not provided',
+  'not available',
+  'no aplica',
+  'no disponible',
+].map(normalizeSourceAliasKey));
+
+const isPlaceholderMetadataValue = (value: string | null | undefined) => {
+  const valueKey = normalizeSourceAliasKey(value ?? '');
+  if (!valueKey) return true;
+
+  return Array.from(sourceAliasKeyVariants(valueKey)).some((variant) =>
+    placeholderMetadataValueKeys.has(variant)
+  );
+};
+
 const defaultPublicFormSourceKeys = new Set([
   defaultPublicFormSource,
   '-',
@@ -2174,7 +2206,7 @@ const getSearchableRegistrationAcquisitionContext = (
   ]
     .map((value) => {
       const trimmedValue = value?.trim() ?? '';
-      if (!trimmedValue) return '';
+      if (!trimmedValue || isPlaceholderMetadataValue(trimmedValue)) return '';
       const displayLabel = humanizeDelimitedSourceLabel(trimmedValue);
       return displayLabel === trimmedValue ? trimmedValue : `${trimmedValue} ${displayLabel}`;
     })

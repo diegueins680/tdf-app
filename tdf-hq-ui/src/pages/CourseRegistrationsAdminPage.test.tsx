@@ -11893,6 +11893,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('ignores placeholder acquisition metadata in busy-list search prompts', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crHowHeard: 'unknown',
+        crUtmSource: 'not_set',
+        crUtmMedium: 'n/a',
+        crUtmCampaign: 'sin_origen',
+        crUtmContent: 'no_aplica',
+      }),
+      ...buildRegistrations(8, (index) => ({
+        crId: 200 + index,
+        crPartyId: 40 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('origen');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin origen');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "sin origen" en las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain('Coincide con origen o campaña.');
+      expect(container.textContent).not.toContain('Coinciden con origen o campaña.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('uses the single visible identity type after local search narrows a mixed busy list', async () => {
     const mixedBusySearchHint = mixedIdentityPaymentWorkflowDossierScopeHint;
     listRegistrationsMock.mockResolvedValue([
