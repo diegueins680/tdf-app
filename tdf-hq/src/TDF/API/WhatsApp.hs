@@ -34,7 +34,7 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Control.Monad (unless)
 import Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAlphaNum
   , isAscii
@@ -290,7 +290,10 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
   | T.any isUnsafeLeadCompletionNameChar nameValue =
       Left err400
-        { errBody = "Invalid name: must not contain control or hidden formatting characters" }
+        { errBody =
+            "Invalid name: must not contain control or hidden formatting characters"
+              <> ", or non-ASCII spaces"
+        }
   | T.length emailValue > maxLeadCompletionEmailChars =
       Left err400 { errBody = "Invalid email: must be 254 characters or fewer" }
   | not (isValidEmail emailValue) =
@@ -325,7 +328,11 @@ isValidLeadCompletionTokenChar c =
 
 isUnsafeLeadCompletionNameChar :: Char -> Bool
 isUnsafeLeadCompletionNameChar ch =
-  isControl ch || isHiddenFormattingChar ch
+  isControl ch || isHiddenFormattingChar ch || isNonAsciiSpace ch
+
+isNonAsciiSpace :: Char -> Bool
+isNonAsciiSpace ch =
+  generalCategory ch == Space && ch /= ' '
 
 isHiddenFormattingChar :: Char -> Bool
 isHiddenFormattingChar ch =

@@ -10552,6 +10552,13 @@ main = hspec $ do
                     "ada@example.com"
                 )
                 "Invalid name: must not contain control or hidden formatting characters"
+            assertInvalid
+                ( CompleteReq
+                    validToken
+                    ("Ada" <> Data.Text.singleton '\x00A0' <> "Lovelace")
+                    "ada@example.com"
+                )
+                "Invalid name: must not contain control or hidden formatting characters, or non-ASCII spaces"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada @example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
