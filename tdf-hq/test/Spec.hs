@@ -1922,6 +1922,35 @@ main = hspec $ do
                     "Invalid WhatsApp verify token"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects missing WhatsApp enrollment provider credentials before send attempts" $ do
+            let cfg =
+                    WhatsAppService.WhatsAppConfig
+                        { WhatsAppService.waToken = ""
+                        , WhatsAppService.waPhoneId = "   "
+                        , WhatsAppService.waVerifyToken = Nothing
+                        , WhatsAppService.courseSlug = "produccion-musical"
+                        , WhatsAppService.courseRegUrl = Nothing
+                        , WhatsAppService.appBaseUrl = "http://localhost:5173"
+                        , WhatsAppService.waApiVersion = "v20.0"
+                        }
+            case WhatsAppService.requireWhatsAppProviderCredentials cfg of
+                Left err -> do
+                    err `shouldContain` "WhatsApp configuration not available"
+                    err `shouldContain` "WA_TOKEN"
+                    err `shouldContain` "WHATSAPP_TOKEN"
+                    err `shouldContain` "WA_PHONE_ID"
+                    err `shouldContain` "WHATSAPP_PHONE_NUMBER_ID"
+                Right creds ->
+                    expectationFailure
+                        ("Expected missing WhatsApp provider credentials to fail, got " <> show creds)
+
+            WhatsAppService.requireWhatsAppProviderCredentials
+                cfg
+                    { WhatsAppService.waToken = " token_123 "
+                    , WhatsAppService.waPhoneId = " 1234567890 "
+                    }
+                `shouldBe` Right ("token_123", "1234567890")
+
         it "normalizes WhatsApp transport alias fallbacks before provider sends" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

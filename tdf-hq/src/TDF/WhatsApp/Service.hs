@@ -7,11 +7,13 @@ module TDF.WhatsApp.Service
   , mkWhatsAppService
   , enrollPhone
   , previewEnrollment
+  , requireWhatsAppProviderCredentials
   , verifyTokenMatches
   , requireWhatsAppSendSuccess
   ) where
 
 import Data.Aeson (Value, object, (.=))
+import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import qualified Data.Text as T
 import System.Environment (lookupEnv)
@@ -188,8 +190,39 @@ sendViaWA WhatsAppService{waManager, waConfig} to url = do
   let msg = "¡Gracias por tu interés en el Curso de Producción Musical! Aquí está tu enlace de inscripción: "
             <> url <> "\nCupos limitados (10)."
       version = waApiVersion waConfig
-  result <- sendText waManager version (waToken waConfig) (waPhoneId waConfig) to msg
+  (token, phoneId) <- either fail pure (requireWhatsAppProviderCredentials waConfig)
+  result <- sendText waManager version token phoneId to msg
   either fail pure (requireWhatsAppSendSuccess result)
+
+requireWhatsAppProviderCredentials :: WhatsAppConfig -> Either String (Text, Text)
+requireWhatsAppProviderCredentials WhatsAppConfig{waToken, waPhoneId} =
+  case catMaybes [missingToken, missingPhoneId] of
+    [] -> do
+      token <- normalizeWhatsAppAccessToken waToken
+      phoneId <- normalizeWhatsAppPhoneNumberId waPhoneId
+      Right (token, phoneId)
+    missingPieces ->
+      Left $
+        "WhatsApp configuration not available: "
+          <> T.unpack (T.intercalate "; " missingPieces)
+  where
+    missingToken =
+      missingCredential "token" ["WA_TOKEN", "WHATSAPP_TOKEN"] waToken
+    missingPhoneId =
+      missingCredential
+        "phoneId"
+        ["WA_PHONE_ID", "WHATSAPP_PHONE_NUMBER_ID"]
+        waPhoneId
+
+    missingCredential name envNames rawValue
+      | T.null (T.strip rawValue) =
+          Just $
+            name
+              <> " (expected env vars: "
+              <> T.intercalate ", " envNames
+              <> ")"
+      | otherwise =
+          Nothing
 
 requireWhatsAppSendSuccess :: Either String SendTextResult -> Either String Value
 requireWhatsAppSendSuccess (Left err) =
