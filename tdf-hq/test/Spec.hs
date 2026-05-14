@@ -217,6 +217,7 @@ import TDF.Server
     ( buildWhatsappCtaFor,
       DriveApiResp (..),
       GoogleEventsPage (..),
+      decodeDriveMetaResourceKeyIfSuccessful,
       parseMcpRequest,
       parseToolCallParams,
       resolveDriveRedirectUri,
@@ -5886,6 +5887,20 @@ main = hspec $ do
                     Right resp ->
                         expectationFailure
                             ("Expected conflicting Drive resource keys to be rejected, got: " <> show resp)
+
+        it "trusts Drive metadata resource keys only from successful responses" $ do
+            decodeDriveMetaResourceKeyIfSuccessful
+                200
+                "{\"resourceKey\":\"rk_meta\"}"
+                `shouldBe` Just "rk_meta"
+            decodeDriveMetaResourceKeyIfSuccessful
+                404
+                "{\"resourceKey\":\"rk_meta\"}"
+                `shouldBe` Nothing
+            decodeDriveMetaResourceKeyIfSuccessful
+                200
+                "{\"resourceKey\":\"rk meta\"}"
+                `shouldBe` Nothing
 
         it "keeps canonical Google Drive download links only when they point at the uploaded file" $ do
             resolveDrivePublicUrl

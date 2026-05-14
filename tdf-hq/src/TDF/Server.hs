@@ -13363,6 +13363,14 @@ instance FromJSON DriveMetaResp where
     DriveMetaResp <$>
       ((o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey"))
 
+decodeDriveMetaResourceKeyIfSuccessful :: Int -> BL.ByteString -> Maybe Text
+decodeDriveMetaResourceKeyIfSuccessful responseStatus responseBodyBytes
+  | responseStatus < 200 || responseStatus >= 300 = Nothing
+  | otherwise =
+      case eitherDecode responseBodyBytes of
+        Right (DriveMetaResp key) -> key
+        Left _ -> Nothing
+
 rejectUnexpectedDriveResponseKeys :: String -> [Text] -> AKeyMap.KeyMap Value -> Parser ()
 rejectUnexpectedDriveResponseKeys responseLabel allowedKeys o =
   case filter (`Set.notMember` allowedKeySet) (AKeyMap.keys o) of
@@ -13458,9 +13466,9 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
   let metaResourceKey =
         case metaResp of
           Right respMeta ->
-            case eitherDecode (responseBody respMeta) of
-              Right (DriveMetaResp key) -> key
-              Left _ -> Nothing
+            decodeDriveMetaResourceKeyIfSuccessful
+              (statusCode (responseStatus respMeta))
+              (responseBody respMeta)
           Left _ -> Nothing
       publicUrl =
         case permResp of
