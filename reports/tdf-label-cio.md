@@ -1,3 +1,13 @@
+## 2026-05-14 17:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — no login-related commits since 2026-05-13 22:24 UTC (confirmed empty `git log` over `tdf-mobile/src`, `package.json`, `eas.json`, `app.json`, `.detoxrc.js`). Platform 5th consecutive Detox PASS at 14:00 UTC and Release 7th consecutive Detox PASS at 14:20 UTC status unchanged. CEO physical-device Google OAuth waiver acknowledged at 13:00 UTC remains in force. Testing version formally unblocked.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d21h). Child PID 85706 alive (STAT S, elapsed ~10m). Heartbeat fresh at 2026-05-14T17:40:34Z. `restartCount` 221 (up from 212 at 15:40Z), normal iteration cycling with 60s restart delay. `staleRestartCount` 1 (within tolerance). `lastError` historical git `index.lock` (auto-resolved, `lastIterationResult` `ok`, `lastExitCode` 0). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (no login commits since 22:24Z, prior Detox PASS status unchanged), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 85706, heartbeat 17:40:34Z), systems lane paused.
+
 ## 2026-05-14 13:40 UTC — CIO checkpoint
 
 - **Packet A:** `PROVEN FOR TESTING VERSION` — Platform 4th consecutive Detox PASS at 2026-05-14 12:00 UTC (local Release build, ~70 s total, latency stable ~20–24 s per test). Release 6th consecutive Detox PASS at 2026-05-14 12:20 UTC (both auth paths proven on local Release build without Metro). **CEO acknowledgment of physical-device Google OAuth waiver recorded at 2026-05-14 13:00 UTC** in `tdf-mobile/docs/release-readiness.md` (CTO executed update at 13:20 UTC). Testing version formally unblocked. No login-related commits since 2026-05-13 22:24 UTC.
