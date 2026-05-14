@@ -6202,9 +6202,19 @@ describe('AdminConsolePage', () => {
           body: ['Nothing here yet.'],
         },
         {
+          cardId: 'secrets-nothing-to-see',
+          title: 'Secretos operativos',
+          body: ['Nothing to see here yet.'],
+        },
+        {
           cardId: 'service-tokens-nada',
           title: 'Tokens de servicio',
           body: ['No hay nada que mostrar todavía.'],
+        },
+        {
+          cardId: 'admin-keys-nada-por-aqui',
+          title: 'Llaves admin',
+          body: ['Nada por aquí todavía.'],
         },
         {
           cardId: 'api-access-empty',
@@ -6227,13 +6237,21 @@ describe('AdminConsolePage', () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /Integraciones|Tokens de servicio|Acceso API/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: /Integraciones|Secretos operativos|Tokens de servicio|Llaves admin|Acceso API/i,
+      }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Secretos operativos')).not.toBeInTheDocument();
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Llaves admin')).not.toBeInTheDocument();
     expect(screen.queryByText('Acceso API')).not.toBeInTheDocument();
     expect(screen.queryByText(/Nothing here/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nothing to see here/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/No hay nada que mostrar/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nada por aquí/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Nada que mostrar/i)).not.toBeInTheDocument();
   });
 
