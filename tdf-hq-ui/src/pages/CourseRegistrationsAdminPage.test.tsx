@@ -10200,6 +10200,71 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats direct and organic website source labels as default plumbing in busy lists', async () => {
+    const defaultSources = [
+      'direct',
+      'direct_web',
+      'direct-website',
+      'organic',
+      'organic_web',
+      'organic-website',
+      'website_organic',
+      'trafico_directo',
+      'trafico_organico',
+    ] as const;
+    const hiddenSourceLabels = [
+      'direct',
+      'Direct web',
+      'Direct website',
+      'organic',
+      'Organic web',
+      'Organic website',
+      'Website organic',
+      'Trafico directo',
+      'Trafico organico',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'organic website');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "organic website" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats generic lead-capture source containers as default plumbing in busy lists', async () => {
     const defaultSources = [
       'lead_capture_form',
