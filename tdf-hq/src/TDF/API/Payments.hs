@@ -6,8 +6,14 @@
 
 module TDF.API.Payments where
 
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  )
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           GHC.Generics (Generic)
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), ToJSON, defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields)
@@ -36,6 +42,10 @@ instance FromJSON PaymentCreate where
     maybe (pure ()) (validatePositiveInt64Field "pcOrderId") (pcOrderId payload)
     maybe (pure ()) (validatePositiveInt64Field "pcInvoiceId") (pcInvoiceId payload)
     validatePositiveIntField "pcAmountCents" (pcAmountCents payload)
+    validateRequiredPaymentTextField "pcCurrency" (pcCurrency payload)
+    validateRequiredPaymentTextField "pcMethod" (pcMethod payload)
+    validateRequiredPaymentTextField "pcPaidAt" (pcPaidAt payload)
+    validateRequiredPaymentTextField "pcConcept" (pcConcept payload)
     pure payload
 
 validatePositiveInt64Field :: String -> Int64 -> Parser ()
@@ -49,6 +59,23 @@ validatePositiveIntField fieldName rawValue =
   if rawValue > 0
     then pure ()
     else fail (fieldName <> " must be a positive integer")
+
+validateRequiredPaymentTextField :: String -> Text -> Parser ()
+validateRequiredPaymentTextField fieldName rawValue
+  | T.null (T.strip rawValue) =
+      fail (fieldName <> " is required")
+  | T.any isUnsafePaymentCreateTextChar rawValue =
+      fail
+        ( fieldName
+            <> " must not contain control characters or hidden formatting characters"
+        )
+  | otherwise =
+      pure ()
+
+isUnsafePaymentCreateTextChar :: Char -> Bool
+isUnsafePaymentCreateTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 instance MimeUnrender LooseJSON PaymentCreate where
   mimeUnrender _ = eitherDecode

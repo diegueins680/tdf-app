@@ -267,6 +267,43 @@ spec = do
         "{\"pcPartyId\":42,\"pcAmountCents\":0,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
         "pcAmountCents must be a positive integer"
 
+    it "rejects blank or unsafe required text before manual payment handler fallbacks" $ do
+      let paymentCreateJson :: Text -> Text -> Text -> Text -> BL8.ByteString
+          paymentCreateJson currencyValue methodValue paidAtValue conceptValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= currencyValue
+                , "pcMethod" .= methodValue
+                , "pcPaidAt" .= paidAtValue
+                , "pcConcept" .= conceptValue
+                ]
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        (paymentCreateJson "   " "cash" "2026-04-13" "Studio booking")
+        "pcCurrency is required"
+      assertInvalid
+        (paymentCreateJson "USD" "\n" "2026-04-13" "Studio booking")
+        "pcMethod is required"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13\NUL" "Studio booking")
+        "pcPaidAt must not contain control characters or hidden formatting characters"
+      assertInvalid
+        ( paymentCreateJson
+            "USD"
+            "cash"
+            "2026-04-13"
+            ("Studio" <> T.singleton '\x202E' <> " booking")
+        )
+        "pcConcept must not contain control characters or hidden formatting characters"
+
   describe "inventory checkout/check-in request JSON" $ do
     it "accepts canonical asset create and patch keys used by current clients" $ do
       case A.eitherDecode
