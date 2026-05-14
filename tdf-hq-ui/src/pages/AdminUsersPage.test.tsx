@@ -846,6 +846,67 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('ignores update-pending placeholders before summarizing contact and access state', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyName: 'Placeholder Admin',
+        username: 'placeholder-admin',
+        primaryEmail: 'Por actualizar',
+        primaryPhone: null,
+        whatsapp: null,
+        roles: ['por actualizar'],
+        modules: ['sin actualizar'],
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Ready',
+        username: 'grace-ready',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus Ready',
+        username: 'linus-ready',
+        primaryEmail: 'linus@example.com',
+        primaryPhone: '+593999000333',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 3 usuarios en esta vista. 2 listos para WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos.',
+        );
+
+        const placeholderRow = getRowByUserId(container, 101);
+        expect(placeholderRow.textContent).not.toContain('Por actualizar');
+        expect(placeholderRow.textContent).not.toContain('por actualizar');
+        expect(placeholderRow.textContent).not.toContain('sin actualizar');
+        expect(placeholderRow.textContent).not.toContain('Roles:');
+        expect(placeholderRow.textContent).not.toContain('Módulos:');
+        expect(hasExactText(placeholderRow, 'Sin acceso asignado')).toBe(true);
+        expect(getButtonsByText(placeholderRow, 'WhatsApp')).toHaveLength(0);
+
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('distinguishes missing WhatsApp from missing contact in the page summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

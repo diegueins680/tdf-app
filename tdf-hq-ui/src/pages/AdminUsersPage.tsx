@@ -34,6 +34,7 @@ const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   'none',
   'not available',
   'pendiente',
+  'por actualizar',
   'pendiente por validar',
   'por validar',
   'por confirmar',
@@ -45,6 +46,7 @@ const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   'sin email',
   'sin telefono',
   'sin whatsapp',
+  'sin actualizar',
   'tbd',
 ]);
 
@@ -86,9 +88,11 @@ const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
   'none',
   'pendiente',
   'pendiente por validar',
+  'por actualizar',
   'por confirmar',
   'por definir',
   'por validar',
+  'sin actualizar',
   'sin acceso',
   'sin acceso asignado',
   'sin modulo',
