@@ -11418,11 +11418,13 @@ spec = describe "TDF.Server helpers" $ do
                     False)
 
     describe "invalidCardText" $
-        it "rejects Unicode space lookalikes in admin console fallback copy" $ do
+        it "rejects Unicode space lookalikes and combining marks in admin console fallback copy" $ do
             invalidCardText 120 "Tokens API" `shouldBe` False
             invalidCardText 120 ("Tokens" <> T.singleton '\x00A0' <> "API")
                 `shouldBe` True
             invalidCardText 120 ("Tokens" <> T.singleton '\x2007' <> "API")
+                `shouldBe` True
+            invalidCardText 120 ("Gestio" <> T.singleton '\x0301' <> "n de usuarios")
                 `shouldBe` True
 
     describe "validateFutureAdminConsoleCard" $ do

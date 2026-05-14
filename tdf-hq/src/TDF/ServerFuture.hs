@@ -6,7 +6,15 @@ module TDF.ServerFuture where
 import           Control.Monad.Except (MonadError)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  ( GeneralCategory
+      ( EnclosingMark
+      , Format
+      , LineSeparator
+      , NonSpacingMark
+      , ParagraphSeparator
+      , Space
+      , SpacingCombiningMark
+      )
   , generalCategory
   , isControl
   )
@@ -558,7 +566,14 @@ invalidCardText maxLength value =
     stripped = T.strip value
     invalidCardChar ch =
       isControl ch
-        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+        || generalCategory ch
+             `elem` [ EnclosingMark
+                    , Format
+                    , LineSeparator
+                    , NonSpacingMark
+                    , ParagraphSeparator
+                    , SpacingCombiningMark
+                    ]
         || (generalCategory ch == Space && ch /= ' ')
 
 accessLoginOptionsStub, accessModuleBehaviourStub, accessSessionPolicyStub
