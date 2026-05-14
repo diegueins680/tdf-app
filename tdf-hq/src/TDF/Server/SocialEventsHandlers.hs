@@ -2373,20 +2373,20 @@ validateInvitationStatusUpdateInput (Just rawStatus) =
 
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
 validateEventArtistIds artists = do
-  artistKeys <- fmap catMaybes (traverse validateArtistId artists)
+  artistKeys <- traverse validateArtistId artists
   if Set.size (Set.fromList artistKeys) == length artistKeys
     then Right artistKeys
     else Left err400 { errBody = "eventArtists[].artistId must be unique" }
   where
     validateArtistId artist =
       case artistId artist of
-        Nothing -> Right Nothing
+        Nothing -> Left err400 { errBody = "eventArtists[].artistId is required" }
         Just rawArtistId ->
           case normalizePositiveIdentifierText rawArtistId of
             Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
             Just normalizedArtistId ->
               case readMaybe (T.unpack normalizedArtistId) :: Maybe Int64 of
-                Just artistIdValue -> Right (Just (toSqlKey artistIdValue))
+                Just artistIdValue -> Right (toSqlKey artistIdValue)
                 Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
 
 validateArtistName :: T.Text -> Either ServerError T.Text

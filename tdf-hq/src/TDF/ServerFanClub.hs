@@ -58,7 +58,9 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , FanClubEvent(..), FanClubOfficerRole(..), ElectionStatus(..)
                                          , Party(..), PartyId, FanFollow(..), FanProfile(..)
                                          , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryReport(..)
-                                         , Unique(..), FanClubElectionId, FanClubCandidacyId)
+                                         , FanClubInboxMessage(..), FanClubInboxMessageId
+                                         , RoleEnum(..)
+                                         , Unique(..), FanClubElectionId, FanClubCandidacyId, artistProfileHeroImageUrl)
 import qualified TDF.Models             as M
 
 type AppM = ReaderT Env Handler
@@ -818,156 +820,161 @@ fanClubSecureArtistHandlers user artistId =
 
     sendInboxMessage aId req = do
       artistKey <- requireArtistKey aId
-      runDB $ do
-        mClub <- getBy (UniqueFanClubArtist artistKey)
-        case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
-          Just (Entity cid _) -> do
-            now <- liftIO getCurrentTime
-            mid <- insert FanClubInboxMessage
-              { fanClubInboxMessageClubId = cid
-              , fanClubInboxMessageFanPartyId = auPartyId user
-              , fanClubInboxMessageSubject = fcisReqSubject req
-              , fanClubInboxMessageBody = fcisReqBody req
-              , fanClubInboxMessageStatus = "unread"
-              , fanClubInboxMessageOfficerPartyId = Nothing
-              , fanClubInboxMessageReplyBody = Nothing
-              , fanClubInboxMessageCreatedAt = now
-              , fanClubInboxMessageUpdatedAt = Nothing
-              }
-            fanAuthor <- getAuthorDTO (auPartyId user)
-            pure FanClubInboxMessageDTO
-              { fcimId = fromSqlKey mid
-              , fcimFanId = fromSqlKey (auPartyId user)
-              , fcimFanName = sppDisplayName fanAuthor
-              , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
-              , fcimSubject = fcisReqSubject req
-              , fcimBody = fcisReqBody req
-              , fcimStatus = "unread"
-              , fcimOfficerId = Nothing
-              , fcimOfficerName = Nothing
-              , fcimReplyBody = Nothing
-              , fcimCreatedAt = now
-              , fcimUpdatedAt = Nothing
-              }
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> runDB $ do
+          now <- liftIO getCurrentTime
+          mid <- insert FanClubInboxMessage
+            { fanClubInboxMessageClubId = cid
+            , fanClubInboxMessageFanPartyId = auPartyId user
+            , fanClubInboxMessageSubject = fcisReqSubject req
+            , fanClubInboxMessageBody = fcisReqBody req
+            , fanClubInboxMessageStatus = "unread"
+            , fanClubInboxMessageOfficerPartyId = Nothing
+            , fanClubInboxMessageReplyBody = Nothing
+            , fanClubInboxMessageCreatedAt = now
+            , fanClubInboxMessageUpdatedAt = Nothing
+            }
+          fanAuthor <- getAuthorDTO (auPartyId user)
+          pure FanClubInboxMessageDTO
+            { fcimId = fromSqlKey mid
+            , fcimFanId = fromSqlKey (auPartyId user)
+            , fcimFanName = sppDisplayName fanAuthor
+            , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
+            , fcimSubject = fcisReqSubject req
+            , fcimBody = fcisReqBody req
+            , fcimStatus = "unread"
+            , fcimOfficerId = Nothing
+            , fcimOfficerName = Nothing
+            , fcimReplyBody = Nothing
+            , fcimCreatedAt = now
+            , fcimUpdatedAt = Nothing
+            }
 
     getInboxMessage aId messageId = do
       artistKey <- requireArtistKey aId
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ do
-        mClub <- getBy (UniqueFanClubArtist artistKey)
-        case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
-          Just (Entity cid _) -> do
-            msgKey <- either throwError pure (validatePositiveIdField "messageId" messageId)
-            let mid = toSqlKey msgKey :: FanClubInboxMessageId
-            mMsg <- get mid
-            case mMsg of
-              Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
-              Just m -> do
-                unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
-                when (fanClubInboxMessageStatus m == "unread") $ do
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> runDB $ do
+          let msgKey = validatePositiveIdField "messageId" messageId
+          case msgKey of
+            Left _ -> throwError err404 { errBody = "Mensaje no encontrado" }
+            Right validMsgKey -> do
+              let mid = toSqlKey validMsgKey :: FanClubInboxMessageId
+              mMsg <- get mid
+              case mMsg of
+                Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
+                Just m -> do
+                  unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
                   now <- liftIO getCurrentTime
-                  update mid [M.FanClubInboxMessageStatus =. "opened", M.FanClubInboxMessageUpdatedAt =. Just now]
-                fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
-                officerAuthor <- case fanClubInboxMessageOfficerPartyId m of
-                  Nothing -> pure Nothing
-                  Just oid -> Just <$> getAuthorDTO oid
-                pure FanClubInboxMessageDTO
-                  { fcimId = fromSqlKey mid
-                  , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
-                  , fcimFanName = sppDisplayName fanAuthor
-                  , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
-                  , fcimSubject = fanClubInboxMessageSubject m
-                  , fcimBody = fanClubInboxMessageBody m
-                  , fcimStatus = if fanClubInboxMessageStatus m == "unread" then "opened" else fanClubInboxMessageStatus m
-                  , fcimOfficerId = fmap fromSqlKey (fanClubInboxMessageOfficerPartyId m)
-                  , fcimOfficerName = fmap sppDisplayName officerAuthor
-                  , fcimReplyBody = fanClubInboxMessageReplyBody m
-                  , fcimCreatedAt = fanClubInboxMessageCreatedAt m
-                  , fcimUpdatedAt = if fanClubInboxMessageStatus m == "unread" then Just now else fanClubInboxMessageUpdatedAt m
-                  }
+                  when (fanClubInboxMessageStatus m == "unread") $ do
+                    update mid [M.FanClubInboxMessageStatus =. "opened", M.FanClubInboxMessageUpdatedAt =. Just now]
+                  fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
+                  officerAuthor <- case fanClubInboxMessageOfficerPartyId m of
+                    Nothing -> pure Nothing
+                    Just oid -> Just <$> getAuthorDTO oid
+                  pure FanClubInboxMessageDTO
+                    { fcimId = fromSqlKey mid
+                    , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
+                    , fcimFanName = sppDisplayName fanAuthor
+                    , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
+                    , fcimSubject = fanClubInboxMessageSubject m
+                    , fcimBody = fanClubInboxMessageBody m
+                    , fcimStatus = if fanClubInboxMessageStatus m == "unread" then "opened" else fanClubInboxMessageStatus m
+                    , fcimOfficerId = fmap fromSqlKey (fanClubInboxMessageOfficerPartyId m)
+                    , fcimOfficerName = fmap sppDisplayName officerAuthor
+                    , fcimReplyBody = fanClubInboxMessageReplyBody m
+                    , fcimCreatedAt = fanClubInboxMessageCreatedAt m
+                    , fcimUpdatedAt = if fanClubInboxMessageStatus m == "unread" then Just now else fanClubInboxMessageUpdatedAt m
+                    }
 
     replyInboxMessage aId messageId req = do
       artistKey <- requireArtistKey aId
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ do
-        mClub <- getBy (UniqueFanClubArtist artistKey)
-        case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
-          Just (Entity cid _) -> do
-            msgKey <- either throwError pure (validatePositiveIdField "messageId" messageId)
-            let mid = toSqlKey msgKey :: FanClubInboxMessageId
-            mMsg <- get mid
-            case mMsg of
-              Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
-              Just m -> do
-                unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
-                now <- liftIO getCurrentTime
-                update mid
-                  [ M.FanClubInboxMessageOfficerPartyId =. Just (auPartyId user)
-                  , M.FanClubInboxMessageReplyBody =. Just (fcirReqBody req)
-                  , M.FanClubInboxMessageStatus =. "replied"
-                  , M.FanClubInboxMessageUpdatedAt =. Just now
-                  ]
-                fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
-                officerAuthor <- Just <$> getAuthorDTO (auPartyId user)
-                pure FanClubInboxMessageDTO
-                  { fcimId = fromSqlKey mid
-                  , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
-                  , fcimFanName = sppDisplayName fanAuthor
-                  , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
-                  , fcimSubject = fanClubInboxMessageSubject m
-                  , fcimBody = fanClubInboxMessageBody m
-                  , fcimStatus = "replied"
-                  , fcimOfficerId = Just (fromSqlKey (auPartyId user))
-                  , fcimOfficerName = Just (sppDisplayName officerAuthor)
-                  , fcimReplyBody = Just (fcirReqBody req)
-                  , fcimCreatedAt = fanClubInboxMessageCreatedAt m
-                  , fcimUpdatedAt = Just now
-                  }
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> runDB $ do
+          let msgKey = validatePositiveIdField "messageId" messageId
+          case msgKey of
+            Left _ -> throwError err404 { errBody = "Mensaje no encontrado" }
+            Right validMsgKey -> do
+              let mid = toSqlKey validMsgKey :: FanClubInboxMessageId
+              mMsg <- get mid
+              case mMsg of
+                Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
+                Just m -> do
+                  unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
+                  now <- liftIO getCurrentTime
+                  update mid
+                    [ M.FanClubInboxMessageOfficerPartyId =. Just (auPartyId user)
+                    , M.FanClubInboxMessageReplyBody =. Just (fcirReqBody req)
+                    , M.FanClubInboxMessageStatus =. "replied"
+                    , M.FanClubInboxMessageUpdatedAt =. Just now
+                    ]
+                  fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
+                  officerAuthor <- Just <$> getAuthorDTO (auPartyId user)
+                  pure FanClubInboxMessageDTO
+                    { fcimId = fromSqlKey mid
+                    , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
+                    , fcimFanName = sppDisplayName fanAuthor
+                    , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
+                    , fcimSubject = fanClubInboxMessageSubject m
+                    , fcimBody = fanClubInboxMessageBody m
+                    , fcimStatus = "replied"
+                    , fcimOfficerId = Just (fromSqlKey (auPartyId user))
+                    , fcimOfficerName = Just (sppDisplayName officerAuthor)
+                    , fcimReplyBody = Just (fcirReqBody req)
+                    , fcimCreatedAt = fanClubInboxMessageCreatedAt m
+                    , fcimUpdatedAt = Just now
+                    }
 
     updateInboxStatus aId messageId req = do
       artistKey <- requireArtistKey aId
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
-      runDB $ do
-        mClub <- getBy (UniqueFanClubArtist artistKey)
-        case mClub of
-          Nothing -> throwError err404 { errBody = "Club no encontrado" }
-          Just (Entity cid _) -> do
-            msgKey <- either throwError pure (validatePositiveIdField "messageId" messageId)
-            let mid = toSqlKey msgKey :: FanClubInboxMessageId
-            mMsg <- get mid
-            case mMsg of
-              Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
-              Just m -> do
-                unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
-                now <- liftIO getCurrentTime
-                update mid
-                  [ M.FanClubInboxMessageStatus =. fcistReqStatus req
-                  , M.FanClubInboxMessageUpdatedAt =. Just now
-                  ]
-                fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
-                officerAuthor <- case fanClubInboxMessageOfficerPartyId m of
-                  Nothing -> pure Nothing
-                  Just oid -> Just <$> getAuthorDTO oid
-                pure FanClubInboxMessageDTO
-                  { fcimId = fromSqlKey mid
-                  , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
-                  , fcimFanName = sppDisplayName fanAuthor
-                  , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
-                  , fcimSubject = fanClubInboxMessageSubject m
-                  , fcimBody = fanClubInboxMessageBody m
-                  , fcimStatus = fcistReqStatus req
-                  , fcimOfficerId = fmap fromSqlKey (fanClubInboxMessageOfficerPartyId m)
-                  , fcimOfficerName = fmap sppDisplayName officerAuthor
-                  , fcimReplyBody = fanClubInboxMessageReplyBody m
-                  , fcimCreatedAt = fanClubInboxMessageCreatedAt m
-                  , fcimUpdatedAt = Just now
-                  }
+      mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
+      case mClub of
+        Nothing -> throwError err404 { errBody = "Club no encontrado" }
+        Just (Entity cid _) -> runDB $ do
+          let msgKey = validatePositiveIdField "messageId" messageId
+          case msgKey of
+            Left _ -> throwError err404 { errBody = "Mensaje no encontrado" }
+            Right validMsgKey -> do
+              let mid = toSqlKey validMsgKey :: FanClubInboxMessageId
+              mMsg <- get mid
+              case mMsg of
+                Nothing -> throwError err404 { errBody = "Mensaje no encontrado" }
+                Just m -> do
+                  unless (fanClubInboxMessageClubId m == cid) $ throwError err404 { errBody = "Mensaje no encontrado" }
+                  now <- liftIO getCurrentTime
+                  update mid
+                    [ M.FanClubInboxMessageStatus =. fcistReqStatus req
+                    , M.FanClubInboxMessageUpdatedAt =. Just now
+                    ]
+                  fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
+                  officerAuthor <- case fanClubInboxMessageOfficerPartyId m of
+                    Nothing -> pure Nothing
+                    Just oid -> Just <$> getAuthorDTO oid
+                  pure FanClubInboxMessageDTO
+                    { fcimId = fromSqlKey mid
+                    , fcimFanId = fromSqlKey (fanClubInboxMessageFanPartyId m)
+                    , fcimFanName = sppDisplayName fanAuthor
+                    , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
+                    , fcimSubject = fanClubInboxMessageSubject m
+                    , fcimBody = fanClubInboxMessageBody m
+                    , fcimStatus = fcistReqStatus req
+                    , fcimOfficerId = fmap fromSqlKey (fanClubInboxMessageOfficerPartyId m)
+                    , fcimOfficerName = fmap sppDisplayName officerAuthor
+                    , fcimReplyBody = fanClubInboxMessageReplyBody m
+                    , fcimCreatedAt = fanClubInboxMessageCreatedAt m
+                    , fcimUpdatedAt = Just now
+                    }
 
     requireArtistKey :: Int64 -> AppM PartyId
     requireArtistKey =
@@ -1085,7 +1092,7 @@ validateFanClubOfficerRoleInput rawRole =
 checkIsOfficer :: AuthedUser -> PartyId -> SqlPersistT IO Bool
 checkIsOfficer user artistKey = do
   let userRoles = auRoles user
-      isAdminOrAgency = Admin `elem` userRoles || Agency `elem` userRoles
+      isAdminOrAgency = M.Admin `elem` userRoles || M.Agency `elem` userRoles
   if isAdminOrAgency
     then pure True
     else do
@@ -1101,6 +1108,11 @@ validateFanClubArtistPathId :: Int64 -> Either ServerError PartyId
 validateFanClubArtistPathId rawArtistId
   | rawArtistId <= 0 = Left err400 { errBody = "Invalid fan club artist id" }
   | otherwise = Right (toSqlKey rawArtistId)
+
+validatePositiveIdField :: Text -> Int64 -> Either ServerError Int64
+validatePositiveIdField _ rawId
+  | rawId <= 0 = Left err400 { errBody = "Invalid id" }
+  | otherwise = Right rawId
 
 validateFanClubPostPathId :: Int64 -> Either ServerError FanClubPostId
 validateFanClubPostPathId rawPostId

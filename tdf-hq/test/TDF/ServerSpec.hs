@@ -76,6 +76,7 @@ import TDF.Config (AppConfig(..))
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
+import TDF.DTO.SocialEventsDTO (ArtistDTO (..))
 import TDF.Handlers.InputList (AssetField (..), renderInputListLatex)
 import TDF.Models
     ( ApiToken (..)
@@ -424,6 +425,7 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
+import TDF.Server.SocialEventsHandlers (validateEventArtistIds)
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -893,6 +895,49 @@ spec = describe "TDF.Server helpers" $ do
                             ("Expected invalid optional id input to be rejected, got: " <> show value)
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
+
+    describe "validateEventArtistIds" $ do
+        it "requires explicit artist ids instead of dropping nested artist-shaped objects" $ do
+            let eventArtistRef mArtistId =
+                    ArtistDTO
+                        { artistId = mArtistId
+                        , artistPartyId = Nothing
+                        , artistName = "Ada Lovelace"
+                        , artistGenres = []
+                        , artistBio = Nothing
+                        , artistAvatarUrl = Nothing
+                        , artistSocialLinks = Nothing
+                        , artistCreatedAt = Nothing
+                        , artistUpdatedAt = Nothing
+                        }
+                assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid event artist references to be rejected, got: "
+                                    <> show value
+                                )
+
+            validateEventArtistIds [] `shouldBe` Right []
+            validateEventArtistIds [eventArtistRef (Just "42")]
+                `shouldBe` Right [toSqlKey 42]
+
+            assertInvalid
+                "eventArtists[].artistId is required"
+                (validateEventArtistIds [eventArtistRef Nothing])
+            assertInvalid
+                "eventArtists[].artistId must be a positive integer"
+                (validateEventArtistIds [eventArtistRef (Just "0")])
+            assertInvalid
+                "eventArtists[].artistId must be unique"
+                ( validateEventArtistIds
+                    [ eventArtistRef (Just "42")
+                    , eventArtistRef (Just "42")
+                    ]
+                )
 
     describe "validateUserRoleUserId" $
         it "rejects non-positive admin user-role path ids before credential lookup" $ do
