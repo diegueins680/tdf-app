@@ -1124,6 +1124,8 @@ validateDropdownOptionValue :: Text -> Either ServerError Text
 validateDropdownOptionValue rawValue
   | T.null value =
       Left err400 { errBody = "Value is required" }
+  | T.length value > maxDropdownValueChars =
+      Left err400 { errBody = "Value must be 160 characters or fewer" }
   | T.any isControl value =
       Left err400 { errBody = "Value must not contain control characters" }
   | T.any isUnsupportedAdminAuditChar value =
@@ -1133,11 +1135,16 @@ validateDropdownOptionValue rawValue
   where
     value = T.strip rawValue
 
+maxDropdownValueChars :: Int
+maxDropdownValueChars = 160
+
 validateDropdownOptionLabel :: Maybe Text -> Either ServerError (Maybe Text)
 validateDropdownOptionLabel Nothing = Right Nothing
 validateDropdownOptionLabel (Just rawLabel)
   | T.null label =
       Right Nothing
+  | T.length label > maxDropdownLabelChars =
+      Left err400 { errBody = "Label must be 160 characters or fewer" }
   | T.any isControl label =
       Left err400 { errBody = "Label must not contain control characters" }
   | T.any isUnsupportedAdminAuditChar label =
@@ -1146,6 +1153,9 @@ validateDropdownOptionLabel (Just rawLabel)
       Right (Just label)
   where
     label = T.strip rawLabel
+
+maxDropdownLabelChars :: Int
+maxDropdownLabelChars = 160
 
 ensureModule
   :: (MonadError ServerError m)

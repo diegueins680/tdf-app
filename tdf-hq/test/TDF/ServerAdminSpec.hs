@@ -357,6 +357,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "Dropdown category must be 64 characters or fewer"
                 (validateDropdownOptionCategory (T.replicate 65 "a"))
             assertInvalid
+                "Value must be 160 characters or fewer"
+                (validateDropdownOptionValue (T.replicate 161 "a"))
+            assertInvalid
+                "Label must be 160 characters or fewer"
+                (validateDropdownOptionLabel (Just (T.replicate 161 "a")))
+            assertInvalid
                 "Dropdown category must not contain control characters"
                 (validateDropdownOptionCategory "asset\ncategory")
             assertInvalid
