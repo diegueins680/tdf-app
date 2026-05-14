@@ -20,6 +20,7 @@ const MODULE_TO_PATH: Record<string, string> = {
   'Bar': '/bar',
   'Operación': '/operacion',
   'Configuración': '/configuracion',
+  'Metadata': '/metadata',
   'Insights': '/insights'
 };
 
@@ -54,7 +55,8 @@ const SUBPATH_OVERRIDES: Record<string, Record<string, string>> = {
     'Marcas': '/configuracion/marcas',
     'Integraciones': '/configuracion/integraciones',
     'Preferencias': '/configuracion/preferencias'
-  }
+  },
+  'Metadata': {}
 };
 
 function slugify(label: string) {

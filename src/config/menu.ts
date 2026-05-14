@@ -13,6 +13,7 @@ export const topLevel = [
   "Bar",
   "Operación",
   "Configuración",
+  "Metadata",
   "Insights"
 ] as const;
 
@@ -26,6 +27,7 @@ export const submenus: Record<string, string[]> = {
   "Bar": ["Punto de venta","Caja","Inventario","Staff"],
   "Operación": ["Calendario DOMO","Inventario","Reservas de equipo","Mantenimiento","Paquetes"],
   "Configuración": ["Roles y permisos","Impuestos y series","Unidades de negocio","Sedes","Marcas","Integraciones","Preferencias"],
+  "Metadata": [],
   "Insights": []
 };
 
@@ -33,8 +35,8 @@ export const visibilityByRole: Record<Role, (string | "*")[]> = {
   admin: ["*"],
   finanzas: ["Finanzas","Label.Regalías","Estudio.Órdenes","Estudio.Reportes","Eventos.Presupuestos","CRM","Insights","Bar"],
   booker: ["Estudio","CRM","Operación.Calendario DOMO","Operación.Reservas de equipo","Operación.Paquetes","Finanzas.Cotizaciones","Bar"],
-  ingeniero: ["Estudio","Operación","CRM","Label"],
-  productor: ["Estudio","Label","Eventos","CRM","Bar"],
+  ingeniero: ["Estudio","Operación","CRM","Label","Metadata"],
+  productor: ["Estudio","Label","Eventos","CRM","Bar","Metadata"],
   artista: ["Label.Contratos","Label.Releases","Label.Tracks","Label.Assets","Label.Regalías","Estudio.Calendario","Eventos.Fechas y tours"],
   profesor: ["Escuela","Estudio.Calendario","CRM"],
   estudiante: ["Escuela.Cursos","Escuela.Inscripciones","Escuela.Pagos"],
