@@ -17,6 +17,16 @@ FINAL_STATUS: done — Packet A partially proven (EAS env fix applied, build ver
 - **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
 - **No company-level blocker** to Lane C durability. No repair needed.
 
+## 2026-05-14 03:26 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — both login paths verified end-to-end via Detox on EAS ios-simulator build `8d91fabe-a01c-41d1-bc6b-b55dc9c689e9` (2026-05-13 20:20 UTC) and local Release build (2026-05-14 02:06 UTC, 2 passed, 2 total in 163s). Username/password: PASS (25.5s). Google OAuth: PASS (47.0s, button → ASWebAuthenticationSession dialog). Release Director maintains `GO` / `TESTING VERSION READY`. No login-related commits since 2026-05-13 22:24 UTC.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`). Child PID 30113 alive, state `running`, phase `supervising`. Heartbeat fresh at 2026-05-14T03:26:44Z. restartCount 162, staleRestartCount 1 (within tolerance over ~4.5 days). `lastError` is stale git submodule ref `7ecf27dbde842f990ce9f0cf6c54074a314175a1` from prior iteration; loop recovered, `lastIterationResult` `ok`, `lastExitCode` 0. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (EAS + local Detox PASS both auth paths, Release Director GO), Packet B gated on EAS_IOS_CREDENTIALS_MISSING for physical/store publish, Lane C live with launchd durability (supervisor 68059, child 30113, heartbeat 03:26Z), systems lane paused.
+
 ## 2026-05-13 21:40 UTC — CIO checkpoint
 
 - **Packet A:** `PROVEN FOR TESTING VERSION` — both login paths verified end-to-end via Detox on EAS ios-simulator build `8d91fabe-a01c-41d1-bc6b-b55dc9c689e9`. Username/password: PASS (22.5s). Google OAuth: PASS (35.9s, button → ASWebAuthenticationSession dialog). Release Director maintains `GO` / `TESTING VERSION READY`. No login-related commits since 15:40 UTC. Physical device full web-sign-in → callback → post-login remains recommended before production but is not a testing-version blocker.

@@ -16996,6 +16996,39 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('deduplicates link-in-bio provider variants in first-run copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-beacons', ccTitle: 'Beacons page - Beatmaking 101' },
+      { ccSlug: 'beatmaking-stan-store', ccTitle: 'Stan Store - Beatmaking 101' },
+      { ccSlug: 'beatmaking-koji', ccTitle: 'Beatmaking 101 - Koji link' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+      const copy = emptyState?.textContent ?? '';
+
+      expect(emptyState).not.toBeNull();
+      expect(copy).toContain(
+        'Hay 3 variantes públicas de Beatmaking 101 listas para recibir la primera inscripción.',
+      );
+      expect(copy).not.toMatch(/Beacons|Stan Store|Koji/i);
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
+      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 variantes públicas para Beatmaking 101.');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips course-community wrappers from first-run cohort copy', async () => {
     const titles = [
       'Course community - Beatmaking 101',
