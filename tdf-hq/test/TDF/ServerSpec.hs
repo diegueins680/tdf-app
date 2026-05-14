@@ -10378,6 +10378,9 @@ spec = describe "TDF.Server helpers" $ do
             hasStrictAdminAccess (mkUser [Webmaster]) `shouldBe` False
             hasStrictAdminAccess (mkUser [StudioManager]) `shouldBe` False
             hasStrictAdminAccess (mkUser [Admin]) `shouldBe` True
+            hasStrictAdminAccess (mkUser [Admin, Fan, Customer]) `shouldBe` True
+            hasStrictAdminAccess (mkUser [Admin, Webmaster]) `shouldBe` False
+            hasStrictAdminAccess (mkUser [Admin, Manager]) `shouldBe` False
 
         it "rejects stale or duplicated grants before strict-admin fallbacks" $ do
             let staleAdmin =
@@ -10394,6 +10397,7 @@ spec = describe "TDF.Server helpers" $ do
     describe "validateStrictAdminAccess" $ do
         it "requires coherent Admin grants before protected role-management handlers run" $ do
             validateStrictAdminAccess (mkUser [Admin]) `shouldBe` Right ()
+            validateStrictAdminAccess (mkUser [Admin, Fan, Customer]) `shouldBe` Right ()
 
             let assertRejected expectedMessage user =
                     case validateStrictAdminAccess user of
@@ -10411,6 +10415,9 @@ spec = describe "TDF.Server helpers" $ do
                 "Valid admin party required"
                 ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
             assertRejected "Admin role grants must be unique" (mkUser [Admin, Admin])
+            assertRejected
+                "Strict Admin access cannot be combined with non-baseline roles"
+                (mkUser [Admin, Webmaster])
             assertRejected
                 "Admin module grants must match roles"
                 ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })

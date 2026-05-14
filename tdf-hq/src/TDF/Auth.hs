@@ -115,7 +115,9 @@ validateModuleAccess moduleTag user@AuthedUser{..}
 
 hasStrictAdminAccess :: AuthedUser -> Bool
 hasStrictAdminAccess user@AuthedUser{..} =
-  Admin `elem` auRoles && hasCoherentRoleGrants user
+  Admin `elem` auRoles
+    && all isStrictAdminRoleScope auRoles
+    && hasCoherentRoleGrants user
 
 hasOperationsAccess :: AuthedUser -> Bool
 hasOperationsAccess user@AuthedUser{..} =
@@ -247,6 +249,10 @@ hasCoherentRoleGrants user@AuthedUser{..} =
 hasValidAuthPartyId :: AuthedUser -> Bool
 hasValidAuthPartyId AuthedUser{..} =
   fromSqlKey auPartyId > 0
+
+isStrictAdminRoleScope :: RoleEnum -> Bool
+isStrictAdminRoleScope role =
+  role `elem` [Admin, Fan, Customer]
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
 modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]

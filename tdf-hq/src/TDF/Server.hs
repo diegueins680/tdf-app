@@ -9492,10 +9492,16 @@ validateStrictAdminAccess AuthedUser{..}
       Left err403 { errBody = "Valid admin party required" }
   | length auRoles /= length (nub auRoles) =
       Left err403 { errBody = "Admin role grants must be unique" }
+  | any (not . isStrictAdminRoleScope) auRoles =
+      Left err403
+        { errBody = "Strict Admin access cannot be combined with non-baseline roles" }
   | auModules /= modulesForRoles auRoles =
       Left err403 { errBody = "Admin module grants must match roles" }
   | otherwise =
       Right ()
+  where
+    isStrictAdminRoleScope role =
+      role `elem` [Admin, Fan, Customer]
 -- User roles API
 userRolesServer :: AuthedUser -> ServerT UserRolesAPI AppM
 userRolesServer user =
