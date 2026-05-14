@@ -3626,6 +3626,36 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('treats placeholder access labels as missing access in first-user guidance', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-placeholder-access',
+        roles: ['N/A', 'Sin roles', '  '],
+        modules: ['No aplica', 'sin módulos'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Acceso de este usuario: Sin acceso asignado.',
+        );
+
+        expect(container.textContent).not.toContain('N/A');
+        expect(container.textContent).not.toContain('Sin roles');
+        expect(container.textContent).not.toContain('No aplica');
+        expect(container.textContent).not.toContain('sin módulos');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('deduplicates accented and spaced access labels before rendering row summaries', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

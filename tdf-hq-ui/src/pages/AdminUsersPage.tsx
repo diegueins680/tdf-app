@@ -76,12 +76,37 @@ const normalizeAccessKey = (value: string) =>
     .trim()
     .toLocaleLowerCase('es');
 
+const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n/a',
+  'na',
+  'no aplica',
+  'none',
+  'sin acceso',
+  'sin acceso asignado',
+  'sin modulo',
+  'sin modulo asignado',
+  'sin modulos',
+  'sin modulos asignados',
+  'sin rol',
+  'sin rol asignado',
+  'sin roles',
+  'sin roles asignados',
+  'tbd',
+]);
+
+const isPlaceholderAccessValue = (value: string) => {
+  const accessKey = normalizeAccessKey(value).replace(/[.!?:;]+$/g, '').trim();
+  return ACCESS_PLACEHOLDER_VALUE_KEYS.has(accessKey);
+};
+
 const normalizeAccessValues = (values: readonly string[]) => {
   const valuesByKey = new Map<string, string>();
 
   values.forEach((value) => {
     const trimmedValue = value.trim();
     if (!trimmedValue) return;
+    if (isPlaceholderAccessValue(trimmedValue)) return;
 
     const accessKey = normalizeAccessKey(trimmedValue);
     if (!valuesByKey.has(accessKey)) {
