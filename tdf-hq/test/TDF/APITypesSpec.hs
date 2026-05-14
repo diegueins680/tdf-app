@@ -1065,6 +1065,25 @@ spec = do
                         members ->
                             expectationFailure ("Expected one band member, got: " <> show members)
 
+        it "normalizes optional member roles before band creation stores them" $ do
+            case decodeBandCreate (BL8.concat
+                [ "{\"bcName\":\"TDF House Band\""
+                , ",\"bcMembers\":["
+                , "{\"bmPartyId\":42,\"bmRole\":\"  keys  \"},"
+                , "{\"bmPartyId\":43,\"bmRole\":\"   \"}"
+                , "]}"
+                ])
+             of
+                Left err ->
+                    expectationFailure ("Expected band member roles to normalize, got: " <> err)
+                Right payload ->
+                    case bcMembers payload of
+                        [BandMemberInput _ firstRole, BandMemberInput _ secondRole] -> do
+                            firstRole `shouldBe` Just "keys"
+                            secondRole `shouldBe` Nothing
+                        members ->
+                            expectationFailure ("Expected two band members, got: " <> show members)
+
         it "rejects unexpected top-level or member keys instead of silently ignoring CRM typos" $ do
             decodeBandCreate
                 "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"members\":[]}"
@@ -1074,6 +1093,36 @@ spec = do
                 , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
                 ])
                 `shouldSatisfy` isLeft
+
+        it "rejects malformed member ids and roles before band creation handler fallbacks" $ do
+            let assertInvalid rawPayload expectedMessage =
+                    case decodeBandCreate rawPayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected malformed band create to fail, got: " <> show payload)
+
+            assertInvalid
+                (BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":0,\"bmRole\":\"keys\"}]}"
+                    ])
+                "bmPartyId must be a positive integer"
+            assertInvalid
+                (BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\\nlead\"}]}"
+                    ])
+                "bmRole must not contain control characters"
+            assertInvalid
+                (BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\""
+                    , BL8.pack (replicate 81 'a')
+                    , "\"}]}"
+                    ])
+                "bmRole must be 80 characters or fewer"
 
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $

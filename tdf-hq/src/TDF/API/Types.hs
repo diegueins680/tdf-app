@@ -1373,10 +1373,38 @@ instance FromJSON BandMemberInput where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in BandMemberInput: " <> T.unpack key)
-      [] ->
-        BandMemberInput
-          <$> o .:  "bmPartyId"
-          <*> o .:? "bmRole"
+      [] -> do
+        partyIdValue <- o .: "bmPartyId"
+        roleValue <- normalizeBandMemberRoleField =<< o .:? "bmRole"
+        if partyIdValue <= 0
+          then fail "bmPartyId must be a positive integer"
+          else
+            pure BandMemberInput
+              { bmiPartyId = partyIdValue
+              , bmiRole = roleValue
+              }
+
+maxBandMemberRoleChars :: Int
+maxBandMemberRoleChars = 80
+
+normalizeBandMemberRoleField :: Maybe Text -> Parser (Maybe Text)
+normalizeBandMemberRoleField Nothing = pure Nothing
+normalizeBandMemberRoleField (Just rawRole)
+  | T.null role =
+      pure Nothing
+  | T.length role > maxBandMemberRoleChars =
+      fail "bmRole must be 80 characters or fewer"
+  | T.any isUnsafeBandMemberRoleChar role =
+      fail "bmRole must not contain control characters or hidden formatting characters"
+  | otherwise =
+      pure (Just role)
+  where
+    role = T.strip rawRole
+
+isUnsafeBandMemberRoleChar :: Char -> Bool
+isUnsafeBandMemberRoleChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 -- Minimal Payment DTO for UI/backend bridging
 data SimplePaymentDTO = SimplePaymentDTO
