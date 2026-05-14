@@ -1864,7 +1864,7 @@ function UserRow({
                 WhatsApp
               </Button>
             ) : (
-              <Tooltip title={whatsappActionTitle}>
+              <Tooltip title={whatsappActionTitle} describeChild>
                 <IconButton
                   size="small"
                   color="primary"

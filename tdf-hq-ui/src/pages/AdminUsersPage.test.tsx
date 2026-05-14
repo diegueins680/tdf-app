@@ -1595,8 +1595,17 @@ describe('AdminUsersPage', () => {
         expect(buttonText(graceAction)).toBe('');
         expect(buttonText(linusAction)).toBe('');
         expect(adaAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin)');
+        expect(adaAction.getAttribute('title')).toBe(
+          'Abrir WhatsApp para Ada Lovelace (Usuario: ada-admin) · +593999000111',
+        );
         expect(graceAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para Grace Hopper (Usuario: grace-admin)');
+        expect(graceAction.getAttribute('title')).toBe(
+          'Abrir WhatsApp para Grace Hopper (Usuario: grace-admin) · +593999000222',
+        );
         expect(linusAction.getAttribute('aria-label')).toBe('Abrir WhatsApp para linus-view');
+        expect(linusAction.getAttribute('title')).toBe(
+          'Abrir WhatsApp para linus-view · +593999000333',
+        );
       });
     } finally {
       await cleanup();
