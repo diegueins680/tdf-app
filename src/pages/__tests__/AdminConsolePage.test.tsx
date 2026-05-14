@@ -6554,6 +6554,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Navigation shortcuts')).not.toBeInTheDocument();
   });
 
+  it('ignores settings-navigation fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'settings-integrations-shortcut',
+          title: 'Integraciones técnicas',
+          body: ['Open this module from Settings > Integrations.'],
+        },
+        {
+          cardId: 'configuracion-preferencias-shortcut',
+          title: 'Preferencias avanzadas',
+          body: ['Abre este flujo desde Configuración > Preferencias.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Preferencias avanzadas')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Open this module from Settings/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Abre este flujo desde Configuración/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Integraciones técnicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Preferencias avanzadas')).not.toBeInTheDocument();
+  });
+
   it('ignores quick-link fallback cards that duplicate first-run section anchors', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
