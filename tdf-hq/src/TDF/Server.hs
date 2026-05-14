@@ -12263,7 +12263,7 @@ gatewayAuthHeaderUnsafeMessage :: Text -> Text
 gatewayAuthHeaderUnsafeMessage fieldName =
   fieldName
     <> " must not contain control characters or whitespace, "
-    <> "or hidden formatting characters"
+    <> "hidden formatting characters, or non-ASCII characters"
 
 gatewayCredentialTooLongMessage :: Text -> Text
 gatewayCredentialTooLongMessage fieldName =
@@ -12274,7 +12274,7 @@ maxGatewayCredentialChars = 4096
 
 isGatewayAuthHeaderUnsafeChar :: Char -> Bool
 isGatewayAuthHeaderUnsafeChar ch =
-  isControl ch || isSpace ch || generalCategory ch == Format
+  isControl ch || isSpace ch || generalCategory ch == Format || not (isAscii ch)
 
 resolvePaypalBaseUrl :: Maybe String -> Either ServerError String
 resolvePaypalBaseUrl mEnv =

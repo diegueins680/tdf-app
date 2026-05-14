@@ -8113,6 +8113,10 @@ spec = describe "TDF.Server helpers" $ do
                 (Just ("client" <> [toEnum 0x202E] <> "id"))
                 "hidden formatting characters"
             assertInvalid
+                "PAYPAL_CLIENT_SECRET"
+                (Just "secr\233t")
+                "non-ASCII characters"
+            assertInvalid
                 "PAYPAL_CLIENT_ID"
                 (Just "client:id")
                 "PAYPAL_CLIENT_ID must not contain ':'"
