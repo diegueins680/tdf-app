@@ -75,6 +75,7 @@ import TDF.Cors
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
@@ -3052,6 +3053,27 @@ main = hspec $ do
                 `shouldBe` Just "configured-token"
             selectInstagramSyncAccessToken (Just "   ") (Just "\t")
                 `shouldBe` Nothing
+
+        it "rejects malformed Instagram sync tokens before Graph URL construction" $ do
+            let assertInvalid rawToken expectedMessage =
+                    withEnvOverrides
+                        [ ("INSTAGRAM_GRAPH_BASE", Just "https://graph.instagram.com") ]
+                        $ do
+                            cfg <- loadConfig
+                            case buildUserMediaRequestUrl cfg rawToken "17841400000000000" of
+                                Left err ->
+                                    Data.Text.unpack err `shouldContain` expectedMessage
+                                Right value ->
+                                    expectationFailure
+                                        ( "Expected malformed Instagram sync token to fail, got: "
+                                            <> value
+                                        )
+            assertInvalid
+                "tokené"
+                "Instagram access token must contain visible ASCII characters only"
+            assertInvalid
+                (Data.Text.replicate 4097 "a")
+                "Instagram access token must be 4096 characters or fewer"
 
         it "rejects malformed Instagram send payloads before building Graph requests" $
             withEnvOverrides

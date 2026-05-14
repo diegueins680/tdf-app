@@ -165,11 +165,22 @@ normalizeGraphAccessToken :: Text -> Either Text Text
 normalizeGraphAccessToken rawAccessToken
   | T.null accessToken =
       Left "Instagram access token is required"
+  | T.length accessToken > maxInstagramGraphAccessTokenChars =
+      Left "Instagram access token must be 4096 characters or fewer"
   | T.any (\ch -> isControl ch || isSpace ch) accessToken =
       Left "Instagram access token must not contain whitespace or control characters"
   | T.any isHiddenInstagramFormattingChar accessToken =
       Left "Instagram access token must not contain hidden formatting characters"
+  | T.any (not . isVisibleAsciiTokenChar) accessToken =
+      Left "Instagram access token must contain visible ASCII characters only"
   | otherwise =
       Right accessToken
   where
     accessToken = T.strip rawAccessToken
+
+maxInstagramGraphAccessTokenChars :: Int
+maxInstagramGraphAccessTokenChars = 4096
+
+isVisibleAsciiTokenChar :: Char -> Bool
+isVisibleAsciiTokenChar ch =
+  ch >= '!' && ch <= '~'
