@@ -1249,7 +1249,7 @@ const firstRunEmailMarketingFormDescriptorPrefixPattern =
 const firstRunEmailMarketingFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft))\s*$/i;
 
-const firstRunCoursePlatformPattern = String.raw`(?:kajabi|teachable|thinkific|moodle|hotmart|podia|learn\s*worlds?|click\s*funnels?|clickfunnels|kartra|systeme\s*\.?\s*io|go\s*high\s*level|gohighlevel|mighty\s*networks?|skool|circle\s*\.?\s*so)`;
+const firstRunCoursePlatformPattern = String.raw`(?:kajabi|teachable|thinkific|moodle|hotmart|podia|learn\s*worlds?|click\s*funnels?|clickfunnels|kartra|systeme\s*\.?\s*io|go\s*high\s*level|gohighlevel|mighty\s*networks?|skool|circle\s*\.?\s*so|udemy|coursera|skill\s*share|ed\s*x)`;
 const firstRunCoursePlatformDescriptorPattern = String.raw`(?:(?:course\s+)?(?:checkout|payment|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)(?:\s+(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))?|(?:course\s+)?(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))`;
 const firstRunCoursePlatformDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunCoursePlatformPattern}(?:\s+${firstRunCoursePlatformDescriptorPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
