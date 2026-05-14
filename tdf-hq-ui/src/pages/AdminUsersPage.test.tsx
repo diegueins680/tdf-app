@@ -517,7 +517,71 @@ describe('AdminUsersPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Buscar usuarios');
         expect(container.querySelector('[data-testid="admin-users-header-actions"]')).not.toBeNull();
-        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).not.toBeNull();
+        const refreshButton = container.querySelector('button[aria-label="Refrescar lista de usuarios"]');
+        expect(refreshButton).not.toBeNull();
+        expect(refreshButton?.getAttribute('title')).toBe('Refrescar usuarios activos');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('names the refresh scope when inactive users are included so the icon-only action stays clear', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser(),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Hopper',
+        username: 'grace-admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Linus View',
+        username: 'linus-view',
+        primaryEmail: 'linus@example.com',
+      }),
+      buildUser({
+        userId: 104,
+        partyId: 12,
+        partyName: 'Marie Ops',
+        username: 'marie-ops',
+        primaryEmail: 'marie@example.com',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 105,
+              partyId: 13,
+              partyName: 'Ada Inactiva',
+              username: 'ada-inactiva',
+              active: false,
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const refreshButton = container.querySelector('button[aria-label="Refrescar lista de usuarios"]');
+        expect(refreshButton).not.toBeNull();
+        expect(refreshButton?.getAttribute('title')).toBe('Refrescar usuarios activos');
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        const refreshButton = container.querySelector('button[aria-label="Refrescar lista de usuarios"]');
+        expect(refreshButton).not.toBeNull();
+        expect(refreshButton?.getAttribute('title')).toBe('Refrescar usuarios activos e inactivos');
+        expect(hasExactText(container, 'Refrescar usuarios activos e inactivos')).toBe(false);
       });
     } finally {
       await cleanup();

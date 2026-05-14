@@ -1122,6 +1122,9 @@ export default function AdminUsersPage() {
     && hasUsers
     && !showSearchEmptyState
     && usersInCurrentSummary.length >= MIN_USERS_FOR_REFRESH;
+  const refreshActionTitle = includeInactive
+    ? 'Refrescar usuarios activos e inactivos'
+    : 'Refrescar usuarios activos';
   const showHeaderActions = showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction;
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
@@ -1519,10 +1522,11 @@ export default function AdminUsersPage() {
                   </Button>
                 )}
                 {showRefreshAction && (
-                  <Tooltip title="Refrescar">
+                  <Tooltip title={refreshActionTitle}>
                     <span>
                       <IconButton
                         aria-label="Refrescar lista de usuarios"
+                        title={refreshActionTitle}
                         onClick={handleRefresh}
                         disabled={usersQuery.isFetching}
                       >
