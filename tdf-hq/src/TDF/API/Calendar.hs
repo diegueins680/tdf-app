@@ -68,6 +68,26 @@ optionalNonBlank raw =
     Just trimmed | not (T.null trimmed) -> Just trimmed
     _ -> Nothing
 
+optionalRedirectUri :: Maybe Text -> Parser (Maybe Text)
+optionalRedirectUri Nothing = pure Nothing
+optionalRedirectUri (Just raw) =
+  case optionalNonBlank (Just raw) of
+    Nothing -> pure Nothing
+    Just redirectUriVal
+      | T.any isControl redirectUriVal ->
+          fail "redirectUri must not contain control characters"
+      | T.any isHiddenCalendarIdChar redirectUriVal ->
+          fail "redirectUri must not contain hidden formatting characters"
+      | T.any isSpace redirectUriVal ->
+          fail "redirectUri must not contain whitespace"
+      | T.length redirectUriVal > maxCalendarRedirectUriChars ->
+          fail "redirectUri must be 2048 characters or fewer"
+      | otherwise ->
+          pure (Just redirectUriVal)
+
+maxCalendarRedirectUriChars :: Int
+maxCalendarRedirectUriChars = 2048
+
 data AuthUrlResponse = AuthUrlResponse
   { url :: Text
   } deriving (Show, Generic)
@@ -84,7 +104,7 @@ instance FromJSON TokenExchangeIn where
       genericParseJSON strictObjectOptions value
     TokenExchangeIn
       <$> requiredAuthorizationCode "code" rawCode
-      <*> pure (optionalNonBlank rawRedirectUri)
+      <*> optionalRedirectUri rawRedirectUri
       <*> requiredCalendarId rawCalendarId
 
 data CalendarConfigDTO = CalendarConfigDTO

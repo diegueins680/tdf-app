@@ -831,6 +831,22 @@ spec = do
                     show <$> fromVal `shouldBe` Just "2026-05-02 15:00:00 UTC"
                     show <$> toVal `shouldBe` Just "2026-05-02 16:00:00 UTC"
 
+            case decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\" https://tdf-app.pages.dev/configuracion/"
+                    , "integraciones/calendario \""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
+             of
+                Left err ->
+                    expectationFailure ("Expected canonical calendar redirectUri to decode, got: " <> err)
+                Right (Calendar.TokenExchangeIn _ redirectUriVal _) ->
+                    redirectUriVal
+                        `shouldBe`
+                            Just "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+
         it "rejects blank, typoed, or inverted calendar admin bodies before ambiguous Google calls" $ do
             decodeCalendarTokenExchange
                 "{\"code\":\"   \",\"calendarId\":\"primary\"}"
@@ -863,6 +879,33 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"primary\",\"syncCursor\":\"stale\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario\\n\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario\\u202E\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario bad\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"   \"}"
