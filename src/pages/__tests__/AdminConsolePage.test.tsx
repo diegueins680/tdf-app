@@ -3763,7 +3763,7 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
   });
 
-  it('keeps a single long first-run module title compact until the admin expands it', async () => {
+  it('keeps a single long first-run module title compact while exposing the title on hover', async () => {
     const user = userEvent.setup();
     const longModuleTitle = 'Configuración operativa para credenciales externas compartidas';
     mockConsolePreview.mockResolvedValue({
@@ -3796,7 +3796,7 @@ describe('AdminConsolePage', () => {
     });
 
     const actionButton = within(firstRunAlert).getByRole('button', { name: 'Opcional: ver 1 módulo adicional' });
-    expect(actionButton).not.toHaveAttribute('title');
+    expect(actionButton).toHaveAttribute('title', `Opcional: ver ${longModuleTitle}`);
     expect(actionButton).toHaveTextContent('Opcional: ver 1 módulo adicional');
     expect(within(firstRunAlert).queryByText(longModuleTitle)).not.toBeInTheDocument();
 

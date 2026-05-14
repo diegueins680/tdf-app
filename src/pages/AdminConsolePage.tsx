@@ -1943,9 +1943,11 @@ function buildAdditionalModulesActionCopy({
 
 function formatFirstRunAdditionalModulesActionCopy(cards: readonly Pick<AdminConsoleCard, 'title'>[]) {
   if (cards.length === 1) {
+    const title = cards[0]?.title?.trim() ?? '';
+
     return {
       label: 'Opcional: ver 1 módulo adicional',
-      title: undefined,
+      title: title ? `Opcional: ver ${title}` : undefined,
       ariaLabel: undefined,
     } as const;
   }
