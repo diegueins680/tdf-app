@@ -910,6 +910,7 @@ const normalizeFirstRunDescriptorSeparators = (value: string) =>
 
 const firstRunDecorativeEdgeMarkerPattern =
   /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
+const firstRunListMarkerPattern = /^(?:[-*•]\s+|\d+[.)]\s+)/;
 const firstRunInvisibleFormatCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
 
 const firstRunCohortHtmlEntities: Record<string, string> = {
@@ -953,6 +954,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
   decodeFirstRunCohortHtmlEntities(value)
     .replace(firstRunInvisibleFormatCharacterPattern, '')
     .trim()
+    .replace(firstRunListMarkerPattern, '')
     .replace(/^#{1,6}\s+/, '')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/__([^_\n]+)__/g, '$1')
@@ -961,6 +963,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/<\/?(?:strong|b|em|i|span|a)[^>\n]*>/gi, '')
     .replace(/^\[(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\]\s*/g, '')
     .replace(/^(?:TODO|FIXME|DRAFT|BORRADOR|WIP)\s*(?::|-|\u2013|\u2014)\s*/g, '')
+    .replace(firstRunListMarkerPattern, '')
     .replace(firstRunDecorativeEdgeMarkerPattern, '')
     .trim();
 
