@@ -28,6 +28,7 @@ import TDF.ServerFanClub
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
   , validateFanClubOfficerRoleInput
+  , validateFanClubInboxStatusInput
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
@@ -160,6 +161,23 @@ spec = do
         validateFanClubOfficerRoleInput "  "
       assertRejected 400 "role must be one of" $
         validateFanClubOfficerRoleInput "secretary"
+
+  describe "validateFanClubInboxStatusInput" $ do
+    it "normalizes supported inbox statuses before persistence" $ do
+      validateFanClubInboxStatusInput " Archived "
+        `shouldBe` Right "archived"
+      validateFanClubInboxStatusInput "OPENED"
+        `shouldBe` Right "opened"
+
+    it "rejects blank, unknown, or unsafe inbox status tokens before persistence" $ do
+      assertRejected 400 "status is required" $
+        validateFanClubInboxStatusInput "   "
+      assertRejected 400 "status must be one of" $
+        validateFanClubInboxStatusInput "deleted"
+      assertRejected 400 "status must not contain control" $
+        validateFanClubInboxStatusInput "opened\n"
+      assertRejected 400 "hidden formatting" $
+        validateFanClubInboxStatusInput ("open" <> "\x202E" <> "ed")
 
 mkElection :: Int64 -> FanClubElection
 mkElection clubId =

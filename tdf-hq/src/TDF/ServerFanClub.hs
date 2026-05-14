@@ -19,6 +19,7 @@ module TDF.ServerFanClub
   , validateFanClubVoteCandidacyTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubOfficerRoleInput
+  , validateFanClubInboxStatusInput
   , validateFanClubMemoryPathId
   ) where
 
@@ -27,6 +28,8 @@ import           Control.Monad          (forM, forM_, when, unless, void)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader   (ask)
+import           Data.Char              (GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+                                         , generalCategory, isControl, isSpace)
 import           Data.Int               (Int64)
 import           Data.List              (nub, sortOn)
 import           Data.Map               (Map)
@@ -941,6 +944,7 @@ fanClubSecureArtistHandlers user artistId =
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       msgKey <- either throwError pure (validatePositiveIdField "messageId" messageId)
+      status <- either throwError pure (validateFanClubInboxStatusInput (fcistReqStatus req))
       let mid = toSqlKey msgKey :: FanClubInboxMessageId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -956,7 +960,7 @@ fanClubSecureArtistHandlers user artistId =
                   else do
                     now <- liftIO getCurrentTime
                     update mid
-                      [ M.FanClubInboxMessageStatus =. fcistReqStatus req
+                      [ M.FanClubInboxMessageStatus =. status
                       , M.FanClubInboxMessageUpdatedAt =. Just now
                       ]
                     fanAuthor <- getAuthorDTO (fanClubInboxMessageFanPartyId m)
@@ -970,7 +974,7 @@ fanClubSecureArtistHandlers user artistId =
                       , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
                       , fcimSubject = fanClubInboxMessageSubject m
                       , fcimBody = fanClubInboxMessageBody m
-                      , fcimStatus = fcistReqStatus req
+                      , fcimStatus = status
                       , fcimOfficerId = fmap fromSqlKey (fanClubInboxMessageOfficerPartyId m)
                       , fcimOfficerName = fmap sppDisplayName officerAuthor
                       , fcimReplyBody = fanClubInboxMessageReplyBody m
@@ -1091,6 +1095,36 @@ validateFanClubOfficerRoleInput rawRole =
         { errBody =
             "role must be one of: presidente, vicepresidente, secretario, tesorero, coordinador"
         }
+
+validateFanClubInboxStatusInput :: Text -> Either ServerError Text
+validateFanClubInboxStatusInput rawStatus
+  | T.null status =
+      Left err400 { errBody = "status is required" }
+  | T.any invalidFanClubInboxStatusChar rawStatus =
+      Left err400
+        { errBody =
+            "status must not contain control, hidden formatting, or non-ASCII whitespace"
+        }
+  | normalized `elem` allowedFanClubInboxStatuses =
+      Right normalized
+  | otherwise =
+      Left err400
+        { errBody =
+            "status must be one of: unread, opened, replied, archived"
+        }
+  where
+    status = T.strip rawStatus
+    normalized = T.toLower status
+
+allowedFanClubInboxStatuses :: [Text]
+allowedFanClubInboxStatuses =
+  ["unread", "opened", "replied", "archived"]
+
+invalidFanClubInboxStatusChar :: Char -> Bool
+invalidFanClubInboxStatusChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (isSpace ch && ch /= ' ')
 
 checkIsOfficer :: AuthedUser -> PartyId -> SqlPersistT IO Bool
 checkIsOfficer user artistKey = do
