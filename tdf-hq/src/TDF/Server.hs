@@ -3179,7 +3179,7 @@ calendarServer user =
   :<|> calendarSyncH
   :<|> calendarEventsH
   where
-    requireAdmin = unless (hasRole Admin user) $ throwError err403
+    requireAdmin = requireStrictAdmin user
 
     loadGoogleEnv :: Maybe Text -> AppM (Text, Text, Text)
     loadGoogleEnv mRedirect = do

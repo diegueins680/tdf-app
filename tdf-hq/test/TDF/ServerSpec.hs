@@ -366,6 +366,7 @@ import TDF.Server
     , shouldRetryWithFallbackModel
     , listMarketplace
     , resolveMarketplacePhotoUrl
+    , calendarServer
     , cmsAdminServer
     )
 import qualified TDF.ServerRadio as Radio
@@ -6166,6 +6167,34 @@ spec = describe "TDF.Server helpers" $ do
                 :: Either String DriveTokenExchangeRequest
             )
                 `shouldSatisfy` isLeft
+
+    describe "calendarServer authorization" $
+        it "rejects malformed Admin grants before Calendar config fallback lookup" $ do
+            let unusedEnv =
+                    Env
+                        { envPool = error "envPool should be unused by Calendar authorization"
+                        , envConfig = error "envConfig should be unused by Calendar authorization"
+                        }
+                assertRejected user expectedMessage = do
+                    let _authUrlH :<|> _tokenH :<|> configH :<|> _syncH :<|> _eventsH =
+                            calendarServer user
+                    result <- runHandler (runReaderT (configH Nothing) unusedEnv)
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 403
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected Calendar access to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertRejected
+                (mkUser [Admin, Admin])
+                "Admin role grants must be unique"
+            assertRejected
+                ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
+                "Admin module grants must match roles"
 
     describe "validateCalendarAuthorizationCode" $ do
         it "normalizes valid Google Calendar OAuth codes before token exchange" $
