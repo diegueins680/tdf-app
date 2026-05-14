@@ -5413,6 +5413,59 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/No hay datos para mostrar/i)).not.toBeInTheDocument();
   });
 
+  it('ignores admin empty-state fallback cards while keeping real first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'admin-users-empty',
+          title: 'Usuarios administrables',
+          body: ['No hay usuarios administrables todavía.'],
+        },
+        {
+          cardId: 'audit-events-empty',
+          title: 'Eventos de auditoría',
+          body: ['No hay eventos de auditoría por ahora.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Usuarios administrables')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eventos de auditoría')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No hay usuarios administrables todavía\.$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^No hay eventos de auditoría por ahora\.$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Usuarios administrables')).not.toBeInTheDocument();
+    expect(screen.queryByText('Eventos de auditoría')).not.toBeInTheDocument();
+  });
+
   it('ignores item-empty fallback cards while keeping real first-run modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

@@ -653,6 +653,8 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_FRAGMENTS = [
   'no hay contenido',
   'nada que mostrar',
   'no hay nada que mostrar',
+  'no hay usuarios administrables',
+  'no hay eventos de auditoria',
   'sin datos disponibles',
   'sin elementos disponibles',
   'sin elementos para mostrar',
