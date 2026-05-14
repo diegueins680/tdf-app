@@ -74,7 +74,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (Day, UTCTime, getCurrentTime)
-import Data.UUID (fromText, toText)
+import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
@@ -851,9 +851,18 @@ validatePasswordResetToken rawToken
           Left err400
             { errBody = BL.fromStrict (TE.encodeUtf8 "Token format is invalid")
             }
-        Just parsed -> Right (toText parsed)
+        Just parsed
+          | isNilPasswordResetToken parsed ->
+              Left err400
+                { errBody = BL.fromStrict (TE.encodeUtf8 "Token format is invalid")
+                }
+          | otherwise -> Right (toText parsed)
   where
     token = T.strip rawToken
+
+isNilPasswordResetToken :: UUID -> Bool
+isNilPasswordResetToken parsedToken =
+  toText parsedToken == "00000000-0000-0000-0000-000000000000"
 
 passwordReset :: PasswordResetRequest -> AppM NoContent
 passwordReset PasswordResetRequest{..} = do

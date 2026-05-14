@@ -328,6 +328,14 @@ passwordResetTokenSpec = describe "validatePasswordResetToken" $ do
     validatePasswordResetToken "550E8400-E29B-41D4-A716-446655440000"
       `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
 
+  it "rejects nil UUID reset tokens before the confirm flow performs a database lookup" $
+    case validatePasswordResetToken "00000000-0000-0000-0000-000000000000" of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "Token format is invalid"
+      Right value ->
+        expectationFailure ("Expected nil reset token to be rejected, got " <> show value)
+
   it "rejects blank reset tokens instead of querying the database with empty input" $
     case validatePasswordResetToken "   " of
       Left err -> do
