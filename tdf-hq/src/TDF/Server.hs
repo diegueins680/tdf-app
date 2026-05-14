@@ -325,6 +325,11 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
     Nothing -> pure ()
     Just Null -> pure ()
     Just (String rawText)
+      | fieldName == "htmlLink" ->
+          either
+            (fail . googleCalendarPageFieldError idx fieldName)
+            (const (pure ()))
+            (validateGoogleCalendarHtmlLink rawText)
       | T.any isUnsupportedGoogleCalendarPageTextChar rawText ->
           fail
             ( fieldLabel
@@ -335,6 +340,62 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
       fail (fieldLabel <> " must be a string")
   where
     fieldLabel = "items[" <> show idx <> "]." <> T.unpack fieldName
+
+googleCalendarPageFieldError :: Int -> Text -> Text -> String
+googleCalendarPageFieldError idx fieldName message =
+  "items[" <> show idx <> "]."
+    <> T.unpack fieldName
+    <> ": "
+    <> T.unpack message
+
+validateGoogleCalendarHtmlLink :: Text -> Either Text Text
+validateGoogleCalendarHtmlLink rawLink
+  | T.null htmlLink =
+      Left "Google Calendar htmlLink must not be blank"
+  | htmlLink /= rawLink =
+      Left "Google Calendar htmlLink must not include surrounding whitespace"
+  | T.length htmlLink > maxGoogleCalendarHtmlLinkChars =
+      Left "Google Calendar htmlLink must be 2048 characters or fewer"
+  | T.any isUnsupportedGoogleCalendarPageTextChar htmlLink =
+      Left $
+        "Google Calendar htmlLink must not contain unsupported control "
+          <> "or formatting characters"
+  | T.any isSpace htmlLink =
+      Left "Google Calendar htmlLink must not contain whitespace"
+  | not
+      ( "https://" `T.isPrefixOf` T.toLower htmlLink
+          && TrialsServer.isValidHttpUrl htmlLink
+      ) =
+      Left "Google Calendar htmlLink must be an absolute https URL"
+  | "#" `T.isInfixOf` htmlLink =
+      Left "Google Calendar htmlLink must not contain a fragment"
+  | not (isGoogleCalendarHtmlLink htmlLink) =
+      Left "Google Calendar htmlLink must be a Google Calendar web link"
+  | otherwise =
+      Right htmlLink
+  where
+    htmlLink = T.strip rawLink
+
+maxGoogleCalendarHtmlLinkChars :: Int
+maxGoogleCalendarHtmlLinkChars = 2048
+
+isGoogleCalendarHtmlLink :: Text -> Bool
+isGoogleCalendarHtmlLink rawUrl =
+  case httpsUrlAuthority rawUrl of
+    Just (host, portSuffix) ->
+      host `elem` googleCalendarHtmlLinkHosts
+        && (T.null portSuffix || portSuffix == ":443")
+        && case drivePathSegments rawUrl of
+             "calendar" : _ -> True
+             _ -> False
+    Nothing ->
+      False
+
+googleCalendarHtmlLinkHosts :: [Text]
+googleCalendarHtmlLinkHosts =
+  [ "www.google.com"
+  , "calendar.google.com"
+  ]
 
 isUnsupportedGoogleCalendarPageTextChar :: Char -> Bool
 isUnsupportedGoogleCalendarPageTextChar ch =
@@ -3346,7 +3407,10 @@ calendarServer user =
         summary <- o .:? "summary"
         description <- o .:? "description"
         location <- o .:? "location"
-        htmlLink <- o .:? "htmlLink"
+        htmlLink <-
+          o .:? "htmlLink"
+            >>= traverse
+              (either (fail . T.unpack) pure . validateGoogleCalendarHtmlLink)
         updatedRaw <- o .:? "updated"
         attendeesVal <- o .:? "attendees"
         startObj <- o .:? "start"

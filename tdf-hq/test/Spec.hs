@@ -4898,6 +4898,39 @@ main = hspec $ do
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
 
+        it "rejects unsafe Google Calendar htmlLink values before persisting synced events" $ do
+            let pageWithHtmlLink rawLink =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ A.object
+                                    [ "id" .= ("event-123" :: Text)
+                                    , "htmlLink" .= (rawLink :: Text)
+                                    ]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+                assertRejected rawLink =
+                    ( eitherDecode (pageWithHtmlLink rawLink)
+                        :: Either String GoogleEventsPage
+                    )
+                        `shouldSatisfy` isLeft
+
+            case eitherDecode
+                (pageWithHtmlLink "https://www.google.com/calendar/event?eid=abc123") of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Google Calendar htmlLink to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems _ _) ->
+                    length parsedItems `shouldBe` 1
+
+            assertRejected "javascript:alert(1)"
+            assertRejected "http://www.google.com/calendar/event?eid=abc123"
+            assertRejected "https://evil.example.com/calendar/event?eid=abc123"
+            assertRejected "https://www.google.com/search?q=calendar"
+            assertRejected " https://www.google.com/calendar/event?eid=abc123 "
+            assertRejected "https://www.google.com/calendar/event?eid=abc123#fragment"
+
         it "rejects duplicate Google Calendar event ids before sync fallback upserts" $
             ( eitherDecode
                 ( "{\"items\":[{\"id\":\"event-123\"},{\"id\":\" event-123 \"}]"
