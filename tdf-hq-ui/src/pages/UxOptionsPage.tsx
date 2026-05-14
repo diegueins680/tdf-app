@@ -216,6 +216,9 @@ export default function UxOptionsPage() {
   const showListChrome = hasOptions && (options.length > 1 || hasActiveFilter);
   const showClearFilterAction = showListChrome && hasActiveFilter;
   const showSingleOptionGuidance = options.length === 1 && !hasActiveFilter;
+  const showInactiveFilter = hasOptions || includeInactive;
+  const showManualRefreshAction = hasOptions || includeInactive || optionsQuery.isError;
+  const showReviewInactiveEmptyAction = hasLoadedOptions && !hasOptions && !includeInactive;
 
   useEffect(() => {
     if (!hasLoadedOptions || hasOptions) return;
@@ -259,24 +262,28 @@ export default function UxOptionsPage() {
               renderInput={(params) => <TextField {...params} label="Categoría" placeholder="band-genre, band-role, etc." />}
               sx={{ minWidth: { xs: '100%', md: 320 } }}
             />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={includeInactive}
-                  onChange={(e) => setIncludeInactive(e.target.checked)}
-                />
-              }
-              label="Incluir inactivas"
-            />
-            <Button
-              variant="outlined"
-              onClick={() => {
-                void optionsQuery.refetch();
-              }}
-              disabled={optionsQuery.isFetching}
-            >
-              Recargar
-            </Button>
+            {showInactiveFilter && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={includeInactive}
+                    onChange={(e) => setIncludeInactive(e.target.checked)}
+                  />
+                }
+                label="Incluir inactivas"
+              />
+            )}
+            {showManualRefreshAction && (
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  void optionsQuery.refetch();
+                }}
+                disabled={optionsQuery.isFetching}
+              >
+                Recargar
+              </Button>
+            )}
           </Stack>
           {error && <Alert severity="error">{error}</Alert>}
           <Stack
@@ -400,7 +407,16 @@ export default function UxOptionsPage() {
         {optionsQuery.isLoading ? (
           <Typography>Cargando opciones…</Typography>
         ) : options.length === 0 ? (
-          <Alert severity="info">No hay opciones aún para esta categoría.</Alert>
+          <Alert
+            severity="info"
+            action={showReviewInactiveEmptyAction ? (
+              <Button color="inherit" size="small" onClick={() => setIncludeInactive(true)}>
+                Revisar inactivas
+              </Button>
+            ) : undefined}
+          >
+            No hay opciones aún para esta categoría.
+          </Alert>
         ) : filteredOptions.length === 0 ? (
           <Alert severity="info">
             No hay coincidencias para el filtro actual. Ajusta el texto para ver opciones.
