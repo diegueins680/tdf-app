@@ -775,6 +775,12 @@ validateGoogleIdTokenInput rawToken
             BL.fromStrict
               (TE.encodeUtf8 "Google idToken must be a JWT with three non-empty segments")
         }
+  | not (hasGoogleIdTokenBase64UrlSegments token) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "Google idToken segments must contain only base64url characters")
+        }
   | otherwise =
       Right token
   where
@@ -790,6 +796,22 @@ hasGoogleIdTokenShape token =
       all (not . T.null) [headerPart, payloadPart, signaturePart]
     _ ->
       False
+
+hasGoogleIdTokenBase64UrlSegments :: Text -> Bool
+hasGoogleIdTokenBase64UrlSegments token =
+  case T.splitOn "." token of
+    [headerPart, payloadPart, signaturePart] ->
+      all (T.all validGoogleIdTokenSegmentChar) [headerPart, payloadPart, signaturePart]
+    _ ->
+      False
+
+validGoogleIdTokenSegmentChar :: Char -> Bool
+validGoogleIdTokenSegmentChar ch =
+  (ch >= 'A' && ch <= 'Z')
+    || (ch >= 'a' && ch <= 'z')
+    || isDigit ch
+    || ch == '-'
+    || ch == '_'
 
 validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
 validateLoginRequest (LoginRequest rawUsername rawPassword)
