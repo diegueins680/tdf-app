@@ -1295,6 +1295,10 @@ function sortAdminUsers(users: readonly AdminUserDTO[]) {
   return [...users].sort(compareAdminUsers);
 }
 
+function isRenderableAdminUser(user: Pick<AdminUserDTO, 'displayName' | 'username'>) {
+  return user.username.trim() !== '' || (user.displayName?.trim().length ?? 0) > 0;
+}
+
 function preferRicherAuditDiff(primary?: string | null, fallback?: string | null) {
   const normalizedPrimary = primary?.trim() ?? '';
   const normalizedFallback = fallback?.trim() ?? '';
@@ -2164,7 +2168,9 @@ export default function AdminConsolePage() {
   ));
   const consoleCards: AdminConsoleCard[] = previewCards;
   const consoleError = consoleQuery.isError ? (consoleQuery.error as Error).message : null;
-  const users = sortAdminUsers(dedupeAdminUsers(usersQuery.data ?? []));
+  const users = sortAdminUsers(
+    dedupeAdminUsers((usersQuery.data ?? []).filter(isRenderableAdminUser)),
+  );
   const usersById = useMemo(
     () => new Map(users.map((user) => [user.userId, user])),
     [users],

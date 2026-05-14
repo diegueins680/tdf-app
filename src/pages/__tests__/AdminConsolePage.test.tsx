@@ -594,6 +594,37 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acción$/i })).not.toBeInTheDocument();
   });
 
+  it('ignores blank user fallback rows so first-run onboarding stays focused', async () => {
+    mockListUsers.mockResolvedValue([
+      buildAdminUser({
+        userId: 999,
+        username: '   ',
+        displayName: '   ',
+        partyId: null,
+        roles: [],
+      }),
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+      expect(screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Roles: Sin roles')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Asignar roles/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Party #')).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Usuario$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^Roles$/i })).not.toBeInTheDocument();
+  });
+
   it('keeps the header focused on refresh once the console already has admin data', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
