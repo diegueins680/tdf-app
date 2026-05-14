@@ -24,6 +24,7 @@ export default function FanClubMemberProfilePage() {
   const artistIdNum = parseInt(artistId || '0', 10);
   const partyIdNum = parseInt(partyId || '0', 10);
   const { session } = useSession();
+  const isAuthenticated = Boolean(session);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -42,27 +43,27 @@ export default function FanClubMemberProfilePage() {
   });
 
   const clubQuery = useQuery({
-    queryKey: ['fan-club', artistIdNum],
-    queryFn: () => Fans.getMyClub(artistIdNum),
+    queryKey: ['fan-club', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryFn: () => isAuthenticated ? Fans.getMyClub(artistIdNum) : Fans.getClub(artistIdNum),
     enabled: artistIdNum > 0,
   });
 
   const profilesQuery = useQuery({
     queryKey: ['fan-club-member-profiles', artistIdNum],
     queryFn: () => Fans.listClubMemberProfiles(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: artistIdNum > 0 && isAuthenticated,
   });
 
   const myProfileQuery = useQuery({
     queryKey: ['fan-club-my-member-profile', artistIdNum],
     queryFn: () => Fans.getMyClubMemberProfile(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: artistIdNum > 0 && isAuthenticated,
   });
 
   const memoriesQuery = useQuery({
     queryKey: ['fan-club-memories', artistIdNum],
     queryFn: () => Fans.listClubMemories(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: artistIdNum > 0 && isAuthenticated,
   });
 
   const isMe = session?.partyId === partyIdNum;

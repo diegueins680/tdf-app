@@ -73,6 +73,15 @@ const normalizeNetworkError = (err: unknown) => {
   return wrapped;
 };
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = 'ApiError';
+  }
+}
+
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const authHeader = buildAuthorizationHeader();
   const headers = buildRequestHeaders(init.headers, authHeader);
@@ -101,7 +110,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     if ((res.status === 401 || res.status === 403) && isSessionAuthFailureMessage(details)) {
       notifyAuthSessionExpired();
     }
-    throw new Error(details);
+    throw new ApiError(details, res.status);
   }
 
   if (res.status === 204 || res.status === 205) return undefined as T;

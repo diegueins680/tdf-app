@@ -3548,10 +3548,21 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const showRepeatedPaymentStatusIconActions = Boolean(combinedSingleChoiceSummary)
+    && !hasLocalSearch
+    && !showBusyListSearchOnboarding
+    && allVisibleRowsCanOpenPaymentWorkflow
+    && dossierIdentityTargetLabel === 'el nombre'
+    && registrationIdsRequiringActionDisambiguator.size === 0
+    && registrationIdsRequiringActionRecordDisambiguator.size === 0
+    && visibleRegistrationsMissingContactCount === 0
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= 3;
   const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
     && !hasLocalSearch
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow
+    && !showRepeatedPaymentStatusIconActions
     && useCompactStatusActionLabel
     && searchedRegistrations.length > 1;
   const allVisibleRowsUsePaidRecoveryAction = searchedRegistrations.length > 0
@@ -3573,9 +3584,11 @@ export default function CourseRegistrationsAdminPage() {
       reg.crStatus,
       allVisibleRowsUsePaidRecoveryAction,
     ));
-  const showBusyStatusIconActions = showBusyListSearchOnboarding
+  const showBusyStatusIconActions = (
+    showBusyListSearchOnboarding
     && useCompactStatusActionLabel
-    && !allVisibleRowsUseDirectPendingRecoveryAction;
+    && !allVisibleRowsUseDirectPendingRecoveryAction
+  ) || showRepeatedPaymentStatusIconActions;
   const dossierScopeHint = [
     allVisibleRowsUsePaidRecoveryAction
       ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)

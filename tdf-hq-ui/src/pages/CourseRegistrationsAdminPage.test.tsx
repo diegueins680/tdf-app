@@ -17650,6 +17650,62 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts repeated payment-status row actions once the default pending list gets busy', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentViewContext = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-choice-context"]',
+      );
+      expect(currentViewContext?.textContent).toContain('Mostrando 3 inscripciones en esta vista.');
+      expect(currentViewContext?.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+
+      const firstStatusAction = getButtonByAriaLabel(
+        container,
+        'Registrar pago o cambiar estado para Ada Lovelace',
+      );
+      expect(firstStatusAction.textContent?.trim()).toBe('');
+      expect(firstStatusAction.getAttribute('aria-haspopup')).toBe('menu');
+      expect(firstStatusAction.getAttribute('title')).toBe(
+        'Registrar pago o cambiar estado; actual: Pendiente de pago',
+      );
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(
+        document.body.querySelector('[role="menuitem"][aria-label="Registrar pago para Ada Lovelace"]'),
+      ).not.toBeNull();
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('folds tiny default-list counts into the current view instead of adding a utility row', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
