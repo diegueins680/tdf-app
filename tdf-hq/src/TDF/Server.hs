@@ -4571,7 +4571,8 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
     throwBadRequest "nombre requerido"
   when (sourceClean == "landing" && isNothing normalizedEmail) $
     throwBadRequest "email requerido"
-  existing <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
+  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean
+  existing <- either throwError pure existingResult
   either throwError pure $
     validateCourseRegistrationSeatAvailability
       metaRemaining
@@ -5758,7 +5759,7 @@ findExistingRegistration
   :: Text
   -> Maybe Text
   -> Maybe Text
-  -> SqlPersistT IO (Maybe (Entity ME.CourseRegistration))
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
 findExistingRegistration slugVal mEmail mPhone = do
   byEmail <- case mEmail of
     Nothing -> pure Nothing
@@ -5767,15 +5768,22 @@ findExistingRegistration slugVal mEmail mPhone = do
       , ME.CourseRegistrationEmail ==. Just e
       ]
       [Desc ME.CourseRegistrationCreatedAt]
-  case byEmail of
-    Just hit -> pure (Just hit)
-    Nothing -> case mPhone of
-      Nothing -> pure Nothing
-      Just p -> selectFirst
-        [ ME.CourseRegistrationCourseSlug ==. slugVal
-        , ME.CourseRegistrationPhoneE164 ==. Just p
-        ]
-        [Desc ME.CourseRegistrationCreatedAt]
+  byPhone <- case mPhone of
+    Nothing -> pure Nothing
+    Just p -> selectFirst
+      [ ME.CourseRegistrationCourseSlug ==. slugVal
+      , ME.CourseRegistrationPhoneE164 ==. Just p
+      ]
+      [Desc ME.CourseRegistrationCreatedAt]
+  pure $ case (byEmail, byPhone) of
+    (Just emailHit, Just phoneHit)
+      | entityKey emailHit /= entityKey phoneHit ->
+          Left err409
+            { errBody =
+                "email and phone match different course registrations"
+            }
+    _ ->
+      Right (byEmail <|> byPhone)
 
 -- Health
 health :: AppM TDF.API.HealthStatus

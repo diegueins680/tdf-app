@@ -266,6 +266,7 @@ import TDF.Server
     , selectUniquePartyByPrimaryPhone
     , ensurePartyForInquiry
     , ensurePartyForCourseRegistrationDb
+    , findExistingRegistration
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validateBookingNotes
@@ -3985,6 +3986,65 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected duplicate course registration party match to fail, got: "
                             <> show partyId
                         )
+
+    describe "findExistingRegistration" $
+        it "rejects conflicting email and phone matches instead of choosing one registration" $ do
+            (emailRowId, sameRowResult, conflictResult) <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkRegistration emailVal phoneVal createdAt =
+                        ME.CourseRegistration
+                            { ME.courseRegistrationCourseSlug = "produccion-musical"
+                            , ME.courseRegistrationPartyId = Nothing
+                            , ME.courseRegistrationFullName = Nothing
+                            , ME.courseRegistrationEmail = emailVal
+                            , ME.courseRegistrationPhoneE164 = phoneVal
+                            , ME.courseRegistrationSource = "landing"
+                            , ME.courseRegistrationStatus = "pending_payment"
+                            , ME.courseRegistrationAdminNotes = Nothing
+                            , ME.courseRegistrationHowHeard = Nothing
+                            , ME.courseRegistrationUtmSource = Nothing
+                            , ME.courseRegistrationUtmMedium = Nothing
+                            , ME.courseRegistrationUtmCampaign = Nothing
+                            , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationCreatedAt = createdAt
+                            , ME.courseRegistrationUpdatedAt = createdAt
+                            }
+                emailRow <- insert $
+                    mkRegistration
+                        (Just "lead@example.com")
+                        (Just "+593991111111")
+                        now
+                insert_ $
+                    mkRegistration
+                        (Just "other@example.com")
+                        (Just "+593992222222")
+                        (addUTCTime 60 now)
+                sameRow <-
+                    findExistingRegistration
+                        "produccion-musical"
+                        (Just "lead@example.com")
+                        (Just "+593991111111")
+                conflictingRows <-
+                    findExistingRegistration
+                        "produccion-musical"
+                        (Just "lead@example.com")
+                        (Just "+593992222222")
+                pure (emailRow, sameRow, conflictingRows)
+
+            case sameRowResult of
+                Right (Just (Entity matchedId _)) ->
+                    matchedId `shouldBe` emailRowId
+                other ->
+                    expectationFailure
+                        ("Expected matching email and phone to resolve one row, got: " <> show other)
+            case conflictResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "email and phone match different course registrations"
+                Right value ->
+                    expectationFailure
+                        ("Expected conflicting registration identifiers to fail, got: " <> show value)
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
@@ -12182,6 +12242,26 @@ initializeAuthSchema = do
         \\"active\" BOOLEAN NOT NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"course_registration\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"course_slug\" VARCHAR NOT NULL,\
+        \\"party_id\" INTEGER NULL,\
+        \\"full_name\" VARCHAR NULL,\
+        \\"email\" VARCHAR NULL,\
+        \\"phone_e164\" VARCHAR NULL,\
+        \\"source\" VARCHAR NOT NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"admin_notes\" VARCHAR NULL,\
+        \\"how_heard\" VARCHAR NULL,\
+        \\"utm_source\" VARCHAR NULL,\
+        \\"utm_medium\" VARCHAR NULL,\
+        \\"utm_campaign\" VARCHAR NULL,\
+        \\"utm_content\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
         []
     rawExecute
