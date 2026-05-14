@@ -755,6 +755,52 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('ignores placeholder contact values so first-time summaries do not treat them as usable channels', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'placeholder-contact',
+        primaryEmail: 'Sin correo',
+        primaryPhone: 'N/A',
+        whatsapp: 'Pendiente por validar',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Grace Ready',
+        username: 'grace-ready',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 2 usuarios en esta vista. 1 listo para WhatsApp y 1 pendiente de contacto. Vista actual: solo usuarios activos.',
+        );
+
+        const placeholderRow = getRowByUserId(container, 101);
+        expect(placeholderRow.textContent).not.toContain('Sin correo');
+        expect(placeholderRow.textContent).not.toContain('N/A');
+        expect(placeholderRow.textContent).not.toContain('Pendiente por validar');
+        expect(getButtonsByText(placeholderRow, 'WhatsApp')).toHaveLength(0);
+        expect(placeholderRow.querySelector('[aria-label^="Abrir WhatsApp para "]')).toBeNull();
+
+        const readyRow = getRowByUserId(container, 102);
+        expect(getButtonsByText(readyRow, 'WhatsApp')).toHaveLength(1);
+        expect(container.querySelectorAll('button[aria-label^="Abrir WhatsApp para "]')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('distinguishes missing WhatsApp from missing contact in the page summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

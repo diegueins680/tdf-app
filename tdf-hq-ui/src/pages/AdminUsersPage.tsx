@@ -23,9 +23,43 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
 
+const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n a',
+  'na',
+  'ninguna',
+  'ninguno',
+  'no aplica',
+  'no disponible',
+  'none',
+  'not available',
+  'pendiente',
+  'pendiente por validar',
+  'por validar',
+  'sin correo',
+  'sin email',
+  'sin telefono',
+  'sin whatsapp',
+  'tbd',
+]);
+
+const normalizeContactPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderContactValue = (value: string) =>
+  CONTACT_PLACEHOLDER_VALUE_KEYS.has(normalizeContactPlaceholderKey(value));
+
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
   if (trimmed == null || trimmed === '') return null;
+  if (isPlaceholderContactValue(trimmed)) return null;
   return trimmed;
 };
 
