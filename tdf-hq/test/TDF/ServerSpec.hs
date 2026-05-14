@@ -399,6 +399,7 @@ import TDF.ServerFuture
     , futureStubId
     , futureStubResponseFor
     , futureServer
+    , futureAdminConsoleView
     , invalidCardText
     , mountedFutureStubAreas
     , reservedFutureStubRoutes
@@ -421,6 +422,7 @@ import TDF.ServerFuture
     , validateFutureStubPublishedId
     , validateFutureStubPublishedPath
     , validateFutureStubResponse
+    , futureStubResponseForWithConsole
     )
 import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
@@ -10935,7 +10937,7 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
-    describe "futureStubResponseFor" $
+    describe "futureStubResponseFor" $ do
         it "reports invalid fallback discovery metadata before building response envelopes" $ do
             case futureStubResponseFor "crm" "parties/list-columns" of
                 Right response -> do
@@ -10962,6 +10964,34 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid future stub metadata, got: " <> show value)
+
+        it "blocks mounted generic stubs when the admin console fallback metadata drifts" $ do
+            case futureStubResponseForWithConsole
+                futureAdminConsoleView
+                "crm"
+                "parties/list-columns" of
+                Right response ->
+                    stubId response `shouldBe` "crm.parties.list-columns"
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected canonical fallback discovery surface to serve, got: "
+                            <> show serverErr
+                        )
+
+            case futureStubResponseForWithConsole
+                (futureAdminConsoleView { Future.viewStatus = "planned" })
+                "crm"
+                "parties/list-columns" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future admin console metadata"
+                Right response ->
+                    expectationFailure
+                        ( "Expected drifted admin console fallback metadata to block "
+                            <> "generic stub serving, got: "
+                            <> show response
+                        )
 
     describe "validateFutureStubPublishedId" $
         it "keeps fallback discovery ids tied to canonical route segments" $ do

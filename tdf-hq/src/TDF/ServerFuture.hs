@@ -34,7 +34,8 @@ stub
   -> Text
   -> m StubResponse
 stub rawArea rawEndpoint =
-  either throwError pure (futureStubResponseFor rawArea rawEndpoint)
+  either throwError pure $
+    futureStubResponseForWithConsole futureAdminConsoleView rawArea rawEndpoint
 
 futureServer
   :: MonadError ServerError m
@@ -428,6 +429,16 @@ futureStubResponseFor rawArea rawEndpoint = do
       , stubRequiredModule = futureStubRequiredModule
       , stubImplemented = False
       }
+
+futureStubResponseForWithConsole
+  :: AdminConsoleView
+  -> Text
+  -> Text
+  -> Either ServerError StubResponse
+futureStubResponseForWithConsole consoleView rawArea rawEndpoint = do
+  response <- futureStubResponseFor rawArea rawEndpoint
+  _ <- validateFutureAdminConsoleViewWithCatalog allowedFutureStubMetadata consoleView
+  Right response
 
 futureStubPath :: Text -> Text -> Text
 futureStubPath area endpoint =
