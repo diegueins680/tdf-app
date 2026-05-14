@@ -1325,6 +1325,15 @@ const firstRunCourseCatalogDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
 
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|google\s+calendar)`;
+const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+(?:links?|urls?|pages?|forms?|portals?)|(?:links?|urls?|pages?|forms?|portals?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
+const firstRunSchedulingProviderLinkDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSchedulingProviderLinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunSchedulingProviderLinkDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSchedulingProviderLinkDescriptorPattern})\s*$`,
+  'i',
+);
 const firstRunReservationDescriptorPattern = String.raw`(?:booking|reservation|rsvp|appointments?(?:\s+schedules?)?|scheduling)(?:\s+(?:forms?|pages?|links?|urls?|portals?|schedules?))?`;
 
 const firstRunReservationDescriptorPrefixPattern =
@@ -1444,6 +1453,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunLearningPortalDescriptorPrefixPattern, '')
     .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
+    .replace(firstRunSchedulingProviderLinkDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
@@ -1532,6 +1542,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunLearningPortalDescriptorSuffixPattern, '')
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
+    .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')

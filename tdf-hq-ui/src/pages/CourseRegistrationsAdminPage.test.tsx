@@ -16643,6 +16643,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips scheduling-provider link wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Calendly link - Beatmaking 101',
+      'Beatmaking 101 - Cal.com URL',
+      'Enlace de Calendly - Beatmaking 101',
+      'Beatmaking 101 - portal de Google Calendar',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const copy = emptyState?.textContent ?? '';
+        expect(emptyState).not.toBeNull();
+        expect(copy).toContain(singleCohortInitialEmptyStateMessage);
+        expect(copy).not.toContain(title);
+        expect(copy).not.toMatch(/calendly|cal\.com|google calendar/i);
+        expect(copy).not.toMatch(/enlace|portal/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips first-run form descriptors across decorative separators', async () => {
     const titles = [
       'Formulario público \u2014 Beatmaking 101',
