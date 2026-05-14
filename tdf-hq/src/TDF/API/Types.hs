@@ -765,7 +765,31 @@ data LabelTrackUpdate = LabelTrackUpdate
 
 instance ToJSON LabelTrackUpdate
 instance FromJSON LabelTrackUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "LabelTrackUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ltuTitle"
+          , "ltuNote"
+          , "ltuStatus"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in LabelTrackUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "LabelTrackUpdate must include at least one field"
+            else
+              LabelTrackUpdate
+                <$> o .:? "ltuTitle"
+                <*> o .:? "ltuNote"
+                <*> o .:? "ltuStatus"
 
 data AssetCreate = AssetCreate
   { cName     :: Text

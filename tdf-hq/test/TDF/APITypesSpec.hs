@@ -1336,6 +1336,15 @@ spec = do
                 "{\"ltuStatus\":\"done\",\"ltuOwnerId\":8}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty or null label track updates so patch intent stays explicit" $ do
+            decodeLabelTrackUpdate "{}" `shouldSatisfy` isLeft
+            case decodeLabelTrackUpdate "{\"ltuTitle\":\"Master delivered\",\"ltuStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "ltuStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track status update to fail, got: " <> show value)
+
     describe "internship time-entry request FromJSON" $ do
         it "accepts canonical clock-in and clock-out payloads while trimming blank notes to omission" $ do
             case decodeClockIn "{}" of
