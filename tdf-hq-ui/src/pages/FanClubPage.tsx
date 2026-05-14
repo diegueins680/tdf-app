@@ -31,53 +31,63 @@ export default function FanClubPage() {
   const { artistId } = useParams<{ artistId: string }>();
   const artistIdNum = parseInt(artistId || '0', 10);
   const { session } = useSession();
+  const isAuthenticated = Boolean(session);
   const qc = useQueryClient();
   const [tab, setTab] = useState(0);
+  const location = useLocation();
+
+  const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
 
   const clubQuery = useQuery({
-    queryKey: ['fan-club', artistIdNum],
-    queryFn: () => Fans.getMyClub(artistIdNum),
+    queryKey: ['fan-club', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryFn: () => isAuthenticated ? Fans.getMyClub(artistIdNum) : Fans.getClub(artistIdNum),
     enabled: artistIdNum > 0,
   });
 
   const feedQuery = useQuery({
     queryKey: ['fan-club-feed', artistIdNum],
     queryFn: () => Fans.listClubFeed(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 0,
+    enabled: artistIdNum > 0 && tab === 0 && isAuthenticated,
   });
 
   const postsQuery = useQuery({
     queryKey: ['fan-club-posts', artistIdNum],
     queryFn: () => Fans.listClubPosts(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 1,
+    enabled: artistIdNum > 0 && tab === 1 && isAuthenticated,
   });
 
   const memoriesQuery = useQuery({
     queryKey: ['fan-club-memories', artistIdNum],
     queryFn: () => Fans.listClubMemories(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 2,
+    enabled: artistIdNum > 0 && tab === 2 && isAuthenticated,
   });
 
   const eventsQuery = useQuery({
-    queryKey: ['fan-club-events', artistIdNum],
-    queryFn: () => Fans.listClubEvents(artistIdNum),
+    queryKey: ['fan-club-events', artistIdNum, isAuthenticated ? 'auth' : 'public'],
+    queryFn: () => isAuthenticated ? Fans.listClubEvents(artistIdNum) : Fans.getClubEvents(artistIdNum),
     enabled: artistIdNum > 0 && tab === 3,
   });
 
   const electionsQuery = useQuery({
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
-    enabled: artistIdNum > 0 && tab === 4,
+    enabled: artistIdNum > 0 && tab === 4 && isAuthenticated,
   });
 
   const memberProfilesQuery = useQuery({
     queryKey: ['fan-club-member-profiles', artistIdNum],
     queryFn: () => Fans.listClubMemberProfiles(artistIdNum),
-    enabled: artistIdNum > 0,
+    enabled: artistIdNum > 0 && isAuthenticated,
   });
 
   const club = clubQuery.data;
   const isOfficer = club?.fcOfficers.some(o => o.fcoPartyId === session?.partyId) ?? false;
+
+  useEffect(() => {
+    if (!isAuthenticated && club) {
+      setTab((prev) => (prev < 3 ? 3 : prev));
+    }
+  }, [isAuthenticated, club]);
 
   return (
     <PageShell
@@ -92,6 +102,8 @@ export default function FanClubPage() {
           icon={<GroupsIcon fontSize="large" />}
           title="Club no encontrado"
           description="Este artista aún no tiene un club de fans activo."
+          actionLabel="Volver a la comunidad"
+          actionHref="/fans"
         />
       ) : (
         <Stack spacing={3}>
@@ -119,14 +131,16 @@ export default function FanClubPage() {
                 <Divider />
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Typography variant="subtitle2" fontWeight={600}>Directiva</Typography>
-                  <Button
-                    component={RouterLink}
-                    to={`/fans/clubs/${artistIdNum}/members`}
-                    size="small"
-                    startIcon={<PersonIcon />}
-                  >
-                    Ver miembros
-                  </Button>
+                  {isAuthenticated && (
+                    <Button
+                      component={RouterLink}
+                      to={`/fans/clubs/${artistIdNum}/members`}
+                      size="small"
+                      startIcon={<PersonIcon />}
+                    >
+                      Ver miembros
+                    </Button>
+                  )}
                 </Stack>
                 <Stack direction="row" spacing={2} flexWrap="wrap">
                   {club.fcOfficers.length === 0 && (
@@ -156,14 +170,42 @@ export default function FanClubPage() {
             </Tabs>
           </Box>
 
-          {tab === 0 && <ClubFeed artistId={artistIdNum} feed={feedQuery.data ?? []} isOfficer={isOfficer} loading={feedQuery.isLoading} />}
-          {tab === 1 && <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={isOfficer} loading={postsQuery.isLoading} />}
-          {tab === 2 && <ClubMemories artistId={artistIdNum} memories={memoriesQuery.data ?? []} isOfficer={isOfficer} loading={memoriesQuery.isLoading} />}
+          {tab === 0 && (isAuthenticated ? (
+            <ClubFeed artistId={artistIdNum} feed={feedQuery.data ?? []} isOfficer={isOfficer} loading={feedQuery.isLoading} />
+          ) : (
+            <LoginPrompt loginPath={loginPath} />
+          ))}
+          {tab === 1 && (isAuthenticated ? (
+            <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={isOfficer} loading={postsQuery.isLoading} />
+          ) : (
+            <LoginPrompt loginPath={loginPath} />
+          ))}
+          {tab === 2 && (isAuthenticated ? (
+            <ClubMemories artistId={artistIdNum} memories={memoriesQuery.data ?? []} isOfficer={isOfficer} loading={memoriesQuery.isLoading} />
+          ) : (
+            <LoginPrompt loginPath={loginPath} />
+          ))}
           {tab === 3 && <ClubCalendar artistId={artistIdNum} events={eventsQuery.data ?? []} isOfficer={isOfficer} loading={eventsQuery.isLoading} />}
-          {tab === 4 && <ClubElections artistId={artistIdNum} elections={electionsQuery.data ?? []} />}
+          {tab === 4 && (isAuthenticated ? (
+            <ClubElections artistId={artistIdNum} elections={electionsQuery.data ?? []} />
+          ) : (
+            <LoginPrompt loginPath={loginPath} />
+          ))}
         </Stack>
       )}
     </PageShell>
+  );
+}
+
+function LoginPrompt({ loginPath }: { loginPath: string }) {
+  return (
+    <EmptyState
+      icon={<LockOutlinedIcon fontSize="large" />}
+      title="Inicia sesión para continuar"
+      description="Únete al club de fans para ver publicaciones, compartir recuerdos y participar en elecciones."
+      actionLabel="Ingresar"
+      actionHref={loginPath}
+    />
   );
 }
 

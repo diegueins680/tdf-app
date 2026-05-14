@@ -247,6 +247,14 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null model selectors instead of falling back to configured defaults" $
+            case decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":null}" of
+                Left err ->
+                    err `shouldContain` "model must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null tidal-agent model to be rejected, got: " <> show value)
+
     describe "social reply request FromJSON" $ do
         it "accepts canonical and legacy manual reply payloads" $ do
             case decodeInstagramReply

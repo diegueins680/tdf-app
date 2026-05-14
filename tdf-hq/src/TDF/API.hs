@@ -817,6 +817,7 @@ data TidalAgentRequest = TidalAgentRequest
 instance FromJSON TidalAgentRequest where
   parseJSON = withObject "TidalAgentRequest" $ \o -> do
     rejectUnexpectedObjectFields "TidalAgentRequest" ["prompt", "model"] o
+    rejectNullObjectField "model" o
     prompt <- normalizeRequiredPrompt =<< o .:? "prompt"
     model <- traverse (normalizeOptionalTextField "model") =<< o .:? "model"
     pure TidalAgentRequest
