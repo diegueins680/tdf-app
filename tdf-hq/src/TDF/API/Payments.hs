@@ -16,8 +16,10 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 import           GHC.Generics (Generic)
 import           Servant
-import           Data.Aeson (FromJSON (parseJSON), ToJSON, defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields)
-import           Data.Aeson.Types (Parser)
+import           Data.Aeson (FromJSON (parseJSON), ToJSON, Value (Null), defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields, withObject)
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types (Object, Parser)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -37,6 +39,7 @@ data PaymentCreate = PaymentCreate
 
 instance FromJSON PaymentCreate where
   parseJSON value = do
+    rejectNullOptionalPaymentFields value
     payload <- genericParseJSON defaultOptions { rejectUnknownFields = True } value
     validatePositiveInt64Field "pcPartyId" (pcPartyId payload)
     maybe (pure ()) (validatePositiveInt64Field "pcOrderId") (pcOrderId payload)
@@ -47,6 +50,26 @@ instance FromJSON PaymentCreate where
     validateRequiredPaymentTextField "pcPaidAt" (pcPaidAt payload)
     validateRequiredPaymentTextField "pcConcept" (pcConcept payload)
     pure payload
+
+rejectNullOptionalPaymentFields :: Value -> Parser ()
+rejectNullOptionalPaymentFields =
+  withObject "PaymentCreate" $ \obj ->
+    mapM_
+      (rejectNullOptionalPaymentField obj)
+      [ "pcOrderId"
+      , "pcInvoiceId"
+      , "pcReference"
+      , "pcPeriod"
+      , "pcAttachmentUrl"
+      ]
+
+rejectNullOptionalPaymentField :: Object -> Text -> Parser ()
+rejectNullOptionalPaymentField obj fieldName =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+    Just Null ->
+      fail (T.unpack fieldName <> " must be omitted instead of null")
+    _ ->
+      pure ()
 
 validatePositiveInt64Field :: String -> Int64 -> Parser ()
 validatePositiveInt64Field fieldName rawValue =

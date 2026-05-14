@@ -246,6 +246,33 @@ spec = do
           :: Either String PaymentCreate)
         `shouldSatisfy` isLeft
 
+    it "rejects null optional payment fields instead of treating them as omitted" $ do
+      let basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid fieldName rawPayload =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right payload ->
+                expectationFailure
+                  ("Expected null optional payment field to fail, got: " <> show payload)
+
+      assertInvalid "pcOrderId" (basePaymentJson ("pcOrderId" .= A.Null))
+      assertInvalid "pcInvoiceId" (basePaymentJson ("pcInvoiceId" .= A.Null))
+      assertInvalid "pcReference" (basePaymentJson ("pcReference" .= A.Null))
+      assertInvalid "pcPeriod" (basePaymentJson ("pcPeriod" .= A.Null))
+      assertInvalid "pcAttachmentUrl" (basePaymentJson ("pcAttachmentUrl" .= A.Null))
+
     it "rejects non-positive ids and amounts before manual payment handler fallbacks" $ do
       let assertInvalid rawPayload expectedMessage =
             case A.eitherDecode rawPayload :: Either String PaymentCreate of
