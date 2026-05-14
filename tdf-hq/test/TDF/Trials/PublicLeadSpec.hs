@@ -72,6 +72,7 @@ import TDF.Trials.Server
   , validatePublicTrialRequestInput
   , validatePublicTrialPartyId
   , validateTeacherSubjectIdsInput
+  , validateTeacherStudentLinkInput
   , validateTrialAvailabilityUpsertInput
   , validateTrialScheduleInput
   )
@@ -1002,6 +1003,28 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "subjectIds must not contain duplicates"
         Right value ->
           expectationFailure ("Expected duplicate subject ids to be rejected, got " <> show value)
+
+  describe "validateTeacherStudentLinkInput" $ do
+    it "accepts distinct positive teacher and student party ids" $
+      validateTeacherStudentLinkInput 7 11 `shouldBe` Right (7, 11)
+
+    it "rejects malformed teacher-student link ids before private link mutations" $ do
+      let assertRejected expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ( "Expected malformed teacher-student link ids to be rejected, got "
+                      <> show value
+                  )
+      assertRejected "teacherId must be a positive integer" $
+        validateTeacherStudentLinkInput 0 11
+      assertRejected "studentId must be a positive integer" $
+        validateTeacherStudentLinkInput 7 (-1)
+      assertRejected "studentId must refer to a different party than teacherId" $
+        validateTeacherStudentLinkInput 7 7
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $

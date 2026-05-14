@@ -605,6 +605,18 @@ validateTeacherSubjectIdsInput rawSubjectIds
   | otherwise =
       Right rawSubjectIds
 
+validateTeacherStudentTeacherIdInput :: Int -> Either ServerError Int
+validateTeacherStudentTeacherIdInput =
+  validatePositiveIntField "teacherId"
+
+validateTeacherStudentLinkInput :: Int -> Int -> Either ServerError (Int, Int)
+validateTeacherStudentLinkInput rawTeacherId rawStudentId = do
+  teacherIdVal <- validateTeacherStudentTeacherIdInput rawTeacherId
+  studentIdVal <- validatePositiveIntField "studentId" rawStudentId
+  when (teacherIdVal == studentIdVal) $
+    Left (badRequestText "studentId must refer to a different party than teacherId")
+  Right (teacherIdVal, studentIdVal)
+
 validateTrialAssignInput :: Int -> TrialAssignIn -> Either ServerError (Int, TrialAssignIn)
 validateTrialAssignInput requestIdInt input@TrialAssignIn{..}
   | requestIdInt <= 0 =
@@ -2191,19 +2203,29 @@ privateTrialsServer user@AuthedUser{..} =
             }
 
     teacherStudentsListH :: Int -> AppM [StudentDTO]
-    teacherStudentsListH teacherId = do
+    teacherStudentsListH rawTeacherId = do
       ensureSchoolAccess
+      teacherId <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentTeacherIdInput rawTeacherId)
       let teacherKey = intKey teacherId :: PartyId
       ensureTeacherOrStaff teacherKey
       ids <- teacherStudentIdsFor teacherKey
       studentsByIds ids
 
     teacherStudentsAddH :: Int -> TeacherStudentLinkIn -> AppM NoContent
-    teacherStudentsAddH teacherId TeacherStudentLinkIn{..} = do
+    teacherStudentsAddH rawTeacherId TeacherStudentLinkIn{..} = do
       ensureSchoolAccess
+      (teacherId, studentIdVal) <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentLinkInput rawTeacherId studentId)
       now <- liftIO getCurrentTime
       let teacherKey = intKey teacherId :: PartyId
-          studentKey = intKey studentId :: PartyId
+          studentKey = intKey studentIdVal :: PartyId
       ensureTeacherOrStaff teacherKey
       mTeacher <- get teacherKey
       when (isNothing mTeacher) $
@@ -2216,8 +2238,13 @@ privateTrialsServer user@AuthedUser{..} =
       pure NoContent
 
     teacherStudentsDeleteH :: Int -> Int -> AppM NoContent
-    teacherStudentsDeleteH teacherId studentId = do
+    teacherStudentsDeleteH rawTeacherId rawStudentId = do
       ensureSchoolAccess
+      (teacherId, studentId) <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentLinkInput rawTeacherId rawStudentId)
       let teacherKey = intKey teacherId :: PartyId
           studentKey = intKey studentId :: PartyId
       ensureTeacherOrStaff teacherKey
