@@ -198,8 +198,7 @@ export default function AdminDiagnosticsPage() {
   const showSharedAwaitingReplyHistorySummary = awaitingReplyHistoryChannelLabels.length > 1;
   const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
   const showSocialRefreshAction = !showGlobalSocialQuietGuidance && !showSocialLoadingSummary;
-  const showGroupedSocialError = socialQueryErrors.length > 1;
-  const groupedSocialErrorTitle = showGroupedSocialError
+  const socialErrorDetailsTitle = socialQueryErrors.length > 0
     ? socialQueryErrors.map(({ label, message }) => `${label}: ${message}`).join(' · ')
     : undefined;
   const refetchSocialMessages = () => {
@@ -273,20 +272,14 @@ export default function AdminDiagnosticsPage() {
       </Paper>
       {socialQueryErrors.length > 0 && (
         <Stack spacing={1}>
-          {showGroupedSocialError ? (
-            <Alert
-              severity="error"
-              title={groupedSocialErrorTitle}
-              data-testid="admin-diagnostics-social-error-summary"
-            >
-              No se pudieron cargar mensajes de {formatChannelList(socialQueryErrors.map(({ label }) => label))}.
-              Usa Actualizar mensajes para reintentar.
-            </Alert>
-          ) : socialQueryErrors.map(({ label, message }) => (
-            <Alert severity="error" key={label}>
-              {label}: {message}
-            </Alert>
-          ))}
+          <Alert
+            severity="error"
+            title={socialErrorDetailsTitle}
+            data-testid="admin-diagnostics-social-error-summary"
+          >
+            No se pudieron cargar mensajes de {formatChannelList(socialQueryErrors.map(({ label }) => label))}.
+            Usa Actualizar mensajes para reintentar.
+          </Alert>
         </Stack>
       )}
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>

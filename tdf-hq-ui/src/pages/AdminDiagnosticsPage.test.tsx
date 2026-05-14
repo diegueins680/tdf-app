@@ -256,9 +256,18 @@ describe('AdminDiagnosticsPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Instagram: instagram unavailable');
+        const errorSummary = container.querySelector<HTMLElement>(
+          '[data-testid="admin-diagnostics-social-error-summary"]',
+        );
+
+        expect(errorSummary).not.toBeNull();
+        expect(errorSummary?.textContent).toContain(
+          'No se pudieron cargar mensajes de Instagram. Usa Actualizar mensajes para reintentar.',
+        );
+        expect(errorSummary?.getAttribute('title')).toBe('Instagram: instagram unavailable');
         expect(container.textContent).toContain('Actualizar mensajes');
         expect(container.querySelectorAll('[data-testid="admin-diagnostics-social-channel-card"]')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Instagram: instagram unavailable');
         expect(container.textContent).not.toContain('Entrantes: 0');
         expect(countOccurrences(container, 'Todavía no hay mensajes entrantes en este canal.')).toBe(0);
       });
