@@ -894,6 +894,55 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps generated admin action shortcuts from duplicating first-run actions', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-admin-tools',
+          title: 'Admin tools',
+          body: [
+            'Use quick shortcuts to refresh admin data and load sample records.',
+          ],
+        },
+        {
+          cardId: 'fallback-acciones-admin',
+          title: 'Acciones administrativas',
+          body: [
+            'Usa atajos para refrescar el panel y cargar datos de ejemplo.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^Cargar datos de ejemplo$/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Cargar datos de ejemplo/i })).toHaveLength(1);
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Admin tools')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acciones administrativas')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Use quick shortcuts to refresh admin data and load sample records\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Usa atajos para refrescar el panel y cargar datos de ejemplo\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps admin-center fallback cards from duplicating the console intro', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',

@@ -846,6 +846,8 @@ const BUILT_IN_ADMIN_CARD_BODY_COPY = [
   'load temporary admin records for sandbox review',
   'prepare a disposable workspace for onboarding checks',
   'prepara registros temporales para revisar la consola',
+  'use quick shortcuts to refresh admin data and load sample records',
+  'usa atajos para refrescar el panel y cargar datos de ejemplo',
 ] as const;
 const GETTING_STARTED_ADMIN_SECTIONS = [
   { label: '1. Estado del servicio', targetId: 'admin-service-health' },
