@@ -195,6 +195,17 @@ const normalizeRoleSelection = (roles?: readonly RoleValue[] | null) => {
     .sort((left, right) => left.localeCompare(right));
 };
 
+const isRenderableNormalizedUser = (user: NormalizedUser) => {
+  const normalizedName = normalizeContactValue(user.name);
+
+  return (
+    (Number.isInteger(user.id) && user.id > 0)
+    || (normalizedName != null && normalizedName !== 'Sin nombre')
+    || getContactSummary(user) != null
+    || normalizeRoleSelection(user.roles).length > 0
+  );
+};
+
 const hasRoleSelectionChanged = (
   currentRoles?: readonly RoleValue[] | null,
   nextRoles?: readonly RoleValue[] | null,
@@ -398,7 +409,7 @@ export default function UserRoleManagement() {
         phone: u.phone,
         status: u.status ?? 'Inactive',
         roles: normalizeRoleSelection((u.roles ?? []) as RoleValue[]),
-      }));
+      })).filter(isRenderableNormalizedUser);
       setUsers(dedupeNormalizedUsers(normalized));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron cargar los usuarios');

@@ -177,6 +177,40 @@ describe('UserRoleManagement', () => {
     }
   });
 
+  it('ignores blank API fallback users so first-run guidance stays focused', async () => {
+    getUsersMock.mockResolvedValue([
+      {
+        id: null,
+        name: '   ',
+        email: '   ',
+        phone: null,
+        status: null,
+        roles: ['   '],
+      },
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getUsersMock).toHaveBeenCalledTimes(1);
+        expect(container.textContent).toContain('Roles y permisos');
+        expect(container.textContent).toContain(
+          'Todavía no hay usuarios administrables. Cuando exista el primero, verás sus datos clave y roles editables aquí.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Sin nombre');
+        expect(container.textContent).not.toContain('Sin email ni teléfono');
+        expect(container.textContent).not.toContain('Sin roles');
+        expect(container.querySelector('button[aria-label^="Asignar roles de"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('consolidates contact details into one column so the admin table avoids repeated empty placeholders', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
