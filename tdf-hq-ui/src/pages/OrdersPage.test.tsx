@@ -184,12 +184,11 @@ describe('OrdersPage', () => {
         );
         expect(container.textContent).toContain('Primeras sesiones');
         expect(container.textContent).toContain(
-          'Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.',
+          'Todavía no hay sesiones registradas. Crea la primera desde Nueva sesión; la vista comparativa aparecerá cuando exista una segunda sesión.',
         );
-        expect(container.textContent).toContain(
-          'La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.',
-        );
-        expect(countOccurrencesIgnoringCase(container.textContent ?? '', 'Usa Nueva sesión')).toBe(1);
+        expect(countOccurrencesIgnoringCase(container.textContent ?? '', 'Crea la primera desde Nueva sesión')).toBe(1);
+        expect(container.textContent).not.toContain('al menos una sesión para comparar');
+        expect(container.textContent).not.toContain('La tabla y la paginación aparecerán');
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Horario')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);

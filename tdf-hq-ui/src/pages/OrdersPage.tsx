@@ -625,11 +625,8 @@ export default function OrdersPage() {
               Primeras sesiones
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando
-              necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.
+              Todavía no hay sesiones registradas. Crea la primera desde Nueva sesión; la vista comparativa aparecerá
+              cuando exista una segunda sesión.
             </Typography>
             {showInlineCreateSessionAction && (
               <Button
