@@ -4909,6 +4909,49 @@ main = hspec $ do
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
 
+        it "rejects malformed Google Calendar date fields before ambiguous sync writes" $ do
+            case eitherDecode
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"updated\":\"2026-05-14T15:00:00Z\""
+                    <> ",\"start\":{\"dateTime\":\"2026-05-14T16:00:00-05:00\"}"
+                    <> ",\"end\":{\"date\":\"2026-05-15\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                ) of
+                    Left err ->
+                        expectationFailure
+                            ( "Expected valid Google Calendar date fields to decode, got: "
+                                <> err
+                            )
+                    Right (GoogleEventsPage parsedItems _ _) ->
+                        length parsedItems `shouldBe` 1
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"updated\":\"soon\"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"start\":\"2026-05-14\"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"start\":{}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"start\":{\"dateTime\":\"not-a-date\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"start\":{\"dateTime\":\"2026-05-14T16:00:00Z\""
+                    <> ",\"date\":\"2026-05-14\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+
         it "rejects unsafe Google Calendar htmlLink values before persisting synced events" $ do
             let pageWithHtmlLink rawLink =
                     A.encode $

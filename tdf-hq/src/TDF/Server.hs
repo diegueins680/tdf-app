@@ -306,6 +306,9 @@ validateGoogleCalendarPageItem idx (Object eventObj) = do
       fail (googleItemFieldLabel "status" <> " must be a string")
   forM_ googleCalendarPageTextFields $
     validateGoogleCalendarPageTextField idx eventObj
+  validateGoogleCalendarPageTimestampField idx eventObj "updated"
+  validateGoogleCalendarPageDateObjectField idx eventObj "start"
+  validateGoogleCalendarPageDateObjectField idx eventObj "end"
   pure eventId
   where
     googleItemFieldLabel fieldName =
@@ -347,6 +350,99 @@ googleCalendarPageFieldError idx fieldName message =
     <> T.unpack fieldName
     <> ": "
     <> T.unpack message
+
+validateGoogleCalendarPageTimestampField :: Int -> Object -> Text -> Parser ()
+validateGoogleCalendarPageTimestampField idx eventObj fieldName =
+  case AKeyMap.lookup (AKey.fromText fieldName) eventObj of
+    Nothing -> pure ()
+    Just Null -> pure ()
+    Just (String rawTimestamp) ->
+      either
+        (fail . googleCalendarPageFieldError idx fieldName)
+        (const (pure ()))
+        (validateGoogleCalendarIsoTimestamp fieldName rawTimestamp)
+    Just _ ->
+      fail (fieldLabel <> " must be a string")
+  where
+    fieldLabel = "items[" <> show idx <> "]." <> T.unpack fieldName
+
+validateGoogleCalendarPageDateObjectField :: Int -> Object -> Text -> Parser ()
+validateGoogleCalendarPageDateObjectField idx eventObj fieldName =
+  case AKeyMap.lookup (AKey.fromText fieldName) eventObj of
+    Nothing -> pure ()
+    Just Null -> pure ()
+    Just (Object dateObj) -> validateDateObject dateObj
+    Just _ ->
+      fail (fieldLabel <> " must be an object")
+  where
+    fieldLabel = "items[" <> show idx <> "]." <> T.unpack fieldName
+    validateDateObject dateObj = do
+      let mDateTime = AKeyMap.lookup "dateTime" dateObj
+          mDate = AKeyMap.lookup "date" dateObj
+      when (isJust mDateTime && isJust mDate) $
+        fail (fieldLabel <> " must include only one of dateTime or date")
+      case (mDateTime, mDate) of
+        (Just (String rawDateTime), Nothing) ->
+          either
+            (fail . googleCalendarPageFieldError idx (fieldName <> ".dateTime"))
+            (const (pure ()))
+            (validateGoogleCalendarIsoTimestamp (fieldName <> ".dateTime") rawDateTime)
+        (Nothing, Just (String rawDate)) ->
+          either
+            (fail . googleCalendarPageFieldError idx (fieldName <> ".date"))
+            (const (pure ()))
+            (validateGoogleCalendarDateOnly (fieldName <> ".date") rawDate)
+        (Nothing, Nothing) ->
+          fail (fieldLabel <> " must include dateTime or date")
+        (Just _, Nothing) ->
+          fail (fieldLabel <> ".dateTime must be a string")
+        (Nothing, Just _) ->
+          fail (fieldLabel <> ".date must be a string")
+        (Just _, Just _) ->
+          fail (fieldLabel <> " must include only one of dateTime or date")
+
+validateGoogleCalendarIsoTimestamp :: Text -> Text -> Either Text Text
+validateGoogleCalendarIsoTimestamp fieldName rawTimestamp =
+  validateGoogleCalendarDateToken
+    fieldName
+    "ISO8601 timestamp"
+    parseGoogleCalendarIsoTimestamp
+    rawTimestamp
+
+validateGoogleCalendarDateOnly :: Text -> Text -> Either Text Text
+validateGoogleCalendarDateOnly fieldName rawDate =
+  validateGoogleCalendarDateToken
+    fieldName
+    "ISO8601 date"
+    parseGoogleCalendarDateOnly
+    rawDate
+
+validateGoogleCalendarDateToken
+  :: Text -> Text -> (String -> Maybe a) -> Text -> Either Text Text
+validateGoogleCalendarDateToken fieldName expectedShape parseToken rawValue
+  | T.null value =
+      Left (fieldName <> " must not be blank")
+  | value /= rawValue =
+      Left (fieldName <> " must not include surrounding whitespace")
+  | T.any isUnsupportedGoogleCalendarPageTextChar value =
+      Left
+        ( fieldName
+            <> " must not contain unsupported control or formatting characters"
+        )
+  | T.any isSpace value =
+      Left (fieldName <> " must not contain whitespace")
+  | isNothing (parseToken (T.unpack value)) =
+      Left (fieldName <> " must be an " <> expectedShape)
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
+
+parseGoogleCalendarIsoTimestamp :: String -> Maybe UTCTime
+parseGoogleCalendarIsoTimestamp = iso8601ParseM
+
+parseGoogleCalendarDateOnly :: String -> Maybe Day
+parseGoogleCalendarDateOnly = iso8601ParseM
 
 validateGoogleCalendarHtmlLink :: Text -> Either Text Text
 validateGoogleCalendarHtmlLink rawLink
