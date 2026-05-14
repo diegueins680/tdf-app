@@ -1082,6 +1082,8 @@ export default function SessionsPage() {
 
   const roomsQuery = useQuery({ queryKey: ['rooms', 'for-sessions'], queryFn: Rooms.list });
   const rooms = roomsQuery.data ?? [];
+  const roomsMissingForSessionCreation =
+    !roomsQuery.isLoading && !roomsQuery.isError && rooms.length === 0;
 
   const sessionOptionsQuery = useQuery({ queryKey: ['sessions', 'options'], queryFn: Sessions.options });
   const bandChoices = sessionOptionsQuery.data?.bands ?? [];
@@ -1131,12 +1133,21 @@ export default function SessionsPage() {
     + (showBookingColumn ? 1 : 0)
     + (showEngineerColumn ? 1 : 0)
     + (showRoomsColumn ? 1 : 0);
+  const firstSessionSetupDescription = roomsMissingForSessionCreation
+    ? 'Registra una sala antes de crear la primera sesión. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión.'
+    : 'Empieza con Nueva sesión. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión.';
 
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h5">Sesiones</Typography>
-        <Button variant="contained" onClick={() => setCreateOpen(true)}>Nueva sesión</Button>
+        <Button
+          variant="contained"
+          onClick={() => setCreateOpen(true)}
+          disabled={roomsMissingForSessionCreation}
+        >
+          Nueva sesión
+        </Button>
       </Stack>
       <Paper variant="outlined">
         {showSessionsLoadingState ? (
@@ -1166,7 +1177,7 @@ export default function SessionsPage() {
                 Todavía no hay sesiones registradas.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Empieza con Nueva sesión. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión.
+                {firstSessionSetupDescription}
               </Typography>
             </Stack>
           </Box>

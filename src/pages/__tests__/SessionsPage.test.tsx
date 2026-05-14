@@ -137,11 +137,11 @@ describe('SessionsPage', () => {
     expect(await screen.findByText('Sesiones')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Nueva sesión/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Nueva sesión/i })).toBeDisabled();
       expect(screen.getByText('Todavía no hay sesiones registradas.')).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Empieza con Nueva sesión\. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión\./i,
+          /Registra una sala antes de crear la primera sesión\. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión\./i,
         ),
       ).toBeInTheDocument();
     });
@@ -156,6 +156,29 @@ describe('SessionsPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/No hay sesiones registradas todavía\./i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
+  });
+
+  it('enables the first-session action once a room exists', async () => {
+    mockRoomsList.mockResolvedValue([
+      { roomId: 'room-a', rName: 'Sala A' },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByText('Sesiones')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Nueva sesión/i })).toBeEnabled();
+      expect(
+        screen.getByText(
+          /Empieza con Nueva sesión\. La tabla, edición rápida y paginación aparecerán cuando exista la primera sesión\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText(/Registra una sala antes de crear la primera sesión/i),
+    ).not.toBeInTheDocument();
   });
 
   it('replaces the one-row schedule table with a compact first-session summary and one edit action', async () => {
