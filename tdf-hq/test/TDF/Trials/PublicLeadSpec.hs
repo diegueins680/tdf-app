@@ -340,6 +340,49 @@ spec = do
           expectationFailure
             ("Expected fallback party marker drift to be rejected, got " <> show partyId)
 
+    it "rejects fallback party rows that already have artist profile links" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Models.ArtistProfile
+          { Models.artistProfileArtistPartyId = partyId
+          , Models.artistProfileSlug = Just "public-interest"
+          , Models.artistProfileBio = Nothing
+          , Models.artistProfileCity = Nothing
+          , Models.artistProfileHeroImageUrl = Nothing
+          , Models.artistProfileSpotifyArtistId = Nothing
+          , Models.artistProfileSpotifyUrl = Nothing
+          , Models.artistProfileYoutubeChannelId = Nothing
+          , Models.artistProfileYoutubeUrl = Nothing
+          , Models.artistProfileWebsiteUrl = Nothing
+          , Models.artistProfileFeaturedVideoUrl = Nothing
+          , Models.artistProfileGenres = Nothing
+          , Models.artistProfileHighlights = Nothing
+          , Models.artistProfileCreatedAt = now
+          , Models.artistProfileUpdatedAt = Nothing
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "artist profile links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party profile link drift to be rejected, got " <> show partyId)
+
     it "rejects fallback party rows that already have account or role links" $ do
       let fallbackParty now = Models.Party
             { Models.partyLegalName = Nothing
@@ -2566,6 +2609,31 @@ initializePartySchema = do
     \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\")\
     \)"
     []
+  initializeArtistProfileSchema
+
+initializeArtistProfileSchema :: (MonadIO m) => SqlPersistT m ()
+initializeArtistProfileSchema =
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"artist_party_id\" INTEGER NOT NULL,\
+    \\"slug\" VARCHAR NULL,\
+    \\"bio\" VARCHAR NULL,\
+    \\"city\" VARCHAR NULL,\
+    \\"hero_image_url\" VARCHAR NULL,\
+    \\"spotify_artist_id\" VARCHAR NULL,\
+    \\"spotify_url\" VARCHAR NULL,\
+    \\"youtube_channel_id\" VARCHAR NULL,\
+    \\"youtube_url\" VARCHAR NULL,\
+    \\"website_url\" VARCHAR NULL,\
+    \\"featured_video_url\" VARCHAR NULL,\
+    \\"genres\" VARCHAR NULL,\
+    \\"highlights\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL,\
+    \\"updated_at\" TIMESTAMP NULL,\
+    \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\")\
+    \)"
+    []
 
 runTrialsInMemory :: SqlPersistT IO a -> IO a
 runTrialsInMemory action =
@@ -2602,6 +2670,7 @@ initializeTrialsSchema = do
     \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
     \)"
     []
+  initializeArtistProfileSchema
   rawExecute
     "CREATE TABLE IF NOT EXISTS \"resource\" (\
     \\"id\" INTEGER PRIMARY KEY,\
