@@ -2781,6 +2781,71 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps inactive-only first-run review to one exit action instead of adding refresh chrome', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildUser({
+              userId: 201,
+              partyId: 21,
+              partyName: 'Ada Inactiva',
+              username: 'ada-inactiva',
+              active: false,
+            }),
+            buildUser({
+              userId: 202,
+              partyId: 22,
+              partyName: 'Grace Inactiva',
+              username: 'grace-inactiva',
+              active: false,
+            }),
+            buildUser({
+              userId: 203,
+              partyId: 23,
+              partyName: 'Linus Inactivo',
+              username: 'linus-inactivo',
+              active: false,
+            }),
+            buildUser({
+              userId: 204,
+              partyId: 24,
+              partyName: 'María Inactiva',
+              username: 'maria-inactiva',
+              active: false,
+            }),
+          ]
+        : [],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(ADMIN_USERS_EMPTY_STATE);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([201, 202, 203, 204]);
+        expect(getPageGuidance(container)).toBe(
+          'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible. 4 usuarios en esta vista. Vista actual: solo usuarios inactivos.',
+        );
+        expect(getButtonsByText(container, ADMIN_USERS_RETURN_TO_ACTIVE_ACTION)).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+        expect(container.textContent).not.toContain('Incluir inactivos');
+        expect(container.textContent).not.toContain('Inactivos incluidos');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('uses the page scope summary for a lone inactive roster instead of adding a section label', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve(
       includeInactive

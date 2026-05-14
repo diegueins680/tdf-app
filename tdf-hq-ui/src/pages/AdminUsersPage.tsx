@@ -1214,6 +1214,7 @@ export default function AdminUsersPage() {
     && !hasActiveSearch
     && hasUsers
     && !showSearchEmptyState
+    && !showOnlyInactiveUsers
     && usersInCurrentSummary.length >= MIN_USERS_FOR_REFRESH;
   const refreshActionTitle = includeInactive
     ? 'Refrescar usuarios activos e inactivos'
