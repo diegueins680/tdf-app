@@ -733,7 +733,9 @@ invalidPasswordChangeAuthTokenChar :: Char -> Bool
 invalidPasswordChangeAuthTokenChar ch =
   isSpace ch
     || isControl ch
+    || not (isAscii ch)
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || ch `elem` ['"', ';', ',', '\\']
 
 validateGoogleIdTokenInput :: Text -> Either ServerError Text
 validateGoogleIdTokenInput rawToken

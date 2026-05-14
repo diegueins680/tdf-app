@@ -225,6 +225,20 @@ passwordChangeAuthHeaderSpec = describe "parsePasswordChangeAuthToken" $ do
     assertRejected "Bearer\tsession-token"
     assertRejected ("Bearer" <> T.singleton (chr 0x00A0) <> "session-token")
 
+  it "rejects non-ASCII and delimiter token characters before password-change fallback lookup" $ do
+    let assertRejected rawHeader =
+          case parsePasswordChangeAuthToken rawHeader of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err)
+                `shouldContain` "Authorization header must be Bearer <token>"
+            Right value ->
+              expectationFailure
+                ("Expected malformed Authorization token to be rejected, got " <> show value)
+
+    assertRejected "Bearer sesión-token"
+    assertRejected "Bearer session;token"
+
 tokenLabelUsernameSpec :: Spec
 tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
   it "keeps generated auth labels usable as current-session username fallbacks" $ do
