@@ -1361,6 +1361,16 @@ const firstRunOnlineRegistrationDescriptorPrefixPattern =
 const firstRunOnlineRegistrationDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
 
+const firstRunPostSubmitDescriptorPattern = String.raw`(?:(?:thank[-\s]?you|thanks|success)\s+(?:pages?|screens?|links?|urls?|portals?)|(?:registration|enrollment|sign[-\s]?up|signup)\s+confirmation(?:\s+(?:pages?|screens?|links?|urls?|portals?))?|confirmation\s+(?:pages?|screens?|links?|urls?|portals?)|(?:p[aá]ginas?|pantallas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:gracias|[eé]xito|confirmaci[oó]n)|confirmaci[oó]n\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula)(?:\s+(?:p[aá]ginas?|pantallas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunPostSubmitDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPostSubmitDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPostSubmitDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPostSubmitDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunLandingPageDescriptorPrefixPattern =
   /^(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*[-:/|]\s*/i;
 
@@ -1522,6 +1532,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunPostSubmitDescriptorPrefixPattern, '')
     .replace(firstRunLandingPageDescriptorPrefixPattern, '')
     .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
     .replace(firstRunBioLinkDescriptorPrefixPattern, '')
@@ -1614,6 +1625,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
     .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunPostSubmitDescriptorSuffixPattern, '')
     .replace(firstRunLandingPageDescriptorSuffixPattern, '')
     .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
     .replace(firstRunBioLinkDescriptorSuffixPattern, '')
