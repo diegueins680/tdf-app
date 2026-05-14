@@ -165,6 +165,7 @@ import TDF.ServerExtra (
     validatePaymentPartyFilter,
     normalizeServiceCatalogName,
     normalizeServiceCatalogNameUpdate,
+    serviceCatalogNamesConflict,
     validateServiceCatalogId,
     persistMetaInbound,
     validatePaymentMethod,
@@ -5610,6 +5611,11 @@ spec = do
       normalizeServiceCatalogName "  Mezcla Full  " `shouldBe` Right "Mezcla Full"
       normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
       normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
+
+    it "treats case-only or spacing-only service name variants as duplicate catalog entries" $ do
+      serviceCatalogNamesConflict "  Mezcla   Full  " "mezcla full" `shouldBe` True
+      serviceCatalogNamesConflict "PODCAST" "podcast" `shouldBe` True
+      serviceCatalogNamesConflict "Mezcla Full" "Mastering Full" `shouldBe` False
 
     it "rejects malformed service catalog names before persistence" $ do
       let assertInvalid expected result = case result of

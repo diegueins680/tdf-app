@@ -2446,8 +2446,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
         either throwError pure (validateServiceCatalogBillingUnit sccBillingUnit)
       when (maybe False (< 0) sccRateCents) $
         throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      duplicate <- withPool $ selectFirst [M.ServiceCatalogName ==. nameClean] []
-      when (isJust duplicate) $
+      duplicate <- withPool $ serviceCatalogNameExists nameClean Nothing
+      when duplicate $
         throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
       entity <- withPool $ do
         let record = M.ServiceCatalog
@@ -2478,12 +2478,8 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
       nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
       case nameClean of
         Just nm -> do
-          conflict <- withPool $ selectFirst
-            [ M.ServiceCatalogName ==. nm
-            , M.ServiceCatalogId !=. svcKey
-            ]
-            []
-          when (isJust conflict) $
+          conflict <- withPool $ serviceCatalogNameExists nm (Just svcKey)
+          when conflict $
             throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
         Nothing -> pure ()
       updated <- withPool $ do
@@ -2537,6 +2533,25 @@ normalizeServiceCatalogName rawName =
                  "Nombre no debe contener caracteres de control o marcas de formato ocultas"
              }
          else Right trimmed
+
+serviceCatalogNameExists :: Text -> Maybe (Key M.ServiceCatalog) -> SqlPersistT IO Bool
+serviceCatalogNameExists candidate ignoredKey = do
+  services <- selectList ([] :: [Filter M.ServiceCatalog]) []
+  pure $
+    any
+      (\(Entity serviceKey service) ->
+        Just serviceKey /= ignoredKey
+          && serviceCatalogNamesConflict candidate (M.serviceCatalogName service)
+      )
+      services
+
+serviceCatalogNamesConflict :: Text -> Text -> Bool
+serviceCatalogNamesConflict left right =
+  canonicalServiceCatalogName left == canonicalServiceCatalogName right
+
+canonicalServiceCatalogName :: Text -> Text
+canonicalServiceCatalogName =
+  T.toCaseFold . T.unwords . T.words . T.strip
 
 isUnsafeServiceCatalogLabelChar :: Char -> Bool
 isUnsafeServiceCatalogLabelChar ch =
