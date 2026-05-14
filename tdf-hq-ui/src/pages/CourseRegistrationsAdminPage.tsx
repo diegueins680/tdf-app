@@ -3642,6 +3642,10 @@ export default function CourseRegistrationsAdminPage() {
     viewHitsCurrentLimit
     || showAdvancedFilters
   );
+  const hideCohortFilterForSingleLocalSearchResult = Boolean(localSearchSingleResult)
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !cohortsQuery.isError;
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
   const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
     && !hasCustomFilters
@@ -4071,6 +4075,7 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyCohortFilterSummaryBlock = showEmptyCohortFilterSummary && !showInlineEmptyCohortFilterGuidance;
   const showCohortSelectControl = showCohortSelect && !showInlineEmptyCohortFilterGuidance;
   const showCohortFilterColumn = !hidePassiveFiltersDuringEmptyLocalSearch
+    && !hideCohortFilterForSingleLocalSearchResult
     && (
       showCohortSelectControl
       || showCohortFilterUnavailableSummary
