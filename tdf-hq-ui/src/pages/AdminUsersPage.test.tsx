@@ -4072,6 +4072,86 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps collapsed inactive access out of the visible list while naming it in the hidden-row hint', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Active',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-admin',
+        partyName: 'Linus Active',
+        primaryEmail: 'linus@example.com',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 102,
+              partyId: 44,
+              username: 'grace-manager',
+              partyName: 'Grace Manager',
+              active: false,
+              primaryEmail: 'grace@example.com',
+              primaryPhone: '+593999000222',
+              roles: ['Manager'],
+              modules: ['crm'],
+            }),
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'maria-manager',
+              partyName: 'María Manager',
+              active: false,
+              primaryEmail: 'maria@example.com',
+              primaryPhone: '+593999000444',
+              roles: ['Manager'],
+              modules: ['crm'],
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(container.textContent).not.toContain('Grace Manager');
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103]);
+        expect(container.textContent).not.toContain('Grace Manager');
+        expect(container.textContent).not.toContain('Roles: Manager');
+        expect(container.textContent).not.toContain('Módulos: crm');
+
+        const showInactiveListButton = getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!;
+        expect(buttonText(showInactiveListButton)).toBe('Ver 2 usuarios inactivos');
+        expect(showInactiveListButton.getAttribute('title')).toBe(
+          'Usuarios inactivos ocultos: acceso compartido (Roles: Manager · Módulos: crm) y 2 listos para WhatsApp.',
+        );
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([101, 103, 102, 104]);
+        expect(getRowByUserId(container, 102).textContent).toContain('Roles: Manager · Módulos: crm');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps long shared access summaries compact while preserving the full scope in the header title', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

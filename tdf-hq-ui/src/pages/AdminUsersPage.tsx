@@ -636,12 +636,28 @@ const buildUserRowAccessSummary = ({
 const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
   getUserAccessSummary(user.roles) === '' && getUserAccessSummary(user.modules) === '';
 
+const buildHiddenInactiveAccessSummary = (users: readonly AdminUser[]) => {
+  if (users.length < 2) return '';
+
+  const sharedRolesValues = getSharedAccessValues(users.map((user) => user.roles));
+  const sharedModulesValues = getSharedAccessValues(users.map((user) => user.modules));
+  if (sharedRolesValues.length === 0 && sharedModulesValues.length === 0) return '';
+
+  const compactAccessSummary = buildUserRowAccessSummary({
+    roles: sharedRolesValues,
+    modules: sharedModulesValues,
+  });
+
+  return compactAccessSummary ? `acceso compartido (${compactAccessSummary})` : '';
+};
+
 const buildCollapsedInactiveUsersToggleTitle = (users: readonly AdminUser[]) => {
   const noAccessCount = users.filter(hasNoAccessAssigned).length;
   const pendingProfileCount = users.filter((user) => !hasLinkedAdminUserProfile(user)).length;
   const readyForWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'whatsapp-ready').length;
   const pendingWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'contact-ready').length;
   const pendingContactCount = users.filter((user) => getUserContactReadiness(user) === 'missing-contact').length;
+  const hiddenAccessSummary = noAccessCount === 0 ? buildHiddenInactiveAccessSummary(users) : '';
   const contactStateSummary = buildContactStateSummary({
     readyForWhatsAppCount,
     pendingWhatsAppCount,
@@ -649,6 +665,7 @@ const buildCollapsedInactiveUsersToggleTitle = (users: readonly AdminUser[]) => 
   });
   const parts = [
     noAccessCount > 0 ? `${noAccessCount} sin acceso asignado` : '',
+    hiddenAccessSummary,
     pendingProfileCount > 0 ? `${pendingProfileCount} sin perfil vinculado` : '',
     contactStateSummary,
   ].filter(Boolean);
