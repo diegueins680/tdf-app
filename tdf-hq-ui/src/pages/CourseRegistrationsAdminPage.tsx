@@ -6318,7 +6318,7 @@ export default function CourseRegistrationsAdminPage() {
                           title={
                             useDirectPendingRecoveryAction
                               ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
-                              : statusMenuButtonTitle(reg.crStatus)
+                              : statusMenuButtonTitle(reg.crStatus, rowActionTarget)
                           }
                           aria-label={
                             useDirectPendingRecoveryAction

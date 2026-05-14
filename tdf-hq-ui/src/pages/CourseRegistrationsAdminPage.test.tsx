@@ -3511,10 +3511,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').textContent?.trim()).toBe(reopenPendingLabel);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').getAttribute('title')).toBe(
-        'Registrar pago o cambiar estado; actual: Pendiente de pago',
+        'Registrar pago o cambiar estado para Ada Lovelace; actual: Pendiente de pago',
       );
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').getAttribute('title')).toBe(
-        'Cambiar estado; actual: Pagado',
+        'Cambiar estado para Grace Hopper; actual: Pagado',
       );
       expect(getButtonByAriaLabel(container, 'Reabrir como pendiente para Katherine Johnson').getAttribute('title')).toBe(
         'Reabrir como pendiente; actual: Cancelado',
@@ -3700,9 +3700,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const apiStatusAction = getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper');
 
       expect(crmStatusAction.textContent?.trim()).toBe('CRM Review');
-      expect(crmStatusAction.getAttribute('title')).toBe('Cambiar estado; actual: CRM Review');
+      expect(crmStatusAction.getAttribute('title')).toBe('Cambiar estado para Ada Lovelace; actual: CRM Review');
       expect(apiStatusAction.textContent?.trim()).toBe('API Follow Up');
-      expect(apiStatusAction.getAttribute('title')).toBe('Cambiar estado; actual: API Follow Up');
+      expect(apiStatusAction.getAttribute('title')).toBe('Cambiar estado para Grace Hopper; actual: API Follow Up');
       expect(container.textContent).not.toContain('Crm Review');
       expect(container.textContent).not.toContain('Api Follow Up');
       expect(container.textContent).not.toContain('crm_review');
