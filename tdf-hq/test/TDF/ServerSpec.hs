@@ -144,6 +144,7 @@ import TDF.Server
     , resolveServiceMarketplaceBookingEntity
     , validateMetaBackfillOptions
     , validateMetaBackfillConversationId
+    , validateMetaBackfillConversationIdField
     , validateMetaBackfillMessageCreatedAt
     , parsePaymentMethodText
     , validateBookingTimeRange
@@ -3435,6 +3436,27 @@ spec = describe "TDF.Server helpers" $ do
         it "normalizes upstream conversation ids before using them in Graph request paths" $
             validateMetaBackfillConversationId "  t_17841400000000000.abc_123  "
                 `shouldBe` Right "t_17841400000000000.abc_123"
+
+        it "rejects missing upstream conversation ids instead of silent hydration skips" $ do
+            validateMetaBackfillConversationIdField
+                (Just "  t_17841400000000000.abc_123  ")
+                `shouldBe` Right "t_17841400000000000.abc_123"
+
+            let assertInvalid expectedMessage rawConversationId =
+                    case validateMetaBackfillConversationIdField rawConversationId of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Meta conversation id field to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "Meta Graph conversation missing id" Nothing
+            assertInvalid "Meta Graph conversation missing id" (Just "   ")
+            assertInvalid
+                "Meta Graph returned an invalid conversation id"
+                (Just "conversation/../../me")
 
         it "rejects path-shaped upstream conversation ids before message hydration" $ do
             let assertInvalid rawConversationId =

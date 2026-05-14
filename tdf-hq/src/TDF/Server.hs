@@ -1698,6 +1698,14 @@ validateMetaBackfillConversationId rawConversationId =
         { errBody = "Meta Graph returned an invalid conversation id"
         }
 
+validateMetaBackfillConversationIdField :: Maybe Text -> Either ServerError Text
+validateMetaBackfillConversationIdField rawConversationId =
+  case cleanOptional rawConversationId of
+    Nothing ->
+      Left err502 { errBody = "Meta Graph conversation missing id" }
+    Just conversationId ->
+      validateMetaBackfillConversationId conversationId
+
 metaBackfillBadRequest :: Text -> Either ServerError a
 metaBackfillBadRequest msg =
   Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
@@ -1856,23 +1864,19 @@ fetchGraphConversations manager cfg path accessToken mPlatform MetaBackfillOptio
 
       hydrateConversation conversationVal = do
         let unreadCount = fromMaybe 0 (jsonIntField "unread_count" conversationVal)
-            mConversationId = fmap T.strip (jsonTextField "id" conversationVal)
             shouldSkipMessages = mboOnlyUnread && unreadCount <= 0
-        case cleanOptional mConversationId of
-          Nothing -> pure (withMessages conversationVal Nothing [])
-          Just rawConversationId -> do
-            conversationId <-
-              either throwError pure $
-                validateMetaBackfillConversationId rawConversationId
-            if shouldSkipMessages
-              then pure (withMessages conversationVal (Just conversationId) [])
-              else do
-                messages <- fetchConversationMessages conversationId
-                  `catchError` \err ->
-                    if isMetaGraphTimeoutError err
-                      then pure []
-                      else throwError err
-                pure (withMessages conversationVal (Just conversationId) messages)
+        conversationId <-
+          either throwError pure $
+            validateMetaBackfillConversationIdField (jsonTextField "id" conversationVal)
+        if shouldSkipMessages
+          then pure (withMessages conversationVal (Just conversationId) [])
+          else do
+            messages <- fetchConversationMessages conversationId
+              `catchError` \err ->
+                if isMetaGraphTimeoutError err
+                  then pure []
+                  else throwError err
+            pure (withMessages conversationVal (Just conversationId) messages)
 
       runAttempt conversationLimit = do
         stubs <- fetchConversationStubs conversationLimit
@@ -2021,8 +2025,11 @@ backfillFacebookToken manager cfg opts accessToken = do
   conversations <- fetchGraphConversations manager cfg "/me/conversations" accessToken Nothing opts
   (incomingScanned, importedCount) <- foldM
     (\(scannedAcc, importedAcc) conversationVal -> do
-      let conversationId = fromMaybe "unknown" (jsonTextField "id" conversationVal)
-          incomingMessages = filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
+      conversationId <-
+        either throwError pure $
+          validateMetaBackfillConversationIdField (jsonTextField "id" conversationVal)
+      let incomingMessages =
+            filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
       stored <- mapM (storeBackfilledMessage MetaFacebook opts conversationId) incomingMessages
       let imported = length (filter (\ok -> ok) stored)
       pure (scannedAcc + length incomingMessages, importedAcc + imported)
@@ -2051,8 +2058,11 @@ backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
     fetchGraphConversations manager cfg conversationPath accessToken (Just "instagram") opts
   (incomingScanned, importedCount) <- foldM
     (\(scannedAcc, importedAcc) conversationVal -> do
-      let conversationId = fromMaybe "unknown" (jsonTextField "id" conversationVal)
-          incomingMessages = filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
+      conversationId <-
+        either throwError pure $
+          validateMetaBackfillConversationIdField (jsonTextField "id" conversationVal)
+      let incomingMessages =
+            filter (isIncomingMetaMessage ownerId) (selectConversationMessages opts conversationVal)
       stored <- mapM (storeBackfilledMessage MetaInstagram opts conversationId) incomingMessages
       let imported = length (filter (\ok -> ok) stored)
       pure (scannedAcc + length incomingMessages, importedAcc + imported)
