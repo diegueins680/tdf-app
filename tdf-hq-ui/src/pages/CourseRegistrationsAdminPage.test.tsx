@@ -13151,8 +13151,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(container.textContent).toContain(
-        'Los filtros se aplican automáticamente al cambiar. Usa Estado. Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.',
+        'Cambia Estado para actualizar la lista. Ajustar límite aparecerá cuando se llene el lote.',
       );
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado');
     });
 

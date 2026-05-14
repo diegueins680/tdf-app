@@ -359,16 +359,16 @@ const buildAutomaticFilterHelpText = ({
   if (!hasStatusFilterControl) return '';
 
   const filterStartingPoint = hasCohortFilterControl
-    ? 'Empieza por cohorte y estado.'
-    : 'Usa Estado.';
+    ? 'Cambia cohorte o estado para actualizar la lista.'
+    : 'Cambia Estado para actualizar la lista.';
   const limitGuidance = showAdvancedLimitControl
-    ? 'Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-    : 'Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.';
+    ? 'Usa Ajustar límite solo si necesitas otro lote.'
+    : 'Ajustar límite aparecerá cuando se llene el lote.';
   const emptySuffix = hasVisibleRegistrations
     ? ''
-    : ' Ajusta la vista o usa refrescar si esperabas resultados.';
+    : ' Si esperabas resultados, ajusta la vista o refresca.';
 
-  return `Los filtros se aplican automáticamente al cambiar. ${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
+  return `${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
 };
 
 const getResetViewLabel = ({
