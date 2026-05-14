@@ -4747,11 +4747,11 @@ main = hspec $ do
     describe "Google Calendar config fallback discovery" $ do
         it "validates stored sync cursors before returning the implicit config fallback" $ do
             let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
-                calendarConfig syncCursor =
+                calendarConfigWithOwner ownerId syncCursor =
                     Entity
                         (toSqlKey 1 :: Cal.GoogleCalendarConfigId)
                         Cal.GoogleCalendarConfig
-                            { Cal.googleCalendarConfigOwnerId = Nothing
+                            { Cal.googleCalendarConfigOwnerId = ownerId
                             , Cal.googleCalendarConfigCalendarId = "primary"
                             , Cal.googleCalendarConfigAccessToken = Nothing
                             , Cal.googleCalendarConfigRefreshToken = Nothing
@@ -4762,6 +4762,7 @@ main = hspec $ do
                             , Cal.googleCalendarConfigCreatedAt = now
                             , Cal.googleCalendarConfigUpdatedAt = now
                             }
+                calendarConfig = calendarConfigWithOwner Nothing
 
             case selectUniqueCalendarConfigFallback [calendarConfig (Just " cursor-1 ")] of
                 Right (Just (Entity _ cfg)) ->
@@ -4779,6 +4780,16 @@ main = hspec $ do
                     Right value ->
                         expectationFailure
                             ("Expected invalid stored sync cursor to fail, got: " <> show value)
+
+            case selectUniqueCalendarConfigFallback
+                [calendarConfigWithOwner (Just (toSqlKey 0)) (Just "cursor-1")] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar config ownerId is invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored ownerId to fail, got: " <> show value)
 
         it "rejects malformed stored OAuth tokens before sync fallback requests are built" $ do
             validateStoredGoogleCalendarAccessToken (Just " ya29.access-token_123 ")

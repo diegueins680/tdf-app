@@ -3483,6 +3483,9 @@ validateStoredCalendarConfigFallback
   -> Either ServerError (Entity Cal.GoogleCalendarConfig)
 validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
   unless (fromSqlKey cfgId > 0) invalidStoredCalendarConfigId
+  case Cal.googleCalendarConfigOwnerId cfg of
+    Just ownerId | fromSqlKey ownerId <= 0 -> invalidStoredCalendarOwnerId
+    _ -> pure ()
   calendarIdVal <-
     case CalAPI.normalizeCalendarId storedCalendarId of
       Right val -> Right val
@@ -3499,6 +3502,10 @@ validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
     invalidStoredCalendarId =
       Left err500
         { errBody = "Stored Google Calendar config calendarId is invalid"
+        }
+    invalidStoredCalendarOwnerId =
+      Left err500
+        { errBody = "Stored Google Calendar config ownerId is invalid"
         }
 
 encodeGooglePathSegment :: Text -> Text
