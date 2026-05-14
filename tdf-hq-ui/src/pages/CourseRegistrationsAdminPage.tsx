@@ -131,7 +131,7 @@ const buildInitialEmptyStateMultiCohortActionTitle = (count: number, labels: rea
   const uniqueLabels = uniqueInitialCohortLabels(labels);
   if (uniqueLabels.length === 0) return initialEmptyStateMultiCohortActionAriaLabel;
 
-  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} públicos`;
+  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} público${count === 1 ? '' : 's'}`;
   if (count > 1 && uniqueLabels.length === 1) {
     return `Elegir entre ${formsLabel} para ${uniqueLabels[0]}.`;
   }
@@ -143,15 +143,15 @@ const buildInitialEmptyStateSingleCourseVariantActionTitle = (count: number, lab
   const [label] = uniqueInitialCohortLabels(labels);
   if (!label) return initialEmptyStateSingleCourseVariantActionAriaLabel;
 
-  const variantsLabel = `${count} variante${count === 1 ? '' : 's'} pública${count === 1 ? '' : 's'}`;
-  return `Elegir entre ${variantsLabel} para ${label}.`;
+  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} público${count === 1 ? '' : 's'}`;
+  return `Elegir entre ${formsLabel} de ${label}.`;
 };
 
 const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
   const preview = formatInitialCohortPreview(labels);
   if (preview) {
     if (count > 1 && countInitialCohortPreviewLabels(labels) === 1) {
-      return `Hay ${count} variantes públicas de ${preview} listas para recibir la primera inscripción.`;
+      return `Hay ${count} formularios públicos de ${preview} listos para recibir la primera inscripción.`;
     }
     return `Hay ${count} formularios públicos listos para recibir la primera inscripción: ${preview}.`;
   }
@@ -159,7 +159,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
 };
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
-const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante';
+const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
@@ -169,7 +169,7 @@ const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curs
 const initialCohortRetryLabel = 'Reintentar formularios';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
-const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver variantes públicas para elegir cuál compartir primero';
+const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';

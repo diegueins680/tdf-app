@@ -268,14 +268,14 @@ const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
-const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante';
+const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel =
-  'Ver variantes públicas para elegir cuál compartir primero';
+  'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage =
   'Revisando formularios de curso para mostrar el siguiente paso.';
@@ -17182,14 +17182,15 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(emptyState).not.toBeNull();
       expect(copy).toContain(
-        'Hay 3 variantes públicas de Beatmaking 101 listas para recibir la primera inscripción.',
+        'Hay 3 formularios públicos de Beatmaking 101 listos para recibir la primera inscripción.',
       );
       expect(copy).not.toMatch(/Beacons|Stan Store|Koji/i);
+      expect(copy).not.toContain('variantes públicas');
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
-      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 variantes públicas para Beatmaking 101.');
+      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 formularios públicos de Beatmaking 101.');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
@@ -17779,7 +17780,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('clarifies when all first-run form labels are variants of one course', async () => {
+  it('clarifies same-course first-run forms without variant jargon', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'beatmaking-101-weekend', ccTitle: 'Formulario público - beatmaking 101' },
@@ -17796,18 +17797,17 @@ describe('CourseRegistrationsAdminPage', () => {
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(
-        'Hay 3 variantes públicas de Beatmaking 101 listas para recibir la primera inscripción.',
+        'Hay 3 formularios públicos de Beatmaking 101 listos para recibir la primera inscripción.',
       );
+      expect(emptyState?.textContent).not.toContain('variantes públicas');
+      expect(emptyState?.textContent).not.toContain('Elegir variante');
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
-      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 variantes públicas para Beatmaking 101.');
+      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 formularios públicos de Beatmaking 101.');
       expect(emptyState?.textContent).not.toContain(
         'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101.',
-      );
-      expect(emptyState?.textContent).not.toContain(
-        'Hay 3 formularios públicos para Beatmaking 101 listos para recibir la primera inscripción.',
       );
       expect(emptyState?.textContent).not.toContain('y 2 más');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
