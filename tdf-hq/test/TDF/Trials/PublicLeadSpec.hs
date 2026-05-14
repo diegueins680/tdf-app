@@ -821,6 +821,15 @@ spec = do
         Right (InterestIn _ _ _ driveLinkValue) ->
           driveLinkValue `shouldBe` Just "https://example.com:8443/file"
 
+    it "rejects drive links with URL fragments before storing ambiguous lead metadata" $
+      case validatePublicInterestInput
+        (InterestIn "workshop" Nothing Nothing (Just "https://example.com/file#section")) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "driveLink must not contain URL fragments"
+        Right _ ->
+          expectationFailure "Expected fragmented driveLink to be rejected"
+
     it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
       case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
         Left err -> do

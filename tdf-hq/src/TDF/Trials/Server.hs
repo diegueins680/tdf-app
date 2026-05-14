@@ -827,6 +827,8 @@ validateOptionalDriveLink (Just rawDriveLink) =
     Just driveLinkVal ->
       if T.length driveLinkVal > maxPublicDriveLinkChars
         then Left err400 { errBody = "driveLink must be 2048 characters or fewer" }
+        else if T.any (== '#') driveLinkVal
+          then Left err400 { errBody = "driveLink must not contain URL fragments" }
         else if "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
           then Right (Just driveLinkVal)
           else Left err400 { errBody = "driveLink must be an absolute https URL" }
