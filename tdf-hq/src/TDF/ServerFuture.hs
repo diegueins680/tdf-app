@@ -226,13 +226,25 @@ validateFutureStubCatalogRouteBoundaries
   :: [(Text, Text)]
   -> [(Text, Text)]
   -> Either ServerError [(Text, Text)]
-validateFutureStubCatalogRouteBoundaries reservedRoutes catalog
-  | any routesOverlap [ (reservedRoute, catalogRoute)
-                      | reservedRoute <- reservedRoutes
-                      , catalogRoute <- catalog
-                      ] = invalidFutureStubCatalog
-  | otherwise = Right catalog
+validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
+  validatedReservedRoutes <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateReservedFutureStubRoute reservedRoutes
+  validatedCatalog <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubBoundaryRoute catalog
+  if any routesOverlap [ (reservedRoute, catalogRoute)
+                       | reservedRoute <- validatedReservedRoutes
+                       , catalogRoute <- validatedCatalog
+                       ]
+    then invalidFutureStubCatalog
+    else Right validatedCatalog
   where
+    validateFutureStubBoundaryRoute (area, endpoint) = do
+      areaClean <- validateFutureStubArea area
+      endpointClean <- validateFutureStubEndpoint endpoint
+      pure (areaClean, endpointClean)
+
     routesOverlap ((reservedArea, reservedEndpoint), (area, endpoint)) =
       area == reservedArea
         && ( reservedSegments `isPrefixOf` endpointSegments

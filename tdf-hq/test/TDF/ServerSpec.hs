@@ -10745,6 +10745,29 @@ spec = describe "TDF.Server helpers" $ do
 
             assertBoundaryConflict [("admin", "console/settings")]
             assertBoundaryConflict [("admin", "seed")]
+
+            let assertInvalidBoundaryInput reservedRoutes catalog =
+                    case validateFutureStubCatalogRouteBoundaries reservedRoutes catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed fallback route boundary input to fail, got: "
+                                    <> show value
+                                )
+
+            assertInvalidBoundaryInput
+                [("admin", "seed ")]
+                [("crm", "console/settings")]
+            assertInvalidBoundaryInput
+                [("admin", "seed")]
+                [("ops", "console/settings")]
+            assertInvalidBoundaryInput
+                [("admin", "seed")]
+                [("crm", "console settings")]
+
             validateFutureStubCatalogRouteBoundaries
                 [("admin", "seed")]
                 [("admin", "seed-policy"), ("crm", "console/settings")]
