@@ -5162,6 +5162,14 @@ spec = do
         Right value ->
           expectationFailure ("Expected fragmented payment attachment URL error, got " <> show value)
 
+    it "rejects oversized payment attachment URLs before storing manual payment rows" $
+      case validatePaymentAttachmentUrl (Just ("https://files.example.com/" <> T.replicate 2049 "a")) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "attachmentUrl must be 2048 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized payment attachment URL error, got " <> show value)
+
   describe "validatePaymentConcept" $ do
     it "trims meaningful concepts before storing manual payment rows" $ do
       validatePaymentConcept "  Honorarios abril  " `shouldBe` Right "Honorarios abril"

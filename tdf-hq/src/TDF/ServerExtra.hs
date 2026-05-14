@@ -3334,6 +3334,15 @@ validatePaymentAttachmentUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just attachmentUrl
+      | T.length attachmentUrl > maxPaymentAttachmentUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "attachmentUrl must be "
+                      <> T.pack (show maxPaymentAttachmentUrlChars)
+                      <> " characters or fewer"
+            }
       | "https://" `T.isPrefixOf` T.toLower attachmentUrl
           && TrialsServer.isValidHttpUrl attachmentUrl
           && not ("#" `T.isInfixOf` attachmentUrl) ->
@@ -3342,6 +3351,9 @@ validatePaymentAttachmentUrl (Just rawUrl) =
           Left err400
             { errBody = "attachmentUrl must be an absolute https URL without a fragment"
             }
+
+maxPaymentAttachmentUrlChars :: Int
+maxPaymentAttachmentUrlChars = 2048
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
