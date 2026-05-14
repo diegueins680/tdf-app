@@ -6265,6 +6265,24 @@ spec = describe "TDF.Server helpers" $ do
                             <> show (fmap (fromSqlKey . entityKey) value)
                         )
 
+        it "surfaces malformed stored configs before ambiguous fallback conflicts" $
+            case selectUniqueCalendarConfigFallback
+                    [ calendarConfigEntity 1 "primary"
+                    , calendarConfigEntity 2 " team calendar "
+                    ] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Stored Google Calendar config calendarId is invalid"
+                    BL8.unpack (errBody err)
+                        `shouldNotContain` "calendarId is required"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed Calendar config fallback to fail before "
+                            <> "ambiguity handling, got: "
+                            <> show (fmap (fromSqlKey . entityKey) value)
+                        )
+
     describe "validateGoogleCalendarEventStatus" $ do
         it "normalizes only statuses the sync path can persist and report consistently" $ do
             validateGoogleCalendarEventStatus " CONFIRMED " `shouldBe` Right "confirmed"

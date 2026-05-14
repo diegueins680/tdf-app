@@ -3339,14 +3339,16 @@ googleCalendarEventsEndpoint calendarId =
 selectUniqueCalendarConfigFallback
   :: [Entity Cal.GoogleCalendarConfig]
   -> Either ServerError (Maybe (Entity Cal.GoogleCalendarConfig))
-selectUniqueCalendarConfigFallback [] = Right Nothing
-selectUniqueCalendarConfigFallback [cfg] =
-  Just <$> validateStoredCalendarConfigFallback cfg
-selectUniqueCalendarConfigFallback _ =
-  Left err409
-    { errBody =
-        "calendarId is required when multiple Google Calendar configs exist"
-    }
+selectUniqueCalendarConfigFallback candidates = do
+  validatedCandidates <- traverse validateStoredCalendarConfigFallback candidates
+  case validatedCandidates of
+    [] -> Right Nothing
+    [cfg] -> Right (Just cfg)
+    _ ->
+      Left err409
+        { errBody =
+            "calendarId is required when multiple Google Calendar configs exist"
+        }
 
 validateStoredCalendarConfigFallback
   :: Entity Cal.GoogleCalendarConfig
