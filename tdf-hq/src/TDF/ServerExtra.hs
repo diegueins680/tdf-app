@@ -2776,6 +2776,8 @@ parseOptionalKeyField fieldName (Just raw) =
 
 parseCanonicalPathPiece :: PathPiece a => Text -> Maybe a
 parseCanonicalPathPiece raw = do
+  guard (raw /= "0")
+  guard (not ("-" `T.isPrefixOf` raw))
   parsed <- fromPathPiece raw
   guard (toPathPiece parsed == raw)
   pure parsed

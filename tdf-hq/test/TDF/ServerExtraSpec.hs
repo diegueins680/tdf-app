@@ -1765,6 +1765,20 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid optional key input error, got " <> show value)
 
+    it "rejects non-positive numeric optional ids before relation lookups" $ do
+      let assertInvalid rawId =
+            case ( parseOptionalKeyField "targetParty" (Just rawId)
+                     :: Either ServerError (Maybe (Key M.Party))
+                 ) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "targetParty must be a valid identifier"
+              Right value ->
+                expectationFailure
+                  ("Expected non-positive optional key input error, got " <> show value)
+      assertInvalid "0"
+      assertInvalid "-1"
+
   describe "validateCheckoutTargets" $ do
     let roomId = case (fromPathPiece "00000000-0000-0000-0000-000000000042" :: Maybe (Key Room)) of
           Just key -> key
