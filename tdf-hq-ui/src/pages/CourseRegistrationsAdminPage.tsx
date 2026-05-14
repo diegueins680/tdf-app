@@ -1137,10 +1137,10 @@ const firstRunSalesDescriptorSuffixPattern =
   /(?:(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:sales?|purchase|order|tickets?)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras|tickets?|entradas?|boletos?)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?|tickets?|entradas?|boletos?))|\s*[-:/|]\s*(?:tickets?|entradas?|boletos?))\s*$/i;
 
 const firstRunPaymentDescriptorPrefixPattern =
-  /^(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment|checkout|deposit|down\s*payment|reservation\s+payment)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunPaymentDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment|checkout)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment|checkout|deposit|down\s*payment|reservation\s+payment)\s+(?:forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?)\s+de\s+(?:pago|checkout|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
 
 const firstRunSignupSheetDescriptorPrefixPattern =
   /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
@@ -1411,7 +1411,12 @@ const firstRunCourseCatalogDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
 
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|google\s+calendar)`;
-const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+(?:links?|urls?|pages?|forms?|portals?)|(?:links?|urls?|pages?|forms?|portals?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
+const firstRunSchedulingProviderIntentPattern = String.raw`(?:(?:booking|reservation|rsvp|appointments?|scheduling)\s+)?`;
+const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+${firstRunSchedulingProviderIntentPattern}(?:links?|urls?|pages?|forms?|portals?|schedules?)|(?:links?|urls?|pages?|forms?|portals?|schedules?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
+const firstRunSchedulingProviderStandalonePrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSchedulingProviderPattern})\s*(?:[-:/|]\s*)`,
+  'i',
+);
 const firstRunSchedulingProviderLinkDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunSchedulingProviderLinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
   'i',
@@ -1544,6 +1549,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
     .replace(firstRunSchedulingProviderLinkDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
+    .replace(firstRunSchedulingProviderStandalonePrefixPattern, '')
     .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
