@@ -3194,6 +3194,10 @@ export default function CourseRegistrationsAdminPage() {
     && !showAdvancedFilters;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const statusFiltersSummarizeBusyListRows = showBusyListSearchOnboarding
+    && status === 'all'
+    && actionableStatusFilters.length > 1
+    && !hasVisibleCustomStatuses;
   const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
   const hasDedicatedCohortFilterControl = showCohortSelect
     && !cohortsQuery.isError
@@ -3234,7 +3238,7 @@ export default function CourseRegistrationsAdminPage() {
       ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
       : allVisibleRowsUseCustomStatusActions
         ? buildCustomStatusNormalizationScopeHint(dossierIdentityTargetLabel)
-      : statusAlreadyVisibleInBusySearchOnboarding
+      : statusAlreadyVisibleInBusySearchOnboarding || statusFiltersSummarizeBusyListRows
         ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
         : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
@@ -3534,6 +3538,7 @@ export default function CourseRegistrationsAdminPage() {
     && !hideSingleResultLocalSearchPassiveCurrentView;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInBusySearchOnboarding
+    || statusFiltersSummarizeBusyListRows
     || statusAlreadyVisibleInFilterStrip
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary

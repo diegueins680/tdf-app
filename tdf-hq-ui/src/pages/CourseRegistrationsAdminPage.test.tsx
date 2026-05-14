@@ -8840,10 +8840,17 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).toContain(dossierOnlyScopeHint);
+      expect(container.textContent).toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(4);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
+      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Ada Lovelace').textContent?.trim()).toBe('');
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+      expect(countOccurrences(container, 'Pagado')).toBe(1);
+      expect(countOccurrences(container, 'Cancelado')).toBe(1);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -9028,14 +9035,15 @@ describe('CourseRegistrationsAdminPage', () => {
         'Nombre o contacto',
       );
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Estudiante 1')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1').textContent?.trim()).toBe('');
       const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
-      expect(paidRecoveryAction.textContent?.trim()).toBe(markPaymentPendingLabel);
+      expect(paidRecoveryAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
       expect(paidRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).toContain(dossierOnlyScopeHint);
+      expect(container.textContent).toContain(dossierScopeHint);
+      expect(container.textContent).not.toContain(dossierOnlyScopeHint);
     });
 
     listRegistrationsMock.mockClear();
