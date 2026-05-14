@@ -3260,6 +3260,27 @@ main = hspec $ do
             formatted `shouldNotContain` "\n"
             formatted `shouldNotContain` "\x200B"
 
+        it "redacts Graph token fields before surfacing fallback send failures" $ do
+            let formatted =
+                    Data.Text.unpack $
+                        formatInstagramGraphHttpError
+                            400
+                            ( BL.pack
+                                ( "GET /oauth/access_token?client_secret=app-secret&code=oauth-code"
+                                    <> "&fb_exchange_token=short-token failed: "
+                                    <> "{\"access_token\":\"page-token\",\"error\":{\"code\":190}}"
+                                )
+                            )
+            formatted `shouldContain` "client_secret=[redacted]"
+            formatted `shouldContain` "code=[redacted]"
+            formatted `shouldContain` "fb_exchange_token=[redacted]"
+            formatted `shouldContain` "\"access_token\":\"[redacted]\""
+            formatted `shouldContain` "\"code\":190"
+            formatted `shouldNotContain` "app-secret"
+            formatted `shouldNotContain` "oauth-code"
+            formatted `shouldNotContain` "short-token"
+            formatted `shouldNotContain` "page-token"
+
     describe "Facebook messaging context fallback" $ do
         it "rejects hidden-format outgoing message bodies before fallback config is evaluated" $
             sendFacebookText

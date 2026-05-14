@@ -7,7 +7,13 @@ module TDF.Services.InstagramMessaging
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.Char (GeneralCategory(Format, LineSeparator, ParagraphSeparator), generalCategory, isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isControl
+  , isSpace
+  )
 import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -278,7 +284,10 @@ formatInstagramGraphHttpError status bodyBytes =
 
 sanitizeInstagramGraphBody :: BL.ByteString -> Text
 sanitizeInstagramGraphBody bodyBytes =
-  truncateInstagramGraphErrorBody . T.strip . T.map sanitizeGraphErrorChar $
+  truncateInstagramGraphErrorBody
+    . redactInstagramGraphSecrets
+    . T.strip
+    . T.map sanitizeGraphErrorChar $
     decodeInstagramGraphBody bodyBytes
 
 decodeInstagramGraphBody :: BL.ByteString -> Text
@@ -295,6 +304,89 @@ sanitizeGraphErrorChar ch
   | isControl ch = ' '
   | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
   | otherwise = ch
+
+redactInstagramGraphSecrets :: Text -> Text
+redactInstagramGraphSecrets = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveGraphField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveGraphField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveGraphField previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveInstagramGraphFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveGraphField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+isSecretFieldBoundary :: Maybe Char -> Bool
+isSecretFieldBoundary Nothing = True
+isSecretFieldBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+sensitiveInstagramGraphFields :: [Text]
+sensitiveInstagramGraphFields =
+  [ "access_token"
+  , "fb_exchange_token"
+  , "client_secret"
+  , "appsecret_proof"
+  , "code"
+  ]
+
+parseSensitiveGraphField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveGraphField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || (separator == ':' && fieldName /= "code")
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+consumeOptionalQuote :: Text -> (Text, Text)
+consumeOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSecretValueEnd)
+
+isUnquotedSecretValueEnd :: Char -> Bool
+isUnquotedSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,}]" :: String)
 
 maxInstagramGraphErrorBodyChars :: Int
 maxInstagramGraphErrorBodyChars = 1000
