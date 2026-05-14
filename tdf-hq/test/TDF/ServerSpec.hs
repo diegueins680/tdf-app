@@ -252,6 +252,8 @@ import TDF.Server
     , listInventory
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
+    , resolveFanProfileDisplayName
+    , validateFanProfileUpdate
     , validateServiceMarketplaceBookingRefs
     , validateServiceMarketplaceBookingTitle
     , validateServiceMarketplaceBookingNotes
@@ -1753,6 +1755,51 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "partyId query supports at most 100 ids"
                 (validateSocialProfilePartyIds [1..101])
+
+    describe "validateFanProfileUpdate" $ do
+        let profileUpdate displayName =
+                DTO.FanProfileUpdate
+                    { DTO.fpuDisplayName = displayName
+                    , DTO.fpuAvatarUrl = Nothing
+                    , DTO.fpuFavoriteGenres = Nothing
+                    , DTO.fpuBio = Nothing
+                    , DTO.fpuCity = Nothing
+                    }
+
+        it "normalizes fan display names before profile fallback rendering" $ do
+            case validateFanProfileUpdate (profileUpdate (Just "  Ada Fan  ")) of
+                Right validated ->
+                    DTO.fpuDisplayName validated `shouldBe` Just "Ada Fan"
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid fan profile update, got: " <> show serverErr)
+
+            case validateFanProfileUpdate (profileUpdate (Just "   ")) of
+                Right validated ->
+                    DTO.fpuDisplayName validated `shouldBe` Nothing
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected blank fan display name to clear, got: " <> show serverErr)
+
+            resolveFanProfileDisplayName (Just "   ") (Just "  Party Name  ")
+                `shouldBe` Just "Party Name"
+            resolveFanProfileDisplayName (Just "  Ada Fan  ") (Just "Party Name")
+                `shouldBe` Just "Ada Fan"
+
+        it "rejects unsafe or oversized fan display names before persistence" $ do
+            let assertInvalid rawDisplayName expectedMessage =
+                    case validateFanProfileUpdate (profileUpdate (Just rawDisplayName)) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid fan profile update, got: " <> show value)
+            assertInvalid "Ada\nFan" "displayName must not contain control characters"
+            assertInvalid
+                ("Ada" <> T.singleton '\x202E' <> "Fan")
+                "hidden formatting characters"
+            assertInvalid (T.replicate 161 "A") "displayName must be 160 characters or fewer"
 
     describe "resolveFanFollowArtistTarget" $ do
         it "requires fan follow targets to be published artist profiles" $ do

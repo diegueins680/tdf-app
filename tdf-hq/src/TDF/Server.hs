@@ -5644,8 +5644,10 @@ fanGetProfile user = do
   liftIO $ flip runSqlPool pool $ loadFanProfileDTO (auPartyId user)
 
 fanUpdateProfile :: AuthedUser -> FanProfileUpdate -> AppM FanProfileDTO
-fanUpdateProfile user FanProfileUpdate{..} = do
+fanUpdateProfile user rawUpdate = do
   requireFanAccess user
+  validatedUpdate <- either throwError pure (validateFanProfileUpdate rawUpdate)
+  let FanProfileUpdate{..} = validatedUpdate
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
@@ -5668,6 +5670,32 @@ fanUpdateProfile user FanProfileUpdate{..} = do
       , FanProfileUpdatedAt      =. Just now
       ]
     loadFanProfileDTO fanId
+
+validateFanProfileUpdate :: FanProfileUpdate -> Either ServerError FanProfileUpdate
+validateFanProfileUpdate update@FanProfileUpdate{..} = do
+  displayNameVal <- validateOptionalFanProfileDisplayName fpuDisplayName
+  Right update { fpuDisplayName = displayNameVal }
+
+validateOptionalFanProfileDisplayName :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalFanProfileDisplayName rawDisplayName =
+  case cleanOptional rawDisplayName of
+    Nothing -> Right Nothing
+    Just displayNameVal
+      | T.length displayNameVal > maxFanProfileDisplayNameChars ->
+          Left err400 { errBody = "displayName must be 160 characters or fewer" }
+      | T.any isUnsafeFanProfileDisplayNameChar displayNameVal ->
+          Left err400
+            { errBody =
+                "displayName must not contain control characters or hidden formatting characters"
+            }
+      | otherwise -> Right (Just displayNameVal)
+
+maxFanProfileDisplayNameChars :: Int
+maxFanProfileDisplayNameChars = 160
+
+isUnsafeFanProfileDisplayNameChar :: Char -> Bool
+isUnsafeFanProfileDisplayNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 fanListFollows :: AuthedUser -> AppM [FanFollowDTO]
 fanListFollows user = do
@@ -6217,7 +6245,13 @@ toSocialPartyProfileDTO :: Maybe FanProfile -> Entity Party -> SocialPartyProfil
 toSocialPartyProfileDTO mProfile (Entity partyId party) =
   SocialPartyProfileDTO
     { sppPartyId = fromSqlKey partyId
-    , sppDisplayName = fromMaybe (M.partyDisplayName party) (mProfile >>= fanProfileDisplayName)
+    , sppDisplayName =
+        fromMaybe
+          (M.partyDisplayName party)
+          ( resolveFanProfileDisplayName
+              (mProfile >>= fanProfileDisplayName)
+              (Just (M.partyDisplayName party))
+          )
     , sppAvatarUrl = mProfile >>= fanProfileAvatarUrl
     , sppBio = mProfile >>= fanProfileBio
     , sppCity = mProfile >>= fanProfileCity
@@ -6249,12 +6283,16 @@ toArtistReleaseDTO (Entity releaseId release) =
 fanProfileToDTO :: Maybe Text -> FanProfile -> FanProfileDTO
 fanProfileToDTO fallback FanProfile{..} = FanProfileDTO
   { fpArtistId      = fromSqlKey fanProfileFanPartyId
-  , fpDisplayName   = fanProfileDisplayName <|> fallback
+  , fpDisplayName   = resolveFanProfileDisplayName fanProfileDisplayName fallback
   , fpAvatarUrl     = fanProfileAvatarUrl
   , fpFavoriteGenres = fanProfileFavoriteGenres
   , fpBio           = fanProfileBio
   , fpCity          = fanProfileCity
   }
+
+resolveFanProfileDisplayName :: Maybe Text -> Maybe Text -> Maybe Text
+resolveFanProfileDisplayName profileDisplayName fallback =
+  cleanOptional profileDisplayName <|> cleanOptional fallback
 
 fanFollowEntityToDTO
   :: Map.Map PartyId Text
