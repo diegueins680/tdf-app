@@ -177,19 +177,19 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; el menú de estado muestra acciones.`;
+  `Abre expediente desde ${targetLabel}; el botón de estado muestra acciones.`;
 const buildDossierLinkScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente.`;
+  `Abre expediente desde ${targetLabel}.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; el menú de estado incluye Registrar pago.`;
+  `Abre expediente desde ${targetLabel}; el botón de estado incluye Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; el menú de estado abre acciones rápidas.`;
+  `Abre expediente desde ${targetLabel}; el botón de estado abre acciones rápidas.`;
 const buildCustomStatusNormalizationScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; el menú de estado ofrece normalizar a pendiente o cancelado.`;
+  `Abre expediente desde ${targetLabel}; el botón de estado normaliza a pendiente o cancelado.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Reabrir vuelve a pendiente.`;
+  `Abre expediente desde ${targetLabel}; Reabrir vuelve a pendiente.`;
 const buildPaidRecoveryScopeHint = (targetLabel: string) =>
-  `Usa ${targetLabel} para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.`;
+  `Abre expediente desde ${targetLabel}; Marcar pago pendiente devuelve la inscripción a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';

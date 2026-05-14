@@ -227,35 +227,35 @@ const customStatusFilterUnavailableMessage =
   'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
 const customStatusFilterUnavailableTitle = 'Estados no estándar';
 const dossierScopeHint =
-  'Usa el nombre para abrir expediente; el menú de estado muestra acciones.';
+  'Abre expediente desde el nombre; el botón de estado muestra acciones.';
 const dossierLinkScopeHint =
-  'Usa el nombre para abrir expediente.';
+  'Abre expediente desde el nombre.';
 const paymentWorkflowDossierScopeHint =
-  'Usa el nombre para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Abre expediente desde el nombre; el botón de estado incluye Registrar pago.';
 const dossierOnlyScopeHint =
-  'Usa el nombre para abrir expediente; el menú de estado abre acciones rápidas.';
+  'Abre expediente desde el nombre; el botón de estado abre acciones rápidas.';
 const customStatusNormalizationScopeHint =
-  'Usa el nombre para abrir expediente; el menú de estado ofrece normalizar a pendiente o cancelado.';
+  'Abre expediente desde el nombre; el botón de estado normaliza a pendiente o cancelado.';
 const pendingRecoveryScopeHint =
-  'Usa el nombre para abrir expediente; Reabrir vuelve a pendiente.';
+  'Abre expediente desde el nombre; Reabrir vuelve a pendiente.';
 const paidRecoveryScopeHint =
-  'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.';
+  'Abre expediente desde el nombre; Marcar pago pendiente devuelve la inscripción a pendiente.';
 const emailDossierScopeHint =
-  'Usa el correo para abrir expediente; el menú de estado muestra acciones.';
+  'Abre expediente desde el correo; el botón de estado muestra acciones.';
 const emailPaymentWorkflowDossierScopeHint =
-  'Usa el correo para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Abre expediente desde el correo; el botón de estado incluye Registrar pago.';
 const phonePaymentWorkflowDossierScopeHint =
-  'Usa el teléfono para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Abre expediente desde el teléfono; el botón de estado incluye Registrar pago.';
 const recordDossierScopeHint =
-  'Usa el número de registro para abrir expediente; el menú de estado muestra acciones.';
+  'Abre expediente desde el número de registro; el botón de estado muestra acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Usa el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Abre expediente desde el número de registro; el botón de estado incluye Registrar pago.';
 const recordDossierLinkScopeHint =
-  'Usa el número de registro para abrir expediente.';
+  'Abre expediente desde el número de registro.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Usa el nombre, el correo o el número de registro para abrir expediente; el menú de estado incluye Registrar pago.';
+  'Abre expediente desde el nombre, el correo o el número de registro; el botón de estado incluye Registrar pago.';
 const mixedIdentityDossierLinkScopeHint =
-  'Usa el nombre, el correo o el número de registro para abrir expediente.';
+  'Abre expediente desde el nombre, el correo o el número de registro.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
@@ -1772,7 +1772,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(emailDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
       expect(container.textContent).not.toContain('dato principal de cada fila');
-      expect(countOccurrences(container, 'para abrir expediente')).toBe(1);
+      expect(countOccurrences(container, 'Abre expediente desde')).toBe(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
@@ -8981,7 +8981,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain('Cambiar estado incluye Registrar pago y acciones.');
-      expect(container.textContent).not.toContain('el botón de estado');
+      expect(container.textContent).not.toContain('el menú de estado incluye Registrar pago');
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
@@ -9009,7 +9009,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Beatmaking 101 · Pagado. Busca dentro de las 9 inscripciones cargadas.',
       );
       expect(container.textContent).toContain(
-        'Usa el nombre para abrir expediente; Marcar pago pendiente devuelve la inscripción a pendiente.',
+        paidRecoveryScopeHint,
       );
       expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(9);
       expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
@@ -9097,7 +9097,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(container.textContent).toContain('Usa el nombre para abrir expediente;');
+      expect(container.textContent).toContain('Abre expediente desde el nombre;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
