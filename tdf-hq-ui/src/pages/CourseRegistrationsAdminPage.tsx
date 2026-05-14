@@ -910,6 +910,7 @@ const normalizeFirstRunDescriptorSeparators = (value: string) =>
 
 const firstRunDecorativeEdgeMarkerPattern =
   /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
+const firstRunInvisibleFormatCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
 
 const firstRunCohortHtmlEntities: Record<string, string> = {
   amp: '&',
@@ -950,6 +951,7 @@ const decodeFirstRunCohortHtmlEntities = (value: string) =>
 
 const stripFirstRunCohortPresentationMarkers = (value: string) =>
   decodeFirstRunCohortHtmlEntities(value)
+    .replace(firstRunInvisibleFormatCharacterPattern, '')
     .trim()
     .replace(/^#{1,6}\s+/, '')
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
