@@ -240,7 +240,7 @@ fanClubSecureArtistHandlers user artistId =
                 , fcfAuthorId = fromSqlKey (fanClubPostFanPartyId p)
                 , fcfAuthorName = sppDisplayName author
                 , fcfAvatarUrl = sppAvatarUrl author
-                , fcfMediaUrls = []
+                , fcfMediaUrls = maybe [] (T.splitOn ",") (fanClubPostMediaUrls p)
                 , fcfIsPinned = fanClubPostIsPinned p
                 , fcfIsOfficer = isOfficer
                 , fcfIsHidden = fanClubPostIsHidden p
@@ -301,6 +301,7 @@ fanClubSecureArtistHandlers user artistId =
               , fanClubPostParentId = parentKey
               , fanClubPostTitle = fcpReqTitle req
               , fanClubPostContent = fcpReqContent req
+              , fanClubPostMediaUrls = if null (fcpReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcpReqMediaUrls req))
               , fanClubPostIsPinned = False
               , fanClubPostIsHidden = False
               , fanClubPostCreatedAt = now
@@ -308,7 +309,7 @@ fanClubSecureArtistHandlers user artistId =
               }
             author <- getAuthorDTO (auPartyId user)
             pure $ postToDTO pid
-              (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) False False now Nothing)
+              (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) (if null (fcpReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcpReqMediaUrls req))) False False now Nothing)
               0 author
 
     resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
@@ -822,6 +823,7 @@ postToDTO pid p replies author = FanClubPostDTO
   , fcpParentId = fmap fromSqlKey (fanClubPostParentId p)
   , fcpTitle = fanClubPostTitle p
   , fcpContent = fanClubPostContent p
+  , fcpMediaUrls = maybe [] (T.splitOn ",") (fanClubPostMediaUrls p)
   , fcpAuthorId = fromSqlKey (fanClubPostFanPartyId p)
   , fcpAuthorName = sppDisplayName author
   , fcpAvatarUrl = sppAvatarUrl author

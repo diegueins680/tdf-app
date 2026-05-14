@@ -967,6 +967,7 @@ CREATE TABLE IF NOT EXISTS fan_club_post (
     parent_id      BIGINT REFERENCES fan_club_post(id) ON DELETE CASCADE,
     title          TEXT,
     content        TEXT NOT NULL,
+    media_urls     TEXT,
     is_pinned      BOOLEAN NOT NULL DEFAULT FALSE,
     is_hidden      BOOLEAN NOT NULL DEFAULT FALSE,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),

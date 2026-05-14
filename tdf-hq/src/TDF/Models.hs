@@ -751,6 +751,7 @@ FanClubPost
     parentId     FanClubPostId Maybe
     title        Text Maybe
     content      Text
+    mediaUrls    Text Maybe
     isPinned     Bool default=False
     isHidden     Bool default=False
     createdAt    UTCTime default=now()

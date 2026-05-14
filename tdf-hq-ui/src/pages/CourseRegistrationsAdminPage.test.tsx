@@ -14036,6 +14036,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'WhatsApp automation flow for Beatmaking 101',
       'Beatmaking 101 - Instagram automation funnel',
       'Automatización de WhatsApp para Beatmaking 101',
+      'Instagram DM keyword - Beatmaking 101',
+      'Palabra clave de Instagram para Beatmaking 101',
+      'Beatmaking 101 - WhatsApp keyword trigger',
     ];
 
     for (const title of titles) {
@@ -14051,7 +14054,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/DM automation|ManyChat|WhatsApp (?:message flow|automation)|Instagram automation|Messenger bot|Automatización de WhatsApp/i);
+        expect(emptyState?.textContent).not.toMatch(/DM automation|DM keyword|ManyChat|WhatsApp (?:message flow|automation|keyword trigger)|Instagram automation|Messenger bot|Automatización de WhatsApp|Palabra clave de Instagram/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(

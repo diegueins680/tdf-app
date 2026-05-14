@@ -768,6 +768,7 @@ data FanClubPostDTO = FanClubPostDTO
   , fcpParentId    :: Maybe Int64
   , fcpTitle       :: Maybe Text
   , fcpContent     :: Text
+  , fcpMediaUrls   :: [Text]
   , fcpAuthorId    :: Int64
   , fcpAuthorName  :: Text
   , fcpAvatarUrl   :: Maybe Text
@@ -895,9 +896,10 @@ instance FromJSON FanClubMemberProfileUpdate where
   parseJSON = genericParseJSON strictDecodeOptions
 
 data FanClubCreatePostReq = FanClubCreatePostReq
-  { fcpReqTitle   :: Maybe Text
-  , fcpReqContent :: Text
+  { fcpReqTitle    :: Maybe Text
+  , fcpReqContent  :: Text
   , fcpReqParentId :: Maybe Int64
+  , fcpReqMediaUrls :: [Text]
   } deriving (Show, Generic)
 instance FromJSON FanClubCreatePostReq where
   parseJSON = genericParseJSON strictDecodeOptions
