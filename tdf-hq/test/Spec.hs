@@ -8233,6 +8233,12 @@ main = hspec $ do
             assertInvalid
                 "http://127.0.0.1/live"
                 "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
+            assertInvalid
+                "https://radio.example.com/live/../admin"
+                "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
+            assertInvalid
+                "https://radio.example.com//live"
+                "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
 
     describe "resolveRadioTransmissionEnvBase" $ do
         it "uses fallback bases only when transmission env vars are absent" $ do
@@ -8342,6 +8348,12 @@ main = hspec $ do
             assertInvalid
                 (validateRadioTransmissionWhipBase "https://127.0.0.1/whip")
                 "RADIO_WHIP_BASE must not target localhost or private network addresses"
+            assertInvalid
+                (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live/./stage")
+                "RADIO_INGEST_BASE path must not contain empty, dot, or dot-dot segments"
+            assertInvalid
+                (validateRadioTransmissionWhipBase "https://stream.example.com//whip")
+                "RADIO_WHIP_BASE path must not contain empty, dot, or dot-dot segments"
 
     describe "validateRadioOptionalMetadataField" $ do
         it "trims optional radio metadata and treats blank values as omitted" $ do

@@ -137,6 +137,8 @@ validateRadioTransmissionPublicBase rawBase =
            then Left err400 { errBody = "RADIO_PUBLIC_BASE must be https" }
            else if T.any (`elem` ("?#" :: String)) normalizedPublicBase
              then Left err400 { errBody = "RADIO_PUBLIC_BASE must not include query or fragment" }
+           else if hasAmbiguousRadioBasePath normalizedPublicBase
+             then Left err400 { errBody = "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments" }
              else Right (T.dropWhileEnd (== '/') normalizedPublicBase)
 
 validateRadioTransmissionIngestBase :: Text -> Either ServerError Text
@@ -276,6 +278,8 @@ validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes ra
       Left err400 { errBody = fieldBody " must contain only ASCII URL characters" }
   | T.any (`elem` ("?#" :: String)) normalizedEndpointBase =
       Left err400 { errBody = fieldBody " must not include query or fragment" }
+  | hasAmbiguousRadioBasePath normalizedEndpointBase =
+      Left err400 { errBody = fieldBody " path must not contain empty, dot, or dot-dot segments" }
   | otherwise =
       Right (T.dropWhileEnd (== '/') normalizedEndpointBase)
   where
@@ -297,6 +301,26 @@ validateRadioTransmissionEndpointBase label allowedSchemesText allowedSchemes ra
       maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
     fieldBody suffix =
       BL.fromStrict (TE.encodeUtf8 (label <> suffix))
+
+hasAmbiguousRadioBasePath :: Text -> Bool
+hasAmbiguousRadioBasePath rawUrl =
+  any isAmbiguousPathSegment pathSegments
+  where
+    noScheme =
+      fromMaybe rawUrl $
+        T.stripPrefix "https://" rawUrl
+          <|> T.stripPrefix "http://" rawUrl
+          <|> T.stripPrefix "rtmps://" rawUrl
+          <|> T.stripPrefix "rtmp://" rawUrl
+    pathWithQueryOrFragment = T.dropWhile (/= '/') noScheme
+    path = T.takeWhile (\ch -> ch /= '?' && ch /= '#') pathWithQueryOrFragment
+    trimmedPath = T.dropWhileEnd (== '/') path
+    pathSegments =
+      if T.null trimmedPath
+        then []
+        else T.splitOn "/" (T.drop 1 trimmedPath)
+    isAmbiguousPathSegment segment =
+      segment == "" || segment == "." || segment == ".."
 
 radioFieldError :: Text -> ServerError -> ServerError
 radioFieldError label err =
