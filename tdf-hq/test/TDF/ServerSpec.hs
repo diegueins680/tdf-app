@@ -233,6 +233,7 @@ import TDF.Server
     , resolvePayPalApprovalUrlForBase
     , validatePayPalApprovalUrlOrderToken
     , extractPayPalCaptureStatus
+    , extractPayPalPayerEmail
     , parsePayPalCaptureOrderStatus
     , validatePayPalCaptureOrderId
     , validatePayPalCaptureOrderReference
@@ -8184,6 +8185,45 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "PayPal capture response must be a JSON object"
                 (A.String "COMPLETED")
+
+    describe "extractPayPalPayerEmail" $ do
+        it "keeps absent payer emails optional and normalizes present payer emails" $ do
+            extractPayPalPayerEmail (object [])
+                `shouldBe` Right Nothing
+            extractPayPalPayerEmail
+                ( object
+                    [ "payer"
+                        .= object ["email_address" .= (" Buyer@Example.com " :: Text)]
+                    ]
+                )
+                `shouldBe` Right (Just "buyer@example.com")
+
+        it "rejects malformed payer payloads instead of treating them as omitted" $ do
+            let assertInvalid expectedMessage payload =
+                    case extractPayPalPayerEmail payload of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right emailVal ->
+                            expectationFailure
+                                ( "Expected invalid PayPal payer payload to be rejected, got: "
+                                    <> show emailVal
+                                )
+            assertInvalid
+                "PayPal capture response payer cannot be null"
+                (object ["payer" .= A.Null])
+            assertInvalid
+                "PayPal capture response payer must be an object"
+                (object ["payer" .= ("buyer@example.com" :: Text)])
+            assertInvalid
+                "PayPal payer email cannot be null"
+                (object ["payer" .= object ["email_address" .= A.Null]])
+            assertInvalid
+                "PayPal payer email must be a string when present"
+                (object ["payer" .= object ["email_address" .= (42 :: Int)]])
+            assertInvalid
+                "PayPal returned an invalid payer email"
+                (object ["payer" .= object ["email_address" .= ("not-an-email" :: Text)]])
 
     describe "resolvePaypalBaseUrl" $ do
         it "keeps the default sandbox fallback and accepts explicit live aliases" $ do

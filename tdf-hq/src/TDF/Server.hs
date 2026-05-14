@@ -12779,11 +12779,7 @@ capturePaypalOrderRemote manager cid sec baseUrl paypalOrderId = do
   statusTxt <-
     either throwError pure (extractPayPalCaptureStatus parsed)
   payerEmail <-
-    case parseEither parsePayPalPayerEmail parsed of
-      Left _ ->
-        throwError err502 { errBody = "PayPal payer email must be a string when present" }
-      Right rawPayerEmail ->
-        either throwError pure (validatePayPalPayerEmailField rawPayerEmail)
+    either throwError pure (extractPayPalPayerEmail parsed)
   pure PayPalCaptureOutcome
     { pcoStatus = statusTxt
     , pcoPayerEmail = payerEmail
@@ -12842,15 +12838,27 @@ isPayPalCaptureStatusChar :: Char -> Bool
 isPayPalCaptureStatusChar ch =
   isPayPalCaptureStatusAtom ch || ch == '_'
 
-parsePayPalPayerEmail :: Value -> Parser (Maybe Text)
-parsePayPalPayerEmail =
-  withObject "PayPalCapture" $ \o -> do
-    mPayer <- o .:? "payer"
-    case (mPayer :: Maybe Value) of
-      Nothing ->
-        pure Nothing
-      Just payer ->
-        withObject "PayPalPayer" (\po -> po .:? "email_address") payer
+extractPayPalPayerEmail :: Value -> Either ServerError (Maybe Text)
+extractPayPalPayerEmail (Object o) =
+  case AKeyMap.lookup "payer" o of
+    Nothing ->
+      Right Nothing
+    Just Null ->
+      Left err502 { errBody = "PayPal capture response payer cannot be null" }
+    Just (Object payerObj) ->
+      case AKeyMap.lookup "email_address" payerObj of
+        Nothing ->
+          Right Nothing
+        Just Null ->
+          Left err502 { errBody = "PayPal payer email cannot be null" }
+        Just (String rawEmail) ->
+          validatePayPalPayerEmailField (Just rawEmail)
+        Just _ ->
+          Left err502 { errBody = "PayPal payer email must be a string when present" }
+    Just _ ->
+      Left err502 { errBody = "PayPal capture response payer must be an object" }
+extractPayPalPayerEmail _ =
+  Left err502 { errBody = "PayPal capture response must be a JSON object" }
 
 validatePayPalPayerEmailField :: Maybe Text -> Either ServerError (Maybe Text)
 validatePayPalPayerEmailField Nothing = Right Nothing
