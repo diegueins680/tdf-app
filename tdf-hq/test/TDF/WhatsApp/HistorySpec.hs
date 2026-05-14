@@ -363,6 +363,35 @@ spec = do
       ME.whatsAppMessageDeliveryError (entityVal stored)
         `shouldBe` Just "WhatsApp provider response did not include a usable message id"
 
+    it "does not echo malformed recipient text into generated fallback external ids" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          sendResult =
+            Right SendTextResult
+              { sendTextPayload = object []
+              , sendTextMessageId = Just "   "
+              }
+      stored <- runWhatsAppHistorySql $
+        recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = "call me at 099 123 4567"
+          , owrRecipientPartyId = Nothing
+          , owrRecipientName = Just "Ada"
+          , owrRecipientEmail = Nothing
+          , owrActorPartyId = Nothing
+          , owrBody = "Hola"
+          , owrSource = Just "history_spec"
+          , owrReplyToMessageId = Nothing
+          , owrReplyToExternalId = Nothing
+          , owrResendOfMessageId = Nothing
+          , owrMetadata = Nothing
+          }
+          sendResult
+
+      let externalId = ME.whatsAppMessageExternalId (entityVal stored)
+      externalId `shouldSatisfy` ("unknown-out-" `T.isPrefixOf`)
+      externalId `shouldSatisfy` (T.all (not . isSpace))
+      externalId `shouldSatisfy` (not . ("call me" `T.isInfixOf`))
+      ME.whatsAppMessageDeliveryStatus (entityVal stored) `shouldBe` "failed"
+
     it "allocates distinct fallback external ids for repeated blank-id sends at the same timestamp" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
           sendResult =

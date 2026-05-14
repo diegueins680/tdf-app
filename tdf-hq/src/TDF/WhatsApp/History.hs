@@ -337,10 +337,7 @@ generatedWhatsAppExternalIdBase :: Text -> UTCTime -> Text
 generatedWhatsAppExternalIdBase recipientPhone now =
   safeBase <> "-out-" <> T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" now)
   where
-    safeBase =
-      case cleanMaybeText (Just recipientPhone) of
-        Nothing -> "unknown"
-        Just value -> value
+    safeBase = fromMaybe "unknown" (normalizeWhatsAppPhone recipientPhone)
 
 generatedIncomingWhatsAppExternalIdBase :: Text -> UTCTime -> Text
 generatedIncomingWhatsAppExternalIdBase senderId now =
