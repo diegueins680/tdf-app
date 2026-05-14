@@ -605,6 +605,17 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "{\"beuTitle\":\"Updated runbook\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null create defaults so omitted fields stay distinguishable from nulls" $ do
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becActive\":null}"
+                `shouldSatisfy` isLeft
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becTags\":null}"
+                `shouldSatisfy` isLeft
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becCategory\":null}"
+                `shouldSatisfy` isLeft
+
     describe "validateBrainEntryId" $
         it "rejects non-positive Studio Brain ids before update lookup can report a missing row" $ do
             validateBrainEntryId 1 `shouldBe` Right 1

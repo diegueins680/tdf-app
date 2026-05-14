@@ -366,7 +366,16 @@ data BrainEntryCreate = BrainEntryCreate
   , becActive   :: Maybe Bool
   } deriving (Show, Generic)
 instance FromJSON BrainEntryCreate where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON value = do
+    mapM_
+      (\fieldName ->
+        rejectNullOptionalField
+          "BrainEntryCreate"
+          fieldName
+          (T.unpack fieldName <> " must be omitted instead of null")
+          value)
+      ["becCategory", "becTags", "becActive"]
+    genericParseJSON defaultOptions { rejectUnknownFields = True } value
 
 data BrainEntryUpdate = BrainEntryUpdate
   { beuTitle    :: Maybe Text
