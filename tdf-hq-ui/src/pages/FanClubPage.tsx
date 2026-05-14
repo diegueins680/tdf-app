@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
@@ -19,10 +19,12 @@ import {
   PhotoLibrary as PhotoLibraryIcon,
   Report as ReportIcon,
   Person as PersonIcon,
+  LockOutlined as LockOutlinedIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
 import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO } from '../api/types';
 
 export default function FanClubPage() {
