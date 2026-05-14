@@ -3767,7 +3767,7 @@ export default function CourseRegistrationsAdminPage() {
     && registrationIdsRequiringActionRecordDisambiguator.size === 0
     && visibleRegistrationsMissingContactCount === 0
     && useCompactStatusActionLabel
-    && searchedRegistrations.length >= 3;
+    && searchedRegistrations.length >= 2;
   const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
     && !hasLocalSearch
     && !showBusyListSearchOnboarding
