@@ -1,3 +1,13 @@
+## 2026-05-14 13:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — Platform 4th consecutive Detox PASS at 2026-05-14 12:00 UTC (local Release build, ~70 s total, latency stable ~20–24 s per test). Release 6th consecutive Detox PASS at 2026-05-14 12:20 UTC (both auth paths proven on local Release build without Metro). **CEO acknowledgment of physical-device Google OAuth waiver recorded at 2026-05-14 13:00 UTC** in `tdf-mobile/docs/release-readiness.md` (CTO executed update at 13:20 UTC). Testing version formally unblocked. No login-related commits since 2026-05-13 22:24 UTC.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d17h). Child PID 39198 alive (STAT S, elapsed ~2.5h). Heartbeat fresh at 2026-05-14T13:41:47Z. `restartCount` 202, `staleRestartCount` 1 (within tolerance). `lastError` historical git submodule ref from prior main history (auto-recovered, `lastIterationResult` `ok`, `lastExitCode` 0). Fix on disk since 06:26 UTC; supervisor executing pre-fix code from memory. Not yet at 24 h threshold for forced restart (~7.25 h elapsed). Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
+- **CTO report freshness:** `FRESH` — last entry 2026-05-14 13:20 UTC (CTO recorded CEO acknowledgment, updated release-readiness.md, unblocked testing version). Prior ~16 h stale gap closed.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (Platform 4× PASS, Release 6× PASS, CEO waiver acknowledged 13:00Z), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 39198, heartbeat 13:41Z, lastError fix on disk pending natural restart), systems lane paused, CTO gap closed.
 
 ## 2026-05-13 17:40 UTC — CIO checkpoint
 

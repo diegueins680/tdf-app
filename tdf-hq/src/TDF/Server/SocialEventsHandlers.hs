@@ -46,6 +46,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentCaption
   , normalizeMomentCommentBody
   , validateEventCreateUpdateDimensions
+  , validateSocialEventsListOffset
   , validateVenueCreateUpdateFields
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
@@ -525,6 +526,19 @@ applyVenueContactUpdate VenueContactUpdateDTO{..} existing = VenueContactMetadat
   , vcmImageUrl = applyNullableTextUpdate vcuImageUrl (vcmImageUrl existing)
   }
 
+validateSocialEventsListOffset :: Maybe Int -> Either ServerError Int
+validateSocialEventsListOffset Nothing = Right 0
+validateSocialEventsListOffset (Just rawOffset)
+  | rawOffset < 0 =
+      Left err400 { errBody = "offset must be greater than or equal to 0" }
+  | rawOffset > maxSocialEventsListOffset =
+      Left err400 { errBody = "offset must be 10000 or fewer" }
+  | otherwise =
+      Right rawOffset
+
+maxSocialEventsListOffset :: Int
+maxSocialEventsListOffset = 10000
+
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
 socialEventsServer user = eventsServer
                :<|> venuesServer
@@ -552,7 +566,7 @@ socialEventsServer user = eventsServer
     listEvents mCity mStartAfter mType mStatus mArtistId mVenueId mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
-      offset <- resolveOffset mOffset
+      offset <- either throwError pure (validateSocialEventsListOffset mOffset)
       typeNeedle <- either throwError pure (parseEventTypeQueryParamEither mType)
       statusNeedle <- either throwError pure (parseEventStatusQueryParamEither mStatus)
       startFilter <- case mStartAfter of
@@ -821,7 +835,7 @@ socialEventsServer user = eventsServer
     listVenues mCity mNear mQuery mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
-      offset <- resolveOffset mOffset
+      offset <- either throwError pure (validateSocialEventsListOffset mOffset)
       let searchNeedle = fmap (T.toCaseFold . T.strip) mQuery
       nearFilter <- case mNear of
         Nothing -> pure Nothing
@@ -994,7 +1008,7 @@ socialEventsServer user = eventsServer
     listArtists mNameFilter mGenreFilter mLimit mOffset = do
       Env{..} <- ask
       limit <- resolveLimit 500 1000 mLimit
-      offset <- resolveOffset mOffset
+      offset <- either throwError pure (validateSocialEventsListOffset mOffset)
       let nameFilter = normalizeFilter mNameFilter
           genreFilter = normalizeFilter mGenreFilter
           hasFilter = isJust nameFilter || isJust genreFilter
@@ -1037,14 +1051,6 @@ socialEventsServer user = eventsServer
         Just n
           | n <= 0 -> throwError err400 { errBody = "limit must be greater than 0" }
           | n > maxLimit -> throwError err400 { errBody = "limit exceeds allowed maximum" }
-          | otherwise -> pure n
-
-    resolveOffset :: Maybe Int -> AppM Int
-    resolveOffset mVal =
-      case mVal of
-        Nothing -> pure 0
-        Just n
-          | n < 0 -> throwError err400 { errBody = "offset must be greater than or equal to 0" }
           | otherwise -> pure n
 
     listArtistFollowers :: T.Text -> AppM [ArtistFollowerDTO]

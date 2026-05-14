@@ -51,6 +51,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
+    , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
     , validateVenueCreateUpdateFields
     )
@@ -233,6 +234,28 @@ spec = describe "social event handler helpers" $ do
 
         assertInvalid ("Teatro" <> hiddenFormat <> "TDF")
         assertInvalid ("Teatro" <> T.singleton (chr 0x2028) <> "TDF")
+
+    it "rejects deep social event list offsets before running list fallbacks" $ do
+        validateSocialEventsListOffset Nothing `shouldBe` Right 0
+        validateSocialEventsListOffset (Just 10000) `shouldBe` Right 10000
+
+        let assertInvalid expectedMessage result =
+                case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ( "Expected social event offset to be rejected, got: "
+                                <> show value
+                            )
+
+        assertInvalid
+            "offset must be greater than or equal to 0"
+            (validateSocialEventsListOffset (Just (-1)))
+        assertInvalid
+            "offset must be 10000 or fewer"
+            (validateSocialEventsListOffset (Just 10001))
 
     it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
