@@ -5,6 +5,7 @@ module TDF.ServerFanClubSpec (spec) where
 import Control.Monad.Trans.Reader (runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
+import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..))
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
@@ -27,7 +28,10 @@ import TDF.ServerFanClub
   , validateFanClubCandidacyPathId
   , validateFanClubElectionMutationTarget
   , validateFanClubElectionPathId
+  , validateFanClubInboxBodyInput
+  , validateFanClubInboxReplyBodyInput
   , validateFanClubOfficerRoleInput
+  , validateFanClubInboxSubjectInput
   , validateFanClubInboxStatusInput
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
@@ -161,6 +165,33 @@ spec = do
         validateFanClubOfficerRoleInput "  "
       assertRejected 400 "role must be one of" $
         validateFanClubOfficerRoleInput "secretary"
+
+  describe "fan club inbox text validation" $ do
+    it "normalizes optional subjects and required bodies before inbox persistence" $ do
+      validateFanClubInboxSubjectInput (Just "  Hola directiva  ")
+        `shouldBe` Right (Just "Hola directiva")
+      validateFanClubInboxSubjectInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubInboxBodyInput "  Primera linea\nsegunda linea  "
+        `shouldBe` Right "Primera linea\nsegunda linea"
+      validateFanClubInboxReplyBodyInput "  Respondido  "
+        `shouldBe` Right "Respondido"
+
+    it "rejects blank, oversized, or unsafe inbox text before DB fallback writes" $ do
+      assertRejected 400 "body is required" $
+        validateFanClubInboxBodyInput "   "
+      assertRejected 400 "subject must be 160 characters or fewer" $
+        validateFanClubInboxSubjectInput (Just (T.replicate 161 "a"))
+      assertRejected 400 "replyBody must be 4096 characters or fewer" $
+        validateFanClubInboxReplyBodyInput (T.replicate 4097 "a")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubInboxBodyInput ("Hola" <> "\x202E" <> "ops")
+      assertRejected 400 "unsupported control" $
+        validateFanClubInboxSubjectInput (Just "Hola\nDirectiva")
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubInboxSubjectInput (Just ("Hola" <> "\x00A0" <> "directiva"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubInboxReplyBodyInput ("Hola" <> "\NUL" <> "ops")
 
   describe "validateFanClubInboxStatusInput" $ do
     it "normalizes supported inbox statuses before persistence" $ do

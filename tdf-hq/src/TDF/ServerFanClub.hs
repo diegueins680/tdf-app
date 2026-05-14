@@ -19,6 +19,9 @@ module TDF.ServerFanClub
   , validateFanClubVoteCandidacyTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubOfficerRoleInput
+  , validateFanClubInboxSubjectInput
+  , validateFanClubInboxBodyInput
+  , validateFanClubInboxReplyBodyInput
   , validateFanClubInboxStatusInput
   , validateFanClubMemoryPathId
   ) where
@@ -823,6 +826,8 @@ fanClubSecureArtistHandlers user artistId =
 
     sendInboxMessage aId req = do
       artistKey <- requireArtistKey aId
+      subject <- either throwError pure (validateFanClubInboxSubjectInput (fcisReqSubject req))
+      body <- either throwError pure (validateFanClubInboxBodyInput (fcisReqBody req))
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -831,8 +836,8 @@ fanClubSecureArtistHandlers user artistId =
           mid <- insert FanClubInboxMessage
             { fanClubInboxMessageClubId = cid
             , fanClubInboxMessageFanPartyId = auPartyId user
-            , fanClubInboxMessageSubject = fcisReqSubject req
-            , fanClubInboxMessageBody = fcisReqBody req
+            , fanClubInboxMessageSubject = subject
+            , fanClubInboxMessageBody = body
             , fanClubInboxMessageStatus = "unread"
             , fanClubInboxMessageOfficerPartyId = Nothing
             , fanClubInboxMessageReplyBody = Nothing
@@ -845,8 +850,8 @@ fanClubSecureArtistHandlers user artistId =
             , fcimFanId = fromSqlKey (auPartyId user)
             , fcimFanName = sppDisplayName fanAuthor
             , fcimFanAvatarUrl = sppAvatarUrl fanAuthor
-            , fcimSubject = fcisReqSubject req
-            , fcimBody = fcisReqBody req
+            , fcimSubject = subject
+            , fcimBody = body
             , fcimStatus = "unread"
             , fcimOfficerId = Nothing
             , fcimOfficerName = Nothing
@@ -901,6 +906,7 @@ fanClubSecureArtistHandlers user artistId =
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "No autorizado" }
       msgKey <- either throwError pure (validatePositiveIdField "messageId" messageId)
+      replyBody <- either throwError pure (validateFanClubInboxReplyBodyInput (fcirReqBody req))
       let mid = toSqlKey msgKey :: FanClubInboxMessageId
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
@@ -917,7 +923,7 @@ fanClubSecureArtistHandlers user artistId =
                     now <- liftIO getCurrentTime
                     update mid
                       [ M.FanClubInboxMessageOfficerPartyId =. Just (auPartyId user)
-                      , M.FanClubInboxMessageReplyBody =. Just (fcirReqBody req)
+                      , M.FanClubInboxMessageReplyBody =. Just replyBody
                       , M.FanClubInboxMessageStatus =. "replied"
                       , M.FanClubInboxMessageUpdatedAt =. Just now
                       ]
@@ -933,7 +939,7 @@ fanClubSecureArtistHandlers user artistId =
                       , fcimStatus = "replied"
                       , fcimOfficerId = Just (fromSqlKey (auPartyId user))
                       , fcimOfficerName = fmap sppDisplayName officerAuthor
-                      , fcimReplyBody = Just (fcirReqBody req)
+                      , fcimReplyBody = Just replyBody
                       , fcimCreatedAt = fanClubInboxMessageCreatedAt m
                       , fcimUpdatedAt = Just now
                       }
@@ -1095,6 +1101,87 @@ validateFanClubOfficerRoleInput rawRole =
         { errBody =
             "role must be one of: presidente, vicepresidente, secretario, tesorero, coordinador"
         }
+
+validateFanClubInboxSubjectInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateFanClubInboxSubjectInput Nothing = Right Nothing
+validateFanClubInboxSubjectInput (Just rawSubject) =
+  validateOptionalFanClubInboxText "subject" maxFanClubInboxSubjectChars False rawSubject
+
+validateFanClubInboxBodyInput :: Text -> Either ServerError Text
+validateFanClubInboxBodyInput =
+  validateRequiredFanClubInboxText "body" maxFanClubInboxBodyChars True
+
+validateFanClubInboxReplyBodyInput :: Text -> Either ServerError Text
+validateFanClubInboxReplyBodyInput =
+  validateRequiredFanClubInboxText "replyBody" maxFanClubInboxBodyChars True
+
+validateOptionalFanClubInboxText
+  :: Text
+  -> Int
+  -> Bool
+  -> Text
+  -> Either ServerError (Maybe Text)
+validateOptionalFanClubInboxText fieldName maxChars allowMultiline rawValue =
+  case validateFanClubInboxText fieldName maxChars False allowMultiline rawValue of
+    Right value | T.null value -> Right Nothing
+    Right value -> Right (Just value)
+    Left err -> Left err
+
+validateRequiredFanClubInboxText
+  :: Text
+  -> Int
+  -> Bool
+  -> Text
+  -> Either ServerError Text
+validateRequiredFanClubInboxText fieldName maxChars allowMultiline rawValue =
+  validateFanClubInboxText fieldName maxChars True allowMultiline rawValue
+
+validateFanClubInboxText
+  :: Text
+  -> Int
+  -> Bool
+  -> Bool
+  -> Text
+  -> Either ServerError Text
+validateFanClubInboxText fieldName maxChars required allowMultiline rawValue
+  | required && T.null value =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required")) }
+  | T.length value > maxChars =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName <> " must be " <> T.pack (show maxChars) <> " characters or fewer"
+        }
+  | T.any (invalidFanClubInboxTextChar allowMultiline) value =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName
+                  <> " must not contain unsupported control, hidden formatting, "
+                  <> "or non-ASCII whitespace characters"
+        }
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
+
+maxFanClubInboxSubjectChars :: Int
+maxFanClubInboxSubjectChars = 160
+
+maxFanClubInboxBodyChars :: Int
+maxFanClubInboxBodyChars = 4096
+
+invalidFanClubInboxTextChar :: Bool -> Char -> Bool
+invalidFanClubInboxTextChar allowMultiline ch =
+  (isControl ch && not allowedMultilineWhitespace)
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (isSpace ch && ch /= ' ' && not allowedMultilineWhitespace)
+  where
+    allowedMultilineWhitespace =
+      allowMultiline && ch `elem` ("\n\r\t" :: String)
 
 validateFanClubInboxStatusInput :: Text -> Either ServerError Text
 validateFanClubInboxStatusInput rawStatus
