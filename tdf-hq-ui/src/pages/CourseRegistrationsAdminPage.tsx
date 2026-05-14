@@ -676,12 +676,13 @@ const cancelStatusMenuTargetLabel = (currentStatus: string) =>
     ? 'normalizar la inscripción como cancelada'
     : 'cancelar la inscripción';
 
-const statusMenuButtonTitle = (currentStatus: string) => {
+const statusMenuButtonTitle = (currentStatus: string, targetLabel?: string) => {
   const currentStatusLabel = registrationStatusLabel(currentStatus);
+  const targetSuffix = targetLabel ? ` para ${targetLabel}` : '';
   if (canOpenPaymentWorkflowFromStatus(currentStatus)) {
-    return `${openPaymentWorkflowLabel} o cambiar estado; actual: ${currentStatusLabel}`;
+    return `${openPaymentWorkflowLabel} o cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
   }
-  return `Cambiar estado; actual: ${currentStatusLabel}`;
+  return `Cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
 };
 
 const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => (
@@ -6138,6 +6139,7 @@ export default function CourseRegistrationsAdminPage() {
                       && hasOnlyPendingRecoveryStatusAction(reg.crStatus)
                     );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
+                  const statusIconActionTitle = statusMenuButtonTitle(reg.crStatus, rowActionTarget);
                   const usePaymentStatusMenuLabel =
                     showInlinePaymentWorkflowRowLabel && canOpenPaymentWorkflowFromStatus(reg.crStatus);
                   const rowCohortSlug = reg.crCourseSlug.trim();
@@ -6226,12 +6228,12 @@ export default function CourseRegistrationsAdminPage() {
                         </Box>
                       )}
                       {useStatusIconAction ? (
-                        <Tooltip title={statusMenuButtonTitle(reg.crStatus)}>
+                        <Tooltip title={statusIconActionTitle}>
                           <span>
                             <IconButton
                               size="small"
                               color={registrationStatusButtonColor(reg.crStatus)}
-                              title={statusMenuButtonTitle(reg.crStatus)}
+                              title={statusIconActionTitle}
                               aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
                               aria-haspopup="menu"
                               disabled={isUpdating}
