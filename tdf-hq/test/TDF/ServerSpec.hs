@@ -10794,19 +10794,22 @@ spec = describe "TDF.Server helpers" $ do
                 [("crm", "console/settings")]
             assertInvalidBoundaryInput
                 [("admin", "seed")]
+                [("crm", "console/settings")]
+            assertInvalidBoundaryInput
+                reservedFutureStubRoutes
                 [("ops", "console/settings")]
             assertInvalidBoundaryInput
-                [("admin", "seed")]
+                reservedFutureStubRoutes
                 [("crm", "console settings")]
             assertInvalidBoundaryInput
                 [("admin", "seed"), ("admin", "seed")]
                 [("crm", "console/settings")]
             assertInvalidBoundaryInput
-                [("admin", "seed")]
+                reservedFutureStubRoutes
                 [("crm", "console/settings"), ("crm", "console/settings")]
 
             validateFutureStubCatalogRouteBoundaries
-                [("admin", "seed")]
+                reservedFutureStubRoutes
                 [("admin", "seed-policy"), ("crm", "console/settings")]
                 `shouldBe` Right [("admin", "seed-policy"), ("crm", "console/settings")]
 

@@ -228,9 +228,7 @@ validateFutureStubCatalogRouteBoundaries
   -> [(Text, Text)]
   -> Either ServerError [(Text, Text)]
 validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
-  validatedReservedRoutes <-
-    either (const invalidFutureStubCatalog) Right $
-      traverse validateReservedFutureStubRoute reservedRoutes
+  validatedReservedRoutes <- validateReservedFutureStubRoutes reservedRoutes
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubBoundaryRoute catalog
