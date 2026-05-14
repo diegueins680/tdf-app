@@ -3631,8 +3631,8 @@ describe('AdminUsersPage', () => {
       buildUser({
         userId: 101,
         username: 'solo-placeholder-access',
-        roles: ['N/A', 'Sin roles', '  '],
-        modules: ['No aplica', 'sin módulos'],
+        roles: ['N/A', 'Sin roles', 'Pendiente', 'Por definir', '  '],
+        modules: ['No aplica', 'sin módulos', 'Pendiente por validar', 'Por confirmar'],
       }),
     ]);
 
@@ -3648,8 +3648,12 @@ describe('AdminUsersPage', () => {
 
         expect(container.textContent).not.toContain('N/A');
         expect(container.textContent).not.toContain('Sin roles');
+        expect(container.textContent).not.toContain('Pendiente');
+        expect(container.textContent).not.toContain('Por definir');
         expect(container.textContent).not.toContain('No aplica');
         expect(container.textContent).not.toContain('sin módulos');
+        expect(container.textContent).not.toContain('Pendiente por validar');
+        expect(container.textContent).not.toContain('Por confirmar');
       });
     } finally {
       await cleanup();
