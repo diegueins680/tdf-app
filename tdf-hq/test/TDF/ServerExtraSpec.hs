@@ -300,6 +300,16 @@ spec = do
           :: Either String AssetUpdate)
         `shouldSatisfy` isLeft
 
+    it
+      "rejects empty or null-only asset patch bodies before inventory handler fallback validation"
+      $ do
+      (A.eitherDecode "{}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"uNotes\":null}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"uPhotoUrl\":null}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
         "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coPaymentAmount\":\"1200.50\",\"coPaymentCurrency\":\"usd\",\"coPaymentOutstanding\":\"400.25\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of

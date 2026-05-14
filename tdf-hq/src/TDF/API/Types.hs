@@ -787,7 +787,37 @@ data AssetUpdate = AssetUpdate
   } deriving (Show, Generic)
 
 instance FromJSON AssetUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "AssetUpdate" $ \o -> do
+    let allowedKeys =
+          [ "uName"
+          , "uCategory"
+          , "uStatus"
+          , "uLocationId"
+          , "uNotes"
+          , "uPhotoUrl"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in AssetUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "AssetUpdate must include at least one field"
+            else
+              AssetUpdate
+                <$> o .:? "uName"
+                <*> o .:? "uCategory"
+                <*> o .:? "uStatus"
+                <*> o .:? "uLocationId"
+                <*> o .:? "uNotes"
+                <*> o .:? "uPhotoUrl"
 instance ToJSON AssetUpdate
 
 data AssetCheckoutDTO = AssetCheckoutDTO

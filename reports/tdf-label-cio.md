@@ -85,3 +85,13 @@ FINAL_STATUS: done — Packet A partially proven (Google OAuth device test remai
 - **Systems lane:** `PAUSED` per standing directive. `objectives/tdf-label-systems.md` unchanged. No resume warranted.
 
 FINAL_STATUS: done — Packet A partial (Google OAuth e2e sole remaining gate), Packet B closed behind Packet A, Lane C live with launchd durability (supervisor 68059, child 3772, heartbeat 09:40Z).
+
+## 2026-05-14 04:44 UTC — CIO checkpoint
+
+- **Packet A:** `PARTIALLY PROVEN` — username/password auth remains FULLY PROVEN (Detox consecutive PASS). Google OAuth full e2e remains UNPROVEN on physical device; simulator-realistic proven only. No new device test results since last checkpoint. Mobile submodule received two non-login commits since 15:40 UTC: `9d3c05c` (disable OTA updates for ios-simulator builds to prevent stale preview channel overwriting embedded Google OAuth config) and `bf5ce6f` (testing version baseline doc). `EAS_IOS_CREDENTIALS_MISSING` persists for physical-device `.ipa` preview profile. No change to login proof status.
+- **Packet B:** `GATED` — strictly sequenced after Packet A full proof. No store-publish motion until Google OAuth device proof complete.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d8h). Child PID 71827 alive (STAT S, elapsed ~6m), actively implementing iteration 1 since 04:42:50Z. Heartbeat fresh at 2026-05-14T04:44:39Z. Last successful commit `527cde4b` (`fix: improve marketplace orders page`) pushed at 04:41:48Z. `restartCount` 167 over ~5 days with 60s restart delay — normal iteration cycling. `staleRestartCount` 1 (one child exceeded 2h timeout). `lastError` historical: `git submodule update --init --recursive` failed because commit `50b2737ea` in main history references missing tdf-mobile submodule ref `7ecf27dbde842f990ce9f0cf6c54074a314175a1`; current iterations succeed because HEAD submodule pointer `de6c624` is valid. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. No resume warranted.
+- **No company-level blocker** to Lane C durability. No repair needed (Lane C live, launchd durability present).
+
+FINAL_STATUS: done — Packet A partially proven (Google OAuth physical device test remains sole open ship gate; EAS_IOS_CREDENTIALS_MISSING persists), Packet B gated on Packet A full proof, Lane C live with launchd durability (supervisor 68059, child 71827, heartbeat 04:44Z, one historical submodule error in main history not currently blocking iterations).
