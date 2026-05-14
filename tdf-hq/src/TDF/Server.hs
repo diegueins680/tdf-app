@@ -13364,7 +13364,7 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
             ]
         , requestBody = RequestBodyLBS permBody
         }
-  _ <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
+  permResp <- (try (httpLbs permReq manager) :: IO (Either SomeException (Response BL.ByteString)))
 
   metaReq0 <- parseRequest $
     "https://www.googleapis.com/drive/v3/files/" <>
@@ -13384,12 +13384,16 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
               Left _ -> Nothing
           Left _ -> Nothing
       publicUrl =
-        Just $
-          resolveDrivePublicUrl
-            (darId driveResp)
-            (darWebContentLink driveResp)
-            (darResourceKey driveResp)
-            metaResourceKey
+        case permResp of
+          Right permissionResponse ->
+            resolveDrivePublicUrlAfterPermission
+              (statusCode (responseStatus permissionResponse))
+              (darId driveResp)
+              (darWebContentLink driveResp)
+              (darResourceKey driveResp)
+              metaResourceKey
+          Left _ ->
+            Nothing
   pure DriveUploadDTO
     { duFileId = darId driveResp
     , duWebViewLink = darWebViewLink driveResp
@@ -13429,6 +13433,24 @@ resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey
         else
           resolveDriveResourceKey explicitResourceKeyCandidates
             <|> (mContentLink >>= singleValidResourceKeyParam)
+
+resolveDrivePublicUrlAfterPermission
+  :: Int
+  -> Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+resolveDrivePublicUrlAfterPermission
+  permissionStatus
+  fileId
+  mWebContentLink
+  mUploadResourceKey
+  mMetaResourceKey
+  | permissionStatus >= 200 && permissionStatus < 300 =
+      Just (resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey)
+  | otherwise =
+      Nothing
 
 resolveDriveResourceKey :: [Maybe Text] -> Maybe Text
 resolveDriveResourceKey resourceKeyCandidates =

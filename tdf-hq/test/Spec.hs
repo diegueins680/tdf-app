@@ -220,6 +220,7 @@ import TDF.Server
       parseToolCallParams,
       resolveDriveRedirectUri,
       resolveDrivePublicUrl,
+      resolveDrivePublicUrlAfterPermission,
       resolveProvidedDriveAccessToken,
       selectUniqueCalendarConfigFallback,
       sanitizeStoredCoursePublicUrl,
@@ -5860,6 +5861,35 @@ main = hspec $ do
                 (Just " rk_123 ")
                 `shouldBe`
                     "https://drive.usercontent.google.com/download?id=1A_B-99&export=download&resourcekey=rk_123"
+
+        it "only returns a public Drive URL after the permission grant succeeds" $ do
+            let expectedUrl =
+                    "https://drive.usercontent.google.com/download?id=1A_B-99" <>
+                    "&export=download&resourcekey=rk_123"
+            resolveDrivePublicUrlAfterPermission
+                200
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    Just expectedUrl
+            resolveDrivePublicUrlAfterPermission
+                204
+                "1A_B-99"
+                Nothing
+                Nothing
+                Nothing
+                `shouldBe`
+                    Just "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrlAfterPermission
+                403
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    Nothing
 
         it "falls back to the canonical download URL when Drive returns an ambiguous or mismatched content link" $ do
             resolveDrivePublicUrl
