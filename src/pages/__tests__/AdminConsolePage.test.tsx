@@ -615,6 +615,50 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByRole('button', { name: /Cargar datos de ejemplo/i })).not.toBeInTheDocument();
   });
 
+  it('keeps refresh fallback cards from duplicating the live panel refresh action', async () => {
+    mockListUsers.mockResolvedValue([buildAdminUser()]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'refresh-panel',
+          title: 'Refresh panel',
+          body: ['Reload health, users, roles, and audit from this panel.'],
+        },
+        {
+          cardId: 'refrescar-consola',
+          title: 'Refrescar consola',
+          body: ['Recarga estado, usuarios, roles y auditoría desde esta consola.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /^Actualizar panel$/i })).toBeInTheDocument();
+      expect(screen.getByText('Tokens de servicio')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /^Ver 3 módulos adicionales$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Refresh panel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Refrescar consola')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Reload health, users, roles, and audit/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Recarga estado, usuarios, roles y auditoría/i)).not.toBeInTheDocument();
+  });
+
   it('separates the single-user role summary from the edit action so first-time admins see both clearly', async () => {
     mockListUsers.mockResolvedValue([buildAdminUser()]);
 
