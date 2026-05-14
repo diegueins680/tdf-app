@@ -1463,8 +1463,16 @@ validateWhatsAppConsentDisplayName =
 
 validateWhatsAppConsentSource :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateWhatsAppConsentSource defaultSource rawSource =
-  fmap (<|> Just defaultSource) $
-    validateOptionalWhatsAppConsentText "source" maxWhatsAppConsentSourceChars rawSource
+  case validateOptionalWhatsAppConsentText "source" maxWhatsAppConsentSourceChars rawSource of
+    Left err -> Left err
+    Right (Just sourceVal) -> Right (Just sourceVal)
+    Right Nothing -> Just <$> validateDefaultWhatsAppConsentSource defaultSource
+
+validateDefaultWhatsAppConsentSource :: Text -> Either ServerError Text
+validateDefaultWhatsAppConsentSource defaultSource =
+  case validateOptionalWhatsAppConsentText "source" maxWhatsAppConsentSourceChars (Just defaultSource) of
+    Right (Just sourceVal) -> Right sourceVal
+    _ -> Left err500 { errBody = "Invalid WhatsApp consent default source" }
 
 validateWhatsAppOptOutReason :: Maybe Text -> Either ServerError (Maybe Text)
 validateWhatsAppOptOutReason =

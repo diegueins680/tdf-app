@@ -8981,6 +8981,8 @@ spec = describe "TDF.Server helpers" $ do
             validateWhatsAppConsentDisplayName (Just "  Ada Lovelace  ")
                 `shouldBe` Right (Just "Ada Lovelace")
             validateWhatsAppConsentSource "public" Nothing `shouldBe` Right (Just "public")
+            validateWhatsAppConsentSource "  public  " Nothing
+                `shouldBe` Right (Just "public")
             validateWhatsAppConsentSource "public" (Just "  landing-page  ")
                 `shouldBe` Right (Just "landing-page")
             validateWhatsAppConsentSource "public" (Just "   ")
@@ -9014,6 +9016,19 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "control or formatting characters"
                 (validateWhatsAppOptOutReason (Just ("no" <> T.singleton '\x2028' <> "gracias")))
+
+        it "rejects malformed WhatsApp consent source fallbacks before persistence" $ do
+            let assertInvalidFallback result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL8.unpack (errBody serverErr)
+                            `shouldContain` "Invalid WhatsApp consent default source"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid WhatsApp consent source fallback, got: " <> show value)
+            assertInvalidFallback (validateWhatsAppConsentSource "   " Nothing)
+            assertInvalidFallback
+                (validateWhatsAppConsentSource ("public" <> T.singleton '\x202E') (Just "   "))
 
     describe "whatsAppConsentStatusFromRow" $ do
         it "omits stored display names from public consent status responses" $ do
