@@ -14389,6 +14389,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 WhatsApp group',
       'Slack community - Beatmaking 101',
       'Beatmaking 101 Facebook community',
+      'WhatsApp broadcast list - Beatmaking 101',
+      'Lista de difusión de WhatsApp para Beatmaking 101',
+      'Canal de Telegram - Beatmaking 101',
+      'Beatmaking 101 - canal de WhatsApp',
     ];
 
     for (const title of titles) {
@@ -14404,7 +14408,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/WhatsApp group|Grupo de WhatsApp|Discord community|Telegram chat|comunidad de Telegram|Slack community|Facebook community/i);
+        expect(emptyState?.textContent).not.toMatch(/WhatsApp group|Grupo de WhatsApp|Discord community|Telegram chat|comunidad de Telegram|Slack community|Facebook community|broadcast list|Lista de difusión|Canal de Telegram|canal de WhatsApp/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
