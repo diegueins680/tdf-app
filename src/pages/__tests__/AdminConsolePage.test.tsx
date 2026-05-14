@@ -1144,6 +1144,64 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps role-editor fallback cards from duplicating the users workflow', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-role-editor',
+          title: 'Editor de roles',
+          body: [
+            'Usa esta tarjeta para editar roles de usuarios administrables.',
+          ],
+        },
+        {
+          cardId: 'admin-edit-roles',
+          title: 'Edit roles',
+          body: [
+            'Open the role editor to change admin permissions.',
+          ],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Editor de roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Edit roles')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Usa esta tarjeta para editar roles/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Open the role editor/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Editor de roles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Edit roles')).not.toBeInTheDocument();
+  });
+
   it('filters duplicate admin guidance by body copy before showing optional first-run modules', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
