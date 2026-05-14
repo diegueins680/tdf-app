@@ -3903,6 +3903,9 @@ describe('AdminUsersPage', () => {
         expect(container.querySelector('[data-testid="admin-user-row-203"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-user-row-204"]')).toBeNull();
         const showInactiveListButton = getButtonsByText(container, 'Ver 2 usuarios inactivos')[0]!;
+        expect(showInactiveListButton.getAttribute('title')).toBe(
+          'Usuarios inactivos ocultos: 2 listos para WhatsApp.',
+        );
         expect(showInactiveListButton.getAttribute('aria-expanded')).toBe('false');
         expect(buttonText(showInactiveListButton)).toBe('Ver 2 usuarios inactivos');
         expect(hasExactText(container, 'Ver 2 usuarios inactivos')).toBe(true);

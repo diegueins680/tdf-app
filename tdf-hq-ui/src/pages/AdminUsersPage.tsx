@@ -639,10 +639,11 @@ const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
 const buildCollapsedInactiveUsersToggleTitle = (users: readonly AdminUser[]) => {
   const noAccessCount = users.filter(hasNoAccessAssigned).length;
   const pendingProfileCount = users.filter((user) => !hasLinkedAdminUserProfile(user)).length;
+  const readyForWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'whatsapp-ready').length;
   const pendingWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'contact-ready').length;
   const pendingContactCount = users.filter((user) => getUserContactReadiness(user) === 'missing-contact').length;
   const contactStateSummary = buildContactStateSummary({
-    readyForWhatsAppCount: 0,
+    readyForWhatsAppCount,
     pendingWhatsAppCount,
     pendingContactCount,
   });
