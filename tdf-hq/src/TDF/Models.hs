@@ -49,6 +49,7 @@ data RoleEnum
   | Promotor
   | Promoter
   | Producer
+  | Agency
   | Songwriter
   | DJ
   | Publicist
@@ -795,5 +796,17 @@ FanClubMemoryReport
     memoryId         FanClubMemoryId
     reason           Text
     createdAt        UTCTime default=now()
+    deriving Show Generic
+
+FanClubInboxMessage
+    clubId           FanClubId
+    fanPartyId       PartyId
+    subject          Text Maybe
+    body             Text
+    status           Text default='unread'
+    officerPartyId   PartyId Maybe
+    replyBody        Text Maybe
+    createdAt        UTCTime default=now()
+    updatedAt        UTCTime Maybe
     deriving Show Generic
 |]

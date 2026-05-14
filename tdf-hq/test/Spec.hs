@@ -244,6 +244,8 @@ import TDF.Server
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
       validateGoogleCalendarEventId,
+      validateStoredGoogleCalendarAccessToken,
+      validateStoredGoogleCalendarRefreshToken,
       expiredGoogleCalendarSyncRetryState,
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
@@ -4687,6 +4689,47 @@ main = hspec $ do
                     Right value ->
                         expectationFailure
                             ("Expected invalid stored sync cursor to fail, got: " <> show value)
+
+        it "rejects malformed stored OAuth tokens before sync fallback requests are built" $ do
+            validateStoredGoogleCalendarAccessToken (Just " ya29.access-token_123 ")
+                `shouldBe` Right "ya29.access-token_123"
+            validateStoredGoogleCalendarRefreshToken " 1//refresh-token_123 "
+                `shouldBe` Right "1//refresh-token_123"
+
+            case validateStoredGoogleCalendarAccessToken Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 401
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "No hay access_token para Google Calendar"
+                Right value ->
+                    expectationFailure
+                        ("Expected missing Calendar access token to fail, got: " <> show value)
+
+            let assertStoredTokenInvalid label result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` ("Stored Google Calendar " <> label <> " is invalid")
+                    Right value ->
+                        expectationFailure
+                            ("Expected malformed Calendar token to fail, got: " <> show value)
+
+            assertStoredTokenInvalid
+                "access token"
+                (validateStoredGoogleCalendarAccessToken (Just "ya29.access token"))
+            assertStoredTokenInvalid
+                "access token"
+                ( validateStoredGoogleCalendarAccessToken
+                    (Just ("ya29.access" <> Data.Text.singleton '\x202E' <> "token"))
+                )
+            assertStoredTokenInvalid
+                "refresh token"
+                (validateStoredGoogleCalendarRefreshToken "refresh\ntoken")
+            assertStoredTokenInvalid
+                "refresh token"
+                ( validateStoredGoogleCalendarRefreshToken
+                    ("refresh-tok" <> Data.Text.singleton '\x00E9' <> "n")
+                )
 
     describe "Google Calendar event page decoding" $ do
         it "requires an items array instead of treating malformed pages as empty syncs" $ do

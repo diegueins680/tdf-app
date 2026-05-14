@@ -52,6 +52,7 @@ import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
+import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
@@ -1585,7 +1586,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <Avatar src={artist.apHeroImageUrl ?? undefined} alt={artist.apDisplayName} />
+                                  <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
                                   <Box>
                                     <Typography variant="subtitle1" fontWeight={700}>
                                       {artist.apDisplayName}
@@ -2250,18 +2251,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const youtubeButtonProps = youtubeUrl
               ? { component: 'a', href: youtubeUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
+            const displayHeroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug);
             const featuredSources = artist.apFeaturedVideoUrl
               ? [
                   {
                     url: artist.apFeaturedVideoUrl,
                     provider: 'youtube' as const,
                     label: 'YouTube',
-                    posterUrl: artist.apHeroImageUrl,
+                    posterUrl: displayHeroImage,
                   },
                 ]
               : [];
             const isFeaturedOpen = expandedFeatured.has(artist.apArtistId);
-            const hasPreview = artist.apFeaturedVideoUrl && artist.apHeroImageUrl;
+            const hasPreview = artist.apFeaturedVideoUrl && displayHeroImage;
             const latestRelease = latestReleaseByArtist.get(artist.apArtistId);
             const latestLink = latestRelease?.arSpotifyUrl ?? latestRelease?.arYoutubeUrl ?? null;
             return (
@@ -2295,8 +2297,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     }
                   }}
                 >
-                  {artist.apHeroImageUrl && (
-                    <CardMedia component="img" height="220" image={artist.apHeroImageUrl} alt={artist.apDisplayName} />
+                  {displayHeroImage && (
+                    <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
@@ -2429,7 +2431,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           {!isFeaturedOpen && hasPreview && (
                             <Box
                               component="img"
-                              src={artist.apHeroImageUrl ?? undefined}
+                              src={displayHeroImage ?? undefined}
                               alt={`${artist.apDisplayName} preview`}
                               sx={{
                                 width: '100%',
@@ -2446,7 +2448,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               <StreamingPlayer
                                 title={`${artist.apDisplayName} — Destacado`}
                                 artist={artist.apDisplayName}
-                                posterUrl={artist.apHeroImageUrl}
+                                posterUrl={displayHeroImage}
                                 sources={featuredSources}
                                 variant="compact"
                               />

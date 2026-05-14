@@ -25,6 +25,7 @@ import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
+import { getArtistHeroImage } from '../utils/artistFallbacks';
 
 export default function ArtistPublicPage() {
   const { slugOrId } = useParams();
@@ -153,7 +154,7 @@ export default function ArtistPublicPage() {
     );
   }
 
-  const heroImage = artist.apHeroImageUrl ?? null;
+  const heroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug);
   const spotifyUrl =
     artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
   const youtubeUrl =
@@ -195,7 +196,11 @@ export default function ArtistPublicPage() {
             }}
           >
             <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-              <Avatar sx={{ width: 64, height: 64, bgcolor: 'rgba(59,130,246,0.35)', border: '1px solid rgba(148,163,184,0.35)' }}>
+              <Avatar
+                src={heroImage ?? undefined}
+                alt={artist.apDisplayName}
+                sx={{ width: 64, height: 64, bgcolor: 'rgba(59,130,246,0.35)', border: '1px solid rgba(148,163,184,0.35)' }}
+              >
                 {artist.apDisplayName?.[0]?.toUpperCase() ?? <MusicNoteIcon />}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>

@@ -994,6 +994,22 @@ CREATE TABLE IF NOT EXISTS fan_club_event (
 CREATE INDEX idx_fan_club_event_club ON fan_club_event(club_id);
 CREATE INDEX idx_fan_club_event_time ON fan_club_event(starts_at, ends_at);
 
+CREATE TABLE IF NOT EXISTS fan_club_inbox_message (
+    id                  BIGSERIAL PRIMARY KEY,
+    club_id             BIGINT NOT NULL REFERENCES fan_club(id) ON DELETE CASCADE,
+    fan_party_id        BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
+    subject             TEXT,
+    body                TEXT NOT NULL,
+    status              TEXT NOT NULL DEFAULT 'unread',
+    officer_party_id    BIGINT REFERENCES party(id) ON DELETE SET NULL,
+    reply_body          TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ
+);
+
+CREATE INDEX idx_fan_club_inbox_club ON fan_club_inbox_message(club_id);
+CREATE INDEX idx_fan_club_inbox_status ON fan_club_inbox_message(club_id, status);
+
 -- ============================================================================
 -- END OF FAN CLUBS SCHEMA
 -- ============================================================================

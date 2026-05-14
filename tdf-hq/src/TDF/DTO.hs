@@ -936,3 +936,38 @@ data FanClubVoteReq = FanClubVoteReq
   } deriving (Show, Generic)
 instance FromJSON FanClubVoteReq where
   parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxMessageDTO = FanClubInboxMessageDTO
+  { fcimId           :: Int64
+  , fcimFanId        :: Int64
+  , fcimFanName      :: Text
+  , fcimFanAvatarUrl :: Maybe Text
+  , fcimSubject      :: Maybe Text
+  , fcimBody         :: Text
+  , fcimStatus       :: Text
+  , fcimOfficerId    :: Maybe Int64
+  , fcimOfficerName  :: Maybe Text
+  , fcimReplyBody    :: Maybe Text
+  , fcimCreatedAt    :: UTCTime
+  , fcimUpdatedAt    :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubInboxMessageDTO
+
+data FanClubInboxSendReq = FanClubInboxSendReq
+  { fcisReqSubject :: Maybe Text
+  , fcisReqBody    :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxSendReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxReplyReq = FanClubInboxReplyReq
+  { fcirReqBody :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxReplyReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxStatusReq = FanClubInboxStatusReq
+  { fcistReqStatus :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxStatusReq where
+  parseJSON = genericParseJSON strictDecodeOptions

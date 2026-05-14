@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Button, Card, CardContent, Chip, Divider, IconButton, Stack, TextField, Typography,
@@ -11,9 +11,11 @@ import {
   Edit as EditIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
+  MailOutline as MailIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import { Fans } from '../api/fans';
+import { ChatAPI } from '../api/chat';
 import { useSession } from '../session/SessionContext';
 import type { FanClubMemberProfileDTO, FanClubMemoryDTO } from '../api/types';
 
@@ -22,9 +24,22 @@ export default function FanClubMemberProfilePage() {
   const artistIdNum = parseInt(artistId || '0', 10);
   const partyIdNum = parseInt(partyId || '0', 10);
   const { session } = useSession();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ handle: '', bio: '', avatarUrl: '' });
+  const [inboxOpen, setInboxOpen] = useState(false);
+  const [inboxSubject, setInboxSubject] = useState('');
+  const [inboxBody, setInboxBody] = useState('');
+
+  const sendInboxMessage = useMutation({
+    mutationFn: () => Fans.sendClubInboxMessage(artistIdNum, { fcisReqSubject: inboxSubject || null, fcisReqBody: inboxBody }),
+    onSuccess: () => {
+      setInboxOpen(false);
+      setInboxSubject('');
+      setInboxBody('');
+    },
+  });
 
   const clubQuery = useQuery({
     queryKey: ['fan-club', artistIdNum],
@@ -141,6 +156,31 @@ export default function FanClubMemberProfilePage() {
                     {editing ? 'Cancelar' : 'Editar perfil'}
                   </Button>
                 )}
+                {!isMe && session && (
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        ChatAPI.getOrCreateDmThread(profile.fcmpPartyId)
+                          .then(() => {
+                            navigate('/chat');
+                          })
+                          .catch(() => {
+                            // ignore errors
+                          });
+                      }}
+                    >
+                      Enviar mensaje
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<MailIcon />}
+                      onClick={() => setInboxOpen(true)}
+                    >
+                      Escribir al club
+                    </Button>
+                  </Stack>
+                )}
               </Stack>
 
               {editing ? (
@@ -224,6 +264,22 @@ export default function FanClubMemberProfilePage() {
             ))}
           </Grid>
         )}
+
+        <Dialog open={inboxOpen} onClose={() => setInboxOpen(false)} fullWidth maxWidth="sm">
+          <DialogTitle>Escribir al club</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField label="Asunto (opcional)" value={inboxSubject} onChange={e => setInboxSubject(e.target.value)} fullWidth />
+              <TextField label="Mensaje" value={inboxBody} onChange={e => setInboxBody(e.target.value)} multiline rows={4} fullWidth required />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setInboxOpen(false)}>Cancelar</Button>
+            <Button variant="contained" onClick={() => sendInboxMessage.mutate()} disabled={!inboxBody.trim() || sendInboxMessage.isPending}>
+              Enviar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     </PageShell>
   );

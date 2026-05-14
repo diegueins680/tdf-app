@@ -2884,6 +2884,34 @@ validateGoogleCalendarSyncCursor (Just rawCursor)
 maxGoogleCalendarSyncCursorChars :: Int
 maxGoogleCalendarSyncCursorChars = 4096
 
+validateStoredGoogleCalendarAccessToken :: Maybe Text -> Either ServerError Text
+validateStoredGoogleCalendarAccessToken Nothing =
+  Left err401 { errBody = "No hay access_token para Google Calendar." }
+validateStoredGoogleCalendarAccessToken (Just rawToken) =
+  validateStoredGoogleCalendarOAuthToken "access token" rawToken
+
+validateStoredGoogleCalendarRefreshToken :: Text -> Either ServerError Text
+validateStoredGoogleCalendarRefreshToken =
+  validateStoredGoogleCalendarOAuthToken "refresh token"
+
+validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
+validateStoredGoogleCalendarOAuthToken label rawToken
+  | T.null tokenVal = invalid
+  | T.length tokenVal > maxDriveOAuthTokenChars = invalid
+  | T.any isSpace tokenVal = invalid
+  | T.any isControl tokenVal = invalid
+  | T.any isHiddenDriveOAuthTokenChar tokenVal = invalid
+  | T.any (not . isAscii) tokenVal = invalid
+  | otherwise = Right tokenVal
+  where
+    tokenVal = T.strip rawToken
+    invalid =
+      Left err500
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 ("Stored Google Calendar " <> label <> " is invalid")
+        }
+
 validateCalendarEventStatusQuery :: Maybe Text -> Either ServerError (Maybe Text)
 validateCalendarEventStatusQuery Nothing = Right Nothing
 validateCalendarEventStatusQuery (Just rawStatus) = do
@@ -3130,7 +3158,9 @@ calendarServer user =
         _ -> do
           case Cal.googleCalendarConfigRefreshToken cfg of
             Nothing -> throwError err401 { errBody = "No hay refresh_token para Google Calendar." }
-            Just rt -> refreshAccessToken cid sec redirect cfg rt now
+            Just rt -> do
+              refreshToken <- either throwError pure (validateStoredGoogleCalendarRefreshToken rt)
+              refreshAccessToken cid sec redirect cfg refreshToken now
 
     refreshAccessToken :: Text -> Text -> Text -> Cal.GoogleCalendarConfig -> Text -> UTCTime -> AppM Cal.GoogleCalendarConfig
     refreshAccessToken cid sec redirect cfg rt now = do
@@ -3166,16 +3196,23 @@ calendarServer user =
     syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
     syncFromGoogle cfg fromTs toTs now = do
       manager <- pure sharedTlsManager
-      let token = Cal.googleCalendarConfigAccessToken cfg
-      case token of
-        Nothing -> throwError err401 { errBody = "No hay access_token para Google Calendar." }
-        Just tok -> do
-          (events, cursor) <- fetchAllPages manager tok (Cal.googleCalendarConfigCalendarId cfg) (Cal.googleCalendarConfigSyncCursor cfg) fromTs toTs Nothing []
-          results <- mapM (upsertEvent now (Cal.googleCalendarConfigCalendarId cfg)) events
-          let createdCount = length (filter (== "created") results)
-              updatedCount = length (filter (== "updated") results)
-              deletedCount = length (filter (== "cancelled") results)
-          pure (createdCount, updatedCount, deletedCount, cursor)
+      token <- either throwError pure $
+        validateStoredGoogleCalendarAccessToken (Cal.googleCalendarConfigAccessToken cfg)
+      (events, cursor) <-
+        fetchAllPages
+          manager
+          token
+          (Cal.googleCalendarConfigCalendarId cfg)
+          (Cal.googleCalendarConfigSyncCursor cfg)
+          fromTs
+          toTs
+          Nothing
+          []
+      results <- mapM (upsertEvent now (Cal.googleCalendarConfigCalendarId cfg)) events
+      let createdCount = length (filter (== "created") results)
+          updatedCount = length (filter (== "updated") results)
+          deletedCount = length (filter (== "cancelled") results)
+      pure (createdCount, updatedCount, deletedCount, cursor)
 
     fetchAllPages
       :: Manager

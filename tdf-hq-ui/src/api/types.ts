@@ -757,6 +757,7 @@ export interface FanClubPostDTO {
   fcpParentId?: number | null;
   fcpTitle?: string | null;
   fcpContent: string;
+  fcpMediaUrls: string[];
   fcpAuthorId: number;
   fcpAuthorName: string;
   fcpAvatarUrl?: string | null;
@@ -809,6 +810,7 @@ export interface FanClubCreatePostReq {
   fcpReqTitle?: string | null;
   fcpReqContent: string;
   fcpReqParentId?: number | null;
+  fcpReqMediaUrls?: string[];
 }
 
 export interface FanClubCreateEventReq {
@@ -897,4 +899,32 @@ export interface FanClubMemberProfileUpdate {
   fcmpuHandle?: string | null;
   fcmpuBio?: string | null;
   fcmpuAvatarUrl?: string | null;
+}
+
+export interface FanClubInboxMessageDTO {
+  fcimId: number;
+  fcimFanId: number;
+  fcimFanName: string;
+  fcimFanAvatarUrl?: string | null;
+  fcimSubject?: string | null;
+  fcimBody: string;
+  fcimStatus: string;
+  fcimOfficerId?: number | null;
+  fcimOfficerName?: string | null;
+  fcimReplyBody?: string | null;
+  fcimCreatedAt: string;
+  fcimUpdatedAt?: string | null;
+}
+
+export interface FanClubInboxSendReq {
+  fcisReqSubject?: string | null;
+  fcisReqBody: string;
+}
+
+export interface FanClubInboxReplyReq {
+  fcirReqBody: string;
+}
+
+export interface FanClubInboxStatusReq {
+  fcistReqStatus: string;
 }

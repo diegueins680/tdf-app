@@ -20,12 +20,14 @@ import {
   Report as ReportIcon,
   Person as PersonIcon,
   LockOutlined as LockOutlinedIcon,
+  MailOutline as MailIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO } from '../api/types';
+import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
 
 export default function FanClubPage() {
   const { artistId } = useParams<{ artistId: string }>();
@@ -82,6 +84,14 @@ export default function FanClubPage() {
 
   const club = clubQuery.data;
   const isOfficer = club?.fcOfficers.some(o => o.fcoPartyId === session?.partyId) ?? false;
+  const userRoles = session?.roles ?? [];
+  const canManageClub = isOfficer || userRoles.some(r => ['admin', 'agency'].includes(r.toLowerCase()));
+
+  const inboxQuery = useQuery({
+    queryKey: ['fan-club-inbox', artistIdNum],
+    queryFn: () => Fans.listClubInbox(artistIdNum),
+    enabled: artistIdNum > 0 && isAuthenticated && canManageClub && tab === 5,
+  });
 
   useEffect(() => {
     if (!isAuthenticated && club) {
@@ -153,6 +163,9 @@ export default function FanClubPage() {
                       label={`${o.fcoFanName} — ${o.fcoRole}`}
                       color="primary"
                       variant="outlined"
+                      component={RouterLink}
+                      to={`/fans/clubs/${artistIdNum}/members/${o.fcoPartyId}`}
+                      clickable
                     />
                   ))}
                 </Stack>
@@ -167,30 +180,34 @@ export default function FanClubPage() {
               <Tab icon={<PhotoLibraryIcon />} label="Recuerdos" />
               <Tab icon={<CalendarMonthIcon />} label="Calendario" />
               <Tab icon={<HowToVoteIcon />} label="Elecciones" />
+              {canManageClub && <Tab icon={<MailIcon />} label="Mensajes" />}
             </Tabs>
           </Box>
 
           {tab === 0 && (isAuthenticated ? (
-            <ClubFeed artistId={artistIdNum} feed={feedQuery.data ?? []} isOfficer={isOfficer} loading={feedQuery.isLoading} />
+            <ClubFeed artistId={artistIdNum} feed={feedQuery.data ?? []} isOfficer={canManageClub} loading={feedQuery.isLoading} />
           ) : (
             <LoginPrompt loginPath={loginPath} />
           ))}
           {tab === 1 && (isAuthenticated ? (
-            <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={isOfficer} loading={postsQuery.isLoading} />
+            <ClubForum artistId={artistIdNum} posts={postsQuery.data ?? []} isOfficer={canManageClub} loading={postsQuery.isLoading} />
           ) : (
             <LoginPrompt loginPath={loginPath} />
           ))}
           {tab === 2 && (isAuthenticated ? (
-            <ClubMemories artistId={artistIdNum} memories={memoriesQuery.data ?? []} isOfficer={isOfficer} loading={memoriesQuery.isLoading} />
+            <ClubMemories artistId={artistIdNum} memories={memoriesQuery.data ?? []} isOfficer={canManageClub} loading={memoriesQuery.isLoading} />
           ) : (
             <LoginPrompt loginPath={loginPath} />
           ))}
-          {tab === 3 && <ClubCalendar artistId={artistIdNum} events={eventsQuery.data ?? []} isOfficer={isOfficer} loading={eventsQuery.isLoading} />}
+          {tab === 3 && <ClubCalendar artistId={artistIdNum} events={eventsQuery.data ?? []} isOfficer={canManageClub} loading={eventsQuery.isLoading} />}
           {tab === 4 && (isAuthenticated ? (
             <ClubElections artistId={artistIdNum} elections={electionsQuery.data ?? []} />
           ) : (
             <LoginPrompt loginPath={loginPath} />
           ))}
+          {tab === 5 && canManageClub && (
+            <ClubInbox artistId={artistIdNum} messages={inboxQuery.data ?? []} loading={inboxQuery.isLoading} />
+          )}
         </Stack>
       )}
     </PageShell>
@@ -282,20 +299,157 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
   );
 }
 
+function ClubInbox({ artistId, messages, loading }: { artistId: number; messages: FanClubInboxMessageDTO[]; loading: boolean }) {
+  const qc = useQueryClient();
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [replyOpen, setReplyOpen] = useState<number | null>(null);
+  const [replyBody, setReplyBody] = useState('');
+  const [detailOpen, setDetailOpen] = useState<number | null>(null);
+
+  const replyMut = useMutation({
+    mutationFn: ({ messageId, body }: { messageId: number; body: string }) =>
+      Fans.replyClubInboxMessage(artistId, messageId, { fcirReqBody: body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
+      setReplyOpen(null);
+      setReplyBody('');
+    },
+  });
+
+  const statusMut = useMutation({
+    mutationFn: ({ messageId, status }: { messageId: number; status: string }) =>
+      Fans.updateClubInboxStatus(artistId, messageId, { fcistReqStatus: status }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
+    },
+  });
+
+  if (loading) return <SkeletonCards count={3} />;
+
+  const filtered = filterStatus === 'all' ? messages : messages.filter(m => m.fcimStatus === filterStatus);
+  const unreadCount = messages.filter(m => m.fcimStatus === 'unread').length;
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'unread': return 'error';
+      case 'opened': return 'warning';
+      case 'replied': return 'success';
+      case 'archived': return 'default';
+      default: return 'default';
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack direction="row" spacing={1}>
+          <Chip label={`Todos (${messages.length})`} color={filterStatus === 'all' ? 'primary' : 'default'} onClick={() => setFilterStatus('all')} clickable />
+          <Chip label={`Sin leer (${unreadCount})`} color={filterStatus === 'unread' ? 'error' : 'default'} onClick={() => setFilterStatus('unread')} clickable />
+          <Chip label={`Abiertos`} color={filterStatus === 'opened' ? 'warning' : 'default'} onClick={() => setFilterStatus('opened')} clickable />
+          <Chip label={`Respondidos`} color={filterStatus === 'replied' ? 'success' : 'default'} onClick={() => setFilterStatus('replied')} clickable />
+          <Chip label={`Archivados`} color={filterStatus === 'archived' ? 'default' : 'default'} onClick={() => setFilterStatus('archived')} clickable />
+        </Stack>
+      </Stack>
+
+      {filtered.length === 0 && (
+        <EmptyState icon={<MailIcon fontSize="large" />} title="Sin mensajes" description="No hay mensajes en esta categoría." />
+      )}
+
+      {filtered.map(msg => (
+        <Card key={msg.fcimId}>
+          <CardContent>
+            <Stack spacing={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Avatar src={msg.fcimFanAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
+                <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
+                <Box flexGrow={1} />
+                <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
+                {msg.fcimStatus !== 'replied' && (
+                  <Button size="small" variant="contained" onClick={() => { setReplyOpen(msg.fcimId); setReplyBody(''); }}>Responder</Button>
+                )}
+                {msg.fcimStatus !== 'archived' && (
+                  <Button size="small" variant="text" onClick={() => statusMut.mutate({ messageId: msg.fcimId, status: 'archived' })}>Archivar</Button>
+                )}
+              </Stack>
+              {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
+              <Typography variant="body2" color="text.secondary">
+                {msg.fcimBody.length > 200 ? `${msg.fcimBody.slice(0, 200)}…` : msg.fcimBody}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {new Date(msg.fcimCreatedAt).toLocaleString()}
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Dialog open={detailOpen !== null} onClose={() => setDetailOpen(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Mensaje</DialogTitle>
+        <DialogContent>
+          {detailOpen !== null && (() => {
+            const msg = messages.find(m => m.fcimId === detailOpen);
+            if (!msg) return null;
+            return (
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Avatar src={msg.fcimFanAvatarUrl || undefined} />
+                  <Typography variant="subtitle1">{msg.fcimFanName}</Typography>
+                  <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
+                </Stack>
+                {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
+                <Typography variant="body1">{msg.fcimBody}</Typography>
+                {msg.fcimReplyBody && (
+                  <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
+                    <CardContent>
+                      <Typography variant="subtitle2">Respuesta de {msg.fcimOfficerName || 'Directiva'}</Typography>
+                      <Typography variant="body2">{msg.fcimReplyBody}</Typography>
+                    </CardContent>
+                  </Card>
+                )}
+              </Stack>
+            );
+          })()}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailOpen(null)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={replyOpen !== null} onClose={() => setReplyOpen(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Responder mensaje</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField label="Respuesta" value={replyBody} onChange={e => setReplyBody(e.target.value)} multiline rows={4} fullWidth />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReplyOpen(null)}>Cancelar</Button>
+          <Button variant="contained" disabled={!replyBody.trim() || replyMut.isPending} onClick={() => replyOpen !== null && replyMut.mutate({ messageId: replyOpen, body: replyBody })}>
+            Enviar respuesta
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Stack>
+  );
+}
+
 function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; posts: FanClubPostDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
 
   const createPost = useMutation({
-    mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null }),
+    mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null, fcpReqMediaUrls: postMediaUrls }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
       qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
       setOpen(false);
       setTitle('');
       setContent('');
+      setPostMediaUrls([]);
     },
   });
 
@@ -364,6 +518,15 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
               </Stack>
               {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
               <Typography variant="body1">{post.fcpContent}</Typography>
+              {post.fcpMediaUrls.length > 0 && (
+                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                  {post.fcpMediaUrls.map((url, idx) => (
+                    <ImageListItem key={idx}>
+                      <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              )}
               <Typography variant="caption" color="text.secondary">
                 {new Date(post.fcpCreatedAt).toLocaleString()}
               </Typography>
@@ -372,16 +535,34 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         </Card>
       ))}
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog open={open} onClose={() => { setOpen(false); setPostMediaUrls([]); }} fullWidth maxWidth="sm">
         <DialogTitle>Nuevo post</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Título (opcional)" value={title} onChange={e => setTitle(e.target.value)} fullWidth />
             <TextField label="Contenido" value={content} onChange={e => setContent(e.target.value)} multiline rows={4} fullWidth />
+            <GoogleDriveUploadWidget
+              label="Adjuntar fotos, audio o video"
+              helperText="Sube archivos a Google Drive. Se insertarán como enlaces en el post."
+              accept="image/*,audio/*,video/*"
+              multiple
+              dense
+              onComplete={(files) => {
+                const urls = files.map(f => f.publicUrl ?? f.webContentLink ?? f.webViewLink ?? '').filter(Boolean);
+                setPostMediaUrls(prev => [...prev, ...urls]);
+              }}
+            />
+            {postMediaUrls.length > 0 && (
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {postMediaUrls.map((url, idx) => (
+                  <Chip key={idx} label={url.slice(0, 40) + (url.length > 40 ? '…' : '')} size="small" onDelete={() => setPostMediaUrls(prev => prev.filter((_, i) => i !== idx))} />
+                ))}
+              </Stack>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={() => { setOpen(false); setPostMediaUrls([]); }}>Cancelar</Button>
           <Button variant="contained" onClick={() => createPost.mutate()} disabled={!content.trim() || createPost.isPending}>
             Publicar
           </Button>

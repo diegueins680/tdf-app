@@ -383,6 +383,11 @@ type FanSecureAPI =
       :<|> "member-profiles" :> Get '[JSON] [FanClubMemberProfileDTO]
       :<|> "member-profiles" :> "me" :> Get '[JSON] FanClubMemberProfileDTO
       :<|> "member-profiles" :> "me" :> ReqBody '[JSON] FanClubMemberProfileUpdate :> Put '[JSON] FanClubMemberProfileDTO
+      :<|> "inbox" :> Get '[JSON] [FanClubInboxMessageDTO]
+      :<|> "inbox" :> ReqBody '[JSON] FanClubInboxSendReq :> Post '[JSON] FanClubInboxMessageDTO
+      :<|> "inbox" :> Capture "messageId" Int64 :> Get '[JSON] FanClubInboxMessageDTO
+      :<|> "inbox" :> Capture "messageId" Int64 :> "reply" :> ReqBody '[JSON] FanClubInboxReplyReq :> Post '[JSON] FanClubInboxMessageDTO
+      :<|> "inbox" :> Capture "messageId" Int64 :> "status" :> ReqBody '[JSON] FanClubInboxStatusReq :> Post '[JSON] FanClubInboxMessageDTO
          )
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent

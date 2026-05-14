@@ -23,6 +23,10 @@ import type {
   FanClubMemoryReportReq,
   FanClubMemberProfileDTO,
   FanClubMemberProfileUpdate,
+  FanClubInboxMessageDTO,
+  FanClubInboxSendReq,
+  FanClubInboxReplyReq,
+  FanClubInboxStatusReq,
 } from './types';
 
 export const Fans = {
@@ -86,4 +90,15 @@ export const Fans = {
   getMyClubMemberProfile: (artistId: number) => get<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`),
   updateMyClubMemberProfile: (artistId: number, payload: FanClubMemberProfileUpdate) =>
     put<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`, payload),
+
+  // Fan Club Inbox
+  listClubInbox: (artistId: number) => get<FanClubInboxMessageDTO[]>(`/fans/me/clubs/${artistId}/inbox`),
+  sendClubInboxMessage: (artistId: number, payload: FanClubInboxSendReq) =>
+    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox`, payload),
+  getClubInboxMessage: (artistId: number, messageId: number) =>
+    get<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}`),
+  replyClubInboxMessage: (artistId: number, messageId: number, payload: FanClubInboxReplyReq) =>
+    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/reply`, payload),
+  updateClubInboxStatus: (artistId: number, messageId: number, payload: FanClubInboxStatusReq) =>
+    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/status`, payload),
 };
