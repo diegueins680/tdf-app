@@ -10622,6 +10622,73 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats link-in-bio source wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'linktree_link',
+      'beacons_page',
+      'beacons.ai_link',
+      'stan_store',
+      'koji.to_link',
+      'milkshake_app',
+      'bio_link',
+      'link_in_bio',
+      'enlace_en_bio',
+      'profile_link',
+      'pagina_de_bio',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Linktree link',
+      'Beacons page',
+      'Beacons ai link',
+      'Stan store',
+      'Koji to link',
+      'Milkshake app',
+      'Bio link',
+      'Link in bio',
+      'Enlace en bio',
+      'Profile link',
+      'Pagina de bio',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'linktree');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "linktree" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats social lead-form sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'facebook_lead_ad',
