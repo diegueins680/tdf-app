@@ -9355,6 +9355,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats setup placeholder contacts as missing contact in busy registration lists', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crEmail: index % 2 === 0 ? 'Por completar' : 'Sin correo',
+        crPhoneE164: index % 2 === 0 ? 'Pendiente por validar' : 'Por confirmar',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('contacto');
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Contacto pendiente en todas las inscripciones visibles. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countOccurrences(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(1);
+      expect(container.textContent).not.toContain('Por completar');
+      expect(container.textContent).not.toContain('Sin correo');
+      expect(container.textContent).not.toContain('Pendiente por validar');
+      expect(container.textContent).not.toContain('Por confirmar');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'contacto pendiente');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).not.toContain('No hay coincidencias');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('compacts busy payment actions even when shared contact guidance is present', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({

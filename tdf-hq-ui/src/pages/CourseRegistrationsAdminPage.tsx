@@ -224,6 +224,54 @@ const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
 const missingContactSummary = 'Sin correo ni teléfono';
+const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n a',
+  'na',
+  'ninguna',
+  'ninguno',
+  'no aplica',
+  'no disponible',
+  'none',
+  'not available',
+  'pendiente',
+  'pendiente por validar',
+  'por actualizar',
+  'por completar',
+  'por confirmar',
+  'por definir',
+  'por validar',
+  's n',
+  'sin completar',
+  'sin correo',
+  'sin email',
+  'sin telefono',
+  'sin telefono ni correo',
+  'sin actualizar',
+  'tbd',
+]);
+
+const normalizeContactPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderContactValue = (value: string) => {
+  const placeholderKey = normalizeContactPlaceholderKey(value);
+  return placeholderKey === '' || CONTACT_PLACEHOLDER_VALUE_KEYS.has(placeholderKey);
+};
+
+const normalizeRegistrationContactValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (isPlaceholderContactValue(trimmed)) return null;
+  return trimmed;
+};
 
 const formatDossierContextActionsLabel = ({
   showInlineEmptyFollowUpAction,
@@ -447,7 +495,9 @@ const phoneSearchDigitCandidates = (digits: string) => {
   ));
 };
 const phoneDigitsMatchLocalSearch = (phoneValue: string | null | undefined, localSearchDigitsKey: string) => {
-  const phoneCandidates = phoneSearchDigitCandidates(normalizeLocalSearchDigits(phoneValue ?? ''));
+  const phoneCandidates = phoneSearchDigitCandidates(
+    normalizeLocalSearchDigits(normalizeRegistrationContactValue(phoneValue) ?? ''),
+  );
   const searchCandidates = phoneSearchDigitCandidates(localSearchDigitsKey);
 
   return phoneCandidates.some((phoneDigits) => (
@@ -485,9 +535,9 @@ const formatLocalSearchQuerySummary = (value: string) => {
   return `${compactPrefix}...`;
 };
 const normalizeContactComparisonValue = (value: string | null | undefined) =>
-  value?.trim().toLocaleLowerCase('es') ?? '';
+  normalizeRegistrationContactValue(value)?.toLocaleLowerCase('es') ?? '';
 const normalizePhoneComparisonValue = (value: string | null | undefined) => {
-  const trimmedValue = value?.trim() ?? '';
+  const trimmedValue = normalizeRegistrationContactValue(value) ?? '';
   if (!/^\+?[\d\s().-]+$/.test(trimmedValue)) return '';
 
   const digits = normalizeLocalSearchDigits(trimmedValue);
@@ -2288,7 +2338,7 @@ const registrationVisibleSearchText = (
   const courseSlug = reg.crCourseSlug.trim();
   return [
     reg.crFullName,
-    reg.crEmail,
+    normalizeRegistrationContactValue(reg.crEmail),
     `registro #${reg.crId}`,
     String(reg.crId),
     courseSlug,
@@ -2390,8 +2440,8 @@ const registrationIdentityDisplay = (
   registrationId?: number | null,
 ) => {
   const trimmedName = fullName?.trim() ?? '';
-  const trimmedEmail = email?.trim() ?? '';
-  const trimmedPhone = phone?.trim() ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
   const fallbackIdentity = registrationId == null ? 'Sin nombre' : `Registro #${registrationId}`;
 
   if (trimmedName) {
@@ -2425,15 +2475,16 @@ const registrationIdentityKind = (
   reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ): RegistrationIdentityKind => {
   if (reg.crFullName?.trim()) return 'name';
-  if (reg.crEmail?.trim()) return 'email';
-  if (reg.crPhoneE164?.trim()) return 'phone';
+  if (normalizeRegistrationContactValue(reg.crEmail)) return 'email';
+  if (normalizeRegistrationContactValue(reg.crPhoneE164)) return 'phone';
   return 'record';
 };
 
 const registrationNeedsContact = (
   reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
 ) => (
-  !reg.crEmail?.trim() && !reg.crPhoneE164?.trim()
+  !normalizeRegistrationContactValue(reg.crEmail)
+  && !normalizeRegistrationContactValue(reg.crPhoneE164)
 );
 
 const registrationContactStateSearchValues = (
@@ -2484,8 +2535,8 @@ const registrationContactSummary = (
   phone: string | null | undefined,
   visibleIdentityValues: readonly string[] = [],
 ) => {
-  const trimmedEmail = email?.trim() ?? '';
-  const trimmedPhone = phone?.trim() ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
   if (parts.length === 0) return missingContactSummary;
   return visibleRegistrationContactParts(parts, visibleIdentityValues).join(' · ');
@@ -2496,9 +2547,9 @@ const registrationActionTargetLabel = (
 ) => {
   const trimmedName = reg.crFullName?.trim() ?? '';
   if (trimmedName) return trimmedName;
-  const trimmedEmail = reg.crEmail?.trim() ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(reg.crEmail) ?? '';
   if (trimmedEmail) return trimmedEmail;
-  const trimmedPhone = reg.crPhoneE164?.trim() ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(reg.crPhoneE164) ?? '';
   if (trimmedPhone) return trimmedPhone;
   return `registro #${reg.crId}`;
 };
@@ -2639,11 +2690,13 @@ const buildLocalSearchPlaceholder = (
 
   registrations.forEach((reg) => {
     const hasName = Boolean(reg.crFullName?.trim());
-    const hasEmail = Boolean(reg.crEmail?.trim());
-    const hasPhone = Boolean(reg.crPhoneE164?.trim());
+    const email = normalizeRegistrationContactValue(reg.crEmail);
+    const phone = normalizeRegistrationContactValue(reg.crPhoneE164);
+    const hasEmail = Boolean(email);
+    const hasPhone = Boolean(phone);
     const hasContact = hasEmail || hasPhone;
-    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crEmail));
-    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crPhoneE164));
+    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(reg.crFullName, email));
+    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(reg.crFullName, phone));
 
     if (hasName) hasNameIdentity = true;
     if (hasDistinctEmail) hasEmailIdentity = true;
@@ -2752,6 +2805,9 @@ const preferNonEmptyText = (primary?: string | null, fallback?: string | null) =
   return null;
 };
 
+const preferContactText = (primary?: string | null, fallback?: string | null) =>
+  normalizeRegistrationContactValue(primary) ?? normalizeRegistrationContactValue(fallback);
+
 const preferMeaningfulRegistrationSource = (primary?: string | null, fallback?: string | null) => {
   const trimmedPrimary = primary?.trim() ?? '';
   const trimmedFallback = fallback?.trim() ?? '';
@@ -2801,8 +2857,8 @@ const mergeCourseRegistrationRecords = (
   ...primary,
   crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
   crFullName: preferNonEmptyText(primary.crFullName, fallback.crFullName),
-  crEmail: preferNonEmptyText(primary.crEmail, fallback.crEmail),
-  crPhoneE164: preferNonEmptyText(primary.crPhoneE164, fallback.crPhoneE164),
+  crEmail: preferContactText(primary.crEmail, fallback.crEmail),
+  crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
   crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
   crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
   crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
@@ -3237,7 +3293,7 @@ export default function CourseRegistrationsAdminPage() {
       const courseSlug = reg.crCourseSlug.trim();
       const haystack = [
         reg.crFullName,
-        reg.crEmail,
+        normalizeRegistrationContactValue(reg.crEmail),
         `registro #${reg.crId}`,
         String(reg.crId),
         reg.crAdminNotes,
@@ -3385,7 +3441,7 @@ export default function CourseRegistrationsAdminPage() {
     [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, searchedRegistrations],
   );
   const hasSearchablePhoneContacts = useMemo(
-    () => registrations.some((reg) => Boolean(reg.crPhoneE164?.trim())),
+    () => registrations.some((reg) => Boolean(normalizeRegistrationContactValue(reg.crPhoneE164))),
     [registrations],
   );
   const shortPhoneSearchHint = hasSearchablePhoneContacts
@@ -4996,8 +5052,7 @@ export default function CourseRegistrationsAdminPage() {
   const showInternalRegistrationReference = Boolean(
     activeRegistration?.crPartyId
     && !activeRegistration?.crFullName?.trim()
-    && !activeRegistration?.crEmail?.trim()
-    && !activeRegistration?.crPhoneE164?.trim(),
+    && registrationNeedsContact(activeRegistration),
   );
   const activeRegistrationSecondaryLine = showInternalRegistrationReference && activeRegistration?.crPartyId
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
@@ -6252,8 +6307,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowSecondaryIdentity =
                     rowIdentity.secondary === missingContactSummary ? '' : rowIdentity.secondary;
                   const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
-                    && !reg.crEmail?.trim()
-                    && !reg.crPhoneE164?.trim();
+                    && registrationNeedsContact(reg);
                   const showRowRegistrationDisambiguator =
                     registrationIdsRequiringActionRecordDisambiguator.has(reg.crId)
                     || (
