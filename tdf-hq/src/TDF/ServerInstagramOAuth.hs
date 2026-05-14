@@ -508,7 +508,7 @@ resolveInstagramRedirectUri cfg mProvided = do
   maybe
     (Right configuredRedirectUri)
     (validateProvidedRedirectUri configuredRedirectUri)
-    (mProvided >>= cleanRedirectText)
+    mProvided
   where
     validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
       redirectUri <- validateInstagramRedirectUri rawRedirect
@@ -517,10 +517,6 @@ resolveInstagramRedirectUri cfg mProvided = do
         else
           Left err400
             { errBody = "redirectUri must match the configured Instagram OAuth callback URL" }
-
-    cleanRedirectText txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
 
 validateConfiguredInstagramRedirectUri :: Text -> Either ServerError Text
 validateConfiguredInstagramRedirectUri rawRedirect =

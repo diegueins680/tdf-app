@@ -168,3 +168,14 @@ FINAL_STATUS: done — Packet A proven for testing version (4× EAS Release Deto
 - **No company-level blocker** to Lane C durability. No repair needed.
 
 FINAL_STATUS: done — Packet A proven for testing version (Platform 5× PASS at 14:00Z, Release 7× PASS at 14:20Z, CEO waiver acknowledged 13:00Z), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 45620, heartbeat 15:40Z, supervisor restart pending ~9.25h/24h threshold), systems lane paused, CTO gap closed.
+
+## 2026-05-14 21:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — one commit in monitored paths since 2026-05-13 22:24 UTC (`3521b5fbd`, `.detoxrc.js` only: device property `id` vs `udid` fix), **not login logic**. Platform 8th consecutive Detox PASS at 20:00 UTC and Release 7th consecutive Detox PASS at 20:20 UTC per company truth (latency returned to baseline ~79 s). CEO physical-device Google OAuth waiver recorded in `tdf-mobile/docs/release-readiness.md` remains in force. Testing version formally unblocked.
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`). Child PID 75578 alive (STAT S, elapsed ~3h17m). Heartbeat fresh at 2026-05-14T21:40:12Z. `restartCount` 243 (up from 233 at 19:40Z), normal iteration cycling with 60s restart delay. `staleRestartCount` 1 (within tolerance). `lastError` shows transient git `index.lock` (auto-resolved, `lastIterationResult` `ok`, `lastExitCode` 0, lock file absent at check time). Prior 06:26 UTC fix still on disk; 24 h graceful-restart deadline remains 2026-05-15 06:26 UTC if stale lastError persists. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. Recommendation: **STAY PAUSED**.
+- **Release report:** `reports/tdf-label-release.md` does not exist on disk. No release artifact to tail.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (one test-config commit only, no login logic changes; Platform 8× PASS, Release 7× PASS per company truth), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 75578, heartbeat 21:40:12Z, restart deadline 06:26Z), systems lane paused, no release report on disk.

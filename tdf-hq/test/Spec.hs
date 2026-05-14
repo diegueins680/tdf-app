@@ -4599,8 +4599,20 @@ main = hspec $ do
             cfg <- loadInstagramConfig
             resolveInstagramRedirectUri cfg Nothing
                 `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
-            resolveInstagramRedirectUri cfg (Just "   ")
-                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+
+        it "rejects blank explicit Instagram redirect URIs instead of using the fallback" $ do
+            cfg <- loadInstagramConfig
+            case resolveInstagramRedirectUri cfg (Just "   ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "redirectUri must be an absolute https Instagram OAuth callback URL"
+                Right value ->
+                    expectationFailure
+                        ( "Expected blank explicit Instagram redirectUri to fail, got: "
+                            <> show value
+                        )
 
         it "rejects unsafe configured Instagram callback fallbacks before token exchange" $ do
             cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig

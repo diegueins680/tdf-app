@@ -771,7 +771,7 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
-        it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do
+        it "accepts canonical payloads and trims request inputs" $ do
             case decodeInstagramOAuthExchange
                 "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}"
              of
@@ -780,14 +780,6 @@ spec = do
                 Right (InstagramOAuth.InstagramOAuthExchangeRequest codeVal redirectUriVal) -> do
                     codeVal `shouldBe` "oauth-code-123"
                     redirectUriVal `shouldBe` Just "https://tdf-app.pages.dev/oauth/instagram/callback"
-
-            case decodeInstagramOAuthExchange
-                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
-             of
-                Left err ->
-                    expectationFailure ("Expected blank Instagram OAuth redirectUri to decode as omitted, got: " <> err)
-                Right (InstagramOAuth.InstagramOAuthExchangeRequest _ redirectUriVal) ->
-                    redirectUriVal `shouldBe` Nothing
 
         it "rejects blank or typoed request bodies before the handler reaches Facebook with ambiguous input" $ do
             decodeInstagramOAuthExchange
@@ -804,6 +796,12 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
                 (BL8.concat ["{\"code\":\"", BL8.pack (replicate 4097 'a'), "\"}"])
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":null}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
                 "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
