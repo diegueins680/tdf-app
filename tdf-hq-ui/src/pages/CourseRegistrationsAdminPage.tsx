@@ -1576,8 +1576,12 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const fallbackLabel = readableCohortFallbackLabel(slug);
   if (!title) return fallbackLabel;
 
-  const strippedTitle = dedupeRepeatedCohortTitleSegments(stripTrailingCohortSlug(title, slug));
-  const displayTitle = strippedTitle || fallbackLabel;
+  const strippedTitle = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
+  );
+  const displayTitle = unwrapFirstRunDescriptorWrappedTitle(
+    dedupeRepeatedCohortTitleSegments(strippedTitle),
+  ) || fallbackLabel;
   if (!slug) return displayTitle;
 
   const displayKey = normalizeCohortLabelKey(displayTitle);

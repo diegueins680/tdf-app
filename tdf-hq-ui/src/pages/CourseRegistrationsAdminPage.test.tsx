@@ -1464,6 +1464,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips public-form wrappers from selected cohort filter labels', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Formulario público - Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Página pública para inscripciones - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(container.textContent).toContain('Beatmaking 101');
+      expect(container.textContent).not.toContain('Formulario público - Beatmaking 101');
+      expect(container.textContent).not.toContain('Página pública para inscripciones');
+      expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101)');
+    });
+
+    await cleanup();
+  });
+
   it('condenses each registration contact line into one scan-friendly summary', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
