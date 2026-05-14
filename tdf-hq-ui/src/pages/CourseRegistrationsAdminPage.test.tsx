@@ -10700,24 +10700,32 @@ describe('CourseRegistrationsAdminPage', () => {
   it('treats checkout and payment source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'stripe_checkout',
+      'stripe_checkout_links',
       'datafast_payment_link',
       'kushki_payment_link',
       'paymentez_checkout',
       'deuna_payment_link',
       'payphone_payment_button',
+      'payphone_payment_buttons',
       'online_payment_form',
+      'online_payment_links',
       'checkout_portal',
+      'checkout_links',
       'formulario_de_pago',
     ] as const;
     const hiddenSourceLabels = [
       'Stripe checkout',
+      'Stripe checkout links',
       'Datafast payment link',
       'Kushki payment link',
       'Paymentez checkout',
       'Deuna payment link',
       'Payphone payment button',
+      'Payphone payment buttons',
       'Online payment form',
+      'Online payment links',
       'Checkout portal',
+      'Checkout links',
       'Formulario de pago',
     ];
     listRegistrationsMock.mockResolvedValue(

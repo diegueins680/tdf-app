@@ -1734,8 +1734,11 @@ const sourceAliasKeyVariants = (sourceKey: string) => {
   const variants = new Set([sourceKey]);
   const pluralSuffixes = [
     ['form', 'forms'],
+    ['link', 'links'],
     ['page', 'pages'],
     ['portal', 'portals'],
+    ['button', 'buttons'],
+    ['url', 'urls'],
   ] as const;
 
   for (const [singularSuffix, pluralSuffix] of pluralSuffixes) {
