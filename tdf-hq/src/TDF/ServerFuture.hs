@@ -194,6 +194,7 @@ validateFutureStubMetadataIn catalog rawArea rawEndpoint = do
 
 validateFutureStubCatalog :: [(Text, Text)] -> Either ServerError [(Text, Text)]
 validateFutureStubCatalog catalog = do
+  _ <- validateReservedFutureStubRoutes reservedFutureStubRoutes
   normalized <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
@@ -201,6 +202,24 @@ validateFutureStubCatalog catalog = do
   if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
     else Right normalized
+
+validateReservedFutureStubRoutes :: [(Text, Text)] -> Either ServerError [(Text, Text)]
+validateReservedFutureStubRoutes routes = do
+  normalized <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateReservedFutureStubRoute routes
+  if null normalized
+       || normalized /= requiredReservedFutureStubRoutes
+       || length normalized /= length (nub normalized)
+       || any (`elem` allowedFutureStubMetadata) normalized
+    then invalidFutureStubCatalog
+    else Right normalized
+
+validateReservedFutureStubRoute :: (Text, Text) -> Either ServerError (Text, Text)
+validateReservedFutureStubRoute (area, endpoint) = do
+  areaClean <- validateFutureStubArea area
+  endpointClean <- validateFutureStubEndpoint endpoint
+  pure (areaClean, endpointClean)
 
 validateFutureStubCatalogEntry :: (Text, Text) -> Either ServerError (Text, Text)
 validateFutureStubCatalogEntry (area, endpoint) = do
@@ -236,6 +255,10 @@ validateFutureStubCatalogAreaOrder catalog = do
 
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =
+  requiredReservedFutureStubRoutes
+
+requiredReservedFutureStubRoutes :: [(Text, Text)]
+requiredReservedFutureStubRoutes =
   [ ("admin", "console")
   , ("admin", "seed")
   ]

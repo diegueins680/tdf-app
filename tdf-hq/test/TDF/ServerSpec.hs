@@ -400,12 +400,14 @@ import TDF.ServerFuture
     , futureServer
     , invalidCardText
     , mountedFutureStubAreas
+    , reservedFutureStubRoutes
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleView
     , validateFutureAdminConsoleViewWithCatalog
+    , validateReservedFutureStubRoutes
     , validateFutureStubArea
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
@@ -10655,6 +10657,27 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [(" crm", "parties/list-columns")]
             assertInvalid [("crm", "parties/1list-columns")]
             assertInvalid [("crm", "parties/list columns")]
+
+        it "keeps non-stub fallback discovery routes reserved out of the generic catalog" $ do
+            validateReservedFutureStubRoutes reservedFutureStubRoutes
+                `shouldBe` Right [("admin", "console"), ("admin", "seed")]
+
+            let assertInvalid routes =
+                    case validateReservedFutureStubRoutes routes of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid reserved fallback route set, got: " <> show value)
+
+            assertInvalid []
+            assertInvalid [("admin", "seed")]
+            assertInvalid [("admin", "console"), ("admin", "console")]
+            assertInvalid [(" admin", "console")]
+            assertInvalid [("admin", "console/preview/details")]
+            assertInvalid [("access", "login-options")]
 
         it "keeps fallback discovery areas grouped in mounted route order" $ do
             validateFutureStubCatalogAreaOrder allowedFutureStubMetadata
