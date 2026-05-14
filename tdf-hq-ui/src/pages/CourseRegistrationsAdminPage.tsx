@@ -1783,8 +1783,15 @@ const placeholderMetadataValueKeys = new Set([
   'unknown',
   'desconocido',
   'desconocida',
+  'pendiente',
+  'pendiente por validar',
+  'por actualizar',
+  'por confirmar',
+  'por definir',
+  'por validar',
   'sin dato',
   'sin datos',
+  'sin actualizar',
   'sin fuente',
   'sin origen',
   'n/a',
@@ -1799,6 +1806,7 @@ const placeholderMetadataValueKeys = new Set([
   'not available',
   'no aplica',
   'no disponible',
+  'tbd',
 ].map(normalizeSourceAliasKey));
 
 const isPlaceholderMetadataValue = (value: string | null | undefined) => {
