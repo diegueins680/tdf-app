@@ -9355,6 +9355,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts busy payment actions even when shared contact guidance is present', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crEmail: null,
+        crPhoneE164: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Contacto pendiente en todas las inscripciones visibles. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
+
+      const firstStatusAction = getButtonByAriaLabel(
+        container,
+        paymentStatusIconButtonAriaLabel('Estudiante 1'),
+      );
+      expect(firstStatusAction.textContent?.trim()).toBe('');
+      expect(firstStatusAction.getAttribute('aria-haspopup')).toBe('menu');
+      expect(firstStatusAction.getAttribute('title')).toBe(
+        'Registrar pago o cambiar estado para Estudiante 1; actual: Pendiente de pago',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('lets admins search the shared contact-pending hint without adding row placeholders', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
