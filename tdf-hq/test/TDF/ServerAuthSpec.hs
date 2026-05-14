@@ -438,6 +438,8 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
                 ("Expected malformed Google subject to be rejected, got " <> show profile)
     assertRejected "   "
     assertRejected "google sub 1"
+    assertRejected "gøogle-sub-1"
+    assertRejected (T.replicate 256 "a")
     assertRejected ("google-sub-" <> hiddenFormat <> "1")
 
   it "falls back to verified email when Google profile names are unsafe" $ do

@@ -1050,7 +1050,10 @@ validateGoogleIdTokenInfo mExpectedClientId info
       Left "El token de Google no coincide con el cliente configurado."
   | not (issuerAllowed (gitIss info)) =
       Left "El token de Google proviene de un emisor no permitido."
-  | T.null (T.strip (gitSub info)) || T.any invalidGoogleSubjectChar (gitSub info) =
+  | gitSub info /= subject
+      || T.null subject
+      || T.length subject > maxGoogleSubjectChars
+      || T.any invalidGoogleSubjectChar subject =
       Left "El token de Google no contiene un identificador válido."
   | otherwise =
       case normalizeAuthEmailAddress (gitEmail info) of
@@ -1064,6 +1067,8 @@ validateGoogleIdTokenInfo mExpectedClientId info
                 , gpPicture = gitPicture info
                 }
            in Right profile
+  where
+    subject = T.strip (gitSub info)
 
 issuerAllowed :: Maybe Text -> Bool
 issuerAllowed Nothing = False
@@ -1073,9 +1078,13 @@ issuerAllowed (Just issRaw) =
 
 invalidGoogleSubjectChar :: Char -> Bool
 invalidGoogleSubjectChar ch =
-  isSpace ch
+  not (isAscii ch)
+    || isSpace ch
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+maxGoogleSubjectChars :: Int
+maxGoogleSubjectChars = 255
 
 sanitizeGoogleProfileName :: Maybe Text -> Maybe Text
 sanitizeGoogleProfileName rawName = do
