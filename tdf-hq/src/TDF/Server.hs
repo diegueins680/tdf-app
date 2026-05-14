@@ -7704,16 +7704,19 @@ resolveOptionalBookingPartyReference
   -> SqlPersistT IO (Either ServerError (Maybe (Entity Party)))
 resolveOptionalBookingPartyReference _ Nothing = pure (Right Nothing)
 resolveOptionalBookingPartyReference fieldName (Just rawId) = do
-  let partyKey = toSqlKey (fromIntegral rawId) :: Key Party
-  mParty <- getEntity partyKey
-  pure $
-    case mParty of
-      Nothing ->
-        Left err422
-          { errBody =
-              BL.fromStrict (TE.encodeUtf8 (fieldName <> " references an unknown party"))
-          }
-      Just partyEnt -> Right (Just partyEnt)
+  case validatePositiveIdField fieldName rawId of
+    Left serverErr -> pure (Left serverErr)
+    Right partyId -> do
+      let partyKey = toSqlKey (fromIntegral partyId) :: Key Party
+      mParty <- getEntity partyKey
+      pure $
+        case mParty of
+          Nothing ->
+            Left err422
+              { errBody =
+                  BL.fromStrict (TE.encodeUtf8 (fieldName <> " references an unknown party"))
+              }
+          Just partyEnt -> Right (Just partyEnt)
 
 
 resolveOptionalBookingEngineerReference

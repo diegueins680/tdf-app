@@ -2531,6 +2531,25 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected unknown booking party id to be rejected, got: " <> show value)
 
+        it "rejects non-positive booking party ids before database lookup fallback" $ do
+            let assertInvalid result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "engineerPartyId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed booking party id to be rejected, got: "
+                                    <> show value
+                                )
+            zeroResult <- runAuthSqlite $
+                resolveOptionalBookingPartyReference "engineerPartyId" (Just 0)
+            negativeResult <- runAuthSqlite $
+                resolveOptionalBookingPartyReference "engineerPartyId" (Just (-7))
+            assertInvalid zeroResult
+            assertInvalid negativeResult
+
     describe "resolveOptionalBookingEngineerReference" $ do
         it "requires explicit booking engineer ids to have an active Engineer role" $ do
             (engineerId, omittedResult, engineerResult, customerResult, inactiveResult) <-
