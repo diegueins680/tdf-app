@@ -247,9 +247,17 @@ parseHttpBaseOrigin raw
     validBaseSuffix suffix =
       BS.null suffix
         || ( "/" `BS.isPrefixOf` suffix
-             && not ("//" `BS.isPrefixOf` suffix)
+             && not (hasAmbiguousBasePath suffix)
              && not (BS.any (\c -> c == '?' || c == '#' || c == '\\') suffix)
            )
+
+    hasAmbiguousBasePath suffix =
+      hasRepeatedPathSeparator suffix
+        || any (`elem` ["..", "."]) (BS.split '/' (BS.drop 1 suffix))
+
+    hasRepeatedPathSeparator suffix =
+      BS.length suffix >= 2
+        && (BS.take 2 suffix == "//" || hasRepeatedPathSeparator (BS.drop 1 suffix))
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
