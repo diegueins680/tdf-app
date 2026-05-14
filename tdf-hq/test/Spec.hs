@@ -4651,6 +4651,12 @@ main = hspec $ do
             assertInvalid "https://localhost/configuracion/integraciones/calendario"
             assertInvalid "https://127.0.0.1:5173/configuracion/integraciones/calendario"
             assertInvalid "https://[::1]:5173/configuracion/integraciones/calendario"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin/../"
+                    <> "configuracion/integraciones/calendario"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin//"
+                    <> "configuracion/integraciones/calendario"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#token"
 
@@ -5537,6 +5543,12 @@ main = hspec $ do
             assertInvalid "https://localhost/oauth/google-drive/callback"
             assertInvalid "https://127.0.0.1:5173/oauth/google-drive/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/other"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin/../"
+                    <> "oauth/google-drive/callback"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin//"
+                    <> "oauth/google-drive/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
 

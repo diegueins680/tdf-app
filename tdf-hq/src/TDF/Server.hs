@@ -2480,6 +2480,7 @@ validateConfiguredDriveRedirectUri rawRedirect =
 isSafeDriveRedirectUri :: Text -> Bool
 isSafeDriveRedirectUri uri
   | not (googleDriveOAuthCallbackPath `T.isSuffixOf` uri) = False
+  | hasAmbiguousOAuthRedirectPath uri = False
   | "https://" `T.isPrefixOf` lowerUri =
       maybe False (not . isLocalCalendarRedirectHost) (calendarRedirectHost (T.drop 8 uri))
   | "http://" `T.isPrefixOf` lowerUri =
@@ -2786,6 +2787,7 @@ validateConfiguredCalendarRedirectUri rawRedirect =
 isSafeCalendarRedirectUri :: Text -> Bool
 isSafeCalendarRedirectUri uri
   | not (googleCalendarOAuthCallbackPath `T.isSuffixOf` uri) = False
+  | hasAmbiguousOAuthRedirectPath uri = False
   | "https://" `T.isPrefixOf` lowerUri =
       maybe False (not . isLocalCalendarRedirectHost) (calendarRedirectHost (T.drop 8 uri))
   | "http://" `T.isPrefixOf` lowerUri =
@@ -2794,6 +2796,31 @@ isSafeCalendarRedirectUri uri
   where
     googleCalendarOAuthCallbackPath = "/configuracion/integraciones/calendario"
     lowerUri = T.toLower uri
+
+hasAmbiguousOAuthRedirectPath :: Text -> Bool
+hasAmbiguousOAuthRedirectPath uri =
+  case absoluteUrlPath uri of
+    Nothing -> True
+    Just path ->
+      T.null path
+        || not ("/" `T.isPrefixOf` path)
+        || any isAmbiguousSegment (drop 1 (T.splitOn "/" path))
+  where
+    isAmbiguousSegment segment =
+      T.null segment || segment == "." || segment == ".."
+
+absoluteUrlPath :: Text -> Maybe Text
+absoluteUrlPath uri
+  | "https://" `T.isPrefixOf` lowerUri = pathFromRemainder (T.drop 8 uri)
+  | "http://" `T.isPrefixOf` lowerUri = pathFromRemainder (T.drop 7 uri)
+  | otherwise = Nothing
+  where
+    lowerUri = T.toLower uri
+    pathFromRemainder remainder =
+      let suffix = T.dropWhile (/= '/') remainder
+      in if T.null suffix
+           then Nothing
+           else Just (T.takeWhile (\ch -> ch /= '?' && ch /= '#') suffix)
 
 calendarRedirectHost :: Text -> Maybe Text
 calendarRedirectHost remainder =
