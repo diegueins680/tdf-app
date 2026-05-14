@@ -1521,6 +1521,57 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps plural log fallback titles from duplicating recent audit', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-audit-logs',
+          title: 'Audit logs',
+          body: ['Review audit log history before repeating admin changes.'],
+        },
+        {
+          cardId: 'fallback-registros-auditoria',
+          title: 'Registros de auditoría',
+          body: ['Revisa registros de auditoría antes de repetir acciones administrativas.'],
+        },
+        {
+          cardId: 'fallback-system-logs',
+          title: 'System logs',
+          body: ['Review workspace logs before changing access.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Audit logs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Registros de auditoría')).not.toBeInTheDocument();
+    expect(screen.queryByText('System logs')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review audit log history before repeating admin changes\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa registros de auditoría antes de repetir acciones administrativas\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review workspace logs before changing access\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps recent-activity fallback titles from duplicating recent audit', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
