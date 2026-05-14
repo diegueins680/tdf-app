@@ -13448,6 +13448,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy-list search focused while the cohort filter is still loading', async () => {
+    listCohortsMock.mockImplementation(() => new Promise<CourseCohortOptionDTO[]>(() => undefined));
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crCourseSlug: index % 2 === 0 ? 'beatmaking-101' : 'live-production',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortLoading = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-cohort-filter-loading"]',
+      );
+      const searchInput = getInputByLabel(container, localSearchLabel);
+
+      expect(cohortLoading).not.toBeNull();
+      expect(cohortLoading?.textContent).toContain(cohortFilterLoadingMessage);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await cleanup();
+  });
+
   it('folds empty cohort setup guidance into one inline note when registrations are loaded', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([

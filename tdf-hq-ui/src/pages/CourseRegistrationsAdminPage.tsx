@@ -3398,11 +3398,14 @@ export default function CourseRegistrationsAdminPage() {
   const hasDedicatedCohortFilterControl = showCohortSelect
     && !cohortsQuery.isError
     && cohortOptions.length > 1;
+  const hasDedicatedCohortFilterPath = showCohortSelect
+    && !cohortsQuery.isError
+    && (cohortsQuery.isLoading || cohortOptions.length > 1);
   const localSearchPlaceholder = useMemo(
     () => buildLocalSearchPlaceholder(registrations, {
-      includeCourseTerm: !hasDedicatedCohortFilterControl,
+      includeCourseTerm: !hasDedicatedCohortFilterPath,
     }),
-    [hasDedicatedCohortFilterControl, registrations],
+    [hasDedicatedCohortFilterPath, registrations],
   );
   const hasCustomStatusSearch = useMemo(
     () => hasSearchableCustomRegistrationStatus(registrations),
