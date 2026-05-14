@@ -11369,8 +11369,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Simone').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Garcia').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone').textContent?.trim()).toBe(
+        compactPaymentPendingActionLabel,
+      );
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Garcia').textContent?.trim()).toBe(
+        compactPaymentPendingActionLabel,
+      );
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone').getAttribute('aria-haspopup')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Garcia"]')).toBeNull();
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countButtonsByText(container, 'Pagado')).toBe(0);
       expect(container.textContent).not.toContain('Cohorte: Mixing Bootcamp');
       expect(container.textContent).not.toContain('Fuente: referral');

@@ -3561,6 +3561,9 @@ export default function CourseRegistrationsAdminPage() {
   const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock
     && !showSingleResultWithOnlyPassiveFilterContext
     && !hideSingleResultLocalSearchPassiveCurrentView;
+  const localSearchSharedPaidStatusSummary = hasLocalSearch
+    && shouldShowSharedStatusSummary
+    && singleSearchedKnownStatus === 'paid';
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInBusySearchOnboarding
     || statusFiltersSummarizeBusyListRows
@@ -3590,6 +3593,7 @@ export default function CourseRegistrationsAdminPage() {
     && (
       allVisibleRowsUseBusyListPaidRecoveryAction
       || showActiveStatusFilterSummary
+      || localSearchSharedPaidStatusSummary
       || (
         localSearchSingleResultUsesDirectPaidRecovery
         && searchedRegistrations.length === 1
@@ -6071,6 +6075,7 @@ export default function CourseRegistrationsAdminPage() {
                       reg.crStatus,
                       showActiveStatusFilterSummary
                         || statusAlreadyVisibleInBusySearchOnboarding
+                        || localSearchSharedPaidStatusSummary
                         || (
                           localSearchSingleResultUsesDirectPaidRecovery
                           && localSearchSingleResult?.crId === reg.crId
