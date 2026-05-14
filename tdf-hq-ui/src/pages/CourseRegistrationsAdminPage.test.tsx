@@ -270,6 +270,8 @@ const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
+const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
 const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel =
@@ -13266,9 +13268,13 @@ describe('CourseRegistrationsAdminPage', () => {
         formAction?.textContent?.trim(),
       ).toBe(initialEmptyStateFormActionLabel);
       expect(formAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(formAction?.getAttribute('aria-describedby')).toBe(initialEmptyStateNewTabDescriptionId);
       expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
       expect(formAction?.getAttribute('target')).toBe('_blank');
       expect(formAction?.getAttribute('rel')).toBe('noreferrer');
+      expect(
+        emptyState?.querySelector<HTMLElement>(`#${initialEmptyStateNewTabDescriptionId}`)?.textContent?.trim(),
+      ).toBe(initialEmptyStateNewTabDescription);
       expect(
         formAction?.querySelector('[data-testid="course-registration-initial-empty-state-new-tab-icon"]'),
       ).not.toBeNull();

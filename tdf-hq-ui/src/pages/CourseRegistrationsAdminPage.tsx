@@ -161,6 +161,8 @@ const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir variante';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
+const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
@@ -5282,6 +5284,7 @@ export default function CourseRegistrationsAdminPage() {
               component={RouterLink}
               to={initialEmptyStateAction.to}
               aria-label={initialEmptyStateAction.ariaLabel}
+              aria-describedby={initialEmptyStateAction.target ? initialEmptyStateNewTabDescriptionId : undefined}
               title={initialEmptyStateAction.title}
               target={initialEmptyStateAction.target}
               rel={initialEmptyStateAction.rel}
@@ -5298,6 +5301,25 @@ export default function CourseRegistrationsAdminPage() {
           )}
         >
           {initialEmptyStateMessage}
+          {initialEmptyStateAction.target && (
+            <Box
+              id={initialEmptyStateNewTabDescriptionId}
+              component="span"
+              sx={{
+                border: 0,
+                clip: 'rect(0 0 0 0)',
+                height: 1,
+                margin: -1,
+                overflow: 'hidden',
+                padding: 0,
+                position: 'absolute',
+                whiteSpace: 'nowrap',
+                width: 1,
+              }}
+            >
+              {initialEmptyStateNewTabDescription}
+            </Box>
+          )}
         </Alert>
       )}
 
