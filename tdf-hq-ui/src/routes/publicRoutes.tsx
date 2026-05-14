@@ -9,6 +9,7 @@ const CourseProductionLandingPage = lazy(() => import('../pages/CourseProduction
 const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
 const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
+const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
 const GoogleDriveCallbackPage = lazy(() => import('../pages/GoogleDriveCallbackPage'));
@@ -32,6 +33,7 @@ export function renderPublicRoutes() {
   return (
     <>
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
+      <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
       <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />

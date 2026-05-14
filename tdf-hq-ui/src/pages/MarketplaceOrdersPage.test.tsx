@@ -486,7 +486,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('restores the refresh action once the page has a real order list to revisit', async () => {
+  it('restores the refresh action once the page has a real order list without adding permission chrome', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -507,7 +507,7 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();

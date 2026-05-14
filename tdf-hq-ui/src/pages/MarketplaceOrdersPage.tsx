@@ -440,10 +440,6 @@ export default function MarketplaceOrdersPage() {
       : `Mostrar ${advancedFiltersButtonSubject}`;
   const showHeaderRefreshAction =
     Boolean(ordersQuery.error) || (!ordersQuery.isLoading && !hasSearchInput && (orders.length > 1 || filtersDirty));
-  const showPermissionNotice =
-    !ordersQuery.isLoading
-    && !showFirstOrderEmptyState
-    && !showSingleVisibleOrderSummary;
   const emptyOrdersMessage = showSearchOwnedFilterHelper
     ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
     : showSearchWithExtraFilters
@@ -696,11 +692,6 @@ export default function MarketplaceOrdersPage() {
 
   return (
     <Box p={2}>
-      {showPermissionNotice && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.
-        </Alert>
-      )}
       <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
         <LocalMallIcon color="primary" />
         <Typography variant="h4" fontWeight={700}>
