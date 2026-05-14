@@ -80,8 +80,11 @@ parseIcyMetaIntHeader rawHeader = do
   if BS.null header || not (BS8.all isDigit header)
     then Nothing
     else case readMaybe (BS8.unpack header) of
-      Just value | value > 0 -> Just value
+      Just value | value > 0 && value <= maxIcyMetaIntBytes -> Just value
       _                      -> Nothing
+
+maxIcyMetaIntBytes :: Int
+maxIcyMetaIntBytes = 262144
 
 trimHeaderValue :: BS.ByteString -> BS.ByteString
 trimHeaderValue =
@@ -1058,13 +1061,9 @@ radioServer user =
               , responseTimeout = responseTimeoutMicro 5000000
               }
         withResponse req manager $ \resp -> do
-          let metaIntLimit = 262144
           case parseIcyMetaInt (responseHeaders resp) of
             Nothing -> pure Nothing
-            Just metaInt
-              | metaInt <= 0 -> pure Nothing
-              | metaInt > metaIntLimit -> pure Nothing
-              | otherwise -> readIcyStreamTitle (responseBody resp) metaInt 2
+            Just metaInt -> readIcyStreamTitle (responseBody resp) metaInt 2
       pure $ case result of
         Left (ex :: SomeException) -> Left (T.pack (displayException ex))
         Right title -> Right title

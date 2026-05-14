@@ -8594,6 +8594,8 @@ main = hspec $ do
         it "requires a complete positive icy-metaint header before reading stream metadata" $ do
             parseIcyMetaIntHeader "16000" `shouldBe` Just 16000
             parseIcyMetaIntHeader "  4096  " `shouldBe` Just 4096
+            parseIcyMetaIntHeader "262144" `shouldBe` Just 262144
+            parseIcyMetaIntHeader "262145" `shouldBe` Nothing
             parseIcyMetaIntHeader "16000; charset=utf-8" `shouldBe` Nothing
             parseIcyMetaIntHeader "16000x" `shouldBe` Nothing
             parseIcyMetaIntHeader "+16000" `shouldBe` Nothing
