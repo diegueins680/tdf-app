@@ -4,11 +4,12 @@
 
 module TDF.Services.InstagramSync
   ( InstagramMedia(..)
+  , InstagramMediaList(..)
   , buildUserMediaRequestUrl
   , fetchUserMedia
   ) where
 
-import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?))
 import           Data.Aeson.Types (Parser)
 import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
 import           Data.Text (Text)
@@ -108,7 +109,7 @@ newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 
 instance FromJSON InstagramMediaList where
   parseJSON = withObject "InstagramMediaList" $ \o ->
-    InstagramMediaList <$> o .:? "data" .!= []
+    InstagramMediaList <$> o .: "data"
 
 -- | Fetch media for a given Instagram user id (or handle, if your token supports it).
 fetchUserMedia :: AppConfig -> Text -> Text -> IO (Either Text [InstagramMedia])

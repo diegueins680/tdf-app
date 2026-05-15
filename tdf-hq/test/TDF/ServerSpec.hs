@@ -440,7 +440,11 @@ import TDF.ServerExtra
     , validateInstagramReplyTarget
     , validateSocialReplyBody
     )
-import TDF.Services.InstagramSync (InstagramMedia(..), buildUserMediaRequestUrl)
+import TDF.Services.InstagramSync
+    ( InstagramMedia(..)
+    , InstagramMediaList(..)
+    , buildUserMediaRequestUrl
+    )
 import Test.Hspec
 import Web.PathPieces (fromPathPiece, toPathPiece)
 
@@ -10602,6 +10606,19 @@ spec = describe "TDF.Server helpers" $ do
                 "must not contain hidden formatting characters"
 
     describe "Instagram sync media response decoding" $ do
+        it "requires the top-level Graph data array before treating sync as empty" $ do
+            case (eitherDecode "{\"data\":[]}" :: Either String InstagramMediaList) of
+                Left err ->
+                    expectationFailure
+                        ("Expected empty Instagram media list to decode, got: " <> err)
+                Right (InstagramMediaList media) ->
+                    media `shouldBe` []
+
+            (eitherDecode "{}" :: Either String InstagramMediaList)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"data\":null}" :: Either String InstagramMediaList)
+                `shouldSatisfy` isLeft
+
         it "normalizes canonical media ids and public media links before cron storage" $
             case ( eitherDecode
                     "{\"id\":\" ig-media-42 \",\"caption\":\"new post\",\"media_url\":\" https://cdn.example.com/post.jpg?sig=1 \",\"permalink\":\" https://www.instagram.com/p/post42/ \"}"
