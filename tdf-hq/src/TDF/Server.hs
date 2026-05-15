@@ -11459,7 +11459,8 @@ confirmDatafastPayment mOrderId mResourcePath = do
         ]
   liftIO $ flip runSqlPool envPool $ update orderKey updateFields
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+  either throwError pure $
+    requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
 createPaypalOrder :: Text -> MarketplaceCheckoutReq -> AppM PaypalCreateDTO
 createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
@@ -11551,7 +11552,8 @@ capturePaypalOrder PaypalCaptureReq{..} = do
         , ME.MarketplaceOrderUpdatedAt =. now
         ]
       mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-      either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace order" mDto)
+      either throwError pure $
+        requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
 requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
 requestDatafastCheckout orderKey totalCents currency name email mPhone = do
@@ -12047,6 +12049,14 @@ requireLoadedMarketplaceWriteResult entityLabel Nothing =
         BL.fromStrict . TE.encodeUtf8 $
           entityLabel <> " could not be loaded after write"
     }
+
+requireLoadedMarketplacePublicOrderResponse
+  :: Text
+  -> Maybe MarketplaceOrderDTO
+  -> Either ServerError MarketplaceOrderDTO
+requireLoadedMarketplacePublicOrderResponse entityLabel mDto =
+  redactMarketplaceOrderForPublicLookup
+    <$> requireLoadedMarketplaceWriteResult entityLabel mDto
 
 validateMarketplacePublicListingActive :: Bool -> Either ServerError ()
 validateMarketplacePublicListingActive True = Right ()

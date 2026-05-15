@@ -220,6 +220,7 @@ import TDF.Server
     , redactMarketplaceOrderForPublicLookup
     , requireMarketplaceOrderLookupResult
     , requireLoadedMarketplaceWriteResult
+    , requireLoadedMarketplacePublicOrderResponse
     , requireMarketplaceCartTotals
     , resolveMarketplaceCartCurrency
     , validateMarketplaceCartLineQuantity
@@ -7814,7 +7815,7 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
-        it "redacts buyer and gateway fields from unauthenticated public order lookups" $ do
+        it "redacts buyer and gateway fields from unauthenticated public order responses" $ do
             let now = UTCTime (fromGregorian 2026 5 1) (secondsToDiffTime 36000)
                 orderItem =
                     MarketplaceOrderItemDTO
@@ -7847,18 +7848,41 @@ spec = describe "TDF.Server helpers" $ do
                         , moItems = [orderItem]
                         }
                 redacted = redactMarketplaceOrderForPublicLookup fullOrder
+                assertPublicOrderResponse response = do
+                    moOrderId response `shouldBe` "42"
+                    moStatus response `shouldBe` "paypal_pending"
+                    moTotalUsdCents response `shouldBe` 2500
+                    map moiTitle (moItems response) `shouldBe` ["Moog pedal"]
+                    moPaymentProvider response `shouldBe` Just "paypal"
+                    moCartId response `shouldBe` Nothing
+                    moBuyerName response `shouldBe` ""
+                    moBuyerEmail response `shouldBe` ""
+                    moBuyerPhone response `shouldBe` Nothing
+                    moPaypalOrderId response `shouldBe` Nothing
+                    moPaypalPayerEmail response `shouldBe` Nothing
 
-            moOrderId redacted `shouldBe` "42"
-            moStatus redacted `shouldBe` "paypal_pending"
-            moTotalUsdCents redacted `shouldBe` 2500
-            map moiTitle (moItems redacted) `shouldBe` ["Moog pedal"]
-            moPaymentProvider redacted `shouldBe` Just "paypal"
-            moCartId redacted `shouldBe` Nothing
-            moBuyerName redacted `shouldBe` ""
-            moBuyerEmail redacted `shouldBe` ""
-            moBuyerPhone redacted `shouldBe` Nothing
-            moPaypalOrderId redacted `shouldBe` Nothing
-            moPaypalPayerEmail redacted `shouldBe` Nothing
+            assertPublicOrderResponse redacted
+            case requireLoadedMarketplacePublicOrderResponse
+                "Marketplace order"
+                (Just fullOrder) of
+                Left serverErr ->
+                    expectationFailure
+                        ( "Expected loaded public payment response to succeed, got: "
+                            <> show serverErr
+                        )
+                Right paymentResponse ->
+                    assertPublicOrderResponse paymentResponse
+
+            case requireLoadedMarketplacePublicOrderResponse "Marketplace order" Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Marketplace order could not be loaded after write"
+                Right value ->
+                    expectationFailure
+                        ( "Expected missing public payment order to fail, got: "
+                            <> show value
+                        )
 
         it "rejects impossible stored line quantities before checkout can create order items" $ do
             validateMarketplaceCartLineQuantity 1 `shouldBe` Right 1
