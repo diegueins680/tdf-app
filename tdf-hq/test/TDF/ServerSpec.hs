@@ -8081,6 +8081,10 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 502
                 "invalid payment amount"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "0.00") (Just "USD"))
+            assertInvalid
+                502
+                "invalid payment amount"
                 (validateDatafastSuccessfulPaymentAmountAndCurrency
                     2500
                     "USD"

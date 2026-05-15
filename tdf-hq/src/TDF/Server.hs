@@ -11988,8 +11988,9 @@ validateDatafastPaymentAmountField Nothing =
   Left err502 { errBody = "Datafast payment response did not include an amount" }
 validateDatafastPaymentAmountField (Just rawAmount) =
   case parseDatafastAmountCents rawAmount of
-    Just cents -> Right cents
+    Just cents | cents > 0 -> Right cents
     Nothing -> Left err502 { errBody = "Datafast returned an invalid payment amount" }
+    Just _ -> Left err502 { errBody = "Datafast returned an invalid payment amount" }
 
 validateDatafastPaymentCurrencyField :: Maybe Text -> Either ServerError Text
 validateDatafastPaymentCurrencyField Nothing =
