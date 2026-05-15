@@ -18676,9 +18676,11 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(
-        document.body.querySelector('[role="menuitem"][aria-label="Registrar pago para Ada Lovelace"]'),
-      ).not.toBeNull();
+      const paymentMenuItem = document.body.querySelector<HTMLElement>(
+        '[role="menuitem"][aria-label="Registrar pago para Ada Lovelace"]',
+      );
+      expect(paymentMenuItem).not.toBeNull();
+      expect(paymentMenuItem?.getAttribute('title')).toBe('Registrar pago para Ada Lovelace');
       expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
     });
 

@@ -6579,6 +6579,7 @@ export default function CourseRegistrationsAdminPage() {
         {statusMenuReg && canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
             aria-label={`${openPaymentWorkflowLabel} para ${statusMenuActionTargetLabel}`}
+            title={`${openPaymentWorkflowLabel} para ${statusMenuActionTargetLabel}`}
             onClick={() => {
               handleCloseStatusMenu();
               handleOpenDossier(statusMenuReg, 'markPaid');
