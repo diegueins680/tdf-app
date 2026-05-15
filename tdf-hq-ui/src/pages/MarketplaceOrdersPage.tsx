@@ -441,7 +441,8 @@ export default function MarketplaceOrdersPage() {
       ? `Editar ${advancedFiltersButtonSubject}`
       : `Mostrar ${advancedFiltersButtonSubject}`;
   const showHeaderRefreshAction =
-    Boolean(ordersQuery.error) || (!ordersQuery.isLoading && !hasSearchInput && (orders.length > 1 || filtersDirty));
+    Boolean(ordersQuery.error)
+    || (!ordersQuery.isLoading && !showEmptyOrdersState && !hasSearchInput && (orders.length > 1 || filtersDirty));
   const emptyOrdersMessage = showSearchOwnedFilterHelper
     ? 'No hay órdenes para la búsqueda actual. Usa Limpiar dentro del campo de búsqueda para volver a la bandeja completa.'
     : showSearchWithExtraFilters

@@ -836,6 +836,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
         expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(container.textContent).not.toContain('Todavía no hay órdenes. Cuando llegue la primera');
         expect(container.querySelector('tbody tr')).toBeNull();
       });
