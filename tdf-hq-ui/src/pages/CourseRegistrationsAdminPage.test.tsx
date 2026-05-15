@@ -263,18 +263,18 @@ const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`;
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
+  'Todavía no hay inscripciones. Crea el primer curso y su formulario público para recibir solicitudes aquí.';
 const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
-const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
+const initialEmptyStateConfigActionLabel = 'Crear curso';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
-const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
+const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel =
   'Ver formularios públicos de este curso para elegir cuál compartir primero';
@@ -8160,9 +8160,13 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(emptyState?.textContent).not.toContain('Configurar primer formulario');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateConfigActionLabel);
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.getAttribute('aria-label'),
+      ).toBe(initialEmptyStateConfigActionAriaLabel);
       expect(container.textContent).not.toContain('No hay inscripciones con el límite actual');
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);

@@ -59,7 +59,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El primer formulario público enviará aquí las nuevas solicitudes.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Crea el primer curso y su formulario público para recibir solicitudes aquí.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const cleanInitialCohortPreviewLabel = (label: string) =>
@@ -157,7 +157,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   }
   return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 };
-const initialEmptyStateConfigActionLabel = 'Configurar primer formulario';
+const initialEmptyStateConfigActionLabel = 'Crear curso';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
@@ -167,7 +167,7 @@ const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
-const initialEmptyStateConfigActionAriaLabel = 'Configurar el primer formulario público de curso';
+const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
