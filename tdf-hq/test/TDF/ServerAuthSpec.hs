@@ -293,6 +293,15 @@ signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
     assertRejected "lastName" $
       validateSignupDisplayName "Ada" ("Love" <> hiddenFormat <> "lace")
 
+  it "rejects punctuation-only signup names before profile fallback rendering" $
+    case validateSignupDisplayName " ... " " --- " of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "displayName must include at least one letter or digit"
+      Right value ->
+        expectationFailure
+          ("Expected punctuation-only display name to be rejected, got " <> show value)
+
 signupGoogleIdTokenSpec :: Spec
 signupGoogleIdTokenSpec = describe "validateSignupGoogleIdToken" $ do
   it "rejects Google id tokens on password signup instead of silently ignoring them" $ do
@@ -453,6 +462,16 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
       Right profile ->
         expectationFailure
           ("Expected malformed Google token email to be rejected, got " <> show profile)
+
+  it "falls back to email for punctuation-only Google profile names" $
+    case validateGoogleIdTokenInfo
+      (Just "client-id")
+      googleTokenInfo { gitName = Just " ... --- " } of
+      Right profile ->
+        gpName profile `shouldBe` Just "ada@example.com"
+      Left err ->
+        expectationFailure
+          ("Expected punctuation-only Google profile name to fall back, got " <> T.unpack err)
 
   it "rejects blank or unsafe Google subjects before account fallback creation" $ do
     let hiddenFormat = T.singleton (chr 0x200D)

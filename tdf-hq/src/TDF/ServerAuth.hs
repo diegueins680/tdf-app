@@ -58,6 +58,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAlphaNum
   , isAscii
   , isAsciiLower
   , isControl
@@ -429,6 +430,8 @@ validateSignupDisplayName rawFirst rawLast
         ( signupNameError
             "lastName must not contain control or hidden formatting characters"
         )
+  | not (hasMeaningfulDisplayNameChar displayNameText) =
+      Left (signupNameError "displayName must include at least one letter or digit")
   | T.length firstClean > maxSignupNamePartChars =
       Left (signupNameError "firstName must be 80 characters or fewer")
   | T.length lastClean > maxSignupNamePartChars =
@@ -452,6 +455,10 @@ maxSignupDisplayNameChars = 160
 isUnsafeSignupNameChar :: Char -> Bool
 isUnsafeSignupNameChar ch =
   isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+hasMeaningfulDisplayNameChar :: Text -> Bool
+hasMeaningfulDisplayNameChar =
+  T.any isAlphaNum
 
 validateOptionalSignupPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalSignupPhone Nothing = Right Nothing
@@ -1113,7 +1120,9 @@ maxGoogleSubjectChars = 255
 sanitizeGoogleProfileName :: Maybe Text -> Maybe Text
 sanitizeGoogleProfileName rawName = do
   name <- cleanOptional rawName
-  if T.length name <= maxSignupDisplayNameChars && not (T.any isUnsafeSignupNameChar name)
+  if T.length name <= maxSignupDisplayNameChars
+      && not (T.any isUnsafeSignupNameChar name)
+      && hasMeaningfulDisplayNameChar name
     then Just name
     else Nothing
 
