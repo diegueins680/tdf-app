@@ -16049,8 +16049,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Placement test form - Beatmaking 101',
       'Course assessment page for Beatmaking 101',
       'Beatmaking 101 - diagnostic quiz',
+      'Quiz form - Beatmaking 101',
+      'Beatmaking 101 - quiz funnel',
       'Beatmaking 101 - formulario de diagnóstico',
       'Prueba de nivel - Beatmaking 101',
+      'Cuestionario de diagnóstico - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -16066,7 +16069,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/placement test|assessment page|diagnostic quiz|formulario de diagn[oó]stico|prueba de nivel/i);
+        expect(emptyState?.textContent).not.toMatch(/placement test|assessment page|diagnostic quiz|quiz form|quiz funnel|formulario de diagn[oó]stico|prueba de nivel|cuestionario de diagn[oó]stico/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

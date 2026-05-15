@@ -1152,10 +1152,10 @@ const firstRunAuditionDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:audition|casting)\s+(?:forms?|pages?|portals?|sign[-\s]?ups?|registrations?|applications?)|(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+de\s+(?:audici[oó]n(?:es)?|casting)|(?:audici[oó]n(?:es)?|casting)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
 
 const firstRunAssessmentDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?)|(?:formulario|p[aá]gina|prueba|test)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunAssessmentDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?)|(?:formulario|p[aá]gina|prueba|test)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
 const firstRunCohortDescriptorPrefixPattern =
   /^(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*[-:/|]\s*/i;
