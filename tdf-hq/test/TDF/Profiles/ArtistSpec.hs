@@ -9,6 +9,7 @@ import Control.Monad.Logger (NoLoggingT)
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawExecute)
@@ -71,6 +72,47 @@ spec = do
             assertInvalid "-mentores" "only lowercase ASCII letters"
             assertInvalid ("mentores" <> T.singleton '\x202E') "only lowercase ASCII letters"
             assertInvalid (T.replicate 97 "a") "96 characters or fewer"
+
+        it "normalizes public artist profile URLs before profile writes persist them" $
+            case validateArtistProfileUpsert
+                ( baseProfileUpsert
+                    { apuHeroImageUrl = Just "  https://cdn.tdf/hero.jpg  "
+                    , apuSpotifyUrl = Just "   "
+                    , apuWebsiteUrl = Just "http://artist.example"
+                    }
+                ) of
+                Left err ->
+                    expectationFailure ("Expected valid profile URL fields, got " <> T.unpack err)
+                Right payload -> do
+                    apuHeroImageUrl payload `shouldBe` Just "https://cdn.tdf/hero.jpg"
+                    apuSpotifyUrl payload `shouldBe` Nothing
+                    apuWebsiteUrl payload `shouldBe` Just "http://artist.example"
+
+        it "rejects unsafe public artist profile URLs before they can be rendered from profiles" $ do
+            let assertInvalid payload expectedMessage =
+                    case validateArtistProfileUpsert payload of
+                        Left err -> T.unpack err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid profile URL error, got " <> show value)
+            assertInvalid
+                (baseProfileUpsert { apuWebsiteUrl = Just "javascript:alert(1)" })
+                "websiteUrl must be an absolute http or https URL"
+            assertInvalid
+                (baseProfileUpsert { apuHeroImageUrl = Just "https://cdn.tdf/hero image.jpg" })
+                "heroImageUrl must not contain whitespace"
+            assertInvalid
+                ( baseProfileUpsert
+                    { apuYoutubeUrl =
+                        Just ("https://youtube.com/watch" <> T.singleton '\x202E')
+                    }
+                )
+                "youtubeUrl must not contain whitespace"
+            assertInvalid
+                (baseProfileUpsert { apuSpotifyUrl = Just "https://" })
+                "spotifyUrl must be an absolute http or https URL"
+            assertInvalid
+                (baseProfileUpsert { apuFeaturedVideoUrl = Just (T.replicate 2049 "a") })
+                "featuredVideoUrl must be 2048 characters or fewer"
 
         it "returns an initialized profile when none exists" $ do
             dto <- runInMemory $ do

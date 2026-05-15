@@ -13,8 +13,15 @@ module TDF.Profiles.Artist
   , fetchArtistProfileMap
   ) where
 
+import           Control.Applicative       ((<|>))
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
-import           Data.Char                 (isAsciiLower, isDigit)
+import           Data.Char                 ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+                                           , generalCategory
+                                           , isAsciiLower
+                                           , isControl
+                                           , isDigit
+                                           , isSpace
+                                           )
 import qualified Data.Map.Strict           as Map
 import qualified Data.Set                  as Set
 import           Data.List                 (foldl')
@@ -41,7 +48,19 @@ cleanOptionalText = (>>= nonBlank)
 validateArtistProfileUpsert :: ArtistProfileUpsert -> Either Text ArtistProfileUpsert
 validateArtistProfileUpsert payload@ArtistProfileUpsert{..} = do
   normalizedSlug <- validateArtistProfileSlug apuSlug
-  pure payload { apuSlug = normalizedSlug }
+  normalizedHeroImageUrl <- validateArtistProfileUrl "heroImageUrl" apuHeroImageUrl
+  normalizedSpotifyUrl <- validateArtistProfileUrl "spotifyUrl" apuSpotifyUrl
+  normalizedYoutubeUrl <- validateArtistProfileUrl "youtubeUrl" apuYoutubeUrl
+  normalizedWebsiteUrl <- validateArtistProfileUrl "websiteUrl" apuWebsiteUrl
+  normalizedFeaturedVideoUrl <- validateArtistProfileUrl "featuredVideoUrl" apuFeaturedVideoUrl
+  pure payload
+    { apuSlug = normalizedSlug
+    , apuHeroImageUrl = normalizedHeroImageUrl
+    , apuSpotifyUrl = normalizedSpotifyUrl
+    , apuYoutubeUrl = normalizedYoutubeUrl
+    , apuWebsiteUrl = normalizedWebsiteUrl
+    , apuFeaturedVideoUrl = normalizedFeaturedVideoUrl
+    }
 
 validateArtistProfileSlug :: Maybe Text -> Either Text (Maybe Text)
 validateArtistProfileSlug Nothing = Right Nothing
@@ -73,6 +92,43 @@ isArtistProfileSlugChar ch = isArtistProfileSlugAtom ch || ch == '-'
 
 isArtistProfileSlugAtom :: Char -> Bool
 isArtistProfileSlugAtom ch = isAsciiLower ch || isDigit ch
+
+validateArtistProfileUrl :: Text -> Maybe Text -> Either Text (Maybe Text)
+validateArtistProfileUrl _ Nothing = Right Nothing
+validateArtistProfileUrl fieldName (Just rawUrl) =
+  case cleanOptionalText (Just rawUrl) of
+    Nothing -> Right Nothing
+    Just urlVal
+      | T.length urlVal > maxArtistProfileUrlChars ->
+          Left (fieldName <> " must be 2048 characters or fewer")
+      | T.any isUnsafeArtistProfileUrlChar urlVal ->
+          Left
+            ( fieldName
+                <> " must not contain whitespace, control, or hidden formatting characters"
+            )
+      | isAbsoluteArtistProfileHttpUrl urlVal ->
+          Right (Just urlVal)
+      | otherwise ->
+          Left (fieldName <> " must be an absolute http or https URL")
+
+maxArtistProfileUrlChars :: Int
+maxArtistProfileUrlChars = 2048
+
+isAbsoluteArtistProfileHttpUrl :: Text -> Bool
+isAbsoluteArtistProfileHttpUrl rawUrl =
+  case T.stripPrefix "https://" lowerUrl <|> T.stripPrefix "http://" lowerUrl of
+    Just remainder ->
+      not (T.null (T.takeWhile (`notElem` ("/?#" :: String)) remainder))
+    Nothing ->
+      False
+  where
+    lowerUrl = T.toLower rawUrl
+
+isUnsafeArtistProfileUrlChar :: Char -> Bool
+isUnsafeArtistProfileUrlChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 upsertArtistProfileRecord
   :: MonadIO m
