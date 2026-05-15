@@ -5285,6 +5285,73 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('ignores TBD placeholder titles before they become first-run optional modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'tbd-admin-workflow',
+          title: 'TBD',
+          body: [
+            'Revisa llaves internas antes de rotar credenciales compartidas.',
+          ],
+        },
+        {
+          cardId: 'por-definir-admin-workflow',
+          title: 'Por definir',
+          body: [
+            'Revisa conectores pendientes antes de activar accesos administrativos.',
+          ],
+        },
+        {
+          cardId: 'to-be-determined-admin-workflow',
+          title: 'To be determined',
+          body: [
+            'Review future connector access before changing admin roles.',
+          ],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 4 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('TBD')).not.toBeInTheDocument();
+    expect(screen.queryByText('Por definir')).not.toBeInTheDocument();
+    expect(screen.queryByText('To be determined')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Revisa llaves internas/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Revisa conectores pendientes/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Review future connector access/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('TBD')).not.toBeInTheDocument();
+    expect(screen.queryByText('Por definir')).not.toBeInTheDocument();
+    expect(screen.queryByText('To be determined')).not.toBeInTheDocument();
+  });
+
   it('ignores placeholder-only preview cards so first-run stays focused on real admin workflows', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
