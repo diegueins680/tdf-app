@@ -16,7 +16,7 @@ import           Data.Char
   , isSpace
   , toLower
   )
-import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
+import           Data.Aeson   (FromJSON(..), Object, Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
@@ -57,6 +57,111 @@ rejectNullOptionalFields objectName fieldNames =
             Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
             _         -> pure ()
     in mapM_ rejectNullField fieldNames
+
+parseMetaReplySenderId :: Text -> Object -> Parser Text
+parseMetaReplySenderId fieldName obj = do
+  rawSenderId <- obj .: AKey.fromText fieldName
+  case normalizeMetaReplySenderId rawSenderId of
+    Left err -> fail (T.unpack err)
+    Right senderId -> pure senderId
+
+parseMetaReplyMessage :: Text -> Object -> Parser Text
+parseMetaReplyMessage fieldName obj = do
+  rawMessage <- obj .: AKey.fromText fieldName
+  case normalizeMetaReplyMessage rawMessage of
+    Left err -> fail (T.unpack err)
+    Right message -> pure message
+
+parseMetaReplyExternalId :: Text -> Object -> Parser (Maybe Text)
+parseMetaReplyExternalId fieldName obj = do
+  mRawExternalId <- obj .:? AKey.fromText fieldName
+  case mRawExternalId of
+    Nothing -> pure Nothing
+    Just rawExternalId ->
+      case normalizeMetaReplyExternalId rawExternalId of
+        Left err -> fail (T.unpack err)
+        Right externalId -> pure (Just externalId)
+
+normalizeMetaReplySenderId :: Text -> Either Text Text
+normalizeMetaReplySenderId rawSenderId =
+  let senderId = T.strip rawSenderId
+  in if T.null senderId
+       then Left "senderId is required"
+       else do
+         identifier <- validateMetaReplyIdentifier "senderId" senderId
+         validateMetaReplyGraphNodeId identifier
+
+normalizeMetaReplyExternalId :: Text -> Either Text Text
+normalizeMetaReplyExternalId rawExternalId =
+  let externalId = T.strip rawExternalId
+  in if T.null externalId
+       then Left "externalId must be omitted or a non-empty string"
+       else validateMetaReplyIdentifier "externalId" externalId
+
+normalizeMetaReplyMessage :: Text -> Either Text Text
+normalizeMetaReplyMessage rawMessage =
+  let message = T.strip rawMessage
+  in if T.null message
+       then Left "message is required"
+       else if T.length message > maxMetaReplyMessageChars
+       then Left "message must be 4096 characters or fewer"
+       else if T.any isUnsupportedMetaReplyControl message
+       then Left "message must not contain unsupported control characters"
+       else if T.any isHiddenMetaReplyTextChar message
+       then Left "message must not contain hidden formatting characters"
+       else Right message
+
+validateMetaReplyIdentifier :: Text -> Text -> Either Text Text
+validateMetaReplyIdentifier fieldName value
+  | T.any isSpace value =
+      Left (fieldName <> " must not contain whitespace")
+  | T.any isControl value =
+      Left (fieldName <> " must not contain control characters")
+  | T.any isHiddenMetaReplyTextChar value =
+      Left (fieldName <> " must not contain hidden formatting characters")
+  | T.any (not . isAsciiMetaReplyIdentifierChar) value =
+      Left (fieldName <> " must contain only ASCII characters")
+  | T.length value > maxMetaReplyIdentifierChars =
+      Left (fieldName <> " must be 256 characters or fewer")
+  | otherwise =
+      Right value
+
+validateMetaReplyGraphNodeId :: Text -> Either Text Text
+validateMetaReplyGraphNodeId senderId
+  | not (T.any isMetaReplyGraphNodeIdAtom senderId)
+      || T.any (not . isMetaReplyGraphNodeIdChar) senderId =
+      Left
+        ( "senderId must be a Graph node id using only ASCII letters, numbers, "
+            <> "'.', '_' or '-' with at least one letter or number"
+        )
+  | otherwise =
+      Right senderId
+
+isMetaReplyGraphNodeIdChar :: Char -> Bool
+isMetaReplyGraphNodeIdChar ch =
+  isMetaReplyGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+isMetaReplyGraphNodeIdAtom :: Char -> Bool
+isMetaReplyGraphNodeIdAtom ch =
+  isAsciiLower ch || isAsciiUpper ch || isDigit ch
+
+isAsciiMetaReplyIdentifierChar :: Char -> Bool
+isAsciiMetaReplyIdentifierChar ch =
+  ch <= '\x7f'
+
+isUnsupportedMetaReplyControl :: Char -> Bool
+isUnsupportedMetaReplyControl ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
+
+isHiddenMetaReplyTextChar :: Char -> Bool
+isHiddenMetaReplyTextChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+maxMetaReplyIdentifierChars :: Int
+maxMetaReplyIdentifierChars = 256
+
+maxMetaReplyMessageChars :: Int
+maxMetaReplyMessageChars = 4096
 
 camelDrop :: Int -> String -> String
 camelDrop prefixLen fieldName =

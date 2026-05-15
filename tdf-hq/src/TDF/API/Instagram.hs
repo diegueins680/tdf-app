@@ -28,7 +28,12 @@ import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
-import           TDF.API.Types (RawJSON)
+import           TDF.API.Types
+  ( RawJSON
+  , parseMetaReplyExternalId
+  , parseMetaReplyMessage
+  , parseMetaReplySenderId
+  )
 
 data InstagramReplyReq = InstagramReplyReq
   { irSenderId :: Text
@@ -65,9 +70,9 @@ parseInstagramReplyReq =
                 else ("senderId", "message", "externalId")
         rejectNullInstagramOptionalKey externalKey obj
         InstagramReplyReq
-          <$> obj .: AesonKey.fromText senderKey
-          <*> obj .: AesonKey.fromText messageKey
-          <*> obj .:? AesonKey.fromText externalKey
+          <$> parseMetaReplySenderId senderKey obj
+          <*> parseMetaReplyMessage messageKey obj
+          <*> parseMetaReplyExternalId externalKey obj
 
 rejectNullInstagramOptionalKey :: Text -> Object -> Parser ()
 rejectNullInstagramOptionalKey fieldName obj =

@@ -28,7 +28,12 @@ import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
-import           TDF.API.Types (RawJSON)
+import           TDF.API.Types
+  ( RawJSON
+  , parseMetaReplyExternalId
+  , parseMetaReplyMessage
+  , parseMetaReplySenderId
+  )
 
 data FacebookReplyReq = FacebookReplyReq
   { frSenderId :: Text
@@ -65,9 +70,9 @@ parseFacebookReplyReq =
                 else ("senderId", "message", "externalId")
         rejectNullFacebookOptionalKey externalKey obj
         FacebookReplyReq
-          <$> obj .: AesonKey.fromText senderKey
-          <*> obj .: AesonKey.fromText messageKey
-          <*> obj .:? AesonKey.fromText externalKey
+          <$> parseMetaReplySenderId senderKey obj
+          <*> parseMetaReplyMessage messageKey obj
+          <*> parseMetaReplyExternalId externalKey obj
 
 rejectNullFacebookOptionalKey :: Text -> Object -> Parser ()
 rejectNullFacebookOptionalKey fieldName obj =

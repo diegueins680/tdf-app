@@ -318,6 +318,47 @@ spec = do
                 "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "normalizes social reply ids and text before handler fallback dispatch" $ do
+            case decodeInstagramReply
+                "{\"senderId\":\" ig-sender_1 \",\"message\":\" Hola\\nlinea dos \",\"externalId\":\" mid.ig.1 \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected normalized Instagram reply payload, got: " <> err)
+                Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "ig-sender_1"
+                    messageVal `shouldBe` "Hola\nlinea dos"
+                    externalIdVal `shouldBe` Just "mid.ig.1"
+
+            case decodeFacebookReply
+                "{\"senderId\":\" fb-sender_1 \",\"message\":\" Hola\\tMeta \",\"externalId\":\" mid.fb.1 \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected normalized Facebook reply payload, got: " <> err)
+                Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "fb-sender_1"
+                    messageVal `shouldBe` "Hola\tMeta"
+                    externalIdVal `shouldBe` Just "mid.fb.1"
+
+        it "rejects malformed social reply fields before dispatch fallbacks run" $ do
+            decodeInstagramReply
+                "{\"senderId\":\"   \",\"message\":\"Hola\"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb sender\",\"message\":\"Hola\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramReply
+                "{\"senderId\":\"ig-sender\",\"message\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\\u0000\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramReply
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"mid\\u202E1\"}"
+                `shouldSatisfy` isLeft
+
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
