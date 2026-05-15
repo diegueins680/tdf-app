@@ -4625,6 +4625,15 @@ main = hspec $ do
                     expectationFailure
                         ("Expected preferred Instagram page to resolve, got " <> show other)
 
+            case selectPrimaryInstagramCandidate ["ig-missing"] [firstPage, secondPage] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "primary page fallback is ambiguous"
+                Right value ->
+                    expectationFailure
+                        ("Expected stale Instagram preference fallback to fail, got " <> show value)
+
             case selectPrimaryInstagramCandidate ["ig-1"] [firstPage, ("ig-1", "page-duplicate")] of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 409

@@ -343,6 +343,9 @@ instagramOAuthServer user = exchangeHandler
           , pcInstagramHandle = mHandle
           }
 
+      primary <-
+        either throwError pure (selectPrimaryInstagramPage preferredIds pageContexts)
+
       now <- liftIO getCurrentTime
       liftIO $ flip runSqlPool envPool $ do
         forM_ pageContexts $ \ctx ->
@@ -371,8 +374,6 @@ instagramOAuthServer user = exchangeHandler
             pure ()
 
       let pagesDto = map toPageDTO pageContexts
-      primary <-
-        either throwError pure (selectPrimaryInstagramPage preferredIds pageContexts)
       (mPrimaryId, mPrimaryHandle, media) <-
         case primary of
           Nothing -> pure (Nothing, Nothing, [])
