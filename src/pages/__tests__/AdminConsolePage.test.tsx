@@ -7794,6 +7794,58 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Reporte operativo')).not.toBeInTheDocument();
   });
 
+  it('filters first-run empty-state fallback cards so optional modules stay actionable', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'audit-empty-state',
+          title: 'Actividad del sistema',
+          body: ['La auditoría aparecerá cuando se registre el primer cambio.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole(
+          'button',
+          { name: /^Opcional: ver 1 módulo adicional$/i },
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 2 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Actividad del sistema')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/La auditoría aparecerá cuando se registre el primer cambio\./i),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole(
+        'button',
+        { name: /^Opcional: ver 1 módulo adicional$/i },
+      ),
+    );
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(screen.queryByText('Actividad del sistema')).not.toBeInTheDocument();
+  });
+
   it('strips repeated card titles from fallback bodies so optional modules do not echo themselves', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({

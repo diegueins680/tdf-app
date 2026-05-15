@@ -878,6 +878,7 @@ const ADMIN_CONSOLE_PLACEHOLDER_BODY_EXACT_KEYS = new Set([
   'aun no hay usuarios administrables',
   'aun no hay usuarios registrados',
   'aun no hay eventos registrados',
+  'la auditoria aparecera cuando se registre el primer cambio',
   'sin datos',
   'sin flujos configurados',
   'sin flujos disponibles',
