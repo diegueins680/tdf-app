@@ -1037,7 +1037,7 @@ function normalizeAdminConsoleSectionKey(value: string) {
 function normalizeBuiltInAdminConsoleSectionKey(value: string) {
   return normalizeAdminConsoleSectionKey(value)
     .replace(
-      /\b(?:and|y|of|de|del|la|el|the|admin|administration|administrative|administracion|administrativo|administrativa|console|consola|draft|fallback|planned|placeholder|preview|stub|module|modules|modulo|modulos|section|sections|seccion|secciones|page|pages|pagina|paginas|screen|screens|pantalla|pantallas|view|views|vista|vistas|workflow|workflows|flow|flows|flujo|flujos|area|areas|zona|zonas|card|cards|tarjeta|tarjetas|panel|panels|dashboard|dashboards|tile|tiles|widget|widgets|list|lists|lista|listas|table|tables|tabla|tablas|grid|grids|grilla|grillas|tab|tabs|pestana|pestanas|bloque|bloques)\b/g,
+      /\b(?:and|y|of|de|del|la|el|the|admin|administration|administrative|administracion|administrativo|administrativa|console|consola|draft|fallback|planned|placeholder|preview|stub|module|modules|modulo|modulos|section|sections|seccion|secciones|page|pages|pagina|paginas|screen|screens|pantalla|pantallas|view|views|vista|vistas|workflow|workflows|flow|flows|flujo|flujos|area|areas|zona|zonas|card|cards|tarjeta|tarjetas|panel|panels|dashboard|dashboards|overview|overviews|summary|summaries|center|centers|centre|centres|hub|hubs|home|homes|landing|landings|tile|tiles|widget|widgets|list|lists|lista|listas|table|tables|tabla|tablas|grid|grids|grilla|grillas|tab|tabs|pestana|pestanas|bloque|bloques)\b/g,
       ' ',
     )
     .replace(/\s+/g, ' ')
