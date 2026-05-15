@@ -17320,6 +17320,9 @@ describe('CourseRegistrationsAdminPage', () => {
       '[TEST] Typeform registration page - Beatmaking 101',
       'DEMO: Formulario de Tally para Beatmaking 101',
       'Sample - Google Forms - Beatmaking 101',
+      'Preview - Typeform registration page - Beatmaking 101',
+      'Sandbox: Formulario de Tally para Beatmaking 101',
+      'Vista previa - Google Forms - Beatmaking 101',
       '[PRUEBA] Beatmaking 101',
     ];
 
@@ -17335,7 +17338,9 @@ describe('CourseRegistrationsAdminPage', () => {
         const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
-        expect(emptyState?.textContent).not.toMatch(/TEST|DEMO|Sample|PRUEBA|Typeform|Tally|Google Forms|registration page/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /TEST|DEMO|Sample|Preview|Sandbox|Vista previa|PRUEBA|Typeform|Tally|Google Forms|registration page/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
