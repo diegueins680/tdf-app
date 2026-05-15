@@ -1232,6 +1232,8 @@ spec = do
       validateAssetPhotoUrl (Just "   ") `shouldBe` Right Nothing
       validateAssetPhotoUrl (Just "  https://cdn.example.com/roland.jpg  ")
         `shouldBe` Right (Just "https://cdn.example.com/roland.jpg")
+      validateAssetPhotoUrl (Just "https://cdn.example.com/roland.jpg?v=2")
+        `shouldBe` Right (Just "https://cdn.example.com/roland.jpg?v=2")
       validateAssetPhotoUrl (Just " inventory/roland-juno.jpg ")
         `shouldBe` Right (Just "inventory/roland-juno.jpg")
       validateAssetPhotoUrl (Just "assets/inventory/roland-juno.jpg")
@@ -1256,6 +1258,8 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
       assertInvalid
         (validateAssetPhotoUrl (Just "https://cdn.example.com/roland.jpg#preview"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/manual.pdf"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/roland-photo"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/.hidden.jpg"))

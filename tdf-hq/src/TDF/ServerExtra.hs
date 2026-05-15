@@ -2327,14 +2327,16 @@ validateAssetPhotoUrl (Just rawUrl) =
     Just trimmedUrl
       | "https://" `T.isPrefixOf` T.toLower trimmedUrl
           && TrialsServer.isValidHttpUrl trimmedUrl
-          && not ("#" `T.isInfixOf` trimmedUrl) ->
+          && not ("#" `T.isInfixOf` trimmedUrl)
+          && hasSupportedAssetPhotoUrlExtension trimmedUrl ->
           Right (Just trimmedUrl)
       | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
       | otherwise ->
           Left err400
             { errBody =
                 "photoUrl must be an absolute https URL without a fragment "
-                  <> "or an inventory asset path"
+                  <> "or an inventory asset path; external photo URLs must end "
+                  <> "with .jpg, .jpeg, .png, .webp, or .gif"
             }
 
 validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
@@ -2377,6 +2379,10 @@ hasSupportedAssetPhotoExtension :: Text -> Bool
 hasSupportedAssetPhotoExtension path =
   T.toLower (T.pack (takeExtension (T.unpack path))) `elem`
     [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+
+hasSupportedAssetPhotoUrlExtension :: Text -> Bool
+hasSupportedAssetPhotoUrlExtension url =
+  hasSupportedAssetPhotoExtension (T.takeWhile (/= '?') url)
 
 roomsPublicServer
   :: ( MonadReader Env m
