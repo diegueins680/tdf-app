@@ -1889,6 +1889,27 @@ const formatDelimitedSourceWord = (word: string, index: number) => {
   return `${lowerWord.charAt(0).toLocaleUpperCase('es')}${lowerWord.slice(1)}`;
 };
 
+const sourceWordComparisonKey = (word: string) => {
+  const lowerWord = word.toLocaleLowerCase('es');
+  return (sourceLabelSpecialWords.get(lowerWord) ?? lowerWord).toLocaleLowerCase('es');
+};
+
+const dedupeAdjacentSourceWords = (words: readonly string[]) => {
+  const dedupedWords: string[] = [];
+
+  words.forEach((word) => {
+    const wordKey = sourceWordComparisonKey(word);
+    const previousWord = dedupedWords[dedupedWords.length - 1];
+    const previousWordKey = previousWord == null ? '' : sourceWordComparisonKey(previousWord);
+
+    if (wordKey && wordKey === previousWordKey) return;
+
+    dedupedWords.push(word);
+  });
+
+  return dedupedWords;
+};
+
 const humanizeDelimitedSourceLabel = (source: string) => {
   const hasDelimitedParts = /[_./-]/.test(source);
   const hasCamelCaseParts = /[a-z0-9][A-Z]/.test(source);
@@ -1902,7 +1923,7 @@ const humanizeDelimitedSourceLabel = (source: string) => {
     .replace(/\s+/g, ' ')
     .trim();
   if (!normalized) return source;
-  return normalized.split(' ').map(formatDelimitedSourceWord).join(' ');
+  return dedupeAdjacentSourceWords(normalized.split(' ')).map(formatDelimitedSourceWord).join(' ');
 };
 
 const normalizeSourceAliasKey = (source: string) =>

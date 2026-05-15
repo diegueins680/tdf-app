@@ -2388,6 +2388,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates repeated source provider labels before showing shared source context', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crSource: 'instagram_instagram_story',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+        crSource: 'ig_instagram_story',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const cohortSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-single-cohort-summary"]',
+      );
+
+      expect(cohortSummary).not.toBeNull();
+      expect(cohortSummary?.textContent).toContain('Beatmaking 101 · Fuente: Instagram story');
+      expect(container.textContent).not.toContain('Instagram Instagram story');
+      expect(container.textContent).not.toContain('instagram_instagram_story');
+      expect(container.textContent).not.toContain('ig_instagram_story');
+      expect(countOccurrences(container, 'Fuente: Instagram story')).toBe(1);
+      expect(getDossierTriggers(container)).toHaveLength(2);
+    });
+
+    await cleanup();
+  });
+
   it('omits passive single-choice context when the default view has only one registration', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
