@@ -3488,6 +3488,12 @@ export default function CourseRegistrationsAdminPage() {
   const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && !hasCustomFilters
     && !viewHitsCurrentLimit;
+  const showFilteredEmptyLocalSearchFocus = showEmptyLocalSearchResults
+    && hasManualFilters
+    && !viewHitsCurrentLimit
+    && !cohortsQuery.isError
+    && Boolean(activeFilterSummary);
+  const showFocusedEmptyLocalSearchState = showDefaultEmptyLocalSearchFocus || showFilteredEmptyLocalSearchFocus;
   const defaultEmptyLocalSearchScopeSummary = showDefaultEmptyLocalSearchFocus
     ? [
       combinedSingleChoiceSummary
@@ -3496,6 +3502,10 @@ export default function CourseRegistrationsAdminPage() {
       hasNamedVisibleSource ? `Fuente visible: ${singleVisibleSourceLabel}` : '',
     ].filter(Boolean).join(' · ')
     : '';
+  const filteredEmptyLocalSearchScopeSummary = showFilteredEmptyLocalSearchFocus
+    ? `Vista filtrada: ${activeFilterSummary}`
+    : '';
+  const emptyLocalSearchScopeSummary = filteredEmptyLocalSearchScopeSummary || defaultEmptyLocalSearchScopeSummary;
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
   const singleVisibleRegistrationNeedsContact = searchedRegistrations.length === 1
     && searchedRegistrations[0] != null
@@ -3630,7 +3640,7 @@ export default function CourseRegistrationsAdminPage() {
       : `${localSearchLoadedScopeHint}${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
-      defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',
+      emptyLocalSearchScopeSummary ? `${emptyLocalSearchScopeSummary}.` : '',
       shortPhoneSearchHint
         || `No hay coincidencias para "${localSearchSummary}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
       shortPhoneSearchHint || showEmptyLocalSearchLimitRecoveryAction
@@ -3644,7 +3654,7 @@ export default function CourseRegistrationsAdminPage() {
     && !shortPhoneSearchHint
     && localSearchSummary !== localSearchTerm
     ? [
-      defaultEmptyLocalSearchScopeSummary ? `${defaultEmptyLocalSearchScopeSummary}.` : '',
+      emptyLocalSearchScopeSummary ? `${emptyLocalSearchScopeSummary}.` : '',
       `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
       showEmptyLocalSearchLimitRecoveryAction
         ? ''
@@ -4211,7 +4221,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showInitialCohortResolutionState
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
-    && !showDefaultEmptyLocalSearchFocus
+    && !showFocusedEmptyLocalSearchState
     && !showSingleResultWithOnlyPassiveFilterContext
     && (!regsQuery.isError || hasVisibleRegistrations);
   const showRegistrationResultsPanel = !showInitialRegistrationLoading

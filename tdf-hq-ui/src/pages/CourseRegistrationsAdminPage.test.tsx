@@ -12558,7 +12558,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps empty filtered searches owned by the search clear action instead of repeating filter reset recovery', async () => {
+  it('folds filtered empty-search scope into one recovery state instead of keeping filter chrome open', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -12592,11 +12592,14 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
-      expect(container.textContent).toContain(
-        'No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
+      const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
+      expect(emptySearch).not.toBeNull();
+      expect(emptySearch?.textContent).toContain(
+        'Vista filtrada: cohorte Beatmaking 101 · estado pagado. No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
       );
-      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
-      expect(container.textContent).toContain('Estado filtrado');
+      expect(container.textContent).not.toContain('Estado filtrado');
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(container.querySelector('[data-testid="course-registration-active-status-summary"]')).toBeNull();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
