@@ -1176,10 +1176,10 @@ const firstRunVariantDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))\s*$/i;
 
 const firstRunCopyDescriptorPrefixPattern =
-  /^(?:(?:copy|duplicate)\s+of|(?:copia|duplicado)\s+de)\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:copy|duplicate)\s+of|(?:copia|duplicad[oa])\s+de)\s*(?:[-:/|]\s*)?/i;
 
 const firstRunCopyDescriptorSuffixPattern =
-  /\s*(?:(?:[-:/|]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|copia|duplicado)\s*(?:\)|\])?\s*$/i;
+  /\s*(?:(?:[-:/|]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|copia|duplicad[oa])\s*(?:\)|\])?\s*$/i;
 
 const firstRunRegistrationLinkDescriptorPrefixPattern =
   /^(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

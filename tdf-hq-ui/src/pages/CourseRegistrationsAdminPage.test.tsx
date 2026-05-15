@@ -18616,8 +18616,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Duplicate of Beatmaking 101',
       'Copia de Beatmaking 101',
       'Duplicado de Beatmaking 101',
+      'Duplicada de Beatmaking 101',
       'Beatmaking 101 - copy',
       'Beatmaking 101 (copia)',
+      'Beatmaking 101 (duplicada)',
     ];
 
     for (const title of titles) {
@@ -18635,7 +18637,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/copy|duplicate|copia|duplicado/i);
+        expect(emptyState?.textContent).not.toMatch(/copy|duplicate|copia|duplicad[oa]/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
         expect(publicFormAction?.getAttribute('title')).toBe(
