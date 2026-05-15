@@ -12,7 +12,7 @@ import Data.Text (Text, pack)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
+import Database.Persist (Entity (..), getBy, getJustEntity, insert, insertKey, selectList, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent, ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
@@ -340,6 +340,34 @@ spec = do
         Right partyId ->
           expectationFailure
             ("Expected fallback party marker drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows with impossible persisted ids" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        insertKey
+          (toSqlKey 0 :: Models.PartyId)
+          Models.Party
+            { Models.partyLegalName = Nothing
+            , Models.partyDisplayName = "Public Trial Interest"
+            , Models.partyIsOrg = False
+            , Models.partyTaxId = Nothing
+            , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+            , Models.partyPrimaryPhone = Nothing
+            , Models.partyWhatsapp = Nothing
+            , Models.partyInstagram = Nothing
+            , Models.partyEmergencyContact = Nothing
+            , Models.partyNotes =
+                Just "System fallback party for anonymous public trial interests."
+            , Models.partyCreatedAt = now
+            }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "fallback party id is invalid"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party id drift to be rejected, got " <> show partyId)
 
     it "rejects fallback party rows that already have artist profile links" $ do
       result <- (try $ runInMemory $ do

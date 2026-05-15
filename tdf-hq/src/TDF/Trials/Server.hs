@@ -1243,6 +1243,7 @@ ensurePublicLeadParty now = do
   existing <- selectList [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
   case existing of
     [Entity partyId party] -> do
+      validatePublicLeadFallbackPartyId partyId
       validatePublicLeadFallbackParty party
       validatePublicLeadFallbackRelations partyId
       pure partyId
@@ -1263,6 +1264,12 @@ ensurePublicLeadParty now = do
     _ ->
       liftIO $ throwIO err500
         { errBody = "Anonymous public lead fallback party is ambiguous" }
+
+validatePublicLeadFallbackPartyId :: PartyId -> AppM ()
+validatePublicLeadFallbackPartyId partyId =
+  unless (fromSqlKey partyId > 0) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party id is invalid" }
 
 validatePublicLeadFallbackParty :: Party -> AppM ()
 validatePublicLeadFallbackParty party = do
