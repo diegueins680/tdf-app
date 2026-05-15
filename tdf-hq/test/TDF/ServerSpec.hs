@@ -5518,6 +5518,16 @@ spec = describe "TDF.Server helpers" $ do
                         )
 
         it "rejects malformed configured folder fallbacks before upload requests are built" $ do
+            case resolveDriveUploadFolderId Nothing (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "DRIVE_UPLOAD_FOLDER_ID must not be blank"
+                Right value ->
+                    expectationFailure
+                        ( "Expected blank DRIVE_UPLOAD_FOLDER_ID to be rejected, got "
+                            <> show value
+                        )
             case resolveDriveUploadFolderId Nothing (Just "env/folder") of
                 Left err -> do
                     errHTTPCode err `shouldBe` 500

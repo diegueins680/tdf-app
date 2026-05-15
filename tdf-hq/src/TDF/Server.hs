@@ -2329,9 +2329,13 @@ resolveDriveUploadFolderId mProvidedFolderId mFallbackFolderId =
             { errBody = "folderId must not be blank" }
         else Just <$> validateDriveUploadFolderId err400 "folderId" provided
     Nothing ->
-      traverse
-        (validateDriveUploadFolderId err500 "DRIVE_UPLOAD_FOLDER_ID")
-        (cleanOptional mFallbackFolderId)
+      case mFallbackFolderId of
+        Nothing -> Right Nothing
+        Just fallbackRaw -> do
+          let fallback = T.strip fallbackRaw
+          if T.null fallback
+            then Left err500 { errBody = "DRIVE_UPLOAD_FOLDER_ID must not be blank" }
+            else Just <$> validateDriveUploadFolderId err500 "DRIVE_UPLOAD_FOLDER_ID" fallback
 
 validateDriveUploadFolderId :: ServerError -> Text -> Text -> Either ServerError Text
 validateDriveUploadFolderId baseError fieldName folderId
