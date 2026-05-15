@@ -1198,10 +1198,10 @@ const firstRunQrRegistrationDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunEnrollmentFlowDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|landing(?:\s+pages?)?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|pipelines?|landing(?:\s+pages?)?)|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunEnrollmentFlowDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|landing(?:\s+pages?)?)|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujo|embudo)s?\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|pipelines?|landing(?:\s+pages?)?)|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
 
 const firstRunOfferDescriptorPrefixPattern =
   /^(?:(?:early[-\s]?bird|promo(?:tional)?|discount(?:ed)?|pre[-\s]?sale)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:descuento|promoci[oó]n|oferta|preventa)(?:\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))?|(?:descuento|promoci[oó]n|oferta|preventa)\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

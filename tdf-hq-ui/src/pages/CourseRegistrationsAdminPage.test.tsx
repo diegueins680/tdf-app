@@ -17512,13 +17512,16 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips enrollment workflow descriptors from first-run cohort copy', async () => {
     const titles = [
       'Enrollment funnel - Beatmaking 101',
+      'Enrollment pipeline - Beatmaking 101',
       'Beatmaking 101 - registration flow',
+      'Beatmaking 101 - admissions pipeline',
       'Course registration workflow - Beatmaking 101',
       'Beatmaking 101 - enrollment workflow',
       'Registration landing page - Beatmaking 101',
       'Beatmaking 101 - enrollment landing page',
       'Application landing page for Beatmaking 101',
       'Flujo de inscripción - Beatmaking 101',
+      'Canalización de inscripción - Beatmaking 101',
       'Beatmaking 101 - embudo de admisiones',
     ];
 
@@ -17536,7 +17539,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /enrollment funnel|registration flow|registration workflow|enrollment workflow|landing page|flujo de inscripci[oó]n|embudo de admisiones/i,
+          /enrollment funnel|enrollment pipeline|registration flow|admissions pipeline|registration workflow|enrollment workflow|landing page|flujo de inscripci[oó]n|canalizaci[oó]n de inscripci[oó]n|embudo de admisiones/i,
         );
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
