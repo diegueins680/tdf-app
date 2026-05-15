@@ -49,7 +49,15 @@ instance FromJSON PaymentCreate where
     validateRequiredPaymentTextField "pcMethod" (pcMethod payload)
     validateRequiredPaymentTextField "pcPaidAt" (pcPaidAt payload)
     validateRequiredPaymentTextField "pcConcept" (pcConcept payload)
+    referenceValue <- validateOptionalPaymentTextField "pcReference" (pcReference payload)
+    periodValue <- validateOptionalPaymentTextField "pcPeriod" (pcPeriod payload)
+    attachmentUrlValue <-
+      validateOptionalPaymentTextField "pcAttachmentUrl" (pcAttachmentUrl payload)
     pure payload
+      { pcReference = referenceValue
+      , pcPeriod = periodValue
+      , pcAttachmentUrl = attachmentUrlValue
+      }
 
 rejectNullOptionalPaymentFields :: Value -> Parser ()
 rejectNullOptionalPaymentFields =
@@ -94,6 +102,22 @@ validateRequiredPaymentTextField fieldName rawValue
         )
   | otherwise =
       pure ()
+
+validateOptionalPaymentTextField :: String -> Maybe Text -> Parser (Maybe Text)
+validateOptionalPaymentTextField _ Nothing =
+  pure Nothing
+validateOptionalPaymentTextField fieldName (Just rawValue)
+  | T.null value =
+      fail (fieldName <> " must be omitted or a non-empty string")
+  | T.any isUnsafePaymentCreateTextChar rawValue =
+      fail
+        ( fieldName
+            <> " must not contain control characters or hidden formatting characters"
+        )
+  | otherwise =
+      pure (Just value)
+  where
+    value = T.strip rawValue
 
 isUnsafePaymentCreateTextChar :: Char -> Bool
 isUnsafePaymentCreateTextChar ch =

@@ -276,6 +276,63 @@ spec = do
       assertInvalid "pcPeriod" (basePaymentJson ("pcPeriod" .= A.Null))
       assertInvalid "pcAttachmentUrl" (basePaymentJson ("pcAttachmentUrl" .= A.Null))
 
+    it "normalizes optional payment text at the JSON boundary" $ do
+      let rawPayload =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= ("USD" :: Text)
+                , "pcMethod" .= ("cash" :: Text)
+                , "pcReference" .= ("  REC-42  " :: Text)
+                , "pcPaidAt" .= ("2026-04-13" :: Text)
+                , "pcConcept" .= ("Studio booking" :: Text)
+                , "pcPeriod" .= (" 2026-04 " :: Text)
+                , "pcAttachmentUrl" .= (" https://files.example.com/receipt.pdf " :: Text)
+                ]
+      case A.eitherDecode rawPayload of
+        Left err ->
+          expectationFailure ("Expected trimmed payment create payload to decode, got: " <> err)
+        Right payload -> do
+          pcReference payload `shouldBe` Just "REC-42"
+          pcPeriod payload `shouldBe` Just "2026-04"
+          pcAttachmentUrl payload `shouldBe` Just "https://files.example.com/receipt.pdf"
+
+    it "rejects blank or unsafe optional payment text before manual payment handler fallbacks" $ do
+      let basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed optional payment text to fail, got: " <> show payload)
+
+      assertInvalid
+        (basePaymentJson ("pcReference" .= ("   " :: Text)))
+        "pcReference must be omitted or a non-empty string"
+      assertInvalid
+        (basePaymentJson ("pcReference" .= ("REC\n42" :: Text)))
+        "pcReference must not contain control characters or hidden formatting characters"
+      assertInvalid
+        (basePaymentJson ("pcPeriod" .= ("2026" <> T.singleton '\x202E' <> "-04")))
+        "pcPeriod must not contain control characters or hidden formatting characters"
+      assertInvalid
+        ( basePaymentJson
+            ("pcAttachmentUrl" .= ("https://files.example.com/proof.pdf\NUL" :: Text))
+        )
+        "pcAttachmentUrl must not contain control characters or hidden formatting characters"
+
     it "rejects non-positive ids and amounts before manual payment handler fallbacks" $ do
       let assertInvalid rawPayload expectedMessage =
             case A.eitherDecode rawPayload :: Either String PaymentCreate of
