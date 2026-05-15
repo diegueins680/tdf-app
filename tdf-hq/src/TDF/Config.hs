@@ -1145,18 +1145,19 @@ validateConfiguredOpenAiModel (Just rawModel) =
 
 validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
 validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
-validateConfiguredOpenAiEmbedModel (Just rawModel)
-  | T.null model = pure defaultOpenAiEmbedModel
-  | otherwise =
-      case openAiEmbedDimensions model of
+validateConfiguredOpenAiEmbedModel (Just rawModel) =
+  case normalizeConfiguredOpenAiModel "OPENAI_EMBED_MODEL" rawModel of
+    Left msg -> fail msg
+    Right Nothing -> pure defaultOpenAiEmbedModel
+    Right (Just rawModelId) ->
+      let model = T.toLower rawModelId
+      in case openAiEmbedDimensions model of
         Just _ -> pure model
         Nothing ->
           fail
             ( "OPENAI_EMBED_MODEL must be one of: text-embedding-3-small, "
               <> "text-embedding-3-large, text-embedding-ada-002"
             )
-  where
-    model = T.toLower (T.strip (T.pack rawModel))
 
 validateConfiguredOpenAiApiKey :: Maybe String -> IO (Maybe Text)
 validateConfiguredOpenAiApiKey Nothing = pure Nothing

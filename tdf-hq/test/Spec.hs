@@ -1500,6 +1500,22 @@ main = hspec $ do
                     "OPENAI_EMBED_MODEL must be one of"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects malformed OpenAI embedding model ids before sizing RAG storage" $ do
+            let assertInvalid rawModel expectedMessage =
+                    withEnvOverrides
+                        [ ("OPENAI_EMBED_MODEL", Just rawModel) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "text-embedding-3-small debug"
+                "OPENAI_EMBED_MODEL must not contain whitespace"
+            assertInvalid
+                "text-embedding-3-small/path"
+                "OPENAI_EMBED_MODEL must use only ASCII letters"
+            assertInvalid
+                ("text-embedding-3-small" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "OPENAI_EMBED_MODEL must use only ASCII letters"
+
         it "normalizes configured OpenAI chat models before fallback requests are built" $
             withEnvOverrides
                 [ ("OPENAI_MODEL", Just " kimi-latest ") ]
