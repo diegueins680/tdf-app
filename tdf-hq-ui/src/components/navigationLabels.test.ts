@@ -13,4 +13,18 @@ describe('course registration navigation labels', () => {
     );
     expect(courseRegistrationItem?.label).not.toBe('Inscripciones curso');
   });
+
+  it('keeps the sidebar free of duplicate destinations', () => {
+    const seenPaths = new Set<string>();
+    const duplicatedPaths = NAV_GROUPS
+      .flatMap((group) => group.items)
+      .map((item) => item.path)
+      .filter((path) => {
+        if (seenPaths.has(path)) return true;
+        seenPaths.add(path);
+        return false;
+      });
+
+    expect(duplicatedPaths).toEqual([]);
+  });
 });

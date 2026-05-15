@@ -68,7 +68,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: 'GENTE',
     items: [
       { label: 'Comunidad', path: '/fans' },
-      { label: 'Clubes', path: '/fans' },
       { label: 'Tienda', path: '/marketplace' },
       { label: 'Lanzamientos', path: '/records' },
       { label: 'Conexiones', path: '/social' },
