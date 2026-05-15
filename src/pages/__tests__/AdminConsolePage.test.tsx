@@ -3452,6 +3452,50 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps control-panel fallback cards from duplicating the admin console shell', async () => {
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-control-panel',
+          title: 'Control panel',
+          body: ['Review service health, users, roles, and audit from this panel.'],
+        },
+        {
+          cardId: 'panel-de-control-admin',
+          title: 'Panel de control',
+          body: ['Revisa salud, usuarios, roles y auditoría desde este panel.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Sigue este recorrido para ubicar cada bloque sin repetir revisiones vacías\./i,
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /Opcional: ver .*módulo/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
+    expect(screen.queryByText('Control panel')).not.toBeInTheDocument();
+    expect(screen.queryByText('Panel de control')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review service health, users, roles, and audit from this panel\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa salud, usuarios, roles y auditoría desde este panel\./i),
+    ).not.toBeInTheDocument();
+  });
+
   it('keeps getting-started fallback cards from duplicating the first-run checklist', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
