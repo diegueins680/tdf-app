@@ -431,7 +431,9 @@ describe('AdminUsersPage', () => {
         expect(listUsersMock).toHaveBeenCalledTimes(2);
         expect(container.textContent).toContain('No se pudieron cargar los usuarios: admin users unavailable.');
         expect(getButtonsByText(container, 'Reintentar usuarios')).toHaveLength(1);
+        expect(container.querySelector('[data-testid="admin-users-header-actions"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getRenderedRowUserIds(container)).toEqual([101, 102, 103, 104]);
       });
 

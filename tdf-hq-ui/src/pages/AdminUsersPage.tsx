@@ -1221,7 +1221,8 @@ export default function AdminUsersPage() {
   const refreshActionTitle = includeInactive
     ? 'Refrescar usuarios activos e inactivos'
     : 'Refrescar usuarios activos';
-  const showHeaderActions = showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction;
+  const showHeaderActions = !usersQuery.error
+    && (showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction);
   const showInlineClearSearchAction = showSearchField && hasActiveSearch;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
