@@ -2173,6 +2173,60 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps service dependency fallback cards from duplicating service health while preserving real modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'fallback-service-dependencies',
+          title: 'Service dependencies',
+          body: ['Review API, database, and queue dependency status before changing admin access.'],
+        },
+        {
+          cardId: 'dependencias-servicio',
+          title: 'Dependencias del servicio',
+          body: ['Revisa API, base de datos y dependencias antes de ajustar permisos administrativos.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: ['Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.'],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Primeros pasos')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /^Opcional: ver 3 módulos adicionales$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Service dependencies')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dependencias del servicio')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Review API, database, and queue dependency status before changing admin access\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Revisa API, base de datos y dependencias antes de ajustar permisos administrativos\./i),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios\./i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Service dependencies')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dependencias del servicio')).not.toBeInTheDocument();
+  });
+
   it('keeps connector-formatted built-in access titles out of optional modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
