@@ -1784,6 +1784,9 @@ sessionsServer user =
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
       serviceClean <- either throwError pure (validateSessionRequiredTextField "service" (scService req))
       engineerRefClean <- either throwError pure (validateSessionRequiredTextField "engineerRef" (scEngineerRef req))
+      sampleRateValue <- either throwError pure (validateSessionSampleRate (scSampleRate req))
+      bitDepthValue <- either throwError pure (validateSessionBitDepth (scBitDepth req))
+      dawValue <- either throwError pure (validateSessionOptionalTextField "daw" (scDaw req))
       either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
       either throwError pure =<< withPool (validateSessionReferences bandKey roomKeys)
       let
@@ -1799,9 +1802,9 @@ sessionsServer user =
           , sessionEngineerRef          = engineerRefClean
           , sessionAssistantRef         = scAssistantRef req
           , sessionStatus               = status'
-          , sessionSampleRate           = scSampleRate req
-          , sessionBitDepth             = scBitDepth req
-          , sessionDaw                  = scDaw req
+          , sessionSampleRate           = sampleRateValue
+          , sessionBitDepth             = bitDepthValue
+          , sessionDaw                  = dawValue
           , sessionSessionFolderDriveId = scSessionFolderDriveId req
           , sessionNotes                = scNotes req
           }
@@ -1847,6 +1850,9 @@ sessionsServer user =
       statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
       serviceUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "service") (suService req)
       engineerRefUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "engineerRef") (suEngineerRef req)
+      sampleRateUpdate <- traverse (either throwError pure . validateSessionSampleRate) (suSampleRate req)
+      bitDepthUpdate <- traverse (either throwError pure . validateSessionBitDepth) (suBitDepth req)
+      dawUpdate <- traverse (either throwError pure . validateSessionOptionalTextField "daw") (suDaw req)
       let currentSession = entityVal existing
           effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
           effectiveEndAt = fromMaybe (sessionEndAt currentSession) (suEndAt req)
@@ -1864,9 +1870,9 @@ sessionsServer user =
             , fmap (SessionEngineerRef =.)          engineerRefUpdate
             , fmap (SessionAssistantRef =.)         (suAssistantRef req)
             , fmap (SessionStatus =.)               statusVal
-            , fmap (SessionSampleRate =.)           (suSampleRate req)
-            , fmap (SessionBitDepth =.)             (suBitDepth req)
-            , fmap (SessionDaw =.)                  (suDaw req)
+            , fmap (SessionSampleRate =.)           sampleRateUpdate
+            , fmap (SessionBitDepth =.)             bitDepthUpdate
+            , fmap (SessionDaw =.)                  dawUpdate
             , fmap (SessionSessionFolderDriveId =.) (suSessionFolderDriveId req)
             , fmap (SessionNotes =.)                (suNotes req)
             ]
@@ -2927,13 +2933,23 @@ validateSessionRequiredTextField fieldName rawValue =
          then Left err400
            { errBody =
                BL.fromStrict
-                 (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxSessionRequiredTextChars) <> " characters or fewer"))
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must be "
+                         <> T.pack (show maxSessionRequiredTextChars)
+                         <> " characters or fewer"
+                     )
+                 )
            }
        else if T.any isUnsafeSessionRequiredTextChar cleanValue
          then Left err400
            { errBody =
                BL.fromStrict
-                 (TE.encodeUtf8 (fieldName <> " must not contain control characters or hidden formatting characters"))
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must not contain control characters or hidden formatting characters"
+                     )
+                 )
            }
        else Right cleanValue
 
@@ -2943,6 +2959,62 @@ isUnsafeSessionRequiredTextChar ch =
 
 maxSessionRequiredTextChars :: Int
 maxSessionRequiredTextChars = 160
+
+validateSessionOptionalTextField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSessionOptionalTextField _ Nothing = Right Nothing
+validateSessionOptionalTextField fieldName (Just rawValue) =
+  let cleanValue = T.strip rawValue
+  in if T.null cleanValue
+       then Right Nothing
+       else if T.length cleanValue > maxSessionRequiredTextChars
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must be "
+                         <> T.pack (show maxSessionRequiredTextChars)
+                         <> " characters or fewer"
+                     )
+                 )
+           }
+       else if T.any isUnsafeSessionRequiredTextChar cleanValue
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must not contain control characters or hidden formatting characters"
+                     )
+                 )
+           }
+       else Right (Just cleanValue)
+
+validateSessionSampleRate :: Maybe Int -> Either ServerError (Maybe Int)
+validateSessionSampleRate =
+  validateSessionPositiveBoundedInt "sampleRate" 384000
+
+validateSessionBitDepth :: Maybe Int -> Either ServerError (Maybe Int)
+validateSessionBitDepth =
+  validateSessionPositiveBoundedInt "bitDepth" 64
+
+validateSessionPositiveBoundedInt :: Text -> Int -> Maybe Int -> Either ServerError (Maybe Int)
+validateSessionPositiveBoundedInt _ _ Nothing = Right Nothing
+validateSessionPositiveBoundedInt fieldName maxValue (Just value)
+  | value <= 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be greater than zero"))
+        }
+  | value > maxValue =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  (fieldName <> " must be " <> T.pack (show maxValue) <> " or less")
+              )
+        }
+  | otherwise = Right (Just value)
 
 validateSessionStatusInput :: Maybe Text -> Either ServerError (Maybe SessionStatus)
 validateSessionStatusInput Nothing = Right Nothing

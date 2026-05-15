@@ -175,6 +175,9 @@ import TDF.ServerExtra (
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
     validateSessionRequiredTextField,
+    validateSessionOptionalTextField,
+    validateSessionSampleRate,
+    validateSessionBitDepth,
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
     validatePublicQrUploadContext,
@@ -4892,6 +4895,37 @@ spec = do
               expectationFailure ("Expected invalid session status error, got " <> show value)
       assertInvalid (validateSessionStatusInput (Just "   "))
       assertInvalid (validateSessionStatusInput (Just "live"))
+
+  describe "session audio metadata validation" $ do
+    it "normalizes optional DAW text and bounds numeric audio fields before session writes" $ do
+      validateSessionOptionalTextField "daw" Nothing `shouldBe` Right Nothing
+      validateSessionOptionalTextField "daw" (Just "  Ableton Live  ")
+        `shouldBe` Right (Just "Ableton Live")
+      validateSessionOptionalTextField "daw" (Just "   ") `shouldBe` Right Nothing
+      validateSessionSampleRate (Just 48000) `shouldBe` Right (Just 48000)
+      validateSessionBitDepth (Just 24) `shouldBe` Right (Just 24)
+
+    it "rejects malformed audio metadata instead of persisting unusable session values" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid audio metadata error, got " <> show value)
+
+      assertInvalid "sampleRate must be greater than zero"
+        (validateSessionSampleRate (Just 0))
+      assertInvalid "sampleRate must be 384000 or less"
+        (validateSessionSampleRate (Just 384001))
+      assertInvalid "bitDepth must be greater than zero"
+        (validateSessionBitDepth (Just (-1)))
+      assertInvalid "bitDepth must be 64 or less"
+        (validateSessionBitDepth (Just 128))
+      assertInvalid "daw must not contain control characters or hidden formatting characters"
+        ( validateSessionOptionalTextField
+            "daw"
+            (Just ("Logic" <> T.singleton '\x202E'))
+        )
 
   describe "validateSessionTimeRange" $ do
     it "accepts sessions whose end time is strictly after the start time" $ do
