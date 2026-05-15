@@ -27,3 +27,13 @@ FINAL_STATUS: done — Packet A blocked on `DEVICE_LAUNCHAPP_TIMEOUT` + missing 
 
 FINAL_STATUS: blocked — Packet A blocked on `SIMCTL_DAEMON_DEADLOCK` (host restart required), Packet B closed behind Packet A + `EAS_IOS_CREDENTIALS_MISSING`, Lane C live with durable launchd supervisor PID 72115 / child PID 69324 (heartbeat 13:44Z, no lastError), backend stable under launchd PID 47708.
 
+
+## 2026-05-15 15:53 UTC — CIO checkpoint
+
+- **Packet A — Login-proof release lane:** `PROVEN FOR TESTING VERSION` — 9th consecutive Detox PASS at 2026-05-15 00:23 UTC remains last proven state (baseline `8d91fabe`, >15 h stale). Zero login-related commits since 00:23 UTC (confirmed empty `git log` over `tdf-mobile/src`, `package.json`, `eas.json`, `app.json`, `.detoxrc.js`, `ios/`, `android/`). Infrastructure blocker **`SIMCTL_DAEMON_DEADLOCK` CLEARED** — `xcrun simctl list devices` responsive at 15:53 UTC (<8 s), test-device `3C3D5759-6E10-480D-B768-2747B9B0D02A` booted. Release binary PRESENT at `tdf-mobile/ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app` (32 MB, May 13 03:28). Lane is **UNBLOCKED and ready for 10th PASS attempt**; no active infrastructure blocker remains.
+- **Packet B — Store-publish readiness gate:** `GATED` — strictly sequenced after Packet A proof. `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). No store-publish motion until 10th PASS achieved and credentials resolved.
+- **Lane C — Evergreen continuous-improvement runner:** `live` — supervisor PID `72115` (launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, PPID 1, elapsed ~13 h). Child PID `15930` active (running single-iteration child, `--max-iterations 1`). Heartbeat fresh at `2026-05-15T15:54:17Z`. `restartCount` 46, `staleRestartCount` 0, `lastExitCode` 0, `lastError` absent, `lastIterationResult` `ok`. Durability contract intact; clean child exits per one-iteration design, supervisor restarts reliably.
+- **Backend health:** `UP` — launchd `com.tdf.backend` PID `47708` (since 12:17 UTC), health check `{"db":"ok","status":"ok"}`, elapsed ~03:36. No crash signals.
+- **Systems lane:** `PAUSED` per standing CEO directive; cron `47ccc4be-1307-4001-9581-80956c0d82b9` disabled. `objectives/tdf-label-systems.md` unchanged. **Recommendation:** `STAY PAUSED` — no fresh bounded artifact with narrow acceptance test written.
+
+FINAL_STATUS: done — Packet A proven state intact (9× PASS, baseline 8d91fabe), infrastructure deadlock cleared at 15:53Z, lane unblocked for 10th PASS; Packet B gated behind Packet A + EAS_IOS_CREDENTIALS_MISSING; Lane C live (supervisor 72115, child 15930, heartbeat 15:54Z, no lastError); backend stable; systems paused.
