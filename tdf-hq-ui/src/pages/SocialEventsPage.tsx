@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AddIcon from '@mui/icons-material/Add';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -43,7 +44,7 @@ import {
 import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
-import { getSocialEventsOverviewUiState } from './socialEventsPageState';
+import { getSocialEventsCreateUiState, getSocialEventsOverviewUiState } from './socialEventsPageState';
 
 interface InvitationState {
   partyId: string;
@@ -420,6 +421,7 @@ export default function SocialEventsPage() {
   const [checkInCodes, setCheckInCodes] = useState<Record<string, string>>({});
   const [eventPosterFiles, setEventPosterFiles] = useState<Record<string, File | null>>({});
   const [eventDraft, setEventDraft] = useState<EventDraftState>(() => buildInitialEventDraft());
+  const [createEventFormOpen, setCreateEventFormOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => DateTime.local().toISODate() ?? '');
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
@@ -456,6 +458,12 @@ export default function SocialEventsPage() {
     canCreateEvent: hasSession,
     eventCount: events.length,
     filtersActive: eventFiltersActive,
+  });
+  const eventCreateUiState = getSocialEventsCreateUiState({
+    canCreateEvent: hasSession,
+    eventCount: events.length,
+    filtersActive: eventFiltersActive,
+    createFormOpen: createEventFormOpen,
   });
 
   const eventsByDate = useMemo(() => {
@@ -640,6 +648,7 @@ export default function SocialEventsPage() {
       const nextCalendarDate = dateKeyFromIso(createdEvent.eventStart);
       if (nextCalendarDate) setSelectedCalendarDate(nextCalendarDate);
       setEventDraft(buildInitialEventDraft());
+      setCreateEventFormOpen(false);
       qc.setQueryData<SocialEventDTO[]>(eventsQueryKey, (prev = []) => {
         const createdId = createdEvent.eventId != null ? String(createdEvent.eventId) : null;
         const withoutCreated = createdId
@@ -1157,19 +1166,28 @@ export default function SocialEventsPage() {
           >
             Refrescar
           </Button>
+          {eventCreateUiState.showCreateToolbarAction && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateEventFormOpen(true)}
+            >
+              Nuevo evento
+            </Button>
+          )}
           {!hasSession && eventOverviewUiState.showFilters && (
             <Alert severity="info" sx={{ m: 0, py: 0.5 }}>
               Inicia sesión para RSVP, invitaciones, tickets y gestión financiera.
             </Alert>
           )}
         </Stack>
-        {hasSession ? (
+        {hasSession && eventCreateUiState.showCreateForm && (
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1.5}>
                 <Typography variant="h6" fontWeight={700}>Crear evento</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Crea el primer evento aqui; cuando exista al menos uno, apareceran los filtros y el calendario.
+                  {eventCreateUiState.createFormDescription}
                 </Typography>
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                   <TextField
@@ -1290,6 +1308,14 @@ export default function SocialEventsPage() {
                     />
                     <Typography variant="body2" color="text.secondary">Evento público</Typography>
                   </Stack>
+                  {events.length > 0 && (
+                    <Button
+                      variant="text"
+                      onClick={() => setCreateEventFormOpen(false)}
+                    >
+                      Cerrar
+                    </Button>
+                  )}
                   <Button
                     variant="contained"
                     onClick={() => createEventMutation.mutate()}
@@ -1301,7 +1327,8 @@ export default function SocialEventsPage() {
               </Stack>
             </CardContent>
           </Card>
-        ) : (
+        )}
+        {!hasSession && (
           <Alert severity="info">Inicia sesión para crear eventos.</Alert>
         )}
         {eventOverviewUiState.showCalendar && (
