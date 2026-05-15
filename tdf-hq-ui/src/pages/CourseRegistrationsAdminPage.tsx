@@ -33,6 +33,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -4001,6 +4002,10 @@ export default function CourseRegistrationsAdminPage() {
       reg.crStatus,
       allVisibleRowsUsePaidRecoveryAction,
     ));
+  const showBusyDirectRecoveryIconActions = showBusyListSearchOnboarding
+    && allVisibleRowsUseDirectPendingRecoveryAction
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_LOCAL_SEARCH_REGISTRATIONS;
   const showBusyStatusIconActions = (
     showBusyListSearchOnboarding
     && useCompactStatusActionLabel
@@ -6523,6 +6528,11 @@ export default function CourseRegistrationsAdminPage() {
                     source: reg.crSource,
                   });
                   const showRowContext = Boolean(rowContextSummary);
+                  const useDirectPendingRecoveryIconAction =
+                    useDirectPendingRecoveryAction && showBusyDirectRecoveryIconActions;
+                  const directPendingRecoveryActionLabel = `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`;
+                  const directPendingRecoveryActionTitle =
+                    `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`;
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
@@ -6590,6 +6600,28 @@ export default function CourseRegistrationsAdminPage() {
                             </IconButton>
                           </span>
                         </Tooltip>
+                      ) : useDirectPendingRecoveryIconAction ? (
+                        <Tooltip title={directPendingRecoveryActionTitle}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              color={registrationStatusButtonColor('pending_payment')}
+                              title={directPendingRecoveryActionTitle}
+                              aria-label={directPendingRecoveryActionLabel}
+                              disabled={isUpdating}
+                              onClick={() => {
+                                handleCloseStatusMenu();
+                                handleQuickStatus(reg, 'pending_payment');
+                              }}
+                              sx={{
+                                border: '1px solid',
+                                borderColor: 'currentColor',
+                              }}
+                            >
+                              <UndoIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                       ) : (
                         <Button
                           size="small"
@@ -6602,12 +6634,12 @@ export default function CourseRegistrationsAdminPage() {
                           endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
                           title={
                             useDirectPendingRecoveryAction
-                              ? `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`
+                              ? directPendingRecoveryActionTitle
                               : statusMenuButtonTitle(reg.crStatus, rowActionTarget)
                           }
                           aria-label={
                             useDirectPendingRecoveryAction
-                              ? `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`
+                              ? directPendingRecoveryActionLabel
                               : usePaymentStatusMenuLabel
                               ? paymentStatusMenuButtonAriaLabel(rowActionTarget)
                               : `Cambiar estado para ${rowActionTarget}`

@@ -9122,7 +9122,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses direct paid recovery actions when the busy list already states paid status', async () => {
+  it('compacts direct paid recovery actions when the busy list already states paid status', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, () => ({ crStatus: 'paid' })));
 
     const container = document.createElement('div');
@@ -9137,9 +9137,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         paidRecoveryScopeHint,
       );
-      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(9);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(0);
       expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
-      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Estudiante 1')).toBeTruthy();
+      expect(container.querySelectorAll('button[aria-label^="Marcar pago pendiente para "]')).toHaveLength(9);
+      const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Estudiante 1');
+      expect(paidRecoveryAction.textContent?.trim()).toBe('');
+      expect(paidRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
+      expect(paidRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(countOccurrences(container, 'Pagado')).toBe(1);
       expect(container.textContent).not.toContain('Reabrir vuelve a pendiente.');
@@ -9148,7 +9152,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('matches busy cancelled-list guidance to the direct reopen row action', async () => {
+  it('matches busy cancelled-list guidance to compact direct reopen row actions', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9, () => ({ crStatus: 'cancelled' })));
 
     const container = document.createElement('div');
@@ -9166,7 +9170,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         `Beatmaking 101 · Cancelado. Busca dentro de las 9 inscripciones cargadas. ${dossierScopeHint}`,
       );
-      expect(countButtonsByText(container, 'Reabrir')).toBe(9);
+      expect(countButtonsByText(container, 'Reabrir')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Reabrir como pendiente para "]')).toHaveLength(9);
+      const reopenAction = getButtonByAriaLabel(container, 'Reabrir como pendiente para Estudiante 1');
+      expect(reopenAction.textContent?.trim()).toBe('');
+      expect(reopenAction.getAttribute('title')).toBe('Reabrir como pendiente; actual: Cancelado');
+      expect(reopenAction.getAttribute('aria-haspopup')).toBeNull();
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Cancelado')).toBe(1);
     });
