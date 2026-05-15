@@ -7931,6 +7931,12 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "https://attacker.example/v1/checkouts/ABC/payment")
                 "Datafast relative checkout payment path"
             assertInvalid
+                (Just "xv1/checkouts/ABC/payment")
+                "Datafast relative checkout payment path"
+            assertInvalid
+                (Just "v1/checkouts/ABC/payment")
+                "Datafast relative checkout payment path"
+            assertInvalid
                 (Just "/v1/checkouts/ABC/payment?entityId=other")
                 "Datafast relative checkout payment path"
             assertInvalid

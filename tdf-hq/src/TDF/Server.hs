@@ -11616,6 +11616,8 @@ validateDatafastResourcePath Nothing =
 validateDatafastResourcePath (Just rawResourcePath)
   | T.null resourcePath =
       Left err400 { errBody = "resourcePath requerido" }
+  | not ("/" `T.isPrefixOf` resourcePath) =
+      invalidDatafastResourcePath
   | T.length resourcePath > 512 =
       invalidDatafastResourcePath
   | T.isPrefixOf "http://" lowered
