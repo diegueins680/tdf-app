@@ -224,6 +224,7 @@ const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
 const missingContactSummary = 'Sin correo ni teléfono';
+const registrationStatusNeedsReviewLabel = 'Estado por revisar';
 const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   '-',
   'n a',
@@ -582,8 +583,40 @@ const getSharedOptionalDateLabel = (values: readonly (string | null | undefined)
 
 type RegistrationStatus = Exclude<StatusFilter, 'all'>;
 
+const REGISTRATION_STATUS_PLACEHOLDER_VALUE_KEYS = new Set([
+  '',
+  '-',
+  'desconocida',
+  'desconocido',
+  'n a',
+  'na',
+  'no disponible',
+  'none',
+  'not available',
+  'null',
+  'sin estado',
+  'sin status',
+  'tbd',
+  'unknown',
+]);
+
+const normalizeRegistrationStatusPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderRegistrationStatus = (status: string) =>
+  REGISTRATION_STATUS_PLACEHOLDER_VALUE_KEYS.has(normalizeRegistrationStatusPlaceholderKey(status));
+
 const normalizeRegistrationStatusKey = (status: string) =>
-  normalizeBackendStatusToken(status);
+  isPlaceholderRegistrationStatus(status)
+    ? '__placeholder_registration_status__'
+    : normalizeBackendStatusToken(status);
 
 const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | null => {
   const statusFilter = normalizeStatusFilterAlias(status);
@@ -605,8 +638,10 @@ const formatCustomStatusWord = (word: string) => (
 );
 
 const customRegistrationStatusLabel = (status: string) => {
+  if (isPlaceholderRegistrationStatus(status)) return registrationStatusNeedsReviewLabel;
+
   const normalized = status.trim().toLowerCase().replace(/[\s._/-]+/g, ' ').trim();
-  if (!normalized) return 'Estado desconocido';
+  if (!normalized) return registrationStatusNeedsReviewLabel;
   return normalized.split(' ').map(formatCustomStatusWord).join(' ');
 };
 

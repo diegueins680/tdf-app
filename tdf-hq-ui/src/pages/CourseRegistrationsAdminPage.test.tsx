@@ -4122,14 +4122,60 @@ describe('CourseRegistrationsAdminPage', () => {
         '[data-testid="course-registration-current-view-summary"]',
       );
 
-      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Estado desconocido');
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Estado por revisar');
       expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
-      expect(countOccurrences(container, 'Estado desconocido')).toBe(1);
+      expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('collapses placeholder status variants into one review-needed summary', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'unknown',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'n/a',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'Sin estado',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Estado por revisar');
+      expect(currentViewSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
+      expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
+      expect(container.textContent).not.toContain('Unknown');
+      expect(container.textContent).not.toContain('N A');
+      expect(container.textContent).not.toContain('Sin Estado');
+      expect(container.textContent).not.toContain('Estado desconocido');
     });
 
     await cleanup();
