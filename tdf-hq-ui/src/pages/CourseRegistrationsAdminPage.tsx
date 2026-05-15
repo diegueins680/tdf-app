@@ -246,6 +246,7 @@ const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   'sin completar',
   'sin correo',
   'sin email',
+  'sin numero',
   'sin telefono',
   'sin telefono ni correo',
   'sin actualizar',
