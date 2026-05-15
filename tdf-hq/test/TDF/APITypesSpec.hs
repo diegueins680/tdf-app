@@ -1305,6 +1305,16 @@ spec = do
         it "rejects empty order updates instead of accepting a no-op admin write" $
             decodeMarketplaceOrderUpdate "{}" `shouldSatisfy` isLeft
 
+        it "rejects null order status instead of silently treating it as omitted" $
+            case decodeMarketplaceOrderUpdate
+                "{\"mouStatus\":null,\"mouPaymentProvider\":\"paypal\"}"
+             of
+                Left err ->
+                    err `shouldContain` "mouStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null marketplace order status to fail, got: " <> show value)
+
     describe "PaypalCaptureReq FromJSON" $ do
         it "accepts canonical PayPal capture payloads and trims identifiers" $
             case decodePaypalCapture

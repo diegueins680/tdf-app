@@ -638,6 +638,9 @@ data MarketplaceOrderUpdate = MarketplaceOrderUpdate
 instance ToJSON MarketplaceOrderUpdate
 instance FromJSON MarketplaceOrderUpdate where
   parseJSON value@(Object o) = do
+    case AKM.lookup (AKey.fromText "mouStatus") o of
+      Just Null -> fail "mouStatus must be omitted instead of null"
+      _ -> pure ()
     MarketplaceOrderUpdateParsed
       { mouStatus = statusVal
       } <- genericParseJSON strictObjectOptions value
