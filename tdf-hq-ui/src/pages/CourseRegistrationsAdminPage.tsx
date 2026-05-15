@@ -4261,6 +4261,7 @@ export default function CourseRegistrationsAdminPage() {
   const showStatusFilterCaption = !showBusyListSearchOnboarding
     && !hasLocalSearch
     && !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
+  const showStatusFilterCounts = hasVisibleRegistrations && !hasLocalSearch;
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
@@ -6033,7 +6034,7 @@ export default function CourseRegistrationsAdminPage() {
                                 component="button"
                                 type="button"
                                 color={registrationStatusChipColor(value)}
-                                label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
+                                label={statusFilterChipLabel(value, statusCounts, showStatusFilterCounts)}
                                 variant={status === value ? 'filled' : 'outlined'}
                                 aria-label={statusFilterChipAriaLabel(value, status === value)}
                                 aria-pressed={status === value}

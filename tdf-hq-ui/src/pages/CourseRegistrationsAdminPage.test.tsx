@@ -8975,7 +8975,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe(
+        'Pagado (1)',
+      );
     });
 
     await cleanup();
@@ -9149,7 +9151,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).toContain('Abre expediente desde el nombre;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      const remainingStatusFilter = getButtonByAriaLabel(
+        container,
+        'Filtrar inscripciones por estado Pendiente de pago',
+      );
+      expect(remainingStatusFilter.textContent?.trim()).toBe('Pendiente de pago');
+      expect(remainingStatusFilter.textContent).not.toContain('(8)');
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
