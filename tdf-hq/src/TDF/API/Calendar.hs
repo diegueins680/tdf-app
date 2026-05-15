@@ -7,7 +7,18 @@
 module TDF.API.Calendar where
 
 import           Servant
-import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
+import           Data.Aeson
+  ( FromJSON (parseJSON)
+  , Options
+  , ToJSON
+  , Value(..)
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  , withObject
+  )
+import qualified Data.Aeson.Key as Key
+import qualified Data.Aeson.KeyMap as KeyMap
 import           Data.Aeson.Types (Parser)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -62,31 +73,31 @@ requiredCalendarId :: Text -> Parser Text
 requiredCalendarId raw =
   either (fail . T.unpack) pure (normalizeCalendarId raw)
 
-optionalNonBlank :: Maybe Text -> Maybe Text
-optionalNonBlank raw =
-  case T.strip <$> raw of
-    Just trimmed | not (T.null trimmed) -> Just trimmed
-    _ -> Nothing
-
 optionalRedirectUri :: Maybe Text -> Parser (Maybe Text)
 optionalRedirectUri Nothing = pure Nothing
 optionalRedirectUri (Just raw) =
-  case optionalNonBlank (Just raw) of
-    Nothing -> pure Nothing
-    Just redirectUriVal
-      | T.any isControl redirectUriVal ->
-          fail "redirectUri must not contain control characters"
-      | T.any isHiddenCalendarIdChar redirectUriVal ->
-          fail "redirectUri must not contain hidden formatting characters"
-      | T.any isSpace redirectUriVal ->
-          fail "redirectUri must not contain whitespace"
-      | T.length redirectUriVal > maxCalendarRedirectUriChars ->
-          fail "redirectUri must be 2048 characters or fewer"
-      | otherwise ->
-          pure (Just redirectUriVal)
+  let redirectUriVal = T.strip raw
+  in if T.null redirectUriVal
+       then fail "redirectUri must be omitted instead of blank"
+       else if T.any isControl redirectUriVal
+         then fail "redirectUri must not contain control characters"
+       else if T.any isHiddenCalendarIdChar redirectUriVal
+         then fail "redirectUri must not contain hidden formatting characters"
+       else if T.any isSpace redirectUriVal
+         then fail "redirectUri must not contain whitespace"
+       else if T.length redirectUriVal > maxCalendarRedirectUriChars
+         then fail "redirectUri must be 2048 characters or fewer"
+       else pure (Just redirectUriVal)
 
 maxCalendarRedirectUriChars :: Int
 maxCalendarRedirectUriChars = 2048
+
+rejectNullTokenRedirectUri :: Value -> Parser ()
+rejectNullTokenRedirectUri =
+  withObject "TokenExchangeIn" $ \o ->
+    case KeyMap.lookup (Key.fromText "redirectUri") o of
+      Just Null -> fail "redirectUri must be omitted instead of null"
+      _ -> pure ()
 
 data AuthUrlResponse = AuthUrlResponse
   { url :: Text
@@ -100,6 +111,7 @@ data TokenExchangeIn = TokenExchangeIn
   } deriving (Show, Generic)
 instance FromJSON TokenExchangeIn where
   parseJSON value = do
+    rejectNullTokenRedirectUri value
     TokenExchangeIn rawCode rawRedirectUri rawCalendarId <-
       genericParseJSON strictObjectOptions value
     TokenExchangeIn

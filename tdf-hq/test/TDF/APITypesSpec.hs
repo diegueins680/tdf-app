@@ -852,7 +852,7 @@ spec = do
     describe "Calendar admin request FromJSON" $ do
         it "normalizes canonical token exchange and sync payloads before handlers call Google" $ do
             case decodeCalendarTokenExchange
-                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\"   \",\"calendarId\":\" primary \"}"
+                "{\"code\":\" oauth-code-123 \",\"calendarId\":\" primary \"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical calendar token payload to decode, got: " <> err)
@@ -916,6 +916,12 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"team calendar\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":null,\"calendarId\":\"primary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"primary\",\"syncCursor\":\"stale\"}"
