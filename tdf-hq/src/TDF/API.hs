@@ -623,6 +623,7 @@ data ServiceMarketplaceBookingReq = ServiceMarketplaceBookingReq
   } deriving (Show, Generic)
 instance FromJSON ServiceMarketplaceBookingReq where
   parseJSON value = do
+    withObject "ServiceMarketplaceBookingReq" rejectAmbiguousNullFallbacks value
     req <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True
@@ -645,6 +646,15 @@ instance FromJSON ServiceMarketplaceBookingReq where
         in if T.null trimmedPaymentMethod
              then fail "paymentMethod cannot be blank; omit paymentMethod to use other"
              else pure trimmedPaymentMethod
+
+      rejectAmbiguousNullFallbacks obj = do
+        rejectNullFallback "title" "title must be omitted instead of null to use the service ad headline" obj
+        rejectNullFallback "paymentMethod" "paymentMethod must be omitted instead of null to use other" obj
+
+      rejectNullFallback fieldName message obj =
+        case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+          Just Null -> fail message
+          _ -> pure ()
 
 data ServiceMarketplaceBookingDTO = ServiceMarketplaceBookingDTO
   { smbBookingId         :: Int64

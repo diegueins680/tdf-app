@@ -1053,6 +1053,14 @@ spec = do
                 "{\"adId\":42,\"slotId\":84,\"paymentMethod\":\"   \"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback selectors so callers must omit them intentionally" $ do
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"title\":null}"
+                `shouldSatisfy` isLeft
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"paymentMethod\":null}"
+                `shouldSatisfy` isLeft
+
     describe "Service catalog write payload FromJSON" $ do
         it "accepts canonical service catalog create and update payloads, including explicit clear updates" $ do
             case decodeServiceCatalogCreate
