@@ -3356,6 +3356,8 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
         expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
       });
@@ -3388,6 +3390,8 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(0);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
         expect(getRowByUserId(container, 101).textContent).not.toContain('Contacto pendiente');
         expect(getRowByUserId(container, 101).textContent).not.toContain('WhatsApp pendiente');
       });
@@ -3418,6 +3422,8 @@ describe('AdminUsersPage', () => {
           'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.',
         );
         expect(getButtonsByText(container, 'WhatsApp')).toHaveLength(1);
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
         const loneRow = getRowByUserId(container, 101);
         expect(loneRow.querySelectorAll('a')).toHaveLength(0);
         expect(loneRow.textContent).not.toContain('Perfil pendiente');
@@ -3667,6 +3673,8 @@ describe('AdminUsersPage', () => {
         expect(loneRow.textContent).not.toContain('Sin acceso asignado');
         expect(loneRow.textContent).not.toContain('Roles:');
         expect(loneRow.textContent).not.toContain('Módulos:');
+        expect(getButtonsByText(container, ADMIN_USERS_EMPTY_INACTIVE_CHECK_ACTION)).toHaveLength(0);
+        expect(container.textContent).not.toContain('Incluir inactivos');
       });
     } finally {
       await cleanup();

@@ -1214,8 +1214,18 @@ export default function AdminUsersPage() {
   const showReturnToActiveUsersAction = showOnlyInactiveUsers;
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
+  const singleUserPrimarySetupComplete = Boolean(
+    singleVisibleUser
+    && hasLinkedAdminUserProfile(singleVisibleUser)
+    && getUserContactReadiness(singleVisibleUser) === 'whatsapp-ready'
+    && !hasNoAccessAssigned(singleVisibleUser),
+  );
   const showReviewInactiveSingleUserAction =
-    showSingleUserGuidance && !includeInactive && !usersQuery.isLoading && !usersQuery.error;
+    showSingleUserGuidance
+    && singleUserPrimarySetupComplete
+    && !includeInactive
+    && !usersQuery.isLoading
+    && !usersQuery.error;
   const showInlineErrorRetryAction = Boolean(usersQuery.error);
   const showRefreshAction = !usersQuery.error
     && !hasActiveSearch
