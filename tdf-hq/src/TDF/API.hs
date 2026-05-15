@@ -201,9 +201,11 @@ data WhatsAppConsentRequest = WhatsAppConsentRequest
 instance FromJSON WhatsAppConsentRequest where
   parseJSON raw = do
     withObject "WhatsAppConsentRequest"
-      (rejectNullOptionalRequestField
-        "sendMessage"
-        "sendMessage must be omitted instead of null")
+      (rejectNullOptionalRequestFields
+        [ ("name", "name must be omitted instead of null")
+        , ("source", "source must be omitted instead of null")
+        , ("sendMessage", "sendMessage must be omitted instead of null")
+        ])
       raw
     req <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
@@ -223,9 +225,10 @@ data WhatsAppOptOutRequest = WhatsAppOptOutRequest
 instance FromJSON WhatsAppOptOutRequest where
   parseJSON raw = do
     withObject "WhatsAppOptOutRequest"
-      (rejectNullOptionalRequestField
-        "sendMessage"
-        "sendMessage must be omitted instead of null")
+      (rejectNullOptionalRequestFields
+        [ ("reason", "reason must be omitted instead of null")
+        , ("sendMessage", "sendMessage must be omitted instead of null")
+        ])
       raw
     req <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
@@ -246,6 +249,10 @@ rejectNullOptionalRequestField fieldName message obj =
   case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
     Just Null -> fail message
     _ -> pure ()
+
+rejectNullOptionalRequestFields :: [(Text, String)] -> Object -> Parser ()
+rejectNullOptionalRequestFields fields obj =
+  mapM_ (\(fieldName, message) -> rejectNullOptionalRequestField fieldName message obj) fields
 
 data WhatsAppConsentStatus = WhatsAppConsentStatus
   { wcsPhone       :: Text

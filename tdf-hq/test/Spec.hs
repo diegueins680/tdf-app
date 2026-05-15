@@ -5129,26 +5129,37 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
-        it "rejects null sendMessage instead of silently defaulting confirmation delivery" $ do
-            case ( eitherDecode
-                    "{\"phone\":\"+593991234567\",\"consent\":true,\"sendMessage\":null}"
-                    :: Either String WhatsAppConsentRequest
-                 ) of
-                Left err ->
-                    err `shouldContain` "sendMessage must be omitted instead of null"
-                Right payload ->
-                    expectationFailure
-                        ("Expected null consent sendMessage to fail, got: " <> show payload)
+        it "rejects null optional consent fields instead of silently defaulting them" $ do
+            let assertConsentNull rawJson expectedMessage =
+                    case (eitherDecode rawJson :: Either String WhatsAppConsentRequest) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null consent field to fail, got: " <> show payload)
+                assertOptOutNull rawJson expectedMessage =
+                    case (eitherDecode rawJson :: Either String WhatsAppOptOutRequest) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null opt-out field to fail, got: " <> show payload)
 
-            case ( eitherDecode
-                    "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"sendMessage\":null}"
-                    :: Either String WhatsAppOptOutRequest
-                 ) of
-                Left err ->
-                    err `shouldContain` "sendMessage must be omitted instead of null"
-                Right payload ->
-                    expectationFailure
-                        ("Expected null opt-out sendMessage to fail, got: " <> show payload)
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"name\":null,\"consent\":true}"
+                "name must be omitted instead of null"
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"source\":null,\"consent\":true}"
+                "source must be omitted instead of null"
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"consent\":true,\"sendMessage\":null}"
+                "sendMessage must be omitted instead of null"
+            assertOptOutNull
+                "{\"phone\":\"+593991234567\",\"reason\":null}"
+                "reason must be omitted instead of null"
+            assertOptOutNull
+                "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"sendMessage\":null}"
+                "sendMessage must be omitted instead of null"
 
         it "normalizes optional consent metadata before storage or confirmation messages" $ do
             validateWhatsAppConsentDisplayName (Just "  Ada  ")
