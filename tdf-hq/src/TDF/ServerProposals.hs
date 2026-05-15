@@ -464,17 +464,21 @@ validateOptionalProposalNotes fieldName (Just rawNotes) =
   case normalizeOptionalText (Just rawNotes) of
     Nothing -> Right Nothing
     Just notesVal
-      | T.any isUnsafeNoteControl notesVal ->
+      | T.any isUnsafeNoteChar notesVal ->
           Left err400
             { errBody =
                 encodeUtf8Lazy
-                  (fieldName <> " must not contain control characters other than tabs or line breaks")
+                  ( fieldName
+                      <> " must not contain control characters other than tabs or line breaks, "
+                      <> "or hidden formatting characters"
+                  )
             }
       | otherwise ->
           Right (Just notesVal)
   where
-    isUnsafeNoteControl ch =
-      isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+    isUnsafeNoteChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalProposalClientPartyId Nothing = Right Nothing

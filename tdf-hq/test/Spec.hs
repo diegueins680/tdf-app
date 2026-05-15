@@ -9153,7 +9153,7 @@ main = hspec $ do
             validateOptionalProposalNotes "notes" (Just "  Linea uno\nLinea dos\tOK  ")
                 `shouldBe` Right (Just "Linea uno\nLinea dos\tOK")
 
-        it "rejects unsafe control characters in proposal notes instead of persisting ambiguous backend text" $ do
+        it "rejects unsafe or hidden-format proposal notes instead of persisting ambiguous backend text" $ do
             let assertInvalid fieldName raw expected = case validateOptionalProposalNotes fieldName (Just raw) of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
@@ -9162,6 +9162,10 @@ main = hspec $ do
                         expectationFailure ("Expected invalid proposal notes to be rejected, got " <> show value)
             assertInvalid "notes" "Confirmado\NULinternamente" "notes must not contain control characters other than tabs or line breaks"
             assertInvalid "versionNotes" "Compartido\ESCinternamente" "versionNotes must not contain control characters other than tabs or line breaks"
+            assertInvalid
+              "notes"
+              ("Confirmado" <> Data.Text.singleton '\x202E' <> "internamente")
+              "or hidden formatting characters"
 
     describe "validateOptionalProposalClientPartyId" $ do
         it "preserves omitted ids and accepts positive client party ids" $ do
