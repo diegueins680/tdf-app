@@ -4623,7 +4623,8 @@ validateSocialReplySenderId :: Text -> Either ServerError Text
 validateSocialReplySenderId rawSenderId =
   case normalizeOptionalTextField (Just rawSenderId) of
     Nothing -> Left err400 { errBody = "senderId is required" }
-    Just senderId -> validateSocialReplyIdentifier "senderId" senderId
+    Just senderId ->
+      validateSocialReplyGraphNodeId =<< validateSocialReplyIdentifier "senderId" senderId
 
 validateSocialReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialReplyExternalId Nothing = Right Nothing
@@ -4748,6 +4749,28 @@ validateSocialReplyIdentifier fieldName value
         }
   | otherwise =
       Right value
+
+validateSocialReplyGraphNodeId :: Text -> Either ServerError Text
+validateSocialReplyGraphNodeId senderId
+  | not (T.any isGraphNodeIdAtom senderId)
+      || T.any (not . isGraphNodeIdChar) senderId =
+      Left err400
+        { errBody =
+            "senderId must be a Graph node id using only ASCII letters, numbers, "
+              <> "'.', '_' or '-' with at least one letter or number"
+        }
+  | otherwise =
+      Right senderId
+
+isGraphNodeIdChar :: Char -> Bool
+isGraphNodeIdChar ch =
+  isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+isGraphNodeIdAtom :: Char -> Bool
+isGraphNodeIdAtom ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
 
 isHiddenSocialReplyIdentifierChar :: Char -> Bool
 isHiddenSocialReplyIdentifierChar ch =

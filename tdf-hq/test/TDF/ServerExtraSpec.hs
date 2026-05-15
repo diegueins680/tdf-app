@@ -5370,7 +5370,7 @@ spec = do
       validateSocialReplyExternalId (Just " msg-1 ")
         `shouldBe` Right (Just "msg-1")
 
-    it "rejects blank, whitespace, control, hidden formatting, or oversized ids before reply dispatch" $ do
+    it "rejects blank, malformed, hidden, or oversized ids before reply dispatch" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
@@ -5393,6 +5393,12 @@ spec = do
       assertInvalid
         "senderId must contain only ASCII characters"
         (validateSocialReplySenderId "usuario-ñ")
+      assertInvalid
+        "senderId must be a Graph node id"
+        (validateSocialReplySenderId "ig-user/1")
+      assertInvalid
+        "senderId must be a Graph node id"
+        (validateSocialReplySenderId "---")
       assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId (T.replicate 257 "a"))
