@@ -87,6 +87,9 @@ const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
   'desconocido',
   'desconocida',
   'no aplica',
+  'no asignado',
+  'no asignada',
+  'not assigned',
   'none',
   'pendiente',
   'pendiente por validar',
@@ -97,6 +100,7 @@ const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
   'sin actualizar',
   'sin acceso',
   'sin acceso asignado',
+  'sin asignar',
   'sin modulo',
   'sin modulo asignado',
   'sin modulos',
@@ -106,6 +110,7 @@ const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
   'sin roles',
   'sin roles asignados',
   'tbd',
+  'unassigned',
 ]);
 
 const isPlaceholderAccessValue = (value: string) => {
