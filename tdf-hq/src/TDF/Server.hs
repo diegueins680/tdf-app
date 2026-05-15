@@ -10037,8 +10037,17 @@ shouldUseAdsAssistNoAiFallback rawError =
   errorMessage == "openai_api_key no configurada"
     || errorMessage == "no pude generar una respuesta automática en este momento."
     || shouldRetryWithFallbackModel 404 rawError
+    || isAuthError errorMessage
   where
     errorMessage = T.toLower (T.strip rawError)
+    isAuthError msg =
+      any (`T.isInfixOf` msg)
+        [ "invalid authentication"
+        , "invalid api key"
+        , "incorrect api key"
+        , "authentication_error"
+        , "unauthorized"
+        ]
 
 adsAssistNoAiFallback :: AppConfig -> Text
 adsAssistNoAiFallback cfg =
