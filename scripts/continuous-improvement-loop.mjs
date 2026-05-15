@@ -738,12 +738,12 @@ function filterTrackedChanges(lines, baselineTrackedPaths) {
 }
 
 async function listTrackedChanges(repoRoot) {
-  const { stdout } = await execText('git', ['status', '--porcelain', '--untracked-files=no'], repoRoot);
+  const { stdout } = await execText('git', ['-c', 'core.quotePath=false', 'status', '--porcelain', '--untracked-files=no'], repoRoot);
   return splitLines(stdout);
 }
 
 async function listUntrackedFiles(repoRoot) {
-  const { stdout } = await execText('git', ['ls-files', '--others', '--exclude-standard'], repoRoot);
+  const { stdout } = await execText('git', ['-c', 'core.quotePath=false', 'ls-files', '--others', '--exclude-standard'], repoRoot);
   return splitLines(stdout);
 }
 
