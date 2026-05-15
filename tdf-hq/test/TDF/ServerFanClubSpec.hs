@@ -37,6 +37,7 @@ import TDF.ServerFanClub
   , validateFanClubInboxStatusInput
   , validateFanClubMemoryMutationTarget
   , validateFanClubMemoryPathId
+  , validateFanClubMemoryReportReason
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
@@ -115,6 +116,20 @@ spec = do
           (toSqlKey 10)
           (Entity (toSqlKey 70) (mkMemory 60))
           (Just (Entity (toSqlKey 60) (mkMemberProfile 11)))
+
+  describe "fan club memory report reason validation" $
+    it "normalizes required reasons and rejects unsafe report text before persistence" $ do
+      validateFanClubMemoryReportReason "  Datos privados\nsin consentimiento  "
+        `shouldBe` Right "Datos privados\nsin consentimiento"
+
+      assertRejected 400 "reason is required" $
+        validateFanClubMemoryReportReason "   "
+      assertRejected 400 "reason must be 500 characters or fewer" $
+        validateFanClubMemoryReportReason (T.replicate 501 "a")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubMemoryReportReason ("spam" <> "\x202E" <> "visible")
+      assertRejected 400 "unsupported control" $
+        validateFanClubMemoryReportReason ("spam" <> "\NUL" <> "visible")
 
   describe "validateFanClubElectionMutationTarget" $ do
     it "requires URL artist-club ownership before mutating an election" $ do

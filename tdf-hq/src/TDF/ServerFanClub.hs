@@ -25,6 +25,7 @@ module TDF.ServerFanClub
   , validateFanClubInboxStatusInput
   , validateFanClubMemoryPathId
   , validateFanClubMemoryMutationTarget
+  , validateFanClubMemoryReportReason
   ) where
 
 import           Control.Arrow          ((&&&))
@@ -647,6 +648,8 @@ fanClubSecureArtistHandlers user artistId =
 
     reportMemory aId memoryId req = do
       artistKey <- requireArtistKey aId
+      reason <- either throwError pure $
+        validateFanClubMemoryReportReason (fcmrReqReason req)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -668,7 +671,7 @@ fanClubSecureArtistHandlers user artistId =
                         rid <- insert FanClubMemoryReport
                           { fanClubMemoryReportReporterId = auPartyId user
                           , fanClubMemoryReportMemoryId = memoryKey
-                          , fanClubMemoryReportReason = fcmrReqReason req
+                          , fanClubMemoryReportReason = reason
                           , fanClubMemoryReportCreatedAt = now
                           }
                         pure $ Just (rid, now)
@@ -678,7 +681,7 @@ fanClubSecureArtistHandlers user artistId =
               { fcmrId = fromSqlKey rid
               , fcmrReporterId = fromSqlKey (auPartyId user)
               , fcmrMemoryId = memoryId
-              , fcmrReason = fcmrReqReason req
+              , fcmrReason = reason
               , fcmrCreatedAt = now
               }
 
@@ -1102,6 +1105,13 @@ validateFanClubMemoryMutationTarget clubId (Entity memoryId memory) mProfile =
 fanClubMemoryNotFound :: ServerError
 fanClubMemoryNotFound =
   err404 { errBody = "Fan club memory not found" }
+
+validateFanClubMemoryReportReason :: Text -> Either ServerError Text
+validateFanClubMemoryReportReason =
+  validateRequiredFanClubInboxText "reason" maxFanClubMemoryReportReasonChars True
+
+maxFanClubMemoryReportReasonChars :: Int
+maxFanClubMemoryReportReasonChars = 500
 
 validateFanClubOfficerRoleInput :: Text -> Either ServerError FanClubOfficerRole
 validateFanClubOfficerRoleInput rawRole =
