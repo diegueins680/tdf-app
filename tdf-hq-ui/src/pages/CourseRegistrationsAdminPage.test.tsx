@@ -14430,8 +14430,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - webinar waitlist',
       'Live session booking link - Beatmaking 101',
       'Beatmaking 101 - meeting RSVP page',
+      'Webinar page - Beatmaking 101',
+      'Beatmaking 101 - live session portal',
       'Formulario de registro para webinar - Beatmaking 101',
       'Formulario de inscripción para seminario - Beatmaking 101',
+      'Página de webinar - Beatmaking 101',
+      'Beatmaking 101 - portal de sesión en vivo',
     ];
 
     for (const title of titles) {
@@ -14448,7 +14452,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /Zoom|Google Meet|webinar registration|seminar|seminario|sign-up link|waitlist|booking link|RSVP page/i,
+          /Zoom|Google Meet|webinar registration|webinar page|seminar|seminario|sign-up link|waitlist|booking link|RSVP page|live session portal|página de webinar|portal de sesión en vivo/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
