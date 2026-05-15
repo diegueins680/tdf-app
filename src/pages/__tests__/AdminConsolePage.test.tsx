@@ -5779,6 +5779,74 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText(/To be determined/i)).not.toBeInTheDocument();
   });
 
+  it('ignores loading placeholder fallback cards while keeping actionable first-run modules', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'external-credentials-loading',
+          title: 'Credenciales externas',
+          body: ['Loading data...'],
+        },
+        {
+          cardId: 'integrations-fetching',
+          title: 'Integraciones',
+          body: ['Fetching records from the admin workspace.'],
+        },
+        {
+          cardId: 'service-keys-cargando',
+          title: 'Llaves de servicio',
+          body: ['Cargando registros...'],
+        },
+        {
+          cardId: 'credential-rotation-wait',
+          title: 'Credential rotation',
+          body: ['Please wait while we load this module.'],
+        },
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByRole('button', { name: /^Opcional: ver 5 módulos adicionales$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Llaves de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credential rotation')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Loading data/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Fetching records/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cargando registros/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Please wait while we load/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Tokens de servicio')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Credenciales externas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Integraciones')).not.toBeInTheDocument();
+    expect(screen.queryByText('Credential rotation')).not.toBeInTheDocument();
+  });
+
   it('ignores no-data fallback cards so first-run users do not open dead-end modules', async () => {
     mockConsolePreview.mockResolvedValue({
       status: 'preview',
