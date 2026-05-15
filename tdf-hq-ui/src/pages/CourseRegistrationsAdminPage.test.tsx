@@ -11029,6 +11029,13 @@ describe('CourseRegistrationsAdminPage', () => {
       'checkout_portal',
       'checkout_links',
       'formulario_de_pago',
+      'lemon_squeezy_checkout',
+      'gumroad_payment_link',
+      'payhip_checkout',
+      'samcart_payment_link',
+      'thrivecart_checkout',
+      'shopify_checkout',
+      'woocommerce_payment_link',
     ] as const;
     const hiddenSourceLabels = [
       'Stripe checkout',
@@ -11044,6 +11051,13 @@ describe('CourseRegistrationsAdminPage', () => {
       'Checkout portal',
       'Checkout links',
       'Formulario de pago',
+      'Lemon squeezy checkout',
+      'Gumroad payment link',
+      'Payhip checkout',
+      'Samcart payment link',
+      'Thrivecart checkout',
+      'Shopify checkout',
+      'Woocommerce payment link',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
