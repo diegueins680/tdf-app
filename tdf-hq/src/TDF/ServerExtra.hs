@@ -2325,6 +2325,15 @@ validateAssetPhotoUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just trimmedUrl
+      | T.length trimmedUrl > maxAssetPhotoUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "photoUrl must be "
+                      <> T.pack (show maxAssetPhotoUrlChars)
+                      <> " characters or fewer"
+            }
       | "https://" `T.isPrefixOf` T.toLower trimmedUrl
           && TrialsServer.isValidHttpUrl trimmedUrl
           && not ("#" `T.isInfixOf` trimmedUrl)
@@ -2338,6 +2347,9 @@ validateAssetPhotoUrl (Just rawUrl) =
                   <> "or an inventory asset path; external photo URLs must end "
                   <> "with .jpg, .jpeg, .png, .webp, or .gif"
             }
+
+maxAssetPhotoUrlChars :: Int
+maxAssetPhotoUrlChars = 2048
 
 validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
 validateAssetPhotoUrlUpdate Nothing = Right Nothing

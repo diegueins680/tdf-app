@@ -1267,6 +1267,16 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "inventory/manual.pdf"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/folder/no-extension"))
 
+    it "rejects oversized asset photo URLs before storing opaque inventory metadata" $ do
+      let oversizedUrl =
+            "https://cdn.example.com/" <> T.replicate 2049 "a" <> ".jpg"
+      case validateAssetPhotoUrl (Just oversizedUrl) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "photoUrl must be 2048 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized asset photo URL error, got " <> show value)
+
   describe "validateAssetPhotoUrlUpdate" $ do
     it "keeps omitted photo updates untouched, trims valid values, and treats blank strings as clear intents" $ do
       validateAssetPhotoUrlUpdate Nothing `shouldBe` Right Nothing
