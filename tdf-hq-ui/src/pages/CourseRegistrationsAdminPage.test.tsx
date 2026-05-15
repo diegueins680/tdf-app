@@ -15435,6 +15435,14 @@ describe('CourseRegistrationsAdminPage', () => {
       'Reservation payment page for Beatmaking 101',
       'Formulario de depósito para Beatmaking 101',
       'Beatmaking 101 - página de abono',
+      'Payment receipt - Beatmaking 101',
+      'Payment proof page for Beatmaking 101',
+      'Proof of payment - Beatmaking 101',
+      'Beatmaking 101 - payment invoice',
+      'Comprobante de pago - Beatmaking 101',
+      'Beatmaking 101 - recibo de pago',
+      'Factura de pago para Beatmaking 101',
+      'Beatmaking 101 - evidencia de pago',
     ];
 
     for (const title of titles) {
@@ -15450,7 +15458,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|stripe|datafast|kushki|paymentez|deuna|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|deposit|dep[oó]sito|abono/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|stripe|datafast|kushki|paymentez|deuna|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|deposit|dep[oó]sito|abono|receipt|proof|invoice|comprobante|recibo|factura|evidencia/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
