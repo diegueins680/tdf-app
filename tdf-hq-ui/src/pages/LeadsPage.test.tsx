@@ -123,6 +123,9 @@ const countButtonsByText = (root: ParentNode, labelText: string) =>
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ).length;
 
+const countOccurrences = (root: ParentNode, text: string) =>
+  (root.textContent ?? '').split(text).length - 1;
+
 const getColumnHeaders = (root: ParentNode) =>
   Array.from(root.querySelectorAll('th')).map((element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim());
 
@@ -274,6 +277,58 @@ describe('LeadsPage', () => {
           '—',
           'Editar',
         ]);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces an all-empty notes column with one setup hint', async () => {
+    listPartiesMock.mockResolvedValue([
+      buildLead({
+        partyId: 1,
+        displayName: 'Ada Lovelace',
+        primaryEmail: 'ada@example.com',
+        primaryPhone: '+593999000111',
+        notes: null,
+      }),
+      buildLead({
+        partyId: 2,
+        displayName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+        primaryPhone: '+593999000222',
+        notes: '',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const bodyRows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
+
+        expect(getColumnHeaders(container)).toEqual(['Lead', 'Contacto', 'Acciones']);
+        expect(container.textContent).toContain(
+          'Haz clic en el nombre para revisar relaciones. Contacto reúne correo y teléfono en una sola columna. Usa Editar solo cuando necesites actualizarlo.',
+        );
+        expect(container.textContent).toContain(
+          'Todavía no hay notas ni estado en esta vista. La columna volverá cuando algún lead tenga estado, fuente o siguiente paso.',
+        );
+        expect(container.textContent).not.toContain('Notas / Estado concentra estado');
+        expect(bodyRows).toHaveLength(2);
+        expect(getRowCellTexts(bodyRows[0] ?? document.createElement('tr'))).toEqual([
+          'Ada Lovelace',
+          'ada@example.com · +593999000111',
+          'Editar',
+        ]);
+        expect(getRowCellTexts(bodyRows[1] ?? document.createElement('tr'))).toEqual([
+          'Grace Hopper',
+          'grace@example.com · +593999000222',
+          'Editar',
+        ]);
+        expect(countOccurrences(container, 'Todavía no hay notas ni estado en esta vista.')).toBe(1);
       });
     } finally {
       await cleanup();

@@ -259,6 +259,8 @@ export default function LeadsPage() {
   const showSearchEmptyState = !isLoading && hasLeads && leads.length === 0 && trimmedSearch !== '';
   const showSingleLeadSummary = !isLoading && leads.length === 1;
   const singleLead = showSingleLeadSummary ? (leads[0] ?? null) : null;
+  const showNotesColumn = leads.some((lead) => normalizeLeadFieldValue(lead.notes));
+  const showMissingNotesSummary = !isLoading && leads.length > 1 && !showNotesColumn;
   const singleLeadSummaryTitle = trimmedSearch === ''
     ? 'Primer lead registrado'
     : `1 coincidencia para "${trimmedSearch}"`;
@@ -266,7 +268,9 @@ export default function LeadsPage() {
     ? 'Revísalo aquí sin tabla ni buscador. Cuando llegue el segundo, volverá la vista comparativa para revisar contacto y seguimiento lado a lado.'
     : 'La búsqueda dejó un solo lead visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar leads en la tabla.';
   const tableGuidance = trimmedSearch === ''
-    ? 'Haz clic en el nombre para revisar relaciones. Contacto reúne correo y teléfono en una sola columna. Notas / Estado concentra estado, fuente y siguiente paso. Usa Editar solo cuando necesites actualizarlo.'
+    ? showNotesColumn
+      ? 'Haz clic en el nombre para revisar relaciones. Contacto reúne correo y teléfono en una sola columna. Notas / Estado concentra estado, fuente y siguiente paso. Usa Editar solo cuando necesites actualizarlo.'
+      : 'Haz clic en el nombre para revisar relaciones. Contacto reúne correo y teléfono en una sola columna. Usa Editar solo cuando necesites actualizarlo.'
     : `Mostrando ${leads.length} de ${allLeads.length} leads para "${trimmedSearch}".`;
 
   return (
@@ -393,16 +397,24 @@ export default function LeadsPage() {
           ) : (
             <>
               {!isLoading && leads.length > 1 && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                  {tableGuidance}
-                </Typography>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {tableGuidance}
+                  </Typography>
+                  {showMissingNotesSummary && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                      Todavía no hay notas ni estado en esta vista. La columna volverá cuando algún lead tenga estado,
+                      fuente o siguiente paso.
+                    </Typography>
+                  )}
+                </Stack>
               )}
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Lead</TableCell>
                     <TableCell>Contacto</TableCell>
-                    <TableCell>Notas / Estado</TableCell>
+                    {showNotesColumn && <TableCell>Notas / Estado</TableCell>}
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
                 </TableHead>
@@ -427,7 +439,7 @@ export default function LeadsPage() {
                         </Stack>
                       </TableCell>
                       <TableCell>{getLeadContactSummary(l)}</TableCell>
-                      <TableCell>{l.notes ?? '—'}</TableCell>
+                      {showNotesColumn && <TableCell>{normalizeLeadFieldValue(l.notes) ?? '—'}</TableCell>}
                       <TableCell align="right">
                         <Button
                           size="small"
