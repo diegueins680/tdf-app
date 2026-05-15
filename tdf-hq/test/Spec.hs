@@ -1599,6 +1599,32 @@ main = hspec $ do
                 Nothing ->
                     expectationFailure "Expected sanitized upstream API error message"
 
+        it "redacts upstream API secrets before fallback error handling exposes them" $ do
+            let payload =
+                    A.object
+                        [ "error" .= A.object
+                            [ "type" .= ("invalid_request_error" :: Text)
+                            , "message" .=
+                                ( "Authorization: Bearer sk-live-secret api_key=sk-query-secret "
+                                    <> "{\"access_token\":\"token-secret\","
+                                    <> "\"client_secret\":\"client-secret\"}"
+                                    :: Text
+                                )
+                            ]
+                        ]
+            case extractApiErrorMessage payload of
+                Just msg -> do
+                    msg `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+                    msg `shouldSatisfy` Data.Text.isInfixOf "api_key=[redacted]"
+                    msg `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+                    msg `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-live-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-query-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "token-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "client-secret")
+                Nothing ->
+                    expectationFailure "Expected redacted upstream API error message"
+
         it "uses status fallback text for non-JSON ChatKit upstream errors" $ do
             chatKitSessionErrorMessage 503 (BL.pack "<html>unavailable</html>")
                 `shouldBe` "Error al crear sesión ChatKit (HTTP 503)"

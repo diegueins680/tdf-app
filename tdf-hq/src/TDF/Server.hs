@@ -10802,18 +10802,140 @@ maxApiErrorMessageChars = 500
 sanitizeApiErrorMessage :: Text -> Maybe Text
 sanitizeApiErrorMessage raw =
   nonEmptyText $
-    if T.length cleaned > maxApiErrorMessageChars
-      then T.take maxApiErrorMessageChars cleaned <> " [truncated]"
-      else cleaned
+    if T.length redacted > maxApiErrorMessageChars
+      then T.take maxApiErrorMessageChars redacted <> " [truncated]"
+      else redacted
   where
-    cleaned =
-      T.unwords $
-        T.words $
-          T.map normalizeErrorChar raw
+    redacted =
+      redactApiErrorSecrets $
+        T.unwords $
+          T.words $
+            T.map normalizeErrorChar raw
     normalizeErrorChar ch
       | isControl ch = ' '
       | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
       | otherwise = ch
+
+redactApiErrorSecrets :: Text -> Text
+redactApiErrorSecrets =
+  redactSensitiveApiErrorFields . redactBearerTokens
+
+redactBearerTokens :: Text -> Text
+redactBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchBearerToken previous textValue
+  | not (isApiErrorSecretBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) = consumeApiErrorValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between || T.null tokenValue || not (T.any isApiErrorSecretAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+redactSensitiveApiErrorFields :: Text -> Text
+redactSensitiveApiErrorFields = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveApiErrorField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveApiErrorField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveApiErrorField previous textValue
+  | not (isApiErrorSecretBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveApiErrorFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveApiErrorField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+sensitiveApiErrorFields :: [Text]
+sensitiveApiErrorFields =
+  [ "access_token"
+  , "api_key"
+  , "api-key"
+  , "apikey"
+  , "authorization"
+  , "client_secret"
+  , "id_token"
+  , "refresh_token"
+  ]
+
+parseSensitiveApiErrorField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveApiErrorField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeApiErrorOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || separator == ':'
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeApiErrorValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+isApiErrorSecretBoundary :: Maybe Char -> Bool
+isApiErrorSecretBoundary Nothing = True
+isApiErrorSecretBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+isApiErrorSecretAtom :: Char -> Bool
+isApiErrorSecretAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+consumeApiErrorOptionalQuote :: Text -> (Text, Text)
+consumeApiErrorOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeApiErrorValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeApiErrorValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedApiErrorSecretValueEnd)
+
+isUnquotedApiErrorSecretValueEnd :: Char -> Bool
+isUnquotedApiErrorSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,;}]" :: String)
 
 extractModelReplyText :: Value -> Maybe Text
 extractModelReplyText payload =
