@@ -1079,7 +1079,22 @@ parseKey
   => Text
   -> m (Key record)
 parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  let trimmed = T.strip raw
+      isSignedNegativeInt =
+        case T.uncons trimmed of
+          Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
+          _ -> False
+      isNonPositiveDigits =
+        T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
+  in
+    if isSignedNegativeInt || isNonPositiveDigits
+      then throwError err400 { errBody = "identifier must be a positive integer" }
+      else case fromPathPiece trimmed of
+        Just key | fromSqlKey key > 0 -> pure key
+        Just _ ->
+          throwError err400 { errBody = "identifier must be a positive integer" }
+        Nothing ->
+          throwError err400 { errBody = "Invalid identifier" }
 
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip

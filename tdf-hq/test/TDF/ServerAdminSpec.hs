@@ -29,7 +29,14 @@ import TDF.API.Admin
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
-import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate (..))
+import TDF.API.Types
+    ( DropdownOptionCreate
+    , DropdownOptionDTO
+    , DropdownOptionUpdate (..)
+    , UserAccountCreate (..)
+    , UserAccountDTO
+    , UserAccountUpdate (..)
+    )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
@@ -1028,6 +1035,32 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected invalid WhatsApp resend message id to be rejected, got " <> show value)
 
+        it "rejects non-positive dropdown option ids before update lookups hit the database" $ do
+            let _listOptions :<|> _createOption :<|> updateOption =
+                    dropdownsHandlersFor (mkUser [Admin])
+                updateReq =
+                    DropdownOptionUpdate
+                        { douValue = Nothing
+                        , douLabel = Nothing
+                        , douSortOrder = Nothing
+                        , douActive = Just True
+                        }
+                assertRejected rawId = do
+                    result <- runAdminTest (updateOption "asset-category" rawId updateReq)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL8.unpack (errBody err)
+                                `shouldContain` "identifier must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid dropdown option id to be rejected, got "
+                                    <> show value
+                                )
+
+            assertRejected "0"
+            assertRejected "-7"
+
         it "rejects non-positive artist and release ids before admin artist writes hit the database" $ do
             let artistProfiles :<|> artistReleases = artistsHandlersFor (mkUser [Admin])
                 _listProfiles :<|> upsertArtistProfile = artistProfiles
@@ -1723,6 +1756,26 @@ usersHandlersFor user =
             :<|> _rag
             :<|> _social ->
                 usersRouter
+
+dropdownsHandlersFor
+    :: AuthedUser
+    -> (Maybe Bool -> AdminTestM [DropdownOptionDTO])
+        :<|> (DropdownOptionCreate -> AdminTestM DropdownOptionDTO)
+        :<|> (T.Text -> DropdownOptionUpdate -> AdminTestM DropdownOptionDTO)
+dropdownsHandlersFor user =
+    case adminServer user of
+        _seed
+            :<|> dropdownsRouter
+            :<|> _users
+            :<|> _communications
+            :<|> _roles
+            :<|> _artists
+            :<|> _logs
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                dropdownsRouter
 
 artistsHandlersFor
     :: AuthedUser
