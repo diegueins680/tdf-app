@@ -309,6 +309,7 @@ validateGoogleCalendarPageItem idx (Object eventObj) = do
   validateGoogleCalendarPageTimestampField idx eventObj "updated"
   validateGoogleCalendarPageDateObjectField idx eventObj "start"
   validateGoogleCalendarPageDateObjectField idx eventObj "end"
+  validateGoogleCalendarPageAttendeesField idx eventObj
   pure eventId
   where
     googleItemFieldLabel fieldName =
@@ -400,6 +401,21 @@ validateGoogleCalendarPageDateObjectField idx eventObj fieldName =
           fail (fieldLabel <> ".date must be a string")
         (Just _, Just _) ->
           fail (fieldLabel <> " must include only one of dateTime or date")
+
+validateGoogleCalendarPageAttendeesField :: Int -> Object -> Parser ()
+validateGoogleCalendarPageAttendeesField idx eventObj =
+  case AKeyMap.lookup "attendees" eventObj of
+    Nothing -> pure ()
+    Just Null -> pure ()
+    Just (Array attendeesValue) ->
+      for_ attendeesValue $ \attendee ->
+        case attendee of
+          Object _ -> pure ()
+          _ -> fail (fieldLabel <> " must contain only attendee objects")
+    Just _ ->
+      fail (fieldLabel <> " must be an array")
+  where
+    fieldLabel = "items[" <> show idx <> "].attendees"
 
 validateGoogleCalendarIsoTimestamp :: Text -> Text -> Either Text Text
 validateGoogleCalendarIsoTimestamp fieldName rawTimestamp =

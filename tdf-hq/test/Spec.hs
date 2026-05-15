@@ -5033,6 +5033,35 @@ main = hspec $ do
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
 
+        it "rejects malformed Google Calendar attendee shapes before persistence" $ do
+            let pageWithAttendees attendeesValue =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ A.object
+                                    [ "id" .= ("event-123" :: Text)
+                                    , "attendees" .= attendeesValue
+                                    ]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+                assertRejected attendeesValue =
+                    ( eitherDecode (pageWithAttendees attendeesValue)
+                        :: Either String GoogleEventsPage
+                    )
+                        `shouldSatisfy` isLeft
+
+            case eitherDecode
+                (pageWithAttendees [A.object ["email" .= ("fan@example.com" :: Text)]]) of
+                Left err ->
+                    expectationFailure
+                        ("Expected Google Calendar attendees to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems _ _) ->
+                    length parsedItems `shouldBe` 1
+
+            assertRejected ("fan@example.com" :: Text)
+            assertRejected [A.String "fan@example.com"]
+
         it "rejects malformed Google Calendar date fields before ambiguous sync writes" $ do
             case eitherDecode
                 ( "{\"items\":[{\"id\":\"event-123\""
