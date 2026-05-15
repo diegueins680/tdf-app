@@ -21,7 +21,8 @@ import qualified TDF.DTO as DTO
 import qualified TDF.DTO.SocialEventsDTO as SocialEvents
 import qualified TDF.DTO.SocialSyncDTO as SocialSync
 import TDF.API.Types
-    ( BandCreate (..)
+    ( AssetCheckoutRequest (..)
+    , BandCreate (..)
     , BandMemberInput (..)
     , ClockInRequest (..)
     , ClockOutRequest (..)
@@ -1273,6 +1274,37 @@ spec = do
                 ])
                 `shouldSatisfy` isLeft
 
+    describe "AssetCheckoutRequest FromJSON" $ do
+        it "accepts canonical asset checkout payloads" $
+            case decodeAssetCheckout
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected asset checkout payload to decode, got: " <> err)
+                Right payload -> do
+                    coTargetKind payload `shouldBe` Just "party"
+                    coTargetParty payload `shouldBe` Just "Ada"
+                    coDisposition payload `shouldBe` Just "loan"
+
+        it "rejects null checkout decision fields before handler fallback validation" $ do
+            case decodeAssetCheckout
+                "{\"coTargetKind\":null,\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}"
+             of
+                Left err ->
+                    err `shouldContain` "coTargetKind must be provided instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null checkout target kind to fail, got: " <> show value)
+
+            case decodeAssetCheckout
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":null}"
+             of
+                Left err ->
+                    err `shouldContain` "coDisposition must be provided instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null checkout disposition to fail, got: " <> show value)
+
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate
@@ -2223,6 +2255,8 @@ spec = do
     decodeBandCreate = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
     decodeMarketplaceCheckout = eitherDecode
+    decodeAssetCheckout :: BL8.ByteString -> Either String AssetCheckoutRequest
+    decodeAssetCheckout = eitherDecode
     decodeMarketplaceCartItemUpdate :: BL8.ByteString -> Either String MarketplaceCartItemUpdate
     decodeMarketplaceCartItemUpdate = eitherDecode
     cartItemUpdateJson :: Int -> BL8.ByteString

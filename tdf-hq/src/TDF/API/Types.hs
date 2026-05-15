@@ -58,6 +58,15 @@ rejectNullOptionalFields objectName fieldNames =
             _         -> pure ()
     in mapM_ rejectNullField fieldNames
 
+rejectNullRequiredFields :: String -> [Text] -> Value -> Parser ()
+rejectNullRequiredFields objectName fieldNames =
+  withObject objectName $ \o ->
+    let rejectNullField fieldName =
+          case AKM.lookup (AKey.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be provided instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullField fieldNames
+
 parseMetaReplySenderId :: Text -> Object -> Parser Text
 parseMetaReplySenderId fieldName obj = do
   rawSenderId <- obj .: AKey.fromText fieldName
@@ -1109,7 +1118,12 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coNotes         :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AssetCheckoutRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullRequiredFields
+      "AssetCheckoutRequest"
+      ["coTargetKind", "coDisposition"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON AssetCheckoutRequest
 
 data AssetCheckinRequest = AssetCheckinRequest
