@@ -17,3 +17,13 @@
 
 FINAL_STATUS: done — Packet A blocked on `DEVICE_LAUNCHAPP_TIMEOUT` + missing Release binary (CTO 11:25Z), Packet B closed behind Packet A, Lane C live (supervisor 72115, child 35680, heartbeat 11:45Z, no lastError), systems lane paused.
 
+## 2026-05-15 13:43 UTC — CIO checkpoint
+
+- **Packet A — Login-proof release lane:** `NO-TEST` / `HOLD`. 9th consecutive Detox PASS at 2026-05-15 00:23 UTC remains last proven state (>13 h stale). Blocker **escalated** from `DEVICE_LAUNCHAPP_TIMEOUT` to `SIMCTL_DAEMON_DEADLOCK` per Release 12:45 UTC and CTO 13:20 UTC — CoreSimulator service deadlocked, all `xcrun simctl` operations hang, hundreds of orphaned runtime processes. **Host restart required** before any simulator testing or binary rebuild can proceed. No login-logic commits since 00:23 UTC.
+- **Packet B — Store-publish readiness gate:** `CLOSED`. Strictly sequenced after Packet A proof. `EAS_IOS_CREDENTIALS_MISSING` persists (operator-gated). Physical-device Google OAuth waived until 2026-05-21 review date.
+- **Lane C — Evergreen continuous-improvement runner:** `live`. Supervisor PID `72115` (launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d15h). Child PID `69324`, state `running`, phase `supervising`. Heartbeat fresh at `2026-05-15T13:44:28Z`. `restartCount` 22, `staleRestartCount` 0, `lastExitCode` 0, `lastIterationResult` `ok`, `lastError` absent. Durability contract intact.
+- **Backend health:** `UP` — launchd-managed PID `47708` (`com.tdf.backend`), health check `{"db":"ok","status":"ok"}`, elapsed ~01:25 since transition at 12:17 UTC. No crash since.
+- **Systems lane:** `PAUSED`. Cron `47ccc4be-1307-4001-9581-80956c0d82b9` disabled. **Recommendation:** `STAY PAUSED` — `objectives/tdf-label-systems.md` still carries `Status: paused pending manual resume.` with no fresh bounded artifact or narrow acceptance test written.
+
+FINAL_STATUS: blocked — Packet A blocked on `SIMCTL_DAEMON_DEADLOCK` (host restart required), Packet B closed behind Packet A + `EAS_IOS_CREDENTIALS_MISSING`, Lane C live with durable launchd supervisor PID 72115 / child PID 69324 (heartbeat 13:44Z, no lastError), backend stable under launchd PID 47708.
+
