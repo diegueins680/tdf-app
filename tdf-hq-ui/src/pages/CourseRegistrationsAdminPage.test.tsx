@@ -17875,7 +17875,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Course community - Beatmaking 101',
       'Beatmaking 101 - student group chat',
+      'Discord server - Beatmaking 101',
+      'Beatmaking 101 - Slack workspace',
       'Grupo del curso - Beatmaking 101',
+      'Beatmaking 101 - servidor de Discord',
       'Beatmaking 101 - comunidad de estudiantes',
     ];
 
@@ -17893,7 +17896,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(copy).toContain(singleCohortInitialEmptyStateMessage);
         expect(copy).not.toContain(title);
-        expect(copy).not.toMatch(/course\s+community|student\s+group\s+chat|grupo\s+del\s+curso|comunidad\s+de\s+estudiantes/i);
+        expect(copy).not.toMatch(
+          /course\s+community|student\s+group\s+chat|discord\s+server|slack\s+workspace|grupo\s+del\s+curso|servidor\s+de\s+discord|comunidad\s+de\s+estudiantes/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

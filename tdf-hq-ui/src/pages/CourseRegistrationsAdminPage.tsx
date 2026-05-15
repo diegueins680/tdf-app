@@ -1400,7 +1400,7 @@ const firstRunAutomationPlumbingDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
-const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|broadcast\s+lists?|listas?\s+de\s+difusi[oó]n)`;
+const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|servers?|servidor(?:es)?|workspaces?|espacios?\s+de\s+trabajo|broadcast\s+lists?|listas?\s+de\s+difusi[oó]n)`;
 const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern}))|(?:(?:${firstRunCommunityChannelPattern})\s+(?:de\s+)?(?:${firstRunCommunityPlatformPattern}))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?))|(?:(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat|canal|listas?\s+de\s+difusi[oó]n)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
 
 const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
