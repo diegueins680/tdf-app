@@ -1228,7 +1228,8 @@ export default function AdminUsersPage() {
     : 'Refrescar usuarios activos';
   const showHeaderActions = !usersQuery.error
     && (showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction);
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch;
+  const showEmptySearchClearAction = showSearchEmptyState && hasActiveSearch;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showEmptySearchClearAction;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const collapsedInactiveUsersToggleLabel = useMemo(
@@ -1674,15 +1675,22 @@ export default function AdminUsersPage() {
                 <Typography color="text.secondary" title={searchEmptyStateTitle}>
                   {searchEmptyStateMessage}
                 </Typography>
-                {showReviewInactiveSearchEmptyAction && (
+                {(showEmptySearchClearAction || showReviewInactiveSearchEmptyAction) && (
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => setIncludeInactive(true)}
-                    >
-                      {reviewInactiveSearchEmptyActionLabel}
-                    </Button>
+                    {showEmptySearchClearAction && (
+                      <Button size="small" variant="outlined" onClick={handleClearSearch}>
+                        Limpiar búsqueda
+                      </Button>
+                    )}
+                    {showReviewInactiveSearchEmptyAction && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setIncludeInactive(true)}
+                      >
+                        {reviewInactiveSearchEmptyActionLabel}
+                      </Button>
+                    )}
                   </Stack>
                 )}
               </Stack>

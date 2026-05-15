@@ -6209,7 +6209,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps the search-owned clear icon as the only reset when a query hides every admin user', async () => {
+  it('moves empty-search reset into the empty state instead of leaving an icon-only clear action', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -6260,10 +6260,11 @@ describe('AdminUsersPage', () => {
         expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(1);
         expect(getButtonsByText(container, 'Revisar cuentas inactivas')).toHaveLength(0);
         expect(container.textContent).not.toContain('Incluir inactivos');
-        expect(container.textContent).not.toContain('Limpiar búsqueda');
+        expect(container.textContent).toContain('Limpiar búsqueda');
         expect(container.querySelector('button[aria-label="Refrescar lista de usuarios"]')).toBeNull();
         expect(container.querySelector('[data-testid="admin-users-empty-search-clear"]')).toBeNull();
-        expect(buttonText(getButtonsByText(container, 'Limpiar búsqueda')[0]!)).toBe('');
+        expect(buttonText(getButtonsByText(container, 'Limpiar búsqueda')[0]!)).toBe('Limpiar búsqueda');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(container.textContent).not.toContain('Mostrando 0 de 3');
         expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
       });
