@@ -10,7 +10,7 @@ import           Data.Aeson
   , Object
   , Options
   , ToJSON(..)
-  , Value
+  , Value(..)
   , defaultOptions
   , fieldLabelModifier
   , genericToJSON
@@ -63,10 +63,17 @@ parseInstagramReplyReq =
               if hasLegacy
                 then ("irSenderId", "irMessage", "irExternalId")
                 else ("senderId", "message", "externalId")
+        rejectNullInstagramOptionalKey externalKey obj
         InstagramReplyReq
           <$> obj .: AesonKey.fromText senderKey
           <*> obj .: AesonKey.fromText messageKey
           <*> obj .:? AesonKey.fromText externalKey
+
+rejectNullInstagramOptionalKey :: Text -> Object -> Parser ()
+rejectNullInstagramOptionalKey fieldName obj =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+    _ -> pure ()
 
 rejectUnknownInstagramReplyKeys :: Object -> Parser ()
 rejectUnknownInstagramReplyKeys obj =

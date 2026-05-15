@@ -8950,6 +8950,27 @@ spec = describe "TDF.Server helpers" $ do
               )
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null social reply external ids instead of treating them as omitted" $ do
+            case eitherDecode
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":null}"
+                :: Either String IG.InstagramReplyReq of
+                Left err -> err `shouldContain` "externalId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null Instagram externalId to fail, got: "
+                            <> show payload
+                        )
+
+            case eitherDecode
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":null}"
+                :: Either String FB.FacebookReplyReq of
+                Left err -> err `shouldContain` "externalId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null Facebook externalId to fail, got: "
+                            <> show payload
+                        )
+
         it "trims manual Instagram/Facebook reply text while preserving multiline formatting" $ do
             validateSocialReplyBody "  Hola, seguimos por aqui.  "
                 `shouldBe` Right "Hola, seguimos por aqui."

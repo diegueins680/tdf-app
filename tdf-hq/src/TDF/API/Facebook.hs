@@ -10,7 +10,7 @@ import           Data.Aeson
   , Object
   , Options
   , ToJSON(..)
-  , Value
+  , Value(..)
   , defaultOptions
   , fieldLabelModifier
   , genericToJSON
@@ -63,10 +63,17 @@ parseFacebookReplyReq =
               if hasLegacy
                 then ("frSenderId", "frMessage", "frExternalId")
                 else ("senderId", "message", "externalId")
+        rejectNullFacebookOptionalKey externalKey obj
         FacebookReplyReq
           <$> obj .: AesonKey.fromText senderKey
           <*> obj .: AesonKey.fromText messageKey
           <*> obj .:? AesonKey.fromText externalKey
+
+rejectNullFacebookOptionalKey :: Text -> Object -> Parser ()
+rejectNullFacebookOptionalKey fieldName obj =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+    _ -> pure ()
 
 rejectUnknownFacebookReplyKeys :: Object -> Parser ()
 rejectUnknownFacebookReplyKeys obj =
