@@ -3013,6 +3013,11 @@ describe('AdminConsolePage', () => {
           body: ['Review security and team permissions before editing admin roles.'],
         },
         {
+          cardId: 'fallback-security-access',
+          title: 'Security & access',
+          body: ['Confirm sensitive admin entry points before editing team roles.'],
+        },
+        {
           cardId: 'fallback-seguridad-permisos',
           title: 'Seguridad y permisos',
           body: ['Revisa seguridad y permisos del equipo antes de cambiar roles administrativos.'],
@@ -3037,9 +3042,13 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Módulos adicionales')).not.toBeInTheDocument();
     expect(screen.queryByText('Access security')).not.toBeInTheDocument();
+    expect(screen.queryByText('Security & access')).not.toBeInTheDocument();
     expect(screen.queryByText('Seguridad y permisos')).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Review security and team permissions before editing admin roles\./i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Confirm sensitive admin entry points before editing team roles\./i),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Revisa seguridad y permisos del equipo antes de cambiar roles administrativos\./i),

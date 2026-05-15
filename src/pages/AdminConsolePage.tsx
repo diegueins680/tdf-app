@@ -474,6 +474,7 @@ const BUILT_IN_ADMIN_CARD_TITLES = [
   'seguridad de accesos',
   'seguridad y permisos',
   'access security',
+  'security and access',
   'security and permissions',
   'security permissions',
   'access authorization',
