@@ -118,6 +118,14 @@ data SocialUnholdRequest = SocialUnholdRequest
 
 instance FromJSON SocialUnholdRequest where
   parseJSON value = do
+    mapM_
+      (\fieldName ->
+        rejectNullOptionalField
+          "SocialUnholdRequest"
+          fieldName
+          (T.unpack fieldName <> " must be omitted instead of null")
+          value)
+      ["externalId", "senderId", "note"]
     request <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True

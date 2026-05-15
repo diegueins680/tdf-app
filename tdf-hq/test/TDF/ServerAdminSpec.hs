@@ -460,6 +460,17 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeSocialUnhold "{\"channel\":\"whatsapp\",\"externalId\":\"   \",\"senderId\":\"\"}" `shouldSatisfy` isLeft
             decodeSocialUnhold "{\"channel\":\"whatsapp\",\"externalId\":\"wa-incoming-1\",\"senderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback fields so lookup mode requires omission" $ do
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"externalId\":null,\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"externalId\":\"wa-incoming-1\",\"senderId\":null}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"note\":null}"
+                `shouldSatisfy` isLeft
+
     describe "AdminWhatsAppSendRequest FromJSON" $ do
         it "accepts canonical admin wire keys for WhatsApp sends" $
             case eitherDecode
