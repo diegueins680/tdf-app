@@ -640,6 +640,13 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becCategory\":null}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null brain entry update fields except the explicit category clear" $ do
+            decodeBrainEntryUpdate "{\"beuCategory\":null}" `shouldSatisfy` isRight
+            decodeBrainEntryUpdate "{\"beuTitle\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuBody\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuTags\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuActive\":null}" `shouldSatisfy` isLeft
+
     describe "validateBrainEntryId" $
         it "rejects non-positive Studio Brain ids before update lookup can report a missing row" $ do
             validateBrainEntryId 1 `shouldBe` Right 1
@@ -1573,6 +1580,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeBrainEntryUpdate = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+    isRight (Right _) = True
+    isRight (Left _) = False
 
 type AdminTestM = ReaderT Env (ExceptT ServerError IO)
 

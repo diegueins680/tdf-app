@@ -399,6 +399,12 @@ instance FromJSON BrainEntryUpdate where
       [] -> pure ()
       unexpected ->
         fail ("Unexpected BrainEntryUpdate keys: " <> show unexpected)
+    mapM_ rejectNullNonClearableField
+      [ "beuTitle"
+      , "beuBody"
+      , "beuTags"
+      , "beuActive"
+      ]
     if null providedKeys
       then fail "BrainEntryUpdate must include at least one field"
       else pure ()
@@ -422,6 +428,10 @@ instance FromJSON BrainEntryUpdate where
         , "beuTags"
         , "beuActive"
         ]
+      rejectNullNonClearableField fieldName =
+        case KeyMap.lookup (Key.fromText (T.pack fieldName)) o of
+          Just Null -> fail (fieldName <> " must be omitted instead of null")
+          _ -> pure ()
 
 data RagIndexStatus = RagIndexStatus
   { risCount     :: Int
