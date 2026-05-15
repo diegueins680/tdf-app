@@ -203,6 +203,7 @@ export default function TrialLessonsPage() {
     })();
   });
   const [quickFiltersExpanded, setQuickFiltersExpanded] = useState(false);
+  const [emptyFiltersExpanded, setEmptyFiltersExpanded] = useState(false);
 
   const toIsoOrUndefined = (val: string) => {
     if (!val) return undefined;
@@ -306,6 +307,7 @@ export default function TrialLessonsPage() {
     setTeacherFilter('all');
     setStatusFilter('all');
     setQuickFiltersExpanded(false);
+    setEmptyFiltersExpanded(false);
     applyRangePreset(7, 30);
   };
 
@@ -488,6 +490,14 @@ export default function TrialLessonsPage() {
   const hasQuickFiltersActive =
     subjectFilter !== 'all' || teacherFilter !== 'all' || statusFilter !== 'all';
   const showQuickFilters = quickFiltersExpanded || hasQuickFiltersActive;
+  const showInitialEmptyState =
+    data.length === 0
+    && !loading
+    && !queryError
+    && !rangeError
+    && !hasQuickFiltersActive;
+  const collapseInitialFilters = showInitialEmptyState && !emptyFiltersExpanded;
+  const showFilterControls = !collapseInitialFilters;
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -637,66 +647,70 @@ export default function TrialLessonsPage() {
 
       <Paper sx={{ p: 2.5 }} variant="outlined">
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
-            <TextField
-              label="Desde"
-              type="datetime-local"
-              value={fromInput}
-              onChange={(e) => setFromInput(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-            <TextField
-              label="Hasta"
-              type="datetime-local"
-              value={toInput}
-              onChange={(e) => setToInput(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => applyRangePreset(7, 30)}>
-                Últimos 7d / próximos 30d
-              </Button>
-              <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
-                Próximas 12 semanas
-              </Button>
-              <Button variant="text" size="small" onClick={resetFilters}>
-                Restablecer filtros
-              </Button>
-            </Stack>
-          </Stack>
-          {rangeError && (
-            <Alert
-              severity="warning"
-              action={
-                <Button color="inherit" size="small" onClick={resetFilters}>
-                  Corregir rango
-                </Button>
-              }
-            >
-              {rangeError} Ajusta las fechas o restablece los filtros.
-            </Alert>
-          )}
-          {!hasQuickFiltersActive && (
-            <Stack spacing={0.75} alignItems="flex-start">
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => setQuickFiltersExpanded((current) => !current)}
-                sx={{ px: 0, textTransform: 'none' }}
-              >
-                {showQuickFilters ? 'Ocultar filtros rápidos' : 'Filtrar por materia, profesor y estado'}
-              </Button>
-              {!showQuickFilters && (
-                <Typography variant="body2" color="text.secondary" data-testid="trial-lessons-quick-filters-hint">
-                  Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o
-                  estado.
-                </Typography>
+          {showFilterControls && (
+            <>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
+                <TextField
+                  label="Desde"
+                  type="datetime-local"
+                  value={fromInput}
+                  onChange={(e) => setFromInput(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <TextField
+                  label="Hasta"
+                  type="datetime-local"
+                  value={toInput}
+                  onChange={(e) => setToInput(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button variant="outlined" size="small" onClick={() => applyRangePreset(7, 30)}>
+                    Últimos 7d / próximos 30d
+                  </Button>
+                  <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
+                    Próximas 12 semanas
+                  </Button>
+                  <Button variant="text" size="small" onClick={resetFilters}>
+                    Restablecer filtros
+                  </Button>
+                </Stack>
+              </Stack>
+              {rangeError && (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button color="inherit" size="small" onClick={resetFilters}>
+                      Corregir rango
+                    </Button>
+                  }
+                >
+                  {rangeError} Ajusta las fechas o restablece los filtros.
+                </Alert>
               )}
-            </Stack>
+              {!hasQuickFiltersActive && (
+                <Stack spacing={0.75} alignItems="flex-start">
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => setQuickFiltersExpanded((current) => !current)}
+                    sx={{ px: 0, textTransform: 'none' }}
+                  >
+                    {showQuickFilters ? 'Ocultar filtros rápidos' : 'Filtrar por materia, profesor y estado'}
+                  </Button>
+                  {!showQuickFilters && (
+                    <Typography variant="body2" color="text.secondary" data-testid="trial-lessons-quick-filters-hint">
+                      Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o
+                      estado.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+              {showQuickFilters && chipFilters}
+            </>
           )}
-          {showQuickFilters && chipFilters}
           {loading && <LinearProgress />}
           {queryError && (
             <Alert severity="error">
@@ -709,11 +723,22 @@ export default function TrialLessonsPage() {
             </Alert>
           )}
           {data.length === 0 && !loading && !rangeError && (
-            <Alert severity="info" variant="outlined" data-testid="trial-lessons-empty-state">
+            <Alert
+              severity="info"
+              variant="outlined"
+              data-testid="trial-lessons-empty-state"
+              action={
+                collapseInitialFilters ? (
+                  <Button color="inherit" size="small" onClick={() => setEmptyFiltersExpanded(true)}>
+                    Ajustar fechas
+                  </Button>
+                ) : undefined
+              }
+            >
               <Typography variant="subtitle2">Primeros pasos</Typography>
               <Typography variant="body2" color="text.secondary">
-                Aún no hay clases de prueba en este rango. Crea una nueva clase para registrar horario,
-                profesor y sala; si esperabas ver datos, amplía las fechas o restablece filtros.
+                Aún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario,
+                profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.
               </Typography>
             </Alert>
           )}
