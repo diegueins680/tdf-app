@@ -24,7 +24,7 @@ import           TDF.DB (sharedTlsManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
-import           TDF.Config (AppConfig(..))
+import           TDF.Config (AppConfig(..), normalizeConfiguredApiBaseUrl)
 
 sendFacebookText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendFacebookText cfg recipientId body =
@@ -33,10 +33,9 @@ sendFacebookText cfg recipientId body =
     Right (cleanRecipientId, cleanBody) ->
       case validateFacebookMessagingContext cfg of
         Left err -> pure (Left err)
-        Right (token, pageId) -> do
+        Right (token, pageId, base) -> do
           manager <- pure sharedTlsManager
-          let base = T.dropWhileEnd (== '/') (facebookMessagingApiBase cfg)
-              urlTxt = base <> "/" <> pageId <> "/messages"
+          let urlTxt = base <> "/" <> pageId <> "/messages"
           reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
           case reqE of
             Left err -> pure (Left (T.pack (show err)))
@@ -188,11 +187,16 @@ nonEmptyText raw =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-validateFacebookMessagingContext :: AppConfig -> Either Text (Text, Text)
+validateFacebookMessagingContext :: AppConfig -> Either Text (Text, Text, Text)
 validateFacebookMessagingContext cfg = do
   token <- validateFacebookBearerToken (facebookMessagingToken cfg)
   pageId <- validateFacebookPageId (facebookMessagingPageId cfg)
-  pure (token, pageId)
+  apiBase <-
+    either (Left . T.pack) Right $
+      normalizeConfiguredApiBaseUrl
+        "FACEBOOK_MESSAGING_API_BASE"
+        (T.unpack (facebookMessagingApiBase cfg))
+  pure (token, pageId, apiBase)
 
 validateFacebookBearerToken :: Maybe Text -> Either Text Text
 validateFacebookBearerToken rawToken =

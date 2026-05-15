@@ -8980,6 +8980,28 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldReturn` Left expectedFacebookPageIdMessage
 
             sendFacebookText
+                (configuredCfg
+                    { facebookMessagingApiBase = "http://graph.facebook.com/v20.0"
+                    })
+                "recipient-1"
+                "hola"
+                `shouldReturn`
+                    Left "FACEBOOK_MESSAGING_API_BASE must be an absolute https URL"
+
+            sendFacebookText
+                (configuredCfg
+                    { facebookMessagingApiBase =
+                        "https://graph.facebook.com/v20.0?debug=1"
+                    })
+                "recipient-1"
+                "hola"
+                `shouldReturn`
+                    Left
+                        ( "FACEBOOK_MESSAGING_API_BASE must be an absolute "
+                            <> "https URL without query or fragment"
+                        )
+
+            sendFacebookText
                 configuredCfg
                 "recipient 1"
                 "hola"
