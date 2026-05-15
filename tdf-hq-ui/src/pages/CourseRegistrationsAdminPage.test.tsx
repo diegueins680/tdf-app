@@ -14576,6 +14576,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Constant Contact signup page for Beatmaking 101',
       'Beatmaking 101 - Keap intake form',
       'Infusionsoft registration page - Beatmaking 101',
+      'Substack signup page - Beatmaking 101',
+      'Beatmaking 101 - Substack form',
+      'Formulario de Substack para Beatmaking 101',
       'CRM lead form - Beatmaking 101',
       'CRM registration page for Beatmaking 101',
       'Beatmaking 101 - CRM intake form',
@@ -14626,7 +14629,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Squarespace');
         expect(emptyState?.textContent).not.toContain('Leadpages');
         expect(emptyState?.textContent).not.toContain('Notion form');
-        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft/i);
+        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Substack/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
