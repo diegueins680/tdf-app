@@ -17679,6 +17679,46 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips seat-reservation CTA wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Reserve your spot - Beatmaking 101',
+      'Save your seat for Beatmaking 101',
+      'Claim a seat - Beatmaking 101',
+      'Book your place for Beatmaking 101',
+      'Join the cohort - Beatmaking 101',
+      'Reserva tu cupo - Beatmaking 101',
+      'Aparta tu lugar para Beatmaking 101',
+      'Beatmaking 101 - asegura tu cupo',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /reserve your spot|save your seat|claim a seat|book your place|join the cohort|reserva tu cupo|aparta tu lugar|asegura tu cupo/i,
+        );
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips open-enrollment wrappers from first-run cohort copy', async () => {
     const titles = [
       'Inscripciones abiertas - Beatmaking 101',

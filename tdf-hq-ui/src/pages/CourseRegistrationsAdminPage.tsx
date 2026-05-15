@@ -1215,6 +1215,12 @@ const firstRunCallToActionDescriptorPrefixPattern =
 const firstRunCallToActionDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:apply|enroll|register|sign\s*up)\s+(?:for|to|in)\s+(?:the\s+)?(?:course|class|program)|(?:apply|enroll|register|sign\s*up)\s+(?:now|here|for|to|in)\b|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+(?:ahora|aqu[ií]|al\s+curso|a\s+la\s+clase|en\s+el\s+curso|para\s+el\s+curso|al\s+programa))\s*$/i;
 
+const firstRunSeatReservationCallToActionDescriptorPrefixPattern =
+  /^(?:(?:reserve|save|claim|book)\s+(?:(?:your|my|a|the)\s+)?(?:spot|seat|place)|join\s+(?:(?:the|my)\s+)?(?:course|class|program|cohort|waitlist|waiting\s+list)|(?:reserva|aparta|separa|asegura|guarda)\s+(?:(?:tu|mi|un|el|la)\s+)?(?:cupo|plaza|lugar|asiento)|(?:[uú]nete|unete)\s+(?:al\s+curso|a\s+la\s+clase|al\s+programa|a\s+la\s+cohorte|a\s+la\s+lista))(?:\s+(?:now|here|ahora|aqu[ií]|del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSeatReservationCallToActionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:reserve|save|claim|book)\s+(?:(?:your|my|a|the)\s+)?(?:spot|seat|place)|join\s+(?:(?:the|my)\s+)?(?:course|class|program|cohort|waitlist|waiting\s+list)|(?:reserva|aparta|separa|asegura|guarda)\s+(?:(?:tu|mi|un|el|la)\s+)?(?:cupo|plaza|lugar|asiento)|(?:[uú]nete|unete)\s+(?:al\s+curso|a\s+la\s+clase|al\s+programa|a\s+la\s+cohorte|a\s+la\s+lista))(?:\s+(?:now|here|ahora|aqu[ií]))?\s*$/i;
+
 const firstRunOpenEnrollmentDescriptorPrefixPattern =
   /^(?:(?:open|abiertas?)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)|(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)\s+open|(?:pre[-\s]?)?inscripci[oó]n(?:es)?\s+abiertas?|matr[ií]cula(?:s)?\s+abiertas?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1611,6 +1617,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunOfferDescriptorPrefixPattern, '')
     .replace(firstRunCallToActionDescriptorPrefixPattern, '')
+    .replace(firstRunSeatReservationCallToActionDescriptorPrefixPattern, '')
     .replace(firstRunOpenEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
@@ -1706,6 +1713,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunOfferDescriptorSuffixPattern, '')
     .replace(firstRunCallToActionDescriptorSuffixPattern, '')
+    .replace(firstRunSeatReservationCallToActionDescriptorSuffixPattern, '')
     .replace(firstRunOpenEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
