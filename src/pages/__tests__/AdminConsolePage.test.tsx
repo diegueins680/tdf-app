@@ -5882,6 +5882,64 @@ describe('AdminConsolePage', () => {
     expect(screen.queryByText('Audit counters')).not.toBeInTheDocument();
   });
 
+  it('ignores terse audit and change counters without hiding actionable setup copy', async () => {
+    const user = userEvent.setup();
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'audit-metrics-empty',
+          title: 'Audit metrics',
+          body: ['Audits: 0', 'Changes: 0'],
+        },
+        {
+          cardId: 'bitacora-cambios-empty',
+          title: 'Bitácora en cero',
+          body: ['Auditorías: 0', '0 cambios administrativos'],
+        },
+        {
+          cardId: 'change-follow-up',
+          title: 'Seguimiento de cambios',
+          body: [
+            '0 cambios pendientes en este flujo. Invita al responsable antes de activar accesos compartidos.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('admin-first-run-users-status')).toHaveTextContent('Aún no hay usuarios administrables.');
+      expect(
+        screen.getByTestId('admin-first-run-audit-status'),
+      ).toHaveTextContent('La auditoría aparecerá cuando se registre el primer cambio.');
+    });
+
+    expect(screen.queryByText('Audit metrics')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora en cero')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Audits: 0$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Changes: 0$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Auditorías: 0$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^0 cambios administrativos$/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Opcional: ver 1 módulo adicional$/i }));
+
+    expect(await screen.findByText('Seguimiento de cambios')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /0 cambios pendientes en este flujo\. Invita al responsable antes de activar accesos compartidos\./i,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Audit metrics')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bitácora en cero')).not.toBeInTheDocument();
+  });
+
   it('ignores registered-user and registered-audit empty cards without hiding invite setup copy', async () => {
     const user = userEvent.setup();
     mockConsolePreview.mockResolvedValue({
