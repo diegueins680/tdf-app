@@ -208,6 +208,7 @@ validateFutureStubCatalog catalog = do
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
   _ <- validateFutureStubCatalogRouteBoundaries reservedRoutes normalized
+  _ <- validateFutureStubCatalogTopLevelBoundaries normalized
   _ <- validateFutureStubCatalogAreaOrder normalized
   if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
@@ -279,6 +280,7 @@ validateFutureStubCatalogAreaOrder catalog = do
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
+  _ <- validateFutureStubCatalogTopLevelBoundaries validatedCatalog
   let areaGroups = group (map fst validatedCatalog)
       expectedAreaGroups = group (map fst allowedFutureStubMetadata)
       areaRuns = map head areaGroups
@@ -296,6 +298,15 @@ validateFutureStubCatalogAreaOrder catalog = do
     then invalidFutureStubCatalog
     else Right areaRuns
 
+validateFutureStubCatalogTopLevelBoundaries
+  :: [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateFutureStubCatalogTopLevelBoundaries catalog
+  | any ((`elem` reservedFutureStubTopLevelAreas) . fst) catalog =
+      invalidFutureStubCatalog
+  | otherwise =
+      Right catalog
+
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =
   requiredReservedFutureStubRoutes
@@ -304,6 +315,12 @@ requiredReservedFutureStubRoutes :: [(Text, Text)]
 requiredReservedFutureStubRoutes =
   [ ("admin", "console")
   , ("admin", "seed")
+  ]
+
+reservedFutureStubTopLevelAreas :: [Text]
+reservedFutureStubTopLevelAreas =
+  -- /stubs/catalog is the discovery index, not a generic stub area.
+  [ "catalog"
   ]
 
 validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
@@ -695,6 +712,7 @@ deriveFutureStubAreas =
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea
   | rawArea /= area = invalidFutureStubMetadata
+  | area `elem` reservedFutureStubTopLevelAreas = invalidFutureStubMetadata
   | area `notElem` mountedFutureStubAreas = invalidFutureStubMetadata
   | area `notElem` allowedFutureStubAreas = invalidFutureStubMetadata
   | validFutureStubSlug area = Right area

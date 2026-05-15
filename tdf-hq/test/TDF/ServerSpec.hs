@@ -426,6 +426,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalogResponseWithConsole
     , validateFutureStubCatalogResponses
     , validateFutureStubCatalogRouteBoundaries
+    , validateFutureStubCatalogTopLevelBoundaries
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
     , validateFutureStubPublishedId
@@ -11065,6 +11066,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "crm" "parties/list--columns"
             assertInvalid "crm" "parties/list columns"
             assertInvalid "crm" "parties/export"
+            assertInvalid "catalog" "index"
             assertInvalid "ops" "parties/list-columns"
 
             case validateFutureStubArea "ops" of
@@ -11149,6 +11151,8 @@ spec = describe "TDF.Server helpers" $ do
                 reservedFutureStubRoutes
                 allowedFutureStubMetadata
                 `shouldBe` Right allowedFutureStubMetadata
+            validateFutureStubCatalogTopLevelBoundaries allowedFutureStubMetadata
+                `shouldBe` Right allowedFutureStubMetadata
 
             let assertInvalid routes =
                     case validateReservedFutureStubRoutes routes of
@@ -11183,6 +11187,21 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalidAdminConsoleRoute [("admin", "console")]
             assertInvalidAdminConsoleRoute
                 [("admin", "console-preview"), ("admin", "seed")]
+
+            let assertTopLevelConflict catalog =
+                    case validateFutureStubCatalogTopLevelBoundaries catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected reserved fallback top-level route to fail, got: "
+                                    <> show value
+                                )
+
+            assertTopLevelConflict [("catalog", "index")]
+            assertTopLevelConflict (("catalog", "future") : allowedFutureStubMetadata)
 
             let assertBoundaryConflict catalog =
                     case validateFutureStubCatalogRouteBoundaries

@@ -1,3 +1,13 @@
+## 2026-05-15 01:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — 9th consecutive Detox PASS at 2026-05-15 00:23 UTC (local Release build, ~114 s, both auth paths verified). No login-related commits since 2026-05-13 22:24 UTC (empty `git log` over `tdf-mobile/src`, `package.json`, `eas.json`, `app.json`, `.detoxrc.js`, `ios/`, `android/` since 23:40Z). Release Director maintains `GO` / `TESTING VERSION READY`. CEO sign-off in `release-readiness.md` (2026-05-14; review date 2026-05-21).
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d21h). Child PID 45021 alive (STAT S, elapsed ~4m). Heartbeat fresh at 2026-05-15T01:40:59Z. `restartCount` 259 (up from 243 at 21:40Z), normal iteration cycling with 60s restart delay. New transient `lastError`: git add pathspec failure on unicode checkmark artifact paths; loop recovered (`lastIterationResult` `ok`, `lastExitCode` 0). 06:26 UTC graceful-restart deadline for prior submodule fix is ~4.75 h away; supervisor restart not yet required. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. Recommendation: **STAY PAUSED**.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (9th Detox PASS at 00:23Z, zero login commits since 22:24Z), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 45021, heartbeat 01:40:59Z, transient git-add error recovered, restart deadline 06:26Z), systems lane paused.
+
 ## 2026-05-14 23:40 UTC — CIO checkpoint
 
 - **Packet A:** `PROVEN FOR TESTING VERSION` — 8th consecutive Detox PASS at 2026-05-14 22:24 UTC (local Release build, ~111 s, both auth paths verified). Release Director maintains `GO` / `TESTING VERSION READY`. No login-related commits since 2026-05-13 22:24 UTC (confirmed empty `git log` over `tdf-mobile/src`, `package.json`, `eas.json`, `app.json`, `.detoxrc.js`, `ios/`, `android/`).
@@ -188,4 +198,13 @@ FINAL_STATUS: done — Packet A proven for testing version (Platform 5× PASS at
 - **Release report:** `reports/tdf-label-release.md` does not exist on disk. No release artifact to tail.
 - **No company-level blocker** to Lane C durability. No repair needed.
 
-FINAL_STATUS: done — Packet A proven for testing version (one test-config commit only, no login logic changes; Platform 8× PASS, Release 7× PASS per company truth), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 75578, heartbeat 21:40:12Z, restart deadline 06:26Z), systems lane paused, no release report on disk.
+## 2026-05-15 01:40 UTC — CIO checkpoint
+
+- **Packet A:** `PROVEN FOR TESTING VERSION` — 9th consecutive Detox PASS at 2026-05-15 00:23 UTC (local Release build, ~114 s, both auth paths verified). No login-related commits since 2026-05-13 22:24 UTC (empty `git log` over `tdf-mobile/src`, `package.json`, `eas.json`, `app.json`, `.detoxrc.js`, `ios/`, `android/` since 23:40Z). Release Director maintains `GO` / `TESTING VERSION READY`. CEO sign-off in `release-readiness.md` (2026-05-14; review date 2026-05-21).
+- **Packet B:** `GATED` — `EAS_IOS_CREDENTIALS_MISSING` persists for `preview` profile (physical device `.ipa`). Blocks physical-device distribution and store publish. Strict sequencing maintained: no store-publish motion until credential resolution or physical-device proof.
+- **Lane C:** `live` — supervisor PID 68059 (PPID 1, launchd `ai.openclaw.tdf-app.continuous-improvement-loop`, elapsed ~5d21h). Child PID 45021 alive (STAT S, elapsed ~4m). Heartbeat fresh at 2026-05-15T01:40:59Z. `restartCount` 259 (up from 243 at 21:40Z), normal iteration cycling with 60s restart delay. New transient `lastError`: git add pathspec failure on unicode checkmark artifact paths; loop recovered (`lastIterationResult` `ok`, `lastExitCode` 0). 06:26 UTC graceful-restart deadline for prior submodule fix is ~4.75 h away; supervisor restart not yet required. Durability contract intact.
+- **Systems lane:** `PAUSED` per standing CEO directive. `objectives/tdf-label-systems.md` unchanged. Recommendation: **STAY PAUSED**.
+- **No company-level blocker** to Lane C durability. No repair needed.
+
+FINAL_STATUS: done — Packet A proven for testing version (9th Detox PASS at 00:23Z, zero login commits since 22:24Z), Packet B gated on EAS_IOS_CREDENTIALS_MISSING, Lane C live with launchd durability (supervisor 68059, child 45021, heartbeat 01:40:59Z, transient git-add error recovered, restart deadline 06:26Z), systems lane paused.
+
