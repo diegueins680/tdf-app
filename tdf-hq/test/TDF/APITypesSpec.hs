@@ -55,6 +55,7 @@ import TDF.API.Types
     , LabelTrackCreate (..)
     , LabelTrackUpdate (..)
     , UserRoleUpdatePayload (..)
+    , verifyMetaWebhookSignature
     )
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
@@ -102,6 +103,28 @@ spec = do
         it "rejects invalid UTF-8 bytes before role assignment validation" $ do
             decodePlainRole invalidUtf8 `shouldSatisfy` isLeft
             decodeOctetRole invalidUtf8 `shouldSatisfy` isLeft
+
+    describe "verifyMetaWebhookSignature" $ do
+        it "requires Meta's sha256-prefixed HMAC header before trusting webhook bodies" $ do
+            let body = BL8.pack "{}"
+                digest = "77325902caca812dc259733aacd046b73817372c777b8d95b402647474516e13"
+                validHeader = "sha256=" <> digest
+
+            verifyMetaWebhookSignature (Just "secret") (Just validHeader) body
+                `shouldSatisfy` isRightUnit
+            verifyMetaWebhookSignature Nothing Nothing body
+                `shouldSatisfy` isRightUnit
+            verifyMetaWebhookSignature (Just "secret") (Just digest) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") (Just ("sha256=" <> T.take 63 digest)) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature
+                (Just "secret")
+                (Just ("sha256=" <> T.take 63 digest <> "z"))
+                body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") Nothing body
+                `shouldSatisfy` isLeft
 
     describe "UserRoleUpdatePayload FromJSON" $ do
         it "accepts canonical admin role update payloads" $
@@ -2343,3 +2366,5 @@ spec = do
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+    isRightUnit (Right ()) = True
+    isRightUnit _ = False

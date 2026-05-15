@@ -2096,12 +2096,34 @@ verifyMetaWebhookSignature mAppSecret mSigHeader body =
       case mSigHeader of
         Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }
         Just sigRaw ->
-          let sigClean = T.strip sigRaw
-              prefix   = "sha256="
-              sigWithoutPrefix
-                | T.toLower prefix `T.isPrefixOf` T.toLower sigClean = T.drop (T.length prefix) sigClean
-                | otherwise = sigClean
-              expected = TE.decodeUtf8 (B16.encode (convert (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)))
-          in if T.toLower sigWithoutPrefix == T.toLower expected
+          let expected =
+                TE.decodeUtf8
+                  ( B16.encode
+                      ( convert
+                          ( hmac (TE.encodeUtf8 appSecret) (BL.toStrict body)
+                              :: HMAC SHA256
+                          )
+                      )
+                  )
+          in if parseMetaWebhookSignature sigRaw == Just expected
              then Right ()
              else Left err401 { errBody = "Invalid webhook signature" }
+
+parseMetaWebhookSignature :: Text -> Maybe Text
+parseMetaWebhookSignature rawSignature =
+  let sigClean = T.strip rawSignature
+      prefix = "sha256="
+      lowerSig = T.toLower sigClean
+  in if prefix `T.isPrefixOf` lowerSig
+       then
+         let digest = T.drop (T.length prefix) sigClean
+         in if T.length digest == 64 && T.all isAsciiHexDigit digest
+              then Just (T.toLower digest)
+              else Nothing
+       else Nothing
+
+isAsciiHexDigit :: Char -> Bool
+isAsciiHexDigit ch =
+  isDigit ch
+    || (ch >= 'a' && ch <= 'f')
+    || (ch >= 'A' && ch <= 'F')
