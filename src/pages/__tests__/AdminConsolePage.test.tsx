@@ -5124,6 +5124,52 @@ describe('AdminConsolePage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('keeps standalone optional modules hidden while required admin data needs a retry', async () => {
+    mockListUsers.mockRejectedValue(new Error('Usuarios no disponibles'));
+    mockAuditLogs.mockResolvedValue([
+      {
+        auditId: 'audit-1',
+        actorId: 101,
+        entity: 'user',
+        entityId: '101',
+        action: 'roles.updated',
+        diff: 'Admin -> Manager',
+        createdAt: '2026-04-09T15:30:00.000Z',
+      },
+    ]);
+    mockConsolePreview.mockResolvedValue({
+      status: 'preview',
+      cards: [
+        {
+          cardId: 'service-tokens',
+          title: 'Tokens de servicio',
+          body: [
+            'Usa este espacio para rotar credenciales compartidas sin tocar los permisos de usuarios.',
+          ],
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Consola de administración')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Usuarios no disponibles')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Actualizar panel/i })).toBeInTheDocument();
+      expect(screen.getByText(/Acción:\s*Roles actualizados/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Tokens de servicio')).not.toBeInTheDocument();
+    expect(screen.queryByText('Opcional')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Ver detalles de Tokens de servicio/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Usa este espacio para rotar credenciales compartidas/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('sorts standalone additional modules by title so fallback discovery stays easy to scan', async () => {
     const user = userEvent.setup();
     mockListUsers.mockResolvedValue([buildAdminUser()]);

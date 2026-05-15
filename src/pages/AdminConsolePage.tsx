@@ -2324,10 +2324,11 @@ export default function AdminConsolePage() {
     || auditQuery.isError
     || consoleQuery.isError
     || usersQuery.isError;
-  const hasRequiredFirstRunError =
+  const hasRequiredAdminDataError =
     healthQuery.isError
     || auditQuery.isError
     || usersQuery.isError;
+  const hasRequiredFirstRunError = hasRequiredAdminDataError;
   const shouldShowHealthLoadingState = healthQuery.isPending && healthQuery.data == null;
   const showCompactHealthyServiceSummary =
     healthQuery.data != null
@@ -2414,7 +2415,10 @@ export default function AdminConsolePage() {
   const showFirstRunAdditionalModulesHideAction =
     canShowFirstRunAdditionalModules
     && shouldShowAdditionalModuleCards;
-  const showStandaloneAdditionalModulesSection = consoleCards.length > 0 && !showGettingStartedGuidance;
+  const showStandaloneAdditionalModulesSection =
+    consoleCards.length > 0
+    && !showGettingStartedGuidance
+    && !hasRequiredAdminDataError;
   const standaloneAdditionalModulesActionCopy = formatStandaloneAdditionalModulesActionCopy(consoleCards);
   const singleAdditionalModule = getSingleAdditionalModule(consoleCards);
   const firstRunAdditionalModulesTitle = singleAdditionalModule?.title ?? 'Módulos opcionales';
