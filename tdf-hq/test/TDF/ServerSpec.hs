@@ -11259,6 +11259,8 @@ spec = describe "TDF.Server helpers" $ do
 
             assertTopLevelConflict [("catalog", "index")]
             assertTopLevelConflict (("catalog", "future") : allowedFutureStubMetadata)
+            assertTopLevelConflict [(" crm", "parties/list-columns")]
+            assertTopLevelConflict [("crm", "parties/list columns")]
 
             let assertBoundaryConflict catalog =
                     case validateFutureStubCatalogRouteBoundaries

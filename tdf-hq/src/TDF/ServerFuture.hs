@@ -301,11 +301,18 @@ validateFutureStubCatalogAreaOrder catalog = do
 validateFutureStubCatalogTopLevelBoundaries
   :: [(Text, Text)]
   -> Either ServerError [(Text, Text)]
-validateFutureStubCatalogTopLevelBoundaries catalog
-  | any ((`elem` reservedFutureStubTopLevelAreas) . fst) catalog =
-      invalidFutureStubCatalog
-  | otherwise =
-      Right catalog
+validateFutureStubCatalogTopLevelBoundaries catalog = do
+  validatedCatalog <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubTopLevelBoundaryRoute catalog
+  if any ((`elem` reservedFutureStubTopLevelAreas) . fst) validatedCatalog
+    then invalidFutureStubCatalog
+    else Right validatedCatalog
+  where
+    validateFutureStubTopLevelBoundaryRoute (area, endpoint) = do
+      areaClean <- validateFutureStubArea area
+      endpointClean <- validateFutureStubEndpoint endpoint
+      pure (areaClean, endpointClean)
 
 reservedFutureStubRoutes :: [(Text, Text)]
 reservedFutureStubRoutes =
