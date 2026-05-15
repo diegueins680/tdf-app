@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tdf.backend</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/diegosaa/GitHub/tdf-app/tdf-hq/dist-newstyle/build/x86_64-osx/ghc-9.4.8/tdf-hq-0.1.0.0/x/tdf-hq-exe/build/tdf-hq-exe/tdf-hq-exe</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/diegosaa/GitHub/tdf-app/tdf-hq</string>
+    <key>StandardOutPath</key>
+    <string>/Users/diegosaa/GitHub/tdf-app/tmp/backend-logs/backend.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/diegosaa/GitHub/tdf-app/tmp/backend-logs/backend.err.log</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>

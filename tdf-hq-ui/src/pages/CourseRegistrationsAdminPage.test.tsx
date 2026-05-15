@@ -17628,8 +17628,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Early bird registration form - Beatmaking 101',
       'Beatmaking 101 - early bird signup page',
       'Discount enrollment page - Beatmaking 101',
+      'Coupon code signup page - Beatmaking 101',
+      'Beatmaking 101 - promo code enrollment page',
       'Formulario de descuento - Beatmaking 101',
+      'Formulario de código promocional - Beatmaking 101',
       'Beatmaking 101 - promoción de inscripción',
+      'Beatmaking 101 - cupón de inscripción',
     ];
 
     for (const title of titles) {
@@ -17645,7 +17649,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/early[-\s]?bird|discount|descuento|promoci[oó]n/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /early[-\s]?bird|discount|coupon|promo(?:tion(?:al)?)?\s+codes?|descuento|promoci[oó]n|cup[oó]n|c[oó]digos?\s+(?:promocional(?:es)?|de\s+descuento)/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
