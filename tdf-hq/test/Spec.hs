@@ -231,6 +231,7 @@ import TDF.Server
       validateWhatsAppConsentSource,
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
+      validateMarketplaceBuyerName,
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
       validateOptionalDatafastMetadataField,
@@ -5487,6 +5488,20 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected oversized PayPal credential, got " <> show value)
+
+    describe "validateMarketplaceBuyerName" $ do
+        it "requires checkout buyer names to include visible identity text before storage" $ do
+            validateMarketplaceBuyerName "  Ada Lovelace  "
+                `shouldBe` Right "Ada Lovelace"
+
+            case validateMarketplaceBuyerName " ... --- " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "buyerName must include letters or numbers"
+                Right value ->
+                    expectationFailure
+                        ("Expected punctuation-only buyerName to fail, got " <> show value)
 
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do

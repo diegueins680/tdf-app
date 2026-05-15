@@ -5429,6 +5429,8 @@ validateMarketplaceBuyerName rawName =
                 "buyerName must not contain control characters or "
                   <> "Unicode formatting/separator characters"
             }
+      | not (T.any isAlphaNum nameVal) ->
+          Left err400 { errBody = "buyerName must include letters or numbers" }
       | otherwise ->
           Right nameVal
 
