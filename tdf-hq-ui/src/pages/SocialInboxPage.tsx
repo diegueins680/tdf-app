@@ -1083,6 +1083,7 @@ interface ChannelPanelProps {
   loading: boolean;
   reviewMode: boolean;
   activeFilterLabel: string;
+  useNeutralCountLabel: boolean;
   showStatusChips: boolean;
   onSelect: (selection: SelectedMessage) => void;
 }
@@ -1095,6 +1096,7 @@ const ChannelPanel = ({
   loading,
   reviewMode,
   activeFilterLabel,
+  useNeutralCountLabel,
   showStatusChips,
   onSelect,
 }: ChannelPanelProps) => {
@@ -1125,6 +1127,8 @@ const ChannelPanel = ({
   const visibleColumnCount = 3 + (showRepliedAtColumn ? 1 : 0) + (showReplyOutcomeColumn ? 1 : 0);
   const channelCountLabel = loading
     ? (reviewMode ? 'Loading' : 'Cargando')
+    : useNeutralCountLabel
+      ? `${reviewMode ? 'Messages' : 'Mensajes'}: ${messages.length}`
     : showStatusChips
       ? `${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`
       : `${activeFilterLabel}: ${messages.length}`;
@@ -1682,6 +1686,7 @@ export default function SocialInboxPage() {
                   loading={panel.loading}
                   reviewMode={reviewMode}
                   activeFilterLabel={activeFilterLabel}
+                  useNeutralCountLabel={showSingleFilterSummary}
                   showStatusChips={showChannelStatusChips}
                   onSelect={(next) => setSelection(next)}
                 />

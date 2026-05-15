@@ -629,7 +629,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('Instagram');
-      expect(container.textContent).toContain('Pending: 100');
+      expect(container.textContent).toContain('Messages: 100');
+      expect(container.textContent).not.toContain('Pending: 100');
       expect(container.textContent).not.toContain('Inbound: 100');
     });
 
@@ -651,7 +652,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
-      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).toContain('Messages: 1');
+      expect(container.textContent).not.toContain('Pending: 1');
       expect(container.textContent).not.toContain('Inbound: 1');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
     });
@@ -1076,6 +1078,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain(
         'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
       );
+      expect(container.textContent).toContain('Messages: 1');
+      expect(container.textContent).not.toContain('Replied: 1');
       expect(container.textContent).not.toContain('No messages for this filter.');
       expect(container.textContent).not.toContain(
         'No messages match Pending in this view. Use All or a status with a count to see existing inbound messages.',
