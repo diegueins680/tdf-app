@@ -308,6 +308,17 @@ validateFeedbackAttachmentFileName rawName
         }
   | T.any isPathSeparator trimmed =
       Left err400 { errBody = "attachment file name must not contain path separators" }
+  | T.length trimmed > maxFeedbackAttachmentFileNameChars =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "attachment file name must be "
+                      <> T.pack (show maxFeedbackAttachmentFileNameChars)
+                      <> " characters or fewer"
+                  )
+              )
+        }
   | sanitized == "attachment" && trimmed /= "attachment" =
       Left err400 { errBody = "attachment file name must include a usable name" }
   | hasDisallowedFeedbackAttachmentExtension sanitized =

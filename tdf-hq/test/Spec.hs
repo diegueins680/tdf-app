@@ -6042,6 +6042,9 @@ main = hspec $ do
             assertInvalid "../secret.png" "attachment file name must not contain path separators"
             assertInvalid "folder\\secret.png" "attachment file name must not contain path separators"
             assertInvalid "screen\8203shot.png" "attachment file name must not contain control characters"
+            assertInvalid
+                (Data.Text.replicate 121 "a" <> ".png")
+                "attachment file name must be 120 characters or fewer"
             assertInvalid "__--__" "attachment file name must include a usable name"
             assertInvalid "debug.html" "attachment file name extension is not allowed"
             assertInvalid "payload.exe" "attachment file name extension is not allowed"
