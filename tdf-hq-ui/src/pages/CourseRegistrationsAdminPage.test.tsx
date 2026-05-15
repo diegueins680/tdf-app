@@ -1785,7 +1785,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('summarizes missing contact once when every named visible registration needs it', async () => {
+  it('summarizes missing contact once while keeping repeated named payment actions compact', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crFullName: 'Ada Lovelace',
@@ -1812,7 +1812,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(countOccurrences(container, 'Contacto pendiente en todas las inscripciones visibles.')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
-      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ada Lovelace')).textContent?.trim()).toBe('');
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Grace Hopper')).textContent?.trim()).toBe('');
     });
 
     await act(async () => {
@@ -1866,7 +1870,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Contacto pendiente en todas las inscripciones visibles.');
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
-      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(3);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ada Lovelace')).textContent?.trim()).toBe('');
     });
 
     await cleanup();
