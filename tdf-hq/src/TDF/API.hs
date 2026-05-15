@@ -167,7 +167,13 @@ data WhatsAppReplyReq = WhatsAppReplyReq
   } deriving (Show, Generic)
 
 instance FromJSON WhatsAppReplyReq where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON raw = do
+    withObject "WhatsAppReplyReq"
+      (rejectNullOptionalRequestFields
+        [ ("wrExternalId", "wrExternalId must be omitted instead of null")
+        ])
+      raw
+    genericParseJSON defaultOptions { rejectUnknownFields = True } raw
 instance ToJSON WhatsAppReplyReq
 
 type WhatsAppReplyAPI =

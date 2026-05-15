@@ -318,6 +318,14 @@ spec = do
             decodeWhatsAppReply
                 "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            case decodeWhatsAppReply
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":null}"
+             of
+                Left err ->
+                    err `shouldContain` "wrExternalId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null WhatsApp reply target to be rejected, got: " <> show value)
 
         it "normalizes social reply ids and text before handler fallback dispatch" $ do
             case decodeInstagramReply
