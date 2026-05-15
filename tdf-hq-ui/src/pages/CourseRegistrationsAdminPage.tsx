@@ -1387,6 +1387,18 @@ const firstRunMessagingAutomationDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunAutomationPlumbingProviderPattern = String.raw`(?:zapier|make\s*\.?\s*com|integromat|n8n|pabbly(?:\s+connect)?|integrately)`;
+const firstRunAutomationPlumbingWorkflowPattern = String.raw`(?:webhooks?|automation|automations|workflows?|flows?|scenarios?|zaps?|connections?|integrations?|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|escenarios?|integraciones?)`;
+const firstRunAutomationPlumbingDescriptorPattern = String.raw`(?:(?:${firstRunAutomationPlumbingProviderPattern})\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)\s+)?(?:${firstRunAutomationPlumbingWorkflowPattern})(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:${firstRunAutomationPlumbingWorkflowPattern})\s+(?:de|para|for)\s+(?:${firstRunAutomationPlumbingProviderPattern}))`;
+const firstRunAutomationPlumbingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAutomationPlumbingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunAutomationPlumbingDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunAutomationPlumbingDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
 const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|broadcast\s+lists?|listas?\s+de\s+difusi[oó]n)`;
 const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern}))|(?:(?:${firstRunCommunityChannelPattern})\s+(?:de\s+)?(?:${firstRunCommunityPlatformPattern}))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?))|(?:(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat|canal|listas?\s+de\s+difusi[oó]n)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
@@ -1617,6 +1629,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
     .replace(firstRunMessagingAutomationDescriptorPrefixPattern, '')
+    .replace(firstRunAutomationPlumbingDescriptorPrefixPattern, '')
     .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunGenericEventDescriptorPrefixPattern, '')
@@ -1711,6 +1724,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
     .replace(firstRunMessagingAutomationDescriptorSuffixPattern, '')
+    .replace(firstRunAutomationPlumbingDescriptorSuffixPattern, '')
     .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunGenericEventDescriptorSuffixPattern, '')
