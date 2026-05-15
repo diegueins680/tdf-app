@@ -12507,9 +12507,8 @@ loadDatafastEnv = do
   pservVal <- either throwError pure (validateOptionalDatafastCredential "DATAFAST_PSERV" mPserv)
   userData2Val <-
     either throwError pure (validateOptionalDatafastCredential "DATAFAST_USER_DATA2" mUserData2)
-  versionDfVal <-
-    either throwError pure (validateOptionalDatafastCredential "DATAFAST_VERSIONDF" mVersionDf)
-  let versionDf = fromMaybe "2" versionDfVal
+  versionDf <- either throwError pure (validateOptionalDatafastVersionDf mVersionDf)
+  let
       optPair k mv = (\v -> (k, TE.encodeUtf8 v)) <$> mv
       extras =
         catMaybes
@@ -12549,6 +12548,33 @@ validateOptionalDatafastCredential envName mRawCredential =
             }
       | otherwise ->
           Right (Just credential)
+
+validateOptionalDatafastVersionDf :: Maybe String -> Either ServerError Text
+validateOptionalDatafastVersionDf mRawVersion = do
+  mVersion <- validateOptionalDatafastCredential "DATAFAST_VERSIONDF" mRawVersion
+  case mVersion of
+    Nothing -> Right defaultDatafastVersionDf
+    Just versionDf
+      | T.length versionDf > 4 ->
+          invalidDatafastVersionDf
+      | not (T.all isAsciiDigitText versionDf) ->
+          invalidDatafastVersionDf
+      | T.isPrefixOf "0" versionDf ->
+          invalidDatafastVersionDf
+      | otherwise ->
+          Right versionDf
+
+defaultDatafastVersionDf :: Text
+defaultDatafastVersionDf = "2"
+
+isAsciiDigitText :: Char -> Bool
+isAsciiDigitText ch = ch >= '0' && ch <= '9'
+
+invalidDatafastVersionDf :: Either ServerError a
+invalidDatafastVersionDf =
+  Left err500
+    { errBody = "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits without leading zeros"
+    }
 
 validateDatafastEntityId :: Maybe String -> Either ServerError Text
 validateDatafastEntityId mRawEntityId = do

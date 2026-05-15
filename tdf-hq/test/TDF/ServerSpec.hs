@@ -230,6 +230,7 @@ import TDF.Server
     , validateDatafastResultCodeField
     , validateDatafastSuccessfulPaymentAmountAndCurrency
     , validateOptionalDatafastCredential
+    , validateOptionalDatafastVersionDf
     , resolvePaypalBaseUrl
     , validatePayPalCredential
     , validatePayPalAccessTokenField
@@ -8172,6 +8173,32 @@ spec = describe "TDF.Server helpers" $ do
                 "DATAFAST_TID"
                 (Just ("tid" <> [toEnum 0x202E] <> "value"))
                 "hidden formatting characters"
+
+    describe "validateOptionalDatafastVersionDf" $ do
+        it "defaults omitted Datafast version settings and accepts canonical numeric overrides" $ do
+            validateOptionalDatafastVersionDf Nothing `shouldBe` Right "2"
+            validateOptionalDatafastVersionDf (Just "   ") `shouldBe` Right "2"
+            validateOptionalDatafastVersionDf (Just " 2 ") `shouldBe` Right "2"
+            validateOptionalDatafastVersionDf (Just "1234") `shouldBe` Right "1234"
+
+        it "rejects malformed Datafast version settings before checkout requests are built" $ do
+            let assertInvalid rawValue expectedMessage =
+                    case validateOptionalDatafastVersionDf (Just rawValue) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Datafast version to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "02" "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits"
+            assertInvalid "2.0" "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits"
+            assertInvalid "vers-2" "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits"
+            assertInvalid
+                "\x0662"
+                "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits"
+            assertInvalid "12345" "DATAFAST_VERSIONDF must be 1 to 4 ASCII digits"
 
     describe "label track update validation" $ do
         it "accepts omitted or positive owner filters before listing label tracks" $ do
