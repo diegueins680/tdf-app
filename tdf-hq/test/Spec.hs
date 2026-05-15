@@ -8799,6 +8799,35 @@ main = hspec $ do
                 )
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null radio fallback fields instead of silently using defaults" $ do
+            let assertImportDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioImportRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio fallback payload to be rejected, got " <> show value)
+                assertRefreshDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioMetadataRefreshRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio fallback payload to be rejected, got " <> show value)
+
+            assertImportDecodeError
+                "{\"rirSources\":null}"
+                ("rirSources must be omitted instead of null" :: String)
+            assertImportDecodeError
+                "{\"rirLimit\":null}"
+                ("rirLimit must be omitted instead of null" :: String)
+            assertRefreshDecodeError
+                "{\"rmrLimit\":null}"
+                ("rmrLimit must be omitted instead of null" :: String)
+            assertRefreshDecodeError
+                "{\"rmrOnlyMissing\":null}"
+                ("rmrOnlyMissing must be omitted instead of null" :: String)
+
         it "rejects extra radio presence keys so typoed station metadata cannot be silently ignored" $
             ( eitherDecode
                 "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":\"Radio Uno\",\"stationName\":\"typo\"}"

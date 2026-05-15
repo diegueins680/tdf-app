@@ -49,6 +49,15 @@ prefixedStrictObjectOptions prefixLen =
     , rejectUnknownFields = True
     }
 
+rejectNullOptionalFields :: String -> [Text] -> Value -> Parser ()
+rejectNullOptionalFields objectName fieldNames =
+  withObject objectName $ \o ->
+    let rejectNullField fieldName =
+          case AKM.lookup (AKey.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullField fieldNames
+
 camelDrop :: Int -> String -> String
 camelDrop prefixLen fieldName =
   case drop prefixLen fieldName of
@@ -1522,7 +1531,9 @@ data RadioImportRequest = RadioImportRequest
   } deriving (Show, Generic)
 instance ToJSON RadioImportRequest
 instance FromJSON RadioImportRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioImportRequest" ["rirSources", "rirLimit"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioImportResult = RadioImportResult
   { rirProcessed :: Int
@@ -1541,7 +1552,9 @@ data RadioMetadataRefreshRequest = RadioMetadataRefreshRequest
   } deriving (Show, Generic)
 instance ToJSON RadioMetadataRefreshRequest
 instance FromJSON RadioMetadataRefreshRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioMetadataRefreshRequest" ["rmrLimit", "rmrOnlyMissing"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioMetadataRefreshResult = RadioMetadataRefreshResult
   { rmrProcessed :: Int
