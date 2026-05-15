@@ -77,11 +77,14 @@ lookupHeader key hdrs =
 parseIcyMetaIntHeader :: BS.ByteString -> Maybe Int
 parseIcyMetaIntHeader rawHeader = do
   let header = trimHeaderValue rawHeader
-  if BS.null header || not (BS8.all isDigit header)
+  if BS.null header || not (BS8.all isDigit header) || hasLeadingZero header
     then Nothing
     else case readMaybe (BS8.unpack header) of
       Just value | value > 0 && value <= maxIcyMetaIntBytes -> Just value
       _                      -> Nothing
+  where
+    hasLeadingZero header =
+      BS.length header > 1 && BS8.head header == '0'
 
 maxIcyMetaIntBytes :: Int
 maxIcyMetaIntBytes = 262144

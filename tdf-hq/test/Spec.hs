@@ -8774,6 +8774,7 @@ main = hspec $ do
             parseIcyMetaIntHeader "  4096  " `shouldBe` Just 4096
             parseIcyMetaIntHeader "262144" `shouldBe` Just 262144
             parseIcyMetaIntHeader "262145" `shouldBe` Nothing
+            parseIcyMetaIntHeader "016000" `shouldBe` Nothing
             parseIcyMetaIntHeader "16000; charset=utf-8" `shouldBe` Nothing
             parseIcyMetaIntHeader "16000x" `shouldBe` Nothing
             parseIcyMetaIntHeader "+16000" `shouldBe` Nothing
