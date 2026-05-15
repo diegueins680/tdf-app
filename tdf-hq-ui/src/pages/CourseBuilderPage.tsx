@@ -294,6 +294,10 @@ export default function CourseBuilderPage() {
     });
   };
 
+  const handleDuplicateLastSession = () => {
+    handleDuplicateSession(sessions.length - 1);
+  };
+
   const handleAddSession = () => {
     markDirty();
     setSessions((prev) => [...prev, { label: '', date: '' }]);
@@ -842,11 +846,6 @@ export default function CourseBuilderPage() {
                   <Grid item xs={12} md={2}>
                     <Stack direction="row" spacing={1}>
                       {sessions.length > 1 && (
-                        <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
-                          Duplicar
-                        </Button>
-                      )}
-                      {sessions.length > 1 && (
                         <Button
                           variant="text"
                           size="small"
@@ -861,9 +860,16 @@ export default function CourseBuilderPage() {
                 </Grid>
               );
             })}
-            <Button variant="outlined" onClick={handleAddSession}>
-              Añadir sesión
-            </Button>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Button variant="outlined" onClick={handleAddSession}>
+                Añadir sesión
+              </Button>
+              {sessions.length > 1 && (
+                <Button variant="text" onClick={handleDuplicateLastSession}>
+                  Duplicar última sesión
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

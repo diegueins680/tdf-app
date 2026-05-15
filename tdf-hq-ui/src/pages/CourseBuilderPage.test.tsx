@@ -254,7 +254,7 @@ describe('CourseBuilderPage', () => {
     }
   });
 
-  it('hides repeated row-session actions until there is more than one session to edit', async () => {
+  it('keeps duplicated session actions collapsed into one list-level duplicate control', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -263,6 +263,7 @@ describe('CourseBuilderPage', () => {
       await waitForExpectation(() => {
         expect(text(document.getElementById('sesiones'))).toContain('Sesiones');
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar')).toBe(0);
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar última sesión')).toBe(0);
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Borrar')).toBe(0);
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Añadir sesión')).toBe(1);
       });
@@ -271,7 +272,8 @@ describe('CourseBuilderPage', () => {
 
       await waitForExpectation(() => {
         const sessionsSection = document.getElementById('sesiones') ?? container;
-        expect(countButtonsByText(sessionsSection, 'Duplicar')).toBe(2);
+        expect(countButtonsByText(sessionsSection, 'Duplicar')).toBe(0);
+        expect(countButtonsByText(sessionsSection, 'Duplicar última sesión')).toBe(1);
         expect(countButtonsByText(sessionsSection, 'Borrar')).toBe(2);
       });
     } finally {
