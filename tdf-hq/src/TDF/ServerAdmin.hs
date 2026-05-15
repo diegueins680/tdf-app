@@ -36,6 +36,7 @@ module TDF.ServerAdmin
   , validateBrainEntryId
   , validateBrainEntryTitle
   , validateBrainEntryBody
+  , validateBrainEntryCategory
   , normalizeBrainEntryTags
   ) where
 
@@ -87,7 +88,11 @@ import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
                                         , insert
                                         , upsert
                                         )
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql   ( SqlPersistT
+                                        , fromSqlKey
+                                        , runSqlPool
+                                        , toSqlKey
+                                        )
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
@@ -507,8 +512,8 @@ adminServer user =
       ensureModule ModuleAdmin user
       title <- either throwError pure (validateBrainEntryTitle becTitle)
       body <- either throwError pure (validateBrainEntryBody becBody)
-      let category = cleanMaybe becCategory
-          active = fromMaybe True becActive
+      category <- either throwError pure (validateBrainEntryCategory becCategory)
+      let active = fromMaybe True becActive
       tags <- either throwError pure (normalizeBrainEntryTags becTags)
       now <- liftIO getCurrentTime
       entryId <- withPool $ insert ME.StudioBrainEntry
@@ -529,6 +534,11 @@ adminServer user =
       let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
       titleUpdate <- traverse (either throwError pure . validateBrainEntryTitle) beuTitle
       bodyUpdate <- traverse (either throwError pure . validateBrainEntryBody) beuBody
+      categoryUpdate <- case beuCategory of
+        Nothing -> pure Nothing
+        Just rawCategory ->
+          fmap (Just . (ME.StudioBrainEntryCategory =.)) $
+            either throwError pure (validateBrainEntryCategory rawCategory)
       tagsUpdate <- case beuTags of
         Nothing -> pure Nothing
         Just rawTags ->
@@ -538,7 +548,7 @@ adminServer user =
       let updates = catMaybes
             [ (ME.StudioBrainEntryTitle =.) <$> titleUpdate
             , (ME.StudioBrainEntryBody =.) <$> bodyUpdate
-            , (ME.StudioBrainEntryCategory =.) <$> fmap cleanMaybe beuCategory
+            , categoryUpdate
             , tagsUpdate
             , (ME.StudioBrainEntryActive =.) <$> beuActive
             ]
@@ -597,11 +607,6 @@ adminServer user =
       , bedActive = ME.studioBrainEntryActive entry
       , bedUpdatedAt = ME.studioBrainEntryUpdatedAt entry
       }
-
-    cleanMaybe Nothing = Nothing
-    cleanMaybe (Just txt) =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
 
     roleDetail role = RoleDetailDTO
       { role    = role
@@ -1090,9 +1095,7 @@ parseKey raw =
     if isSignedNegativeInt || isNonPositiveDigits
       then throwError err400 { errBody = "identifier must be a positive integer" }
       else case fromPathPiece trimmed of
-        Just key | fromSqlKey key > 0 -> pure key
-        Just _ ->
-          throwError err400 { errBody = "identifier must be a positive integer" }
+        Just key -> pure key
         Nothing ->
           throwError err400 { errBody = "Invalid identifier" }
 
@@ -1490,6 +1493,9 @@ brainEntryTitleMaxChars = 160
 brainEntryBodyMaxChars :: Int
 brainEntryBodyMaxChars = 20000
 
+brainEntryCategoryMaxChars :: Int
+brainEntryCategoryMaxChars = 80
+
 validateBrainEntryTitle :: Text -> Either ServerError Text
 validateBrainEntryTitle rawTitle
   | T.null title =
@@ -1521,6 +1527,23 @@ validateBrainEntryBody rawBody
       Right body
   where
     body = T.strip rawBody
+
+validateBrainEntryCategory :: Maybe Text -> Either ServerError (Maybe Text)
+validateBrainEntryCategory Nothing = Right Nothing
+validateBrainEntryCategory (Just rawCategory)
+  | T.null category =
+      Right Nothing
+  | T.length category > brainEntryCategoryMaxChars =
+      Left err400 { errBody = "Brain entry category must be 80 characters or fewer" }
+  | T.any isControl category =
+      Left err400 { errBody = "Brain entry category must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar category =
+      Left err400
+        { errBody = "Brain entry category must not contain hidden format characters" }
+  | otherwise =
+      Right (Just category)
+  where
+    category = T.strip rawCategory
 
 isUnsupportedBrainEntryBodyChar :: Char -> Bool
 isUnsupportedBrainEntryBodyChar ch =

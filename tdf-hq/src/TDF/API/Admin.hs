@@ -395,6 +395,10 @@ data BrainEntryUpdate = BrainEntryUpdate
 instance FromJSON BrainEntryUpdate where
   parseJSON = withObject "BrainEntryUpdate" $ \o -> do
     let providedKeys = map Key.toString (KeyMap.keys o)
+        rejectNullNonClearableField fieldName =
+          case KeyMap.lookup (Key.fromText (T.pack fieldName)) o of
+            Just Null -> fail (fieldName <> " must be omitted instead of null")
+            _ -> pure ()
     case filter (`notElem` brainEntryUpdateAllowedKeys) providedKeys of
       [] -> pure ()
       unexpected ->
@@ -428,10 +432,6 @@ instance FromJSON BrainEntryUpdate where
         , "beuTags"
         , "beuActive"
         ]
-      rejectNullNonClearableField fieldName =
-        case KeyMap.lookup (Key.fromText (T.pack fieldName)) o of
-          Just Null -> fail (fieldName <> " must be omitted instead of null")
-          _ -> pure ()
 
 data RagIndexStatus = RagIndexStatus
   { risCount     :: Int
