@@ -70,6 +70,8 @@ const normalizeContactValue = (value?: string | null) => {
   return trimmed;
 };
 
+const normalizeIdentityDisplayName = (value?: string | null) => normalizeContactValue(value);
+
 const normalizeAccessKey = (value: string) =>
   value
     .normalize('NFD')
@@ -228,7 +230,7 @@ const matchesVisibleIdentityValue = (
 const getVisibleUserContactSummary = (
   user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail' | 'partyName' | 'username'>,
 ) => {
-  const identityValues = [user.partyName, user.username];
+  const identityValues = [normalizeIdentityDisplayName(user.partyName), user.username];
   const preferredPhone = getUserWhatsAppChannel(user);
   const email = normalizeContactValue(user.primaryEmail);
   const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
@@ -775,7 +777,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   const moduleSummaries: string[] = [];
 
   users.forEach((user) => {
-    const partyName = user.partyName.trim();
+    const partyName = normalizeIdentityDisplayName(user.partyName) ?? '';
     const username = user.username.trim();
     const rolesSummary = getUserAccessSummary(user.roles);
     const modulesSummary = getUserAccessSummary(user.modules);
@@ -843,7 +845,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
 };
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
-  const displayName = user.partyName.trim();
+  const displayName = normalizeIdentityDisplayName(user.partyName) ?? '';
   const username = user.username.trim();
   const primary = displayName || username || `Cuenta #${user.userId}`;
   const showUsername = displayName !== ''
@@ -956,7 +958,7 @@ const getUserConcreteSearchValues = (user: AdminUser) => {
 
   return [
     user.username,
-    user.partyName,
+    normalizeIdentityDisplayName(user.partyName) ?? '',
     identity.primary,
     String(user.userId),
     ...getLinkedProfileSearchValues(user),

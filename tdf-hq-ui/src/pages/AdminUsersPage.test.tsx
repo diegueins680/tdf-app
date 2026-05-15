@@ -1221,6 +1221,67 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('falls back to usernames when profile names are placeholder copy', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        partyName: 'Pendiente',
+        username: 'ada-admin',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 10,
+        partyName: 'Por actualizar',
+        username: 'grace-ops',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 11,
+        partyName: 'Sin definir',
+        username: 'linus-view',
+        primaryEmail: null,
+        primaryPhone: null,
+        whatsapp: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Usuario');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('Nombre');
+
+        const adaRow = getRowByUserId(container, 101);
+        expect(hasLinkWithTextAndHref(adaRow, 'ada-admin', '/perfil/9')).toBe(true);
+        expect(adaRow.textContent).not.toContain('Pendiente');
+        expect(adaRow.textContent).not.toContain('Usuario: ada-admin');
+
+        const graceRow = getRowByUserId(container, 102);
+        expect(hasLinkWithTextAndHref(graceRow, 'grace-ops', '/perfil/10')).toBe(true);
+        expect(graceRow.textContent).not.toContain('Por actualizar');
+        expect(graceRow.textContent).not.toContain('Usuario: grace-ops');
+
+        const linusRow = getRowByUserId(container, 103);
+        expect(hasLinkWithTextAndHref(linusRow, 'linus-view', '/perfil/11')).toBe(true);
+        expect(linusRow.textContent).not.toContain('Sin definir');
+        expect(linusRow.textContent).not.toContain('Usuario: linus-view');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows profile ids only when duplicate visible identities need a disambiguator', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
