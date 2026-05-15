@@ -803,6 +803,39 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('ignores no-tiene contact placeholders so first-user setup stays focused', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        primaryEmail: 'No tiene correo',
+        primaryPhone: 'Sin número',
+        whatsapp: 'No tiene WhatsApp',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(row.textContent).not.toContain('No tiene correo');
+        expect(row.textContent).not.toContain('Sin número');
+        expect(row.textContent).not.toContain('No tiene WhatsApp');
+        expect(row.textContent).not.toContain('WhatsApp pendiente');
+        expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(0);
+        expect(row.querySelector('[aria-label^="Abrir WhatsApp para "]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('ignores unresolved Spanish contact placeholders before summarizing WhatsApp readiness', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
