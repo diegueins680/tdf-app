@@ -10825,6 +10825,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats no-code landing source wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'carrd_page',
+      'carrd_landing_page',
+      'framer_form',
+      'framer_landing_page',
+      'unbounce_page',
+      'instapage_form',
+      'landingi_page',
+      'landingi_landing_page',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Carrd page',
+      'Carrd landing page',
+      'Framer form',
+      'Framer landing page',
+      'Unbounce page',
+      'Instapage form',
+      'Landingi page',
+      'Landingi landing page',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'framer');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "framer" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats social lead-form sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'facebook_lead_ad',
