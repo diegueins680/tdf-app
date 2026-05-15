@@ -11945,7 +11945,19 @@ getOrder rawId = do
   orderKey <- parseOrderId rawId
   Env{..} <- ask
   mDto <- liftIO $ flip runSqlPool envPool $ loadOrderDTO orderKey
-  either throwError pure (requireMarketplaceOrderLookupResult mDto)
+  orderDto <- either throwError pure (requireMarketplaceOrderLookupResult mDto)
+  pure (redactMarketplaceOrderForPublicLookup orderDto)
+
+redactMarketplaceOrderForPublicLookup :: MarketplaceOrderDTO -> MarketplaceOrderDTO
+redactMarketplaceOrderForPublicLookup orderDto =
+  orderDto
+    { moCartId = Nothing
+    , moBuyerName = ""
+    , moBuyerEmail = ""
+    , moBuyerPhone = Nothing
+    , moPaypalOrderId = Nothing
+    , moPaypalPayerEmail = Nothing
+    }
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
 parseOrderId rawId = do

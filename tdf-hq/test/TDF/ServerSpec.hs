@@ -44,6 +44,8 @@ import TDF.API.Types
     , DriveTokenRefreshRequest (..)
     , LabelTrackCreate (..)
     , LabelTrackUpdate (..)
+    , MarketplaceOrderDTO (..)
+    , MarketplaceOrderItemDTO (..)
     , maxMarketplaceCartItemQuantity
     )
 import TDF.Auth
@@ -215,6 +217,7 @@ import TDF.Server
     , validateMarketplaceBuyerPhone
     , validateMarketplacePathId
     , validateMarketplacePublicListingActive
+    , redactMarketplaceOrderForPublicLookup
     , requireMarketplaceOrderLookupResult
     , requireLoadedMarketplaceWriteResult
     , requireMarketplaceCartTotals
@@ -7800,6 +7803,52 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected missing marketplace order lookup to be rejected, got: "
                             <> show value
                         )
+
+        it "redacts buyer and gateway fields from unauthenticated public order lookups" $ do
+            let now = UTCTime (fromGregorian 2026 5 1) (secondsToDiffTime 36000)
+                orderItem =
+                    MarketplaceOrderItemDTO
+                        { moiListingId = "7"
+                        , moiTitle = "Moog pedal"
+                        , moiQuantity = 1
+                        , moiUnitPriceUsdCents = 2500
+                        , moiSubtotalCents = 2500
+                        , moiUnitPriceDisplay = "USD $25.00"
+                        , moiSubtotalDisplay = "USD $25.00"
+                        }
+                fullOrder =
+                    MarketplaceOrderDTO
+                        { moOrderId = "42"
+                        , moCartId = Just "5"
+                        , moCurrency = "USD"
+                        , moTotalUsdCents = 2500
+                        , moTotalDisplay = "USD $25.00"
+                        , moStatus = "paypal_pending"
+                        , moStatusHistory = [("paypal_pending", now)]
+                        , moBuyerName = "Buyer Name"
+                        , moBuyerEmail = "buyer@example.com"
+                        , moBuyerPhone = Just "+593991234567"
+                        , moPaymentProvider = Just "paypal"
+                        , moPaypalOrderId = Just "PAYPAL-ORDER_123"
+                        , moPaypalPayerEmail = Just "payer@example.com"
+                        , moPaidAt = Nothing
+                        , moCreatedAt = now
+                        , moUpdatedAt = now
+                        , moItems = [orderItem]
+                        }
+                redacted = redactMarketplaceOrderForPublicLookup fullOrder
+
+            moOrderId redacted `shouldBe` "42"
+            moStatus redacted `shouldBe` "paypal_pending"
+            moTotalUsdCents redacted `shouldBe` 2500
+            map moiTitle (moItems redacted) `shouldBe` ["Moog pedal"]
+            moPaymentProvider redacted `shouldBe` Just "paypal"
+            moCartId redacted `shouldBe` Nothing
+            moBuyerName redacted `shouldBe` ""
+            moBuyerEmail redacted `shouldBe` ""
+            moBuyerPhone redacted `shouldBe` Nothing
+            moPaypalOrderId redacted `shouldBe` Nothing
+            moPaypalPayerEmail redacted `shouldBe` Nothing
 
         it "rejects impossible stored line quantities before checkout can create order items" $ do
             validateMarketplaceCartLineQuantity 1 `shouldBe` Right 1
