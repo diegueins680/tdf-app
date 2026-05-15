@@ -12313,12 +12313,17 @@ resolveMarketplaceOrderPaidAtForStatus
   -> Maybe (Maybe UTCTime)
   -> Either ServerError (Maybe UTCTime)
 resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput
+  | isExplicitPaidAtForNonPaidStatus =
+      Left err400 { errBody = "paidAt can only be set when status is paid" }
   | isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal =
       Left err400 { errBody = "paidAt is required when status is paid" }
   | otherwise =
       Right paidAtFinal
   where
     statusFinal = fromMaybe currentStatus mNextStatus
+    isExplicitPaidAtForNonPaidStatus =
+      not (isPaidMarketplaceOrderStatus statusFinal)
+        && maybe False isJust paidAtInput
     paidAtBase =
       case paidAtInput of
         Nothing -> currentPaidAt

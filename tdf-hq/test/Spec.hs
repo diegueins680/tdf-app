@@ -248,6 +248,7 @@ import TDF.Server
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
+      resolveMarketplaceOrderPaidAtForStatus,
       validateGoogleCalendarEventId,
       validateStoredGoogleCalendarAccessToken,
       validateStoredGoogleCalendarRefreshToken,
@@ -5760,6 +5761,44 @@ main = hspec $ do
             assertInvalid (Just "   ") "PayPal payer email cannot be blank"
             assertInvalid (Just "payer@example..com") "PayPal returned an invalid payer email"
             assertInvalid (Just "payer\n@example.com") "PayPal returned an invalid payer email"
+
+    describe "resolveMarketplaceOrderPaidAtForStatus" $ do
+        it "rejects paidAt payloads unless the final marketplace status is paid" $ do
+            let now = UTCTime (fromGregorian 2026 5 15) (secondsToDiffTime 43200)
+                paidAt = addUTCTime (-3600) now
+                assertRejected result =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "paidAt can only be set when status is paid"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid paidAt update, got " <> show value)
+
+            assertRejected $
+                resolveMarketplaceOrderPaidAtForStatus
+                    now
+                    "pending"
+                    Nothing
+                    Nothing
+                    (Just (Just paidAt))
+
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                (Just (Just paidAt))
+                `shouldBe` Right (Just paidAt)
+
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                Nothing
+                `shouldBe` Right (Just now)
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
