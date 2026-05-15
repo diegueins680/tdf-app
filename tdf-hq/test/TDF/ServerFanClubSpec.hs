@@ -18,6 +18,8 @@ import TDF.Models
   ( ElectionStatus (Upcoming)
   , FanClubCandidacy (..)
   , FanClubElection (..)
+  , FanClubMemberProfile (..)
+  , FanClubMemory (..)
   , FanClubOfficerRole (Coordinator, Secretary)
   , FanClubPost (..)
   , RoleEnum (Customer, Fan)
@@ -33,6 +35,8 @@ import TDF.ServerFanClub
   , validateFanClubOfficerRoleInput
   , validateFanClubInboxSubjectInput
   , validateFanClubInboxStatusInput
+  , validateFanClubMemoryMutationTarget
+  , validateFanClubMemoryPathId
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
@@ -81,6 +85,36 @@ spec = do
         validateFanClubElectionPathId 0
       assertRejected 400 "Invalid fan club candidacy id" $
         validateFanClubCandidacyPathId (-1)
+
+  describe "fan club memory mutation target validation" $ do
+    it "requires memories to resolve through a member profile in the requested club" $ do
+      case validateFanClubMemoryPathId 70 of
+        Right memoryId -> fromSqlKey memoryId `shouldBe` 70
+        Left err -> expectationFailure (unexpectedRejection err)
+      case validateFanClubMemoryMutationTarget
+        (toSqlKey 10)
+        (Entity (toSqlKey 70) (mkMemory 60))
+        (Just (Entity (toSqlKey 60) (mkMemberProfile 10))) of
+          Right memoryId -> fromSqlKey memoryId `shouldBe` 70
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "Invalid fan club memory id" $
+        validateFanClubMemoryPathId 0
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          Nothing
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          (Just (Entity (toSqlKey 61) (mkMemberProfile 10)))
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          (Just (Entity (toSqlKey 60) (mkMemberProfile 11)))
 
   describe "validateFanClubElectionMutationTarget" $ do
     it "requires URL artist-club ownership before mutating an election" $ do
@@ -245,10 +279,34 @@ mkPost clubId parentId =
     , fanClubPostParentId = fmap toSqlKey parentId
     , fanClubPostTitle = Just "Club note"
     , fanClubPostContent = "Visible to club members"
+    , fanClubPostMediaUrls = Nothing
     , fanClubPostIsPinned = False
     , fanClubPostIsHidden = False
     , fanClubPostCreatedAt = testTime
     , fanClubPostUpdatedAt = Nothing
+    }
+
+mkMemberProfile :: Int64 -> FanClubMemberProfile
+mkMemberProfile clubId =
+  FanClubMemberProfile
+    { fanClubMemberProfilePartyId = toSqlKey 40
+    , fanClubMemberProfileClubId = toSqlKey clubId
+    , fanClubMemberProfileHandle = Nothing
+    , fanClubMemberProfileBio = Nothing
+    , fanClubMemberProfileAvatarUrl = Nothing
+    , fanClubMemberProfileJoinedAt = testTime
+    }
+
+mkMemory :: Int64 -> FanClubMemory
+mkMemory memberProfileId =
+  FanClubMemory
+    { fanClubMemoryMemberProfileId = toSqlKey memberProfileId
+    , fanClubMemoryTitle = "Mi recuerdo"
+    , fanClubMemoryDescription = Just "Ensayo general"
+    , fanClubMemoryMediaUrls = Nothing
+    , fanClubMemoryIsHidden = False
+    , fanClubMemoryIsDeleted = False
+    , fanClubMemoryCreatedAt = testTime
     }
 
 testTime :: UTCTime

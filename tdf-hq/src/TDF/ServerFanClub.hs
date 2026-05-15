@@ -24,6 +24,7 @@ module TDF.ServerFanClub
   , validateFanClubInboxReplyBodyInput
   , validateFanClubInboxStatusInput
   , validateFanClubMemoryPathId
+  , validateFanClubMemoryMutationTarget
   ) where
 
 import           Control.Arrow          ((&&&))
@@ -614,15 +615,8 @@ fanClubSecureArtistHandlers user artistId =
           isOfficer <- runDB $ checkIsOfficer user artistKey
           unless isOfficer $ throwError err403 { errBody = "No autorizado" }
           memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
-          runDB $ do
-            mMem <- get memoryKey
-            case mMem of
-              Nothing -> pure ()
-              Just mem -> do
-                mProfile <- get (fanClubMemoryMemberProfileId mem)
-                case mProfile of
-                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsHidden =. True]
-                  _ -> pure ()
+          targetKey <- either throwError pure =<< runDB (lookupFanClubMemoryMutationTarget cid memoryKey)
+          runDB $ update targetKey [M.FanClubMemoryIsHidden =. True]
           pure NoContent
 
     unhideMemory aId memoryId = do
@@ -634,15 +628,8 @@ fanClubSecureArtistHandlers user artistId =
           isOfficer <- runDB $ checkIsOfficer user artistKey
           unless isOfficer $ throwError err403 { errBody = "No autorizado" }
           memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
-          runDB $ do
-            mMem <- get memoryKey
-            case mMem of
-              Nothing -> pure ()
-              Just mem -> do
-                mProfile <- get (fanClubMemoryMemberProfileId mem)
-                case mProfile of
-                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsHidden =. False]
-                  _ -> pure ()
+          targetKey <- either throwError pure =<< runDB (lookupFanClubMemoryMutationTarget cid memoryKey)
+          runDB $ update targetKey [M.FanClubMemoryIsHidden =. False]
           pure NoContent
 
     deleteMemory aId memoryId = do
@@ -654,15 +641,8 @@ fanClubSecureArtistHandlers user artistId =
           isOfficer <- runDB $ checkIsOfficer user artistKey
           unless isOfficer $ throwError err403 { errBody = "No autorizado" }
           memoryKey <- either throwError pure (validateFanClubMemoryPathId memoryId)
-          runDB $ do
-            mMem <- get memoryKey
-            case mMem of
-              Nothing -> pure ()
-              Just mem -> do
-                mProfile <- get (fanClubMemoryMemberProfileId mem)
-                case mProfile of
-                  Just mp | fanClubMemberProfileClubId mp == cid -> update memoryKey [M.FanClubMemoryIsDeleted =. True]
-                  _ -> pure ()
+          targetKey <- either throwError pure =<< runDB (lookupFanClubMemoryMutationTarget cid memoryKey)
+          runDB $ update targetKey [M.FanClubMemoryIsDeleted =. True]
           pure NoContent
 
     reportMemory aId memoryId req = do
@@ -1086,6 +1066,42 @@ validateFanClubMemoryPathId :: Int64 -> Either ServerError (Key FanClubMemory)
 validateFanClubMemoryPathId rawMemoryId
   | rawMemoryId <= 0 = Left err400 { errBody = "Invalid fan club memory id" }
   | otherwise = Right (toSqlKey rawMemoryId)
+
+lookupFanClubMemoryMutationTarget
+  :: FanClubId
+  -> Key FanClubMemory
+  -> SqlPersistT IO (Either ServerError (Key FanClubMemory))
+lookupFanClubMemoryMutationTarget clubId memoryId = do
+  mMemory <- get memoryId
+  case mMemory of
+    Nothing ->
+      pure (Left fanClubMemoryNotFound)
+    Just memory -> do
+      let profileId = fanClubMemoryMemberProfileId memory
+      mProfile <- get profileId
+      pure $
+        validateFanClubMemoryMutationTarget
+          clubId
+          (Entity memoryId memory)
+          (Entity profileId <$> mProfile)
+
+validateFanClubMemoryMutationTarget
+  :: FanClubId
+  -> Entity FanClubMemory
+  -> Maybe (Entity FanClubMemberProfile)
+  -> Either ServerError (Key FanClubMemory)
+validateFanClubMemoryMutationTarget clubId (Entity memoryId memory) mProfile =
+  case mProfile of
+    Just (Entity profileId profile)
+      | profileId == fanClubMemoryMemberProfileId memory
+      , fanClubMemberProfileClubId profile == clubId ->
+          Right memoryId
+    _ ->
+      Left fanClubMemoryNotFound
+
+fanClubMemoryNotFound :: ServerError
+fanClubMemoryNotFound =
+  err404 { errBody = "Fan club memory not found" }
 
 validateFanClubOfficerRoleInput :: Text -> Either ServerError FanClubOfficerRole
 validateFanClubOfficerRoleInput rawRole =
