@@ -8236,16 +8236,21 @@ spec = describe "TDF.Server helpers" $ do
             parsePayPalCaptureOrderStatus "DENIED" `shouldBe` Right "paypal_failed"
 
         it "rejects unsupported PayPal capture statuses instead of persisting raw gateway labels" $
-            case parsePayPalCaptureOrderStatus "mystery_status" of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 502
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Unsupported PayPal capture status: mystery_status"
-                Right statusVal ->
-                    expectationFailure
-                        ( "Expected unsupported PayPal capture status to be rejected, got: "
-                            <> show statusVal
-                        )
+            forM_
+                [ "mystery_status"
+                , "COM_PLETED"
+                ]
+                $ \rawStatus ->
+                    case parsePayPalCaptureOrderStatus rawStatus of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` ("Unsupported PayPal capture status: " <> T.unpack rawStatus)
+                        Right statusVal ->
+                            expectationFailure
+                                ( "Expected unsupported PayPal capture status to be rejected, got: "
+                                    <> show statusVal
+                                )
 
         it "rejects malformed PayPal capture status shapes before fallback mapping" $ do
             let assertInvalid rawStatus expectedMessage =

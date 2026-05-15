@@ -8552,10 +8552,11 @@ normalizeMarketplaceOrderStatus rawStatus =
 
 normalizePayPalCaptureOrderStatus :: Text -> Maybe Text
 normalizePayPalCaptureOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatusToken rawStatus of
+  case T.toLower (T.strip rawStatus) of
     "completed" -> Just "paid"
     "approved" -> Just "paypal_pending"
     "created" -> Just "paypal_pending"
+    "payer_action_required" -> Just "paypal_pending"
     "payeractionrequired" -> Just "paypal_pending"
     "pending" -> Just "paypal_pending"
     "saved" -> Just "paypal_pending"
