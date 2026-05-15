@@ -1140,6 +1140,14 @@ spec = do
                 "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\",\"status\":\"closed\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback fields so ad defaults are only used when omitted" $ do
+            decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"feeCents\":5000,\"currency\":null}"
+                `shouldSatisfy` isLeft
+            decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"feeCents\":5000,\"slotMinutes\":null}"
+                `shouldSatisfy` isLeft
+
     describe "BandCreate FromJSON" $ do
         it "accepts canonical CRM band creation payloads" $
             case decodeBandCreate (BL8.concat

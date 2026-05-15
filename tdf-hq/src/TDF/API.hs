@@ -589,10 +589,28 @@ data ServiceAdCreateReq = ServiceAdCreateReq
   , sacSlotMinutes      :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON ServiceAdCreateReq where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON value = do
+    withObject "ServiceAdCreateReq" rejectAmbiguousDefaultFallbacks value
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      }
+      value
+    where
+      rejectAmbiguousDefaultFallbacks obj = do
+        rejectNullDefault
+          "currency"
+          "currency must be omitted instead of null to use USD"
+          obj
+        rejectNullDefault
+          "slotMinutes"
+          "slotMinutes must be omitted instead of null to use 60"
+          obj
+
+      rejectNullDefault fieldName message obj =
+        case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+          Just Null -> fail message
+          _ -> pure ()
 
 data ServiceAdSlotDTO = ServiceAdSlotDTO
   { sasId       :: Int64
