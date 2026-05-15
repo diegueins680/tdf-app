@@ -3281,7 +3281,9 @@ calendarServer user =
       requireAdmin
       calendarIdFilter <- either throwError pure (validateOptionalCalendarIdQuery mCalendarId)
       mCfg <- case calendarIdFilter of
-        Just cid -> runDB $ getBy (Cal.UniqueCalendar cid)
+        Just cid -> do
+          mExplicitCfg <- runDB $ getBy (Cal.UniqueCalendar cid)
+          traverse (either throwError pure . validateStoredCalendarConfig) mExplicitCfg
         _ -> do
           candidates <- runDB $
             selectList [] [Desc Cal.GoogleCalendarConfigUpdatedAt, LimitTo 2]
@@ -3586,7 +3588,7 @@ selectUniqueCalendarConfigFallback
   :: [Entity Cal.GoogleCalendarConfig]
   -> Either ServerError (Maybe (Entity Cal.GoogleCalendarConfig))
 selectUniqueCalendarConfigFallback candidates = do
-  validatedCandidates <- traverse validateStoredCalendarConfigFallback candidates
+  validatedCandidates <- traverse validateStoredCalendarConfig candidates
   case validatedCandidates of
     [] -> Right Nothing
     [cfg] -> Right (Just cfg)
@@ -3596,10 +3598,10 @@ selectUniqueCalendarConfigFallback candidates = do
             "calendarId is required when multiple Google Calendar configs exist"
         }
 
-validateStoredCalendarConfigFallback
+validateStoredCalendarConfig
   :: Entity Cal.GoogleCalendarConfig
   -> Either ServerError (Entity Cal.GoogleCalendarConfig)
-validateStoredCalendarConfigFallback (Entity cfgId cfg) = do
+validateStoredCalendarConfig (Entity cfgId cfg) = do
   unless (fromSqlKey cfgId > 0) invalidStoredCalendarConfigId
   case Cal.googleCalendarConfigOwnerId cfg of
     Just ownerId | fromSqlKey ownerId <= 0 -> invalidStoredCalendarOwnerId

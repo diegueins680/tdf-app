@@ -225,6 +225,7 @@ import TDF.Server
       resolveDrivePublicUrlAfterPermission,
       resolveProvidedDriveAccessToken,
       selectUniqueCalendarConfigFallback,
+      validateStoredCalendarConfig,
       sanitizeStoredCoursePublicUrl,
       validateContractsAccess,
       validateWhatsAppConsentDisplayName,
@@ -4853,6 +4854,40 @@ main = hspec $ do
                     Right value ->
                         expectationFailure
                             ("Expected invalid stored ownerId to fail, got: " <> show value)
+
+        it "validates explicit Google Calendar configs before returning DTOs" $ do
+            let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
+                calendarConfig rawCalendarId syncCursor =
+                    Entity
+                        (toSqlKey 7 :: Cal.GoogleCalendarConfigId)
+                        Cal.GoogleCalendarConfig
+                            { Cal.googleCalendarConfigOwnerId = Just (toSqlKey 11)
+                            , Cal.googleCalendarConfigCalendarId = rawCalendarId
+                            , Cal.googleCalendarConfigAccessToken = Nothing
+                            , Cal.googleCalendarConfigRefreshToken = Nothing
+                            , Cal.googleCalendarConfigTokenType = Nothing
+                            , Cal.googleCalendarConfigTokenExpiresAt = Nothing
+                            , Cal.googleCalendarConfigSyncCursor = syncCursor
+                            , Cal.googleCalendarConfigSyncedAt = Nothing
+                            , Cal.googleCalendarConfigCreatedAt = now
+                            , Cal.googleCalendarConfigUpdatedAt = now
+                            }
+
+            case validateStoredCalendarConfig (calendarConfig "primary" (Just " cursor-1 ")) of
+                Right (Entity _ cfg) ->
+                    Cal.googleCalendarConfigSyncCursor cfg `shouldBe` Just "cursor-1"
+                other ->
+                    expectationFailure
+                        ("Expected explicit calendar config to validate, got: " <> show other)
+
+            case validateStoredCalendarConfig (calendarConfig " primary " Nothing) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "Stored Google Calendar config calendarId is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid explicit calendar config to fail, got: " <> show value)
 
         it "rejects malformed stored OAuth tokens before sync fallback requests are built" $ do
             validateStoredGoogleCalendarAccessToken (Just " ya29.access-token_123 ")
