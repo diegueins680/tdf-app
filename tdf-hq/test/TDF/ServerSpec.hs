@@ -5933,6 +5933,29 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"id\":\"file-123\",\"webContentLink\":\"https://drive.google.com/uc?id=file-123\",\"mimeType\":\"image/png\"}"
             assertMetaRejected "{\"resourceKey\":\"rk-123\",\"kind\":\"drive#file\"}"
 
+        it "rejects Drive resource-key conflicts before returning client URLs" $ do
+            let expected = "Drive upload response has conflicting resource keys"
+                assertRejected rawPayload =
+                    case (eitherDecode rawPayload :: Either String DriveApiResp) of
+                        Left err ->
+                            err `shouldContain` expected
+                        Right resp ->
+                            expectationFailure
+                                ( "Expected conflicting Drive resource keys to be rejected, got: "
+                                    <> show resp
+                                )
+            assertRejected $
+                "{\"id\":\"file-123\","
+                    <> "\"webViewLink\":\"https://drive.google.com/file/d/file-123/view"
+                    <> "?resourcekey=rk_view\","
+                    <> "\"resourceKey\":\"rk_upload\"}"
+            assertRejected $
+                "{\"id\":\"file-123\","
+                    <> "\"webViewLink\":\"https://drive.google.com/file/d/file-123/view"
+                    <> "?resourcekey=rk_view\","
+                    <> "\"webContentLink\":\"https://drive.usercontent.google.com/download"
+                    <> "?id=file-123&resourcekey=rk_download\"}"
+
     describe "GoogleToken FromJSON" $ do
         it "normalizes valid Google OAuth token responses before proxying them" $ do
             let rawResponse =

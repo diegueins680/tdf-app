@@ -13498,17 +13498,26 @@ instance FromJSON DriveApiResp where
           "must be a Google Drive download https link for the uploaded file"
     darResourceKey <-
       (o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey")
-    validateDriveResponseResourceKeyConsistency darWebContentLink darResourceKey
+    validateDriveResponseResourceKeyConsistency
+      darWebViewLink
+      darWebContentLink
+      darResourceKey
     pure DriveApiResp{..}
 
-validateDriveResponseResourceKeyConsistency :: Maybe Text -> Maybe Text -> Parser ()
-validateDriveResponseResourceKeyConsistency mWebContentLink mResourceKey =
-  case (mWebContentLink >>= singleValidResourceKeyParam, mResourceKey) of
-    (Just linkResourceKey, Just resourceKey)
-      | linkResourceKey /= resourceKey ->
-          fail "Drive upload response has conflicting resource keys"
+validateDriveResponseResourceKeyConsistency :: Maybe Text -> Maybe Text -> Maybe Text -> Parser ()
+validateDriveResponseResourceKeyConsistency mWebViewLink mWebContentLink mResourceKey =
+  case dedupeStable resourceKeys of
+    _ : _ : _ ->
+      fail "Drive upload response has conflicting resource keys"
     _ ->
       pure ()
+  where
+    resourceKeys =
+      catMaybes
+        [ mWebViewLink >>= singleValidResourceKeyParam
+        , mWebContentLink >>= singleValidResourceKeyParam
+        , mResourceKey
+        ]
 
 parseDriveApiFileId :: Text -> Parser Text
 parseDriveApiFileId rawFileId
