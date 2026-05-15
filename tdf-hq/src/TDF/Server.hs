@@ -7368,25 +7368,33 @@ mkEscrowBookingDTO (Entity escrowId escrow) = Api.ServiceMarketplaceBookingDTO
   }
 
 parsePaymentMethodText :: Maybe Text -> Either ServerError PaymentMethod
-parsePaymentMethodText mTxt =
-  case T.toLower . T.strip <$> mTxt of
-    Nothing -> Right OtherM
-    Just "" -> Right OtherM
-    Just "cash" -> Right CashM
-    Just "bank_transfer" -> Right BankTransferM
-    Just "bank" -> Right BankTransferM
-    Just "card" -> Right CardPOSM
-    Just "paypal" -> Right PayPalM
-    Just "crypto" -> Right CryptoM
-    Just "stripe" -> Right StripeM
-    Just "wompi" -> Right WompiM
-    Just "payphone" -> Right PayPhoneM
-    Just "other" -> Right OtherM
-    _ ->
-      Left err400
-        { errBody =
-            "paymentMethod must be one of: cash, bank_transfer, bank, card, paypal, crypto, stripe, wompi, payphone, other"
-        }
+parsePaymentMethodText Nothing = Right OtherM
+parsePaymentMethodText (Just rawPaymentMethod)
+  | T.any isControl rawPaymentMethod =
+      Left err400 { errBody = "paymentMethod must not contain control characters" }
+  | T.any isHiddenDriveOAuthTokenChar paymentMethod =
+      Left err400 { errBody = "paymentMethod must not contain hidden formatting characters" }
+  | T.null paymentMethod =
+      Left err400 { errBody = "paymentMethod cannot be blank; omit paymentMethod to use other" }
+  | otherwise =
+      case T.toLower paymentMethod of
+        "cash" -> Right CashM
+        "bank_transfer" -> Right BankTransferM
+        "bank" -> Right BankTransferM
+        "card" -> Right CardPOSM
+        "paypal" -> Right PayPalM
+        "crypto" -> Right CryptoM
+        "stripe" -> Right StripeM
+        "wompi" -> Right WompiM
+        "payphone" -> Right PayPhoneM
+        "other" -> Right OtherM
+        _ ->
+          Left err400
+            { errBody =
+                "paymentMethod must be one of: cash, bank_transfer, bank, card, paypal, crypto, stripe, wompi, payphone, other"
+            }
+  where
+    paymentMethod = T.strip rawPaymentMethod
 
 -- Bookings
 bookingPublicServer :: ServerT Api.BookingPublicAPI AppM

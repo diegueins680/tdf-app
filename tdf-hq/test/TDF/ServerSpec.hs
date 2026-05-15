@@ -7388,20 +7388,29 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure ("Expected invalid role payload to be rejected, got: " <> show roleVal)
 
     describe "parsePaymentMethodText" $ do
-        it "defaults missing or blank payment methods to OtherM while normalizing supported values" $ do
+        it "defaults omitted payment methods to OtherM while normalizing supported values" $ do
             parsePaymentMethodText Nothing `shouldBe` Right OtherM
-            parsePaymentMethodText (Just "   ") `shouldBe` Right OtherM
             parsePaymentMethodText (Just " PayPal ") `shouldBe` Right PayPalM
             parsePaymentMethodText (Just "bank") `shouldBe` Right BankTransferM
             parsePaymentMethodText (Just "other") `shouldBe` Right OtherM
 
-        it "rejects unsupported explicit payment methods instead of silently storing OtherM" $
-            case parsePaymentMethodText (Just "paypol") of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "paymentMethod must be one of"
-                Right paymentMethodVal ->
-                    expectationFailure ("Expected invalid payment method to be rejected, got: " <> show paymentMethodVal)
+        it "rejects blank or malformed explicit payment methods instead of silently storing OtherM" $ do
+            let assertInvalid expectedMessage rawPaymentMethod =
+                    case parsePaymentMethodText (Just rawPaymentMethod) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right paymentMethodVal ->
+                            expectationFailure
+                                ( "Expected invalid payment method to be rejected, got: "
+                                    <> show paymentMethodVal
+                                )
+            assertInvalid "paymentMethod cannot be blank" "   "
+            assertInvalid "paymentMethod must be one of" "paypol"
+            assertInvalid "paymentMethod must not contain control characters" "cash\n"
+            assertInvalid
+                "paymentMethod must not contain hidden formatting characters"
+                ("cash" <> T.singleton '\x202E')
 
     describe "parseCourseRegistrationStatus" $ do
         it "normalizes supported course registration statuses and canonicalizes canceled" $ do
