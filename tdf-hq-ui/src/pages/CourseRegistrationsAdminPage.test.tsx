@@ -12368,7 +12368,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps one-result local search focused by hiding the unrelated cohort selector', async () => {
+  it('keeps one-result local search focused by hiding unrelated filter chrome', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -12421,10 +12421,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Nina Simone')).toBeTruthy();
       expect(container.textContent).toContain(`Mostrando 1 de 9 inscripciones cargadas. ${paidRecoveryScopeHint}`);
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
-      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(2);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Filtrar por estado');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 

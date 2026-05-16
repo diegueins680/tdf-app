@@ -3679,6 +3679,15 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchSingleResultKnownStatus = localSearchSingleResult
     ? normalizeKnownRegistrationStatus(localSearchSingleResult.crStatus)
     : null;
+  const singleResultUnrelatedStatusFilterCount = localSearchSingleResultKnownStatus
+    ? actionableStatusFilters.filter((value) => value !== localSearchSingleResultKnownStatus).length
+    : 0;
+  const hideSingleResultLocalSearchPassiveFilterPanel = Boolean(
+    localSearchSingleResult
+    && !hasCustomFilters
+    && !cohortsQuery.isError
+    && singleResultUnrelatedStatusFilterCount > 1,
+  );
   const localSearchSingleResultUsesDirectPaidRecovery =
     localSearchSingleResultKnownStatus === 'paid';
   const localSearchSingleResultTargetLabel = localSearchSingleResult
@@ -4308,6 +4317,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showFilteredEmptyState
     && !showFocusedEmptyLocalSearchState
     && !showSingleResultWithOnlyPassiveFilterContext
+    && !hideSingleResultLocalSearchPassiveFilterPanel
     && (!regsQuery.isError || hasVisibleRegistrations);
   const showRegistrationResultsPanel = !showInitialRegistrationLoading
     && !showInitialFilterGuidance
