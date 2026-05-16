@@ -46,6 +46,7 @@ module.exports = {
     'react/prop-types': 'off',
     'react-hooks/exhaustive-deps': 'warn',
     'no-console': ['warn', { allow: ['error'] }],
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
   ignorePatterns: [
     'dist/',
