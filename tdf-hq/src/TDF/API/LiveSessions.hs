@@ -463,7 +463,15 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               && not (T.isSuffixOf "." domain)
               && T.isInfixOf "." domain
               && all isValidEmailDomainLabel (T.splitOn "." domain)
+              && isValidEmailFinalDomainLabel domain
           _ -> False
+
+      isValidEmailFinalDomainLabel :: Text -> Bool
+      isValidEmailFinalDomainLabel domain =
+        case reverse (T.splitOn "." domain) of
+          finalLabel : _ ->
+            T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+          [] -> False
 
       isValidEmailLocalPart :: Text -> Bool
       isValidEmailLocalPart localPart =
