@@ -10696,7 +10696,7 @@ resolveWorkflowId primary fallback =
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
   let trimmed = T.dropWhileEnd (== '/') (T.strip base)
-  in if T.null trimmed then "https://api.moonshot.cn" else trimmed
+  in if T.null trimmed then "https://api.moonshot.ai" else trimmed
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =

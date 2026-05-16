@@ -550,7 +550,7 @@ loadConfig = do
   chatKitApiBaseVal <-
     validateConfiguredApiBaseUrl
       "CHATKIT_API_BASE"
-      "https://api.moonshot.cn"
+      "https://api.moonshot.ai"
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
