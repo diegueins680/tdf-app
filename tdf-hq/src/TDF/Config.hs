@@ -1170,7 +1170,7 @@ defaultOpenAiEmbedModel :: Text
 defaultOpenAiEmbedModel = "text-embedding-3-small"
 
 defaultOpenAiModel :: Text
-defaultOpenAiModel = "kimi-latest"
+defaultOpenAiModel = "kimi-k2.6"
 
 normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiApiKey envName rawKey
