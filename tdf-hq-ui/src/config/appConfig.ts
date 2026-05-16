@@ -108,11 +108,11 @@ export const COURSE_COHORTS = defaultCourseCohorts.length ? defaultCourseCohorts
 
 export const TRIALS_WHATSAPP_URL =
   envTrimmedOrUndefined(envString('VITE_TRIALS_WHATSAPP_URL')) ??
-  'https://wa.me/593999001122?text=Hola%20quiero%20una%20clase%20de%20prueba%20en%20TDF%20Records';
+  'https://wa.me/593984755301?text=Hola%20quiero%20una%20clase%20de%20prueba%20en%20TDF%20Records';
 
 export const STUDIO_MAP_URL =
   envTrimmedOrUndefined(envString('VITE_STUDIO_MAP_URL')) ?? COURSE_DEFAULTS.mapUrl;
 
 export const STUDIO_WHATSAPP_URL =
   envTrimmedOrUndefined(envString('VITE_STUDIO_WHATSAPP_URL')) ??
-  'https://wa.me/593999001122?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records';
+  'https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records';
