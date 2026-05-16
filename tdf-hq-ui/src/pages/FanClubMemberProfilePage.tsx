@@ -99,6 +99,81 @@ export default function FanClubMemberProfilePage() {
     );
   }
 
+  // If no partyId is provided, show the members list
+  if (!partyId) {
+    return (
+      <PageShell
+        title="Miembros del club"
+        subtitle={clubQuery.data ? `${profilesQuery.data?.length ?? 0} miembros` : undefined}
+        loading={clubQuery.isLoading || profilesQuery.isLoading}
+      >
+        <Stack spacing={3}>
+          <Button
+            component={RouterLink}
+            to={`/fans/clubs/${artistIdNum}`}
+            startIcon={<ArrowBackIcon />}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Volver al club
+          </Button>
+
+          {!profilesQuery.data || profilesQuery.data.length === 0 ? (
+            <EmptyState
+              icon={<PhotoLibraryIcon fontSize="large" />}
+              title="Sin miembros"
+              description="Aún no hay miembros en este club de fans."
+            />
+          ) : (
+            <Grid container spacing={2}>
+              {profilesQuery.data.map((member) => (
+                <Grid item xs={12} sm={6} md={4} key={member.fcmpPartyId}>
+                  <Card
+                    component={RouterLink}
+                    to={`/fans/clubs/${artistIdNum}/members/${member.fcmpPartyId}`}
+                    sx={{
+                      textDecoration: 'none',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: (theme) => theme.shadows[4],
+                      },
+                    }}
+                  >
+                    <CardContent>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar
+                          src={member.fcmpAvatarUrl || undefined}
+                          sx={{ width: 56, height: 56 }}
+                        >
+                          {member.fcmpDisplayName.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box flexGrow={1} minWidth={0}>
+                          <Typography variant="subtitle1" fontWeight={600} noWrap>
+                            {member.fcmpDisplayName}
+                          </Typography>
+                          {member.fcmpHandle && (
+                            <Typography variant="body2" color="text.secondary" noWrap>
+                              @{member.fcmpHandle}
+                            </Typography>
+                          )}
+                          <Chip
+                            size="small"
+                            label={`Desde ${new Date(member.fcmpJoinedAt).toLocaleDateString()}`}
+                            sx={{ mt: 0.5 }}
+                          />
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Stack>
+      </PageShell>
+    );
+  }
+
   if (!profile) {
     return (
       <EmptyState
