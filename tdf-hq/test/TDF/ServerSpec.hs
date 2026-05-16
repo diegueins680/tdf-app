@@ -11340,6 +11340,8 @@ spec = describe "TDF.Server helpers" $ do
 
             assertBoundaryConflict [("admin", "console/settings")]
             assertBoundaryConflict [("admin", "seed")]
+            assertBoundaryConflict [("crm", "parties"), ("crm", "parties/list-columns")]
+            assertBoundaryConflict [("crm", "parties/list-columns"), ("crm", "parties")]
 
             let assertInvalidBoundaryInput reservedRoutes catalog =
                     case validateFutureStubCatalogRouteBoundaries reservedRoutes catalog of

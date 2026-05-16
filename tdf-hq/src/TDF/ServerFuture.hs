@@ -251,6 +251,7 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
             | reservedRoute <- validatedReservedRoutes
             , catalogRoute <- validatedCatalog
             ]
+       || any routesOverlap (routePairs validatedCatalog)
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -267,6 +268,10 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
       where
         reservedSegments = T.splitOn "/" reservedEndpoint
         endpointSegments = T.splitOn "/" endpoint
+
+    routePairs [] = []
+    routePairs (catalogRoute:remaining) =
+      map ((,) catalogRoute) remaining <> routePairs remaining
 
 validateFutureStubCatalogEntry :: (Text, Text) -> Either ServerError (Text, Text)
 validateFutureStubCatalogEntry (area, endpoint) = do
@@ -416,11 +421,11 @@ validateFutureAdminConsoleRouteIn routes =
   case validateReservedFutureStubRoutes routes of
     Left _ -> invalidFutureAdminConsoleMetadata
     Right reservedRoutes ->
-      if route `elem` reservedRoutes
-        then Right route
+      if adminConsoleRoute `elem` reservedRoutes
+        then Right adminConsoleRoute
         else invalidFutureAdminConsoleMetadata
   where
-    route = ("admin", "console")
+    adminConsoleRoute = ("admin", "console")
 
 isFuturePublishedPathShape :: Text -> Text -> Text -> Bool
 isFuturePublishedPathShape area endpoint rawPath =
