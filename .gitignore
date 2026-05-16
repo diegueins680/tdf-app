@@ -86,3 +86,8 @@ screencast/meta-app-review/output/final.mp4
 
 # Cabal build artifacts
 .cabal/
+
+# Media/evidence directories - should not be committed (host externally)
+screenshots/
+evidence/
+screencast/
