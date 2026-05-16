@@ -376,7 +376,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 ### Specialized Documentation
 - **[UI_VISUAL_GUIDE.md](UI_VISUAL_GUIDE.md)** - UI components and design specs
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures
-- **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - System architecture and data flows
+- **[Architecture docs](docs/)** - System architecture and data flows
 - **[FEATURES.md](FEATURES.md)** - Complete feature catalog
 - **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security guidelines
 

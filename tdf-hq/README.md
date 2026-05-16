@@ -28,7 +28,7 @@ A Haskell (Servant + Persistent) backend that powers TDF's internal HQ app for C
 
 ### Prerequisites
 
-- GHC toolchain via [Stack](https://docs.haskellstack.org/).
+- GHC toolchain via [Stack](https://docs.haskellstack.org/) (project targets **GHC 9.6.6** via `stack-snapshot.yaml`).
 - PostgreSQL 16 accessible at the host/port configured in `config/default.env` (or run via Docker Compose).
 - `make`, `curl`, and `jq` for convenience targets.
 - (Optional) A LaTeX toolchain if you plan to regenerate the PDF template assets locally (`scripts/latex`).
