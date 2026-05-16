@@ -2112,12 +2112,11 @@ verifyMetaWebhookSignature mAppSecret mSigHeader body =
 
 parseMetaWebhookSignature :: Text -> Maybe Text
 parseMetaWebhookSignature rawSignature =
-  let sigClean = T.strip rawSignature
-      prefix = "sha256="
-      lowerSig = T.toLower sigClean
-  in if prefix `T.isPrefixOf` lowerSig
+  let prefix = "sha256="
+      lowerSig = T.toLower rawSignature
+  in if rawSignature == T.strip rawSignature && prefix `T.isPrefixOf` lowerSig
        then
-         let digest = T.drop (T.length prefix) sigClean
+         let digest = T.drop (T.length prefix) rawSignature
          in if T.length digest == 64 && T.all isAsciiHexDigit digest
               then Just (T.toLower digest)
               else Nothing
