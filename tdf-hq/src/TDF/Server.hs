@@ -10440,7 +10440,7 @@ requestOpenAIChat manager reqBase key modelName messages = do
   let body = encode ChatCompletionReq
         { model = modelName
         , messages = messages
-        , temperature = 0.3
+        , temperature = 1.0
         }
       req =
         reqBase
@@ -10586,7 +10586,7 @@ tidalAgentServer user TidalAgentRequest{..} = do
             [ object ["role" .= ("system" :: Text), "content" .= tidalSystemPrompt]
             , object ["role" .= ("user" :: Text), "content" .= prompt]
             ]
-        , "temperature" .= (0.6 :: Double)
+        , "temperature" .= (1.0 :: Double)
         , "max_tokens" .= (300 :: Int)
         ]
       req =
