@@ -1276,6 +1276,9 @@ spec = do
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":null}"
+                `shouldSatisfy` isLeft
 
         it "rejects blank or malformed buyer identity fields before marketplace handlers run" $ do
             decodeMarketplaceCheckout

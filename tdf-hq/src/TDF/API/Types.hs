@@ -587,6 +587,7 @@ data MarketplaceCheckoutReq = MarketplaceCheckoutReq
 
 instance FromJSON MarketplaceCheckoutReq where
   parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCheckoutReq" ["mcrBuyerPhone"] value
     payload <- genericParseJSON strictObjectOptions value
     buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
     buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
