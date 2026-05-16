@@ -227,33 +227,33 @@ const customStatusFilterUnavailableMessage =
   'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
 const customStatusFilterUnavailableTitle = 'Estados no estándar';
 const dossierScopeHint =
-  'Abre expediente desde el nombre; el botón de estado muestra acciones.';
+  'Abre expediente desde el nombre; las opciones de estado muestran acciones.';
 const dossierLinkScopeHint =
   'Abre expediente desde el nombre.';
 const paymentWorkflowDossierScopeHint =
-  'Abre expediente desde el nombre; el botón de estado incluye Registrar pago.';
+  'Abre expediente desde el nombre; las opciones de pago y estado incluyen Registrar pago.';
 const dossierOnlyScopeHint =
-  'Abre expediente desde el nombre; el botón de estado abre acciones rápidas.';
+  'Abre expediente desde el nombre; las opciones de estado abren acciones rápidas.';
 const customStatusNormalizationScopeHint =
-  'Abre expediente desde el nombre; el botón de estado normaliza a pendiente o cancelado.';
+  'Abre expediente desde el nombre; las opciones de estado normalizan a pendiente o cancelado.';
 const pendingRecoveryScopeHint =
   'Abre expediente desde el nombre; Reabrir vuelve a pendiente.';
 const paidRecoveryScopeHint =
   'Abre expediente desde el nombre; Marcar pago pendiente devuelve la inscripción a pendiente.';
 const emailDossierScopeHint =
-  'Abre expediente desde el correo; el botón de estado muestra acciones.';
+  'Abre expediente desde el correo; las opciones de estado muestran acciones.';
 const emailPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el correo; el botón de estado incluye Registrar pago.';
+  'Abre expediente desde el correo; las opciones de pago y estado incluyen Registrar pago.';
 const phonePaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el teléfono; el botón de estado incluye Registrar pago.';
+  'Abre expediente desde el teléfono; las opciones de pago y estado incluyen Registrar pago.';
 const recordDossierScopeHint =
-  'Abre expediente desde el número de registro; el botón de estado muestra acciones.';
+  'Abre expediente desde el número de registro; las opciones de estado muestran acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el número de registro; el botón de estado incluye Registrar pago.';
+  'Abre expediente desde el número de registro; las opciones de pago y estado incluyen Registrar pago.';
 const recordDossierLinkScopeHint =
   'Abre expediente desde el número de registro.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el nombre, el correo o el número de registro; el botón de estado incluye Registrar pago.';
+  'Abre expediente desde el nombre, el correo o el número de registro; las opciones de pago y estado incluyen Registrar pago.';
 const mixedIdentityDossierLinkScopeHint =
   'Abre expediente desde el nombre, el correo o el número de registro.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
@@ -9148,6 +9148,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
       expect(container.textContent).not.toContain('Cambiar estado incluye Registrar pago y acciones.');
+      expect(container.textContent).not.toContain('el botón de estado incluye Registrar pago.');
       expect(container.textContent).not.toContain('el menú de estado incluye Registrar pago');
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);

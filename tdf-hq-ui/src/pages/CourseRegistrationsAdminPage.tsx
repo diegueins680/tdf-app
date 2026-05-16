@@ -178,15 +178,15 @@ const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Abre expediente desde ${targetLabel}; el botón de estado muestra acciones.`;
+  `Abre expediente desde ${targetLabel}; las opciones de estado muestran acciones.`;
 const buildDossierLinkScopeHint = (targetLabel: string) =>
   `Abre expediente desde ${targetLabel}.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Abre expediente desde ${targetLabel}; el botón de estado incluye Registrar pago.`;
+  `Abre expediente desde ${targetLabel}; las opciones de pago y estado incluyen Registrar pago.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Abre expediente desde ${targetLabel}; el botón de estado abre acciones rápidas.`;
+  `Abre expediente desde ${targetLabel}; las opciones de estado abren acciones rápidas.`;
 const buildCustomStatusNormalizationScopeHint = (targetLabel: string) =>
-  `Abre expediente desde ${targetLabel}; el botón de estado normaliza a pendiente o cancelado.`;
+  `Abre expediente desde ${targetLabel}; las opciones de estado normalizan a pendiente o cancelado.`;
 const buildPendingRecoveryScopeHint = (targetLabel: string) =>
   `Abre expediente desde ${targetLabel}; Reabrir vuelve a pendiente.`;
 const buildPaidRecoveryScopeHint = (targetLabel: string) =>
