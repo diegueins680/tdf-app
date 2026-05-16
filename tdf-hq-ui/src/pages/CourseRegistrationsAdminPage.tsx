@@ -171,9 +171,9 @@ const initialCohortRetryLabel = 'Reintentar formularios';
 const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
-const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
-const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
-const emptyCohortFilterMessage = 'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
+const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
+const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
+const emptyCohortFilterMessage = 'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
   `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
 type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
@@ -4268,7 +4268,7 @@ export default function CourseRegistrationsAdminPage() {
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
       ? 'Reintentar datos'
-      : 'Reintentar cohortes'
+      : initialCohortRetryLabel
     : regsQuery.isError
       ? 'Reintentar inscripciones'
       : 'Refrescar lista';
@@ -5859,7 +5859,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes no disponibles
+                          Formularios no disponibles
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterUnavailableMessage}
@@ -5891,7 +5891,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes cargando
+                          Formularios cargando
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterLoadingMessage}
@@ -5912,7 +5912,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes no configuradas
+                          Formularios no configurados
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {emptyCohortFilterMessage}
@@ -5968,9 +5968,9 @@ export default function CourseRegistrationsAdminPage() {
                         error={cohortsQuery.isError}
                         helperText={
                           cohortsQuery.isError
-                            ? 'No se pudieron cargar cohortes.'
+                            ? 'No se pudieron cargar formularios.'
                             : cohortsQuery.isLoading
-                              ? 'Cargando cohortes…'
+                              ? 'Cargando formularios…'
                               : undefined
                         }
                       >

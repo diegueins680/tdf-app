@@ -285,11 +285,11 @@ const initialCohortErrorMessage =
   'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
 const cohortFilterUnavailableMessage =
-  'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
+  'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage =
-  'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
+  'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage =
-  'Sin filtro por cohorte hasta configurar cursos. La lista sigue disponible.';
+  'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -13695,21 +13695,24 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
+      expect(cohortFallback?.textContent).toContain('Formularios no disponibles');
+      expect(cohortFallback?.textContent).not.toContain('Cohortes no disponibles');
       expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
-      expect(getButtonByText(cohortFallback!, 'Reintentar cohortes')).toBeTruthy();
-      expect(getButtonByText(container, 'Reintentar cohortes')).toBeTruthy();
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(cohortFallback?.textContent).not.toContain('cohortes');
+      expect(getButtonByText(cohortFallback!, initialCohortRetryLabel)).toBeTruthy();
+      expect(getButtonByText(container, initialCohortRetryLabel)).toBeTruthy();
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Reintentar cohortes'));
+      clickButton(getButtonByText(container, initialCohortRetryLabel));
       await flushPromises();
       await flushPromises();
     });
@@ -13719,7 +13722,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-unavailable"]')).toBeNull();
       expect(container.textContent).not.toContain(cohortFilterUnavailableMessage);
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(0);
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(0);
     });
 
     await cleanup();
@@ -13751,12 +13754,14 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
+      expect(cohortFallback?.textContent).toContain('Formularios no disponibles');
       expect(statusSummary).not.toBeNull();
       expect(statusSummary?.textContent).toContain('Estado disponible');
       expect(statusSummary?.textContent).toContain('Pagado');
       expect(statusSummary?.textContent).not.toContain('Usa cohorte');
       expect(statusSummary?.textContent).not.toContain('Ajustar límite');
-      expect(countButtonsByText(container, 'Reintentar cohortes')).toBe(1);
+      expect(cohortFallback?.textContent).not.toContain('cohortes');
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(1);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
     });
@@ -13787,10 +13792,12 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(cohortLoading).not.toBeNull();
-      expect(cohortLoading?.textContent).toContain('Cohortes cargando');
+      expect(cohortLoading?.textContent).toContain('Formularios cargando');
       expect(cohortLoading?.textContent).toContain(cohortFilterLoadingMessage);
+      expect(cohortLoading?.textContent).not.toContain('Cohortes cargando');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).not.toContain('Cargando cohortes…');
+      expect(container.textContent).not.toContain('Cargando formularios…');
       expect(container.querySelector('[data-testid="course-registration-initial-cohort-loading"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
