@@ -197,6 +197,11 @@ json_update "starting" "startup" "Supervisor booting" "" "" "$restart_count" "$s
 log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG"
 
 preflight_block_reason() {
+  if [ -f "$STATE_DIR/.pause-codex" ]; then
+    echo "blocked: Codex pause flag is present ($STATE_DIR/.pause-codex); remove it to resume"
+    return 0
+  fi
+
   local config_check=""
   if ! config_check="$(node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only 2>&1)"; then
     echo "blocked: ${config_check}"
