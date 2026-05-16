@@ -149,6 +149,12 @@ normalizeConfiguredCorsOrigin raw =
             "Configured CORS origins must contain only ASCII URL characters "
               <> "without whitespace, control, or hidden formatting characters: "
               <> raw
+        else if hasExplicitDefaultHttpPort rawTrimmed
+        then
+          Left $
+            "Configured CORS origins must omit default ports "
+              <> "(:80 for http, :443 for https): "
+              <> raw
         else
           case parseHttpOrigin normalized of
             Just origin -> Right origin
@@ -194,7 +200,9 @@ parseHttpOrigin origin =
   where
     parseWithScheme scheme remainder =
       let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
-      in if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
+      in if BS.null host
+          || not (validOriginHost host)
+          || not (validOriginSuffix scheme suffix)
         then Nothing
         else Just (BS.unpack (scheme <> host <> suffix))
 
@@ -207,6 +215,12 @@ deriveCorsOriginFromAppBase raw =
          Left $
            "HQ_APP_URL CORS fallback must contain only ASCII URL characters "
              <> "without whitespace, control, or hidden formatting characters: "
+             <> raw
+       else if hasExplicitDefaultHttpPort trimmed
+       then
+         Left $
+           "HQ_APP_URL CORS fallback must omit default ports "
+             <> "(:80 for http, :443 for https): "
              <> raw
        else
          case parseHttpBaseOrigin trimmed of
@@ -306,17 +320,40 @@ validOriginHost host =
     isHostnameChar c =
       (c >= 'a' && c <= 'z') || isDigit c || c == '-'
 
-validOriginSuffix :: BS.ByteString -> Bool
-validOriginSuffix suffix
+validOriginSuffix :: BS.ByteString -> BS.ByteString -> Bool
+validOriginSuffix _ suffix
   | BS.null suffix = True
+validOriginSuffix scheme suffix
   | ":" `BS.isPrefixOf` suffix =
       let port = BS.drop 1 suffix
       in not (BS.null port)
         && BS.all isDigit port
         && not (BS.length port > 1 && BS.head port == '0')
+        && Just port /= defaultPortForScheme scheme
         && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
             (readMaybe (BS.unpack port))
   | otherwise = False
+
+defaultPortForScheme :: BS.ByteString -> Maybe BS.ByteString
+defaultPortForScheme "http://" = Just "80"
+defaultPortForScheme "https://" = Just "443"
+defaultPortForScheme _ = Nothing
+
+hasExplicitDefaultHttpPort :: String -> Bool
+hasExplicitDefaultHttpPort raw =
+  case BS.stripPrefix "https://" lowered of
+    Just remainder -> hasDefaultPort "443" remainder
+    Nothing ->
+      case BS.stripPrefix "http://" lowered of
+        Just remainder -> hasDefaultPort "80" remainder
+        Nothing -> False
+  where
+    lowered = BS.map toLower (BS.pack raw)
+
+    hasDefaultPort defaultPort remainder =
+      let (authority, _) = BS.break (`elem` ("/?#" :: String)) remainder
+          (_, portSuffix) = BS.break (== ':') authority
+      in portSuffix == ":" <> defaultPort
 
 -- | Split a comma-separated list into trimmed entries.
 splitComma :: String -> [String]

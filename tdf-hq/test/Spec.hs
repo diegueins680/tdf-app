@@ -4205,6 +4205,30 @@ main = hspec $ do
             assertInvalid "https://app.example.com//"
             assertInvalid "*/"
 
+        it "rejects explicit default CORS ports before fallback origins can mismatch browsers" $ do
+            let assertConfiguredInvalid rawOrigin =
+                    withEnvOverrides
+                        [ ("ALLOWED_ORIGINS", Just rawOrigin)
+                        , ("ALLOW_ORIGINS", Nothing)
+                        , ("ALLOW_ORIGIN", Nothing)
+                        , ("CORS_ALLOW_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ORIGIN", Nothing)
+                        , ("ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                        , ("HQ_APP_URL", Nothing)
+                        ]
+                        $ corsPolicy `shouldThrow` \err ->
+                            "Configured CORS origins must omit default ports"
+                                `isInfixOf` show (err :: IOException)
+            assertConfiguredInvalid "https://app.example.com:443"
+            assertConfiguredInvalid "http://app.example.com:80"
+
+            case deriveCorsOriginFromAppBase "https://hq.example.com:443/admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback must omit default ports"
+                Right origin ->
+                    expectationFailure
+                        ("Expected default-port fallback to fail, got: " <> origin)
+
         it "rejects wildcard origins mixed with explicit allowlist entries" $
             withEnvOverrides
                 [ ("ALLOWED_ORIGINS", Just "*, https://app.example.com")
