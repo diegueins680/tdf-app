@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
@@ -25,7 +26,7 @@ const buildCorsHint = (showCorsHint?: boolean) => {
     const apiUrl = new URL(API_BASE_URL, window.location.origin);
     const appOrigin = window.location.origin;
     if (apiUrl.origin !== appOrigin) {
-      console.warn('Cross-origin API request detected', { apiOrigin: apiUrl.origin, appOrigin });
+      logger.warn('Cross-origin API request detected', { apiOrigin: apiUrl.origin, appOrigin });
       return 'No pudimos conectar con el servicio en este momento. Intenta nuevamente en unos minutos.';
     }
   } catch {

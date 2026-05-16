@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -248,7 +249,7 @@ export default function SocialPage() {
       setCopyMessage('Copiado');
       window.setTimeout(() => setCopyMessage(null), 1800);
     } catch (err) {
-      console.warn('No se pudo copiar', err);
+      logger.warn('No se pudo copiar', err);
       setCopyMessage('No se pudo copiar');
     }
   };

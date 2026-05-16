@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -193,7 +194,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
                         if (navigator?.clipboard?.writeText) {
                           navigator.clipboard
                             .writeText(p.code ?? '')
-                            .catch((err) => console.warn('No se pudo copiar las instrucciones Tidal', err));
+                            .catch((err) => logger.warn('No se pudo copiar las instrucciones Tidal', err));
                         }
                       }}
                     >
@@ -1468,7 +1469,7 @@ export default function RadioWidget() {
         setApiError(null);
         return saved;
       } catch (err) {
-        console.warn('No se pudo guardar metadata del stream', err);
+        logger.warn('No se pudo guardar metadata del stream', err);
         const msg = err instanceof Error ? err.message : 'No se pudo guardar metadata del stream.';
         setApiError(msg);
         return null;

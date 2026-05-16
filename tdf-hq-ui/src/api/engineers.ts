@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { get } from './client';
 
 export interface PublicEngineer {
@@ -78,10 +79,10 @@ export const Engineers = {
     } catch (error) {
       const cached = readCachedEngineers();
       if (cached.length > 0) {
-        console.warn('Engineer catalog unavailable, using cached engineer list', error);
+        logger.warn('Engineer catalog unavailable, using cached engineer list', error);
         return cached;
       }
-      console.warn('Engineer catalog unavailable, falling back to manual entry', error);
+      logger.warn('Engineer catalog unavailable, falling back to manual entry', error);
       return cached;
     }
   },

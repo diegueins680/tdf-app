@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -88,15 +89,15 @@ export default function LabelReleasesPage() {
           setUsedFanFallback(false);
           return adminArtists;
         }
-        console.warn('Lista de artistas de admin vacía, usando fallback público.');
+        logger.warn('Lista de artistas de admin vacía, usando fallback público.');
       } catch (err) {
-        console.warn('Admin artists fetch failed, falling back to fan list', err);
+        logger.warn('Admin artists fetch failed, falling back to fan list', err);
       }
       setUsedFanFallback(true);
       try {
         return await Fans.listArtists();
       } catch (fanErr) {
-        console.warn('No se pudo cargar artistas de fans', fanErr);
+        logger.warn('No se pudo cargar artistas de fans', fanErr);
         throw fanErr;
       }
     },

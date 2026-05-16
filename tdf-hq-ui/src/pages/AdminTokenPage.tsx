@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -55,7 +56,7 @@ export default function AdminTokenPage() {
       setNotice(`${label} copiado al portapapeles.`);
       setError(null);
     } catch (err) {
-      console.warn('No se pudo copiar', err);
+      logger.warn('No se pudo copiar', err);
       setNotice(null);
       setError('No se pudo copiar al portapapeles.');
     }

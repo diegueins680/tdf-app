@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -46,7 +47,7 @@ export default function MusicMakerPage() {
         clearInterval(intervalRef.current);
       }
       if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch((err) => console.warn('No se pudo cerrar el AudioContext', err));
+        audioCtxRef.current.close().catch((err) => logger.warn('No se pudo cerrar el AudioContext', err));
       }
     };
   }, []);

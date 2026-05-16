@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -747,7 +748,7 @@ export default function MarketplacePage() {
   }, [cartItemCount, contactPref, hasCartItems, isValidEmail, isValidName, isValidPhone]);
   useEffect(() => {
     if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
-      console.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
+      logger.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
     }
   }, [paypalEnabled, modules]);
 

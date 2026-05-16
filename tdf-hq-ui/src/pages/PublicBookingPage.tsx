@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -637,7 +638,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
           return;
         }
-        console.warn('No se pudo verificar disponibilidad', err);
+        logger.warn('No se pudo verificar disponibilidad', err);
         setAvailabilityStatus('unknown');
         setAvailabilityNote('No pudimos verificar disponibilidad ahora. Reintenta o confirmaremos contigo.');
       });

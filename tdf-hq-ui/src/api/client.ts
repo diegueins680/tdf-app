@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
 import { isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
@@ -65,7 +66,7 @@ const guessCrossOriginHint = () => {
 const normalizeNetworkError = (err: unknown) => {
   const hint = guessCrossOriginHint();
   if (hint) {
-    console.warn('API network hint:', hint);
+    logger.warn('API network hint:', hint);
   }
   const message = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
   const wrapped = new Error(message);

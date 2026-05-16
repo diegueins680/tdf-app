@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
@@ -235,7 +236,7 @@ export default function LoginPage() {
         apiToken: fallback.apiToken,
       };
     } catch (error) {
-      console.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
+      logger.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
       return fallback;
     }
   }, []);
@@ -596,7 +597,7 @@ export default function LoginPage() {
           setGoogleError(message);
           setGoogleStatus(null);
         }
-        console.warn('Google Sign-In initialization failed', error);
+        logger.warn('Google Sign-In initialization failed', error);
       }
     })();
     return () => {
@@ -648,7 +649,7 @@ export default function LoginPage() {
     try {
       await resetMutation.mutateAsync(emailValue);
     } catch (err) {
-      console.warn('Password reset request failed (silently returning success)', err);
+      logger.warn('Password reset request failed (silently returning success)', err);
     } finally {
       setResetFeedback({
         type: 'success',
@@ -745,7 +746,7 @@ export default function LoginPage() {
         void Promise.all(
           selectedFanArtistIds.map((artistId) =>
             Fans.follow(artistId).catch((followErr) => {
-              console.warn('No se pudo seguir al artista después del registro', followErr);
+              logger.warn('No se pudo seguir al artista después del registro', followErr);
             }),
           ),
         );

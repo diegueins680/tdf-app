@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 const readEnvValue = (key: string): string | undefined => {
   const baked = (import.meta as unknown as { env?: Record<string, unknown> }).env?.[key];
   if (typeof baked === 'string' && baked.trim()) return baked.trim();
@@ -37,7 +38,7 @@ export const reportMissingEnv = (keys: string[]): void => {
 
   if (newlyMissing.length > 0) {
     win.__MISSING_ENV_REPORTED__ = uniqueList([...(win.__MISSING_ENV_REPORTED__ ?? []), ...newlyMissing]);
-    console.warn('Faltan variables de entorno críticas:', newlyMissing.join(', '));
+    logger.warn('Faltan variables de entorno críticas:', newlyMissing.join(', '));
   }
 };
 

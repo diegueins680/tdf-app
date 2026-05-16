@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ReactNode, type ChangeEvent } from 'react';
 import {
   Alert,
@@ -711,7 +712,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       await navigator.clipboard.writeText(artistPublicUrl);
       setArtistToast('Enlace copiado.');
     } catch (error) {
-      console.warn('Failed to copy artist link', error);
+      logger.warn('Failed to copy artist link', error);
       setArtistToast(artistPublicUrl);
     }
   };

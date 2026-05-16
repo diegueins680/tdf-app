@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
@@ -48,7 +49,7 @@ export default function MarketplaceOrderTrackingPage() {
     if (typeof window === 'undefined') return;
     const url = window.location.href;
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url).catch((err) => console.warn('No se pudo copiar el enlace de seguimiento', err));
+      navigator.clipboard.writeText(url).catch((err) => logger.warn('No se pudo copiar el enlace de seguimiento', err));
     }
   };
 

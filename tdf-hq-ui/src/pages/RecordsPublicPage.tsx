@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import {
   Alert,
   Avatar,
@@ -294,7 +295,7 @@ function BookingRequestDialog({
             roles: ['Customer'],
           });
         } catch (err) {
-          console.warn('No se pudo crear el usuario, continuando con la reserva', err);
+          logger.warn('No se pudo crear el usuario, continuando con la reserva', err);
         }
       }
 

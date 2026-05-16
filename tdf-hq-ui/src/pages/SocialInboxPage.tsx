@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
@@ -425,7 +426,7 @@ const copyText = async (value: string) => {
     await navigator.clipboard.writeText(value);
     return true;
   } catch (err) {
-    console.warn('No se pudo copiar al portapapeles', err);
+    logger.warn('No se pudo copiar al portapapeles', err);
     return false;
   }
 };

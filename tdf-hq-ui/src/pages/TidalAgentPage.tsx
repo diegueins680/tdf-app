@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
@@ -54,7 +55,7 @@ export default function TidalAgentPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch (err) {
-      console.warn('No se pudo exportar el historial', err);
+      logger.warn('No se pudo exportar el historial', err);
       setError('No se pudo exportar el historial.');
     }
   }, [history]);
@@ -247,7 +248,7 @@ export default function TidalAgentPage() {
                             size="small"
                             startIcon={<ContentCopyIcon fontSize="small" />}
                             onClick={() => {
-                              navigator.clipboard.writeText(pinned.code).catch((err) => console.warn(err));
+                              navigator.clipboard.writeText(pinned.code).catch((err) => logger.warn(err));
                             }}
                           >
                             Copiar
@@ -303,7 +304,7 @@ export default function TidalAgentPage() {
                             onClick={() => {
                               navigator.clipboard
                                 .writeText(item.code)
-                                .catch((err) => console.warn('No se pudo copiar el historial', err));
+                                .catch((err) => logger.warn('No se pudo copiar el historial', err));
                             }}
                           >
                             Copiar
@@ -333,7 +334,7 @@ export default function TidalAgentPage() {
                               const wrapped = `${target} $ (${item.code})`;
                               navigator.clipboard
                                 .writeText(wrapped)
-                                .catch((err) => console.warn('No se pudo copiar con destino', err));
+                                .catch((err) => logger.warn('No se pudo copiar con destino', err));
                               setShowRaw(false);
                             }}
                           >

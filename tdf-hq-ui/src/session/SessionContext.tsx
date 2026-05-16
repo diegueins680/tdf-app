@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -180,7 +181,7 @@ function persistSession(value: SessionUser | null, scope: SessionStorageScope) {
     const target = scope === 'session' ? window.sessionStorage : window.localStorage;
     target.setItem(SESSION_STORAGE_KEY, serialized);
   } catch (error) {
-    console.warn('Failed to persist session', error);
+    logger.warn('Failed to persist session', error);
   }
 }
 
@@ -251,7 +252,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         });
       } catch (error) {
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
-        console.warn('Failed to bootstrap session from server', error);
+        logger.warn('Failed to bootstrap session from server', error);
       } finally {
         if (!cancelled && versionAtStart === sessionVersionRef.current) {
           setLoading(false);
@@ -275,7 +276,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const logout = useCallback(() => {
     clearLocalSessionState();
     void logoutSessionRequest().catch((error) => {
-      console.warn('Failed to clear server session', error);
+      logger.warn('Failed to clear server session', error);
     });
   }, [clearLocalSessionState]);
 
