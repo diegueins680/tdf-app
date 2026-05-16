@@ -1936,7 +1936,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('disambiguates duplicate named registrations in row actions without adding generic row controls', async () => {
+  it('disambiguates duplicate named registrations in icon row actions without repeating action text', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crId: 101,
@@ -1971,16 +1971,25 @@ describe('CourseRegistrationsAdminPage', () => {
         getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.primary@example.com)'),
       ).toBeTruthy();
       expect(
-        getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ana Torres (ana.primary@example.com)')),
+        getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ana Torres (ana.primary@example.com)')),
       ).toBeTruthy();
       expect(
         getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres (ana.alt@example.com · +593999000222)'),
       ).toBeTruthy();
       expect(
-        getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Ana Torres (ana.alt@example.com · +593999000222)')),
+        getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ana Torres (ana.alt@example.com · +593999000222)')),
       ).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper'))).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Grace Hopper'))).toBeTruthy();
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+      expect(
+        getButtonByAriaLabel(
+          container,
+          paymentStatusIconButtonAriaLabel('Ana Torres (ana.primary@example.com)'),
+        ).textContent?.trim(),
+      ).toBe('');
       expect(countOccurrences(container, 'Registro #101')).toBe(0);
       expect(countOccurrences(container, 'Registro #102')).toBe(0);
       expect(countOccurrences(container, 'Registro #103')).toBe(0);
@@ -2034,7 +2043,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         getButtonByAriaLabel(
           container,
-          paymentStatusMenuButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #101)'),
+          paymentStatusIconButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #101)'),
         ),
       ).toBeTruthy();
       expect(
@@ -2046,11 +2055,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(
         getButtonByAriaLabel(
           container,
-          paymentStatusMenuButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #102)'),
+          paymentStatusIconButtonAriaLabel('Ana Torres (ana.shared@example.com · +593999000222 · registro #102)'),
         ),
       ).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, paymentStatusMenuButtonAriaLabel('Grace Hopper'))).toBeTruthy();
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Grace Hopper'))).toBeTruthy();
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
       expect(countOccurrences(container, 'Registro #101')).toBe(1);
       expect(countOccurrences(container, 'Registro #102')).toBe(1);
       expect(countButtonsByText(container, 'Expediente')).toBe(0);

@@ -4001,8 +4001,6 @@ export default function CourseRegistrationsAdminPage() {
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow
     && dossierIdentityTargetLabel === 'el nombre'
-    && registrationIdsRequiringActionDisambiguator.size === 0
-    && registrationIdsRequiringActionRecordDisambiguator.size === 0
     && useCompactStatusActionLabel
     && searchedRegistrations.length >= 2;
   const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
