@@ -2,8 +2,28 @@ name: CI Safe Install
 
 on:
   pull_request:
+    paths:
+      - 'tdf-hq/**'
+      - 'tdf-hq-ui/**'
+      - 'tdf-mobile'
+      - 'tdf-mobile/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.npmrc'
+      - '.github/workflows/**'
   push:
     branches: [ main ]
+    paths:
+      - 'tdf-hq/**'
+      - 'tdf-hq-ui/**'
+      - 'tdf-mobile'
+      - 'tdf-mobile/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.npmrc'
+      - '.github/workflows/**'
 
 jobs:
   build:
@@ -19,8 +39,8 @@ jobs:
           cache: 'npm'
       - name: Clean install
         run: npm ci
-      - name: npm audit (non-blocking)
-        run: npm audit --omit=dev || true
+      - name: npm audit
+        run: npm audit --omit=dev
       - name: Build (if present)
         run: npm run -s build || echo "no build script; skipping"
       - name: Test (if present)
