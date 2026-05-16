@@ -942,6 +942,44 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('ignores unregistered-data placeholders so the first-user view does not show fake contact or access values', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'solo-placeholder-data',
+        primaryEmail: 'Sin datos',
+        primaryPhone: 'No registrado',
+        whatsapp: 'No registra',
+        roles: ['Sin permisos'],
+        modules: ['No registrada'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Acceso de este usuario: Sin acceso asignado.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(row.textContent).not.toContain('Sin datos');
+        expect(row.textContent).not.toContain('No registrado');
+        expect(row.textContent).not.toContain('No registra');
+        expect(row.textContent).not.toContain('Sin permisos');
+        expect(row.textContent).not.toContain('No registrada');
+        expect(row.textContent).not.toContain('Sin acceso asignado');
+        expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(0);
+        expect(row.querySelector('[aria-label^="Abrir WhatsApp para "]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('distinguishes missing WhatsApp from missing contact in the page summary', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
