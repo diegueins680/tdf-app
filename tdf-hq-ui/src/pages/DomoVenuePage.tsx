@@ -369,7 +369,7 @@ export default function DomoVenuePage() {
         {/* Scroll indicator */}
         <Box sx={{ position: 'absolute', bottom: 24, right: { xs: 16, md: 48 }, display: { xs: 'none', md: 'flex' }, flexDirection: 'column', alignItems: 'center', gap: 1 }}>
           <Box sx={{ width: '1px', height: 40, bgcolor: 'rgba(255,255,255,0.4)', position: 'relative' }}>
-            <Box sx={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 6, height: 6, borderRadius: '50%', bgcolor: '#fff', animation: 'scrollBounce 2s infinite' }} />
+            <Box sx={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 6, height: 6, borderRadius: '50%', bgcolor: '#fff', opacity: 0.8 }} />
           </Box>
           <Typography sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)' }}>
             Pululahua, Ecuador
