@@ -6629,6 +6629,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "must not be blank" "   "
             assertInvalid "must not contain whitespace" "needs action"
             assertInvalid "must not contain control characters" "con\nfirmed"
+            assertInvalid
+                "must not contain hidden formatting characters"
+                ("confirmed" <> T.singleton '\x202E')
             assertInvalid "must be one of" "archived"
 
     describe "validateGoogleCalendarEventId" $ do

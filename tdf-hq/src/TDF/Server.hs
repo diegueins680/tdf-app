@@ -3172,6 +3172,8 @@ validateGoogleCalendarEventStatus rawStatus
       Left "Google Calendar event status must not be blank"
   | T.any isControl statusVal =
       Left "Google Calendar event status must not contain control characters"
+  | T.any isHiddenDriveOAuthTokenChar statusVal =
+      Left "Google Calendar event status must not contain hidden formatting characters"
   | T.any isSpace statusVal =
       Left "Google Calendar event status must not contain whitespace"
   | statusVal `elem` calendarEventStatuses =
