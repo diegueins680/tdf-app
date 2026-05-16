@@ -14875,6 +14875,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Unbounce page for Beatmaking 101',
       'Formulario de Landingi para Beatmaking 101',
       'Beatmaking 101 - Instapage page',
+      'Webflow landing page - Beatmaking 101',
+      'Beatmaking 101 - Wix page',
+      'Squarespace portal for Beatmaking 101',
+      'Notion page - Beatmaking 101',
+      'Google Sites page for Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -14890,7 +14895,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Carrd|Framer|Unbounce|Landingi|Instapage/i);
+        expect(emptyState?.textContent).not.toMatch(/Carrd|Framer|Unbounce|Landingi|Instapage|Webflow|Wix|Squarespace|Notion|Google Sites/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
