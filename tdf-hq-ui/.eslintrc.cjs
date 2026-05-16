@@ -45,6 +45,7 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
     'react-hooks/exhaustive-deps': 'warn',
+    'no-console': ['warn', { allow: ['error'] }],
   },
   ignorePatterns: [
     'dist/',
