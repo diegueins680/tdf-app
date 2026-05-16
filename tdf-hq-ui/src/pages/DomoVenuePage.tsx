@@ -315,15 +315,62 @@ export default function DomoVenuePage() {
           minHeight: { xs: '100vh', md: '100vh' },
           display: 'flex',
           alignItems: 'flex-end',
-          backgroundImage: `linear-gradient(180deg, rgba(4,8,12,0.45) 0%, rgba(4,8,12,0.65) 60%, rgba(4,8,12,0.92) 100%), url(${DOMO_IMAGE_URL})`,
-          backgroundSize: 'cover',
-          backgroundPosition: { xs: '56% center', md: 'center' },
           color: '#fff',
           px: { xs: 2, md: 6 },
           py: { xs: 8, md: 10 },
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Video background */}
+        <Box
+          component="video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster={DOMO_IMAGE_URL}
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 0,
+          }}
+        >
+          <source src={`${PUBLIC_BASE}/videos/nature-hero.mp4`} type="video/mp4" media="(min-width: 768px)" />
+          <source src={`${PUBLIC_BASE}/videos/nature-hero-mobile.mp4`} type="video/mp4" />
+        </Box>
+
+        {/* Top gradient shield for nav readability */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '25%',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 100%)',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Bottom gradient shield for text readability */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '60%',
+            background: 'linear-gradient(to top, rgba(4,8,12,0.92) 0%, rgba(4,8,12,0.5) 50%, transparent 100%)',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        />
         <Stack spacing={3} sx={{ maxWidth: 820, position: 'relative', zIndex: 2 }}>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip icon={<LandscapeIcon />} label="Pululahua" sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: '#fff', backdropFilter: 'blur(8px)' }} />
