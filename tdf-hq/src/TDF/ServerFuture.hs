@@ -11,9 +11,12 @@ import           Data.Char
       , Format
       , LineSeparator
       , NonSpacingMark
+      , NotAssigned
       , ParagraphSeparator
+      , PrivateUse
       , Space
       , SpacingCombiningMark
+      , Surrogate
       )
   , generalCategory
   , isControl
@@ -616,8 +619,11 @@ invalidCardText maxLength value =
                     , Format
                     , LineSeparator
                     , NonSpacingMark
+                    , NotAssigned
                     , ParagraphSeparator
+                    , PrivateUse
                     , SpacingCombiningMark
+                    , Surrogate
                     ]
         || (generalCategory ch == Space && ch /= ' ')
 
