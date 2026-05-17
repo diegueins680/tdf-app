@@ -9334,15 +9334,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
       expect(container.textContent).toContain('Abre expediente desde el nombre;');
       expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
-      const remainingStatusFilter = getButtonByAriaLabel(
-        container,
-        'Filtrar inscripciones por estado Pendiente de pago',
-      );
-      expect(remainingStatusFilter.textContent?.trim()).toBe('Pendiente de pago');
-      expect(remainingStatusFilter.textContent).not.toContain('(8)');
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
+      expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pendiente de pago"]')).toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
@@ -12846,8 +12843,11 @@ describe('CourseRegistrationsAdminPage', () => {
         crStatus: 'paid',
       }),
     ];
-    listRegistrationsMock.mockImplementation((params) =>
-      Promise.resolve(params?.status === 'pending_payment' ? pendingRegistrations : initialRegistrations));
+    listRegistrationsMock.mockImplementation((params) => {
+      if (params?.status === 'pending_payment') return Promise.resolve(pendingRegistrations);
+      if (params?.status === 'paid') return Promise.resolve(initialRegistrations.slice(-1));
+      return Promise.resolve(initialRegistrations);
+    });
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -12859,17 +12859,18 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'student');
       await flushPromises();
       await flushPromises();
     });
 
     await waitForExpectation(() => {
-      expect(getDossierTriggers(container)).toHaveLength(1);
-      expect(container.textContent).toContain('Nina Simone');
-      const pendingStatusFilter = getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago');
-      expect(pendingStatusFilter.getAttribute('title')).toBe(
-        'Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual.',
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).toContain('Estudiante 1');
+      expect(container.textContent).not.toContain('Nina Simone');
+      const paidStatusFilter = getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado');
+      expect(paidStatusFilter.getAttribute('title')).toBe(
+        'Filtrar inscripciones por estado Pagado y limpiar la búsqueda actual.',
       );
       expect(container.textContent).not.toContain('limpiar la búsqueda actual');
     });
@@ -12877,7 +12878,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago'));
+      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado'));
       await flushPromises();
       await flushPromises();
     });
@@ -12885,14 +12886,14 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(listRegistrationsMock).toHaveBeenLastCalledWith({
         slug: undefined,
-        status: 'pending_payment',
+        status: 'paid',
         limit: 200,
       });
-      expect((getInputByLabel(container, localSearchLabel) as HTMLInputElement).value).toBe('');
-      expect(getDossierTriggers(container)).toHaveLength(9);
-      expect(container.textContent).toContain('Estudiante 1');
-      expect(container.textContent).not.toContain('Nina Simone');
-      expect(container.textContent).not.toContain('No hay coincidencias para "nina"');
+      expect(hasLabel(container, localSearchLabel)).toBe(false);
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina Simone');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).not.toContain('No hay coincidencias para "student"');
     });
 
     await cleanup();

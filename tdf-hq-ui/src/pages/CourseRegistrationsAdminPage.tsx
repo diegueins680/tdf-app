@@ -3829,7 +3829,7 @@ export default function CourseRegistrationsAdminPage() {
     localSearchSingleResult
     && !hasCustomFilters
     && !cohortsQuery.isError
-    && singleResultUnrelatedStatusFilterCount > 1,
+    && singleResultUnrelatedStatusFilterCount > 0,
   );
   const localSearchSingleResultUsesDirectPaidRecovery =
     localSearchSingleResultKnownStatus === 'paid';
