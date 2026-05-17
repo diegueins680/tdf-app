@@ -1193,6 +1193,54 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('omits buyer-email placeholders when the buyer identity already owns the customer cell', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'email-only',
+        moBuyerName: '   ',
+        moBuyerEmail: 'buyer@example.com',
+        moBuyerPhone: null,
+      }),
+      buildOrder({
+        moOrderId: 'named-no-email',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: '   ',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'named-with-email',
+        moCartId: 'cart-3',
+        moBuyerName: 'Katherine Johnson',
+        moBuyerEmail: 'katherine@example.com',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const customerCells = getColumnTextsByHeader(container, 'Cliente');
+
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+        expect(customerCells[0]).toContain('Katherine Johnson');
+        expect(customerCells[0]).toContain('katherine@example.com');
+        expect(customerCells.slice(1)).toEqual(['Grace Hopper', 'buyer@example.com']);
+        expect(customerCells).not.toContain('Grace Hopper —');
+        expect(customerCells).not.toContain('buyer@example.com —');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('does not repeat phone-only buyer identities in the contact column', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

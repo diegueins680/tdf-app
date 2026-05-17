@@ -1137,11 +1137,7 @@ export default function MarketplaceOrdersPage() {
                           >
                             {buyerEmail}
                           </Link>
-                        ) : (
-                          <Typography variant="caption" color="text.secondary">
-                            —
-                          </Typography>
-                        )}
+                        ) : null}
                       </TableCell>
                       {showBuyerPhoneColumn && (
                         <TableCell>
