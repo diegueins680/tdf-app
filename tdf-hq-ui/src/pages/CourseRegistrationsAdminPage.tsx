@@ -291,6 +291,24 @@ const normalizeRegistrationContactValue = (value?: string | null) => {
   return trimmed;
 };
 
+const NAME_PLACEHOLDER_VALUE_KEYS = new Set([
+  ...CONTACT_PLACEHOLDER_VALUE_KEYS,
+  'nombre pendiente',
+  'nombre por confirmar',
+  'nombre por definir',
+  'no registra nombre',
+  'no tiene nombre',
+  'sin nombre',
+  'sin nombre completo',
+]);
+
+const normalizeRegistrationNameValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (NAME_PLACEHOLDER_VALUE_KEYS.has(normalizeContactPlaceholderKey(trimmed))) return null;
+  return trimmed;
+};
+
 const formatDossierContextActionsLabel = ({
   showInlineEmptyFollowUpAction,
   showInlineEmptyNotesAction,
@@ -2546,7 +2564,7 @@ const registrationVisibleSearchText = (
 ) => {
   const courseSlug = reg.crCourseSlug.trim();
   return [
-    reg.crFullName,
+    normalizeRegistrationNameValue(reg.crFullName),
     normalizeRegistrationContactValue(reg.crEmail),
     `registro #${reg.crId}`,
     String(reg.crId),
@@ -2648,7 +2666,7 @@ const registrationIdentityDisplay = (
   phone: string | null | undefined,
   registrationId?: number | null,
 ) => {
-  const trimmedName = fullName?.trim() ?? '';
+  const trimmedName = normalizeRegistrationNameValue(fullName) ?? '';
   const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
   const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
   const fallbackIdentity = registrationId == null ? 'Sin nombre' : `Registro #${registrationId}`;
@@ -2683,7 +2701,7 @@ const registrationIdentityDisplay = (
 const registrationIdentityKind = (
   reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ): RegistrationIdentityKind => {
-  if (reg.crFullName?.trim()) return 'name';
+  if (normalizeRegistrationNameValue(reg.crFullName)) return 'name';
   if (normalizeRegistrationContactValue(reg.crEmail)) return 'email';
   if (normalizeRegistrationContactValue(reg.crPhoneE164)) return 'phone';
   return 'record';
@@ -2754,7 +2772,7 @@ const registrationContactSummary = (
 const registrationActionTargetLabel = (
   reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ) => {
-  const trimmedName = reg.crFullName?.trim() ?? '';
+  const trimmedName = normalizeRegistrationNameValue(reg.crFullName) ?? '';
   if (trimmedName) return trimmedName;
   const trimmedEmail = normalizeRegistrationContactValue(reg.crEmail) ?? '';
   if (trimmedEmail) return trimmedEmail;
@@ -2898,14 +2916,15 @@ const buildLocalSearchPlaceholder = (
   const acquisitionContextKeys = new Set<string>();
 
   registrations.forEach((reg) => {
-    const hasName = Boolean(reg.crFullName?.trim());
+    const name = normalizeRegistrationNameValue(reg.crFullName);
+    const hasName = Boolean(name);
     const email = normalizeRegistrationContactValue(reg.crEmail);
     const phone = normalizeRegistrationContactValue(reg.crPhoneE164);
     const hasEmail = Boolean(email);
     const hasPhone = Boolean(phone);
     const hasContact = hasEmail || hasPhone;
-    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(reg.crFullName, email));
-    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(reg.crFullName, phone));
+    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(name, email));
+    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(name, phone));
 
     if (hasName) hasNameIdentity = true;
     if (hasDistinctEmail) hasEmailIdentity = true;
@@ -3501,7 +3520,7 @@ export default function CourseRegistrationsAdminPage() {
     return registrations.filter((reg) => {
       const courseSlug = reg.crCourseSlug.trim();
       const haystack = [
-        reg.crFullName,
+        normalizeRegistrationNameValue(reg.crFullName),
         normalizeRegistrationContactValue(reg.crEmail),
         `registro #${reg.crId}`,
         String(reg.crId),
@@ -5291,7 +5310,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const showInternalRegistrationReference = Boolean(
     activeRegistration?.crPartyId
-    && !activeRegistration?.crFullName?.trim()
+    && !normalizeRegistrationNameValue(activeRegistration?.crFullName)
     && registrationNeedsContact(activeRegistration),
   );
   const activeRegistrationSecondaryLine = showInternalRegistrationReference && activeRegistration?.crPartyId
@@ -6546,7 +6565,7 @@ export default function CourseRegistrationsAdminPage() {
                   );
                   const rowSecondaryIdentity =
                     rowIdentity.secondary === missingContactSummary ? '' : rowIdentity.secondary;
-                  const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
+                  const rowUsesGeneratedIdentity = !normalizeRegistrationNameValue(reg.crFullName)
                     && registrationNeedsContact(reg);
                   const showRowRegistrationDisambiguator =
                     registrationIdsRequiringActionRecordDisambiguator.has(reg.crId)

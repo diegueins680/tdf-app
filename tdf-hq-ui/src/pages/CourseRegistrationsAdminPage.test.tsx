@@ -9593,6 +9593,55 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('ignores placeholder registration names when contact identity is available in busy lists', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crFullName: index % 2 === 0 ? 'Sin nombre' : 'Por definir',
+        crEmail: `contacto${index + 1}@example.com`,
+        crPhoneE164: null,
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+
+      expect(searchInput.getAttribute('placeholder')).toBe('Correo');
+      expect(searchInput.getAttribute('placeholder')).not.toContain('Nombre');
+      expect(container.textContent).toContain(emailPaymentWorkflowDossierScopeHint);
+      expect(countOccurrences(container, emailPaymentWorkflowDossierScopeHint)).toBe(1);
+      expect(container.textContent).not.toContain('Sin nombre');
+      expect(container.textContent).not.toContain('Por definir');
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto1@example.com').textContent?.trim()).toBe(
+        'contacto1@example.com',
+      );
+      expect(
+        getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('contacto1@example.com')),
+      ).toBeTruthy();
+      expect(
+        container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para contacto"]'),
+      ).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin nombre');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-empty-local-search"]')?.textContent).toContain(
+        'No hay coincidencias para "sin nombre"',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('compacts busy payment actions even when shared contact guidance is present', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
