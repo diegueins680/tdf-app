@@ -63,7 +63,12 @@ normalizeCalendarId raw =
            then Left "calendarId must not contain hidden formatting characters"
          else if T.any isSpace trimmed
            then Left "calendarId must not contain whitespace"
+          else if T.length trimmed > maxCalendarIdChars
+            then Left "calendarId must be 1024 characters or fewer"
            else Right trimmed
+
+maxCalendarIdChars :: Int
+maxCalendarIdChars = 1024
 
 isHiddenCalendarIdChar :: Char -> Bool
 isHiddenCalendarIdChar ch =

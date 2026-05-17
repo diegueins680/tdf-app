@@ -921,6 +921,8 @@ spec = do
                             Just "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
 
         it "rejects blank, typoed, or inverted calendar admin bodies before ambiguous Google calls" $ do
+            let oversizedCalendarId =
+                    BL8.pack (replicate (Calendar.maxCalendarIdChars + 1) 'a')
             decodeCalendarTokenExchange
                 "{\"code\":\"   \",\"calendarId\":\"primary\"}"
                 `shouldSatisfy` isLeft
@@ -949,6 +951,14 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"team calendar\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\",\"calendarId\":\""
+                    , oversizedCalendarId
+                    , "\"}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \",\"calendarId\":\"primary\"}"
@@ -994,6 +1004,9 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"team calendar\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                (BL8.concat ["{\"calendarId\":\"", oversizedCalendarId, "\"}"])
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"from\":\"2026-05-02T16:00:00Z\",\"to\":\"2026-05-02T15:00:00Z\"}"
