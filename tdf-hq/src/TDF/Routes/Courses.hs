@@ -38,7 +38,7 @@ import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
-import           TDF.API.Types (RawJSON)
+import           TDF.API.Types (RawJSON, rejectNullOptionalFields)
 import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
 
@@ -94,7 +94,9 @@ data UTMTags = UTMTags
   } deriving (Show, Generic)
 
 instance FromJSON UTMTags where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "UTMTags" ["source", "medium", "campaign", "content"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON UTMTags
 
 data CourseRegistrationRequest = CourseRegistrationRequest
@@ -107,7 +109,12 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationRequest"
+      ["fullName", "email", "phoneE164", "howHeard", "utm"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationRequest
 
 data CourseRegistrationResponse = CourseRegistrationResponse

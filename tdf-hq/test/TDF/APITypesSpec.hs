@@ -431,6 +431,17 @@ spec = do
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null registration fields instead of treating them as fallback omissions" $ do
+            decodeCourseRegistration
+                "{\"fullName\":null,\"email\":\"ada@example.com\",\"source\":\"landing\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistration
+                "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistration
+                "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":null}}"
+                `shouldSatisfy` isLeft
+
     describe "AdsInquiry FromJSON" $ do
         it "accepts canonical public ads inquiry payloads" $
             case decodeAdsInquiry
