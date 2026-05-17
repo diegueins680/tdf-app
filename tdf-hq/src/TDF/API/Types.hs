@@ -209,7 +209,9 @@ data DropdownOptionCreate = DropdownOptionCreate
 
 instance ToJSON DropdownOptionCreate
 instance FromJSON DropdownOptionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "DropdownOptionCreate" ["docActive"] value
+    genericParseJSON strictObjectOptions value
 
 data DropdownOptionUpdate = DropdownOptionUpdate
   { douValue     :: Maybe Text

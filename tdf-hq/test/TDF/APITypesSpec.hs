@@ -178,6 +178,14 @@ spec = do
                 "{\"douActive\":false,\"active\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null dropdown create defaults so active fallback stays intentional" $
+            case decodeDropdownOptionCreate "{\"docValue\":\"stage\",\"docActive\":null}" of
+                Left err ->
+                    err `shouldContain` "docActive must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null dropdown active default to be rejected, got: " <> show value)
+
         it "rejects empty dropdown updates instead of accepting a silent no-op patch" $
             decodeDropdownOptionUpdate "{}" `shouldSatisfy` isLeft
 
