@@ -414,6 +414,7 @@ import TDF.ServerFuture
     , deriveFutureStubAreas
     , futureStubId
     , futureStubResponseFor
+    , futureStubRequiredRoles
     , futureServer
     , futureAdminConsoleView
     , invalidCardText
@@ -11763,6 +11764,7 @@ spec = describe "TDF.Server helpers" $ do
                         , stubMethod = "GET"
                         , stubStatus = "planned"
                         , stubRequiredRole = "Admin"
+                        , stubRequiredRoles = futureStubRequiredRoles
                         , stubRequiredModule = "Admin"
                         , stubImplemented = False
                         }
@@ -11879,6 +11881,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
                     stubRequiredRole response `shouldBe` roleToText Admin
+                    stubRequiredRoles response `shouldBe` futureStubRequiredRoles
                     stubRequiredModule response `shouldBe` moduleName ModuleAdmin
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
@@ -12062,6 +12065,7 @@ spec = describe "TDF.Server helpers" $ do
                         , stubMethod = method
                         , stubStatus = status
                         , stubRequiredRole = requiredRole
+                        , stubRequiredRoles = futureStubRequiredRoles
                         , stubRequiredModule = requiredModule
                         , stubImplemented = implemented
                         }
@@ -12096,6 +12100,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubMethod response `shouldBe` "GET"
                     stubStatus response `shouldBe` "planned"
                     stubRequiredRole response `shouldBe` roleToText Admin
+                    stubRequiredRoles response `shouldBe` futureStubRequiredRoles
                     stubRequiredModule response `shouldBe` moduleName ModuleAdmin
                     stubImplemented response `shouldBe` False
                 Left serverErr ->
@@ -12113,6 +12118,8 @@ spec = describe "TDF.Server helpers" $ do
                     "Admin"
                     "Admin"
                     False)
+            assertInvalid
+                (validResponse { stubRequiredRoles = ["Admin"] })
             assertInvalid
                 (mkResponse
                     "crm"
@@ -12316,6 +12323,7 @@ spec = describe "TDF.Server helpers" $ do
                         , Future.viewMethod = methodValue
                         , Future.viewStatus = statusValue
                         , Future.viewRequiredRole = roleValue
+                        , Future.viewRequiredRoles = futureStubRequiredRoles
                         , Future.viewRequiredModule = moduleValue
                         , Future.viewImplemented = implementedValue
                         , Future.cards = cardsValue
@@ -12358,6 +12366,7 @@ spec = describe "TDF.Server helpers" $ do
                     Future.viewMethod view `shouldBe` "GET"
                     Future.viewStatus view `shouldBe` "preview"
                     Future.viewRequiredRole view `shouldBe` "Admin"
+                    Future.viewRequiredRoles view `shouldBe` futureStubRequiredRoles
                     Future.viewRequiredModule view `shouldBe` "Admin"
                     Future.viewImplemented view `shouldBe` False
                     map Future.cardId (Future.cards view)
@@ -12413,6 +12422,7 @@ spec = describe "TDF.Server helpers" $ do
                     False
                     validCards)
             assertInvalid (mkViewWith "preview" "Manager" "Admin" False validCards)
+            assertInvalid (validView { Future.viewRequiredRoles = ["Admin"] })
             assertInvalid (mkViewWith "preview" "Admin" "CRM" False validCards)
             assertInvalid (mkViewWith "preview" "Admin" "Admin" True validCards)
             assertInvalid (mkView "preview" [])
@@ -12535,6 +12545,7 @@ spec = describe "TDF.Server helpers" $ do
                     catalog `shouldSatisfy` all ((== "GET") . stubMethod)
                     catalog `shouldSatisfy` all ((== "planned") . stubStatus)
                     catalog `shouldSatisfy` all ((== roleToText Admin) . stubRequiredRole)
+                    catalog `shouldSatisfy` all ((== futureStubRequiredRoles) . stubRequiredRoles)
                     catalog `shouldSatisfy` all ((== moduleName ModuleAdmin) . stubRequiredModule)
                     catalog `shouldSatisfy` all (not . stubImplemented)
                 Left serverErr ->
@@ -12568,6 +12579,8 @@ spec = describe "TDF.Server helpers" $ do
                     routeResponses `shouldSatisfy` all ((== "GET") . stubMethod)
                     routeResponses `shouldSatisfy` all ((== "planned") . stubStatus)
                     routeResponses `shouldSatisfy` all ((== roleToText Admin) . stubRequiredRole)
+                    routeResponses
+                        `shouldSatisfy` all ((== futureStubRequiredRoles) . stubRequiredRoles)
                     routeResponses `shouldSatisfy` all ((== moduleName ModuleAdmin) . stubRequiredModule)
                     routeResponses `shouldSatisfy` all (not . stubImplemented)
                 Left serverErr ->
@@ -12592,6 +12605,7 @@ spec = describe "TDF.Server helpers" $ do
                     stubMethod stubResponse `shouldBe` "GET"
                     stubStatus stubResponse `shouldBe` "planned"
                     stubRequiredRole stubResponse `shouldBe` roleToText Admin
+                    stubRequiredRoles stubResponse `shouldBe` futureStubRequiredRoles
                     stubRequiredModule stubResponse `shouldBe` moduleName ModuleAdmin
                 Left serverErr ->
                     expectationFailure
@@ -12607,6 +12621,7 @@ spec = describe "TDF.Server helpers" $ do
                     Future.viewMethod consoleView `shouldBe` "GET"
                     Future.viewStatus consoleView `shouldBe` "preview"
                     Future.viewRequiredRole consoleView `shouldBe` "Admin"
+                    Future.viewRequiredRoles consoleView `shouldBe` futureStubRequiredRoles
                     Future.viewRequiredModule consoleView `shouldBe` "Admin"
                     Future.viewImplemented consoleView `shouldBe` False
                     map Future.cardId (Future.cards consoleView)
@@ -12621,6 +12636,7 @@ spec = describe "TDF.Server helpers" $ do
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("preview" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
+                            , "stubRequiredRoles" .= futureStubRequiredRoles
                             , "stubRequiredModule" .= ("Admin" :: Text)
                             , "stubImplemented" .= False
                             , "cards" .=
@@ -12663,6 +12679,7 @@ spec = describe "TDF.Server helpers" $ do
                             , "stubMethod" .= ("GET" :: Text)
                             , "stubStatus" .= ("planned" :: Text)
                             , "stubRequiredRole" .= ("Admin" :: Text)
+                            , "stubRequiredRoles" .= futureStubRequiredRoles
                             , "stubRequiredModule" .= ("Admin" :: Text)
                             , "stubImplemented" .= False
                             ]

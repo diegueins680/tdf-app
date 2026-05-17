@@ -18,6 +18,7 @@ data StubResponse = StubResponse
   , stubMethod      :: Text
   , stubStatus      :: Text
   , stubRequiredRole   :: Text
+  , stubRequiredRoles  :: [Text]
   , stubRequiredModule :: Text
   , stubImplemented :: Bool
   } deriving stock (Show)
@@ -32,6 +33,7 @@ instance ToJSON StubResponse where
       , "stubMethod" .= stubMethod response
       , "stubStatus" .= stubStatus response
       , "stubRequiredRole" .= stubRequiredRole response
+      , "stubRequiredRoles" .= stubRequiredRoles response
       , "stubRequiredModule" .= stubRequiredModule response
       , "stubImplemented" .= stubImplemented response
       ]
@@ -62,6 +64,7 @@ data AdminConsoleView = AdminConsoleView
   , viewMethod         :: Text
   , viewStatus         :: Text
   , viewRequiredRole   :: Text
+  , viewRequiredRoles  :: [Text]
   , viewRequiredModule :: Text
   , viewImplemented    :: Bool
   , cards              :: [AdminConsoleCard]
@@ -77,6 +80,7 @@ instance ToJSON AdminConsoleView where
       , "stubMethod" .= viewMethod view
       , "stubStatus" .= viewStatus view
       , "stubRequiredRole" .= viewRequiredRole view
+      , "stubRequiredRoles" .= viewRequiredRoles view
       , "stubRequiredModule" .= viewRequiredModule view
       , "stubImplemented" .= viewImplemented view
       , "cards" .= cards view

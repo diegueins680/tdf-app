@@ -116,6 +116,7 @@ futureAdminConsoleView =
     , viewMethod = futureStubMethod
     , viewStatus = "preview"
     , viewRequiredRole = futureStubRequiredRole
+    , viewRequiredRoles = futureStubRequiredRoles
     , viewRequiredModule = futureStubRequiredModule
     , viewImplemented = False
     , cards = adminConsoleCards
@@ -347,6 +348,7 @@ validateFutureStubResponse response =
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
+      | stubRequiredRoles response /= futureStubRequiredRoles -> invalidFutureStubResponse
       | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
@@ -358,8 +360,11 @@ validateFutureStubResponse response =
             , stubId = responseId
             , stubPath = path
             , stubMethod = futureStubMethod
+            , stubStatus = "planned"
             , stubRequiredRole = futureStubRequiredRole
+            , stubRequiredRoles = futureStubRequiredRoles
             , stubRequiredModule = futureStubRequiredModule
+            , stubImplemented = False
             }
 
 validateFutureStubPublishedId
@@ -484,6 +489,7 @@ futureStubResponseFor rawArea rawEndpoint = do
       , stubMethod = futureStubMethod
       , stubStatus = "planned"
       , stubRequiredRole = futureStubRequiredRole
+      , stubRequiredRoles = futureStubRequiredRoles
       , stubRequiredModule = futureStubRequiredModule
       , stubImplemented = False
       }
@@ -511,6 +517,10 @@ futureStubMethod = "GET"
 
 futureStubRequiredRole :: Text
 futureStubRequiredRole = roleToText Admin
+
+futureStubRequiredRoles :: [Text]
+futureStubRequiredRoles =
+  map roleToText (Admin : requiredFutureAdminBaselineRoles)
 
 futureStubRequiredModule :: Text
 futureStubRequiredModule = moduleName ModuleAdmin
@@ -574,6 +584,8 @@ validateFutureAdminConsoleView view
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
+  | viewRequiredRoles view /= futureStubRequiredRoles =
+      invalidFutureAdminConsoleMetadata
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
@@ -593,6 +605,7 @@ validateFutureAdminConsoleView view
           , viewMethod = futureStubMethod
           , viewStatus = "preview"
           , viewRequiredRole = futureStubRequiredRole
+          , viewRequiredRoles = futureStubRequiredRoles
           , viewRequiredModule = futureStubRequiredModule
           , viewImplemented = False
           , cards = validatedCards
