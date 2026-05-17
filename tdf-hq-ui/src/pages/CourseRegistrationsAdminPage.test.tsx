@@ -16560,7 +16560,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Proof of payment - Beatmaking 101',
       'Beatmaking 101 - payment invoice',
       'Comprobante de pago - Beatmaking 101',
+      'Comprobante pago - Beatmaking 101',
       'Beatmaking 101 - recibo de pago',
+      'Beatmaking 101 - recibo pago',
       'Factura de pago para Beatmaking 101',
       'Beatmaking 101 - evidencia de pago',
     ];
