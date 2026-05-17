@@ -11670,7 +11670,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid driftedEndpoint
 
     describe "validateFutureStubCatalogResponses" $ do
-        it "rejects missing, duplicated, or reordered fallback discovery responses" $ do
+        it "distinguishes malformed fallback discovery responses from catalog drift" $ do
             let mkResponse area endpoint =
                     StubResponse
                         { stubArea = area
@@ -11685,7 +11685,7 @@ spec = describe "TDF.Server helpers" $ do
                         }
                 validResponses =
                     map (uncurry mkResponse) allowedFutureStubMetadata
-                assertInvalid responses =
+                assertInvalidCatalog responses =
                     case validateFutureStubCatalogResponses responses of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 500
@@ -11694,6 +11694,17 @@ spec = describe "TDF.Server helpers" $ do
                         Right value ->
                             expectationFailure
                                 ("Expected invalid fallback discovery responses, got: " <> show value)
+                assertInvalidResponse responses =
+                    case validateFutureStubCatalogResponses responses of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                            BL8.unpack (errBody serverErr)
+                                `shouldNotContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed fallback discovery response, got: " <> show value)
 
             case validateFutureStubCatalogResponses validResponses of
                 Right responses ->
@@ -11705,10 +11716,10 @@ spec = describe "TDF.Server helpers" $ do
 
             case validResponses of
                 firstResponse : remainingResponses -> do
-                    assertInvalid (firstResponse { stubMethod = "POST" } : remainingResponses)
-                    assertInvalid remainingResponses
-                    assertInvalid (validResponses <> [firstResponse])
-                    assertInvalid (remainingResponses <> [firstResponse])
+                    assertInvalidResponse (firstResponse { stubMethod = "POST" } : remainingResponses)
+                    assertInvalidCatalog remainingResponses
+                    assertInvalidCatalog (validResponses <> [firstResponse])
+                    assertInvalidCatalog (remainingResponses <> [firstResponse])
                 [] ->
                     expectationFailure "Expected fallback discovery response fixture to be non-empty"
 

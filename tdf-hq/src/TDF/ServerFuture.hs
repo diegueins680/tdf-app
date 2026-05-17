@@ -461,9 +461,7 @@ validateFutureStubCatalogResponseWithConsole consoleView = do
 
 validateFutureStubCatalogResponses :: [StubResponse] -> Either ServerError [StubResponse]
 validateFutureStubCatalogResponses responses = do
-  validatedResponses <-
-    either (const invalidFutureStubCatalog) Right $
-      traverse validateFutureStubResponse responses
+  validatedResponses <- traverse validateFutureStubResponse responses
   let metadata = map (\response -> (stubArea response, stubEndpoint response)) validatedResponses
       ids = map stubId validatedResponses
       paths = map stubPath validatedResponses
