@@ -6514,6 +6514,8 @@ export default function CourseRegistrationsAdminPage() {
                   helperText={localSearchHelperText}
                   size="small"
                   fullWidth
+                  autoComplete="off"
+                  inputProps={{ spellCheck: false }}
                   data-testid="course-registration-local-search"
                   InputProps={{
                     startAdornment: (

@@ -9051,7 +9051,10 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
-      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe('Nombre o contacto');
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(searchInput.getAttribute('autocomplete')).toBe('off');
+      expect(searchInput.getAttribute('spellcheck')).toBe('false');
       expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Busca dentro de las 9 inscripciones cargadas sin cambiar filtros.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
