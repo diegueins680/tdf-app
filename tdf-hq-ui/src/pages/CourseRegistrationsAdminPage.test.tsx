@@ -1554,6 +1554,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps parenthesized cohort filter labels from repeating the matching slug words', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101-weekend', ccTitle: 'Beatmaking 101 (Weekend)' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crCourseSlug: 'beatmaking-101-weekend' }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crCourseSlug: 'beatmaking-101-weekend',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101-weekend');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(container.textContent).toContain('Beatmaking 101 Weekend');
+      expect(container.textContent).not.toContain('Beatmaking 101 (Weekend) (beatmaking-101-weekend)');
+      expect(container.textContent).not.toContain('beatmaking-101-weekend');
+    });
+
+    await cleanup();
+  });
+
   it('strips public-form wrappers from selected cohort filter labels', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Formulario público - Beatmaking 101' },
