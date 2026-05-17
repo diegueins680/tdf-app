@@ -12024,10 +12024,12 @@ validateDatafastPaymentCurrencyField (Just rawCurrency) =
 
 parseDatafastAmountCents :: Text -> Maybe Int
 parseDatafastAmountCents rawAmount =
-  case T.splitOn "." amount of
-    [whole] -> parseParts whole "0"
-    [whole, fraction] -> parseParts whole fraction
-    _ -> Nothing
+  if T.length amount > maxDatafastAmountChars
+    then Nothing
+    else case T.splitOn "." amount of
+      [whole] -> parseParts whole "0"
+      [whole, fraction] -> parseParts whole fraction
+      _ -> Nothing
   where
     amount = T.strip rawAmount
 
@@ -12059,6 +12061,9 @@ parseDecimalDigits rawDigits =
 isAsciiDecimalDigit :: Char -> Bool
 isAsciiDecimalDigit ch =
   ch >= '0' && ch <= '9'
+
+maxDatafastAmountChars :: Int
+maxDatafastAmountChars = 32
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do

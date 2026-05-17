@@ -8128,6 +8128,14 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "USD"))
             assertInvalid
                 502
+                "invalid payment amount"
+                (validateDatafastSuccessfulPaymentAmountAndCurrency
+                    2500
+                    "USD"
+                    (Just (T.replicate 64 "0" <> "25.00"))
+                    (Just "USD"))
+            assertInvalid
+                502
                 "amount does not match"
                 (validateDatafastSuccessfulPaymentAmountAndCurrency 2500 "USD" (Just "24.99") (Just "USD"))
             assertInvalid
