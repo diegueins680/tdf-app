@@ -1228,6 +1228,14 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL path must not start with // or contain backslashes"
             assertInvalid
                 "HQ_APP_URL"
+                "https://hq.example.com/app/../admin"
+                "HQ_APP_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets//logo"
+                "HQ_ASSETS_BASE_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "HQ_APP_URL"
                 "https://hq.example.com/app\SOHadmin"
                 "HQ_APP_URL must not contain control characters"
             assertInvalid
@@ -1301,6 +1309,14 @@ main = hspec $ do
                 "INSTAGRAM_GRAPH_BASE"
                 "https://graph.instagram.com/v1\\profile"
                 "INSTAGRAM_GRAPH_BASE path must not start with // or contain backslashes"
+            assertInvalid
+                "FACEBOOK_GRAPH_BASE"
+                "https://graph.facebook.com/v20.0/../debug"
+                "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                "https://api.moonshot.cn/v1//chat"
+                "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
                 "https://api.moonshot.cn:0443"

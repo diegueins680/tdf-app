@@ -1337,7 +1337,7 @@ normalizeConfiguredApiBaseUrl envName rawUrl
           | T.any (`elem` ("?#" :: String)) urlVal ->
               Left (envName <> " must be an absolute https URL without query or fragment")
           | not (validApiBasePathSuffix (apiBasePathSuffix urlVal)) ->
-              Left (envName <> " path must not start with // or contain backslashes")
+              Left (ambiguousUrlPathMessage envName)
           | otherwise ->
               Right (T.dropWhileEnd (== '/') urlVal)
   where
@@ -1350,6 +1350,7 @@ normalizeConfiguredApiBaseUrl envName rawUrl
         || ( "/" `T.isPrefixOf` suffix
              && not ("//" `T.isPrefixOf` suffix)
              && not (T.any (== '\\') suffix)
+             && not (hasAmbiguousUrlPathSuffix suffix)
            )
 
 validateConfiguredCourseSlug :: Maybe String -> IO Text
@@ -1404,10 +1405,7 @@ normalizeConfiguredBaseUrl envName rawUrl
            then invalid
            else if not (validateBasePathSuffix pathSuffix)
              then
-               Left
-                 ( envName
-                     <> " path must not start with // or contain backslashes"
-                 )
+               Left (ambiguousUrlPathMessage envName)
              else Right (Just trimmed)
 
     validateBasePathSuffix suffix =
@@ -1415,6 +1413,7 @@ normalizeConfiguredBaseUrl envName rawUrl
         || ( "/" `T.isPrefixOf` suffix
              && not ("//" `T.isPrefixOf` suffix)
              && not (T.any (== '\\') suffix)
+             && not (hasAmbiguousUrlPathSuffix suffix)
            )
 
     validateAuthority rawAuthority
@@ -1495,6 +1494,24 @@ normalizeConfiguredBaseUrl envName rawUrl
           if value >= (0 :: Int) && value <= 255
             then Just value
             else Nothing
+
+hasAmbiguousUrlPathSuffix :: Text -> Bool
+hasAmbiguousUrlPathSuffix rawSuffix =
+  any isAmbiguousSegment pathSegments
+  where
+    path = T.dropWhileEnd (== '/') rawSuffix
+    pathSegments =
+      if T.null path
+        then []
+        else T.splitOn "/" (T.drop 1 path)
+    isAmbiguousSegment segment =
+      T.null segment || segment == "." || segment == ".."
+
+ambiguousUrlPathMessage :: String -> String
+ambiguousUrlPathMessage envName =
+  envName
+    <> " path must not start with // or contain backslashes, "
+    <> "empty, dot, or dot-dot segments"
 
 normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredHttpsUrl envName rawUrl
