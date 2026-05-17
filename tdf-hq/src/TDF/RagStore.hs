@@ -9,6 +9,7 @@ module TDF.RagStore
   , getRagIndexStats
   , availabilityOverlaps
   , callOpenAIEmbeddingsWith
+  , shouldUseLocalEmbeddingFallback
   , validateEmbeddingModelDimensions
   , validateEmbeddingResponseOrder
   , validateEmbeddingResponseDimensions
@@ -766,8 +767,13 @@ embedTexts cfg inputs
           results <- forM batches (callOpenAIEmbeddings cfg)
           case concatEmbeddings results of
             Left err -> do
-              hPutStrLn stderr ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
-              pure (Right (localEmbeddings cfg inputs))
+              if shouldUseLocalEmbeddingFallback err
+                then do
+                  hPutStrLn
+                    stderr
+                    ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
+                  pure (Right (localEmbeddings cfg inputs))
+                else pure (Left err)
             Right values -> pure (Right values)
   where
     concatEmbeddings xs =
@@ -775,6 +781,10 @@ embedTexts cfg inputs
       in case failures of
         (err:_) -> Left err
         [] -> Right (concat [vals | Right vals <- xs])
+
+shouldUseLocalEmbeddingFallback :: Text -> Bool
+shouldUseLocalEmbeddingFallback rawError =
+  not ("openai embeddings response invalid:" `T.isPrefixOf` T.toLower (T.strip rawError))
 
 localEmbeddings :: AppConfig -> [Text] -> [[Double]]
 localEmbeddings cfg inputs =
@@ -859,15 +869,24 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
                 pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
             else
               case eitherDecode raw of
-                Left err -> pure (Left (T.pack err))
+                Left err ->
+                  pure (Left ("OpenAI embeddings response invalid: " <> T.pack err))
                 Right (EmbeddingResp embeddings) ->
-                  pure $ do
-                    expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
-                    orderedEmbeddings <-
-                      validateEmbeddingResponseOrder
-                        (length inputs)
-                        [(index item, embedding item) | item <- embeddings]
-                    validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
+                  pure (validateOpenAIEmbeddingPayload cfg (length inputs) embeddings)
+
+validateOpenAIEmbeddingPayload :: AppConfig -> Int -> [EmbeddingData] -> Either Text [[Double]]
+validateOpenAIEmbeddingPayload cfg expectedCount embeddings =
+  case validated of
+    Left err -> Left ("OpenAI embeddings response invalid: " <> err)
+    Right values -> Right values
+  where
+    validated = do
+      expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
+      orderedEmbeddings <-
+        validateEmbeddingResponseOrder
+          expectedCount
+          [(index item, embedding item) | item <- embeddings]
+      validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
 
 sanitizeOpenAIEmbeddingErrorMessage :: Text -> Text
 sanitizeOpenAIEmbeddingErrorMessage raw =

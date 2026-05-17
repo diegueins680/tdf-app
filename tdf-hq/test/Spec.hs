@@ -139,6 +139,7 @@ import TDF.ServerRadio
 import TDF.RagStore
     ( availabilityOverlaps,
       callOpenAIEmbeddingsWith,
+      shouldUseLocalEmbeddingFallback,
       validateEmbeddingModelDimensions,
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
@@ -10517,6 +10518,21 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
             validateEmbeddingResponseDimensions 1 [[infinityValue]]
                 `shouldSatisfy` isLeft
+
+    describe "shouldUseLocalEmbeddingFallback" $
+        it "does not hide upstream embedding response shape drift behind local vectors" $ do
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings request failed: socket closed"
+                `shouldBe` True
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 503)."
+                `shouldBe` True
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings response invalid: Embedding response size mismatch"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "  openai embeddings response invalid: Embedding response dimension mismatch  "
+                `shouldBe` False
 
     describe "callOpenAIEmbeddingsWith" $
         it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
