@@ -11018,6 +11018,70 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats course-platform form wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'kajabi_form',
+      'kajabi_landing_page',
+      'teachable_page',
+      'thinkific_form',
+      'podia_landing_page',
+      'clickfunnels_form',
+      'click_funnels_page',
+      'kartra_form',
+      'systeme.io_form',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Kajabi form',
+      'Kajabi landing page',
+      'Teachable page',
+      'Thinkific form',
+      'Podia landing page',
+      'Clickfunnels form',
+      'Click funnels page',
+      'Kartra form',
+      'Systeme io form',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'kajabi');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "kajabi" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats social lead-form sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'facebook_lead_ad',
