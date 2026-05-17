@@ -5359,7 +5359,8 @@ validatePublicBookingFullName rawName =
       | T.any isUnsafePublicBookingLabelChar nameVal ->
           Left err400
             { errBody =
-                "nombre no debe contener caracteres de control o marcas Unicode invisibles"
+                "nombre no debe contener caracteres de control, "
+                  <> "marcas Unicode invisibles o espacios Unicode ambiguos"
             }
       | otherwise ->
           Right nameVal
@@ -5376,7 +5377,8 @@ validatePublicBookingServiceType rawServiceType =
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
-                "serviceType no debe contener caracteres de control o marcas Unicode invisibles"
+                "serviceType no debe contener caracteres de control, "
+                  <> "marcas Unicode invisibles o espacios Unicode ambiguos"
             }
       | otherwise ->
           Right serviceTypeVal
@@ -5394,7 +5396,8 @@ validateOptionalBookingServiceType (Just rawServiceType) =
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
-                "serviceType must not contain control characters or hidden formatting characters"
+                "serviceType must not contain control characters, "
+                  <> "hidden formatting characters, or Unicode separator spaces"
             }
       | otherwise ->
           Right (Just serviceTypeVal)
@@ -5403,6 +5406,7 @@ isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 hasPublicBookingLabelContent :: Text -> Bool
 hasPublicBookingLabelContent = T.any isAlphaNum

@@ -10005,6 +10005,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("Ana" <> T.singleton '\x2028' <> "Perez")
                 "marcas Unicode invisibles"
+            assertInvalid
+                ("Ana" <> T.singleton '\x00A0' <> "Perez")
+                "espacios Unicode ambiguos"
             assertInvalid "---" "nombre debe incluir letras o números"
             assertInvalid (T.replicate 161 "A") "nombre debe tener 160 caracteres o menos"
 
@@ -10028,6 +10031,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("mixing" <> T.singleton '\x2029')
                 "marcas Unicode invisibles"
+            assertInvalid
+                ("mixing" <> T.singleton '\x00A0' <> "mastering")
+                "espacios Unicode ambiguos"
             assertInvalid "---" "serviceType debe incluir letras o números"
             assertInvalid (T.replicate 121 "A") "serviceType debe tener 120 caracteres o menos"
 
@@ -10053,6 +10059,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("mixing" <> T.singleton '\x202E')
                 "hidden formatting characters"
+            assertInvalid
+                ("mixing" <> T.singleton '\x00A0' <> "mastering")
+                "Unicode separator spaces"
             assertInvalid "---" "serviceType must include letters or numbers"
             assertInvalid (T.replicate 121 "A") "serviceType must be 120 characters or fewer"
 
