@@ -4119,6 +4119,23 @@ main = hspec $ do
             formatted `shouldSatisfy` (not . Data.Text.any (`elem` ['\x202E', '\x2028']))
             Data.Text.length formatted `shouldSatisfy` (<= 2040)
 
+        it "redacts SRI runner stderr secrets before returning backend errors" $ do
+            let formatted =
+                    Sri.formatSriScriptFailure
+                        ( "certificatePassword=sri-cert-secret "
+                            <> "Authorization: Bearer sri-bearer-secret "
+                            <> "{\"access_token\":\"sri-access-secret\","
+                            <> "\"client_secret\":\"sri-client-secret\"}"
+                        )
+            formatted `shouldSatisfy` Data.Text.isInfixOf "certificatePassword=[redacted]"
+            formatted `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+            formatted `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+            formatted `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-cert-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-bearer-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-access-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-client-secret")
+
     describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides

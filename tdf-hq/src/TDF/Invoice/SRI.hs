@@ -18,6 +18,8 @@ import           Control.Monad (when)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
+  , isAlphaNum
+  , isSpace
   )
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -100,15 +102,142 @@ runSriInvoiceScript payload = do
 formatSriScriptFailure :: String -> Text
 formatSriScriptFailure stderrTxt =
   let sanitized = T.strip (T.map sanitizeFailureChar (T.pack stderrTxt))
-  in if T.null sanitized
+      redacted = redactSriScriptFailureSecrets sanitized
+  in if T.null redacted
        then "SRI invoice script failed"
-       else limitSriScriptFailure sanitized
+       else limitSriScriptFailure redacted
   where
     sanitizeFailureChar ch
       | ch == '\n' || ch == '\t' = ch
       | ch == '\DEL' || ch < ' ' = ' '
       | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
       | otherwise = ch
+
+redactSriScriptFailureSecrets :: Text -> Text
+redactSriScriptFailureSecrets =
+  redactSriScriptFailureFields . redactSriScriptFailureBearerTokens
+
+redactSriScriptFailureBearerTokens :: Text -> Text
+redactSriScriptFailureBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSriScriptFailureBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSriScriptFailureBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSriScriptFailureBearerToken previous textValue
+  | not (isSriScriptFailureSecretBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) =
+            consumeSriScriptFailureValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between || T.null tokenValue || not (T.any isSriScriptFailureSecretAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+redactSriScriptFailureFields :: Text -> Text
+redactSriScriptFailureFields = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSriScriptFailureField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSriScriptFailureField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSriScriptFailureField previous textValue
+  | not (isSriScriptFailureSecretBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveSriScriptFailureFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSriScriptFailureField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+sensitiveSriScriptFailureFields :: [Text]
+sensitiveSriScriptFailureFields =
+  [ "access_token"
+  , "api_key"
+  , "apikey"
+  , "authorization"
+  , "certificate_password"
+  , "certificatepassword"
+  , "client_secret"
+  , "password"
+  , "private_key"
+  , "refresh_token"
+  ]
+
+parseSriScriptFailureField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSriScriptFailureField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) =
+            consumeSriScriptFailureOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || separator == ':'
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) =
+                consumeSriScriptFailureValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+isSriScriptFailureSecretBoundary :: Maybe Char -> Bool
+isSriScriptFailureSecretBoundary Nothing = True
+isSriScriptFailureSecretBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+isSriScriptFailureSecretAtom :: Char -> Bool
+isSriScriptFailureSecretAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+consumeSriScriptFailureOptionalQuote :: Text -> (Text, Text)
+consumeSriScriptFailureOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeSriScriptFailureValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeSriScriptFailureValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSriScriptFailureSecretValueEnd)
+
+isUnquotedSriScriptFailureSecretValueEnd :: Char -> Bool
+isUnquotedSriScriptFailureSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,;}]" :: String)
 
 limitSriScriptFailure :: Text -> Text
 limitSriScriptFailure message
