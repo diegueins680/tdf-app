@@ -9,16 +9,18 @@ module TDF.Services.InstagramSync
   , fetchUserMedia
   ) where
 
+import           Control.Exception (try)
+import           Control.Monad (when)
 import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?))
 import           Data.Aeson.Types (Parser)
 import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
+import qualified Data.Set as Set
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
-import           Control.Exception (try)
 import qualified Network.HTTP.Client as HC
 import           Network.HTTP.Client (Request, HttpException)
 import           TDF.DB (sharedTlsManager)
@@ -108,8 +110,12 @@ isInstagramPermalinkUrl url =
 newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
 
 instance FromJSON InstagramMediaList where
-  parseJSON = withObject "InstagramMediaList" $ \o ->
-    InstagramMediaList <$> o .: "data"
+  parseJSON = withObject "InstagramMediaList" $ \o -> do
+    media <- o .: "data"
+    let mediaIds = map imId media
+    when (length mediaIds /= Set.size (Set.fromList mediaIds)) $
+      fail "Instagram media list must not contain duplicate media ids"
+    pure (InstagramMediaList media)
 
 -- | Fetch media for a given Instagram user id (or handle, if your token supports it).
 fetchUserMedia :: AppConfig -> Text -> Text -> IO (Either Text [InstagramMedia])

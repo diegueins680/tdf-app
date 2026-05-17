@@ -11074,6 +11074,17 @@ spec = describe "TDF.Server helpers" $ do
             (eitherDecode "{\"data\":null}" :: Either String InstagramMediaList)
                 `shouldSatisfy` isLeft
 
+        it "rejects duplicate media ids before sync fallback upserts" $
+            case ( eitherDecode
+                    "{\"data\":[{\"id\":\"ig-media-42\"},{\"id\":\" ig-media-42 \"}]}"
+                    :: Either String InstagramMediaList
+                 ) of
+                Left err ->
+                    err `shouldContain` "duplicate media ids"
+                Right _ ->
+                    expectationFailure
+                        "Expected duplicate Instagram media ids to be rejected"
+
         it "normalizes canonical media ids and public media links before cron storage" $
             case ( eitherDecode
                     "{\"id\":\" ig-media-42 \",\"caption\":\"new post\",\"media_url\":\" https://cdn.example.com/post.jpg?sig=1 \",\"permalink\":\" https://www.instagram.com/p/post42/ \"}"
