@@ -5577,10 +5577,8 @@ main = hspec $ do
                 `shouldBe` Right "https://eu-prod.oppwa.com"
             validateDatafastBaseUrl (Just " HTTPS://EU-PROD.OPPWA.COM/ ")
                 `shouldBe` Right "https://eu-prod.oppwa.com"
-            validateDatafastBaseUrl (Just "https://eu-prod.oppwa.com:443")
-                `shouldBe` Right "https://eu-prod.oppwa.com:443"
 
-        it "rejects malformed Datafast bases before payment requests are built" $ do
+        it "rejects malformed or explicit-port Datafast bases before payment requests are built" $ do
             let assertInvalid rawValue =
                     case validateDatafastBaseUrl (Just rawValue) of
                         Left err -> do
@@ -5598,6 +5596,7 @@ main = hspec $ do
             assertInvalid "http://localhost:8080"
             assertInvalid "https://payments.example.com"
             assertInvalid "https://oppwa.com.evil.example"
+            assertInvalid "https://test.oppwa.com:443"
             assertInvalid "https://test.oppwa.com:8443"
 
     describe "validateDatafastCredential" $ do
