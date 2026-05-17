@@ -425,6 +425,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleViewWithCatalog
     , validateReservedFutureStubRoutes
     , validateFutureStubArea
+    , validateFutureStubAreaRegistry
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
     , validateFutureStubCatalogEntry
@@ -11260,8 +11261,29 @@ spec = describe "TDF.Server helpers" $ do
                            , "admin"
                            , "experience"
                            ]
+            validateFutureStubAreaRegistry mountedFutureStubAreas
+                `shouldBe` Right mountedFutureStubAreas
             forM_ allowedFutureStubMetadata $ \(area, _endpoint) ->
                 validateFutureStubArea area `shouldBe` Right area
+
+        it "rejects drifted fallback discovery area registries before area lookup" $ do
+            let assertInvalid areas =
+                    case validateFutureStubAreaRegistry areas of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid fallback discovery area registry, got: "
+                                    <> show value
+                                )
+
+            assertInvalid []
+            assertInvalid (reverse mountedFutureStubAreas)
+            assertInvalid (mountedFutureStubAreas <> ["access"])
+            assertInvalid ("catalog" : mountedFutureStubAreas)
+            assertInvalid ("crm " : filter (/= "crm") mountedFutureStubAreas)
 
         it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
             validateFutureStubArea "access" `shouldBe` Right "access"

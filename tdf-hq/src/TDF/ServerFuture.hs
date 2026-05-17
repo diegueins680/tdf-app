@@ -285,6 +285,7 @@ validateFutureStubCatalogEntry (area, endpoint) = do
 
 validateFutureStubCatalogAreaOrder :: [(Text, Text)] -> Either ServerError [Text]
 validateFutureStubCatalogAreaOrder catalog = do
+  mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubCatalogEntry catalog
@@ -297,9 +298,9 @@ validateFutureStubCatalogAreaOrder catalog = do
       areaEntriesMatch =
         all
           (\area -> entriesFor area == expectedEntriesFor area)
-          mountedFutureStubAreas
+          mountedAreas
   if length validatedCatalog /= length (nub validatedCatalog)
-       || areaRuns /= mountedFutureStubAreas
+       || areaRuns /= mountedAreas
        || map length areaGroups /= map length expectedAreaGroups
        || length areaRuns /= length (nub areaRuns)
        || not areaEntriesMatch
@@ -727,16 +728,28 @@ deriveFutureStubAreas =
       | area == nextArea = areas
       | otherwise = area : areas
 
+validateFutureStubAreaRegistry :: [Text] -> Either ServerError [Text]
+validateFutureStubAreaRegistry areas
+  | null areas = invalidFutureStubCatalog
+  | length areas /= length (nub areas) = invalidFutureStubCatalog
+  | any (`elem` reservedFutureStubTopLevelAreas) areas = invalidFutureStubCatalog
+  | not (all validFutureStubSlug areas) = invalidFutureStubCatalog
+  | areas /= allowedFutureStubAreas = invalidFutureStubCatalog
+  | otherwise = Right areas
+
 validateFutureStubArea :: Text -> Either ServerError Text
-validateFutureStubArea rawArea
-  | rawArea /= area = invalidFutureStubMetadata
-  | area `elem` reservedFutureStubTopLevelAreas = invalidFutureStubMetadata
-  | area `notElem` mountedFutureStubAreas = invalidFutureStubMetadata
-  | area `notElem` allowedFutureStubAreas = invalidFutureStubMetadata
-  | validFutureStubSlug area = Right area
-  | otherwise = invalidFutureStubMetadata
+validateFutureStubArea rawArea = do
+  mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
+  let area = T.strip rawArea
+  validateArea mountedAreas area
   where
-    area = T.strip rawArea
+    validateArea mountedAreas area
+      | rawArea /= area = invalidFutureStubMetadata
+      | area `elem` reservedFutureStubTopLevelAreas = invalidFutureStubMetadata
+      | area `notElem` mountedAreas = invalidFutureStubMetadata
+      | area `notElem` allowedFutureStubAreas = invalidFutureStubMetadata
+      | validFutureStubSlug area = Right area
+      | otherwise = invalidFutureStubMetadata
 
 validateFutureStubEndpoint :: Text -> Either ServerError Text
 validateFutureStubEndpoint rawEndpoint
