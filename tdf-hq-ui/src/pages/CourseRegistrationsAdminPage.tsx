@@ -1597,6 +1597,16 @@ const firstRunCourseCatalogDescriptorPrefixPattern =
 const firstRunCourseCatalogDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
 
+const firstRunScheduleDescriptorPattern = String.raw`(?:(?:course\s+)?(?:schedule|calendar|timetable)\s+(?:pages?|links?|urls?|portals?)|(?:class|lesson)\s+(?:schedule|calendar|timetable)\s+(?:pages?|links?|urls?|portals?)|(?:horarios?|calendarios?|cronogramas?)\s+(?:del?\s+curso|de\s+curso|de\s+clases?)(?:\s+(?:p[aá]ginas?|enlaces?|links?|urls?|portales?))?|(?:p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+(?:de|para)\s+(?:horarios?|calendarios?|cronogramas?)(?:\s+(?:del?\s+curso|de\s+curso|de\s+clases?))?)`;
+const firstRunScheduleDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunScheduleDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunScheduleDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunScheduleDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|google\s+calendar)`;
 const firstRunSchedulingProviderIntentPattern = String.raw`(?:(?:booking|reservation|rsvp|appointments?|scheduling)\s+)?`;
 const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+${firstRunSchedulingProviderIntentPattern}(?:links?|urls?|pages?|forms?|portals?|schedules?)|(?:links?|urls?|pages?|forms?|portals?|schedules?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
@@ -1739,6 +1749,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
     .replace(firstRunLearningPortalDescriptorPrefixPattern, '')
     .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
+    .replace(firstRunScheduleDescriptorPrefixPattern, '')
     .replace(firstRunSchedulingProviderLinkDescriptorPrefixPattern, '')
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunSchedulingProviderStandalonePrefixPattern, '')
@@ -1839,6 +1850,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
     .replace(firstRunLearningPortalDescriptorSuffixPattern, '')
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
+    .replace(firstRunScheduleDescriptorSuffixPattern, '')
     .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
