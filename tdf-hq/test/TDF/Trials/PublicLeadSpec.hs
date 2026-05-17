@@ -937,6 +937,7 @@ spec = do
       assertRejected "https://drive..example.com/folder"
       assertRejected "https://drive_example.com/folder"
       assertRejected "https://drive/folder"
+      assertRejected "https://example.123/folder"
       assertRejected "https://2130706433/folder"
       assertRejected "https://0x7f.0.0.1/folder"
       assertRejected "https://0xc0.0xa8.0x00.0x01/folder"

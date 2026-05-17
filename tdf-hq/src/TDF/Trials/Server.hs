@@ -918,6 +918,7 @@ isValidHttpUrl rawUrl
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
         && not (isAmbiguousNumericHost normalizedHost)
+        && hasValidEmailFinalDomainLabel normalizedHost
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
         && not (looksLikeNonDecimalIpv4 normalizedHost)
         && not (looksLikeInvalidIpv4 normalizedHost)
