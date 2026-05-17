@@ -7897,6 +7897,28 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "pending" (Just "paid") (Just Nothing)
             assertInvalid "paid" Nothing Nothing
 
+        it "rejects malformed stored order statuses before paidAt fallback logic" $ do
+            let assertInvalid rawStatus =
+                    case resolveMarketplaceOrderPaidAtForStatus
+                        now
+                        rawStatus
+                        Nothing
+                        Nothing
+                        Nothing of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Stored marketplace order status is invalid"
+                        Right paidAtValue ->
+                            expectationFailure
+                                ( "Expected malformed stored marketplace status to fail, got: "
+                                    <> show paidAtValue
+                                )
+
+            assertInvalid "paid\npending"
+            assertInvalid ("paypal_pending" <> T.singleton '\x202E')
+            assertInvalid "refunded"
+
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do
             validateOptionalMarketplacePaymentProviderUpdate Nothing

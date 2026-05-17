@@ -12531,28 +12531,37 @@ resolveMarketplaceOrderPaidAtForStatus
   -> Maybe UTCTime
   -> Maybe (Maybe UTCTime)
   -> Either ServerError (Maybe UTCTime)
-resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput
-  | isExplicitPaidAtForNonPaidStatus =
-      Left err400 { errBody = "paidAt can only be set when status is paid" }
-  | isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal =
-      Left err400 { errBody = "paidAt is required when status is paid" }
-  | otherwise =
-      Right paidAtFinal
-  where
-    statusFinal = fromMaybe currentStatus mNextStatus
-    isExplicitPaidAtForNonPaidStatus =
-      not (isPaidMarketplaceOrderStatus statusFinal)
-        && maybe False isJust paidAtInput
-    paidAtBase =
-      case paidAtInput of
-        Nothing -> currentPaidAt
-        Just value -> value
-    paidAtFinal =
-      if isNothing paidAtInput
-          && maybe False isPaidMarketplaceOrderStatus mNextStatus
-          && isNothing currentPaidAt
-        then Just now
-        else paidAtBase
+resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput = do
+  currentStatusVal <- validateStoredMarketplaceOrderStatus currentStatus
+  let statusFinal = fromMaybe currentStatusVal mNextStatus
+      isExplicitPaidAtForNonPaidStatus =
+        not (isPaidMarketplaceOrderStatus statusFinal)
+          && maybe False isJust paidAtInput
+      paidAtBase =
+        case paidAtInput of
+          Nothing -> currentPaidAt
+          Just value -> value
+      paidAtFinal =
+        if isNothing paidAtInput
+            && maybe False isPaidMarketplaceOrderStatus mNextStatus
+            && isNothing currentPaidAt
+          then Just now
+          else paidAtBase
+  if isExplicitPaidAtForNonPaidStatus
+    then Left err400 { errBody = "paidAt can only be set when status is paid" }
+    else
+      if isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal
+        then Left err400 { errBody = "paidAt is required when status is paid" }
+        else Right paidAtFinal
+
+validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
+validateStoredMarketplaceOrderStatus rawStatus =
+  case validateMarketplaceOrderStatusValue
+    "Stored marketplace order status is invalid"
+    "Stored marketplace order status is invalid"
+    rawStatus of
+      Right status -> Right status
+      Left _ -> Left err500 { errBody = "Stored marketplace order status is invalid" }
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =
