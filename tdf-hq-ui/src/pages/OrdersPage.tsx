@@ -101,9 +101,9 @@ function getStatusPresentation(status: string) {
 
 function filterResources(resources: BookingResourceDTO[] | undefined, predicate: (role: string) => boolean) {
   if (!resources) return [];
-  return resources
+  return dedupeStrings(resources
     .filter((resource) => predicate(resource.brRole?.toLowerCase() ?? ''))
-    .map((resource) => resource.brRoomName);
+    .map((resource) => resource.brRoomName));
 }
 
 function dedupeStrings(values: (string | null | undefined)[]) {

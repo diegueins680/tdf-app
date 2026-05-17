@@ -715,6 +715,58 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('deduplicates repeated resource names before deciding which resource columns are shared', async () => {
+    listBookingsMock.mockResolvedValue([
+      {
+        bookingId: 141,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Grabación',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'studio-a-copy', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+          { brRoomId: 'eng-1-copy', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 142,
+        title: 'Edición vocal',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Edición',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+          { brRoomId: 'eng-1', brRoomName: 'Vale', brRole: 'engineer' },
+        ],
+      } satisfies BookingDTO,
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo ingeniero: Vale y una sola sala: Studio A. Las columnas volverán cuando ya no coincidan ingenieros o salas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Vale')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Studio A')).toBe(1);
+        expect(text).not.toContain('Vale, Vale');
+        expect(text).not.toContain('Studio A, Studio A');
+        expect(hasTableHeader(container, 'Ingeniero')).toBe(false);
+        expect(hasTableHeader(container, 'Salas')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('summarizes one shared room once and restores the room column when sessions diverge again', async () => {
     listBookingsMock.mockResolvedValue([
       {
