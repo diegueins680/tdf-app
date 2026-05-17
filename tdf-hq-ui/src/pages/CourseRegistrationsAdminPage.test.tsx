@@ -11911,6 +11911,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats event-platform source wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'eventbrite_registration_page',
+      'eventbrite_event_page',
+      'luma_signup_page',
+      'luma_event_page',
+      'meetup_event_registration',
+      'meetup_registration_page',
+      'event_registration_page',
+      'event_signup_page',
+      'formulario_de_eventbrite',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Eventbrite registration page',
+      'Eventbrite event page',
+      'Luma signup page',
+      'Luma event page',
+      'Meetup event registration',
+      'Meetup registration page',
+      'Event registration page',
+      'Event signup page',
+      'Formulario de eventbrite',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'eventbrite');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "eventbrite" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats scheduling and consultation-call sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'calendly_link',
