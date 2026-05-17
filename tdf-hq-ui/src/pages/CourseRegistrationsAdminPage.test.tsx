@@ -11363,6 +11363,56 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats static form backend sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'netlify_forms',
+      'formkeep',
+      'formkeep_form',
+      'getform',
+      'getform_form',
+      'basin',
+      'basin_form',
+      'formcarry_form',
+    ] as const;
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).not.toContain('Fuente:');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'netlify');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "netlify" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats course-platform form wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'kajabi_form',
