@@ -15388,6 +15388,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Instagram DM keyword - Beatmaking 101',
       'Palabra clave de Instagram para Beatmaking 101',
       'Beatmaking 101 - WhatsApp keyword trigger',
+      'WhatsApp click-to-chat link - Beatmaking 101',
+      'Click-to-chat de WhatsApp para Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -15403,7 +15405,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/DM automation|DM keyword|ManyChat|WhatsApp (?:message flow|automation|keyword trigger)|Instagram automation|Messenger bot|Automatización de WhatsApp|Palabra clave de Instagram/i);
+        expect(emptyState?.textContent).not.toMatch(/DM automation|DM keyword|ManyChat|WhatsApp (?:message flow|automation|keyword trigger|click-to-chat)|Instagram automation|Messenger bot|Automatización de WhatsApp|Palabra clave de Instagram|Click-to-chat de WhatsApp/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
