@@ -13879,7 +13879,18 @@ singleDriveIdQueryParam rawUrl =
 
 drivePathSegments :: Text -> [Text]
 drivePathSegments rawUrl =
-  filter (not . T.null) (T.splitOn "/" path)
+  case T.stripPrefix "/" path of
+    Nothing ->
+      []
+    Just rawPathBody ->
+      let pathBody = T.dropWhileEnd (== '/') rawPathBody
+          segments =
+            if T.null pathBody
+              then []
+              else T.splitOn "/" pathBody
+      in if any isAmbiguousDrivePathSegment segments
+           then []
+           else segments
   where
     remainder = T.drop 8 rawUrl
     afterAuthority =
@@ -13887,6 +13898,10 @@ drivePathSegments rawUrl =
         (\c -> c /= '/' && c /= '?' && c /= '#')
         remainder
     path = T.takeWhile (\c -> c /= '?' && c /= '#') afterAuthority
+
+isAmbiguousDrivePathSegment :: Text -> Bool
+isAmbiguousDrivePathSegment segment =
+  T.null segment || segment == "." || segment == ".."
 
 queryParams :: Text -> [Text]
 queryParams url =

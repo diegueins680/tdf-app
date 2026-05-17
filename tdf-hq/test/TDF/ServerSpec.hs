@@ -6187,6 +6187,23 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
 
+        it "rejects ambiguous Drive path segments before trusting upstream download links" $ do
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/download//file-123?alt=media")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/file/d/file-123/../view")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123"
+
         it "rejects ambiguous Drive id query params before trusting upstream download links" $ do
             resolveDrivePublicUrl
                 "file-123"
