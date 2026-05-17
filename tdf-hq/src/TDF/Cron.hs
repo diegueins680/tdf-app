@@ -98,17 +98,35 @@ parseDirective raw0 =
       isNeedLine line =
         let cleaned = T.strip line
         in T.toCaseFold "NEED:" `T.isPrefixOf` T.toCaseFold cleaned
+      isDirectiveLine line =
+        let cleaned = T.strip line
+            lowered = T.toCaseFold cleaned
+        in any (`T.isPrefixOf` lowered) ["send:", "hold:", "need:"]
+      isNestedHoldDirectiveLine line =
+        let cleaned = T.strip line
+            lowered = T.toCaseFold cleaned
+        in any (`T.isPrefixOf` lowered) ["send:", "hold:"]
+      validateSendBody msg
+        | T.null msg = Left "SEND directive empty"
+        | any isDirectiveLine (filter (not . T.null) (map T.strip (T.lines msg))) =
+            Left "SEND directive contains nested directive line"
+        | otherwise = Right (Send msg)
       parseHoldBody body =
         let lines0 = filter (not . T.null) (map T.strip (T.lines body))
-            needTxt = listToMaybe [need | line <- lines0, Just need <- [parseNeedLine line]]
+            needLines = [need | line <- lines0, Just need <- [parseNeedLine line]]
+            needLineCount = length [() | line <- lines0, isNeedLine line]
             reason = listToMaybe [line | line <- lines0, not (isNeedLine line)]
-        in case reason of
-             Nothing -> Left "HOLD directive empty"
-             Just value -> Right (Hold value needTxt)
+        in if any isNestedHoldDirectiveLine lines0
+             then Left "HOLD directive contains nested directive line"
+             else if needLineCount > 1
+               then Left "HOLD directive must include at most one NEED line"
+               else case reason of
+                 Nothing -> Left "HOLD directive empty"
+                 Just value -> Right (Hold value (listToMaybe needLines))
   in case () of
       _ | Just rest <- stripPrefixCI "SEND:" raw ->
             let msg = T.strip rest
-            in if T.null msg then Left "SEND directive empty" else Right (Send msg)
+            in validateSendBody msg
         | Just rest <- stripPrefixCI "HOLD:" raw ->
             parseHoldBody rest
         | otherwise -> Left "Invalid directive: expected SEND: or HOLD:"

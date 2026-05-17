@@ -10565,6 +10565,16 @@ main = hspec $ do
         it "requires HOLD reason even when NEED exists" $ do
             parseDirective "HOLD:\nNEED: email" `shouldBe` Left "HOLD directive empty"
 
+        it "rejects nested or duplicate auto-reply directives instead of silently choosing one" $ do
+            parseDirective "SEND: Hola\nHOLD: Falta email"
+                `shouldBe` Left "SEND directive contains nested directive line"
+            parseDirective "SEND:\nNEED: email"
+                `shouldBe` Left "SEND directive contains nested directive line"
+            parseDirective "HOLD: Falta confirmar datos\nSEND: Hola"
+                `shouldBe` Left "HOLD directive contains nested directive line"
+            parseDirective "HOLD: Falta confirmar datos\nNEED: email\nNEED: phone"
+                `shouldBe` Left "HOLD directive must include at most one NEED line"
+
     describe "validateHookVerifyRequest" $ do
         it "accepts subscribe verification requests with a matching token" $ do
             validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
