@@ -11019,6 +11019,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats automation plumbing sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'zapier_webhook',
+      'zapier_registration_automation',
+      'make_com_scenario',
+      'integromat_scenario',
+      'n8n_registration_workflow',
+      'pabbly_connect_integration',
+      'integrately_automation',
+      'webhook',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Zapier webhook',
+      'Zapier registration automation',
+      'Make com scenario',
+      'Integromat scenario',
+      'N8n registration workflow',
+      'Pabbly connect integration',
+      'Integrately automation',
+      'webhook',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'zapier webhook');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "zapier webhook" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats link-in-bio source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'linktree_link',
