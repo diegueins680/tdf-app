@@ -13976,7 +13976,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   }, 20_000);
 
-  it('keeps capped cohort empty-search recovery to one limit action', async () => {
+  it('folds capped filtered empty-search scope into the recovery alert', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -14014,9 +14014,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const statusSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-status-summary"]');
 
       expect(emptySearch).not.toBeNull();
-      expect(statusSummary).not.toBeNull();
+      expect(statusSummary).toBeNull();
       expect(emptySearch?.textContent).toContain(
-        'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
+        'Vista filtrada: cohorte Beatmaking 101. No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
       );
       const limitRecoveryAction = getButtonByText(emptySearch!, emptySearchLimitRecoveryLabel);
       expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
@@ -14024,7 +14024,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(limitRecoveryAction.getAttribute('title')).toBe(emptySearchLimitRecoveryTitle);
       expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(statusSummary!, 'Ajustar límite')).toBe(0);
+      expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
+      expect(container.textContent).not.toContain('Estado disponible');
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);

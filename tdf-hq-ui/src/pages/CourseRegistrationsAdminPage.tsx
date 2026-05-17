@@ -3762,11 +3762,14 @@ export default function CourseRegistrationsAdminPage() {
   const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && !hasCustomFilters
     && !viewHitsCurrentLimit;
+  const showCappedEmptyLocalSearchLimitEditor = showEmptyLocalSearchResults
+    && viewHitsCurrentLimit
+    && showAdvancedFilters;
   const showFilteredEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && hasManualFilters
-    && !viewHitsCurrentLimit
     && !cohortsQuery.isError
-    && Boolean(activeFilterSummary);
+    && Boolean(activeFilterSummary)
+    && !showCappedEmptyLocalSearchLimitEditor;
   const showFocusedEmptyLocalSearchState = showDefaultEmptyLocalSearchFocus || showFilteredEmptyLocalSearchFocus;
   const defaultEmptyLocalSearchScopeSummary = showDefaultEmptyLocalSearchFocus
     ? [
