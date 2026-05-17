@@ -24,7 +24,7 @@ import           Data.Bits (xor)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
-import           Data.Foldable (for_)
+import           Data.Foldable (for_, toList)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
@@ -409,15 +409,52 @@ validateGoogleCalendarPageAttendeesField idx eventObj =
   case AKeyMap.lookup "attendees" eventObj of
     Nothing -> pure ()
     Just Null -> pure ()
-    Just (Array attendeesValue) ->
-      for_ attendeesValue $ \attendee ->
-        case attendee of
-          Object _ -> pure ()
-          _ -> fail (fieldLabel <> " must contain only attendee objects")
+    Just (Array attendeesValue) -> do
+      attendeeEmails <-
+        forM
+          (zip [(0 :: Int)..] (toList attendeesValue))
+          (uncurry (validateGoogleCalendarPageAttendee idx))
+      let presentEmails = catMaybes attendeeEmails
+      when (length presentEmails /= Set.size (Set.fromList presentEmails)) $
+        fail (fieldLabel <> " must not contain duplicate attendee emails")
     Just _ ->
       fail (fieldLabel <> " must be an array")
   where
     fieldLabel = "items[" <> show idx <> "].attendees"
+
+validateGoogleCalendarPageAttendee :: Int -> Int -> Value -> Parser (Maybe Text)
+validateGoogleCalendarPageAttendee itemIdx attendeeIdx (Object attendeeObj) =
+  case AKeyMap.lookup "email" attendeeObj of
+    Nothing -> pure Nothing
+    Just Null -> pure Nothing
+    Just (String rawEmail) ->
+      Just <$> validateGoogleCalendarAttendeeEmail itemIdx attendeeIdx rawEmail
+    Just _ ->
+      fail (googleCalendarAttendeeFieldLabel itemIdx attendeeIdx "email" <> " must be a string")
+validateGoogleCalendarPageAttendee itemIdx _ _ =
+  fail ("items[" <> show itemIdx <> "].attendees must contain only attendee objects")
+
+validateGoogleCalendarAttendeeEmail :: Int -> Int -> Text -> Parser Text
+validateGoogleCalendarAttendeeEmail itemIdx attendeeIdx rawEmail
+  | T.null emailVal =
+      fail (fieldLabel <> " must not be blank")
+  | emailVal /= rawEmail =
+      fail (fieldLabel <> " must not include surrounding whitespace")
+  | T.any isUnsupportedGoogleCalendarPageTextChar emailVal =
+      fail (fieldLabel <> " must not contain unsupported control or formatting characters")
+  | not (isValidCourseRegistrationEmail normalizedEmail) =
+      fail (fieldLabel <> " must be a valid email address")
+  | otherwise =
+      pure normalizedEmail
+  where
+    fieldLabel = googleCalendarAttendeeFieldLabel itemIdx attendeeIdx "email"
+    emailVal = T.strip rawEmail
+    normalizedEmail = T.toLower emailVal
+
+googleCalendarAttendeeFieldLabel :: Int -> Int -> Text -> String
+googleCalendarAttendeeFieldLabel itemIdx attendeeIdx fieldName =
+  "items[" <> show itemIdx <> "].attendees[" <> show attendeeIdx <> "]."
+    <> T.unpack fieldName
 
 validateGoogleCalendarIsoTimestamp :: Text -> Text -> Either Text Text
 validateGoogleCalendarIsoTimestamp fieldName rawTimestamp =

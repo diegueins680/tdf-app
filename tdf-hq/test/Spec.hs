@@ -5129,6 +5129,12 @@ main = hspec $ do
 
             assertRejected ("fan@example.com" :: Text)
             assertRejected [A.String "fan@example.com"]
+            assertRejected [A.object ["email" .= (7 :: Int)]]
+            assertRejected [A.object ["email" .= ("not-an-email" :: Text)]]
+            assertRejected
+                [ A.object ["email" .= ("fan@example.com" :: Text)]
+                , A.object ["email" .= ("FAN@example.com" :: Text)]
+                ]
 
         it "rejects malformed Google Calendar date fields before ambiguous sync writes" $ do
             case eitherDecode
