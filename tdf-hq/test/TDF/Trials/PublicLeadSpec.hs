@@ -412,6 +412,47 @@ spec = do
           expectationFailure
             ("Expected fallback party profile link drift to be rejected, got " <> show partyId)
 
+    it "rejects fallback party rows that already own trial requests" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Trials.TrialRequest
+          { Trials.trialRequestPartyId = partyId
+          , Trials.trialRequestSubjectId = toSqlKey 1
+          , Trials.trialRequestPref1Start = slotStart
+          , Trials.trialRequestPref1End = slotEnd
+          , Trials.trialRequestPref2Start = Nothing
+          , Trials.trialRequestPref2End = Nothing
+          , Trials.trialRequestPref3Start = Nothing
+          , Trials.trialRequestPref3End = Nothing
+          , Trials.trialRequestNotes = Nothing
+          , Trials.trialRequestStatus = "Requested"
+          , Trials.trialRequestAssignedTeacherId = Nothing
+          , Trials.trialRequestAssignedAt = Nothing
+          , Trials.trialRequestCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "trial request links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party trial request links to be rejected, got " <> show partyId)
+
     it "rejects fallback party rows that already have account or role links" $ do
       let fallbackParty now = Models.Party
             { Models.partyLegalName = Nothing
@@ -2706,6 +2747,24 @@ initializePartySchema = do
     \\"label\" VARCHAR NULL,\
     \\"active\" BOOLEAN NOT NULL,\
     \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"trial_request\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"pref1_start\" TIMESTAMP NOT NULL,\
+    \\"pref1_end\" TIMESTAMP NOT NULL,\
+    \\"pref2_start\" TIMESTAMP NULL,\
+    \\"pref2_end\" TIMESTAMP NULL,\
+    \\"pref3_start\" TIMESTAMP NULL,\
+    \\"pref3_end\" TIMESTAMP NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"assigned_teacher_id\" INTEGER NULL,\
+    \\"assigned_at\" TIMESTAMP NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
   initializeArtistProfileSchema
