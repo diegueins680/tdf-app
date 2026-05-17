@@ -349,6 +349,8 @@ export default function MarketplaceOrdersPage() {
     shouldShowBuyerPhoneDetail(normalizeBuyerPhoneValue(order.moBuyerPhone), getOrderBuyerIdentity(order))
   ));
   const showPaidAtColumn = filtered.some((order) => Boolean(order.moPaidAt));
+  const showItemsColumn = filtered.some((order) => order.moItems.length > 0);
+  const showSharedEmptyItemsSummary = filtered.length > 1 && !showItemsColumn;
   const visibleStatusLabelSet = useMemo(
     () => new Set(filtered.map((order) => statusLabel(order.moStatus))),
     [filtered],
@@ -1074,6 +1076,16 @@ export default function MarketplaceOrdersPage() {
               Moneda visible: {sharedVisibleCurrencyCaption}.
             </Typography>
           )}
+          {showSharedEmptyItemsSummary && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mb: 1.5 }}
+              data-testid="marketplace-orders-empty-items-summary"
+            >
+              Sin items registrados en las órdenes visibles.
+            </Typography>
+          )}
           {filtered.length > 0 && !singleVisibleOrder && (
             <TableContainer component={Paper}>
               <Table size="small">
@@ -1087,7 +1099,7 @@ export default function MarketplaceOrdersPage() {
                     {showPaymentProviderColumn && <TableCell>Pago</TableCell>}
                     <TableCell>Creado</TableCell>
                     {showPaidAtColumn && <TableCell>Pagado</TableCell>}
-                    <TableCell>Items</TableCell>
+                    {showItemsColumn && <TableCell>Items</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1184,17 +1196,19 @@ export default function MarketplaceOrdersPage() {
                       )}
                       <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
                       {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
-                      <TableCell>
-                        {itemCountLabel && (
-                          <Typography variant="body2">{itemCountLabel}</Typography>
-                        )}
-                        <Typography
-                          variant={itemCountLabel ? 'caption' : 'body2'}
-                          color={itemCountLabel ? 'text.secondary' : 'text.primary'}
-                        >
-                          {itemSummary}
-                        </Typography>
-                      </TableCell>
+                      {showItemsColumn && (
+                        <TableCell>
+                          {itemCountLabel && (
+                            <Typography variant="body2">{itemCountLabel}</Typography>
+                          )}
+                          <Typography
+                            variant={itemCountLabel ? 'caption' : 'body2'}
+                            color={itemCountLabel ? 'text.secondary' : 'text.primary'}
+                          >
+                            {itemSummary}
+                          </Typography>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

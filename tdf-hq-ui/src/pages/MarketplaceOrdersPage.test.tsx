@@ -1935,6 +1935,51 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('summarizes missing table items once when every visible order lacks item data', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'empty-items-1',
+        moItems: [],
+      }),
+      buildOrder({
+        moOrderId: 'empty-items-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moItems: [],
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).not.toContain('Items');
+        expect(getColumnTextsByHeader(container, 'Items')).toEqual([]);
+        expect(container.querySelector('[data-testid="marketplace-orders-empty-items-summary"]')?.textContent?.trim()).toBe(
+          'Sin items registrados en las órdenes visibles.',
+        );
+        expect((container.textContent?.match(/Sin items registrados/g) ?? [])).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Sin items registrados para esta orden.');
+        expect(dialog?.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('humanizes payment provider labels in the order detail and copied summary', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
