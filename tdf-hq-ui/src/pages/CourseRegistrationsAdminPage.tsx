@@ -641,12 +641,15 @@ const REGISTRATION_STATUS_PLACEHOLDER_VALUE_KEYS = new Set([
   'na',
   'no disponible',
   'none',
+  'not provided',
+  'not set',
   'not available',
   'null',
   'sin estado',
   'sin status',
   'tbd',
   'unknown',
+  'undefined',
 ]);
 
 const normalizeRegistrationStatusPlaceholderKey = (value: string) =>

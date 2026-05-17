@@ -4308,6 +4308,18 @@ describe('CourseRegistrationsAdminPage', () => {
         crEmail: 'katherine@example.com',
         crStatus: 'Sin estado',
       }),
+      buildRegistration({
+        crId: 104,
+        crFullName: 'Dorothy Vaughan',
+        crEmail: 'dorothy@example.com',
+        crStatus: 'not set',
+      }),
+      buildRegistration({
+        crId: 105,
+        crFullName: 'Mary Jackson',
+        crEmail: 'mary@example.com',
+        crStatus: 'undefined',
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -4327,10 +4339,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Dorothy Vaughan').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Mary Jackson').textContent?.trim()).toBe('Cambiar estado');
       expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
       expect(container.textContent).not.toContain('Unknown');
       expect(container.textContent).not.toContain('N A');
       expect(container.textContent).not.toContain('Sin Estado');
+      expect(container.textContent).not.toContain('Not Set');
+      expect(container.textContent).not.toContain('Undefined');
       expect(container.textContent).not.toContain('Estado desconocido');
     });
 
