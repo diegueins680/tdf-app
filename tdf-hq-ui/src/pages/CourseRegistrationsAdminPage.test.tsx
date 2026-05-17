@@ -10471,6 +10471,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'formulario-publico',
       'formulario_publico_de_inscripcion',
       'formulario_de_inscripcion_publica',
+      'formulario_online',
+      'formulario_en_linea',
+      'inscripcion_online',
+      'inscripcion_en_linea',
+      'registro_online',
+      'registro_en_linea',
       'formulario_web',
       'sitio-web',
       'pagina_web_del_curso',
@@ -10529,6 +10535,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Formulario publico');
       expect(container.textContent).not.toContain('Fuente: Formulario publico de inscripcion');
       expect(container.textContent).not.toContain('Fuente: Formulario de inscripcion publica');
+      expect(container.textContent).not.toContain('Fuente: Formulario online');
+      expect(container.textContent).not.toContain('Fuente: Formulario en linea');
+      expect(container.textContent).not.toContain('Fuente: Inscripcion online');
+      expect(container.textContent).not.toContain('Fuente: Inscripcion en linea');
+      expect(container.textContent).not.toContain('Fuente: Registro online');
+      expect(container.textContent).not.toContain('Fuente: Registro en linea');
       expect(container.textContent).not.toContain('Fuente: Formulario web');
       expect(container.textContent).not.toContain('Fuente: Sitio web');
       expect(container.textContent).not.toContain('Fuente: Pagina web del curso');
@@ -10571,6 +10583,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario publico de inscripcion.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario de inscripcion publica.');
+      expect(container.textContent).not.toContain('Fuente visible: Formulario online.');
+      expect(container.textContent).not.toContain('Fuente visible: Formulario en linea.');
+      expect(container.textContent).not.toContain('Fuente visible: Inscripcion online.');
+      expect(container.textContent).not.toContain('Fuente visible: Inscripcion en linea.');
+      expect(container.textContent).not.toContain('Fuente visible: Registro online.');
+      expect(container.textContent).not.toContain('Fuente visible: Registro en linea.');
       expect(container.textContent).not.toContain('Fuente visible: Formulario web.');
       expect(container.textContent).not.toContain('Fuente visible: Sitio web.');
       expect(container.textContent).not.toContain('Fuente visible: Pagina web del curso.');
