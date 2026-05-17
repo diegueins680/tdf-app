@@ -1695,6 +1695,10 @@ spec = do
                 "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null notes so omission remains the only fallback path" $ do
+            decodeClockIn "{\"cirNotes\":null}" `shouldSatisfy` isLeft
+            decodeClockOut "{\"corNotes\":null}" `shouldSatisfy` isLeft
+
     describe "InternProfileUpdate FromJSON" $ do
         it "distinguishes omitted nullable profile fields from explicit clears" $ do
             case decodeInternProfileUpdate "{\"ipuSkills\":\"Patch bays\",\"ipuAreas\":\"Live sound\"}" of

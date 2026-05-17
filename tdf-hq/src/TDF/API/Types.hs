@@ -2027,6 +2027,7 @@ data ClockInRequest = ClockInRequest
 instance ToJSON ClockInRequest
 instance FromJSON ClockInRequest where
   parseJSON value = do
+    rejectNullOptionalFields "ClockInRequest" ["cirNotes"] value
     request <- genericParseJSON strictObjectOptions value
     notes <- normalizeTimeEntryNotesField "cirNotes" (cirNotes request)
     pure request { cirNotes = notes }
@@ -2037,6 +2038,7 @@ data ClockOutRequest = ClockOutRequest
 instance ToJSON ClockOutRequest
 instance FromJSON ClockOutRequest where
   parseJSON value = do
+    rejectNullOptionalFields "ClockOutRequest" ["corNotes"] value
     request <- genericParseJSON strictObjectOptions value
     notes <- normalizeTimeEntryNotesField "corNotes" (corNotes request)
     pure request { corNotes = notes }
