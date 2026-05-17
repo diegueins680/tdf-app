@@ -1401,6 +1401,19 @@ const firstRunProviderFormDescriptorPrefixPattern =
 const firstRunProviderFormDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|instant|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform(?:\s*\.?\s*com)?|many\s*chat|manychat|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|lead\s*pages?|notion|fillout|cognito\s+forms?|forms?\.app|form\s*spree|formsite|123\s*forms?\s*builder|123formbuilder)(?:\s+forms?)?)|typeform(?:\s*\.?\s*com)?|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable(?:\s+forms?)?|hubspot\s+forms?|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|lead\s*pages?(?:\s+(?:landing\s+)?pages?|forms?|portals?)?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?|forms?\.app(?:\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))?|form\s*spree(?:\s+forms?)?|formsite(?:\s+forms?)?|123\s*forms?\s*builder(?:\s+forms?)?|123formbuilder(?:\s+forms?)?)\s*$/i;
 
+const firstRunEmergingFormProviderPattern =
+  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery)`;
+const firstRunEmergingFormProviderDescriptorPattern =
+  String.raw`(?:(?:${firstRunEmergingFormProviderPattern})\s+(?:(?:lead|quiz|survey|questionnaire|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?|funnels?|flows?|quiz(?:zes)?|surveys?|questionnaires?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|embudos?|flujos?|cuestionarios?|encuestas?)\s+(?:de\s+)?(?:${firstRunEmergingFormProviderPattern}))`;
+const firstRunEmergingFormProviderDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunEmergingFormProviderDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunEmergingFormProviderDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunEmergingFormProviderDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunNoCodeLandingProviderPattern = String.raw`(?:carrd|framer|unbounce|instapage|landingi|web\s*flow|wix|squarespace|notion|google\s+sites?)`;
 const firstRunNoCodeLandingDescriptorPattern = String.raw`(?:(?:${firstRunNoCodeLandingProviderPattern})\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)|(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:${firstRunNoCodeLandingProviderPattern})|(?:formularios?|p[aá]ginas?|landings?|enlaces?|links?|urls?|portales?)\s+(?:de\s+)?(?:${firstRunNoCodeLandingProviderPattern}))`;
 const firstRunNoCodeLandingDescriptorPrefixPattern = new RegExp(
@@ -1709,6 +1722,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunEmergingFormProviderDescriptorPrefixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunOfferDescriptorPrefixPattern, '')
@@ -1811,6 +1825,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunEmergingFormProviderDescriptorSuffixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunOfferDescriptorSuffixPattern, '')
