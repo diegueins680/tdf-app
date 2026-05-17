@@ -1176,12 +1176,29 @@ data RoomUpdate = RoomUpdate
 
 instance ToJSON RoomUpdate
 instance FromJSON RoomUpdate where
-  parseJSON value = do
-    payload@RoomUpdate{ruName, ruIsBookable} <- genericParseJSON strictObjectOptions value
-    case (ruName, ruIsBookable) of
-      (Nothing, Nothing) ->
-        fail "RoomUpdate must include at least one of ruName or ruIsBookable"
-      _ -> pure payload
+  parseJSON = withObject "RoomUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ruName"
+          , "ruIsBookable"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in RoomUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "RoomUpdate must include at least one of ruName or ruIsBookable"
+            else
+              RoomUpdate
+                <$> o .:? "ruName"
+                <*> o .:? "ruIsBookable"
 
 data PipelineCardDTO = PipelineCardDTO
   { pcId        :: Text

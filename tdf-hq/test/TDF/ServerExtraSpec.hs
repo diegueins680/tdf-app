@@ -1380,6 +1380,23 @@ spec = do
       (A.eitherDecode "{\"ruName\":null,\"ruIsBookable\":null}" :: Either String RoomUpdate)
         `shouldSatisfy` isLeft
 
+    it "rejects null room patch fields instead of silently treating them as omitted" $ do
+      case A.eitherDecode
+        "{\"ruName\":null,\"ruIsBookable\":true}" :: Either String RoomUpdate of
+        Left err ->
+          err `shouldContain` "ruName must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null room name patch to be rejected, got: " <> show payload)
+
+      case A.eitherDecode
+        "{\"ruName\":\"Control Room\",\"ruIsBookable\":null}" :: Either String RoomUpdate of
+        Left err ->
+          err `shouldContain` "ruIsBookable must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null bookable room patch to be rejected, got: " <> show payload)
+
   describe "roomsServer duplicate name handling" $ do
     let existingRoomId = "00000000-0000-0000-0000-000000000701"
         otherRoomId = "00000000-0000-0000-0000-000000000702"
