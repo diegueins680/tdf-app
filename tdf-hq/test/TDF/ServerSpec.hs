@@ -9923,6 +9923,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ("mixing" <> T.singleton '\x202E')
                 "hidden formatting characters"
+            assertInvalid "---" "serviceType must include letters or numbers"
             assertInvalid (T.replicate 121 "A") "serviceType must be 120 characters or fewer"
 
     describe "validatePublicBookingContactDetails" $ do

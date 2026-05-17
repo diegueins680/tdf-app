@@ -5303,6 +5303,8 @@ validateOptionalBookingServiceType (Just rawServiceType) =
     Just serviceTypeVal
       | T.length serviceTypeVal > 120 ->
           Left err400 { errBody = "serviceType must be 120 characters or fewer" }
+      | not (hasPublicBookingLabelContent serviceTypeVal) ->
+          Left err400 { errBody = "serviceType must include letters or numbers" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
