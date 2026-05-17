@@ -1416,6 +1416,42 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "12$"
             assertInvalid "   "
 
+        it "rejects malformed invoice numbers before invoice creation can persist them" $ do
+            let validLine =
+                    CreateInvoiceLineReq
+                        { cilDescription = "Studio session"
+                        , cilQuantity = 1
+                        , cilUnitCents = 9000
+                        , cilTaxBps = Nothing
+                        , cilServiceOrderId = Nothing
+                        , cilPackagePurchaseId = Nothing
+                        }
+                assertInvalid rawNumber expectedMessage = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                ( createInvoice
+                                    (mkUser [Accounting])
+                                    (DTO.CreateInvoiceReq 42 Nothing (Just rawNumber) Nothing [validLine] Nothing)
+                                )
+                                (error "createInvoice should reject invalid ciNumber before reading Env")
+
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right invoice ->
+                            expectationFailure
+                                ("Expected invalid invoice number to be rejected, got: " <> show invoice)
+
+            assertInvalid "INV-2026\n001" "Invoice number must not contain control characters"
+            assertInvalid
+                ("INV-2026" <> T.singleton '\x202E' <> "001")
+                "Invoice number must not contain control characters or Unicode formatting marks"
+            assertInvalid
+                (T.replicate 65 "A")
+                "Invoice number must be 64 characters or fewer"
+
         it "rejects oversized line item lists before invoice creation can fan out database writes" $ do
             let validLine =
                     CreateInvoiceLineReq

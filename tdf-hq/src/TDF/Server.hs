@@ -9244,6 +9244,7 @@ createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
   either throwBadRequest pure (validateInvoiceLineItemCount ciLineItems)
   currency <- either throwError pure (validateCurrencyCode ciCurrency)
+  number <- either throwBadRequest pure (validateInvoiceNumber ciNumber)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
@@ -9254,7 +9255,6 @@ createInvoice user CreateInvoiceReq{..} = do
   now <- liftIO getCurrentTime
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
-      number   = normalizeOptionalText ciNumber
       subtotal = sum (map plSubtotal preparedLines)
       taxTotal = sum (map plTax preparedLines)
       grand    = sum (map plTotal preparedLines)
@@ -9389,6 +9389,27 @@ validateInvoiceLineItemCount lineItems
           <> " line items"
   | otherwise =
       Right ()
+
+validateInvoiceNumber :: Maybe Text -> Either Text (Maybe Text)
+validateInvoiceNumber rawNumber =
+  case normalizeOptionalText rawNumber of
+    Nothing -> Right Nothing
+    Just number
+      | T.length number > maxInvoiceNumberChars ->
+          Left $
+            "Invoice number must be "
+              <> T.pack (show maxInvoiceNumberChars)
+              <> " characters or fewer"
+      | T.any isUnsafeInvoiceNumberChar number ->
+          Left "Invoice number must not contain control characters or Unicode formatting marks"
+      | otherwise -> Right (Just number)
+
+maxInvoiceNumberChars :: Int
+maxInvoiceNumberChars = 64
+
+isUnsafeInvoiceNumberChar :: Char -> Bool
+isUnsafeInvoiceNumberChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
 prepareLine CreateInvoiceLineReq{..} = do
