@@ -9980,6 +9980,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "https://tdf.example.com/contacto"
             assertInvalid "https://wa.me.evil.example/593991234567"
 
+        it "rejects ambiguous public course URL paths before metadata is published" $ do
+            let assertInvalid fieldName rawUrl =
+                    case validateCoursePublicUrlField fieldName (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "path must not contain empty, dot, or dot-dot segments"
+                        Right urlVal ->
+                            expectationFailure
+                                ("Expected ambiguous course URL path to be rejected, got: " <> show urlVal)
+            assertInvalid "landingUrl" "https://tdf.example.com/curso/../admin"
+            assertInvalid "locationMapUrl" "https://maps.example.com//studio"
+            assertInvalid "instructorAvatarUrl" "https://cdn.example.com/./avatar.jpg"
+
         it "rejects oversized public course URLs before fallback metadata can publish them" $ do
             let oversizedUrl =
                     "https://tdf.example.com/"

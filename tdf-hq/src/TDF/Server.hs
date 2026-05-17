@@ -134,7 +134,11 @@ import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
 import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers)
 import           TDF.Trials.API (TrialsAPI)
-import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl, trialsServer)
+import qualified TDF.Trials.Server as TrialsServer
+  ( hasAmbiguousPublicUrlPath
+  , isValidHttpUrl
+  , trialsServer
+  )
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (VersionInfo(..), getVersionInfo)
@@ -5699,21 +5703,26 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                     <> T.pack (show maxCoursePublicUrlChars)
                     <> " characters or fewer"
             }
-      | "https://" `T.isPrefixOf` T.toLower urlVal
-          && TrialsServer.isValidHttpUrl urlVal ->
-          if fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal)
-            then
-              Left err400
-                { errBody =
-                    "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
-                }
-            else Right (Just urlVal)
-      | otherwise ->
+      | not ("https://" `T.isPrefixOf` T.toLower urlVal)
+          || not (TrialsServer.isValidHttpUrl urlVal) ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+      | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " path must not contain empty, dot, or dot-dot segments"
+            }
+      | fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal) ->
+          Left err400
+            { errBody =
+                "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
+            }
+      | otherwise ->
+          Right (Just urlVal)
 
 maxCoursePublicUrlChars :: Int
 maxCoursePublicUrlChars = 2048
