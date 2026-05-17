@@ -1011,6 +1011,18 @@ spec = do
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"from\":\"2026-05-02T16:00:00Z\",\"to\":\"2026-05-02T15:00:00Z\"}"
                 `shouldSatisfy` isLeft
+            case decodeCalendarSync "{\"calendarId\":\"primary\",\"from\":null}" of
+                Left err ->
+                    err `shouldContain` "from must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null calendar sync from bound to be rejected, got: " <> show payload)
+            case decodeCalendarSync "{\"calendarId\":\"primary\",\"to\":null}" of
+                Left err ->
+                    err `shouldContain` "to must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null calendar sync to bound to be rejected, got: " <> show payload)
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"status\":\"confirmed\"}"
                 `shouldSatisfy` isLeft

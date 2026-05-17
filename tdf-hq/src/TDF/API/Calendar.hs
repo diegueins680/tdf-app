@@ -104,6 +104,15 @@ rejectNullTokenRedirectUri =
       Just Null -> fail "redirectUri must be omitted instead of null"
       _ -> pure ()
 
+rejectNullSyncBounds :: Value -> Parser ()
+rejectNullSyncBounds =
+  withObject "SyncRequest" $ \o ->
+    let rejectNull fieldName =
+          case KeyMap.lookup (Key.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _ -> pure ()
+    in mapM_ rejectNull ["from", "to"]
+
 data AuthUrlResponse = AuthUrlResponse
   { url :: Text
   } deriving (Show, Generic)
@@ -139,6 +148,7 @@ data SyncRequest = SyncRequest
   } deriving (Show, Generic)
 instance FromJSON SyncRequest where
   parseJSON value = do
+    rejectNullSyncBounds value
     SyncRequest rawCalendarId rawFrom rawTo <-
       genericParseJSON strictObjectOptions value
     case (rawFrom, rawTo) of
