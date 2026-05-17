@@ -4817,6 +4817,12 @@ spec = describe "TDF.Server helpers" $ do
                 "invalid_api_key: model_not_found"
                 `shouldBe` False
             shouldUseAdsAssistNoAiFallback
+                "authentication_error: invalid API key"
+                `shouldBe` False
+            shouldUseAdsAssistNoAiFallback
+                "unauthorized: incorrect API key provided"
+                `shouldBe` False
+            shouldUseAdsAssistNoAiFallback
                 "OpenAI chat request failed: model_not_found while connecting"
                 `shouldBe` False
 
