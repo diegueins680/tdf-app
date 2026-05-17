@@ -4132,6 +4132,8 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchSharedPaidStatusSummary = hasLocalSearch
     && shouldShowSharedStatusSummary
     && singleSearchedKnownStatus === 'paid';
+  const singleStatusSummarySupportsPaidRecovery =
+    showSingleStatusSummaryInPageChrome && !showCohortFilterUnavailableSummary;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
     || statusAlreadyVisibleInBusySearchOnboarding
     || statusFiltersSummarizeBusyListRows
@@ -4165,10 +4167,7 @@ export default function CourseRegistrationsAdminPage() {
         localSearchSingleResultUsesDirectPaidRecovery
         && searchedRegistrations.length === 1
       )
-      || (
-        showSingleStatusSummaryInPageChrome
-        && searchedRegistrations.length === 1
-      )
+      || singleStatusSummarySupportsPaidRecovery
     );
   const allVisibleRowsUseDossierRecoveryAction = searchedRegistrations.length > 0
     && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
@@ -6655,10 +6654,7 @@ export default function CourseRegistrationsAdminPage() {
                           localSearchSingleResultUsesDirectPaidRecovery
                           && localSearchSingleResult?.crId === reg.crId
                         )
-                        || (
-                          showSingleStatusSummaryInPageChrome
-                          && searchedRegistrations.length === 1
-                        ),
+                        || singleStatusSummarySupportsPaidRecovery,
                     )
                     || (
                       showBusyListSearchOnboarding

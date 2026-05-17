@@ -2327,7 +2327,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the helper copy focused on cohort when status is already implied by the current view', async () => {
+  it('keeps the helper copy focused on cohort and uses direct paid recovery when status is already implied by the current view', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -2357,6 +2357,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Usa cohorte para cambiar la vista.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        paidRecoveryScopeHint,
+      );
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace').textContent?.trim()).toBe(
+        compactPaymentPendingActionLabel,
+      );
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper').textContent?.trim()).toBe(
+        compactPaymentPendingActionLabel,
+      );
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
     await cleanup();
