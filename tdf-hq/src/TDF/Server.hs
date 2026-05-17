@@ -3201,6 +3201,16 @@ validateStoredGoogleCalendarRefreshToken :: Text -> Either ServerError Text
 validateStoredGoogleCalendarRefreshToken =
   validateStoredGoogleCalendarOAuthToken "refresh token"
 
+validateStoredGoogleCalendarTokenType :: Maybe Text -> Either ServerError (Maybe Text)
+validateStoredGoogleCalendarTokenType Nothing = Right Nothing
+validateStoredGoogleCalendarTokenType (Just rawTokenType) =
+  case parseEither parseGoogleTokenType rawTokenType of
+    Right tokenTypeVal -> Right (Just tokenTypeVal)
+    Left _ ->
+      Left err500
+        { errBody = "Stored Google Calendar token_type is invalid"
+        }
+
 validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
 validateStoredGoogleCalendarOAuthToken label rawToken
   | T.null tokenVal = invalid
@@ -3725,12 +3735,14 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
     traverse
       (validateStoredGoogleCalendarOAuthToken "refresh token")
       (Cal.googleCalendarConfigRefreshToken cfg)
+  tokenTypeVal <- validateStoredGoogleCalendarTokenType (Cal.googleCalendarConfigTokenType cfg)
   Right
     ( Entity
         cfgId
         ( cfg
             { Cal.googleCalendarConfigAccessToken = accessTokenVal
             , Cal.googleCalendarConfigRefreshToken = refreshTokenVal
+            , Cal.googleCalendarConfigTokenType = tokenTypeVal
             , Cal.googleCalendarConfigSyncCursor = syncCursorVal
             }
         )

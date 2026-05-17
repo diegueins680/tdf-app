@@ -6685,10 +6685,21 @@ spec = describe "TDF.Server helpers" $ do
                             , Cal.googleCalendarConfigRefreshToken = mRefreshToken
                             }
                         )
+                withTokenType mTokenType (Entity key cfg) =
+                    Entity key
+                        ( cfg
+                            { Cal.googleCalendarConfigTokenType = mTokenType
+                            }
+                        )
                 validWithWhitespace =
-                    withTokens
-                        (Just " access-token ")
-                        (Just " refresh-token ")
+                    withTokenType (Just " bearer ") $
+                        withTokens
+                            (Just " access-token ")
+                            (Just " refresh-token ")
+                            (calendarConfigEntity 1 "primary")
+                invalidTokenType =
+                    withTokenType
+                        (Just "Basic")
                         (calendarConfigEntity 1 "primary")
                 invalidAccessToken =
                     withTokens
@@ -6717,12 +6728,14 @@ spec = describe "TDF.Server helpers" $ do
                 Right (Just (Entity _ cfg)) -> do
                     Cal.googleCalendarConfigAccessToken cfg `shouldBe` Just "access-token"
                     Cal.googleCalendarConfigRefreshToken cfg `shouldBe` Just "refresh-token"
+                    Cal.googleCalendarConfigTokenType cfg `shouldBe` Just "Bearer"
                 other ->
                     expectationFailure
                         ( "Expected valid Calendar OAuth tokens to be normalized, got: "
                             <> show (fmap (fmap (fromSqlKey . entityKey)) other)
                         )
 
+            assertInvalid "token_type" invalidTokenType
             assertInvalid "access token" invalidAccessToken
             assertInvalid "refresh token" invalidRefreshToken
 
