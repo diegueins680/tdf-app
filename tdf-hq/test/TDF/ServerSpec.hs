@@ -400,6 +400,7 @@ import TDF.ServerAuth
     , validateSignupFanArtistTargets
     )
 import TDF.Services.FacebookMessaging (formatFacebookGraphHttpError, sendFacebookText)
+import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
 import TDF.ServerProposals
     ( resolveOptionalProposalClientPartyReference
     , resolveOptionalProposalPipelineCardReference
@@ -9166,6 +9167,41 @@ spec = describe "TDF.Server helpers" $ do
                 "recipient-1"
                 ("hola" <> T.singleton '\NUL')
                 `shouldReturn` Left "Facebook message body must not contain control characters"
+
+    describe "sendInstagramTextWithContext messaging context validation" $
+        it "rejects unsafe Graph API bases before provider fallback attempts" $ do
+            let cfg = marketplaceTestConfig False
+                configuredCfg =
+                    cfg
+                        { instagramMessagingToken = Just "configured-token"
+                        , instagramMessagingAccountId = Just "17841400000000000"
+                        }
+
+            sendInstagramTextWithContext
+                (configuredCfg
+                    { instagramMessagingApiBase = "http://graph.facebook.com/v20.0"
+                    })
+                Nothing
+                Nothing
+                "recipient-1"
+                "hola"
+                `shouldReturn`
+                    Left "INSTAGRAM_MESSAGING_API_BASE must be an absolute https URL"
+
+            sendInstagramTextWithContext
+                (configuredCfg
+                    { instagramMessagingApiBase =
+                        "https://graph.facebook.com/v20.0?debug=1"
+                    })
+                Nothing
+                Nothing
+                "recipient-1"
+                "hola"
+                `shouldReturn`
+                    Left
+                        ( "INSTAGRAM_MESSAGING_API_BASE must be an absolute "
+                            <> "https URL without query or fragment"
+                        )
 
     describe "formatFacebookGraphHttpError" $ do
         it "bounds and sanitizes Graph error bodies without throwing on malformed UTF-8" $ do

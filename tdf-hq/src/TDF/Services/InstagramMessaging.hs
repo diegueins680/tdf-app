@@ -26,7 +26,7 @@ import           TDF.DB (sharedTlsManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
-import           TDF.Config (AppConfig(..))
+import           TDF.Config (AppConfig(..), normalizeConfiguredApiBaseUrl)
 
 sendInstagramText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendInstagramText cfg recipientId body =
@@ -105,24 +105,27 @@ validateInstagramMessageBody rawBody =
           Right messageBody
 
 buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> Either Text [InstagramAttempt]
-buildAttempts cfg mTokenOverride mAccountIdOverride =
-  let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-  in do
-    source <-
-      if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
-        then buildSource
-          "connected asset token"
-          "Instagram connected asset token"
-          "Instagram connected asset account id"
-          mTokenOverride
-          mAccountIdOverride
-        else buildSource
-          "configured fallback token"
-          "INSTAGRAM_MESSAGING_TOKEN"
-          "INSTAGRAM_MESSAGING_ACCOUNT_ID"
-          (instagramMessagingToken cfg)
-          (instagramMessagingAccountId cfg)
-    pure (nubAttempts (sourceAttempts base source))
+buildAttempts cfg mTokenOverride mAccountIdOverride = do
+  base <-
+    either (Left . T.pack) Right $
+      normalizeConfiguredApiBaseUrl
+        "INSTAGRAM_MESSAGING_API_BASE"
+        (T.unpack (instagramMessagingApiBase cfg))
+  source <-
+    if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+      then buildSource
+        "connected asset token"
+        "Instagram connected asset token"
+        "Instagram connected asset account id"
+        mTokenOverride
+        mAccountIdOverride
+      else buildSource
+        "configured fallback token"
+        "INSTAGRAM_MESSAGING_TOKEN"
+        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+        (instagramMessagingToken cfg)
+        (instagramMessagingAccountId cfg)
+  pure (nubAttempts (sourceAttempts base source))
   where
     buildSource attemptLabel tokenLabel accountIdLabel mToken mAccountId =
       InstagramAttemptSource attemptLabel
