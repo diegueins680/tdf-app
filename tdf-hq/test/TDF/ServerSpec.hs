@@ -6647,6 +6647,55 @@ spec = describe "TDF.Server helpers" $ do
                             <> show (fmap (fromSqlKey . entityKey) value)
                         )
 
+        it "rejects malformed stored OAuth tokens before returning a config fallback" $ do
+            let withTokens mAccessToken mRefreshToken (Entity key cfg) =
+                    Entity key
+                        ( cfg
+                            { Cal.googleCalendarConfigAccessToken = mAccessToken
+                            , Cal.googleCalendarConfigRefreshToken = mRefreshToken
+                            }
+                        )
+                validWithWhitespace =
+                    withTokens
+                        (Just " access-token ")
+                        (Just " refresh-token ")
+                        (calendarConfigEntity 1 "primary")
+                invalidAccessToken =
+                    withTokens
+                        (Just "access token")
+                        Nothing
+                        (calendarConfigEntity 1 "primary")
+                invalidRefreshToken =
+                    withTokens
+                        (Just "access-token")
+                        (Just ("refresh" <> T.singleton '\x202E' <> "token"))
+                        (calendarConfigEntity 1 "primary")
+                assertInvalid label candidate =
+                    case selectUniqueCalendarConfigFallback [candidate] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL8.unpack (errBody err)
+                                `shouldContain`
+                                    ("Stored Google Calendar " <> label <> " is invalid")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Calendar OAuth token to fail, got: "
+                                    <> show (fmap (fromSqlKey . entityKey) value)
+                                )
+
+            case selectUniqueCalendarConfigFallback [validWithWhitespace] of
+                Right (Just (Entity _ cfg)) -> do
+                    Cal.googleCalendarConfigAccessToken cfg `shouldBe` Just "access-token"
+                    Cal.googleCalendarConfigRefreshToken cfg `shouldBe` Just "refresh-token"
+                other ->
+                    expectationFailure
+                        ( "Expected valid Calendar OAuth tokens to be normalized, got: "
+                            <> show (fmap (fmap (fromSqlKey . entityKey)) other)
+                        )
+
+            assertInvalid "access token" invalidAccessToken
+            assertInvalid "refresh token" invalidRefreshToken
+
         it "rejects impossible stored fallback config ids before publishing them" $
             case selectUniqueCalendarConfigFallback
                     [calendarConfigEntity 0 "primary"] of

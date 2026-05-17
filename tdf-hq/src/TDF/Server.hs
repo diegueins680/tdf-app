@@ -3685,7 +3685,24 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       Left _ -> invalidStoredCalendarId
   unless (calendarIdVal == storedCalendarId) invalidStoredCalendarId
   syncCursorVal <- validateGoogleCalendarSyncCursor (Cal.googleCalendarConfigSyncCursor cfg)
-  Right (Entity cfgId cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal })
+  accessTokenVal <-
+    traverse
+      (validateStoredGoogleCalendarOAuthToken "access token")
+      (Cal.googleCalendarConfigAccessToken cfg)
+  refreshTokenVal <-
+    traverse
+      (validateStoredGoogleCalendarOAuthToken "refresh token")
+      (Cal.googleCalendarConfigRefreshToken cfg)
+  Right
+    ( Entity
+        cfgId
+        ( cfg
+            { Cal.googleCalendarConfigAccessToken = accessTokenVal
+            , Cal.googleCalendarConfigRefreshToken = refreshTokenVal
+            , Cal.googleCalendarConfigSyncCursor = syncCursorVal
+            }
+        )
+    )
   where
     storedCalendarId = Cal.googleCalendarConfigCalendarId cfg
     invalidStoredCalendarConfigId =
