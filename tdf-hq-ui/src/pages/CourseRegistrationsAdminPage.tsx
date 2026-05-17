@@ -1183,6 +1183,12 @@ const firstRunOnboardingDescriptorPrefixPattern =
 const firstRunOnboardingDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
+const firstRunOrientationDescriptorPrefixPattern =
+  /^(?:(?:(?:student|course|class|program)\s+)?orientation\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?orientation|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+orientaci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOrientationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:student|course|class|program)\s+)?orientation\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?orientation|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+orientaci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
 const firstRunAuditionDescriptorPrefixPattern =
   /^(?:(?:audition|casting)\s+(?:forms?|pages?|portals?|sign[-\s]?ups?|registrations?|applications?)|(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+de\s+(?:audici[oó]n(?:es)?|casting)|(?:audici[oó]n(?:es)?|casting)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1731,6 +1737,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunOnboardingDescriptorPrefixPattern, '')
+    .replace(firstRunOrientationDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
     .replace(firstRunVariantDescriptorPrefixPattern, '')
     .replace(firstRunCopyDescriptorPrefixPattern, '')
@@ -1829,6 +1836,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunOnboardingDescriptorSuffixPattern, '')
+    .replace(firstRunOrientationDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
     .replace(firstRunVariantDescriptorSuffixPattern, '')
     .replace(firstRunCopyDescriptorSuffixPattern, '')
