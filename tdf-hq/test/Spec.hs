@@ -11923,6 +11923,30 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
 
+        it "rejects null optional nested aliases instead of treating them as omitted" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"email\":null,\"isExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "email must be omitted instead of null"
+                Right payload ->
+                    expectationFailure ("Expected null musician email to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"songKey\":null}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "songKey must be omitted instead of null"
+                Right payload ->
+                    expectationFailure ("Expected null setlist songKey to be rejected, got: " <> show payload)
+
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
