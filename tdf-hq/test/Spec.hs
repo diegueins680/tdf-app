@@ -5117,6 +5117,39 @@ main = hspec $ do
                 ( "{\"items\":[{\"id\":\"event-123\",\"location\":\"Sala\\u202E1\"}"
                     <> "],\"nextSyncToken\":\"cursor-1\"}"
                 )
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "summary" .= Data.Text.replicate 1025 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "location" .= Data.Text.replicate 1025 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "description" .= Data.Text.replicate 10001 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
 
         it "rejects malformed Google Calendar attendee shapes before persistence" $ do
             let pageWithAttendees attendeesValue =

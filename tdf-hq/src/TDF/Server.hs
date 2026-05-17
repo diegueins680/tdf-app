@@ -336,6 +336,13 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
             (fail . googleCalendarPageFieldError idx fieldName)
             (const (pure ()))
             (validateGoogleCalendarHtmlLink rawText)
+      | T.length rawText > googleCalendarPageTextFieldMaxChars fieldName ->
+          fail
+            ( fieldLabel
+                <> " must be "
+                <> show (googleCalendarPageTextFieldMaxChars fieldName)
+                <> " characters or fewer"
+            )
       | T.any isUnsupportedGoogleCalendarPageTextChar rawText ->
           fail
             ( fieldLabel
@@ -547,6 +554,21 @@ googleCalendarHtmlLinkHosts =
   [ "www.google.com"
   , "calendar.google.com"
   ]
+
+googleCalendarPageTextFieldMaxChars :: Text -> Int
+googleCalendarPageTextFieldMaxChars "description" = maxGoogleCalendarPageDescriptionChars
+googleCalendarPageTextFieldMaxChars "summary" = maxGoogleCalendarPageSummaryChars
+googleCalendarPageTextFieldMaxChars "location" = maxGoogleCalendarPageLocationChars
+googleCalendarPageTextFieldMaxChars _ = maxGoogleCalendarPageSummaryChars
+
+maxGoogleCalendarPageSummaryChars :: Int
+maxGoogleCalendarPageSummaryChars = 1024
+
+maxGoogleCalendarPageLocationChars :: Int
+maxGoogleCalendarPageLocationChars = 1024
+
+maxGoogleCalendarPageDescriptionChars :: Int
+maxGoogleCalendarPageDescriptionChars = 10000
 
 isUnsupportedGoogleCalendarPageTextChar :: Char -> Bool
 isUnsupportedGoogleCalendarPageTextChar ch =
