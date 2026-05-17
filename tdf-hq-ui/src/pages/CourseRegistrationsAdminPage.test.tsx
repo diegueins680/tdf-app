@@ -10224,6 +10224,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('mentions registration-number search when duplicate busy rows need record disambiguation', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.shared@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana.shared@example.com',
+        crPhoneE164: '+593999000222',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const searchInput = getInputByLabel(container, localSearchLabel);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o número de registro');
+      expect(searchInput.getAttribute('placeholder')).not.toBe('Nombre o contacto');
+      expect(getButtonByAriaLabel(
+        container,
+        'Abrir expediente de Ana Torres (ana.shared@example.com · +593999000222 · registro #101)',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Abrir expediente de Ana Torres (ana.shared@example.com · +593999000222 · registro #102)',
+      )).toBeTruthy();
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'registro #102');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ana Torres')).toBeTruthy();
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 1 de 9 inscripciones cargadas.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('collapses extra spaces in busy-list search so pasted names do not hit empty recovery', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 

@@ -3106,6 +3106,8 @@ const buildLocalSearchPlaceholder = (
   let hasRowsWithoutNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
   let hasHiddenAcquisitionContext = false;
+  const hasRecordDisambiguatorSearch =
+    getRegistrationIdsRequiringActionRecordDisambiguator(registrations).size > 0;
   const noteKeys = new Set<string>();
   const acquisitionContextKeys = new Set<string>();
 
@@ -3179,8 +3181,10 @@ const buildLocalSearchPlaceholder = (
 
   const visibleContextTerms = contextTerms.length > 1 ? ['otros datos'] : contextTerms;
 
+  const hasRecordSearchTerm = hasGeneratedRegistrationIdentity || hasRecordDisambiguatorSearch;
+
   if (
-    hasGeneratedRegistrationIdentity
+    hasRecordSearchTerm
     && identityTerms.length > 0
     && identityTerms.length + 1 + contextTerms.length > MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS
   ) {
@@ -3188,7 +3192,7 @@ const buildLocalSearchPlaceholder = (
   }
 
   const terms = [...identityTerms];
-  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Número de registro' : 'número de registro');
+  if (hasRecordSearchTerm) terms.push(terms.length === 0 ? 'Número de registro' : 'número de registro');
   terms.push(...visibleContextTerms);
 
   return formatLocalSearchPlaceholder(terms);
