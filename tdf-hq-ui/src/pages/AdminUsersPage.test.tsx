@@ -5684,7 +5684,7 @@ describe('AdminUsersPage', () => {
     }
   });
 
-  it('keeps precise search guidance inside the field instead of repeating the same hint in the header summary', async () => {
+  it('keeps access search guidance concise without losing role or module matches', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
         userId: 101,
@@ -5718,9 +5718,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
         expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
-        expect(searchInput.getAttribute('placeholder')).not.toContain('acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
         expect(container.textContent).toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',
         );
@@ -5728,6 +5729,15 @@ describe('AdminUsersPage', () => {
         expect(container.textContent).not.toContain('La búsqueda aparecerá desde el tercer usuario.');
         expect(container.textContent).not.toContain('Busca por identidad');
         expect(container.textContent).not.toContain('Busca por nombre, ID, contacto o acceso.');
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'inventory');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([103]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible. Acceso en este resultado: Roles: ReadOnly · Módulos: inventory.',
+        );
       });
     } finally {
       await cleanup();
@@ -5982,9 +5992,10 @@ describe('AdminUsersPage', () => {
     try {
       await waitForExpectation(() => {
         const searchInput = getInputByLabelText(container, 'Buscar usuarios');
-        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto, rol o módulo');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario, contacto o acceso');
         expect(searchInput.getAttribute('placeholder')).not.toContain('ID');
-        expect(searchInput.getAttribute('placeholder')).not.toContain('acceso');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('rol');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('módulo');
       });
 
       const searchInput = getInputByLabelText(container, 'Buscar usuarios');

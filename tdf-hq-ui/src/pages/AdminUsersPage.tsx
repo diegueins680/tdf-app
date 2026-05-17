@@ -491,7 +491,7 @@ const formatActiveUserCountLabel = (count: number) => `${formatUserCountLabel(co
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
 const MIN_USERS_FOR_REFRESH = 4;
-const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
+const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto o acceso';
 const ACCOUNT_SEARCH_PLACEHOLDER = 'Cuenta';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
@@ -839,9 +839,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   if (hasDistinctUsername) terms.push(hasNameIdentity ? 'usuario' : 'Usuario');
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
   const shouldUseAccessUmbrellaTerm =
-    hasActiveUsers
-    && hasInactiveUsers
-    && hasNonDefaultRoles
+    hasNonDefaultRoles
     && hasNonDefaultModules
     && modulesAddDistinctSearchValue;
 
