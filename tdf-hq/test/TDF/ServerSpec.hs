@@ -5922,6 +5922,14 @@ spec = describe "TDF.Server helpers" $ do
                 "DRIVE_CLIENT_SECRET must not contain hidden formatting characters"
             assertInvalid
                 ( resolveDriveClientCreds
+                    (Just "drive-client")
+                    (Just "drive-secr\233t")
+                    (Just "google-client")
+                    (Just "google-secret")
+                )
+                "DRIVE_CLIENT_SECRET must contain only ASCII characters"
+            assertInvalid
+                ( resolveDriveClientCreds
                     Nothing
                     Nothing
                     (Just "google-client")

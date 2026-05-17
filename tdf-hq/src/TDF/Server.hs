@@ -2907,6 +2907,12 @@ validateOptionalDriveClientCredential envName rawCredential =
                 BL.fromStrict . TE.encodeUtf8 $
                   envName <> " must not contain hidden formatting characters"
             }
+      | T.any (not . isAscii) credential ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must contain only ASCII characters"
+            }
       | T.length credential > maxDriveOAuthTokenChars ->
           Left err503
             { errBody =
