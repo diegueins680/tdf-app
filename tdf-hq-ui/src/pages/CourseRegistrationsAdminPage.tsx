@@ -31,6 +31,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -6647,9 +6648,10 @@ export default function CourseRegistrationsAdminPage() {
                       && hasOnlyPendingRecoveryStatusAction(reg.crStatus)
                     );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
+                  const statusIconActionIsPaymentWorkflow = canOpenPaymentWorkflowFromStatus(reg.crStatus);
                   const statusIconActionTitle = statusMenuButtonTitle(reg.crStatus, rowActionTarget);
                   const usePaymentStatusMenuLabel =
-                    showInlinePaymentWorkflowRowLabel && canOpenPaymentWorkflowFromStatus(reg.crStatus);
+                    showInlinePaymentWorkflowRowLabel && statusIconActionIsPaymentWorkflow;
                   const rowCohortSlug = reg.crCourseSlug.trim();
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
@@ -6749,12 +6751,17 @@ export default function CourseRegistrationsAdminPage() {
                               title={statusIconActionTitle}
                               aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
                               aria-haspopup="menu"
+                              data-action-icon={statusIconActionIsPaymentWorkflow ? 'payment-receipt' : 'status-menu'}
                               disabled={isUpdating}
                               onClick={(event) => {
                                 handleOpenStatusMenu(event.currentTarget, reg);
                               }}
                             >
-                              <MoreVertIcon fontSize="small" />
+                              {statusIconActionIsPaymentWorkflow ? (
+                                <ReceiptLongIcon fontSize="small" />
+                              ) : (
+                                <MoreVertIcon fontSize="small" />
+                              )}
                             </IconButton>
                           </span>
                         </Tooltip>

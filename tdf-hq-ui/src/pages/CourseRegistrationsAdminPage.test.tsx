@@ -19361,7 +19361,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(currentViewContext?.textContent).toContain(paymentWorkflowDossierScopeHint);
       expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+      const compactPaymentActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Registrar pago o cambiar estado para "]'),
+      );
+      expect(compactPaymentActions).toHaveLength(3);
+      expect(compactPaymentActions.every((action) => action.dataset['actionIcon'] === 'payment-receipt')).toBe(true);
 
       const firstStatusAction = getButtonByAriaLabel(
         container,
