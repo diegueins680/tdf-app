@@ -9042,7 +9042,7 @@ main = hspec $ do
                 )
                 `shouldSatisfy` isLeft
 
-        it "rejects explicit null radio fallback fields instead of silently using defaults" $ do
+        it "rejects explicit null radio optional fields before fallback handling" $ do
             let assertImportDecodeError rawPayload expectedMessage =
                     case eitherDecode rawPayload :: Either String RadioImportRequest of
                         Left err ->
@@ -9057,6 +9057,13 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected radio fallback payload to be rejected, got " <> show value)
+                assertTransmissionDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioTransmissionRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio transmission payload to be rejected, got " <> show value)
 
             assertImportDecodeError
                 "{\"rirSources\":null}"
@@ -9070,6 +9077,15 @@ main = hspec $ do
             assertRefreshDecodeError
                 "{\"rmrOnlyMissing\":null}"
                 ("rmrOnlyMissing must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrName\":null}"
+                ("rtrName must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrGenre\":null}"
+                ("rtrGenre must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrCountry\":null}"
+                ("rtrCountry must be omitted instead of null" :: String)
 
         it "rejects extra radio presence keys so typoed station metadata cannot be silently ignored" $
             ( eitherDecode

@@ -1732,7 +1732,9 @@ data RadioTransmissionRequest = RadioTransmissionRequest
   } deriving (Show, Generic)
 instance ToJSON RadioTransmissionRequest
 instance FromJSON RadioTransmissionRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioTransmissionRequest" ["rtrName", "rtrGenre", "rtrCountry"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioTransmissionInfo = RadioTransmissionInfo
   { rtiStreamId  :: Int64
