@@ -238,11 +238,13 @@ parseGoogleTokenField fieldName raw =
        then fail (T.unpack fieldName <> " must not be blank")
        else if T.any (\ch -> isSpace ch || isControl ch) clean
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
-         else if T.any isHiddenDriveOAuthTokenChar clean
-           then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
-           else if T.length clean > maxDriveOAuthTokenChars
-             then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
-             else pure clean
+       else if T.any isHiddenDriveOAuthTokenChar clean
+         then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
+       else if T.any (not . isAscii) clean
+         then fail (T.unpack fieldName <> " must contain only ASCII characters")
+       else if T.length clean > maxDriveOAuthTokenChars
+         then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
+       else pure clean
 
 maxDriveOAuthTokenChars :: Int
 maxDriveOAuthTokenChars = 4096
@@ -2583,6 +2585,8 @@ validateDriveRefreshTokenWith baseError fieldName rawToken
       invalid " must not contain hidden formatting characters"
   | T.any isSpace tokenVal =
       invalid " must not contain whitespace"
+  | T.any (not . isAscii) tokenVal =
+      invalid " must contain only ASCII characters"
   | T.length tokenVal > maxDriveOAuthTokenChars =
       invalid " must be 4096 characters or fewer"
   | otherwise =

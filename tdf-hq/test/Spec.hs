@@ -6080,6 +6080,9 @@ main = hspec $ do
                 ("refresh" <> Data.Text.singleton '\x202E' <> "token")
                 "DRIVE_REFRESH_TOKEN must not contain hidden formatting characters"
             assertInvalid
+                ("refresh" <> Data.Text.singleton '\233' <> "token")
+                "DRIVE_REFRESH_TOKEN must contain only ASCII characters"
+            assertInvalid
                 (Data.Text.replicate 4097 "a")
                 "DRIVE_REFRESH_TOKEN must be 4096 characters or fewer"
 

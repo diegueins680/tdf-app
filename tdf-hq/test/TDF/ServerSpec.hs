@@ -5978,6 +5978,13 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected "{\"access_token\":\"   \",\"expires_in\":3600}"
             assertRejected "{\"access_token\":\"access-token\\nInjected\",\"expires_in\":3600}"
             assertRejected $
+                A.encode $
+                    object
+                        [ "access_token" .= ("access-tok\233n" :: Text)
+                        , "token_type" .= ("Bearer" :: Text)
+                        , "expires_in" .= (3600 :: Int)
+                        ]
+            assertRejected $
                 "{\"access_token\":\"access-token\","
                     <> "\"refresh_token\":\"refresh token\","
                     <> "\"expires_in\":3600}"
@@ -6692,6 +6699,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "refreshToken must not contain hidden formatting characters"
                 (DriveTokenRefreshRequest "1//refresh\x202E\&token")
+            assertInvalid
+                "refreshToken must contain only ASCII characters"
+                (DriveTokenRefreshRequest "1//refresh-tok\233n")
             assertInvalid
                 "refreshToken must be 4096 characters or fewer"
                 (DriveTokenRefreshRequest (T.replicate 4097 "r"))
