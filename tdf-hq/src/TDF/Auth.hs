@@ -234,6 +234,7 @@ invalidResolvedUsernameLabelChar ch =
   isSpace ch
     || isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || ch `elem` (":/\\?#" :: String)
 
 modulesForRoles :: [RoleEnum] -> Set ModuleAccess
 modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty

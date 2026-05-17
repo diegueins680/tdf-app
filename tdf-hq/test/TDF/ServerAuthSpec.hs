@@ -253,6 +253,12 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
       `shouldBe` Nothing
     resolveUsernameFromLabel "password-login:ada example.com"
       `shouldBe` Nothing
+    resolveUsernameFromLabel "password-login:password-reset:ada@example.com"
+      `shouldBe` Nothing
+    resolveUsernameFromLabel "google-login:../ada@example.com"
+      `shouldBe` Nothing
+    resolveUsernameFromLabel "password-reset:ada@example.com?next=/admin"
+      `shouldBe` Nothing
     resolveUsernameFromLabel ("password-login:" <> T.replicate 255 "a")
       `shouldBe` Nothing
 
