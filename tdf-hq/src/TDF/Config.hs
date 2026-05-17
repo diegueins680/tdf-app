@@ -1535,12 +1535,14 @@ normalizeConfiguredHttpsUrl envName rawUrl
       let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
       in if not (hasValidAuthority authority)
            then invalid
-           else if not (validateHttpsPathSuffix pathSuffix)
+           else if not (validateHttpsPathCharacters pathSuffix)
              then
                Left
                  ( envName
                      <> " URL suffix must not start with // or contain backslashes"
                  )
+           else if hasAmbiguousUrlPathSuffix pathSuffix
+             then Left (ambiguousUrlPathMessage envName)
              else Right (Just trimmed)
 
     hasValidAuthority authority =
@@ -1549,7 +1551,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
         && validateHost host
         && validatePortSuffix portSuffix
 
-    validateHttpsPathSuffix suffix =
+    validateHttpsPathCharacters suffix =
       T.null suffix
         || ( not ("//" `T.isPrefixOf` suffix)
              && not (T.any (== '\\') suffix)

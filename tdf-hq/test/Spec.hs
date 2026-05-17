@@ -1873,6 +1873,22 @@ main = hspec $ do
                     "COURSE_DEFAULT_INSTRUCTOR_AVATAR URL suffix must not start with // or contain backslashes"
                         `isInfixOf` show (err :: IOException)
 
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://maps.example.com/studio/../admin")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Nothing)
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/assets//avatar.jpg")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes WhatsApp enrollment fallback config before minting public links" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++
