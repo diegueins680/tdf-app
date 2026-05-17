@@ -2405,6 +2405,51 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts repeated direct paid recovery actions in medium current-view lists', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crStatus: 'paid' }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentView = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+      const paidRecoveryActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Marcar pago pendiente para "]'),
+      );
+
+      expect(currentView?.textContent).toContain('Beatmaking 101 · Pagado');
+      expect(currentView?.textContent).toContain(paidRecoveryScopeHint);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(0);
+      expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
+      expect(paidRecoveryActions).toHaveLength(3);
+      expect(paidRecoveryActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(paidRecoveryActions.every((action) => action.dataset['actionIcon'] === 'pending-recovery')).toBe(true);
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace').getAttribute('title')).toBe(
+        'Marcar pago pendiente; actual: Pagado',
+      );
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace').getAttribute('aria-haspopup')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('folds passive single-status context into busy-list search instead of rendering another filter block', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

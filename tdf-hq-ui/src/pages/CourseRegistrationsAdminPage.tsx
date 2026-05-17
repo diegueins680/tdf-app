@@ -222,6 +222,7 @@ const customStatusFilterUnavailableMessage = 'Normaliza cada fila desde Estado p
 const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
+const MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS = 3;
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MIN_FULL_PHONE_MATCH_DIGITS = 7;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
@@ -4292,6 +4293,9 @@ export default function CourseRegistrationsAdminPage() {
       reg.crStatus,
       allVisibleRowsUsePaidRecoveryAction,
     ));
+  const showRepeatedDirectRecoveryIconActions = allVisibleRowsUseDossierRecoveryAction
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS;
   const showBusyDirectRecoveryIconActions = showBusyListSearchOnboarding
     && allVisibleRowsUseDirectPendingRecoveryAction
     && useCompactStatusActionLabel
@@ -6830,7 +6834,8 @@ export default function CourseRegistrationsAdminPage() {
                   });
                   const showRowContext = Boolean(rowContextSummary);
                   const useDirectPendingRecoveryIconAction =
-                    useDirectPendingRecoveryAction && showBusyDirectRecoveryIconActions;
+                    useDirectPendingRecoveryAction
+                    && (showBusyDirectRecoveryIconActions || showRepeatedDirectRecoveryIconActions);
                   const directPendingRecoveryActionLabel = `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`;
                   const directPendingRecoveryActionTitle =
                     `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`;
@@ -6914,6 +6919,7 @@ export default function CourseRegistrationsAdminPage() {
                               color={registrationStatusButtonColor('pending_payment')}
                               title={directPendingRecoveryActionTitle}
                               aria-label={directPendingRecoveryActionLabel}
+                              data-action-icon="pending-recovery"
                               disabled={isUpdating}
                               onClick={() => {
                                 handleCloseStatusMenu();
