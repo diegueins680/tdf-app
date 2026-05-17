@@ -9713,6 +9713,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://files.example.com:0443/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
+            assertInvalid "fileUrl" "https://files.example.com/proof.pdf#preview"
             assertInvalid "attachmentUrl" ("https://files.example.com/proof" <> T.singleton '\x202E' <> "fdp")
 
         it "rejects oversized course registration asset URLs before receipt or follow-up storage" $

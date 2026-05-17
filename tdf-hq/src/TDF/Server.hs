@@ -5526,12 +5526,13 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
             }
       | "https://" `T.isPrefixOf` T.toLower urlVal
           && TrialsServer.isValidHttpUrl urlVal
+          && not ("#" `T.isInfixOf` urlVal)
         -> Right (Just urlVal)
       | otherwise ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " must be an absolute https URL"
+                  fieldName <> " must be an absolute https URL without a fragment"
             }
 
 maxCourseRegistrationUrlChars :: Int
