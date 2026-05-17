@@ -5109,6 +5109,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('skips empty system-email cards when shared metadata already explains the history', async () => {
+    const sharedEmailCreatedAt = '2030-03-03T12:00:00.000Z';
+    const sharedEmailCreatedLabel = formatTimestampForDisplay(sharedEmailCreatedAt, '-');
+    listRegistrationEmailsMock.mockResolvedValue([
+      buildEmailEvent({
+        ceId: 501,
+        ceMessage: '   ',
+        ceCreatedAt: sharedEmailCreatedAt,
+      }),
+      buildEmailEvent({
+        ceId: 502,
+        ceMessage: '',
+        ceCreatedAt: sharedEmailCreatedAt,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(container, 'Expediente')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Expediente'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByText(document.body, showSystemEmailsLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, showSystemEmailsLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(`Resumen: Recordatorio de pago · Enviado · ${sharedEmailCreatedLabel}`);
+      expect(document.body.querySelectorAll('[data-testid="course-registration-email-event-card"]')).toHaveLength(0);
+      expect(countOccurrences(document.body, 'Recordatorio de pago')).toBe(1);
+      expect(countOccurrences(document.body, 'Enviado')).toBe(1);
+      expect(countOccurrences(document.body, sharedEmailCreatedLabel)).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('resets expanded system-email history when moving to another dossier', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),

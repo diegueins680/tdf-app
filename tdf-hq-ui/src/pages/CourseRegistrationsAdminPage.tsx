@@ -7245,9 +7245,17 @@ export default function CourseRegistrationsAdminPage() {
                             const showEmailEventMetadata = !sharedEmailEventStatusLabel
                               || !sharedEmailEventTypeLabel
                               || Boolean(emailEventCreatedLabel);
+                            const emailEventMessage = entry.ceMessage ?? '';
+                            const hasEmailEventMessage = emailEventMessage.trim() !== '';
+                            if (!showEmailEventMetadata && !hasEmailEventMessage) return null;
 
                             return (
-                              <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
+                              <Paper
+                                key={entry.ceId}
+                                variant="outlined"
+                                sx={{ p: 1.5 }}
+                                data-testid="course-registration-email-event-card"
+                              >
                                 {showEmailEventMetadata && (
                                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
                                     {!sharedEmailEventStatusLabel && (
@@ -7263,12 +7271,12 @@ export default function CourseRegistrationsAdminPage() {
                                     )}
                                   </Stack>
                                 )}
-                                {entry.ceMessage && (
+                                {hasEmailEventMessage && (
                                   <Typography
                                     variant="body2"
                                     sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                                   >
-                                    {entry.ceMessage}
+                                    {emailEventMessage}
                                   </Typography>
                                 )}
                               </Paper>
