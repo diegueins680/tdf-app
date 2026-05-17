@@ -12821,7 +12821,11 @@ validateDatafastBaseUrl mRawBase
       Right (T.unpack (canonicalDatafastBaseUrl cleanBase))
   where
     rawBase = maybe "https://test.oppwa.com" T.pack mRawBase
-    cleanBase = T.dropWhileEnd (== '/') (T.strip rawBase)
+    rawBaseTrimmed = T.strip rawBase
+    cleanBase =
+      case T.unsnoc rawBaseTrimmed of
+        Just (baseWithoutTrailingSlash, '/') -> baseWithoutTrailingSlash
+        _ -> rawBaseTrimmed
 
     isHttpsOrigin rawUrl =
       T.all (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 rawUrl)

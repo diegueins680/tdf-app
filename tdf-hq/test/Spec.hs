@@ -5628,6 +5628,7 @@ main = hspec $ do
             assertInvalid "http://payments.example.com"
             assertInvalid "https://test.oppwa.com/v1"
             assertInvalid "https://test.oppwa.com?proxy=1"
+            assertInvalid "https://test.oppwa.com//"
             assertInvalid "http://localhost:8080"
             assertInvalid "https://payments.example.com"
             assertInvalid "https://oppwa.com.evil.example"
