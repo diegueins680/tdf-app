@@ -11261,6 +11261,20 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+        it "rejects explicit null issueSri instead of falling back to SRI emission" $
+            case
+                ( eitherDecode
+                    "{\"customerId\":42,\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000}],\"issueSri\":null}"
+                    :: Either String DTO.GenerateSessionInvoiceReq
+                ) of
+                Left err ->
+                    err `shouldContain` "issueSri must be omitted or set to true/false"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null issueSri to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "ClassSessionUpdate" $ do
         it "accepts canonical patch payloads and rejects typo-only bodies so class-session updates cannot silently no-op" $ do
             case (eitherDecode "{\"teacherId\":12}" :: Either String TrialsDTO.ClassSessionUpdate) of

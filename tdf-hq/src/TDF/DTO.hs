@@ -5,7 +5,19 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson (Options, ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, rejectUnknownFields)
+import           Data.Aeson
+  ( Options
+  , ToJSON(..)
+  , FromJSON(..)
+  , Value(Null)
+  , defaultOptions
+  , genericParseJSON
+  , genericToJSON
+  , rejectUnknownFields
+  , withObject
+  )
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (fieldLabelModifier, omitNothingFields)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -582,10 +594,17 @@ data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   , gsiCertificatePassword :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceReq where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = dtoCamelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    withObject "GenerateSessionInvoiceReq" rejectNullIssueSri raw
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      } raw
+    where
+      rejectNullIssueSri obj =
+        case AesonKeyMap.lookup (AesonKey.fromText "issueSri") obj of
+          Just Null -> fail "issueSri must be omitted or set to true/false"
+          _ -> pure ()
 
 data SriIssueBuyerDTO = SriIssueBuyerDTO
   { sibRuc       :: Text
