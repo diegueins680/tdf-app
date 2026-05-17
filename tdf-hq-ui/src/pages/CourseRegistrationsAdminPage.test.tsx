@@ -11250,6 +11250,83 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats scheduling and consultation-call sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'calendly_link',
+      'calendly_booking_page',
+      'acuity_scheduling_page',
+      'acuity_booking_link',
+      'cal.com_booking_link',
+      'simplybook_page',
+      'setmore_booking_link',
+      'you_can_book_me_link',
+      'tidycal_link',
+      'google_calendar_booking_link',
+      'discovery_call_booking',
+      'consultation_call_form',
+      'intro_call_link',
+      'strategy_call_booking',
+      'formulario_de_llamada_de_consulta',
+      'enlace_de_llamada_de_diagnostico',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Calendly link',
+      'Calendly booking page',
+      'Acuity scheduling page',
+      'Acuity booking link',
+      'Cal com booking link',
+      'Simplybook page',
+      'Setmore booking link',
+      'You can book me link',
+      'Tidycal link',
+      'Google calendar booking link',
+      'Discovery call booking',
+      'Consultation call form',
+      'Intro call link',
+      'Strategy call booking',
+      'Formulario de llamada de consulta',
+      'Enlace de llamada de diagnostico',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'calendly');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "calendly" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
