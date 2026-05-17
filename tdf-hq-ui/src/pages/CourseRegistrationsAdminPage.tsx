@@ -1644,7 +1644,7 @@ const firstRunScheduleDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
-const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|savvy\s*cal|savvycal|once\s*hub|oncehub|appointlet|book\s*like\s*a\s*boss|booklikeaboss|google\s+calendar)`;
+const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|savvy\s*cal|savvycal|once\s*hub|oncehub|appointlet|book\s*like\s*a\s*boss|booklikeaboss|microsoft\s+bookings?|ms\s+bookings?|google\s+calendar)`;
 const firstRunSchedulingProviderIntentPattern = String.raw`(?:(?:booking|reservation|rsvp|appointments?|scheduling)\s+)?`;
 const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+${firstRunSchedulingProviderIntentPattern}(?:links?|urls?|pages?|forms?|portals?|schedules?)|(?:links?|urls?|pages?|forms?|portals?|schedules?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
 const firstRunSchedulingProviderStandalonePrefixPattern = new RegExp(
@@ -2008,6 +2008,7 @@ const sourceLabelSpecialWords = new Map([
   ['ig', 'Instagram'],
   ['linkedin', 'LinkedIn'],
   ['meta', 'Meta'],
+  ['ms', 'MS'],
   ['qr', 'QR'],
   ['sms', 'SMS'],
   ['tiktok', 'TikTok'],
@@ -2390,6 +2391,16 @@ const defaultPublicFormSourceKeys = new Set([
   'tidycal',
   'tidy cal',
   'tidycal link',
+  'microsoft bookings',
+  'microsoft bookings link',
+  'microsoft bookings booking link',
+  'microsoft bookings booking page',
+  'microsoft bookings reservation link',
+  'microsoft bookings appointment schedule',
+  'ms bookings',
+  'ms bookings link',
+  'ms bookings booking link',
+  'ms bookings booking page',
   'google calendar booking link',
   'google calendar appointment schedule',
   'discovery call booking',

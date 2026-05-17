@@ -11922,6 +11922,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'setmore_booking_link',
       'you_can_book_me_link',
       'tidycal_link',
+      'microsoft_bookings_link',
+      'ms_bookings_booking_page',
       'google_calendar_booking_link',
       'discovery_call_booking',
       'consultation_call_form',
@@ -11940,6 +11942,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Setmore booking link',
       'You can book me link',
       'Tidycal link',
+      'Microsoft bookings link',
+      'MS bookings booking page',
       'Google calendar booking link',
       'Discovery call booking',
       'Consultation call form',
@@ -16058,6 +16062,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - pagina de reserva en Setmore',
       'YouCanBook.me appointment page - Beatmaking 101',
       'Beatmaking 101 - TidyCal booking link',
+      'Microsoft Bookings appointment page - Beatmaking 101',
+      'Beatmaking 101 - MS Bookings reservation link',
       'Google Calendar appointment schedule for Beatmaking 101',
       'Formulario de reserva de YouCanBookMe - Beatmaking 101',
       'SavvyCal booking page - Beatmaking 101',
@@ -16079,7 +16085,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore|YouCanBook|TidyCal|SavvyCal|OnceHub|Appointlet|Book Like A Boss|Google Calendar/i);
+        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore|YouCanBook|TidyCal|SavvyCal|OnceHub|Appointlet|Book Like A Boss|Microsoft Bookings|MS Bookings|Google Calendar/i);
         expect(emptyState?.textContent).not.toMatch(/booking|reservation|appointment|schedule|reserva/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
