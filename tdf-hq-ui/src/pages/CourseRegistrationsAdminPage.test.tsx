@@ -258,8 +258,6 @@ const mixedIdentityDossierLinkScopeHint =
   'Abre expediente desde el nombre, el correo o el número de registro.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const paymentStatusMenuButtonLabel = 'Pago y estado';
-const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
-  `Abrir opciones de pago y estado para ${targetLabel}`;
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`;
 const initialEmptyStateConfigMessage =
@@ -829,7 +827,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crEmail: 'No tiene correo',
-        crPhoneE164: 'Sin WhatsApp',
+        crPhoneE164: 'Sin número de WhatsApp',
       }),
     ]);
 
@@ -845,7 +843,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(countOccurrences(container, 'Contacto pendiente en esta inscripción.')).toBe(1);
       expect(container.textContent).not.toContain('No tiene correo');
-      expect(container.textContent).not.toContain('Sin WhatsApp');
+      expect(container.textContent).not.toContain('Sin número de WhatsApp');
       expect(container.textContent).not.toContain('Sin correo ni teléfono');
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
