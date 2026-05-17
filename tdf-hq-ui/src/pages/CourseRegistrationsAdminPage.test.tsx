@@ -16029,6 +16029,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Página de ventas - Beatmaking 101',
       'Formulario de compra para Beatmaking 101',
       'Beatmaking 101 - enlace de venta',
+      'Shopify product page - Beatmaking 101',
+      'Beatmaking 101 - Gumroad product link',
+      'Página de producto - Beatmaking 101',
+      'Beatmaking 101 - página de tienda',
       'Tickets - Beatmaking 101',
       'Ticket page for Beatmaking 101',
       'Beatmaking 101 - tickets link',
@@ -16051,7 +16055,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /sales page|order form|purchase page|tickets?|entradas?|p[aá]gina de ventas|formulario de compra|enlace de venta/i,
+          /sales page|order form|purchase page|product (?:page|link)|storefront|tickets?|entradas?|p[aá]gina de ventas|formulario de compra|enlace de venta|p[aá]gina de producto|p[aá]gina de tienda/i,
         );
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
