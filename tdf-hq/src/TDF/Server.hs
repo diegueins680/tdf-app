@@ -3199,6 +3199,8 @@ validateGoogleCalendarEventId rawEventId
       Left "Google Calendar event id must not contain hidden formatting characters"
   | T.any isSpace eventIdVal =
       Left "Google Calendar event id must not contain whitespace"
+  | T.any (not . isAscii) eventIdVal =
+      Left "Google Calendar event id must contain only ASCII characters"
   | otherwise =
       Right eventIdVal
   where

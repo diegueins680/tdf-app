@@ -6714,6 +6714,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "must not be blank" "   "
             assertInvalid "must not contain whitespace" "event 123"
             assertInvalid "must not contain control characters" "event\n123"
+            assertInvalid
+                "must contain only ASCII characters"
+                ("event-" <> T.singleton '\x00E9')
             assertInvalid "1024 characters or fewer" (T.replicate 1025 "a")
 
     describe "googleCalendarEventsEndpoint" $ do
