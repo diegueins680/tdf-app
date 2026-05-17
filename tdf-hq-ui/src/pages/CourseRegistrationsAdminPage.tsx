@@ -4051,9 +4051,7 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
-  const shouldCompactRepeatedPaymentStatusActions = dossierIdentityTargetLabel === 'el nombre'
-    ? searchedRegistrations.length >= 2
-    : searchedRegistrations.length >= 3;
+  const shouldCompactRepeatedPaymentStatusActions = searchedRegistrations.length >= 2;
   const showRepeatedPaymentStatusIconActions = Boolean(combinedSingleChoiceSummary)
     && !hasLocalSearch
     && !showBusyListSearchOnboarding

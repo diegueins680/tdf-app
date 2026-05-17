@@ -1700,7 +1700,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses unique registration ids instead of repeating the generic no-name fallback', async () => {
+  it('uses unique registration ids and compact row actions instead of repeating generic fallbacks', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crFullName: null,
@@ -1724,16 +1724,17 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(contextSummary?.textContent).toContain(recordDossierLinkScopeHint);
-      expect(contextSummary?.textContent).not.toContain(recordPaymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).toContain(recordPaymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).not.toContain(recordDossierLinkScopeHint);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(hasExactText(container, 'Registro #101')).toBe(true);
       expect(hasExactText(container, 'Registro #102')).toBe(true);
       expect(countOccurrences(container, 'Sin correo ni teléfono')).toBe(0);
       expect(countOccurrences(container, 'Sin nombre')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de registro #"]')).toHaveLength(2);
-      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para registro #"]')).toHaveLength(2);
-      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para registro #"]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para registro #"]')).toHaveLength(2);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
     });
 
