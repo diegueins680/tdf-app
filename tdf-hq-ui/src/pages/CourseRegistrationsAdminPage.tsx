@@ -4058,7 +4058,9 @@ export default function CourseRegistrationsAdminPage() {
     && allVisibleRowsCanOpenPaymentWorkflow
     && useCompactStatusActionLabel
     && shouldCompactRepeatedPaymentStatusActions;
-  const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
+  const hasSharedPendingPaymentStatusContext = Boolean(combinedSingleChoiceSummary)
+    || showSingleStatusSummaryInPageChrome;
+  const showInlinePaymentWorkflowRowLabel = hasSharedPendingPaymentStatusContext
     && !hasLocalSearch
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow

@@ -4325,6 +4325,10 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
     await cleanup();
