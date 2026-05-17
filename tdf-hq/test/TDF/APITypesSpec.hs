@@ -670,6 +670,20 @@ spec = do
                 "{\"fileUrl\":null,\"fileName\":null,\"mimeType\":null,\"notes\":null}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null receipt update fields so omitted fields stay unambiguous" $ do
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileUrl\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileName\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"mimeType\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileName\":\"receipt.pdf\",\"notes\":null}"
+                `shouldSatisfy` isLeft
+
     describe "Proposal payload FromJSON" $ do
         it "accepts canonical create, update, and version payloads" $ do
             case decodeProposalCreate

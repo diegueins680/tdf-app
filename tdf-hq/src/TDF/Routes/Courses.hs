@@ -26,9 +26,13 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
-import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types (Parser)
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (Day)
 import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
@@ -148,7 +152,8 @@ data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationReceiptUpdate where
-  parseJSON value@(Object _) = do
+  parseJSON value@(Object obj) = do
+    rejectNullCourseRegistrationReceiptUpdateFields obj
     payload@(CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) <-
       genericParseJSON strictObjectOptions value
     case (fileUrlVal, fileNameVal, mimeTypeVal, notesVal) of
@@ -158,6 +163,15 @@ instance FromJSON CourseRegistrationReceiptUpdate where
         pure payload
   parseJSON _ = fail "CourseRegistrationReceiptUpdate must be an object"
 instance ToJSON CourseRegistrationReceiptUpdate
+
+rejectNullCourseRegistrationReceiptUpdateFields :: Object -> Parser ()
+rejectNullCourseRegistrationReceiptUpdateFields obj =
+  mapM_ rejectNullField ["fileUrl", "fileName", "mimeType", "notes"]
+  where
+    rejectNullField fieldName =
+      case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+        Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+        _ -> pure ()
 
 data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
   { entryType      :: Maybe Text
