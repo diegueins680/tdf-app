@@ -1085,6 +1085,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/\*\*([^*\n]+)\*\*/g, '$1')
     .replace(/__([^_\n]+)__/g, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/!\[([^\]\n]*)\]\([^)]+\)/g, '$1')
     .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
     .replace(/<\/?(?:strong|b|em|i|span|a)[^>\n]*>/gi, '')
     .replace(

@@ -18352,6 +18352,8 @@ describe('CourseRegistrationsAdminPage', () => {
       '(Beatmaking 101) enrollment portal',
       '[Beatmaking 101](https://example.test/beatmaking-101)',
       'Formulario público [Beatmaking 101](https://example.test/beatmaking-101)',
+      '![Registration page - Beatmaking 101](https://example.test/beatmaking-101.png)',
+      'Formulario público ![Beatmaking 101](https://example.test/beatmaking-101.png)',
     ];
 
     for (const title of titles) {
@@ -18368,6 +18370,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain('(Beatmaking 101)');
         expect(emptyState?.textContent).not.toContain('[Beatmaking 101]');
+        expect(emptyState?.textContent).not.toContain('![Beatmaking 101]');
+        expect(emptyState?.textContent).not.toContain('!Beatmaking 101');
         expect(emptyState?.textContent).not.toContain('https://example.test/beatmaking-101');
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
