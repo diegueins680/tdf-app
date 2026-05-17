@@ -164,6 +164,9 @@ import TDF.Server
     , validateStrictAdminAccess
     , validateUserRoleUserId
     , validateServiceAdCatalogId
+    , validateServiceAdDescription
+    , validateServiceAdHeadline
+    , validateServiceAdRoleTag
     , validateServiceAdCurrency
     , validateReceiptCurrency
     , validateReceiptBuyerName
@@ -7397,6 +7400,39 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "serviceCatalogId must be a positive integer"
                 (validateServiceAdCatalogId (Just (-3)))
+
+    describe "service ad listing text validation" $ do
+        it "normalizes service ad listing text before marketplace storage" $ do
+            validateServiceAdRoleTag "  Mixing  " `shouldBe` Right "Mixing"
+            validateServiceAdHeadline "  Analog mix cleanup  "
+                `shouldBe` Right "Analog mix cleanup"
+            validateServiceAdDescription Nothing `shouldBe` Right Nothing
+            validateServiceAdDescription (Just "  Bring stems\nand references  ")
+                `shouldBe` Right (Just "Bring stems\nand references")
+
+        it "rejects ambiguous service ad text before publishing marketplace listings" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid service ad text, got: " <> show value)
+
+            assertInvalid "roleTag is required" (validateServiceAdRoleTag "   ")
+            assertInvalid
+                "roleTag must be 80 characters or fewer"
+                (validateServiceAdRoleTag (T.replicate 81 "x"))
+            assertInvalid
+                "headline must include letters or numbers"
+                (validateServiceAdHeadline " ... --- ")
+            assertInvalid
+                "headline must not contain control characters"
+                (validateServiceAdHeadline "Mix\nMaster")
+            assertInvalid
+                "description must not contain control characters"
+                (validateServiceAdDescription (Just ("Details" <> T.singleton '\x202E')))
 
     describe "validateServiceMarketplaceCatalog" $ do
         it "returns the active catalog kind so marketplace bookings inherit the real service kind" $

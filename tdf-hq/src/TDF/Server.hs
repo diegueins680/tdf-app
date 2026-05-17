@@ -7126,10 +7126,11 @@ resolveServiceMarketplaceBookingEntity rawBookingId = do
 
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
-  when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
-    throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
   catalogId <- either throwError pure (validateServiceAdCatalogId sacServiceCatalogId)
+  roleTag <- either throwError pure (validateServiceAdRoleTag sacRoleTag)
+  headline <- either throwError pure (validateServiceAdHeadline sacHeadline)
+  description <- either throwError pure (validateServiceAdDescription sacDescription)
   currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
@@ -7143,9 +7144,9 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
   let record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
         , serviceAdServiceCatalogId = Just catalogKey
-        , serviceAdRoleTag = T.strip sacRoleTag
-        , serviceAdHeadline = T.strip sacHeadline
-        , serviceAdDescription = normalizeOptionalInput sacDescription
+        , serviceAdRoleTag = roleTag
+        , serviceAdHeadline = headline
+        , serviceAdDescription = description
         , serviceAdFeeCents = sacFeeCents
         , serviceAdCurrency = currency
         , serviceAdSlotMinutes = slotMinutes
@@ -8658,6 +8659,77 @@ validateServiceAdCatalogId Nothing =
   Left err400 { errBody = "serviceCatalogId is required" }
 validateServiceAdCatalogId (Just rawCatalogId) =
   validatePositiveIdField "serviceCatalogId" rawCatalogId
+
+validateServiceAdRoleTag :: Text -> Either ServerError Text
+validateServiceAdRoleTag =
+  validateServiceAdRequiredText "roleTag" 80
+
+validateServiceAdHeadline :: Text -> Either ServerError Text
+validateServiceAdHeadline =
+  validateServiceAdRequiredText "headline" 160
+
+validateServiceAdDescription :: Maybe Text -> Either ServerError (Maybe Text)
+validateServiceAdDescription Nothing = Right Nothing
+validateServiceAdDescription (Just rawDescription) =
+  case normalizeOptionalInput (Just rawDescription) of
+    Nothing -> Right Nothing
+    Just description
+      | T.length description > 1000 ->
+          Left err400 { errBody = "description must be 1000 characters or fewer" }
+      | T.any isUnsafeServiceAdDescriptionChar description ->
+          Left err400
+            { errBody =
+                "description must not contain control characters other than tabs "
+                  <> "or line breaks, hidden formatting characters, or Unicode separators"
+            }
+      | otherwise ->
+          Right (Just description)
+
+validateServiceAdRequiredText :: Text -> Int -> Text -> Either ServerError Text
+validateServiceAdRequiredText fieldName maxChars rawText =
+  case normalizeOptionalInput (Just rawText) of
+    Nothing ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
+        }
+    Just textVal
+      | T.length textVal > maxChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> " must be "
+                    <> T.pack (show maxChars)
+                    <> " characters or fewer"
+            }
+      | T.any isUnsafeServiceAdSingleLineChar textVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName
+                    <> " must not contain control characters, hidden formatting "
+                    <> "characters, or Unicode separators"
+            }
+      | not (T.any isAlphaNum textVal) ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must include letters or numbers"
+            }
+      | otherwise ->
+          Right textVal
+
+isUnsafeServiceAdSingleLineChar :: Char -> Bool
+isUnsafeServiceAdSingleLineChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
+isUnsafeServiceAdDescriptionChar :: Char -> Bool
+isUnsafeServiceAdDescriptionChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
 validateServiceAdCurrency = validateCurrencyCode
