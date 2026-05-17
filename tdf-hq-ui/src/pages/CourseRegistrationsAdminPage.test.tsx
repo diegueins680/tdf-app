@@ -13921,11 +13921,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Buscar en más registros')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Filtrar por estado');
@@ -14040,12 +14040,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(limitRecoveryAction.getAttribute('title')).toBe(emptySearchLimitRecoveryTitle);
       expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
     });
 
     await cleanup();
