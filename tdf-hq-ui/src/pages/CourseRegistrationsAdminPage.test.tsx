@@ -15699,6 +15699,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Leadpages',
       'Beatmaking 101 - Notion form',
       'ConvertKit form - Beatmaking 101',
+      'Kit sign-up page - Beatmaking 101',
+      'Beatmaking 101 - Kit lead form',
       'Brevo registration page for Beatmaking 101',
       'Formulario de Flodesk para Beatmaking 101',
       'Beatmaking 101 - MailerLite signup form',
@@ -15767,7 +15769,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Squarespace');
         expect(emptyState?.textContent).not.toContain('Leadpages');
         expect(emptyState?.textContent).not.toContain('Notion form');
-        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Substack/i);
+        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Kit sign-up|Kit lead|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Substack/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
         expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery/i);
