@@ -1843,6 +1843,15 @@ spec = do
       assertInvalid "targetKind is required" (parseCheckoutTargetKind Nothing)
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "   "))
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "locker"))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just "party\n"))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just ("party" <> T.singleton '\x202E')))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just ("party" <> T.singleton '\x00A0')))
 
   describe "parseCheckoutDisposition" $ do
     it "requires explicit dispositions and normalizes supported values" $ do
@@ -1865,6 +1874,15 @@ spec = do
               expectationFailure ("Expected invalid checkout disposition error, got " <> show value)
       assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "   "))
       assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "borrowed-forever"))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just "rent\t"))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just ("rent" <> T.singleton '\x202E')))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just ("rent" <> T.singleton '\x00A0')))
 
   describe "parseOptionalKeyField" $ do
     it "treats missing or blank optional ids as absent and trims valid identifiers" $ do

@@ -130,8 +130,9 @@ hasIsoDateShape t =
 parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
 parseCheckoutTargetKind Nothing =
   Left err400 { errBody = "targetKind is required and must be one of: party, room, session" }
-parseCheckoutTargetKind (Just raw) =
-  case T.toLower (T.strip raw) of
+parseCheckoutTargetKind (Just raw) = do
+  selector <- validateCheckoutSelectorField "targetKind" raw
+  case T.toLower selector of
     "session" -> Right TargetSession
     "party" -> Right TargetParty
     "room" -> Right TargetRoom
@@ -140,8 +141,9 @@ parseCheckoutTargetKind (Just raw) =
 parseCheckoutDisposition :: Maybe Text -> Either ServerError CheckoutDisposition
 parseCheckoutDisposition Nothing =
   Left err400 { errBody = "disposition is required and must be one of: loan, rental, sale, repair, transfer, other" }
-parseCheckoutDisposition (Just raw) =
-  case T.toLower (T.strip raw) of
+parseCheckoutDisposition (Just raw) = do
+  selector <- validateCheckoutSelectorField "disposition" raw
+  case T.toLower selector of
     "" -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
     "loan" -> Right Loan
     "lend" -> Right Loan
@@ -154,6 +156,27 @@ parseCheckoutDisposition (Just raw) =
     "transfer" -> Right Transfer
     "other" -> Right OtherDisposition
     _ -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
+
+validateCheckoutSelectorField :: Text -> Text -> Either ServerError Text
+validateCheckoutSelectorField fieldName raw
+  | T.any isUnsafeCheckoutSelectorChar raw =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8
+                ( fieldName
+                    <> " must not contain control characters, hidden formatting characters, "
+                    <> "or whitespace other than spaces"
+                )
+        }
+  | otherwise =
+      Right (T.strip raw)
+
+isUnsafeCheckoutSelectorChar :: Char -> Bool
+isUnsafeCheckoutSelectorChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (isSpace ch && ch /= ' ')
 
 validateCheckoutTargets
   :: CheckoutTarget
@@ -1010,8 +1033,10 @@ validatePublicQrCheckoutRequestFields req
   | otherwise =
       Right ()
   where
-    isRentalDisposition =
-      maybe False (\raw -> T.toLower (T.strip raw) `elem` ["rental", "rent"])
+    isRentalDisposition rawDisposition =
+      case parseCheckoutDisposition rawDisposition of
+        Right Rental -> True
+        _ -> False
 
 validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
 validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
