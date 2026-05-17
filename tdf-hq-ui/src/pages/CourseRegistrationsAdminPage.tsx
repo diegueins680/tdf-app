@@ -1607,7 +1607,7 @@ const firstRunScheduleDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
-const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|google\s+calendar)`;
+const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|savvy\s*cal|savvycal|once\s*hub|oncehub|appointlet|book\s*like\s*a\s*boss|booklikeaboss|google\s+calendar)`;
 const firstRunSchedulingProviderIntentPattern = String.raw`(?:(?:booking|reservation|rsvp|appointments?|scheduling)\s+)?`;
 const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+${firstRunSchedulingProviderIntentPattern}(?:links?|urls?|pages?|forms?|portals?|schedules?)|(?:links?|urls?|pages?|forms?|portals?|schedules?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
 const firstRunSchedulingProviderStandalonePrefixPattern = new RegExp(

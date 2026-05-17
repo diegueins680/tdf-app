@@ -15584,6 +15584,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - TidyCal booking link',
       'Google Calendar appointment schedule for Beatmaking 101',
       'Formulario de reserva de YouCanBookMe - Beatmaking 101',
+      'SavvyCal booking page - Beatmaking 101',
+      'OnceHub appointment page for Beatmaking 101',
+      'Appointlet reservation link - Beatmaking 101',
+      'Book Like A Boss booking page for Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -15599,7 +15603,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore|YouCanBook|TidyCal|Google Calendar/i);
+        expect(emptyState?.textContent).not.toMatch(/Calendly|Acuity|Cal\.?com|Setmore|YouCanBook|TidyCal|SavvyCal|OnceHub|Appointlet|Book Like A Boss|Google Calendar/i);
         expect(emptyState?.textContent).not.toMatch(/booking|reservation|appointment|schedule|reserva/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
