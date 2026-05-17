@@ -2166,7 +2166,7 @@ spec = do
                         ("Expected canonical RSVP create payload to decode, got: " <> err)
                 Right (SocialEvents.RsvpCreateDTO partyIdVal statusVal) -> do
                     partyIdVal `shouldBe` "42"
-                    statusVal `shouldBe` "Accepted"
+                    statusVal `shouldBe` "accepted"
 
             decodeRsvpCreate
                 "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpEventId\":\"99\"}"
@@ -2176,6 +2176,16 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeRsvpCreate
                 "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpCreatedAt\":\"2026-01-01T00:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed RSVP party ids and statuses before DB fallback lookup" $ do
+            decodeRsvpCreate "{\"rsvpPartyId\":\"   \",\"rsvpStatus\":\"Accepted\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"0\",\"rsvpStatus\":\"Accepted\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"waitlist\"}"
                 `shouldSatisfy` isLeft
 
     describe "social event finance entry request FromJSON" $ do

@@ -401,11 +401,26 @@ data RsvpCreateDTO = RsvpCreateDTO
   , rsvpStatus    :: Text  -- "Accepted", "Declined", "Maybe"
   } deriving (Show, Eq, Generic)
 instance FromJSON RsvpCreateDTO where
-  parseJSON = genericParseJSON defaultOptions
-    { rejectUnknownFields = True
-    }
+  parseJSON = withObject "RsvpCreateDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "RsvpCreateDTO"
+      [ "rsvpPartyId"
+      , "rsvpStatus"
+      ]
+      o
+    partyId <- o .: "rsvpPartyId" >>= normalizePositiveIdText "rsvpPartyId"
+    status <- o .: "rsvpStatus" >>= normalizeRsvpStatusText
+    pure (RsvpCreateDTO partyId status)
 
 instance FromJSON RsvpDTO
+
+normalizeRsvpStatusText :: Text -> Parser Text
+normalizeRsvpStatusText rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "accepted" -> pure "accepted"
+    "declined" -> pure "declined"
+    "maybe" -> pure "maybe"
+    _ -> fail "rsvpStatus must be one of: accepted, declined, maybe"
 
 data InvitationDTO = InvitationDTO
   { invitationId         :: Maybe Text
