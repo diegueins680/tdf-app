@@ -1254,6 +1254,10 @@ data PipelineCardUpdate = PipelineCardUpdate
 
 instance FromJSON PipelineCardUpdate where
   parseJSON value@(Object o) = do
+    rejectNullOptionalFields
+      "PipelineCardUpdate"
+      ["title", "stage", "sortOrder"]
+      value
     PipelineCardUpdateParsed
       { pcupTitle = titleValue
       , pcupStage = stageValue

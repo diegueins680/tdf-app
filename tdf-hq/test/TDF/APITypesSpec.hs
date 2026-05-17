@@ -808,6 +808,17 @@ spec = do
                 "{\"title\":\"Final Quote\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null non-clearable pipeline patch fields instead of treating them as omitted" $ do
+            decodePipelineCardUpdate
+                "{\"title\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"stage\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"sortOrder\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+
     describe "Session write payload FromJSON" $ do
         it "accepts canonical session create payloads" $
             case decodeSessionCreate
