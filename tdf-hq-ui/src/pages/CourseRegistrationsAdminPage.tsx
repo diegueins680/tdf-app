@@ -1455,6 +1455,16 @@ const firstRunAutomationPlumbingDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunDataSourceDescriptorPattern = String.raw`(?:(?:airtable|notion|coda|google\s*sheets?|google\s*sheet)\s+(?:(?:course\s+)?(?:registration|enrollment|lead|intake|student|sign[-\s]?up)\s+)?(?:tables?|views?|databases?|spreadsheets?|sheets?|rows?|bases?|lists?)|(?:tables?|views?|databases?|spreadsheets?|sheets?|rows?|bases?|lists?)\s+(?:for\s+)?(?:airtable|notion|coda|google\s*sheets?|google\s*sheet)|(?:tabla|vista|base\s+de\s+datos|hoja\s+de\s+c[aá]lculo|lista)\s+(?:de|para)\s+(?:airtable|notion|coda|google)|hoja\s+de\s+c[aá]lculo\s+de\s+google)`;
+const firstRunDataSourceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDataSourceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunDataSourceDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunDataSourceDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
 const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|servers?|servidor(?:es)?|workspaces?|espacios?\s+de\s+trabajo|broadcast\s+lists?|listas?\s+de\s+difusi[oó]n|(?:group|community|chat|channel|servers?)\s+(?:invites?|invite\s+links?|invitation\s+links?)|(?:invites?|invite\s+links?|invitation\s+links?)|(?:invitaci[oó]n|enlace(?:\s+de\s+invitaci[oó]n)?|link|url)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:grupo|comunidad|chat|canal|servidor(?:es)?))`;
 const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern}))|(?:(?:${firstRunCommunityChannelPattern})\s+(?:de\s+)?(?:${firstRunCommunityPlatformPattern}))|(?:(?:course|class|students?|members?)\s+(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?))|(?:(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+lists?)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?))|(?:(?:comunidad|grupo|chat|canal|listas?\s+de\s+difusi[oó]n)\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros)|para\s+(?:estudiantes|alumnos|miembros))))`;
@@ -1662,6 +1672,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
@@ -1760,6 +1771,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
