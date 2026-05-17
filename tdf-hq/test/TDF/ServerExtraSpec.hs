@@ -802,6 +802,9 @@ spec = do
       assertInvalid
         "hidden formatting"
         ("Juno" <> T.singleton '\x202E' <> "106")
+      assertInvalid
+        "non-ASCII spaces"
+        ("Juno" <> T.singleton '\x00A0' <> "106")
 
     it "matches name/category/brand/model/owner/notes case-insensitively once q is provided" $ do
       let synthAsset = fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" (Just "Analog poly")

@@ -21,7 +21,7 @@ import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNot
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
 import           Data.Char
-  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAlphaNum
   , isAscii
@@ -2750,7 +2750,8 @@ validateAssetSearchQuery (Just rawQuery) =
          else if T.any isUnsafeAssetSearchQueryChar cleanQuery
            then
              Left err400
-               { errBody = "q must not contain control characters or hidden formatting characters"
+               { errBody =
+                   "q must not contain control characters, hidden formatting characters, or non-ASCII spaces"
                }
            else Right (Just (T.toCaseFold cleanQuery))
 
@@ -2759,7 +2760,9 @@ assetSearchQueryMaxLength = 120
 
 isUnsafeAssetSearchQueryChar :: Char -> Bool
 isUnsafeAssetSearchQueryChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 assetMatchesSearchQuery :: Text -> Asset -> Bool
 assetMatchesSearchQuery normalizedQuery asset =
