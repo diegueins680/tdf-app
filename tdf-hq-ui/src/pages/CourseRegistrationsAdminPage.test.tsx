@@ -4322,7 +4322,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('collapses placeholder status variants into one review-needed summary', async () => {
+  it('collapses placeholder and unresolved status variants into one review-needed summary', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crStatus: 'unknown',
@@ -4343,13 +4343,25 @@ describe('CourseRegistrationsAdminPage', () => {
         crId: 104,
         crFullName: 'Dorothy Vaughan',
         crEmail: 'dorothy@example.com',
-        crStatus: 'not set',
+        crStatus: 'Por actualizar',
       }),
       buildRegistration({
         crId: 105,
         crFullName: 'Mary Jackson',
         crEmail: 'mary@example.com',
-        crStatus: 'undefined',
+        crStatus: 'Por definir',
+      }),
+      buildRegistration({
+        crId: 106,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina@example.com',
+        crStatus: 'por confirmar',
+      }),
+      buildRegistration({
+        crId: 107,
+        crFullName: 'Octavia Butler',
+        crEmail: 'octavia@example.com',
+        crStatus: 'No asignado',
       }),
     ]);
 
@@ -4372,12 +4384,19 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Dorothy Vaughan').textContent?.trim()).toBe('Cambiar estado');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Mary Jackson').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Simone').textContent?.trim()).toBe('Cambiar estado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Octavia Butler').textContent?.trim()).toBe('Cambiar estado');
       expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
       expect(container.textContent).not.toContain('Unknown');
       expect(container.textContent).not.toContain('N A');
       expect(container.textContent).not.toContain('Sin Estado');
       expect(container.textContent).not.toContain('Not Set');
       expect(container.textContent).not.toContain('Undefined');
+      expect(container.textContent).not.toContain('Por Definir');
+      expect(container.textContent).not.toContain('Por Confirmar');
+      expect(container.textContent).not.toContain('Por Actualizar');
+      expect(container.textContent).not.toContain('Sin Actualizar');
+      expect(container.textContent).not.toContain('No Asignado');
       expect(container.textContent).not.toContain('Estado desconocido');
     });
 
