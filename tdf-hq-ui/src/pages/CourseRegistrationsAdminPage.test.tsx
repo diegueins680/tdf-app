@@ -15494,7 +15494,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Slack community - Beatmaking 101',
       'Beatmaking 101 Facebook community',
       'WhatsApp broadcast list - Beatmaking 101',
+      'WhatsApp broadcast channel - Beatmaking 101',
       'Lista de difusión de WhatsApp para Beatmaking 101',
+      'Canal de difusión de WhatsApp para Beatmaking 101',
+      'Telegram announcement channel - Beatmaking 101',
+      'Canal de anuncios de Telegram para Beatmaking 101',
       'Canal de Telegram - Beatmaking 101',
       'Beatmaking 101 - canal de WhatsApp',
       'WhatsApp group invite - Beatmaking 101',
@@ -15515,7 +15519,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/WhatsApp group|Grupo de WhatsApp|Discord community|Telegram chat|comunidad de Telegram|Slack community|Facebook community|broadcast list|Lista de difusión|Canal de Telegram|canal de WhatsApp|group invite|invite link|enlace de invitaci[oó]n/i);
+        expect(emptyState?.textContent).not.toMatch(/WhatsApp group|Grupo de WhatsApp|Discord community|Telegram chat|comunidad de Telegram|Slack community|Facebook community|broadcast (?:list|channel)|Lista de difusión|Canal de difusión|announcement channel|Canal de anuncios|Canal de Telegram|canal de WhatsApp|group invite|invite link|enlace de invitaci[oó]n/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
