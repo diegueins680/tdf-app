@@ -2530,7 +2530,8 @@ const normalizeRegistrationSourceKey = (sourceLabel: string) =>
   registrationSourceLabel(sourceLabel).toLocaleLowerCase('es');
 
 const isDefaultPublicFormSource = (sourceLabel: string) =>
-  Array.from(sourceAliasKeyVariants(normalizeSourceAliasKey(sourceLabel))).some((sourceKey) =>
+  isPlaceholderMetadataValue(sourceLabel)
+  || Array.from(sourceAliasKeyVariants(normalizeSourceAliasKey(sourceLabel))).some((sourceKey) =>
     defaultPublicFormSourceKeys.has(sourceKey)
   );
 
