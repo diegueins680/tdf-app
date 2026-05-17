@@ -2673,10 +2673,18 @@ resolveDriveRedirectUri cfg mProvided = do
   configuredRedirectUri <-
     validateConfiguredDriveRedirectUri
       (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback")
-  maybe
-    (Right configuredRedirectUri)
-    (validateProvidedRedirectUri configuredRedirectUri)
-    (cleanOptional mProvided)
+  case mProvided of
+    Nothing ->
+      Right configuredRedirectUri
+    Just rawRedirect
+      | T.null (T.strip rawRedirect) ->
+          Left err400
+            { errBody =
+                "redirectUri must be omitted instead of blank to use the configured "
+                  <> "Google Drive OAuth callback URL"
+            }
+      | otherwise ->
+          validateProvidedRedirectUri configuredRedirectUri rawRedirect
   where
     validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
       redirectUri <- validateDriveRedirectUri rawRedirect

@@ -5958,8 +5958,20 @@ main = hspec $ do
             cfg <- loadDriveConfig
             resolveDriveRedirectUri cfg Nothing
                 `shouldBe` Right "https://hq.example.com/admin/oauth/google-drive/callback"
-            resolveDriveRedirectUri cfg (Just "   ")
-                `shouldBe` Right "https://hq.example.com/admin/oauth/google-drive/callback"
+
+        it "rejects blank explicit Google Drive callback overrides instead of falling back" $ do
+            cfg <- loadDriveConfig
+            case resolveDriveRedirectUri cfg (Just "   ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "redirectUri must be omitted instead of blank"
+                Right value ->
+                    expectationFailure
+                        ( "Expected blank explicit Drive redirectUri to fail, got: "
+                            <> show value
+                        )
 
         it "rejects unsafe configured Google Drive callback fallbacks before token exchange" $ do
             cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig

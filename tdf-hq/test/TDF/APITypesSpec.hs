@@ -1059,8 +1059,7 @@ spec = do
             case decodeDriveTokenExchange
                 (BL8.concat
                     [ "{\"code\":\" 4/0Adeu5OAuthCode \""
-                    , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \""
-                    , ",\"redirectUri\":\"   \"}"
+                    , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \"}"
                     ])
              of
                 Left err ->
@@ -1070,6 +1069,22 @@ spec = do
                     codeVal `shouldBe` "4/0Adeu5OAuthCode"
                     verifierVal `shouldBe` "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
                     redirectUriVal `shouldBe` Nothing
+
+            case decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\"4/0Adeu5OAuthCode\""
+                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                    , ",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/"
+                    , "google-drive/callback \"}"
+                    ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Drive redirectUri payload to decode, got: " <> err)
+                Right (DriveTokenExchangeRequest _ _ redirectUriVal) ->
+                    redirectUriVal
+                        `shouldBe`
+                            Just "https://tdf-app.pages.dev/oauth/google-drive/callback"
 
             case decodeDriveTokenRefresh "{\"refreshToken\":\" 1//refresh-token_ABC.123 \"}" of
                 Left err ->
@@ -1103,6 +1118,33 @@ spec = do
                     [ "{\"code\":\"oauth-code\""
                     , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
                     , ",\"syncCursor\":\"stale\"}"
+                    ])
+                `shouldSatisfy` isLeft
+            decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\"oauth-code\""
+                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                    , ",\"redirectUri\":\"   \"}"
+                    ])
+                `shouldSatisfy` isLeft
+            case decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\"oauth-code\""
+                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                    , ",\"redirectUri\":null}"
+                    ])
+             of
+                Left err ->
+                    err `shouldContain` "redirectUri must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null Drive redirectUri to be rejected, got: " <> show value)
+            decodeDriveTokenExchange
+                (BL8.concat
+                    [ "{\"code\":\"oauth-code\""
+                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/"
+                    , "google-drive/callback bad\"}"
                     ])
                 `shouldSatisfy` isLeft
             decodeDriveTokenRefresh

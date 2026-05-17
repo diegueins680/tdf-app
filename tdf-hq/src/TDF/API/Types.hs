@@ -1035,13 +1035,18 @@ data DriveTokenExchangeRequest = DriveTokenExchangeRequest
 instance ToJSON DriveTokenExchangeRequest
 instance FromJSON DriveTokenExchangeRequest where
   parseJSON value = do
+    rejectNullOptionalFields
+      "DriveTokenExchangeRequest"
+      ["redirectUri"]
+      value
     payload <- genericParseJSON strictObjectOptions value
     codeVal <- parseDriveOAuthTokenField "code" (code payload)
     codeVerifierVal <- parseDriveCodeVerifierField (codeVerifier payload)
+    redirectUriVal <- parseDriveOptionalRedirectUriField (redirectUri payload)
     pure payload
       { code = codeVal
       , codeVerifier = codeVerifierVal
-      , redirectUri = normalizeDriveOptionalTextField (redirectUri payload)
+      , redirectUri = redirectUriVal
       }
 
 data DriveTokenRefreshRequest = DriveTokenRefreshRequest
@@ -1089,14 +1094,29 @@ parseDriveCodeVerifierField rawValue =
          fail "codeVerifier must be a PKCE verifier (43-128 chars: A-Z a-z 0-9 - . _ ~)"
        else pure verifier
 
-normalizeDriveOptionalTextField :: Maybe Text -> Maybe Text
-normalizeDriveOptionalTextField rawValue =
-  case T.strip <$> rawValue of
-    Just cleanValue | not (T.null cleanValue) -> Just cleanValue
-    _ -> Nothing
+parseDriveOptionalRedirectUriField :: Maybe Text -> Parser (Maybe Text)
+parseDriveOptionalRedirectUriField Nothing = pure Nothing
+parseDriveOptionalRedirectUriField (Just rawValue)
+  | T.null redirectUriVal =
+      fail "redirectUri must be omitted instead of blank"
+  | T.any isControl redirectUriVal =
+      fail "redirectUri must not contain control characters"
+  | T.any isHiddenDriveOAuthRequestTokenChar redirectUriVal =
+      fail "redirectUri must not contain hidden formatting characters"
+  | T.any isSpace redirectUriVal =
+      fail "redirectUri must not contain whitespace"
+  | T.length redirectUriVal > maxDriveOAuthRedirectUriChars =
+      fail "redirectUri must be 2048 characters or fewer"
+  | otherwise =
+      pure (Just redirectUriVal)
+  where
+    redirectUriVal = T.strip rawValue
 
 maxDriveOAuthRequestTokenChars :: Int
 maxDriveOAuthRequestTokenChars = 4096
+
+maxDriveOAuthRedirectUriChars :: Int
+maxDriveOAuthRedirectUriChars = 2048
 
 data DriveTokenResponse = DriveTokenResponse
   { accessToken  :: Text
