@@ -4296,7 +4296,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('replaces a single real status filter with context copy when the current view does not need status filtering', async () => {
+  it('replaces a single real status filter with context copy and compact row payment actions', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -4323,9 +4323,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Solo aparecen estados con inscripciones en esta vista.');
-      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(2);
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent).toContain(
+        paymentWorkflowDossierScopeHint,
+      );
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
-      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(2);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(2);
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ada Lovelace')).textContent?.trim()).toBe('');
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Grace Hopper')).textContent?.trim()).toBe('');
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
