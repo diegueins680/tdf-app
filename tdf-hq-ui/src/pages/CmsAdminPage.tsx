@@ -680,6 +680,13 @@ export default function CmsAdminPage() {
     && !hasCustomNewContentDraft
     && !liveContent
     && !liveLookupUnresolved;
+  const showLiveStartEmptyEditorGuard =
+    hasSlugSelection
+    && Boolean(liveContent)
+    && editingFromId === null
+    && !payloadError
+    && title.trim().length === 0
+    && formattedPayload.trim() === '{}';
   const samplePayloadGuidance = liveLookupPending && hasSamplePayload
     ? 'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.'
     : liveLookupFailed && hasSamplePayload
@@ -696,9 +703,10 @@ export default function CmsAdminPage() {
         ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
         : 'Elige un slug sugerido o escribe uno para empezar a editar.';
   const showSamplePayloadGuidance =
-    !liveLookupFailed && (!liveContent || liveEditorActionState.showUseLiveAction);
+    !liveLookupFailed && (!liveContent || (liveEditorActionState.showUseLiveAction && showLiveStartEmptyEditorGuard));
   const showLiveStartGuidance =
     showSamplePayloadGuidance && Boolean(liveContent) && liveEditorActionState.showUseLiveAction;
+  const editorHasMetadataDraft = titleChangedFromLive || statusChangedFromLive;
   const compareHint = livePayloadPretty
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
@@ -708,7 +716,9 @@ export default function CmsAdminPage() {
           : showLiveStartGuidance
             ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
             : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
-        : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
+        : editorHasMetadataDraft
+          ? 'El payload editable ya coincide con la versión en vivo. Usa "Usar versión en vivo" para descartar cambios de título o estado.'
+          : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
@@ -732,13 +742,6 @@ export default function CmsAdminPage() {
     && versions.length === 0
     && !liveContent
     && !editorHasFirstVersionContentDraft;
-  const showLiveStartEmptyEditorGuard =
-    hasSlugSelection
-    && Boolean(liveContent)
-    && editingFromId === null
-    && !payloadError
-    && title.trim().length === 0
-    && formattedPayload.trim() === '{}';
   const statusHelperText = !hasSlugSelection
     ? 'Completa el slug para habilitar el estado y el guardado.'
     : showFirstVersionEmptyDraftGuard

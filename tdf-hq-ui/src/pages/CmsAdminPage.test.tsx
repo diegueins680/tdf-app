@@ -518,6 +518,51 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps metadata-only edits from reopening live-start and payload-comparison guidance', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+      );
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing retitulada');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
+      expect(guidance).not.toBeNull();
+      expect(guidance?.textContent?.trim()).toBe(
+        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Usa "Usar versión en vivo" para descartar cambios de título o estado.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+      );
+      expect(guidance?.textContent).not.toContain('El comparador aparecerá');
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps the live payload behind the live-to-editor action until the editor uses it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
