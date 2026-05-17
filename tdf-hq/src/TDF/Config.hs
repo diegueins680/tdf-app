@@ -1389,9 +1389,9 @@ normalizeConfiguredBaseUrl envName rawUrl
   | T.any (`elem` ("?#" :: String)) trimmed =
       Left (envName <> " must be an absolute http(s) URL without query or fragment")
   | "https://" `T.isPrefixOf` lowerUrl =
-      validateRemainder (T.drop 8 trimmed)
+      validateRemainder "https" "443" (T.drop 8 trimmed)
   | "http://" `T.isPrefixOf` lowerUrl =
-      validateRemainder (T.drop 7 trimmed)
+      validateRemainder "http" "80" (T.drop 7 trimmed)
   | otherwise =
       invalid
   where
@@ -1399,10 +1399,12 @@ normalizeConfiguredBaseUrl envName rawUrl
     lowerUrl = T.toLower trimmed
     invalid = Left (envName <> " must be an absolute http(s) URL")
 
-    validateRemainder remainder =
+    validateRemainder scheme defaultPort remainder =
       let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
       in if not (validateAuthority authority)
            then invalid
+           else if hasExplicitDefaultPort defaultPort authority
+             then Left (envName <> " must omit default port for " <> scheme)
            else if not (validateBasePathSuffix pathSuffix)
              then
                Left (ambiguousUrlPathMessage envName)
@@ -1429,6 +1431,15 @@ normalizeConfiguredBaseUrl envName rawUrl
       | otherwise =
           let (host, portSuffix) = T.breakOn ":" rawAuthority
           in validateHost host && validatePortSuffix portSuffix
+
+    hasExplicitDefaultPort defaultPort rawAuthority =
+      let portSuffix =
+            if "[" `T.isPrefixOf` rawAuthority
+              then
+                let (_, rest) = T.breakOn "]" rawAuthority
+                in T.drop 1 rest
+              else snd (T.breakOn ":" rawAuthority)
+      in portSuffix == ":" <> defaultPort
 
     validateHost host =
       let normalizedHost = T.toLower host

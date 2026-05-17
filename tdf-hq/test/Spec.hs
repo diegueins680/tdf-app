@@ -1208,6 +1208,14 @@ main = hspec $ do
                 "https://hq.example.com:0443/app"
                 "HQ_APP_URL must be an absolute http(s) URL"
             assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com:443/app"
+                "HQ_APP_URL must omit default port for https"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "http://cdn.example.com:80/assets"
+                "HQ_ASSETS_BASE_URL must omit default port for http"
+            assertInvalid
                 "HQ_ASSETS_BASE_URL"
                 "https://cdn/assets"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
