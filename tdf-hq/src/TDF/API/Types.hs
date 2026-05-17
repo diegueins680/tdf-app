@@ -369,7 +369,16 @@ data ServiceCatalogCreate = ServiceCatalogCreate
 
 instance ToJSON ServiceCatalogCreate
 instance FromJSON ServiceCatalogCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "ServiceCatalogCreate"
+      [ "sccKind"
+      , "sccPricingModel"
+      , "sccCurrency"
+      , "sccActive"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 
 data ServiceCatalogUpdate = ServiceCatalogUpdate
   { scuName         :: Maybe Text

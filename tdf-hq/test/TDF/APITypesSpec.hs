@@ -1153,6 +1153,29 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeServiceCatalogUpdate "{}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null service catalog create defaults so fallback intent is unambiguous" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeServiceCatalogCreate payload of
+                        Left err ->
+                            err
+                                `shouldContain`
+                                    (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null service catalog default to be rejected, got: " <> show value)
+            assertNullRejected
+                "sccKind"
+                "{\"sccName\":\"Podcast\",\"sccKind\":null}"
+            assertNullRejected
+                "sccPricingModel"
+                "{\"sccName\":\"Podcast\",\"sccPricingModel\":null}"
+            assertNullRejected
+                "sccCurrency"
+                "{\"sccName\":\"Podcast\",\"sccCurrency\":null}"
+            assertNullRejected
+                "sccActive"
+                "{\"sccName\":\"Podcast\",\"sccActive\":null}"
+
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do
             case decodeServiceAdCreate
