@@ -841,12 +841,45 @@ validateOptionalDriveLink (Just rawDriveLink) =
         then Left err400 { errBody = "driveLink must be 2048 characters or fewer" }
         else if T.any (== '#') driveLinkVal
           then Left err400 { errBody = "driveLink must not contain URL fragments" }
-        else if "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
-          then Right (Just driveLinkVal)
-          else Left err400 { errBody = "driveLink must be an absolute https URL" }
+        else if not (isValidPublicDriveLinkUrl driveLinkVal)
+          then Left err400 { errBody = "driveLink must be an absolute https URL" }
+        else if hasAmbiguousPublicUrlPath driveLinkVal
+          then Left err400
+            { errBody = "driveLink path must not contain empty, dot, or dot-dot segments" }
+        else
+          Right (Just driveLinkVal)
 
 maxPublicDriveLinkChars :: Int
 maxPublicDriveLinkChars = 2048
+
+isValidPublicDriveLinkUrl :: Text -> Bool
+isValidPublicDriveLinkUrl driveLinkVal =
+  "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
+
+hasAmbiguousPublicUrlPath :: Text -> Bool
+hasAmbiguousPublicUrlPath rawUrl =
+  any isAmbiguousPathSegment pathSegments
+  where
+    lowerUrl = T.toLower rawUrl
+    noScheme
+      | "https://" `T.isPrefixOf` lowerUrl = T.drop 8 rawUrl
+      | "http://" `T.isPrefixOf` lowerUrl = T.drop 7 rawUrl
+      | otherwise = rawUrl
+    pathWithQueryOrFragment =
+      T.dropWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') noScheme
+    path =
+      case T.uncons pathWithQueryOrFragment of
+        Just ('/', _) ->
+          T.takeWhile (\ch -> ch /= '?' && ch /= '#') pathWithQueryOrFragment
+        _ ->
+          ""
+    trimmedPath = T.dropWhileEnd (== '/') path
+    pathSegments =
+      if T.null trimmedPath
+        then []
+        else T.splitOn "/" (T.drop 1 trimmedPath)
+    isAmbiguousPathSegment segment =
+      segment == "" || segment == "." || segment == ".."
 
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl
@@ -861,6 +894,7 @@ isValidHttpUrl rawUrl
     invalidUrlChar ch =
       isSpace ch
         || isControl ch
+        || ch == '\\'
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
     hasValidAuthority remainder =

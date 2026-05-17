@@ -859,6 +859,20 @@ spec = do
         Right _ ->
           expectationFailure "Expected fragmented driveLink to be rejected"
 
+    it "rejects ambiguous drive link paths before storing public lead metadata" $ do
+      let assertRejected rawDriveLink =
+            case validatePublicInterestInput
+              (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "driveLink path must not contain empty, dot, or dot-dot segments"
+              Right _ ->
+                expectationFailure "Expected ambiguous driveLink path to be rejected"
+      assertRejected "https://example.com/folder/../admin"
+      assertRejected "https://example.com/folder/./file"
+      assertRejected "https://example.com/folder//file"
+
     it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
       case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
         Left err -> do
@@ -869,7 +883,8 @@ spec = do
 
     it "rejects malformed or non-HTTPS drive links instead of storing ambiguous free-form text" $ do
       let assertRejected rawDriveLink =
-            case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
+            case validatePublicInterestInput
+              (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
               Left err -> do
                 errHTTPCode err `shouldBe` 400
                 BL8.unpack (errBody err) `shouldContain` "driveLink must be an absolute https URL"
@@ -891,6 +906,7 @@ spec = do
       assertRejected "https://224.0.0.1/folder"
       assertRejected "http://localhost/folder"
       assertRejected "http://127.0.0.1/folder"
+      assertRejected "https://example.com/folder\\file"
       assertRejected "https://[2001:4860:4860::8888]/folder"
       assertRejected "https://[:::]/folder"
       assertRejected "https://[::1]/folder"
