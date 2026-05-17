@@ -2887,17 +2887,31 @@ const registrationNeedsContact = (
 
 const registrationContactStateSearchValues = (
   reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
-) => (
-  registrationNeedsContact(reg)
-    ? [
+) => {
+  const needsEmail = !normalizeRegistrationContactValue(reg.crEmail);
+  const needsPhone = !normalizeRegistrationContactValue(reg.crPhoneE164);
+  const values: string[] = [];
+
+  if (needsEmail && needsPhone) {
+    values.push(
       'contacto pendiente',
       'sin contacto',
       'sin correo ni teléfono',
       'sin correo ni telefono',
       missingContactSummary,
-    ]
-    : []
-);
+    );
+  }
+
+  if (needsEmail) {
+    values.push('correo pendiente', 'email pendiente', 'sin correo', 'sin email');
+  }
+
+  if (needsPhone) {
+    values.push('teléfono pendiente', 'telefono pendiente', 'sin teléfono', 'sin telefono');
+  }
+
+  return values;
+};
 
 const formatVisibleMissingContactSummary = (missingContactCount: number, visibleCount: number) => {
   if (visibleCount <= 1 || missingContactCount === 0) return '';

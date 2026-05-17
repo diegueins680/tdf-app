@@ -9896,6 +9896,77 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('lets admins search missing email or phone states without rendering placeholder row labels', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Email',
+        crEmail: 'nina@example.com',
+        crPhoneE164: null,
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Paco Telefono',
+        crEmail: null,
+        crPhoneE164: '+593999000222',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crPhoneE164: `+59399900033${index}`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.textContent).not.toContain('Sin correo');
+      expect(container.textContent).not.toContain('Sin teléfono');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin teléfono');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Nina Email');
+      expect(container.textContent).not.toContain('Paco Telefono');
+      expect(container.textContent).not.toContain('No hay coincidencias');
+      expect(container.textContent).not.toContain('Sin teléfono');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin correo');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(container.textContent).toContain('Paco Telefono');
+      expect(container.textContent).not.toContain('Nina Email');
+      expect(container.textContent).not.toContain('No hay coincidencias');
+      expect(container.textContent).not.toContain('Sin correo');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('names the exact contact field in busy-list local search prompts', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
