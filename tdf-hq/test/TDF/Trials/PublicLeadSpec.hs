@@ -2585,6 +2585,29 @@ spec = do
         Right _ ->
           expectationFailure "Expected duplicate student emails to be rejected"
 
+    it "rejects unsafe or oversized display names before updating private student profiles" $ do
+      let assertRejected rawDisplayName expectedMessage = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              targetStudentId <- insertPartyFixture "Target Student" now
+              privateStudentUpdateHandler
+                (fromIntegral (fromSqlKey targetStudentId))
+                (StudentUpdate (Just rawDisplayName) Nothing Nothing Nothing)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student update displayName to be rejected"
+      assertRejected "Target\nStudent" "displayName must not contain control characters"
+      assertRejected
+        ("Target" <> "\x202E" <> "Student")
+        "hidden formatting characters"
+      assertRejected
+        ("Target" <> T.singleton '\x00A0' <> "Student")
+        "Unicode space lookalikes"
+      assertRejected (pack (replicate 161 'a')) "displayName must be 1-160 characters"
+
     it "rejects unsafe or oversized notes before updating private student profiles" $ do
       let assertRejected rawNotes expectedMessage = do
             result <- try $ runTrialsInMemory $ do

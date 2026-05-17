@@ -2324,7 +2324,19 @@ privateTrialsServer user@AuthedUser{..} =
         unless owns $
           liftIO $ throwIO err403
 
-      let nameUpdate = displayName >>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t)
+      nameUpdate <- case displayName of
+        Nothing -> pure Nothing
+        Just rawName -> do
+          normalizedName <-
+            either
+              (liftIO . throwIO)
+              pure
+              (validateOptionalPublicTextField "displayName" maxPublicLeadDisplayNameChars (Just rawName))
+          case normalizedName of
+            Nothing ->
+              liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
+            Just nameVal ->
+              pure (Just nameVal)
       emailUpdate <- either (liftIO . throwIO) pure (validateEmailUpdate email)
       phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
       notesUpdate <- case notes of
@@ -2333,9 +2345,6 @@ privateTrialsServer user@AuthedUser{..} =
           Just <$> either (liftIO . throwIO) pure
             (validateOptionalPublicTextField "notes" 2000 (Just raw))
       ensureEmailAvailableForParty studentKey emailUpdate
-
-      when (isJust displayName && isNothing nameUpdate) $
-        liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
 
       let updates =
             maybe [] (\emailVal -> [Models.PartyPrimaryEmail =. emailVal]) emailUpdate
