@@ -9590,6 +9590,23 @@ main = hspec $ do
                 assertInvalidStoredId "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
                 assertInvalidStoredId "{\"id\":\"00000000-0000-0000-0000-000000000000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
 
+        it "rejects non-canonical stored contract envelopes instead of normalizing persisted drift" $ do
+            let assertInvalidStored expected storedPayload =
+                    case decodeStoredContract storedPayload of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right _ ->
+                            expectationFailure "Expected non-canonical stored contract to be rejected"
+            assertInvalidStored
+                "Stored contract id is not canonical"
+                "{\"id\":\" 550e8400-e29b-41d4-a716-446655440000 \",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+            assertInvalidStored
+                "Stored contract kind is not canonical"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\" Generic \",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+            assertInvalidStored
+                "Stored contract payload is not canonical"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\" Generic \"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+
         it "rejects stored contracts whose envelope id does not match the requested route id" $
             case decodeStoredContractFor
                 "550e8400-e29b-41d4-a716-446655440000"

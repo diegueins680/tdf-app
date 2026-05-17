@@ -153,9 +153,12 @@ decodeStoredContractFor rawExpectedId bytes = do
 
 validateStoredContract :: StoredContract -> Either Text StoredContract
 validateStoredContract stored@StoredContract{..} = do
-  contractId <- validateStoredContractId scId
-  storedKind <- validateStoredContractKind scKind
+  contractId <- validateCanonicalStoredContractId scId
+  storedKind <- validateCanonicalStoredContractKind scKind
   (payloadKind, normalizedPayload) <- firstServerErrorText (validateContractPayload scPayload)
+  if scPayload /= normalizedPayload
+    then Left "Stored contract payload is not canonical"
+    else Right ()
   if storedKind /= payloadKind
     then Left "Stored contract kind does not match payload kind"
     else
@@ -166,6 +169,13 @@ validateStoredContract stored@StoredContract{..} = do
           , scPayload = normalizedPayload
           }
 
+validateCanonicalStoredContractId :: Text -> Either Text Text
+validateCanonicalStoredContractId rawId = do
+  contractId <- validateStoredContractId rawId
+  if rawId == contractId
+    then Right contractId
+    else Left "Stored contract id is not canonical"
+
 validateStoredContractId :: Text -> Either Text Text
 validateStoredContractId rawId =
   case UUID.fromText (T.strip rawId) of
@@ -173,6 +183,13 @@ validateStoredContractId rawId =
       | isNilUuid uuid -> Left "Stored contract id is invalid"
       | otherwise -> Right (toText uuid)
     Nothing -> Left "Stored contract id is invalid"
+
+validateCanonicalStoredContractKind :: Text -> Either Text Text
+validateCanonicalStoredContractKind rawKind = do
+  kind <- validateStoredContractKind rawKind
+  if rawKind == kind
+    then Right kind
+    else Left "Stored contract kind is not canonical"
 
 validateStoredContractKind :: Text -> Either Text Text
 validateStoredContractKind rawKind =
