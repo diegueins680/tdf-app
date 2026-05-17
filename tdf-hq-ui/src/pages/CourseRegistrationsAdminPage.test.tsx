@@ -19515,6 +19515,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips bare Spanish registration nouns from first-run course labels', async () => {
+    const titles = [
+      'Inscripciones Beatmaking 101',
+      'Registro: Beatmaking 101',
+      'Matrículas - Beatmaking 101',
+      'Solicitudes Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /Todavía no hay inscripciones para (Inscripciones|Registro|Matr[ií]culas|Solicitudes)/,
+        );
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('keeps the minimal single-result view focused on row actions instead of a standalone list refresh', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

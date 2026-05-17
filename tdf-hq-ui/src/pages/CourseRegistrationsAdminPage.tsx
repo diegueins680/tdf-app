@@ -1684,6 +1684,9 @@ const firstRunLooseEnrollmentDescriptorPrefixPattern =
 const firstRunLooseEnrollmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)\s*$/i;
 
+const firstRunSpanishRegistrationNounPrefixPattern =
+  /^(?:(?:[Pp]re[-\s]?)?[Ii]nscripci[oóÓ]n(?:[Ee]s)?|[Rr]egistro(?:[Ss])?|[Mm]atr[iíÍ]cula(?:[Ss])?|[Ss]olicitud(?:[Ee]s)?)(?:\s+(?:del?|para(?:\s+el)?|al)\s+curso)?(?:\s*[-:/|]\s*|\s+(?=[A-ZÁÉÍÓÚÑ0-9]))/;
+
 const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
   const trimmedTitle = title.trim();
   const parenthesizedTitle = /^\(([^()]+)\)$/.exec(trimmedTitle);
@@ -1763,6 +1766,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
+    .replace(firstRunSpanishRegistrationNounPrefixPattern, '')
     .replace(firstRunOnboardingDescriptorPrefixPattern, '')
     .replace(firstRunOrientationDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
