@@ -1027,10 +1027,16 @@ const isInactiveStatusSearchQuery = (value: string) => {
     && queryVariants.every((query) => INACTIVE_STATUS_SEARCH_VALUES.includes(query));
 };
 
+const isStatusOnlySearchQuery = (value: string) =>
+  isActiveStatusSearchQuery(value) || isInactiveStatusSearchQuery(value);
+
 const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
   const queryVariants = getSearchValueVariants(rawQuery);
   if (queryVariants.length === 0) return true;
   const statusSearchValues = getUserStatusSearchValues(user.active);
+  if (isStatusOnlySearchQuery(rawQuery)) {
+    return queryVariants.some((query) => statusSearchValues.includes(query));
+  }
   const concreteSearchSpace = getUserConcreteSearchValues(user);
   const stateSearchSpace = getUserStateSearchValues(user);
   const searchSpace = [...concreteSearchSpace, ...stateSearchSpace];
