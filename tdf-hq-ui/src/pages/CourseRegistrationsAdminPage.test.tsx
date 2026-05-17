@@ -271,7 +271,7 @@ const singleCohortInitialEmptyStateMessage =
 const genericSingleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Crear curso';
-const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
+const initialEmptyStateMultiCohortActionLabel = 'Seleccionar formulario';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
@@ -19338,10 +19338,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Ver cohortes');
       expect(emptyState?.textContent).not.toContain('Elegir enlace');
       expect(emptyState?.textContent).not.toContain('Elegir cuál compartir');
+      expect(emptyState?.textContent).not.toContain('Elegir formulario público');
       expect(emptyState?.textContent).not.toContain('Gestionar cursos');
       expect(emptyState?.textContent).not.toContain('Ver cursos configurados');
       expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
+      expect(countOccurrences(emptyState!, 'formulario público')).toBe(0);
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
       expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
