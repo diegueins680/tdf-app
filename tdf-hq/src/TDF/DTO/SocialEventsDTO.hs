@@ -66,6 +66,16 @@ rejectUnknownObjectFields typeName allowedKeys obj =
     unexpected ->
       fail (typeName <> " contains unknown fields: " <> T.unpack (T.intercalate ", " unexpected))
 
+rejectNullObjectFields :: [Text] -> Object -> Parser ()
+rejectNullObjectFields fieldNames obj =
+  case filter isNullField fieldNames of
+    [] -> pure ()
+    fieldName : _ ->
+      fail (T.unpack fieldName <> " must be omitted instead of null")
+  where
+    isNullField fieldName =
+      AesonKeyMap.lookup (AesonKey.fromText fieldName) obj == Just Null
+
 data ArtistSocialLinksDTO = ArtistSocialLinksDTO
   { aslSpotify    :: Maybe Text
   , aslInstagram  :: Maybe Text
@@ -646,6 +656,11 @@ instance FromJSON TicketCheckInRequestDTO where
   parseJSON = withObject "TicketCheckInRequestDTO" $ \o -> do
     rejectUnknownObjectFields
       "TicketCheckInRequestDTO"
+      [ "ticketCheckInTicketId"
+      , "ticketCheckInTicketCode"
+      ]
+      o
+    rejectNullObjectFields
       [ "ticketCheckInTicketId"
       , "ticketCheckInTicketCode"
       ]

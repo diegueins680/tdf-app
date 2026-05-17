@@ -2063,6 +2063,23 @@ spec = do
                 "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null ticket check-in lookup fields instead of falling back to the other lookup" $ do
+            case decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":null,\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\"}" of
+                Left err ->
+                    err `shouldContain` "ticketCheckInTicketId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket id lookup to be rejected, got: " <> show payload)
+
+            case decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"42\",\"ticketCheckInTicketCode\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketCheckInTicketCode must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket code lookup to be rejected, got: " <> show payload)
+
         it "rejects malformed ticket purchase tier ids before handler lookup fallback" $ do
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"   \",\"ticketPurchaseQuantity\":2}"
