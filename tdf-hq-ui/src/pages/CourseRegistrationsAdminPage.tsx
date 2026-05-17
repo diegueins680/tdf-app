@@ -175,8 +175,12 @@ const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios pú
 const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
+const genericSingleCohortInitialEmptyStateMessage =
+  'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
-  `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`;
+  cohortLabel
+    ? `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`
+    : genericSingleCohortInitialEmptyStateMessage;
 type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
   `Abre expediente desde ${targetLabel}; las opciones de estado muestran acciones.`;
@@ -1880,6 +1884,14 @@ const stripFirstRunCohortDescriptorFallback = (label: string) => {
   );
 
   return strippedLabel || label.trim();
+};
+
+const isGenericFirstRunCohortLabel = (label: string) => {
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(label),
+  );
+
+  return strippedLabel.trim() === '';
 };
 
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
@@ -4571,11 +4583,15 @@ export default function CourseRegistrationsAdminPage() {
       ? retrySystemEmailsLabel
       : showSystemEmailsLabel;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
+  const firstRunCohortLabel = firstRunCohort?.firstRunLabel.trim() ?? '';
+  const specificFirstRunCohortLabel = firstRunCohortLabel && !isGenericFirstRunCohortLabel(firstRunCohortLabel)
+    ? firstRunCohortLabel
+    : '';
   const configuredCohortFirstRunLabels = configuredCohortOptions.map((option) => option.firstRunLabel);
   const hasSingleCourseFirstRunVariants =
     hasMultipleAvailableCohorts && countInitialCohortPreviewLabels(configuredCohortFirstRunLabels) === 1;
   const initialEmptyStateMessage = firstRunCohort
-    ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
+    ? buildSingleCohortInitialEmptyStateMessage(specificFirstRunCohortLabel)
     : hasMultipleAvailableCohorts
       ? buildInitialEmptyStateMultiCohortMessage(
         configuredCohortOptions.length,
@@ -4586,8 +4602,12 @@ export default function CourseRegistrationsAdminPage() {
     ? {
       label: initialEmptyStateFormActionLabel,
       to: `/inscripcion/${encodeURIComponent(firstRunCohort.value)}`,
-      ariaLabel: `Abrir formulario público de ${firstRunCohort.firstRunLabel}`,
-      title: `Abrir formulario público de ${firstRunCohort.firstRunLabel} en una pestaña nueva`,
+      ariaLabel: specificFirstRunCohortLabel
+        ? `Abrir formulario público de ${specificFirstRunCohortLabel}`
+        : initialEmptyStateFormActionLabel,
+      title: specificFirstRunCohortLabel
+        ? `Abrir formulario público de ${specificFirstRunCohortLabel} en una pestaña nueva`
+        : `${initialEmptyStateFormActionLabel} en una pestaña nueva`,
       target: '_blank',
       rel: 'noreferrer',
     }

@@ -266,6 +266,8 @@ const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones para Beatmaking 101. La página pública ya está lista para recibir la primera.';
+const genericSingleCohortInitialEmptyStateMessage =
+  'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Crear curso';
 const initialEmptyStateMultiCohortActionLabel = 'Elegir formulario público';
 const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
@@ -14376,6 +14378,50 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await cleanup();
+  });
+
+  it('keeps generic first-run form labels out of the single-form empty state', async () => {
+    const cases = [
+      {
+        slug: 'formulario-publico',
+        title: 'Formulario público',
+        genericLabel: 'Formulario Publico',
+      },
+      {
+        slug: 'public-form',
+        title: 'Public form',
+        genericLabel: 'Public Form',
+      },
+    ];
+
+    for (const { genericLabel, slug, title } of cases) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: slug, ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const formAction = emptyState?.querySelector<HTMLAnchorElement>(`a[href="/inscripcion/${slug}"]`);
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(genericSingleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(genericLabel);
+        expect(emptyState?.textContent).not.toContain(`Todavía no hay inscripciones para ${genericLabel}.`);
+        expect(emptyState?.textContent).not.toContain(`de ${genericLabel}`);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(formAction?.textContent?.trim()).toBe(initialEmptyStateFormActionLabel);
+        expect(formAction?.getAttribute('aria-label')).toBe(initialEmptyStateFormActionLabel);
+        expect(formAction?.getAttribute('title')).toBe(`${initialEmptyStateFormActionLabel} en una pestaña nueva`);
+        expect(formAction?.getAttribute('target')).toBe('_blank');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+        expect(emptyState?.querySelector('a[href="/configuracion/cursos"]')).toBeNull();
+      });
+
+      await cleanup();
+    }
   });
 
   it('turns slug-only first-run cohort labels into readable course names', async () => {
