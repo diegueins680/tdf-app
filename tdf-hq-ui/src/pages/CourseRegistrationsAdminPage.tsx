@@ -4208,12 +4208,6 @@ export default function CourseRegistrationsAdminPage() {
     && localSearchNarrowsRegistrations
     ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
     : '';
-  const busyMixedSourceSharedCreatedAtContext = showBusyListSearchOnboarding
-    && !hasCustomFilters
-    && !hasSharedVisibleSource
-    && Boolean(sharedVisibleCreatedAtLabel)
-    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}`
-    : '';
   const shouldHideSharedCreatedAtContext = Boolean(sharedVisibleCreatedAtLabel)
     && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
@@ -4454,9 +4448,18 @@ export default function CourseRegistrationsAdminPage() {
           standaloneSingleChoiceBusySearchSourceSummary,
         ].filter(Boolean).join(' · ')
       : '';
+  const hiddenBusyListBaseIncludesSharedSource = Boolean(
+    hiddenBusyListBaseContextSummary.includes('Fuente visible:'),
+  );
+  const busyListSharedCreatedAtContext = showBusyListSearchOnboarding
+    && !hasCustomFilters
+    && Boolean(sharedVisibleCreatedAtLabel)
+    && (!hasSharedVisibleSource || hiddenBusyListBaseIncludesSharedSource)
+    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}`
+    : '';
   const hiddenBusyListContextSummary = [
     hiddenBusyListBaseContextSummary,
-    busyMixedSourceSharedCreatedAtContext,
+    busyListSharedCreatedAtContext,
     hiddenBusyListMissingContactContext,
   ].filter(Boolean).join('. ');
   const localSearchHelperText = !localSearchKey

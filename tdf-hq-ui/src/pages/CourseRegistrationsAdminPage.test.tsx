@@ -2496,6 +2496,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
+    const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 
     await waitForExpectation(() => {
       expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
@@ -2503,10 +2504,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(container.textContent).toContain(
-        `Pendiente de pago · Fuente visible: Instagram. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
+        `Pendiente de pago · Fuente visible: Instagram. Misma fecha de registro: ${sharedCreatedAtLabel}. Busca dentro de las 8 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
       );
       expect(countOccurrences(container, 'Fuente visible: Instagram')).toBe(1);
+      expect(countOccurrences(container, `Misma fecha de registro: ${sharedCreatedAtLabel}.`)).toBe(1);
       expect(container.textContent).not.toContain('Fuente: Instagram');
+      expect(container.textContent).not.toContain(`Creado: ${sharedCreatedAtLabel}`);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(8);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
@@ -9366,16 +9369,19 @@ describe('CourseRegistrationsAdminPage', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
+    const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.textContent).toContain(
-        'Beatmaking 101 · Fuente visible: Meta ads. Busca dentro de las 9 inscripciones cargadas.',
+        `Beatmaking 101 · Fuente visible: Meta ads. Misma fecha de registro: ${sharedCreatedAtLabel}. Busca dentro de las 9 inscripciones cargadas.`,
       );
       expect(countOccurrences(container, 'Fuente visible: Meta ads.')).toBe(1);
+      expect(countOccurrences(container, `Misma fecha de registro: ${sharedCreatedAtLabel}.`)).toBe(1);
       expect(container.textContent).not.toContain('Fuente: Meta ads');
+      expect(container.textContent).not.toContain(`Creado: ${sharedCreatedAtLabel}`);
       expect(container.textContent).not.toContain('Mostrando una sola fuente: Meta ads.');
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
     });
@@ -12285,6 +12291,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
+    const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
@@ -12292,11 +12299,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).toContain(
-        'Beatmaking 101 · Pendiente de pago. Fuente visible: Instagram story. Busca dentro de las 9 inscripciones cargadas.',
+        `Beatmaking 101 · Pendiente de pago. Fuente visible: Instagram story. Misma fecha de registro: ${sharedCreatedAtLabel}. Busca dentro de las 9 inscripciones cargadas.`,
       );
       expect(countOccurrences(container, 'Fuente visible: Instagram story.')).toBe(1);
+      expect(countOccurrences(container, `Misma fecha de registro: ${sharedCreatedAtLabel}.`)).toBe(1);
       expect(container.textContent).toContain('Fuente visible: Instagram story.');
       expect(container.textContent).not.toContain('Fuente: Instagram story');
+      expect(container.textContent).not.toContain(`Creado: ${sharedCreatedAtLabel}`);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
