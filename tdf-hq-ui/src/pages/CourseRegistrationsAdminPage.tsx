@@ -507,7 +507,9 @@ const buildFullLocalSearchMatchHint = (loadedCount: number) =>
     : `Sin cambios: la búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
-const emptyLocalSearchLimitRecoveryLabel = 'Aumentar límite';
+const emptyLocalSearchLimitRecoveryLabel = 'Revisar más registros';
+const emptyLocalSearchLimitRecoveryAccessibleLabel = 'Revisar más registros aumentando el límite de carga';
+const emptyLocalSearchLimitRecoveryTitle = 'Muestra el campo de límite de carga para buscar fuera del lote actual.';
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
@@ -6662,6 +6664,8 @@ export default function CourseRegistrationsAdminPage() {
                       size="small"
                       onClick={handleToggleAdvancedFilters}
                       aria-expanded={showAdvancedFilters}
+                      aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
+                      title={emptyLocalSearchLimitRecoveryTitle}
                     >
                       {emptyLocalSearchLimitRecoveryLabel}
                     </Button>

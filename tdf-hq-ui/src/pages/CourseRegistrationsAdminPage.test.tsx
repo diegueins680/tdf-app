@@ -219,7 +219,9 @@ const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
-const emptySearchLimitRecoveryLabel = 'Aumentar límite';
+const emptySearchLimitRecoveryLabel = 'Revisar más registros';
+const emptySearchLimitRecoveryAccessibleLabel = 'Revisar más registros aumentando el límite de carga';
+const emptySearchLimitRecoveryTitle = 'Muestra el campo de límite de carga para buscar fuera del lote actual.';
 const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
 const clearPaidStatusFilterLabel = 'Quitar filtro de estado Pagado';
 const clearPendingStatusFilterLabel = 'Quitar filtro de estado Pendiente de pago';
@@ -13845,7 +13847,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch?.textContent).not.toContain(
         'Aumenta el límite si el registro puede estar fuera del lote cargado.',
       );
+      const limitRecoveryAction = getButtonByText(emptySearch!, emptySearchLimitRecoveryLabel);
       expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(limitRecoveryAction.getAttribute('aria-label')).toBe(emptySearchLimitRecoveryAccessibleLabel);
+      expect(limitRecoveryAction.getAttribute('title')).toBe(emptySearchLimitRecoveryTitle);
+      expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Buscar en más registros')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
@@ -13961,7 +13967,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch?.textContent).toContain(
         'No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
       );
+      const limitRecoveryAction = getButtonByText(emptySearch!, emptySearchLimitRecoveryLabel);
       expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
+      expect(limitRecoveryAction.getAttribute('aria-label')).toBe(emptySearchLimitRecoveryAccessibleLabel);
+      expect(limitRecoveryAction.getAttribute('title')).toBe(emptySearchLimitRecoveryTitle);
+      expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(statusSummary!, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
