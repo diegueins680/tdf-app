@@ -11432,34 +11432,50 @@ describe('CourseRegistrationsAdminPage', () => {
       'facebook_lead_ad',
       'facebook_lead_ads_form',
       'facebook_lead_form',
+      'facebook_leadgen_form',
       'fb_leads',
       'fb_lead_form',
+      'fb_leadgen',
       'instagram_lead_ad_form',
       'instagram_lead_form',
+      'instagram_leadgen',
       'ig_lead_ads',
       'ig_lead_form',
+      'ig_leadgen_form',
       'meta_lead_form',
+      'meta_leadgen',
       'meta_leads',
       'linkedin_lead_gen_form',
+      'linkedin_leadgen_form',
       'tiktok_lead_form',
+      'tiktok_leadgen',
       'whatsapp_lead_form',
+      'whatsapp_leadgen_form',
       'leads_de_instagram',
     ] as const;
     const hiddenSourceLabels = [
       'Facebook lead ad',
       'Facebook lead ads form',
       'Facebook lead form',
+      'Facebook leadgen form',
       'Fb leads',
       'Fb lead form',
+      'Fb leadgen',
       'Instagram lead ad form',
       'Instagram lead form',
+      'Instagram leadgen',
       'Ig lead ads',
       'Ig lead form',
+      'Ig leadgen form',
       'Meta lead form',
+      'Meta leadgen',
       'Meta leads',
       'LinkedIn lead gen form',
+      'LinkedIn leadgen form',
       'TikTok lead form',
+      'TikTok leadgen',
       'WhatsApp lead form',
+      'WhatsApp leadgen form',
       'Leads de Instagram',
     ];
     listRegistrationsMock.mockResolvedValue(
@@ -11486,7 +11502,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'facebook lead ad');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'leadgen');
       await flushPromises();
       await flushPromises();
     });
@@ -11494,7 +11510,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
-        `No hay coincidencias para "facebook lead ad" en las ${defaultSources.length} inscripciones cargadas.`,
+        `No hay coincidencias para "leadgen" en las ${defaultSources.length} inscripciones cargadas.`,
       );
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
