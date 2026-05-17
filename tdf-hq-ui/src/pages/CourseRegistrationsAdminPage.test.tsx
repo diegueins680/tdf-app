@@ -8561,14 +8561,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para archived-course.');
       expect(container.textContent).not.toContain(initialEmptyStateFormActionLabel);
       expect(container.querySelector('a[href="/inscripcion/archived-course"]')).toBeNull();
-      expect(countButtonsByText(container, 'Quitar filtro de cohorte')).toBe(1);
+      expect(countButtonsByText(container, 'Quitar filtro de formulario')).toBe(1);
+      expect(countButtonsByText(container, 'Quitar filtro de cohorte')).toBe(0);
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
+      expect(countButtonsByText(container, 'Mostrar todos los formularios')).toBe(0);
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Quitar filtro de cohorte'));
+      clickButton(getButtonByText(container, 'Quitar filtro de formulario'));
       await flushPromises();
       await flushPromises();
     });

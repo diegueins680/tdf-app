@@ -473,8 +473,8 @@ const getResetViewLabel = ({
 }) => {
   if (hasCustomLimit && (hasSlugFilter || hasStatusFilter)) return 'Restablecer vista';
   if (hasCustomLimit) return 'Restablecer límite';
-  if (hasSlugFilter && !hasStatusFilter && hasUnconfiguredSlugFilter) return 'Quitar filtro de cohorte';
-  if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todas las cohortes';
+  if (hasSlugFilter && !hasStatusFilter && hasUnconfiguredSlugFilter) return 'Quitar filtro de formulario';
+  if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todos los formularios';
   if (!hasSlugFilter && hasStatusFilter) return 'Mostrar todos los estados';
   if (hasSlugFilter && hasStatusFilter) return 'Restablecer vista';
   return 'Restablecer vista';
