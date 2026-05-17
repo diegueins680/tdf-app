@@ -4,7 +4,9 @@
 module TDF.DTO.SocialSyncDTO where
 
 import           Control.Monad (when)
-import           Data.Aeson (ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), FromJSON(..), Value(..), defaultOptions, genericParseJSON, genericToJSON, withObject)
+import qualified Data.Aeson.Key as AKey
+import qualified Data.Aeson.KeyMap as AKM
 import           Data.Aeson.Types (Options(..), Parser)
 import           Data.Char (toLower)
 import qualified Data.Set as Set
@@ -36,6 +38,7 @@ data SocialSyncPostIn = SocialSyncPostIn
 
 instance FromJSON SocialSyncPostIn where
   parseJSON value = do
+    rejectNullSocialSyncOptionalFields "SocialSyncPostIn" ["ingestSource"] value
     post <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True
@@ -57,6 +60,15 @@ validateRequiredIdentityField fieldName rawValue =
   in if T.null value
        then fail (fieldName <> " must not be blank")
        else pure value
+
+rejectNullSocialSyncOptionalFields :: String -> [Text] -> Value -> Parser ()
+rejectNullSocialSyncOptionalFields objectName fieldNames =
+  withObject objectName $ \o ->
+    let rejectNullField fieldName =
+          case AKM.lookup (AKey.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullField fieldNames
 
 data SocialSyncIngestRequest = SocialSyncIngestRequest
   { ssirPosts :: [SocialSyncPostIn]

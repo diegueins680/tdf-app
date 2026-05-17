@@ -2324,6 +2324,11 @@ spec = do
                 "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"   \"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null ingest sources so only omitted values use the manual fallback" $
+            decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
+                `shouldSatisfy` isLeft
+
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
