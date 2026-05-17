@@ -9281,6 +9281,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts one-action recovery rows when busy mixed-status lists already show status chips', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crStatus: index < 6 ? 'pending_payment' : index < 8 ? 'paid' : 'cancelled',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe(
+        'Pendiente de pago (6)',
+      );
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (2)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado').textContent?.trim()).toBe('Cancelado (1)');
+      expect(container.querySelectorAll('button[data-action-icon="payment-receipt"]')).toHaveLength(6);
+      expect(container.querySelectorAll('button[data-action-icon="pending-recovery"]')).toHaveLength(3);
+      expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(0);
+      expect(countButtonsByText(container, reopenPendingLabel)).toBe(0);
+
+      const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Estudiante 7');
+      const cancelledRecoveryAction = getButtonByAriaLabel(container, 'Reabrir como pendiente para Estudiante 9');
+      expect(paidRecoveryAction.textContent?.trim()).toBe('');
+      expect(paidRecoveryAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
+      expect(cancelledRecoveryAction.textContent?.trim()).toBe('');
+      expect(cancelledRecoveryAction.getAttribute('title')).toBe('Reabrir como pendiente; actual: Cancelado');
+    });
+
+    await cleanup();
+  });
+
   it('folds a passive single cohort into busy-list search guidance when status filters still matter', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
@@ -9473,7 +9508,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1').textContent?.trim()).toBe('');
       const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
-      expect(paidRecoveryAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
+      expect(paidRecoveryAction.textContent?.trim()).toBe('');
+      expect(paidRecoveryAction.dataset['actionIcon']).toBe('pending-recovery');
       expect(paidRecoveryAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
       expect(getDossierTriggers(container)).toHaveLength(9);

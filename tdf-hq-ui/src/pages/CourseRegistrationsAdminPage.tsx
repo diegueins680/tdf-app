@@ -6850,7 +6850,11 @@ export default function CourseRegistrationsAdminPage() {
                   const showRowContext = Boolean(rowContextSummary);
                   const useDirectPendingRecoveryIconAction =
                     useDirectPendingRecoveryAction
-                    && (showBusyDirectRecoveryIconActions || showRepeatedDirectRecoveryIconActions);
+                    && (
+                      showBusyDirectRecoveryIconActions
+                      || showRepeatedDirectRecoveryIconActions
+                      || showBusyStatusIconActions
+                    );
                   const directPendingRecoveryActionLabel = `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`;
                   const directPendingRecoveryActionTitle =
                     `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`;
