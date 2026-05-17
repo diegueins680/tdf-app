@@ -9057,6 +9057,13 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected radio fallback payload to be rejected, got " <> show value)
+                assertStreamDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioStreamUpsert of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio stream payload to be rejected, got " <> show value)
                 assertTransmissionDecodeError rawPayload expectedMessage =
                     case eitherDecode rawPayload :: Either String RadioTransmissionRequest of
                         Left err ->
@@ -9064,6 +9071,13 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected radio transmission payload to be rejected, got " <> show value)
+                assertPresenceDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioPresenceUpsert of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio presence payload to be rejected, got " <> show value)
 
             assertImportDecodeError
                 "{\"rirSources\":null}"
@@ -9077,6 +9091,15 @@ main = hspec $ do
             assertRefreshDecodeError
                 "{\"rmrOnlyMissing\":null}"
                 ("rmrOnlyMissing must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuName\":null}"
+                ("rsuName must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountry\":null}"
+                ("rsuCountry must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenre\":null}"
+                ("rsuGenre must be omitted instead of null" :: String)
             assertTransmissionDecodeError
                 "{\"rtrName\":null}"
                 ("rtrName must be omitted instead of null" :: String)
@@ -9086,6 +9109,12 @@ main = hspec $ do
             assertTransmissionDecodeError
                 "{\"rtrCountry\":null}"
                 ("rtrCountry must be omitted instead of null" :: String)
+            assertPresenceDecodeError
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":null}"
+                ("rpuStationName must be omitted instead of null" :: String)
+            assertPresenceDecodeError
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationId\":null}"
+                ("rpuStationId must be omitted instead of null" :: String)
 
         it "rejects extra radio presence keys so typoed station metadata cannot be silently ignored" $
             ( eitherDecode

@@ -1669,7 +1669,9 @@ data RadioStreamUpsert = RadioStreamUpsert
   } deriving (Show, Generic)
 instance ToJSON RadioStreamUpsert
 instance FromJSON RadioStreamUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioStreamUpsert" ["rsuName", "rsuCountry", "rsuGenre"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioImportRequest = RadioImportRequest
   { rirSources :: Maybe [Text]
@@ -1763,7 +1765,9 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   } deriving (Show, Generic)
 instance ToJSON RadioPresenceUpsert
 instance FromJSON RadioPresenceUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioPresenceUpsert" ["rpuStationName", "rpuStationId"] value
+    genericParseJSON strictObjectOptions value
 
 data InternProfileDTO = InternProfileDTO
   { ipPartyId  :: Int64
