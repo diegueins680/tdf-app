@@ -16007,9 +16007,11 @@ describe('CourseRegistrationsAdminPage', () => {
 
   it('strips landing-page wrappers from first-run cohort copy', async () => {
     const titles = [
+      'Landing - Beatmaking 101',
       'Landing de curso - Beatmaking 101',
       'Página landing del curso - Beatmaking 101',
       'Beatmaking 101 - página landing',
+      'Beatmaking 101 - landing',
     ];
 
     for (const title of titles) {
@@ -16026,7 +16028,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Landing de curso');
-        expect(emptyState?.textContent).not.toMatch(/p[aá]gina landing/i);
+        expect(emptyState?.textContent).not.toMatch(/\blanding\b|p[aá]gina landing/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),

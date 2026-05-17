@@ -1550,10 +1550,10 @@ const firstRunPostSubmitDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunLandingPageDescriptorPrefixPattern =
-  /^(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*[-:/|]\s*/i;
+  /^(?:(?:p[aá]gina\s+landing|landing)(?:\s+(?:del?\s+curso|de\s+curso))?)\s*[-:/|]\s*/i;
 
 const firstRunLandingPageDescriptorSuffixPattern =
-  /\s*[-:/|]\s*(?:p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
+  /\s*[-:/|]\s*(?:(?:p[aá]gina\s+landing|landing)(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
 
 const firstRunStandalonePublicPageDescriptorPrefixPattern =
   /^(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
