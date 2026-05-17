@@ -4051,13 +4051,15 @@ export default function CourseRegistrationsAdminPage() {
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const shouldCompactRepeatedPaymentStatusActions = dossierIdentityTargetLabel === 'el nombre'
+    ? searchedRegistrations.length >= 2
+    : searchedRegistrations.length >= 3;
   const showRepeatedPaymentStatusIconActions = Boolean(combinedSingleChoiceSummary)
     && !hasLocalSearch
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow
-    && dossierIdentityTargetLabel === 'el nombre'
     && useCompactStatusActionLabel
-    && searchedRegistrations.length >= 2;
+    && shouldCompactRepeatedPaymentStatusActions;
   const showInlinePaymentWorkflowRowLabel = Boolean(combinedSingleChoiceSummary)
     && !hasLocalSearch
     && !showBusyListSearchOnboarding

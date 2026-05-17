@@ -1822,9 +1822,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const contextSummary = container.querySelector<HTMLElement>('[data-testid="course-registration-single-choice-context"]');
 
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(contextSummary?.textContent).toContain(mixedIdentityDossierLinkScopeHint);
-      expect(contextSummary?.textContent).not.toContain(mixedIdentityPaymentWorkflowDossierScopeHint);
-      expect(countOccurrences(container, mixedIdentityDossierLinkScopeHint)).toBe(1);
+      expect(contextSummary?.textContent).toContain(mixedIdentityPaymentWorkflowDossierScopeHint);
+      expect(contextSummary?.textContent).not.toContain(mixedIdentityDossierLinkScopeHint);
+      expect(countOccurrences(container, mixedIdentityPaymentWorkflowDossierScopeHint)).toBe(1);
       expect(container.textContent).not.toContain(dossierScopeHint);
       expect(container.textContent).not.toContain(emailDossierScopeHint);
       expect(container.textContent).not.toContain(recordDossierScopeHint);
@@ -1834,9 +1834,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de contacto@example.com')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro #103')).toBeTruthy();
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(3);
-      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(3);
-      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(3);
+      expect(container.querySelectorAll('button[aria-label^="Abrir opciones de pago y estado para "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
+      expect(getButtonByAriaLabel(
+        container,
+        paymentStatusIconButtonAriaLabel('Ada Lovelace'),
+      ).textContent?.trim()).toBe('');
     });
 
     await cleanup();
