@@ -11,6 +11,7 @@ module TDF.ServerInstagramOAuth
   , FacebookPageList(..)
   , resolveInstagramRedirectUri
   , sanitizeFacebookGraphErrorMessage
+  , shouldFallbackToShortInstagramToken
   , selectPrimaryInstagramCandidate
   , validateInstagramRedirectUri
   , validateInstagramUsername
@@ -625,7 +626,15 @@ requestLongLivedToken manager cfg appId secret shortToken =
       , ("client_secret", secret)
       , ("grant_type", "fb_exchange_token")
       , ("fb_exchange_token", shortToken)
-      ]) `catchError` \_ -> pure Nothing
+      ]) `catchError` \err ->
+        if shouldFallbackToShortInstagramToken err
+          then pure Nothing
+          else throwError err
+
+shouldFallbackToShortInstagramToken :: ServerError -> Bool
+shouldFallbackToShortInstagramToken err =
+  errHTTPCode err == 502
+    && "Facebook request failed" `BL.isPrefixOf` errBody err
 
 requestFacebookUser
   :: (MonadError ServerError m, MonadIO m)

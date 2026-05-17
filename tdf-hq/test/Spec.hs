@@ -23,7 +23,7 @@ import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, to
 import Database.Persist.Sqlite (createSqlitePool)
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
-import Servant (ServerError (..), ServerT, (:<|>) (..))
+import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.IO (hClose)
@@ -210,6 +210,7 @@ import TDF.ServerInstagramOAuth
       instagramOAuthServer,
       resolveInstagramRedirectUri,
       sanitizeFacebookGraphErrorMessage,
+      shouldFallbackToShortInstagramToken,
       selectPrimaryInstagramCandidate,
       validateInstagramRedirectUri,
       validateInstagramUsername )
@@ -4538,6 +4539,17 @@ main = hspec $ do
             assertInvalid
                 "{\"access_token\":\"token-123\",\"expires_in\":0}"
                 "Facebook expires_in must be positive"
+
+        it "only falls back to the short Instagram token for upstream request failures" $ do
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed (400): invalid token" })
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook parse error: missing access_token" })
+                `shouldBe` False
+            shouldFallbackToShortInstagramToken
+                (err500 { errBody = "Facebook request configuration invalid: bad graph base" })
+                `shouldBe` False
 
         it "rejects malformed Facebook page rows before storing OAuth credentials" $ do
             let decodePages rawPayload =
