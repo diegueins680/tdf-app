@@ -369,6 +369,7 @@ import TDF.Server
     , validateDriveUploadFileSize
     , formatDriveUploadFailure
     , formatGoogleOAuthFailure
+    , decodeDriveMetaResourceKeyIfSuccessful
     , resolveDrivePublicUrl
     , resolveWorkflowId
     , openAIChatRequestErrorMessage
@@ -5998,6 +5999,21 @@ spec = describe "TDF.Server helpers" $ do
                     <> "?resourcekey=rk_view\","
                     <> "\"webContentLink\":\"https://drive.usercontent.google.com/download"
                     <> "?id=file-123&resourcekey=rk_download\"}"
+
+    describe "decodeDriveMetaResourceKeyIfSuccessful" $
+        it "trusts Drive metadata resource keys only from full OK responses" $ do
+            decodeDriveMetaResourceKeyIfSuccessful
+                200
+                "{\"resourceKey\":\"rk_meta\"}"
+                `shouldBe` Just "rk_meta"
+            decodeDriveMetaResourceKeyIfSuccessful
+                204
+                "{\"resourceKey\":\"rk_no_content\"}"
+                `shouldBe` Nothing
+            decodeDriveMetaResourceKeyIfSuccessful
+                206
+                "{\"resourceKey\":\"rk_partial\"}"
+                `shouldBe` Nothing
 
     describe "GoogleToken FromJSON" $ do
         it "normalizes valid Google OAuth token responses before proxying them" $ do

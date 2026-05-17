@@ -13770,7 +13770,7 @@ instance FromJSON DriveMetaResp where
 
 decodeDriveMetaResourceKeyIfSuccessful :: Int -> BL.ByteString -> Maybe Text
 decodeDriveMetaResourceKeyIfSuccessful responseStatus responseBodyBytes
-  | responseStatus < 200 || responseStatus >= 300 = Nothing
+  | responseStatus /= 200 = Nothing
   | otherwise =
       case eitherDecode responseBodyBytes of
         Right (DriveMetaResp key) -> key
