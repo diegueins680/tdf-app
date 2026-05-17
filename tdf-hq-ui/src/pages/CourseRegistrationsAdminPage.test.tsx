@@ -14129,6 +14129,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Filtrar por estado');
@@ -14145,6 +14146,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
 
       expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).not.toBeNull();
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(0);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Ocultar límite')).toBe(0);

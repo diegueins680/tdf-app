@@ -4583,11 +4583,14 @@ export default function CourseRegistrationsAdminPage() {
     && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
   const showInitialRegistrationLoading = regsQuery.isLoading && !regsQuery.data;
+  const hidePassiveFiltersDuringCappedEmptyLocalSearch =
+    showEmptyLocalSearchLimitGuidance && !showAdvancedFilters;
   const showRegistrationFilterPanel = !showInitialRegistrationLoading
     && !showInitialCohortResolutionState
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
     && !showFocusedEmptyLocalSearchState
+    && !hidePassiveFiltersDuringCappedEmptyLocalSearch
     && !showSingleResultWithOnlyPassiveFilterContext
     && !hideSingleResultLocalSearchPassiveFilterPanel
     && (!regsQuery.isError || hasVisibleRegistrations);
@@ -6053,7 +6056,7 @@ export default function CourseRegistrationsAdminPage() {
       )}
 
       {showRegistrationFilterPanel && !showInitialFilterGuidance && !hideBusyListPassiveCurrentViewPanel && (
-        <Paper sx={{ p: 3, borderRadius: 3 }}>
+        <Paper sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-filter-panel">
           <>
             <Grid container spacing={2}>
               {combinedSingleChoiceSummary ? (
