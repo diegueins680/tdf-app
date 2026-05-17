@@ -10448,6 +10448,8 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Left "engineerName no debe contener caracteres de control"
             validateEngineer Nothing Nothing (Just ("Alex" <> T.singleton '\x202E' <> "Ops"))
                 `shouldBe` Left "engineerName no debe contener marcas Unicode invisibles"
+            validateEngineer (Just "mixing") Nothing (Just "   ---   ")
+                `shouldBe` Left "engineerName debe incluir letras o números"
             validateEngineer (Just "mastering") Nothing (Just (T.replicate 161 "A"))
                 `shouldBe` Left "engineerName debe tener 160 caracteres o menos"
 

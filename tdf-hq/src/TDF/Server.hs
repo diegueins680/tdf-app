@@ -8820,6 +8820,11 @@ validateEngineer svc mEngineerId mEngineerName
   | Just engineerName <- mEngineerName
   , T.any isUnsafeEngineerNameFormattingChar (T.strip engineerName) =
       Left "engineerName no debe contener marcas Unicode invisibles"
+  | Just engineerName <- mEngineerName
+  , let engineerNameVal = T.strip engineerName
+  , not (T.null engineerNameVal)
+  , not (hasPublicBookingLabelContent engineerNameVal) =
+      Left "engineerName debe incluir letras o números"
   | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
