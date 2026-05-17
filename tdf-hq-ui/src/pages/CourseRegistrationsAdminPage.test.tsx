@@ -10525,6 +10525,62 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats generic public-registration source labels as default plumbing in busy lists', async () => {
+    const defaultSources = [
+      'public_registration',
+      'public-course-registration',
+      'public_enrollment',
+      'public_course_enrollment',
+      'inscripcion_publica',
+      'inscripcion_publica_del_curso',
+      'registro_publico',
+      'registro-publico-de-curso',
+    ] as const;
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).not.toContain('Fuente: Public registration');
+      expect(container.textContent).not.toContain('Fuente: Public course registration');
+      expect(container.textContent).not.toContain('Fuente: Public enrollment');
+      expect(container.textContent).not.toContain('Fuente: Public course enrollment');
+      expect(container.textContent).not.toContain('Fuente: Inscripcion publica');
+      expect(container.textContent).not.toContain('Fuente: Inscripcion publica del curso');
+      expect(container.textContent).not.toContain('Fuente: Registro publico');
+      expect(container.textContent).not.toContain('Fuente: Registro publico de curso');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'public registration');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "public registration" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats direct and organic website source labels as default plumbing in busy lists', async () => {
     const defaultSources = [
       'direct',
