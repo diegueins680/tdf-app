@@ -7,8 +7,9 @@
 module TDF.API.Types where
 
 import           Data.Char
-  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
+  , isAlphaNum
   , isAsciiLower
   , isAsciiUpper
   , isControl
@@ -617,7 +618,9 @@ normalizeMarketplaceBuyerNameField rawName
   | T.length trimmed > 160 =
       fail "mcrBuyerName must be 160 characters or fewer"
   | T.any isUnsafeMarketplaceBuyerNameChar trimmed =
-      fail "mcrBuyerName must not contain control characters or hidden formatting characters"
+      fail "mcrBuyerName must not contain control characters, hidden formatting characters, or Unicode separator spaces"
+  | not (T.any isAlphaNum trimmed) =
+      fail "mcrBuyerName must include letters or numbers"
   | otherwise =
       pure trimmed
   where
@@ -625,7 +628,9 @@ normalizeMarketplaceBuyerNameField rawName
 
 isUnsafeMarketplaceBuyerNameChar :: Char -> Bool
 isUnsafeMarketplaceBuyerNameChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 normalizeMarketplaceBuyerEmailField :: Text -> Parser Text
 normalizeMarketplaceBuyerEmailField rawEmail
