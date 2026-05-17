@@ -1125,6 +1125,10 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
       /^(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA)\s*(?::|-|\u2013|\u2014)\s*/gi,
       '',
     )
+    .replace(
+      /\s*(?:[\[(]\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA)\s*[\])]|\s*(?::|-|\u2013|\u2014)\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA))\s*$/gi,
+      '',
+    )
     .replace(firstRunListMarkerPattern, '')
     .replace(firstRunDecorativeEdgeMarkerPattern, '')
     .trim();

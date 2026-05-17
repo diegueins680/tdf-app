@@ -18774,6 +18774,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips trailing generated-state markers from first-run cohort copy', async () => {
+    const titles = [
+      'Beatmaking 101 [DRAFT]',
+      'Beatmaking 101 (Preview)',
+      'Beatmaking 101 - DEMO',
+      'Beatmaking 101: Vista previa',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/DRAFT|Preview|DEMO|Vista previa/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(publicFormAction?.getAttribute('title')).toBe(
+          'Abrir formulario público de Beatmaking 101 en una pestaña nueva',
+        );
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips enrollment workflow descriptors from first-run cohort copy', async () => {
     const titles = [
       'Enrollment funnel - Beatmaking 101',
