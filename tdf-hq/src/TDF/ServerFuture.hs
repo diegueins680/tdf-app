@@ -518,9 +518,17 @@ futureStubRequiredModule :: Text
 futureStubRequiredModule = moduleName ModuleAdmin
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
-validateFutureAdminConsoleCard card
+validateFutureAdminConsoleCard card = do
+  allowedCardIds <- validateFutureAdminConsoleCardIds allowedFutureAdminConsoleCardIds
+  validateFutureAdminConsoleCardWithIds allowedCardIds card
+
+validateFutureAdminConsoleCardWithIds
+  :: [Text]
+  -> AdminConsoleCard
+  -> Either ServerError AdminConsoleCard
+validateFutureAdminConsoleCardWithIds allowedCardIds card
   | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
-  | cardId card `notElem` allowedFutureAdminConsoleCardIds =
+  | cardId card `notElem` allowedCardIds =
       invalidFutureAdminConsoleMetadata
   | implemented card = invalidFutureAdminConsoleMetadata
   | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
@@ -553,6 +561,10 @@ expectedFutureAdminConsoleBody cardIdValue
 
 allowedFutureAdminConsoleCardIds :: [Text]
 allowedFutureAdminConsoleCardIds =
+  canonicalFutureAdminConsoleCardIds
+
+canonicalFutureAdminConsoleCardIds :: [Text]
+canonicalFutureAdminConsoleCardIds =
   [ "user-management"
   , "api-tokens"
   ]
@@ -567,10 +579,11 @@ validateFutureAdminConsoleView view
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      allowedCardIds <- validateFutureAdminConsoleCardIds allowedFutureAdminConsoleCardIds
       viewIdVal <- validateFutureAdminConsolePublishedId (viewId view)
       path <- validateFutureAdminConsolePublishedPath (viewPath view)
       validatedCards <- traverse validateFutureAdminConsoleCard (cards view)
-      if map cardId validatedCards /= allowedFutureAdminConsoleCardIds
+      if map cardId validatedCards /= allowedCardIds
            || hasDuplicateFutureAdminConsoleTitles validatedCards
            || hasDuplicateFutureAdminConsoleBodyLinesAcrossCards validatedCards
         then invalidFutureAdminConsoleMetadata
@@ -594,6 +607,18 @@ validateFutureAdminConsoleViewWithCatalog
 validateFutureAdminConsoleViewWithCatalog catalog view = do
   _ <- validateFutureStubCatalog catalog
   validateFutureAdminConsoleView view
+
+validateFutureAdminConsoleCardIds :: [Text] -> Either ServerError [Text]
+validateFutureAdminConsoleCardIds cardIds
+  | null cardIds = invalidFutureAdminConsoleMetadata
+  | length cardIds /= length (nub cardIds) = invalidFutureAdminConsoleMetadata
+  | not (all validFutureStubSlug cardIds) = invalidFutureAdminConsoleMetadata
+  | any (invalidCardText 120 . expectedFutureAdminConsoleTitle) cardIds =
+      invalidFutureAdminConsoleMetadata
+  | any (any (invalidCardText 240) . expectedFutureAdminConsoleBody) cardIds =
+      invalidFutureAdminConsoleMetadata
+  | cardIds /= canonicalFutureAdminConsoleCardIds = invalidFutureAdminConsoleMetadata
+  | otherwise = Right cardIds
 
 hasDuplicateFutureAdminConsoleTitles :: [AdminConsoleCard] -> Bool
 hasDuplicateFutureAdminConsoleTitles cardsValue =

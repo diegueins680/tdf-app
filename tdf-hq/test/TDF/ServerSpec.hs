@@ -407,7 +407,8 @@ import TDF.ServerProposals
     , resolveOptionalProposalPipelineCardReferenceUpdate
     )
 import TDF.ServerFuture
-    ( allowedFutureStubMetadata
+    ( allowedFutureAdminConsoleCardIds
+    , allowedFutureStubMetadata
     , allowedFutureStubAreas
     , deriveFutureStubAreas
     , futureStubId
@@ -419,6 +420,7 @@ import TDF.ServerFuture
     , reservedFutureStubRoutes
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
+    , validateFutureAdminConsoleCardIds
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleRouteIn
@@ -12044,6 +12046,29 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` True
             invalidCardText 120 ("Tokens" <> T.singleton '\xE000' <> "API")
                 `shouldBe` True
+
+    describe "validateFutureAdminConsoleCardIds" $
+        it "rejects drifted admin console card registries before serving fallback discovery metadata" $ do
+            validateFutureAdminConsoleCardIds allowedFutureAdminConsoleCardIds
+                `shouldBe` Right ["user-management", "api-tokens"]
+
+            let assertInvalid cardIds =
+                    case validateFutureAdminConsoleCardIds cardIds of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected drifted admin console card registry to fail, got: "
+                                    <> show value
+                                )
+
+            assertInvalid []
+            assertInvalid ["api-tokens", "user-management"]
+            assertInvalid ["user-management", "api-tokens", "api-tokens"]
+            assertInvalid ["user-management", "api tokens"]
+            assertInvalid ["user-management", "unknown-card"]
 
     describe "validateFutureAdminConsoleCard" $ do
         it "rejects malformed or mislabeled admin console cards before serving fallback discovery metadata" $ do
