@@ -14248,7 +14248,9 @@ describe('CourseRegistrationsAdminPage', () => {
         'No hay coincidencias para "permisos administrativos pendientes para revisar inscripciones..." en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain(`No hay coincidencias para "${longQuery}"`);
-      expect(emptySearch?.getAttribute('title')).toBeNull();
+      expect(emptySearch?.getAttribute('title')).toBe(
+        `Beatmaking 101 · Pendiente de pago. No hay coincidencias para "${longQuery}" en las 9 inscripciones cargadas.`,
+      );
       expect(emptySearch?.getAttribute('aria-label')).toBe(
         `Beatmaking 101 · Pendiente de pago. No hay coincidencias para "${longQuery}" en las 9 inscripciones cargadas.`,
       );

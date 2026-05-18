@@ -7124,6 +7124,7 @@ export default function CourseRegistrationsAdminPage() {
               severity="info"
               data-testid="course-registration-empty-local-search"
               aria-label={emptyLocalSearchResultsAccessibleLabel}
+              title={emptyLocalSearchResultsAccessibleLabel}
               action={showEmptyLocalSearchLimitRecoveryAction || showEmptyLocalSearchAlertClearAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   {showEmptyLocalSearchLimitRecoveryAction && (
