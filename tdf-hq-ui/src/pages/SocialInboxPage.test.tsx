@@ -50,6 +50,14 @@ jest.unstable_mockModule('../services/instagramAuth', () => ({
   getStoredInstagramResult: () => getStoredInstagramResultMock(),
 }));
 
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 const { default: SocialInboxPage, SocialMessageDialog } = await import('./SocialInboxPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -824,8 +832,9 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(
-        'Step 2 of 3: keep this dialog visible, click Send, then show the same delivered text in the native client.',
+        'Step 2 of 3: keep this dialog visible, click Send message, then show the same delivered text in the native client.',
       );
+      expect(countTextOccurrences(document.body, 'Step 2 of 3:')).toBe(1);
       expect(document.body.textContent).not.toContain('Explain each button while recording');
       expect(document.body.textContent).not.toContain(
         'Explain the attachment, message textarea, and Send action while recording.',
@@ -951,7 +960,7 @@ describe('SocialInboxPage', () => {
         (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
       );
       expect(sendButton).toBeInstanceOf(HTMLButtonElement);
-      expect((sendButton as HTMLButtonElement).disabled).toBe(false);
+      expect(sendButton!.disabled).toBe(false);
       expect(countButtonsByText(document.body, 'Send message')).toBe(1);
     });
 
@@ -996,7 +1005,11 @@ describe('SocialInboxPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Attachments');
       expect(document.body.textContent).toContain(
-        'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.',
+        'Step 2 of 3: explain the attachment, type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.',
+      );
+      expect(countTextOccurrences(document.body, 'Step 2 of 3:')).toBe(1);
+      expect(document.body.textContent).not.toContain(
+        'Explain the attachment, message textarea, and Send action while recording.',
       );
       expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
       expect(hasLabel(document.body, 'Outgoing message')).toBe(true);

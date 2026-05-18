@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
@@ -502,6 +502,15 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const showReplyComposer = !hasDeliveredReply || showFollowUpComposer || hasReplyDraft || sendLoading;
   const showFollowUpPrompt = hasDeliveredReply && !showReplyComposer;
   const showSendAction = !hasDeliveredReply || hasReplyDraft || sendLoading;
+  const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
+  const reviewPendingReplyGuidance =
+    !reviewMode || hasDeliveredReply
+      ? ''
+      : showAiDraftControls
+        ? 'Step 2 of 3: keep this dialog visible, click Send message, then show the same delivered text in the native client.'
+        : attachments.length > 0
+          ? 'Step 2 of 3: explain the attachment, type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.'
+          : 'Step 2 of 3: type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.';
 
   const extractProviderMessageId = (payload: unknown): string | null => {
     if (!payload || typeof payload !== 'object') return null;
@@ -617,7 +626,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     [replyErrorValue, reviewMode],
   );
   const sendErrorSummary = useMemo(() => summarizeReplyError(error, reviewMode), [error, reviewMode]);
-  const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
   const messageAsset = useMemo(() => extractMetaMessageAsset(msg?.metadata), [msg?.metadata]);
   const nativeClientUrl = msg && channel ? resolveNativeClientUrl(channel, msg.senderId) : '';
   const markAttachmentFailed = (url: string) => {
@@ -660,9 +668,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
           <Typography color="text.secondary">{reviewMode ? 'Select a message.' : 'Selecciona un mensaje.'}</Typography>
         ) : (
           <Stack spacing={2.5}>
-            {reviewMode && !hasDeliveredReply && (
+            {reviewPendingReplyGuidance && (
               <Alert severity="info" variant="outlined">
-                Step 2 of 3: keep this dialog visible, click <strong>Send</strong>, then show the same delivered text in the native client.
+                {reviewPendingReplyGuidance}
               </Alert>
             )}
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -922,12 +930,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                     </Stack>
                   )}
                 </Stack>
-
-                {reviewMode && !hasDeliveredReply && !showAiDraftControls && (
-                  <Alert severity="info" variant="outlined">
-                    Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.
-                  </Alert>
-                )}
 
                 {notice && (
                   <Alert severity="success" onClose={() => setNotice(null)}>
