@@ -20116,9 +20116,13 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Student portal - Beatmaking 101',
       'Beatmaking 101 - learner dashboard',
+      'Student center - Beatmaking 101',
+      'Beatmaking 101 - learning centre',
       'LMS portal: Beatmaking 101',
       'Campus virtual - Beatmaking 101',
+      'Digital campus - Beatmaking 101',
       'Beatmaking 101 - aula virtual',
+      'Beatmaking 101 - centro de estudiantes',
     ];
 
     for (const title of titles) {
@@ -20135,7 +20139,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(copy).toContain(singleCohortInitialEmptyStateMessage);
         expect(copy).not.toContain(title);
-        expect(copy).not.toMatch(/student\s+portal|learner\s+dashboard|lms\s+portal|campus\s+virtual|aula\s+virtual/i);
+        expect(copy).not.toMatch(
+          /student\s+portal|learner\s+dashboard|student\s+center|learning\s+centre|lms\s+portal|campus\s+virtual|digital\s+campus|aula\s+virtual|centro\s+de\s+estudiantes/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
