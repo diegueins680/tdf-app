@@ -4001,6 +4001,12 @@ export default function CourseRegistrationsAdminPage() {
     && configuredCohortOptions.length === 0
     && hasCustomLimit
     && !hasManualFilters;
+  const showUnconfiguredCourseFirstRunFilteredEmptyState = !hasVisibleRegistrations
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && configuredCohortOptions.length === 0
+    && !hasSlugFilter
+    && hasStatusFilter;
   const showMultiCohortFirstRunLimitEmptyState = !hasVisibleRegistrations
     && hasMultipleAvailableCohorts
     && hasCustomLimit
@@ -4904,6 +4910,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showPassiveSingleCohortLimitEmptyState
     && !showSelectedCohortFirstRunEmptyState
     && !showUnconfiguredCourseFirstRunLimitEmptyState
+    && !showUnconfiguredCourseFirstRunFilteredEmptyState
     && !showMultiCohortFirstRunLimitEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
@@ -4957,6 +4964,7 @@ export default function CourseRegistrationsAdminPage() {
       || showPassiveSingleCohortLimitEmptyState
       || showSelectedCohortFirstRunEmptyState
       || showUnconfiguredCourseFirstRunLimitEmptyState
+      || showUnconfiguredCourseFirstRunFilteredEmptyState
       || showMultiCohortFirstRunLimitEmptyState
     )
     && !hasVisibleRegistrations;

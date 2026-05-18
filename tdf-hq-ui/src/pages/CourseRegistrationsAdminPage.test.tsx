@@ -15609,6 +15609,46 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps no-course first-run setup focused even when stale URL filters are present', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(
+      container,
+      '/inscripciones-curso?status=paid&limit=50',
+    );
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateConfigActionLabel);
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateConfigActionAriaLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.textContent).not.toContain('No hay inscripciones con los filtros actuales');
+      expect(container.textContent).not.toContain('estado pagado');
+      expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
+      expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
+      expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(0);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 50,
+      });
+    });
+
+    await cleanup();
+  });
+
   it('keeps the first-run empty state focused on sharing the configured cohort form instead of list actions', async () => {
     listRegistrationsMock.mockResolvedValue([]);
 
