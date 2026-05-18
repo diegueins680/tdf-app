@@ -1615,6 +1615,48 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps filtered-empty version history to one clear reset action', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-01T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+      expect(container.textContent).toContain('3 versiones');
+    });
+
+    await selectComboboxOption(container, 'Todos', 'Archivados');
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain(
+        'Ninguna versión coincide con los filtros actuales. Limpia los filtros para volver a ver el historial completo.',
+      );
+      expect(countActionsByText(history!, 'Limpiar filtros')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+      expect(container.textContent).toContain('0 de 3');
+    });
+
+    await cleanup();
+  });
+
   it('shows shared version status once in the history context instead of repeating identical row chips', async () => {
     listMock.mockResolvedValue([
       buildContent(),

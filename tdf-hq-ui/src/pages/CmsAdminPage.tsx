@@ -640,9 +640,16 @@ export default function CmsAdminPage() {
   const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
   const showHistoryStatusFilter = (versions.length > 2 && historyStatuses.length > 1) || statusFilter !== 'all';
   const showHistoryMinVersionFilter = versions.length > 2 || minVersionFilter != null;
+  const showVersionHistoryEmptyState =
+    Boolean(versionListUiState.emptyMessage) &&
+    !listQuery.isLoading &&
+    !listQuery.isError &&
+    !listDataInvalid;
+  const showVersionEmptyResetAction = showVersionHistoryEmptyState && versionListUiState.showEmptyReset;
+  const showVersionToolbarReset = versionListUiState.showToolbarReset && !showVersionEmptyResetAction;
   const showVersionToolbarControls =
     versionListUiState.showToolbarFilters
-    && (showHistoryStatusFilter || showHistoryMinVersionFilter || versionListUiState.showToolbarReset);
+    && (showHistoryStatusFilter || showHistoryMinVersionFilter || showVersionToolbarReset);
   const versionCountLabel = useMemo(() => {
     const totalVersions = versions.length;
     const visibleVersions = filteredVersions.length;
@@ -799,11 +806,6 @@ export default function CmsAdminPage() {
     listDataInvalid ||
     (versions.length > 0 && !showSingleLiveVersionSummary) ||
     hasActiveVersionFilters;
-  const showVersionHistoryEmptyState =
-    Boolean(versionListUiState.emptyMessage) &&
-    !listQuery.isLoading &&
-    !listQuery.isError &&
-    !listDataInvalid;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -1277,7 +1279,7 @@ export default function CmsAdminPage() {
                     sx={{ width: 150 }}
                   />
                 )}
-                {versionListUiState.showToolbarReset && (
+                {showVersionToolbarReset && (
                   <Button
                     size="small"
                     onClick={resetVersionFilters}
@@ -1395,7 +1397,7 @@ export default function CmsAdminPage() {
               </Typography>
             )}
             {showVersionHistoryEmptyState && (
-              versionListUiState.showEmptyReset ? (
+              showVersionEmptyResetAction ? (
                 <Alert
                   severity="info"
                   action={(
