@@ -288,7 +288,7 @@ function assetMatchesInventorySearch(asset: AssetDTO, query: string, roomMap: Ma
     asset.location,
     asset.condition,
     getInventoryStatusLabel(asset.status),
-    formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap),
+    buildCurrentCheckoutSummary(asset, roomMap),
   ];
 
   return searchableValues.some((value) => normalizeInventoryComparisonValue(value).includes(query));

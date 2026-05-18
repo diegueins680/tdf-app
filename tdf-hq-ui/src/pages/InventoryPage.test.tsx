@@ -1503,6 +1503,62 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('matches visible custody contact through the existing search instead of sending admins to empty recovery', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        currentCheckoutTarget: 'Ada Lovelace',
+        currentCheckoutHolderEmail: 'ada@example.com',
+        currentCheckoutAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+
+        expect(searchInput).not.toBeNull();
+        expect(searchInput?.getAttribute('placeholder')).toBe('Equipo o tenencia');
+        expect(container.textContent).toContain('Prestado Uno');
+        expect(container.textContent).toContain('Prestado Dos');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      await setInputValue(searchInput!, 'grace@example.com');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Resultado único');
+        expect(container.textContent).toContain('Prestado Dos');
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain('grace@example.com');
+        expect(container.textContent).not.toContain('Prestado Uno');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('combines shared custody and status into one helper line so busy inventory views explain hidden columns once', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
