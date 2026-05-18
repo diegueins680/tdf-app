@@ -169,11 +169,13 @@ const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
+const unavailableCohortFilterLabel = 'Filtro por formulario no disponible';
+const unavailableCohortFilterRetryLabel = 'Reintentar filtro';
 const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
-const busyCohortFilterUnavailableMessage = 'Formularios no disponibles; el filtro volverá al reintentar.';
+const busyCohortFilterUnavailableMessage = 'Filtro por formulario no disponible; volverá al reintentar.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
 const genericSingleCohortInitialEmptyStateMessage =
@@ -4831,7 +4833,7 @@ export default function CourseRegistrationsAdminPage() {
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
       ? 'Reintentar datos'
-      : initialCohortRetryLabel
+      : unavailableCohortFilterRetryLabel
     : regsQuery.isError
       ? 'Reintentar inscripciones'
       : 'Refrescar lista';
@@ -6438,7 +6440,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Formularios no disponibles
+                          {unavailableCohortFilterLabel}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterUnavailableMessage}
@@ -6451,7 +6453,7 @@ export default function CourseRegistrationsAdminPage() {
                             onClick={handleRefresh}
                             disabled={cohortsQuery.isFetching}
                           >
-                            {headerRefreshLabel}
+                            {unavailableCohortFilterRetryLabel}
                           </Button>
                         )}
                       </Stack>
