@@ -10984,6 +10984,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats pre-registration source labels as default form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'pre_registration_form',
+      'course_pre_registration_page',
+      'pre-registration-portal',
+      'preinscripcion',
+      'formulario_de_preinscripcion',
+      'pagina-de-pre-registro',
+      'portal_de_preinscripcion',
+      'formulario_de_pre_registro',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Pre registration form',
+      'Course pre registration page',
+      'Pre registration portal',
+      'preinscripcion',
+      'Formulario de preinscripcion',
+      'Pagina de pre registro',
+      'Portal de preinscripcion',
+      'Formulario de pre registro',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'pre registration');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "pre registration" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats direct and organic website source labels as default plumbing in busy lists', async () => {
     const defaultSources = [
       'direct',
