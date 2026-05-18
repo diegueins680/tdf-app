@@ -634,7 +634,29 @@ requestLongLivedToken manager cfg appId secret shortToken =
 shouldFallbackToShortInstagramToken :: ServerError -> Bool
 shouldFallbackToShortInstagramToken err =
   errHTTPCode err == 502
-    && "Facebook request failed" `BL.isPrefixOf` errBody err
+    && isRecoverableFacebookRequestFailure (errBody err)
+
+isRecoverableFacebookRequestFailure :: ByteString -> Bool
+isRecoverableFacebookRequestFailure body
+  | "Facebook request failed: " `BL.isPrefixOf` body = True
+  | otherwise =
+      case facebookRequestFailureStatus body of
+        Just status -> status == 429 || status >= 500
+        Nothing -> False
+
+facebookRequestFailureStatus :: ByteString -> Maybe Int
+facebookRequestFailureStatus body = do
+  rest <-
+    T.stripPrefix
+      "Facebook request failed ("
+      (TE.decodeUtf8With lenientDecode (BL.toStrict body))
+  let (statusText, suffix) = T.breakOn ")" rest
+  case T.stripPrefix "):" suffix of
+    Nothing -> Nothing
+    Just _ ->
+      case readMaybe (T.unpack statusText) of
+        Just status | status >= 100 && status <= 599 -> Just status
+        _ -> Nothing
 
 requestFacebookUser
   :: (MonadError ServerError m, MonadIO m)

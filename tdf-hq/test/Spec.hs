@@ -4590,10 +4590,16 @@ main = hspec $ do
                 "{\"access_token\":\"token-123\",\"expires_in\":0}"
                 "Facebook expires_in must be positive"
 
-        it "only falls back to the short Instagram token for upstream request failures" $ do
+        it "only falls back to the short Instagram token for transport or retryable Facebook failures" $ do
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed: connection timed out" })
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed (503): service unavailable" })
+                `shouldBe` True
             shouldFallbackToShortInstagramToken
                 (err502 { errBody = "Facebook request failed (400): invalid token" })
-                `shouldBe` True
+                `shouldBe` False
             shouldFallbackToShortInstagramToken
                 (err502 { errBody = "Facebook parse error: missing access_token" })
                 `shouldBe` False
