@@ -367,9 +367,10 @@ validateFutureStubResponse response =
     Right (area, endpoint)
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
-      | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
+          requiredModule <-
+            validateFutureStubRequiredModule (stubRequiredModule response)
           (requiredRole, requiredRoles) <-
             validateFutureStubAuthMetadata
               (stubRequiredRole response)
@@ -385,7 +386,7 @@ validateFutureStubResponse response =
             , stubStatus = "planned"
             , stubRequiredRole = requiredRole
             , stubRequiredRoles = requiredRoles
-            , stubRequiredModule = futureStubRequiredModule
+            , stubRequiredModule = requiredModule
             , stubImplemented = False
             }
 
@@ -554,6 +555,9 @@ futureStubRequiredModule = moduleName ModuleAdmin
 canonicalFutureStubRequiredRole :: Text
 canonicalFutureStubRequiredRole = "Admin"
 
+canonicalFutureStubRequiredModule :: Text
+canonicalFutureStubRequiredModule = "Admin"
+
 canonicalFutureStubRequiredRoles :: [Text]
 canonicalFutureStubRequiredRoles =
   [ "Admin"
@@ -574,6 +578,23 @@ validateFutureAdminConsoleAuthMetadata
   -> Either ServerError (Text, [Text])
 validateFutureAdminConsoleAuthMetadata =
   validateFutureAuthMetadataWith invalidFutureAdminConsoleMetadata
+
+validateFutureStubRequiredModule :: Text -> Either ServerError Text
+validateFutureStubRequiredModule =
+  validateFutureRequiredModuleWith invalidFutureStubResponse
+
+validateFutureAdminConsoleRequiredModule :: Text -> Either ServerError Text
+validateFutureAdminConsoleRequiredModule =
+  validateFutureRequiredModuleWith invalidFutureAdminConsoleMetadata
+
+validateFutureRequiredModuleWith
+  :: Either ServerError Text
+  -> Text
+  -> Either ServerError Text
+validateFutureRequiredModuleWith invalid requiredModule
+  | futureStubRequiredModule /= canonicalFutureStubRequiredModule = invalid
+  | requiredModule /= canonicalFutureStubRequiredModule = invalid
+  | otherwise = Right requiredModule
 
 validateFutureAuthMetadataWith
   :: Either ServerError (Text, [Text])
@@ -650,9 +671,10 @@ validateFutureAdminConsoleView view
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
-  | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      requiredModule <-
+        validateFutureAdminConsoleRequiredModule (viewRequiredModule view)
       (requiredRole, requiredRoles) <-
         validateFutureAdminConsoleAuthMetadata
           (viewRequiredRole view)
@@ -674,7 +696,7 @@ validateFutureAdminConsoleView view
           , viewStatus = "preview"
           , viewRequiredRole = requiredRole
           , viewRequiredRoles = requiredRoles
-          , viewRequiredModule = futureStubRequiredModule
+          , viewRequiredModule = requiredModule
           , viewImplemented = False
           , cards = validatedCards
           }

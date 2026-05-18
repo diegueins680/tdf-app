@@ -414,6 +414,7 @@ import TDF.ServerFuture
     , deriveFutureStubAreas
     , futureStubId
     , futureStubResponseFor
+    , futureStubRequiredModule
     , futureStubRequiredRoles
     , futureServer
     , futureAdminConsoleView
@@ -428,6 +429,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleCardWithIds
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
+    , validateFutureAdminConsoleRequiredModule
     , validateFutureAdminConsoleRouteIn
     , validateFutureAdminConsoleView
     , validateFutureAdminConsoleViewWithCatalog
@@ -445,6 +447,7 @@ import TDF.ServerFuture
     , validateFutureStubMetadataIn
     , validateFutureStubPublishedId
     , validateFutureStubPublishedPath
+    , validateFutureStubRequiredModule
     , validateFutureStubAuthMetadata
     , validateFutureStubResponse
     , futureStubResponseForWithConsole
@@ -12227,6 +12230,40 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Admin" ["Admin", "Customer", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Customer", "Manager"]
+
+    describe "validateFutureStubRequiredModule" $
+        it "keeps fallback discovery module metadata pinned to canonical Admin" $ do
+            futureStubRequiredModule `shouldBe` "Admin"
+            validateFutureStubRequiredModule "Admin" `shouldBe` Right "Admin"
+            validateFutureAdminConsoleRequiredModule "Admin" `shouldBe` Right "Admin"
+
+            let assertInvalidStub requiredModule =
+                    case validateFutureStubRequiredModule requiredModule of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid future stub module metadata, got: "
+                                    <> show value
+                                )
+                assertInvalidConsole requiredModule =
+                    case validateFutureAdminConsoleRequiredModule requiredModule of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid admin console module metadata, got: "
+                                    <> show value
+                                )
+
+            assertInvalidStub "admin"
+            assertInvalidStub "ModuleAdmin"
+            assertInvalidStub "Admin "
+            assertInvalidConsole "CRM"
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do
