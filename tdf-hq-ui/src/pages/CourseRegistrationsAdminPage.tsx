@@ -605,11 +605,19 @@ const phoneDigitsMatchLocalSearch = (phoneValue: string | null | undefined, loca
     ))
   ));
 };
-const looksLikeShortPhoneSearch = (value: string, digits: string) => (
-  digits.length > 0
-  && digits.length < MIN_PHONE_SEARCH_DIGITS
-  && /^[\d\s()+.-]+$/.test(value.trim())
-);
+const shortPhoneSearchHintFor = (value: string, digits: string) => {
+  if (!digits || !/^[\d\s()+.-]+$/.test(value.trim())) return '';
+
+  if (digits.length < MIN_PHONE_SEARCH_DIGITS) {
+    return `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`;
+  }
+
+  if (digits.startsWith('0') && digits.slice(1).length < MIN_PHONE_SEARCH_DIGITS) {
+    return `Para buscar teléfonos locales con 0 inicial, escribe al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos después del 0.`;
+  }
+
+  return '';
+};
 const normalizeLocalSearchQuery = (value: string) => value.trim().replace(/\s+/g, ' ');
 const formatLocalSearchQuerySummary = (value: string) => {
   const normalizedValue = normalizeLocalSearchQuery(value);
@@ -4152,8 +4160,7 @@ export default function CourseRegistrationsAdminPage() {
     [registrations],
   );
   const shortPhoneSearchHint = hasSearchablePhoneContacts
-    && looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
-    ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
+    ? shortPhoneSearchHintFor(localSearchTerm, localSearchDigitsKey)
     : '';
   const showEmptyLocalSearchLimitGuidance = showEmptyLocalSearchResults
     && viewHitsCurrentLimit
