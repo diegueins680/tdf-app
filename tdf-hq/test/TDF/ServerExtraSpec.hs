@@ -5354,6 +5354,20 @@ spec = do
         Right value ->
           expectationFailure ("Expected fragmented payment attachment URL error, got " <> show value)
 
+    it "rejects ambiguous payment attachment paths before storing manual payment rows" $ do
+      let assertInvalid rawUrl =
+            case validatePaymentAttachmentUrl (Just rawUrl) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "path must not contain empty, dot, or dot-dot segments"
+              Right value ->
+                expectationFailure ("Expected ambiguous payment attachment URL error, got " <> show value)
+      assertInvalid "https://files.example.com//proof.pdf"
+      assertInvalid "https://files.example.com/./proof.pdf"
+      assertInvalid "https://files.example.com/receipts/../proof.pdf"
+      assertInvalid "https://files.example.com/receipts/%2e%2e/proof.pdf"
+
     it "rejects oversized payment attachment URLs before storing manual payment rows" $
       case validatePaymentAttachmentUrl (Just ("https://files.example.com/" <> T.replicate 2049 "a")) of
         Left err -> do

@@ -91,7 +91,10 @@ import qualified TDF.Models                 as M
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
 import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
-import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
+import qualified TDF.Trials.Server          as TrialsServer
+  ( hasAmbiguousPublicUrlPath
+  , isValidHttpUrl
+  )
 import qualified TDF.Handlers.InputList     as InputList
 import           TDF.WhatsApp.History       (normalizeWhatsAppPhone)
 
@@ -3466,14 +3469,20 @@ validatePaymentAttachmentUrl (Just rawUrl) =
                       <> T.pack (show maxPaymentAttachmentUrlChars)
                       <> " characters or fewer"
             }
-      | "https://" `T.isPrefixOf` T.toLower attachmentUrl
-          && TrialsServer.isValidHttpUrl attachmentUrl
-          && not ("#" `T.isInfixOf` attachmentUrl) ->
-          Right (Just attachmentUrl)
-      | otherwise ->
+      | not ("https://" `T.isPrefixOf` T.toLower attachmentUrl)
+          || not (TrialsServer.isValidHttpUrl attachmentUrl)
+          || "#" `T.isInfixOf` attachmentUrl ->
           Left err400
-            { errBody = "attachmentUrl must be an absolute https URL without a fragment"
+            { errBody =
+                "attachmentUrl must be an absolute https URL without a fragment"
             }
+      | TrialsServer.hasAmbiguousPublicUrlPath attachmentUrl ->
+          Left err400
+            { errBody =
+                "attachmentUrl path must not contain empty, dot, or dot-dot segments"
+            }
+      | otherwise ->
+          Right (Just attachmentUrl)
 
 maxPaymentAttachmentUrlChars :: Int
 maxPaymentAttachmentUrlChars = 2048
