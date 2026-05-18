@@ -2525,6 +2525,9 @@ validateTicketPurchaseBuyerName rawName =
                 "ticketPurchaseBuyerName must not contain control characters "
                   <> "or hidden formatting characters"
             }
+      | not (T.any isAlphaNum buyerName) ->
+          Left err400
+            { errBody = "ticketPurchaseBuyerName must include letters or numbers" }
       | otherwise ->
           Right (Just buyerName)
 

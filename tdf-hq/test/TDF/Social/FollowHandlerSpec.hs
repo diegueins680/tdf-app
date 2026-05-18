@@ -54,6 +54,7 @@ import TDF.Server.SocialEventsHandlers
     , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
+    , validateTicketPurchaseBuyerName
     , validateVenueCreateUpdateFields
     )
 
@@ -285,6 +286,20 @@ spec = describe "social event handler helpers" $ do
         assertInvalid
             "name must not contain control characters or hidden formatting characters"
             (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
+
+    it "rejects punctuation-only ticket buyer names before creating ticket orders" $ do
+        validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
+        validateTicketPurchaseBuyerName (Just "  Diego Saa  ")
+            `shouldBe` Right (Just "Diego Saa")
+
+        case validateTicketPurchaseBuyerName (Just "  ***  ") of
+            Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                    `shouldContain` "ticketPurchaseBuyerName must include letters or numbers"
+            Right value ->
+                expectationFailure
+                    ("Expected punctuation-only buyer name to be rejected, got: " <> show value)
 
     it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
