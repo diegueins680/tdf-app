@@ -870,11 +870,12 @@ const statusMenuButtonTitle = (currentStatus: string, targetLabel?: string) => {
   return `Cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
 };
 
-const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => (
-  canOpenPaymentWorkflowFromStatus(currentStatus)
-    ? `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`
-    : `Cambiar estado para ${targetLabel}`
-);
+const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => {
+  const actionLabel = canOpenPaymentWorkflowFromStatus(currentStatus)
+    ? `${openPaymentWorkflowLabel} o cambiar estado`
+    : 'Cambiar estado';
+  return `${actionLabel} para ${targetLabel}; estado actual: ${registrationStatusLabel(currentStatus)}`;
+};
 
 const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
   `Abrir opciones de pago y estado para ${targetLabel}`;

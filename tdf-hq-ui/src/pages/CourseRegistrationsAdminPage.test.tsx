@@ -261,7 +261,7 @@ const mixedIdentityDossierLinkScopeHint =
 const dossierErrorRetryLabel = 'Reintentar expediente';
 const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
-  `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}`;
+  `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}; estado actual: Pendiente de pago`;
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. Crea el primer curso y su formulario público para recibir solicitudes aquí.';
 const initialEmptyStateMultiCohortMessage =
@@ -9381,7 +9381,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(4);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Ada Lovelace').textContent?.trim()).toBe('');
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ada Lovelace')).textContent?.trim()).toBe('');
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(countOccurrences(container, 'Pagado')).toBe(1);
       expect(countOccurrences(container, 'Cancelado')).toBe(1);
@@ -9524,7 +9524,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1').getAttribute('title')).toBe(
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Estudiante 1')).getAttribute('title')).toBe(
         'Registrar pago o cambiar estado para Estudiante 1; actual: Pendiente de pago',
       );
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
@@ -9619,7 +9619,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Nombre o contacto',
       );
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1').textContent?.trim()).toBe('');
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Estudiante 1')).textContent?.trim()).toBe('');
       const paidRecoveryAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
       expect(paidRecoveryAction.textContent?.trim()).toBe('');
       expect(paidRecoveryAction.dataset['actionIcon']).toBe('pending-recovery');
@@ -13607,7 +13607,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Estudiante 1'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Estudiante 1')));
       await flushPromises();
       await flushPromises();
     });
@@ -20418,17 +20418,20 @@ describe('CourseRegistrationsAdminPage', () => {
 
       const firstStatusAction = getButtonByAriaLabel(
         container,
-        'Registrar pago o cambiar estado para Ada Lovelace',
+        paymentStatusIconButtonAriaLabel('Ada Lovelace'),
       );
       expect(firstStatusAction.textContent?.trim()).toBe('');
       expect(firstStatusAction.getAttribute('aria-haspopup')).toBe('menu');
+      expect(firstStatusAction.getAttribute('aria-label')).toBe(
+        'Registrar pago o cambiar estado para Ada Lovelace; estado actual: Pendiente de pago',
+      );
       expect(firstStatusAction.getAttribute('title')).toBe(
         'Registrar pago o cambiar estado para Ada Lovelace; actual: Pendiente de pago',
       );
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Registrar pago o cambiar estado para Ada Lovelace'));
+      clickButton(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Ada Lovelace')));
       await flushPromises();
       await flushPromises();
     });
