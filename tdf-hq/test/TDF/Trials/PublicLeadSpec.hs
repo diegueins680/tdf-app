@@ -708,6 +708,26 @@ spec = do
             :: Either String SignupIn)
         `shouldBe` True
 
+    it "rejects null optional signup fields instead of treating them as fallback omissions" $ do
+      let decodeSignup rawPayload = A.eitherDecode rawPayload :: Either String SignupIn
+          assertNullRejected fieldName rawPayload =
+            case decodeSignup rawPayload of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right _ ->
+                expectationFailure
+                  ("Expected null public signup field to fail for " <> fieldName)
+
+      assertNullRejected
+        "phone"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":null,\"marketingOptIn\":true}"
+      assertNullRejected
+        "password"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":null,\"marketingOptIn\":true}"
+      assertNullRejected
+        "googleIdToken"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"googleIdToken\":null,\"marketingOptIn\":true}"
+
   describe "validatePublicSignupInput" $ do
     it "normalizes public signup contact fields before creating parties and lead details" $
       case validatePublicSignupInput

@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings #-}
 module TDF.Trials.API where
 
 import Servant
@@ -9,6 +10,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Aeson (FromJSON (parseJSON), Options, ToJSON, defaultOptions, genericParseJSON, rejectUnknownFields)
 import GHC.Generics (Generic)
+import TDF.API.Types (rejectNullOptionalFields)
 import TDF.Trials.DTO
 
 strictRequestObjectOptions :: Options
@@ -62,7 +64,9 @@ type PrivateTrialsAPI =
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)
 instance ToJSON SignupIn
 instance FromJSON SignupIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SignupIn" ["phone", "password", "googleIdToken"] value
+    genericParseJSON strictRequestObjectOptions value
 data SignupOut = SignupOut { ok :: Bool } deriving (Generic)
 instance ToJSON SignupOut; instance FromJSON SignupOut
 
