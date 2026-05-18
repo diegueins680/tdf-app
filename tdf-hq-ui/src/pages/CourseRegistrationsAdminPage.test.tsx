@@ -292,7 +292,7 @@ const unavailableCohortFilterRetryLabel = 'Reintentar filtro';
 const cohortFilterUnavailableMessage =
   'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
 const busyCohortFilterUnavailableMessage =
-  'Filtro por formulario no disponible; volverá al reintentar.';
+  'La lista sigue cargada; el filtro por formulario no está disponible.';
 const cohortFilterLoadingMessage =
   'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage =
@@ -15208,6 +15208,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain(cohortFilterUnavailableMessage);
       expect(container.textContent).not.toContain('el filtro por formulario volverá cuando se recuperen');
+      expect(container.textContent).not.toContain('volverá al reintentar');
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(getDossierTriggers(container)).toHaveLength(9);
