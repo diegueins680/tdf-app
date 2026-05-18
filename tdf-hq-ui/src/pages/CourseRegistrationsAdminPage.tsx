@@ -173,6 +173,7 @@ const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formul
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
+const busyCohortFilterUnavailableMessage = 'Formularios no disponibles; el filtro volverá al reintentar.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage = 'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
 const genericSingleCohortInitialEmptyStateMessage =
@@ -4653,7 +4654,7 @@ export default function CourseRegistrationsAdminPage() {
   const hiddenBusyListCohortUnavailableContext = hideBusyListPassiveCohortUnavailableSummary
     ? [
       hiddenBusyListCohortUnavailableScopeContext,
-      'Formularios no disponibles; el filtro por formulario volverá cuando se recuperen',
+      busyCohortFilterUnavailableMessage.replace(/\.$/, ''),
     ].filter(Boolean).join('. ')
     : '';
   const busyListSharedCreatedAtContext = showBusyListSearchOnboarding
