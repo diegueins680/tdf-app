@@ -12,6 +12,7 @@ module TDF.ServerLiveSessions
   , selectUniqueLiveSessionMusicianByEmail
   , sanitizeLiveSessionRiderFileName
   , validateLiveSessionBandName
+  , validateLiveSessionMusicianCount
   , validateLiveSessionOptionalEmail
   , validateLiveSessionReferencedPartyEmail
   , validateLiveSessionRiderFileName
@@ -103,6 +104,8 @@ liveSessionsServer user = intakeHandler
       contactEmail <-
         either throwError pure $
           validateLiveSessionOptionalEmail "contactEmail" (lsiContactEmail payload)
+      either throwError pure $
+        validateLiveSessionMusicianCount (lsiMusicians payload)
 
       now <- liftIO getCurrentTime
       riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
@@ -369,6 +372,14 @@ selectUniqueLiveSessionMusicianByEmail [] = Right Nothing
 selectUniqueLiveSessionMusicianByEmail [partyEnt] = Right (Just partyEnt)
 selectUniqueLiveSessionMusicianByEmail _ =
   Left err409 { errBody = "Multiple parties match this musician email" }
+
+validateLiveSessionMusicianCount
+  :: [LiveSessionMusicianPayload]
+  -> Either ServerError ()
+validateLiveSessionMusicianCount [] =
+  Left err400 { errBody = "At least one musician is required for live-session intake" }
+validateLiveSessionMusicianCount _ =
+  Right ()
 
 validateLiveSessionOptionalEmail
   :: Text

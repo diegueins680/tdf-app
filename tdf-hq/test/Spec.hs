@@ -268,6 +268,7 @@ import TDF.ServerLiveSessions
       selectUniqueLiveSessionMusicianByEmail,
       sanitizeLiveSessionRiderFileName,
       validateLiveSessionBandName,
+      validateLiveSessionMusicianCount,
       validateLiveSessionOptionalEmail,
       validateLiveSessionReferencedPartyEmail,
       validateLiveSessionRiderFileName,
@@ -11632,6 +11633,30 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected duplicate musician email matches to fail, got " <> show value)
+
+    describe "validateLiveSessionMusicianCount" $ do
+        it "rejects empty musician lists before intake persistence creates orphan sessions" $ do
+            validateLiveSessionMusicianCount
+                [ LiveSessionMusicianPayload
+                    { lsmPartyId = Nothing
+                    , lsmName = "Keys"
+                    , lsmEmail = Just "keys@example.com"
+                    , lsmInstrument = Nothing
+                    , lsmRole = Nothing
+                    , lsmNotes = Nothing
+                    , lsmIsExisting = False
+                    }
+                ]
+                `shouldBe` Right ()
+
+            case validateLiveSessionMusicianCount [] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "At least one musician is required"
+                Right value ->
+                    expectationFailure
+                        ("Expected empty live-session musician list to fail, got " <> show value)
 
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $
