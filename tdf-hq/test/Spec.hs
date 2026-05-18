@@ -250,6 +250,7 @@ import TDF.Server
       validatePayPalCredential,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
+      validatePayPalCaptureOrderState,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
       resolveMarketplaceOrderPaidAtForStatus,
@@ -5960,6 +5961,32 @@ main = hspec $ do
             assertInvalid "ORDER/123"
             assertInvalid "ORDER?token=123"
             assertInvalid (Data.Text.replicate 129 "A")
+
+    describe "validatePayPalCaptureOrderState" $ do
+        it "rejects non-pending marketplace orders before a PayPal capture request is sent" $ do
+            validatePayPalCaptureOrderState "paypal_pending" `shouldBe` Right ()
+            validatePayPalCaptureOrderState " PayPal Pending " `shouldBe` Right ()
+
+            let assertInvalid rawStatus expectedCode expectedMessage =
+                    case validatePayPalCaptureOrderState rawStatus of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` expectedCode
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid PayPal capture state, got " <> show value)
+            assertInvalid
+                "paid"
+                409
+                "PayPal order has already been captured"
+            assertInvalid
+                "datafast_pending"
+                409
+                "Order is not awaiting PayPal capture"
+            assertInvalid
+                "paypal/pending"
+                500
+                "Stored marketplace order status is invalid"
 
     describe "validatePayPalCaptureStatusField" $ do
         it "requires PayPal capture responses to include a non-blank status" $ do

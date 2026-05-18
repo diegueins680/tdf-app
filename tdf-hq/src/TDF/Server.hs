@@ -8791,6 +8791,16 @@ validateStoredPayPalOrderId rawStoredOrderId
   where
     storedOrderId = T.strip rawStoredOrderId
 
+validatePayPalCaptureOrderState :: Text -> Either ServerError ()
+validatePayPalCaptureOrderState rawStatus = do
+  status <- validateStoredMarketplaceOrderStatus rawStatus
+  case status of
+    "paypal_pending" -> Right ()
+    "paid" ->
+      Left err409 { errBody = "PayPal order has already been captured" }
+    _ ->
+      Left err409 { errBody = "Order is not awaiting PayPal capture" }
+
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
   case normalizeMarketplaceOrderStatusParts rawStatus of
@@ -12013,6 +12023,8 @@ capturePaypalOrder PaypalCaptureReq{..} = do
   case mOrder of
     Nothing -> throwError err404
     Just order -> do
+      either throwError pure $
+        validatePayPalCaptureOrderState (ME.marketplaceOrderStatus order)
       paypalOrderIdForCapture <- either throwError pure $
         validatePayPalCaptureOrderReference
           (ME.marketplaceOrderPaypalOrderId order)
