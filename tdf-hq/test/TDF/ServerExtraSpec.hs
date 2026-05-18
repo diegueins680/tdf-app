@@ -1359,6 +1359,26 @@ spec = do
       assertInvalid (normalizeRoomName "   ")
       assertInvalid (normalizeRoomNameUpdate (Just "   "))
 
+    it "rejects oversized or visually ambiguous room names before persistence" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid room name error, got " <> show value)
+      assertInvalid
+        "Room name must be 120 characters or fewer"
+        (normalizeRoomName (T.replicate 121 "a"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomName ("Sala" <> T.singleton '\NUL' <> "A"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomName ("Sala" <> T.singleton '\x202E' <> "A"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomNameUpdate (Just ("Control" <> T.singleton '\x00A0' <> "Room")))
+
   describe "room write request JSON" $ do
     it "accepts canonical room create and patch keys used by current clients" $ do
       case A.eitherDecode

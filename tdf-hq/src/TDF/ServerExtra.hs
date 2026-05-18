@@ -2239,6 +2239,14 @@ normalizeRoomName rawName =
   let normalized = normalizeRoomNameValue rawName
   in if T.null normalized
        then Left err400 { errBody = "Room name is required" }
+       else if T.length normalized > maxRoomNameLength
+         then Left err400 { errBody = "Room name must be 120 characters or fewer" }
+       else if T.any isUnsafeRoomNameChar rawName
+         then Left err400
+           { errBody =
+               "Room name must not contain hidden formatting characters, "
+                 <> "Unicode separator spaces, or control characters other than tabs"
+           }
        else Right normalized
 
 normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
@@ -2254,6 +2262,15 @@ validateRoomPatchIntent _ _ =
 
 normalizeRoomNameValue :: Text -> Text
 normalizeRoomNameValue = T.unwords . T.words
+
+maxRoomNameLength :: Int
+maxRoomNameLength = 120
+
+isUnsafeRoomNameChar :: Char -> Bool
+isUnsafeRoomNameChar ch =
+  (isControl ch && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 canonicalRoomName :: Text -> Text
 canonicalRoomName = T.toCaseFold . normalizeRoomNameValue
