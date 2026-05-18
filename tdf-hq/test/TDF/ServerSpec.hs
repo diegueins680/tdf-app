@@ -4088,7 +4088,7 @@ spec = describe "TDF.Server helpers" $ do
                             <> show partyId
                         )
 
-    describe "findExistingRegistration" $
+    describe "findExistingRegistration" $ do
         it "rejects conflicting email and phone matches instead of choosing one registration" $ do
             (emailRowId, sameRowResult, conflictResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
@@ -4146,6 +4146,43 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected conflicting registration identifiers to fail, got: " <> show value)
+
+        it "rejects duplicate pending contact matches instead of choosing the newest fallback" $ do
+            duplicateResult <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkRegistration createdAt =
+                        ME.CourseRegistration
+                            { ME.courseRegistrationCourseSlug = "produccion-musical"
+                            , ME.courseRegistrationPartyId = Nothing
+                            , ME.courseRegistrationFullName = Nothing
+                            , ME.courseRegistrationEmail = Just "duplicate@example.com"
+                            , ME.courseRegistrationPhoneE164 = Nothing
+                            , ME.courseRegistrationSource = "landing"
+                            , ME.courseRegistrationStatus = "pending_payment"
+                            , ME.courseRegistrationAdminNotes = Nothing
+                            , ME.courseRegistrationHowHeard = Nothing
+                            , ME.courseRegistrationUtmSource = Nothing
+                            , ME.courseRegistrationUtmMedium = Nothing
+                            , ME.courseRegistrationUtmCampaign = Nothing
+                            , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationCreatedAt = createdAt
+                            , ME.courseRegistrationUpdatedAt = createdAt
+                            }
+                insert_ (mkRegistration now)
+                insert_ (mkRegistration (addUTCTime 60 now))
+                findExistingRegistration
+                    "produccion-musical"
+                    (Just "duplicate@example.com")
+                    Nothing
+
+            case duplicateResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Multiple pending course registrations match this email"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate pending registration fallback to fail, got: " <> show value)
 
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do

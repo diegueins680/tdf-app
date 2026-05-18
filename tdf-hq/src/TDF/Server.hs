@@ -6030,28 +6030,55 @@ findExistingRegistration
   -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
 findExistingRegistration slugVal mEmail mPhone = do
   byEmail <- case mEmail of
-    Nothing -> pure Nothing
-    Just e  -> selectFirst
+    Nothing -> pure (Right Nothing)
+    Just e  -> selectCourseRegistrationFallback
+      "email"
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationEmail ==. Just e
       ]
-      [Desc ME.CourseRegistrationCreatedAt]
   byPhone <- case mPhone of
-    Nothing -> pure Nothing
-    Just p -> selectFirst
+    Nothing -> pure (Right Nothing)
+    Just p -> selectCourseRegistrationFallback
+      "phone"
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationPhoneE164 ==. Just p
       ]
-      [Desc ME.CourseRegistrationCreatedAt]
-  pure $ case (byEmail, byPhone) of
-    (Just emailHit, Just phoneHit)
-      | entityKey emailHit /= entityKey phoneHit ->
-          Left err409
-            { errBody =
-                "email and phone match different course registrations"
-            }
+  pure $ do
+    emailHit <- byEmail
+    phoneHit <- byPhone
+    case (emailHit, phoneHit) of
+      (Just emailRow, Just phoneRow)
+        | entityKey emailRow /= entityKey phoneRow ->
+            Left err409
+              { errBody =
+                  "email and phone match different course registrations"
+              }
+      _ ->
+        Right (emailHit <|> phoneHit)
+
+selectCourseRegistrationFallback
+  :: Text
+  -> [Filter ME.CourseRegistration]
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
+selectCourseRegistrationFallback contactLabel filters = do
+  pendingMatches <-
+    selectList
+      (filters ++ [ME.CourseRegistrationStatus ==. "pending_payment"])
+      [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
+  case pendingMatches of
+    [] -> Right <$> selectFirst filters [Desc ME.CourseRegistrationCreatedAt]
+    [pendingRow] -> pure (Right (Just pendingRow))
     _ ->
-      Right (byEmail <|> byPhone)
+      pure $
+        Left err409
+          { errBody =
+              BL.fromStrict $
+                TE.encodeUtf8
+                  ( "Multiple pending course registrations match this "
+                      <> contactLabel
+                      <> "; resolve duplicate pending rows before updating a public registration"
+                  )
+          }
 
 -- Health
 health :: AppM TDF.API.HealthStatus
