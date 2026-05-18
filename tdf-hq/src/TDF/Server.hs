@@ -205,7 +205,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
-import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
+import           Network.HTTP.Types.URI (urlDecode, urlEncode, renderQuery, renderSimpleQuery)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.CMS.Models as CMS
@@ -14286,8 +14286,25 @@ dropNamedQueryParam paramName url =
 
 isNamedQueryParam :: Text -> Text -> Bool
 isNamedQueryParam paramName rawParam =
-  let rawName = fst (T.breakOn "=" rawParam)
-  in T.toLower rawName == T.toLower paramName
+  case decodeAsciiQueryParamName (fst (T.breakOn "=" rawParam)) of
+    Just decodedName -> T.toLower decodedName == T.toLower paramName
+    Nothing -> False
+
+decodeAsciiQueryParamName :: Text -> Maybe Text
+decodeAsciiQueryParamName rawName =
+  if T.all validQueryParamNameChar decodedName
+    then Just decodedName
+    else Nothing
+  where
+    decodedName =
+      TE.decodeUtf8With TEE.lenientDecode $
+        urlDecode True (TE.encodeUtf8 rawName)
+
+validQueryParamNameChar :: Char -> Bool
+validQueryParamNameChar ch =
+  isAscii ch
+    && not (isControl ch)
+    && ch `notElem` (" \t\r\n=&?#%" :: String)
 
 appendQueryParam :: Text -> Text -> Text -> Text
 appendQueryParam paramName paramValue url =

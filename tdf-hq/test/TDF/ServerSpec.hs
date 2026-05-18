@@ -6247,6 +6247,16 @@ spec = describe "TDF.Server helpers" $ do
 
             resolveDrivePublicUrl
                 "file-123"
+                (Just $
+                    "https://drive.google.com/download/file-123?"
+                        <> "%72esourcekey=stale&alt=media")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/download/file-123?alt=media&resourcekey=rk-123"
+
+            resolveDrivePublicUrl
+                "file-123"
                 (Just "https://drive.google.com/download/file-123?resourcekey=rk-good&resourcekey")
                 (Just "rk-123")
                 Nothing
