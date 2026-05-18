@@ -993,6 +993,20 @@ spec = do
                 "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/instagram/callback bad\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/instagram/callback\\u202E\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/"
+                    , BL8.pack (replicate 2049 'a')
+                    , "\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
                 "{\"code\":\"oauth-code-123\",\"redirectUri\":null}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange

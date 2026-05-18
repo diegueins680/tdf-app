@@ -52,10 +52,21 @@ parseOptionalRedirectUri Nothing = pure Nothing
 parseOptionalRedirectUri (Just rawRedirectUri) =
   case nonEmptyText rawRedirectUri of
     Nothing -> fail "redirectUri must not be blank"
-    Just redirectUri -> pure (Just redirectUri)
+    Just redirectUri
+      | T.any isControl redirectUri ->
+          fail "redirectUri must not contain control characters"
+      | T.any isUnsafeOAuthCodeChar redirectUri ->
+          fail "redirectUri must not contain whitespace or hidden formatting characters"
+      | T.length redirectUri > maxInstagramOAuthRedirectUriChars ->
+          fail "redirectUri must be 2048 characters or fewer"
+      | otherwise ->
+          pure (Just redirectUri)
 
 maxInstagramOAuthCodeChars :: Int
 maxInstagramOAuthCodeChars = 4096
+
+maxInstagramOAuthRedirectUriChars :: Int
+maxInstagramOAuthRedirectUriChars = 2048
 
 isUnsafeOAuthCodeChar :: Char -> Bool
 isUnsafeOAuthCodeChar ch =
