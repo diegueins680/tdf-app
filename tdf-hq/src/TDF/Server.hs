@@ -12196,15 +12196,15 @@ isValidDatafastCheckoutId checkoutId =
 
 isDatafastCheckoutIdAtom :: Char -> Bool
 isDatafastCheckoutIdAtom c =
-  isAsciiUpper c || isAsciiLower c || isDigit c
+  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c
 
 isDatafastCheckoutIdChar :: Char -> Bool
 isDatafastCheckoutIdChar c =
-  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_." :: String)
+  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("-_." :: String)
 
 isDatafastResourcePathChar :: Char -> Bool
 isDatafastResourcePathChar c =
-  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_./" :: String)
+  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("-_./" :: String)
 
 invalidDatafastCheckoutId :: Either ServerError a
 invalidDatafastCheckoutId =

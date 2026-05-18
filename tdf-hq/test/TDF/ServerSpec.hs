@@ -8348,6 +8348,9 @@ spec = describe "TDF.Server helpers" $ do
                 (Just "/v1/checkouts/ABC/payment?entityId=other")
                 "Datafast relative checkout payment path"
             assertInvalid
+                (Just ("/v1/checkouts/ABC" <> T.singleton '\x0661' <> "/payment"))
+                "Datafast relative checkout payment path"
+            assertInvalid
                 (Just "/v1/checkouts/../payment")
                 "Datafast relative checkout payment path"
             assertInvalid
