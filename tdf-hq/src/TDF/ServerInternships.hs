@@ -928,17 +928,22 @@ parseKey
      )
   => Text
   -> m (Key record)
-parseKey raw =
-  let trimmed = T.strip raw
-      isSignedNegativeInt =
-        case T.uncons trimmed of
-          Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
-          _ -> False
-      isNonPositiveDigits =
-        T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
-  in
-    if isSignedNegativeInt || isNonPositiveDigits
-      then
-          throwError err400 { errBody = "identifier must be a positive integer" }
-      else
-        maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece trimmed)
+parseKey raw
+  | isSignedNegativeInt || isNonPositiveDigits =
+      throwError err400 { errBody = "identifier must be a positive integer" }
+  | raw /= trimmed || not (T.all isDigit trimmed) =
+      invalid
+  | otherwise =
+      case fromPathPiece trimmed of
+        Just key | toPathPiece key == trimmed -> pure key
+        _ -> invalid
+  where
+    trimmed = T.strip raw
+    isSignedNegativeInt =
+      case T.uncons trimmed of
+        Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
+        _ -> False
+    isNonPositiveDigits =
+      T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
+    invalid =
+      throwError err400 { errBody = "Invalid identifier" }

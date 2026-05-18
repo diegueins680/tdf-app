@@ -10011,6 +10011,9 @@ main = hspec $ do
                             expectationFailure "Expected invalid internship path id to be rejected"
             assertInvalid "0" "positive integer"
             assertInvalid "-3" "positive integer"
+            assertInvalid " 42 " "Invalid identifier"
+            assertInvalid "0042" "Invalid identifier"
+            assertInvalid "+42" "Invalid identifier"
             assertInvalid "project-7" "Invalid identifier"
 
     describe "internship profile text validation" $ do
