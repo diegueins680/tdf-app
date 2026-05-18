@@ -2706,6 +2706,8 @@ validateDriveAuthorizationCode rawCode =
              then Left err400 { errBody = "code must not contain hidden formatting characters" }
            else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
+           else if T.any (not . isAscii) codeVal
+           then Left err400 { errBody = "code must contain only ASCII characters" }
            else if T.length codeVal > maxDriveOAuthTokenChars
            then Left err400 { errBody = "code must be 4096 characters or fewer" }
            else Right codeVal

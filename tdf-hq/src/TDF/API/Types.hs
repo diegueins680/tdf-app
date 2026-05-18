@@ -10,6 +10,7 @@ import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
   , isAlphaNum
+  , isAscii
   , isAsciiLower
   , isAsciiUpper
   , isControl
@@ -1082,6 +1083,8 @@ parseDriveOAuthTokenField fieldName rawValue
       fail (fieldName <> " must not contain whitespace or control characters")
   | T.any isHiddenDriveOAuthRequestTokenChar cleanValue =
       fail (fieldName <> " must not contain hidden formatting characters")
+  | T.any (not . isAscii) cleanValue =
+      fail (fieldName <> " must contain only ASCII characters")
   | T.length cleanValue > maxDriveOAuthRequestTokenChars =
       fail (fieldName <> " must be 4096 characters or fewer")
   | otherwise =

@@ -6463,6 +6463,9 @@ spec = describe "TDF.Server helpers" $ do
                 "code must not contain hidden formatting characters"
                 baseRequest { code = "oauth\x202E\&code" }
             assertInvalid
+                "code must contain only ASCII characters"
+                baseRequest { code = "oauth-cod\233e" }
+            assertInvalid
                 "code must be 4096 characters or fewer"
                 baseRequest { code = T.replicate 4097 "a" }
             assertInvalid
