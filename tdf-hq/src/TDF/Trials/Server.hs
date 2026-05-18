@@ -879,7 +879,20 @@ hasAmbiguousPublicUrlPath rawUrl =
         then []
         else T.splitOn "/" (T.drop 1 trimmedPath)
     isAmbiguousPathSegment segment =
-      segment == "" || segment == "." || segment == ".."
+      segment == "" || decodedSegment == "." || decodedSegment == ".."
+      where
+        decodedSegment = decodeUrlEncodedDots (T.toLower segment)
+
+    decodeUrlEncodedDots txt =
+      case T.uncons txt of
+        Nothing -> ""
+        Just ('%', rest)
+          | "2e" `T.isPrefixOf` rest ->
+              "." <> decodeUrlEncodedDots (T.drop 2 rest)
+          | otherwise ->
+              "%" <> decodeUrlEncodedDots rest
+        Just (ch, rest) ->
+          T.singleton ch <> decodeUrlEncodedDots rest
 
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl
