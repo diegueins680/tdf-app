@@ -10190,12 +10190,12 @@ validatePublicAdsAssistPartyId (Just _) =
 validateAdsAssistChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsAssistChannel Nothing = Right Nothing
 validateAdsAssistChannel (Just rawChannel) =
-  case T.toLower <$> normalizeOptionalInput (Just rawChannel) of
-    Nothing -> Right Nothing
-    Just "instagram" -> Right (Just "instagram")
-    Just "facebook" -> Right (Just "facebook")
-    Just "whatsapp" -> Right (Just "whatsapp")
-    _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+  let channel = T.toLower (T.strip rawChannel)
+  in if T.null channel
+       then Left err400 { errBody = "channel must be omitted instead of blank" }
+       else if channel == "instagram" || channel == "facebook" || channel == "whatsapp"
+         then Right (Just channel)
+         else Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"

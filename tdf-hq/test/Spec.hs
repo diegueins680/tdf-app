@@ -230,6 +230,7 @@ import TDF.Server
       validateStoredCalendarConfig,
       sanitizeStoredCoursePublicUrl,
       validateContractsAccess,
+      validateAdsAssistChannel,
       validateWhatsAppConsentDisplayName,
       validateWhatsAppConsentSource,
       validateWhatsAppOptOutReason,
@@ -5751,6 +5752,21 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected punctuation-only buyerName to fail, got " <> show value)
+
+    describe "validateAdsAssistChannel" $ do
+        it "accepts omitted or supported channels and rejects explicit blank fallback channels" $ do
+            validateAdsAssistChannel Nothing `shouldBe` Right Nothing
+            validateAdsAssistChannel (Just " Instagram ")
+                `shouldBe` Right (Just "instagram")
+
+            case validateAdsAssistChannel (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "channel must be omitted instead of blank"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank ads assist channel to fail, got " <> show value)
 
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do
