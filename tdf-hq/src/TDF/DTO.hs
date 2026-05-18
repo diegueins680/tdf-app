@@ -30,7 +30,7 @@ import           Database.Persist.Sql (fromSqlKey)
 
 import           TDF.Models
 import qualified TDF.Models as M
-import           TDF.API.Types (BandDTO)
+import           TDF.API.Types (BandDTO, rejectNullOptionalFields)
 
 strictDecodeOptions :: Options
 strictDecodeOptions = defaultOptions { rejectUnknownFields = True }
@@ -715,7 +715,9 @@ data SignupRequest = SignupRequest
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON SignupRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SignupRequest" ["roles"] value
+    genericParseJSON strictDecodeOptions value
 
 data ChangePasswordRequest = ChangePasswordRequest
   { username        :: Maybe Text

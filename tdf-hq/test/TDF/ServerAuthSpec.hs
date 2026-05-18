@@ -20,7 +20,7 @@ import TDF.Auth
   , resolveUsernameFromLabel
   , validateModuleAccess
   )
-import TDF.DTO (LoginRequest (..))
+import TDF.DTO (LoginRequest (..), SignupRequest)
 import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
@@ -268,6 +268,17 @@ signupRoleSpec = describe "validateRequestedSignupRoles" $ do
   it "keeps default signup roles and accepted requested roles" $
     validateRequestedSignupRoles (Just [Artist])
       `shouldBe` Right [Customer, Fan, Artist]
+
+  it "rejects explicit null signup roles instead of using the default role fallback" $
+    let rawSignup =
+          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
+            <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
+            <> "\"roles\":null}"
+    in case A.eitherDecode rawSignup :: Either String SignupRequest of
+      Left err ->
+        err `shouldContain` "roles must be omitted instead of null"
+      Right value ->
+        expectationFailure ("Expected null signup roles to be rejected, got " <> show value)
 
   it "rejects duplicate requested roles instead of silently collapsing signup intent" $
     case validateRequestedSignupRoles (Just [Artist, Fan, Artist]) of
