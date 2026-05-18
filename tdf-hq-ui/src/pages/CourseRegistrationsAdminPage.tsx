@@ -1411,6 +1411,16 @@ const firstRunSignupSheetDescriptorPrefixPattern =
 const firstRunSignupSheetDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)\s*$/i;
 
+const firstRunRosterDescriptorPattern = String.raw`(?:(?:(?:course|class|student|students?)\s+(?:rosters?|lists?|directories?))|(?:(?:rosters?|lists?|directories?)\s+(?:for\s+)?(?:course|class|students?))|(?:(?:lista|listado|directorio|n[oó]mina)\s+(?:de|para)\s+(?:estudiantes|alumnos|curso|clase))|(?:(?:estudiantes|alumnos)\s+(?:del?|de|para\s+el)\s+(?:curso|clase)))`;
+const firstRunRosterDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunRosterDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunRosterDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunRosterDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunWorkshopDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -1874,6 +1884,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
+    .replace(firstRunRosterDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunTrialLessonDescriptorPrefixPattern, '')
@@ -1984,6 +1995,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
+    .replace(firstRunRosterDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunTrialLessonDescriptorSuffixPattern, '')
