@@ -11429,6 +11429,63 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats waitlist source wrappers as default plumbing in busy lists', async () => {
+    const defaultSources = [
+      'waitlist',
+      'waitlist_form',
+      'waitlist-page',
+      'course_waitlist',
+      'course-waitlist-form',
+      'waiting_list_page',
+      'lista_de_espera',
+      'formulario_de_lista_de_espera',
+      'portal-de-lista-de-espera',
+    ] as const;
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago.');
+      expect(container.textContent).toContain(
+        'Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain('Fuente:');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(container.textContent).not.toContain('Waitlist');
+      expect(container.textContent).not.toContain('Waiting list');
+      expect(container.textContent).not.toContain('Lista de espera');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'waitlist');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "waitlist" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats generic public-registration source labels as default plumbing in busy lists', async () => {
     const defaultSources = [
       'public_registration',
