@@ -465,17 +465,22 @@ validateFutureStubCatalogResponseWithConsole consoleView = do
   validateFutureStubCatalogResponses responses
 
 validateFutureStubCatalogResponses :: [StubResponse] -> Either ServerError [StubResponse]
-validateFutureStubCatalogResponses responses = do
-  validatedResponses <- traverse validateFutureStubResponse responses
-  let metadata = map (\response -> (stubArea response, stubEndpoint response)) validatedResponses
-      ids = map stubId validatedResponses
-      paths = map stubPath validatedResponses
-  if metadata /= allowedFutureStubMetadata
-       || length metadata /= length (nub metadata)
-       || length ids /= length (nub ids)
-       || length paths /= length (nub paths)
-    then invalidFutureStubCatalog
-    else Right validatedResponses
+validateFutureStubCatalogResponses responses
+  | length responses /= length allowedFutureStubMetadata = invalidFutureStubCatalog
+  | otherwise = do
+      validatedResponses <- traverse validateFutureStubResponse responses
+      let metadata =
+            map
+              (\response -> (stubArea response, stubEndpoint response))
+              validatedResponses
+          ids = map stubId validatedResponses
+          paths = map stubPath validatedResponses
+      if metadata /= allowedFutureStubMetadata
+           || length metadata /= length (nub metadata)
+           || length ids /= length (nub ids)
+           || length paths /= length (nub paths)
+        then invalidFutureStubCatalog
+        else Right validatedResponses
 
 futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
 futureStubResponseFor rawArea rawEndpoint = do
