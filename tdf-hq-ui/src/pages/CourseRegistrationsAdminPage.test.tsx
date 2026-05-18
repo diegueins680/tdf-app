@@ -13315,7 +13315,7 @@ describe('CourseRegistrationsAdminPage', () => {
         crHowHeard: 'unknown',
         crUtmSource: 'not_set',
         crUtmMedium: 'n/a',
-        crUtmCampaign: 'sin_origen',
+        crUtmCampaign: 'sin_campaña',
         crUtmContent: 'no_aplica',
       }),
       buildRegistration({
@@ -13323,11 +13323,11 @@ describe('CourseRegistrationsAdminPage', () => {
         crPartyId: 10,
         crFullName: 'Grace Placeholder',
         crEmail: 'grace-placeholder@example.com',
-        crHowHeard: 'pendiente',
+        crHowHeard: 'not_tracked',
         crUtmSource: 'por_actualizar',
         crUtmMedium: 'por_confirmar',
-        crUtmCampaign: 'por_definir',
-        crUtmContent: 'tbd',
+        crUtmCampaign: 'no_campaign',
+        crUtmContent: 'sin_contenido',
       }),
       ...buildRegistrations(7, (index) => ({
         crId: 200 + index,
@@ -13351,7 +13351,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'sin origen');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'sin campaña');
       await flushPromises();
       await flushPromises();
     });
@@ -13359,7 +13359,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
-        'No hay coincidencias para "sin origen" en las 9 inscripciones cargadas.',
+        'No hay coincidencias para "sin campaña" en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain('Coincide con origen o campaña.');
       expect(container.textContent).not.toContain('Coinciden con origen o campaña.');
@@ -13376,6 +13376,22 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
         'No hay coincidencias para "por confirmar" en las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain('Coincide con origen o campaña.');
+      expect(container.textContent).not.toContain('Coinciden con origen o campaña.');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'not tracked');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        'No hay coincidencias para "not tracked" en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain('Coincide con origen o campaña.');
       expect(container.textContent).not.toContain('Coinciden con origen o campaña.');
