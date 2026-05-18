@@ -6029,6 +6029,60 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps the account search hint when blank identities include expanded inactive accounts', async () => {
+    const buildBlankUser = (userId: number, active = true) => buildUser({
+      userId,
+      partyId: null,
+      partyName: '   ',
+      username: '   ',
+      primaryEmail: null,
+      primaryPhone: null,
+      whatsapp: null,
+      active,
+    });
+    const activeBlankUsers = [701, 702, 703].map((userId) => buildBlankUser(userId));
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      ...activeBlankUsers,
+      ...(includeInactive ? [buildBlankUser(704, false)] : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getInputByLabelText(container, 'Buscar usuarios').getAttribute('placeholder')).toBe('Cuenta');
+        expect(getRenderedRowUserIds(container)).toEqual([701, 702, 703]);
+      });
+
+      await clickButton(getCheckboxByLabelText(container, 'Incluir inactivos'));
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Ver 1 usuario inactivo')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Ver 1 usuario inactivo')[0]!);
+
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Cuenta');
+        expect(searchInput.getAttribute('placeholder')).not.toContain('Estado');
+        expect(getRenderedRowUserIds(container)).toEqual([701, 702, 703, 704]);
+        expect(getRowByUserId(container, 704).textContent).toContain('Cuenta #704');
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'Cuenta #704');
+
+      await waitForExpectation(() => {
+        expect(getRenderedRowUserIds(container)).toEqual([704]);
+        expect(container.textContent).not.toContain('No hay coincidencias');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps internal-id search available without foregrounding IDs in the first-time search hint', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({

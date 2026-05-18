@@ -857,7 +857,7 @@ const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   ) {
     terms.push('acceso');
   }
-  if (hasActiveUsers && hasInactiveUsers) terms.push(terms.length === 0 ? 'Estado' : 'estado');
+  if (hasActiveUsers && hasInactiveUsers && terms.length > 0) terms.push('estado');
 
   return formatSearchPlaceholderTerms(
     terms,
