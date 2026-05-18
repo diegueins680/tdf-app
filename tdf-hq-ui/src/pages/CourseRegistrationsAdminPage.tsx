@@ -4309,9 +4309,10 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch
     && searchedRegistrations.length > 1
     && searchedRegistrations.length < MIN_DEFAULT_CSV_EXPORT_ROWS;
-  const hasExplicitCsvExportScope = hasManualFilters
+  const hasBroadLocalSearch = hasLocalSearch && !localSearchNarrowsRegistrations;
+  const hasExplicitCsvExportScope = !hasBroadLocalSearch && (hasManualFilters
     ? !hasTinyManualFilterView
-    : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView);
+    : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
   const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchResults;

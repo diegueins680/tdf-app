@@ -14170,7 +14170,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps broad filtered searches from moving filtered export into search utilities', async () => {
+  it('keeps broad filtered searches focused on the unchanged-search helper instead of export chrome', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
     const container = document.createElement('div');
@@ -14201,11 +14201,15 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Sin cambios: la búsqueda coincide con las 9 inscripciones cargadas.');
-      expect(filterUtilities).not.toBeNull();
-      expect(getButtonByText(filterUtilities!, copyVisibleCsvLabel(9))).toBeTruthy();
+      expect(filterUtilities).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-local-search-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
-      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(1);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
+      expect(
+        Array.from(container.querySelectorAll('button')).some(
+          (button) => button.textContent?.trim().startsWith('Copiar CSV'),
+        ),
+      ).toBe(false);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
