@@ -3161,14 +3161,18 @@ validateCalendarSyncWindow
   -> Maybe UTCTime
   -> Either ServerError ()
 validateCalendarSyncWindow mSyncCursor mFrom mTo =
-  case (validateGoogleCalendarSyncCursor mSyncCursor, mFrom <|> mTo) of
-    (Left err, _) -> Left err
-    (Right (Just _), Just _) ->
+  case validateGoogleCalendarSyncCursor mSyncCursor of
+    Left err -> Left err
+    Right (Just _) | isJust (mFrom <|> mTo) ->
       Left err400
         { errBody =
             "Calendar sync range cannot be combined with an existing Google sync cursor"
         }
-    _ -> Right ()
+    Right _ ->
+      case (mFrom, mTo) of
+        (Just fromVal, Just toVal) | toVal < fromVal ->
+          Left err400 { errBody = "from must be on or before to" }
+        _ -> Right ()
 
 validateGoogleCalendarSyncCursor :: Maybe Text -> Either ServerError (Maybe Text)
 validateGoogleCalendarSyncCursor Nothing = Right Nothing

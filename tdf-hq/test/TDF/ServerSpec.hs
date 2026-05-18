@@ -6632,6 +6632,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 (validateCalendarSyncWindow (Just "sync-token") (Just fromTs) (Just toTs))
 
+        it "rejects inverted full-sync ranges at the handler invariant" $ do
+            let fromTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 39600)
+                toTs = UTCTime (fromGregorian 2026 4 22) (secondsToDiffTime 36000)
+            case validateCalendarSyncWindow Nothing (Just fromTs) (Just toTs) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "from must be on or before to"
+                Right value ->
+                    expectationFailure
+                        ( "Expected inverted Calendar sync range to fail, got: "
+                            <> show value
+                        )
+
     describe "selectUniqueCalendarConfigFallback" $ do
         it "uses the implicit config fallback only when it is unambiguous" $ do
             case selectUniqueCalendarConfigFallback [] of
