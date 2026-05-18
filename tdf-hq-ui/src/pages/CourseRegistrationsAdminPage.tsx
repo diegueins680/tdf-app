@@ -1067,6 +1067,15 @@ const firstRunDecorativeEdgeMarkerPattern =
   /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
 const firstRunListMarkerPattern = /^(?:[-*•]\s+|\d+[.)]\s+)/;
 const firstRunInvisibleFormatCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
+const firstRunUrlDescriptorPattern = String.raw`(?:(?:https?:\/\/|www\.)[^\s]+)`;
+const firstRunUrlDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunUrlDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunUrlDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunUrlDescriptorPattern})\s*$`,
+  'i',
+);
 
 const firstRunCohortHtmlEntities: Record<string, string> = {
   amp: '&',
@@ -1743,6 +1752,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
+    .replace(firstRunUrlDescriptorPrefixPattern, '')
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
@@ -1847,6 +1857,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
+    .replace(firstRunUrlDescriptorSuffixPattern, '')
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
