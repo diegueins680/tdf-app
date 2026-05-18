@@ -1487,6 +1487,47 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps status-filtered single-cohort lists clear with one cohort summary instead of row repeats', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: undefined,
+        status: 'paid',
+        limit: 200,
+      });
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      const activeStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-active-status-summary"]',
+      );
+      expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
+      expect(activeStatusSummary?.textContent).toContain('Pagado');
+      expect(container.textContent).toContain('Mostrando una sola cohorte: Beatmaking 101.');
+      expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(false);
+      expect(getDossierTriggers(container)).toHaveLength(2);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a tiny cohort-only filtered view focused on the cohort select instead of export chrome', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },

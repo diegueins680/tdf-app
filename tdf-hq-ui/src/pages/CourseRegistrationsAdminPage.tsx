@@ -4266,7 +4266,9 @@ export default function CourseRegistrationsAdminPage() {
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
-  const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
+  const shouldShowSharedCohortSummary = Boolean(singleVisibleCohortLabel)
+    && !singleAvailableCohortLabel
+    && !hasEffectiveSlugFilter;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
