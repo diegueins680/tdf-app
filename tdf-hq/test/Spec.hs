@@ -11429,6 +11429,10 @@ main = hspec $ do
             assertRejected "http://example.com/launch" "CTA URL must be an absolute https URL"
             assertRejected "https://example.com@evil.test/launch" "CTA URL must not include user info"
             assertRejected "https://localhost/launch" "CTA URL must be an absolute public https URL"
+            assertRejected "https://example.com/launch#preview" "CTA URL must not include a URL fragment"
+            assertRejected
+                "https://example.com/launch/%2e%2e/reset"
+                "CTA URL path must not contain empty, dot, or dot-dot segments"
 
     describe "validateBrainEntryTitle" $ do
         it "trims safe Studio Brain titles before admin storage" $
