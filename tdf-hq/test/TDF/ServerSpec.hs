@@ -3796,6 +3796,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (A.Bool True)
             assertInvalid (A.Number 1)
 
+        it "rejects oversized CMS payload objects before storage or public fallback responses" $
+            case validateOptionalCmsPayload
+                    (Just (object ["body" .= T.replicate (300 * 1024) "a"])) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "payload must be 262144 bytes or fewer"
+                Right payload ->
+                    expectationFailure
+                        ("Expected oversized CMS payload to be rejected, got: " <> show payload)
+
     describe "validateRequiredCmsSlug" $ do
         it "canonicalizes CMS slugs before public lookup and admin create handlers use them" $ do
             validateRequiredCmsSlug "  Records-Release-01  "

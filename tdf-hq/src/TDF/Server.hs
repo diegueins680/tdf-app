@@ -8345,9 +8345,21 @@ validateOptionalCmsPayload :: Maybe Value -> Either ServerError (Maybe Value)
 validateOptionalCmsPayload Nothing = Right Nothing
 validateOptionalCmsPayload (Just Null) =
   Left err400 { errBody = "payload must be omitted instead of JSON null" }
-validateOptionalCmsPayload payload@(Just (Object _)) = Right payload
+validateOptionalCmsPayload payload@(Just value@(Object _))
+  | BL.length (encode value) > fromIntegral maxCmsPayloadBytes =
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "payload must be "
+                <> T.pack (show maxCmsPayloadBytes)
+                <> " bytes or fewer"
+        }
+  | otherwise = Right payload
 validateOptionalCmsPayload (Just _) =
   Left err400 { errBody = "payload must be a JSON object when present" }
+
+maxCmsPayloadBytes :: Int
+maxCmsPayloadBytes = 256 * 1024
 
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
