@@ -234,6 +234,7 @@ validateFutureStubCatalog catalog = do
   _ <- validateFutureStubCatalogRouteBoundaries reservedRoutes normalized
   _ <- validateFutureStubCatalogTopLevelBoundaries normalized
   _ <- validateFutureStubCatalogAreaOrder normalized
+  _ <- validateFutureStubCatalogEndpointLeaves normalized
   if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
     else Right normalized
@@ -327,6 +328,36 @@ validateFutureStubCatalogAreaOrder catalog = do
        || not areaEntriesMatch
     then invalidFutureStubCatalog
     else Right areaRuns
+
+validateFutureStubCatalogEndpointLeaves
+  :: [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateFutureStubCatalogEndpointLeaves catalog = do
+  mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
+  validatedCatalog <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubLeafRoute catalog
+  if any (hasDuplicateLeaves validatedCatalog) mountedAreas
+    then invalidFutureStubCatalog
+    else Right validatedCatalog
+  where
+    validateFutureStubLeafRoute (area, endpoint) = do
+      areaClean <- validateFutureStubArea area
+      endpointClean <- validateFutureStubEndpoint endpoint
+      pure (areaClean, endpointClean)
+
+    hasDuplicateLeaves catalogForAreas area =
+      let leaves =
+            [ endpointLeaf endpoint
+            | (entryArea, endpoint) <- catalogForAreas
+            , entryArea == area
+            ]
+      in length leaves /= length (nub leaves)
+
+    endpointLeaf endpoint =
+      case reverse (T.splitOn "/" endpoint) of
+        leaf:_ -> leaf
+        [] -> ""
 
 validateFutureStubCatalogTopLevelBoundaries
   :: [(Text, Text)]

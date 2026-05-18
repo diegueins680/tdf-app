@@ -440,6 +440,7 @@ import TDF.ServerFuture
     , validateFutureStubAreaRegistry
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
+    , validateFutureStubCatalogEndpointLeaves
     , validateFutureStubCatalogEntry
     , validateFutureStubCatalogResponseWithConsole
     , validateFutureStubCatalogResponses
@@ -11992,6 +11993,41 @@ spec = describe "TDF.Server helpers" $ do
                         )
                         allowedFutureStubMetadata
             assertInvalid driftedEndpoint
+
+        it "keeps fallback discovery endpoint leaf labels unambiguous within each area" $ do
+            validateFutureStubCatalogEndpointLeaves allowedFutureStubMetadata
+                `shouldBe` Right allowedFutureStubMetadata
+            validateFutureStubCatalogEndpointLeaves
+                [ ("crm", "parties/filters")
+                , ("inventory", "assets/filters")
+                ]
+                `shouldBe` Right
+                    [ ("crm", "parties/filters")
+                    , ("inventory", "assets/filters")
+                    ]
+
+            let assertInvalid catalog =
+                    case validateFutureStubCatalogEndpointLeaves catalog of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected duplicate fallback discovery leaf labels to fail, got: "
+                                    <> show value
+                                )
+
+            assertInvalid
+                [ ("crm", "parties/filters")
+                , ("crm", "leads/filters")
+                ]
+            assertInvalid
+                [ ("crm", "parties/filters")
+                , ("crm", "filters")
+                ]
+            assertInvalid [(" crm", "parties/filters")]
+            assertInvalid [("crm", "parties/filter s")]
 
     describe "validateFutureStubCatalogResponses" $ do
         it "distinguishes malformed fallback discovery responses from catalog drift" $ do
