@@ -70,12 +70,13 @@ resolveCommit = do
 canonCommit :: Text -> Maybe Text
 canonCommit txt = do
   value <- canonRuntimeMetadata txt
-  if T.any isSpace value
-      || T.length value < 7
-      || T.length value > 64
-      || T.any (not . isHexDigit) value
+  let normalized = T.toLower value
+  if T.any isSpace normalized
+      || T.length normalized < 7
+      || T.length normalized > 64
+      || T.any (not . isHexDigit) normalized
     then Nothing
-    else Just value
+    else Just normalized
 
 canonBuildTime :: Text -> Maybe Text
 canonBuildTime txt = do

@@ -716,6 +716,16 @@ main = hspec $ do
                     info <- getVersionInfo
                     commit info `shouldBe` "abc123def456"
 
+        it "canonicalizes uppercase commit aliases before publishing version metadata" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ [ ("GIT_SHA", Just "ABC123DEF456")
+                       , ("GITHUB_SHA", Just "fedcba987654")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+
         it "skips non-SHA commit aliases instead of exposing branch labels as deploy metadata" $
             withEnvOverrides
                 (clearEnv commitEnvKeys
