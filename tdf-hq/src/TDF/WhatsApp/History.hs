@@ -251,7 +251,8 @@ recordOutgoingWhatsAppMessage
   -> SqlPersistT IO (Entity ME.WhatsAppMessage)
 recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
   snapshot <- resolveWhatsAppContactSnapshot owrRecipientPartyId (Just owrRecipientPhone)
-  let recipientPhone = fromMaybe (nonEmptyOr "unknown" owrRecipientPhone) (normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot)
+  let recipientPhoneE164 = normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot
+      recipientPhone = fromMaybe "unknown" recipientPhoneE164
       fallbackExternalId = generatedWhatsAppExternalIdBase recipientPhone now
       providedExternalId = case sendResult of
         Left _ -> Nothing
@@ -294,7 +295,7 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
     , ME.whatsAppMessageSenderName = senderName
     , ME.whatsAppMessagePartyId = partyId
     , ME.whatsAppMessageActorPartyId = owrActorPartyId
-    , ME.whatsAppMessagePhoneE164 = Just recipientPhone
+    , ME.whatsAppMessagePhoneE164 = recipientPhoneE164
     , ME.whatsAppMessageContactEmail = contactEmail
     , ME.whatsAppMessageText = bodyVal
     , ME.whatsAppMessageDirection = "outgoing"

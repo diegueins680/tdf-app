@@ -386,11 +386,14 @@ spec = do
           }
           sendResult
 
-      let externalId = ME.whatsAppMessageExternalId (entityVal stored)
+      let storedMessage = entityVal stored
+          externalId = ME.whatsAppMessageExternalId storedMessage
       externalId `shouldSatisfy` ("unknown-out-" `T.isPrefixOf`)
       externalId `shouldSatisfy` (T.all (not . isSpace))
       externalId `shouldSatisfy` (not . ("call me" `T.isInfixOf`))
-      ME.whatsAppMessageDeliveryStatus (entityVal stored) `shouldBe` "failed"
+      ME.whatsAppMessageSenderId storedMessage `shouldBe` "unknown"
+      ME.whatsAppMessagePhoneE164 storedMessage `shouldBe` Nothing
+      ME.whatsAppMessageDeliveryStatus storedMessage `shouldBe` "failed"
 
     it "allocates distinct fallback external ids for repeated blank-id sends at the same timestamp" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
