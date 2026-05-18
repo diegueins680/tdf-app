@@ -5766,6 +5766,12 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
+      | "#" `T.isInfixOf` urlVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must not include a URL fragment"
+            }
       | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
           Left err400
             { errBody =

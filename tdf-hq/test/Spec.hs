@@ -5665,6 +5665,16 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected non-default WhatsApp CTA port to be rejected, got " <> show value)
 
+        it "rejects fragment-bearing public course URLs before persisting ambiguous links" $
+            case validateCoursePublicUrlField "landingUrl" (Just "https://tdf.example.com/curso#token") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "landingUrl must not include a URL fragment"
+                Right value ->
+                    expectationFailure ("Expected fragment-bearing course URL to be rejected, got " <> show value)
+
         it "drops stale persisted public course URLs before metadata serialization" $ do
             sanitizeStoredCoursePublicUrl "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")
                 `shouldBe` Just "https://tdf.example.com/curso/produccion"
