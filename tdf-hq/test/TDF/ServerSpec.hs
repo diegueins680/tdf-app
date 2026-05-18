@@ -1215,6 +1215,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 ( object
                     [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("/tools/list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("tools//list" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
+                    , "method" .= ("tools/list/" :: T.Text)
+                    ]
+                )
+            assertInvalid
+                ( object
+                    [ "jsonrpc" .= ("2.0" :: T.Text)
                     , "id" .= object ["nested" .= True]
                     , "method" .= ("tools/list" :: T.Text)
                     ]
@@ -1306,6 +1324,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (object ["name" .= ("   " :: T.Text)])
             assertInvalid (object ["name" .= (" tdf_health_check " :: T.Text)])
             assertInvalid (object ["name" .= ("tdf_health_check?verbose=true" :: T.Text)])
+            assertInvalid (object ["name" .= ("/tdf_health_check" :: T.Text)])
+            assertInvalid (object ["name" .= ("tdf//health_check" :: T.Text)])
+            assertInvalid (object ["name" .= ("tdf_health_check/" :: T.Text)])
             assertInvalid
                 ( object
                     [ "name" .= ("tdf_health_check" :: T.Text)

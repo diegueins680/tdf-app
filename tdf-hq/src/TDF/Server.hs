@@ -770,6 +770,8 @@ validateMcpNameField fieldName rawName = do
       ( T.unpack fieldName
           <> " must use only ASCII lowercase letters, numbers, '/', '_' or '-'"
       )
+  when (hasEmptyMcpNameSegment name) $
+    fail (T.unpack fieldName <> " must not contain empty path segments")
   pure name
 
 isMcpNameChar :: Char -> Bool
@@ -777,6 +779,10 @@ isMcpNameChar ch =
   isAsciiLower ch
     || isDigit ch
     || ch `elem` ("/_-" :: String)
+
+hasEmptyMcpNameSegment :: Text -> Bool
+hasEmptyMcpNameSegment name =
+  any T.null (T.splitOn "/" name)
 
 isUnsafeMcpNameChar :: Char -> Bool
 isUnsafeMcpNameChar ch =
