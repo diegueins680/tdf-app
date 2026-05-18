@@ -1115,7 +1115,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses compact reopen actions when a shared cancelled summary already owns the current status', async () => {
+  it('compacts repeated reopen actions when a shared cancelled summary already owns the current status', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
         crStatus: 'cancelled',
@@ -1142,11 +1142,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(currentView?.textContent).toContain('Beatmaking 101 · Cancelado');
       expect(currentView?.textContent).toContain(pendingRecoveryScopeHint);
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')).toBeNull();
-      expect(adaAction.textContent?.trim()).toBe('Reabrir');
-      expect(graceAction.textContent?.trim()).toBe('Reabrir');
+      expect(adaAction.textContent?.trim()).toBe('');
+      expect(graceAction.textContent?.trim()).toBe('');
+      expect(adaAction.dataset['actionIcon']).toBe('pending-recovery');
+      expect(graceAction.dataset['actionIcon']).toBe('pending-recovery');
       expect(adaAction.getAttribute('title')).toBe('Reabrir como pendiente; actual: Cancelado');
       expect(adaAction.getAttribute('aria-haspopup')).toBeNull();
-      expect(countButtonsByText(container, 'Reabrir')).toBe(2);
+      expect(countButtonsByText(container, 'Reabrir')).toBe(0);
       expect(countButtonsByText(container, reopenPendingLabel)).toBe(0);
       expect(container.textContent).not.toContain(dossierScopeHint);
     });
@@ -2436,12 +2438,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
         paidRecoveryScopeHint,
       );
-      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace').textContent?.trim()).toBe(
-        compactPaymentPendingActionLabel,
-      );
-      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper').textContent?.trim()).toBe(
-        compactPaymentPendingActionLabel,
-      );
+      const adaAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace');
+      const graceAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
+      expect(adaAction.textContent?.trim()).toBe('');
+      expect(graceAction.textContent?.trim()).toBe('');
+      expect(adaAction.dataset['actionIcon']).toBe('pending-recovery');
+      expect(graceAction.dataset['actionIcon']).toBe('pending-recovery');
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(0);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
     });
 
@@ -3697,13 +3700,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Mostrar todos los estados')).toBe(1);
       const graceAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Grace Hopper');
       const katherineAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Katherine Johnson');
-      expect(graceAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
-      expect(katherineAction.textContent?.trim()).toBe(compactPaymentPendingActionLabel);
+      expect(graceAction.textContent?.trim()).toBe('');
+      expect(katherineAction.textContent?.trim()).toBe('');
+      expect(graceAction.dataset['actionIcon']).toBe('pending-recovery');
+      expect(katherineAction.dataset['actionIcon']).toBe('pending-recovery');
       expect(graceAction.getAttribute('title')).toBe('Marcar pago pendiente; actual: Pagado');
       expect(graceAction.getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Grace Hopper"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Katherine Johnson"]')).toBeNull();
-      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(2);
+      expect(countButtonsByText(container, compactPaymentPendingActionLabel)).toBe(0);
       expect(countButtonsByText(container, markPaymentPendingLabel)).toBe(0);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Estado: Pagado')).toBe(0);
@@ -10735,7 +10740,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).toContain('Estado visible: Cancelado.');
       expect(container.textContent).not.toContain('No hay coincidencias para "cancelada"');
-      expect(countButtonsByText(container, 'Reabrir')).toBe(2);
+      expect(countButtonsByText(container, 'Reabrir')).toBe(0);
+      expect(container.querySelectorAll('button[data-action-icon="pending-recovery"]')).toHaveLength(2);
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -12967,12 +12973,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
-      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone').textContent?.trim()).toBe(
-        compactPaymentPendingActionLabel,
-      );
-      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Garcia').textContent?.trim()).toBe(
-        compactPaymentPendingActionLabel,
-      );
+      const ninaSimoneAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
+      const ninaGarciaAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Garcia');
+      expect(ninaSimoneAction.textContent?.trim()).toBe('');
+      expect(ninaGarciaAction.textContent?.trim()).toBe('');
+      expect(ninaSimoneAction.dataset['actionIcon']).toBe('pending-recovery');
+      expect(ninaGarciaAction.dataset['actionIcon']).toBe('pending-recovery');
       expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone').getAttribute('aria-haspopup')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Garcia"]')).toBeNull();
