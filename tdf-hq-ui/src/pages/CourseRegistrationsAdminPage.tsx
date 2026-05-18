@@ -224,6 +224,7 @@ const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
 const MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS = 2;
+const MIN_REPEATED_CUSTOM_STATUS_ICON_ACTIONS = 4;
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MIN_FULL_PHONE_MATCH_DIGITS = 7;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
@@ -4521,6 +4522,9 @@ export default function CourseRegistrationsAdminPage() {
   const showRepeatedDirectRecoveryIconActions = allVisibleRowsUseDossierRecoveryAction
     && useCompactStatusActionLabel
     && searchedRegistrations.length >= MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS;
+  const showRepeatedCustomStatusIconActions = allVisibleRowsUseCustomStatusActions
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_REPEATED_CUSTOM_STATUS_ICON_ACTIONS;
   const showBusyDirectRecoveryIconActions = showBusyListSearchOnboarding
     && allVisibleRowsUseDirectPendingRecoveryAction
     && useCompactStatusActionLabel
@@ -4529,7 +4533,8 @@ export default function CourseRegistrationsAdminPage() {
     showBusyListSearchOnboarding
     && useCompactStatusActionLabel
     && !allVisibleRowsUseDirectPendingRecoveryAction
-  ) || showRepeatedPaymentStatusIconActions;
+  ) || showRepeatedPaymentStatusIconActions
+    || showRepeatedCustomStatusIconActions;
   const dossierScopeHint = [
     allVisibleRowsUsePaidRecoveryAction
       ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)

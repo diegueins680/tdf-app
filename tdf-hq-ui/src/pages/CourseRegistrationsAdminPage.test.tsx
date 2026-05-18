@@ -4617,13 +4617,19 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Dorothy Vaughan').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Mary Jackson').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Nina Simone').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Octavia Butler').textContent?.trim()).toBe('Cambiar estado');
+      const compactStatusActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Cambiar estado para "]'),
+      );
+      expect(compactStatusActions).toHaveLength(7);
+      expect(compactStatusActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(compactStatusActions.every((action) => action.dataset['actionIcon'] === 'status-menu')).toBe(true);
+      expect(compactStatusActions[0]?.getAttribute('aria-label')).toBe(
+        'Cambiar estado para Ada Lovelace; estado actual: Estado por revisar',
+      );
+      expect(compactStatusActions[0]?.getAttribute('title')).toBe(
+        'Cambiar estado para Ada Lovelace; actual: Estado por revisar',
+      );
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
       expect(container.textContent).not.toContain('Unknown');
       expect(container.textContent).not.toContain('N A');
