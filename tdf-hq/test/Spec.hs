@@ -10626,6 +10626,24 @@ main = hspec $ do
             validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
                 `shouldBe` Right "challenge-123"
 
+        it "rejects unsafe hub.mode values before webhook verification fallback checks" $ do
+            let assertInvalidMode rawMode = do
+                    case validateHookVerifyRequest
+                        (Just rawMode)
+                        (Just "challenge-123")
+                        (Just "secret")
+                        (Just "secret") of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "hub.mode must not contain whitespace"
+                        Right value ->
+                            expectationFailure
+                                ("Expected unsafe hub.mode to be rejected, got " <> show value)
+            assertInvalidMode " subscribe "
+            assertInvalidMode "sub\nscribe"
+            assertInvalidMode ("sub" <> Data.Text.singleton '\x200B' <> "scribe")
+
         it "rejects unsafe challenge echoes before returning webhook verification text" $ do
             case validateHookVerifyRequest
                 (Just "subscribe")

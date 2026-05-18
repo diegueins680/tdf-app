@@ -394,10 +394,9 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
   case validateConfiguredVerifyToken mExpected of
     Left err -> Left err
     Right expected ->
-      case fmap T.toLower (nonBlank mmode) of
-        Nothing ->
-          Left err400 { errBody = "hub.mode is required" }
-        Just "subscribe" ->
+      case validateHookMode mmode of
+        Left err -> Left err
+        Right () ->
           case nonBlankRaw mchall of
             Nothing ->
               Left err400 { errBody = "hub.challenge is required" }
@@ -416,9 +415,25 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
                             }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
-        Just _ ->
-          Left err400 { errBody = "hub.mode must be subscribe" }
   where
+    validateHookMode :: Maybe Text -> Either ServerError ()
+    validateHookMode mTxt =
+      case mTxt of
+        Nothing ->
+          Left err400 { errBody = "hub.mode is required" }
+        Just rawMode
+          | T.null (T.strip rawMode) ->
+              Left err400 { errBody = "hub.mode is required" }
+          | T.any isUnsafeHookModeChar rawMode ->
+              Left err400
+                { errBody =
+                    "hub.mode must not contain whitespace, control characters, or hidden formatting characters"
+                }
+          | T.toLower rawMode == "subscribe" ->
+              Right ()
+          | otherwise ->
+              Left err400 { errBody = "hub.mode must be subscribe" }
+
     validateConfiguredVerifyToken :: Maybe Text -> Either ServerError Text
     validateConfiguredVerifyToken mTxt =
       case nonBlank mTxt of
@@ -457,4 +472,7 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
           Right challenge
 
     isUnsafeVerifyTokenChar ch =
+      isControl ch || isSpace ch || isHiddenFormattingChar ch
+
+    isUnsafeHookModeChar ch =
       isControl ch || isSpace ch || isHiddenFormattingChar ch
