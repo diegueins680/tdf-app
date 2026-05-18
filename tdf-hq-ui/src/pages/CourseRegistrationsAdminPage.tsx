@@ -168,15 +168,16 @@ const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
 const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
-const unavailableCohortFilterLabel = 'Filtro por formulario no disponible';
-const unavailableCohortFilterRetryLabel = 'Reintentar filtro';
+const unavailableCohortFilterLabel = 'Formularios públicos no disponibles';
+const unavailableCohortFilterRetryLabel = 'Reintentar formularios públicos';
+const unavailableCohortFilterRetryTitle = 'Reintenta solo los formularios públicos; la lista visible no se recarga.';
 const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
-const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
-const busyCohortFilterUnavailableMessage = 'La lista sigue cargada; el filtro por formulario no está disponible.';
-const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
-const emptyCohortFilterMessage = 'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
+const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el selector por formulario volverá cuando se recupere esa información.';
+const busyCohortFilterUnavailableMessage = 'La lista sigue cargada; los formularios públicos no están disponibles.';
+const cohortFilterLoadingMessage = 'La lista ya está disponible; el selector por formulario aparecerá cuando terminen de cargar los formularios.';
+const emptyCohortFilterMessage = 'Sin selector por formulario hasta configurar cursos. La lista sigue disponible.';
 const genericSingleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
@@ -4925,6 +4926,9 @@ export default function CourseRegistrationsAdminPage() {
     : regsQuery.isError
       ? 'Reintentar inscripciones'
       : 'Refrescar lista';
+  const headerRefreshTitle = cohortsQuery.isError && !regsQuery.isError
+    ? unavailableCohortFilterRetryTitle
+    : undefined;
   const registrationErrorRetryLabel = cohortsQuery.isError
     ? 'Reintentar datos'
     : 'Reintentar inscripciones';
@@ -6350,6 +6354,7 @@ export default function CourseRegistrationsAdminPage() {
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
               disabled={regsQuery.isFetching || cohortsQuery.isFetching}
+              title={headerRefreshTitle}
             >
               {headerRefreshLabel}
             </Button>
@@ -6553,6 +6558,7 @@ export default function CourseRegistrationsAdminPage() {
                             sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                             onClick={handleRefresh}
                             disabled={cohortsQuery.isFetching}
+                            title={unavailableCohortFilterRetryTitle}
                           >
                             {unavailableCohortFilterRetryLabel}
                           </Button>

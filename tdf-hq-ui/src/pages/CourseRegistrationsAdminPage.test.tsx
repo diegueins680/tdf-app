@@ -286,16 +286,17 @@ const initialCohortResolutionMessage =
 const initialCohortErrorMessage =
   'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
-const unavailableCohortFilterLabel = 'Filtro por formulario no disponible';
-const unavailableCohortFilterRetryLabel = 'Reintentar filtro';
+const unavailableCohortFilterLabel = 'Formularios públicos no disponibles';
+const unavailableCohortFilterRetryLabel = 'Reintentar formularios públicos';
+const unavailableCohortFilterRetryTitle = 'Reintenta solo los formularios públicos; la lista visible no se recarga.';
 const cohortFilterUnavailableMessage =
-  'No se pudieron cargar los formularios públicos. La lista sigue disponible; el filtro por formulario volverá cuando se recupere esa información.';
+  'No se pudieron cargar los formularios públicos. La lista sigue disponible; el selector por formulario volverá cuando se recupere esa información.';
 const busyCohortFilterUnavailableMessage =
-  'La lista sigue cargada; el filtro por formulario no está disponible.';
+  'La lista sigue cargada; los formularios públicos no están disponibles.';
 const cohortFilterLoadingMessage =
-  'La lista ya está disponible; el filtro por formulario aparecerá cuando terminen de cargar los formularios.';
+  'La lista ya está disponible; el selector por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage =
-  'Sin filtro por formulario hasta configurar cursos. La lista sigue disponible.';
+  'Sin selector por formulario hasta configurar cursos. La lista sigue disponible.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -15319,6 +15320,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(cohortFallback?.textContent).toContain(cohortFilterUnavailableMessage);
       expect(cohortFallback?.textContent).toContain(unavailableCohortFilterLabel);
+      expect(cohortFallback?.textContent).not.toContain('Filtro por formulario no disponible');
       expect(cohortFallback?.textContent).not.toContain('Formularios no disponibles');
       expect(cohortFallback?.textContent).not.toContain('Cohortes no disponibles');
       expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
@@ -15327,9 +15329,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(cohortFallback?.textContent).not.toContain('cohortes');
-      expect(getButtonByText(cohortFallback!, unavailableCohortFilterRetryLabel)).toBeTruthy();
+      const retryButton = getButtonByText(cohortFallback!, unavailableCohortFilterRetryLabel);
+      expect(retryButton).toBeTruthy();
+      expect(retryButton.getAttribute('title')).toBe(unavailableCohortFilterRetryTitle);
       expect(getButtonByText(container, unavailableCohortFilterRetryLabel)).toBeTruthy();
       expect(countButtonsByText(container, unavailableCohortFilterRetryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar filtro')).toBe(0);
       expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
@@ -15482,8 +15487,11 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
 
       expect(headerActions).not.toBeNull();
-      expect(getButtonByText(headerActions!, unavailableCohortFilterRetryLabel)).toBeTruthy();
+      const headerRetryButton = getButtonByText(headerActions!, unavailableCohortFilterRetryLabel);
+      expect(headerRetryButton).toBeTruthy();
+      expect(headerRetryButton.getAttribute('title')).toBe(unavailableCohortFilterRetryTitle);
       expect(countButtonsByText(container, unavailableCohortFilterRetryLabel)).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar filtro')).toBe(0);
       expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-unavailable"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
