@@ -400,9 +400,33 @@ const normalizeBackendStatusToken = (status: string) =>
 
 const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
   const normalized = normalizeBackendStatusToken(value);
-  if (normalized === 'pending') return 'pending_payment';
-  if (normalized === 'payment_pending') return 'pending_payment';
-  if (normalized === 'canceled') return 'cancelled';
+  if (
+    normalized === 'pending'
+    || normalized === 'payment_pending'
+    || normalized === 'pago_pendiente'
+    || normalized === 'pendiente_de_pago'
+    || normalized === 'pendiente_pago'
+  ) {
+    return 'pending_payment';
+  }
+  if (
+    normalized === 'payment_paid'
+    || normalized === 'payment_received'
+    || normalized === 'payment_confirmed'
+    || normalized === 'payment_succeeded'
+    || normalized === 'pago_recibido'
+    || normalized === 'pago_confirmado'
+    || normalized === 'pagado'
+  ) {
+    return 'paid';
+  }
+  if (
+    normalized === 'canceled'
+    || normalized === 'cancelado'
+    || normalized === 'cancelada'
+  ) {
+    return 'cancelled';
+  }
   return isStatusFilter(normalized) ? normalized : null;
 };
 

@@ -4250,6 +4250,56 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('normalizes payment-received aliases into paid controls before showing fallback status guidance', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'payment_received',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'payment-confirmed',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'pago confirmado',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentView = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+      const paidRecoveryActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Marcar pago pendiente para "]'),
+      );
+
+      expect(currentView?.textContent).toContain('Beatmaking 101 · Pagado');
+      expect(currentView?.textContent).toContain(paidRecoveryScopeHint);
+      expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
+      expect(container.textContent).not.toContain('Payment Received');
+      expect(container.textContent).not.toContain('Payment Confirmed');
+      expect(container.textContent).not.toContain('Pago Confirmado');
+      expect(paidRecoveryActions).toHaveLength(3);
+      expect(paidRecoveryActions.every((action) => action.dataset['actionIcon'] === 'pending-recovery')).toBe(true);
+      expect(getButtonByAriaLabel(container, 'Marcar pago pendiente para Ada Lovelace').getAttribute('title')).toBe(
+        'Marcar pago pendiente; actual: Pagado',
+      );
+    });
+
+    await cleanup();
+  });
+
   it('collapses one shared custom status into the current-view summary instead of repeating passive filter chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
