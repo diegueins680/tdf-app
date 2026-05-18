@@ -12083,6 +12083,8 @@ spec = describe "TDF.Server helpers" $ do
                     assertInvalidCatalog
                         (validResponses <> [firstResponse { stubMethod = "POST" }])
                     assertInvalidCatalog (remainingResponses <> [firstResponse])
+                    assertInvalidCatalog (mkResponse "admin" "console" : remainingResponses)
+                    assertInvalidCatalog (mkResponse "catalog" "index" : remainingResponses)
                 [] ->
                     expectationFailure "Expected fallback discovery response fixture to be non-empty"
 

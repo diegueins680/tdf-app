@@ -263,11 +263,10 @@ cd tdf-hq && stack build --copy-bins
 
 | Target | Root Directory | Install Command | Build Command | Output | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://<your-backend-domain>`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
 | **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
-| **Koyeb (API)** | `tdf-hq` Docker | `stack build` via Dockerfile | – | – | Configure `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`) in the service settings. |
 
-> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with the Koyeb app URL so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with your API domain so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
 
 ## 🔐 Environment Variables
 

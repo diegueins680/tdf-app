@@ -536,6 +536,7 @@ validateFutureStubCatalogResponseWithConsole consoleView = do
 validateFutureStubCatalogResponses :: [StubResponse] -> Either ServerError [StubResponse]
 validateFutureStubCatalogResponses responses
   | length responses /= length allowedFutureStubMetadata = invalidFutureStubCatalog
+  | any isReservedFutureStubCatalogResponseRoute responses = invalidFutureStubCatalog
   | otherwise = do
       validatedResponses <- traverse validateFutureStubResponse responses
       let metadata =
@@ -550,6 +551,11 @@ validateFutureStubCatalogResponses responses
            || length paths /= length (nub paths)
         then invalidFutureStubCatalog
         else Right validatedResponses
+
+isReservedFutureStubCatalogResponseRoute :: StubResponse -> Bool
+isReservedFutureStubCatalogResponseRoute response =
+  (stubArea response, stubEndpoint response) `elem` reservedFutureStubRoutes
+    || stubArea response `elem` reservedFutureStubTopLevelAreas
 
 futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
 futureStubResponseFor rawArea rawEndpoint = do
