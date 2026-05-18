@@ -13079,8 +13079,14 @@ describe('CourseRegistrationsAdminPage', () => {
         'Estado visible: Pagado. Mostrando una sola cohorte: Mixing Bootcamp. Fuente visible: referral.',
       );
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual.',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Filtrar inscripciones por estado Cancelado y limpiar la búsqueda actual.',
+      )).toBeTruthy();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       const ninaSimoneAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
       const ninaGarciaAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Garcia');
@@ -13154,8 +13160,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(container.textContent).toContain('Estado visible: Pagado.');
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual.',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Filtrar inscripciones por estado Cancelado y limpiar la búsqueda actual.',
+      )).toBeTruthy();
     });
 
     await cleanup();
@@ -13787,17 +13799,16 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(container.textContent).toContain('Estudiante 1');
       expect(container.textContent).not.toContain('Nina Simone');
-      const paidStatusFilter = getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado');
-      expect(paidStatusFilter.getAttribute('title')).toBe(
-        'Filtrar inscripciones por estado Pagado y limpiar la búsqueda actual.',
-      );
+      const paidStatusSearchFilterLabel = 'Filtrar inscripciones por estado Pagado y limpiar la búsqueda actual.';
+      const paidStatusFilter = getButtonByAriaLabel(container, paidStatusSearchFilterLabel);
+      expect(paidStatusFilter.getAttribute('title')).toBe(paidStatusSearchFilterLabel);
       expect(container.textContent).not.toContain('limpiar la búsqueda actual');
     });
 
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado'));
+      clickButton(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado y limpiar la búsqueda actual.'));
       await flushPromises();
       await flushPromises();
     });

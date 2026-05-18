@@ -818,6 +818,14 @@ const statusFilterChipTitle = (
     ? `${statusFilterChipAriaLabel(status, isActive)} y limpiar la búsqueda actual.`
     : undefined
 );
+const statusFilterChipAccessibleLabel = (
+  status: StatusFilter,
+  isActive: boolean,
+  clearsLocalSearch: boolean,
+) => (
+  statusFilterChipTitle(status, isActive, clearsLocalSearch)
+  ?? statusFilterChipAriaLabel(status, isActive)
+);
 
 const statusChip = (status: string) => {
   return (
@@ -6700,7 +6708,7 @@ export default function CourseRegistrationsAdminPage() {
                                 color={registrationStatusChipColor(value)}
                                 label={statusFilterChipLabel(value, statusCounts, showStatusFilterCounts)}
                                 variant={status === value ? 'filled' : 'outlined'}
-                                aria-label={statusFilterChipAriaLabel(value, status === value)}
+                                aria-label={statusFilterChipAccessibleLabel(value, status === value, hasLocalSearch)}
                                 aria-pressed={status === value}
                                 title={statusFilterChipTitle(value, status === value, hasLocalSearch)}
                                 onClick={() => {
