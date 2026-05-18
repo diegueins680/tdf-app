@@ -1326,6 +1326,12 @@ const firstRunVariantDescriptorPrefixPattern =
 const firstRunVariantDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))\s*$/i;
 
+const firstRunTemplateDescriptorPrefixPattern =
+  /^(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTemplateDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))\s*$/i;
+
 const firstRunCopyDescriptorPrefixPattern =
   /^(?:(?:copy|duplicate)(?:\s*[-#]?\s*\d+)?\s+of|(?:clone|cloned)(?:\s*[-#]?\s*\d+)?\s+(?:of|from)|(?:copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?\s+de)\s*(?:[-:/|]\s*)?/i;
 
@@ -1959,6 +1965,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunOrientationDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
     .replace(firstRunVariantDescriptorPrefixPattern, '')
+    .replace(firstRunTemplateDescriptorPrefixPattern, '')
     .replace(firstRunCopyDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
@@ -2069,6 +2076,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunOrientationDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
     .replace(firstRunVariantDescriptorSuffixPattern, '')
+    .replace(firstRunTemplateDescriptorSuffixPattern, '')
     .replace(firstRunCopyDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')

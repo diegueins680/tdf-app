@@ -20932,6 +20932,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips template-form wrappers from first-run cohort labels', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101-template', ccTitle: 'Plantilla - Beatmaking 101' },
+      { ccSlug: 'beatmaking-101-copy', ccTitle: 'Beatmaking 101 - Template' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Template form - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 3 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(emptyState?.textContent).not.toMatch(/template|plantilla/i);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips copied-form wrappers from first-run cohort labels', async () => {
     const titles = [
       'Copy of Beatmaking 101',
