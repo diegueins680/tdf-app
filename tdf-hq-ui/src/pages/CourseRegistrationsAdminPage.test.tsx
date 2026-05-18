@@ -15050,6 +15050,52 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy-list search focused when cohort filters are unavailable', async () => {
+    listCohortsMock.mockRejectedValueOnce(new Error('Cohort service unavailable'));
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const headerActions = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-header-actions"]',
+      );
+      const searchInput = getInputByLabel(container, localSearchLabel);
+
+      expect(headerActions).not.toBeNull();
+      expect(getButtonByText(headerActions!, initialCohortRetryLabel)).toBeTruthy();
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(1);
+      expect(container.querySelector('[data-testid="course-registration-cohort-filter-unavailable"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Formularios no disponibles; el filtro por formulario volverá cuando se recuperen. Busca dentro de las 9 inscripciones cargadas.',
+      );
+      expect(container.textContent).not.toContain(cohortFilterUnavailableMessage);
+      expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    listCohortsMock.mockClear();
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      clickButton(getButtonByText(container, initialCohortRetryLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listCohortsMock).toHaveBeenCalledTimes(1);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+      expect(countButtonsByText(container, initialCohortRetryLabel)).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('folds empty cohort setup guidance into one inline note when registrations are loaded', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([

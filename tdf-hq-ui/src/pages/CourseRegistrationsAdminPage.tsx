@@ -4251,6 +4251,11 @@ export default function CourseRegistrationsAdminPage() {
     && !hasCustomFilters
     && !hasVisibleCustomStatuses
     && actionableStatusFilters.length <= 1;
+  const hideBusyListPassiveCohortUnavailableSummary = showBusyListSearchOnboarding
+    && showCohortFilterUnavailableSummary
+    && !hasCustomFilters
+    && !hasVisibleCustomStatuses
+    && actionableStatusFilters.length <= 1;
   const showEmptyCohortFilterSummary = showCohortSelect
     && !cohortsQuery.isLoading
     && !cohortsQuery.isError
@@ -4595,6 +4600,22 @@ export default function CourseRegistrationsAdminPage() {
   const hiddenBusyListBaseIncludesSharedSource = Boolean(
     hiddenBusyListBaseContextSummary.includes('Fuente visible:'),
   );
+  const hiddenBusyListCohortUnavailableScopeContext = hideBusyListPassiveCohortUnavailableSummary
+    ? [
+      singleVisibleCohortLabel || singleAvailableCohortLabel,
+      hiddenBusyListBaseContextSummary
+        ? ''
+        : showSingleStatusSummaryBlock && singleVisibleStatus
+          ? statusFilterLabels[singleVisibleStatus]
+          : '',
+    ].filter(Boolean).join(' · ')
+    : '';
+  const hiddenBusyListCohortUnavailableContext = hideBusyListPassiveCohortUnavailableSummary
+    ? [
+      hiddenBusyListCohortUnavailableScopeContext,
+      'Formularios no disponibles; el filtro por formulario volverá cuando se recuperen',
+    ].filter(Boolean).join('. ')
+    : '';
   const busyListSharedCreatedAtContext = showBusyListSearchOnboarding
     && !hasCustomFilters
     && Boolean(sharedVisibleCreatedAtLabel)
@@ -4604,6 +4625,7 @@ export default function CourseRegistrationsAdminPage() {
   const hiddenBusyListContextSummary = [
     hiddenBusyListBaseContextSummary,
     hiddenBusyListCohortLoadingContext,
+    hiddenBusyListCohortUnavailableContext,
     busyListSharedCreatedAtContext,
     hiddenBusyListMissingContactContext,
   ].filter(Boolean).join('. ');
@@ -4721,7 +4743,9 @@ export default function CourseRegistrationsAdminPage() {
     && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
   const showRegistrationErrorInlineRetry = regsQuery.isError;
-  const showInlineCohortRetryAction = showCohortFilterUnavailableSummary && !regsQuery.isError;
+  const showInlineCohortRetryAction = showCohortFilterUnavailableSummary
+    && !hideBusyListPassiveCohortUnavailableSummary
+    && !regsQuery.isError;
   const showHeaderRefreshAction = !showInitialCohortErrorState
     && !showRegistrationErrorInlineRetry
     && !showInlineCohortRetryAction
@@ -4778,6 +4802,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showFilteredEmptyState
     && !showFocusedEmptyLocalSearchState
     && !hideBusyListPassiveCohortLoadingSummary
+    && !hideBusyListPassiveCohortUnavailableSummary
     && !hidePassiveFiltersDuringCappedEmptyLocalSearch
     && !showSingleResultWithOnlyPassiveFilterContext
     && !hideSingleResultLocalSearchPassiveFilterPanel
