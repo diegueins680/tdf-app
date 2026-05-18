@@ -1886,6 +1886,12 @@ const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
   return trimmedTitle;
 };
 
+const firstRunResponseSheetSuffixPattern =
+  /\s*(?:\(|\[)\s*(?:(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?\s*(?:\)|\])\s*$/i;
+
+const stripFirstRunResponseSheetSuffix = (title: string) =>
+  title.replace(firstRunResponseSheetSuffixPattern, '').trim();
+
 const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
@@ -2130,7 +2136,7 @@ const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
   );
   const displayTitle = unwrapFirstRunDescriptorWrappedTitle(
-    dedupeRepeatedCohortTitleSegments(strippedTitle),
+    stripFirstRunResponseSheetSuffix(dedupeRepeatedCohortTitleSegments(strippedTitle)),
   ) || fallbackLabel;
   if (!slug) return displayTitle;
 
@@ -2154,7 +2160,9 @@ const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
   );
-  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(dedupeRepeatedCohortTitleSegments(strippedLabel));
+  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(
+    stripFirstRunResponseSheetSuffix(dedupeRepeatedCohortTitleSegments(strippedLabel)),
+  );
   if (!displayLabel) return fallbackLabel;
   if (normalizeCohortLabelKey(displayLabel) === normalizeCohortLabelKey(slug)) {
     if (hasCohortTitleFormattingWorthPreserving(displayLabel)) return displayLabel;
