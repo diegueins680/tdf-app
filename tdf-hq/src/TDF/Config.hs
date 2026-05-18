@@ -594,6 +594,7 @@ loadConfig = do
   fbAppId <- validateConfiguredGraphNodeId fbAppIdEnv
   fbAppSecret <- validateConfiguredFacebookAppSecret fbAppSecretEnv
   fbMsgPageId <- validateConfiguredGraphNodeId fbMsgPageIdEnv
+  fbMsgToken <- validateConfiguredNamedGraphAccessToken fbMsgTokenEnv
   igGraphBase <-
     validateConfiguredApiBaseUrl
       "INSTAGRAM_GRAPH_BASE"
@@ -664,7 +665,7 @@ loadConfig = do
     , facebookAppId = fbAppId
     , facebookAppSecret = fbAppSecret
     , facebookGraphBase = fbGraphBase
-    , facebookMessagingToken = fmap (T.pack . snd) fbMsgTokenEnv >>= nonEmpty
+    , facebookMessagingToken = fbMsgToken
     , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
     , instagramAppToken = igAppToken
@@ -1134,6 +1135,11 @@ validateConfiguredGraphAccessToken envName (Just rawToken) =
   case normalizeConfiguredGraphAccessToken envName rawToken of
     Left msg -> fail msg
     Right token -> pure token
+
+validateConfiguredNamedGraphAccessToken :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredNamedGraphAccessToken Nothing = pure Nothing
+validateConfiguredNamedGraphAccessToken (Just (envName, rawToken)) =
+  validateConfiguredGraphAccessToken envName (Just rawToken)
 
 validateConfiguredOpenAiModel :: Maybe String -> IO Text
 validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
