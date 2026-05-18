@@ -3,6 +3,7 @@
 module TDF.ServerAuthSpec (spec) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.Aeson as A
 import Data.Char (chr)
 import Data.Int (Int64)
 import qualified Data.Text as T
@@ -452,6 +453,40 @@ googleIdTokenInputSpec = describe "validateGoogleIdTokenInput" $ do
 
 googleTokenInfoSpec :: Spec
 googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
+  it "requires explicit boolean-like Google email_verified values before account fallback creation" $ do
+    let decodeTokenInfo raw =
+          A.eitherDecode (BL8.pack raw) :: Either String GoogleIdTokenInfo
+        canonicalJson emailVerified =
+          "{\"aud\":\"client-id\",\"email\":\"ada@example.com\","
+            <> "\"sub\":\"google-sub-1\",\"iss\":\"https://accounts.google.com\","
+            <> "\"email_verified\":" <> emailVerified <> "}"
+        assertRejected raw expectedMessage =
+          case decodeTokenInfo raw of
+            Left err ->
+              err `shouldContain` expectedMessage
+            Right info ->
+              expectationFailure
+                ("Expected Google tokeninfo payload to be rejected, got " <> show info)
+
+    case decodeTokenInfo (canonicalJson "true") of
+      Right info ->
+        gitEmailVerified info `shouldBe` True
+      Left err ->
+        expectationFailure ("Expected boolean email_verified to decode, got " <> err)
+
+    case decodeTokenInfo (canonicalJson "\"false\"") of
+      Right info ->
+        gitEmailVerified info `shouldBe` False
+      Left err ->
+        expectationFailure ("Expected string email_verified to decode, got " <> err)
+
+    assertRejected
+      "{\"aud\":\"client-id\",\"email\":\"ada@example.com\",\"sub\":\"google-sub-1\",\"iss\":\"https://accounts.google.com\"}"
+      "key \"email_verified\" not found"
+    assertRejected
+      (canonicalJson "\"yes\"")
+      "email_verified must be a boolean"
+
   it "normalizes Google emails only after rejecting invalid token email shapes" $ do
     case validateGoogleIdTokenInfo (Just "client-id") googleTokenInfo of
       Right profile -> do

@@ -132,13 +132,17 @@ instance FromJSON GoogleIdTokenInfo where
     pure GoogleIdTokenInfo{..}
     where
       parseEmailVerified obj = do
-        mVal <- obj .:? "email_verified"
-        pure $ case mVal of
-          Just (Bool b) -> b
-          Just (String t) ->
-            let lowered = T.toLower (T.strip t)
-            in lowered == "true" || lowered == "1"
-          _ -> False
+        val <- obj .: "email_verified"
+        case val of
+          Bool b -> pure b
+          String t ->
+            case T.toLower (T.strip t) of
+              "true" -> pure True
+              "1" -> pure True
+              "false" -> pure False
+              "0" -> pure False
+              _ -> fail "email_verified must be a boolean or one of true, false, 1, 0"
+          _ -> fail "email_verified must be a boolean or one of true, false, 1, 0"
 
 data GoogleProfile = GoogleProfile
   { gpEmail :: Text
