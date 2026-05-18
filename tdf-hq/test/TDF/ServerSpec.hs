@@ -12003,6 +12003,23 @@ spec = describe "TDF.Server helpers" $ do
                             <> show response
                         )
 
+            case futureStubResponseForWithConsole
+                (futureAdminConsoleView { Future.viewStatus = "planned" })
+                "crm"
+                "parties/export" of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invalid future admin console metadata"
+                    BL8.unpack (errBody serverErr)
+                        `shouldNotContain` "Invalid future stub metadata"
+                Right response ->
+                    expectationFailure
+                        ( "Expected admin console drift to be reported before "
+                            <> "route metadata drift, got: "
+                            <> show response
+                        )
+
     describe "validateFutureStubPublishedId" $
         it "keeps fallback discovery ids tied to canonical route segments" $ do
             validateFutureStubPublishedId

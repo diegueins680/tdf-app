@@ -505,9 +505,8 @@ futureStubResponseForWithConsole
   -> Text
   -> Either ServerError StubResponse
 futureStubResponseForWithConsole consoleView rawArea rawEndpoint = do
-  response <- futureStubResponseFor rawArea rawEndpoint
   _ <- validateFutureAdminConsoleViewWithCatalog allowedFutureStubMetadata consoleView
-  Right response
+  futureStubResponseFor rawArea rawEndpoint
 
 futureStubPath :: Text -> Text -> Text
 futureStubPath area endpoint =
