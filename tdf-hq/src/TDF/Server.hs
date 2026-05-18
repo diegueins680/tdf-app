@@ -1637,32 +1637,52 @@ validateWhatsAppReplyExternalId = ServerExtra.validateSocialReplyExternalId
 
 parseBoolParam :: Maybe Text -> Either ServerError Bool
 parseBoolParam Nothing = Right False
-parseBoolParam (Just raw) =
-  case T.toCaseFold (T.strip raw) of
-    "true" -> Right True
-    "1" -> Right True
-    "yes" -> Right True
-    "false" -> Right False
-    "0" -> Right False
-    "no" -> Right False
-    "" -> invalidRepliedOnly
-    _ -> invalidRepliedOnly
+parseBoolParam (Just raw)
+  | T.any isUnsafeQueryFilterChar raw =
+      invalidUnsafeQueryFilter "repliedOnly"
+  | otherwise =
+      case T.toCaseFold (T.strip raw) of
+        "true" -> Right True
+        "1" -> Right True
+        "yes" -> Right True
+        "false" -> Right False
+        "0" -> Right False
+        "no" -> Right False
+        "" -> invalidRepliedOnly
+        _ -> invalidRepliedOnly
   where
     invalidRepliedOnly =
       Left err400 { errBody = "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no" }
 
 parseDirectionParam :: Maybe Text -> Either ServerError (Maybe Text)
 parseDirectionParam Nothing = Right Nothing
-parseDirectionParam (Just raw) =
-  case T.toCaseFold (T.strip raw) of
-    "" -> invalidDirection
-    "all" -> Right Nothing
-    "incoming" -> Right (Just "incoming")
-    "outgoing" -> Right (Just "outgoing")
-    _ -> invalidDirection
+parseDirectionParam (Just raw)
+  | T.any isUnsafeQueryFilterChar raw =
+      invalidUnsafeQueryFilter "direction"
+  | otherwise =
+      case T.toCaseFold (T.strip raw) of
+        "" -> invalidDirection
+        "all" -> Right Nothing
+        "incoming" -> Right (Just "incoming")
+        "outgoing" -> Right (Just "outgoing")
+        _ -> invalidDirection
   where
     invalidDirection =
       Left err400 { errBody = "direction must be omitted or one of: all, incoming, outgoing" }
+
+isUnsafeQueryFilterChar :: Char -> Bool
+isUnsafeQueryFilterChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+invalidUnsafeQueryFilter :: Text -> Either ServerError a
+invalidUnsafeQueryFilter fieldName =
+  Left err400
+    { errBody =
+        BL.fromStrict $
+          TE.encodeUtf8 $
+            fieldName <> " must not contain control or formatting characters"
+    }
 
 validateWhatsAppReplyTarget
   :: Text

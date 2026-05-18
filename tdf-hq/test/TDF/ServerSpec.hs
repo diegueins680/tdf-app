@@ -3444,6 +3444,20 @@ spec = describe "TDF.Server helpers" $ do
                 "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no"
                 (parseBoolParam (Just "maybe"))
 
+        it "rejects control or formatting characters before normalizing inbox filters" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 400
+                        BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected unsafe WhatsApp inbox filter to be rejected, got: " <> show value)
+            assertInvalid
+                "direction must not contain control or formatting characters"
+                (parseDirectionParam (Just ("incoming" <> T.singleton '\n')))
+            assertInvalid
+                "repliedOnly must not contain control or formatting characters"
+                (parseBoolParam (Just ("true" <> T.singleton '\x202E')))
+
     describe "validateMetaBackfillOptions" $ do
         it "keeps defaults only when omitted and normalizes supported explicit values" $ do
             validateMetaBackfillOptions (object [])
