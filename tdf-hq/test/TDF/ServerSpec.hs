@@ -435,6 +435,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleView
     , validateFutureAdminConsoleViewWithCatalog
     , validateReservedFutureStubRoutes
+    , validateReservedFutureStubTopLevelAreas
     , validateFutureStubArea
     , validateFutureStubAreaRegistry
     , validateFutureStubCatalog
@@ -11806,6 +11807,8 @@ spec = describe "TDF.Server helpers" $ do
         it "keeps non-stub fallback discovery routes reserved out of the generic catalog" $ do
             validateReservedFutureStubRoutes reservedFutureStubRoutes
                 `shouldBe` Right [("admin", "console"), ("admin", "seed")]
+            validateReservedFutureStubTopLevelAreas ["catalog"]
+                `shouldBe` Right ["catalog"]
             validateFutureAdminConsoleRouteIn reservedFutureStubRoutes
                 `shouldBe` Right ("admin", "console")
             validateFutureStubCatalogRouteBoundaries
@@ -11831,6 +11834,24 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [(" admin", "console")]
             assertInvalid [("admin", "console/preview/details")]
             assertInvalid [("access", "login-options")]
+
+            let assertInvalidTopLevelAreas areas =
+                    case validateReservedFutureStubTopLevelAreas areas of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid reserved fallback top-level area set, got: "
+                                    <> show value
+                                )
+
+            assertInvalidTopLevelAreas []
+            assertInvalidTopLevelAreas ["catalog", "catalog"]
+            assertInvalidTopLevelAreas [" catalog"]
+            assertInvalidTopLevelAreas ["admin"]
+            assertInvalidTopLevelAreas ["catalog", "future"]
 
             let assertInvalidAdminConsoleRoute routes =
                     case validateFutureAdminConsoleRouteIn routes of

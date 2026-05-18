@@ -332,10 +332,12 @@ validateFutureStubCatalogTopLevelBoundaries
   :: [(Text, Text)]
   -> Either ServerError [(Text, Text)]
 validateFutureStubCatalogTopLevelBoundaries catalog = do
+  reservedTopLevelAreas <-
+    validateReservedFutureStubTopLevelAreas reservedFutureStubTopLevelAreas
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubTopLevelBoundaryRoute catalog
-  if any ((`elem` reservedFutureStubTopLevelAreas) . fst) validatedCatalog
+  if any ((`elem` reservedTopLevelAreas) . fst) validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -356,9 +358,22 @@ requiredReservedFutureStubRoutes =
 
 reservedFutureStubTopLevelAreas :: [Text]
 reservedFutureStubTopLevelAreas =
+  requiredReservedFutureStubTopLevelAreas
+
+requiredReservedFutureStubTopLevelAreas :: [Text]
+requiredReservedFutureStubTopLevelAreas =
   -- /stubs/catalog is the discovery index, not a generic stub area.
   [ "catalog"
   ]
+
+validateReservedFutureStubTopLevelAreas :: [Text] -> Either ServerError [Text]
+validateReservedFutureStubTopLevelAreas areas
+  | null areas = invalidFutureStubCatalog
+  | length areas /= length (nub areas) = invalidFutureStubCatalog
+  | not (all validFutureStubSlug areas) = invalidFutureStubCatalog
+  | any (`elem` mountedFutureStubAreas) areas = invalidFutureStubCatalog
+  | areas /= requiredReservedFutureStubTopLevelAreas = invalidFutureStubCatalog
+  | otherwise = Right areas
 
 validateFutureStubResponse :: StubResponse -> Either ServerError StubResponse
 validateFutureStubResponse response =
@@ -855,13 +870,18 @@ deriveFutureStubAreas =
       | otherwise = area : areas
 
 validateFutureStubAreaRegistry :: [Text] -> Either ServerError [Text]
-validateFutureStubAreaRegistry areas
-  | null areas = invalidFutureStubCatalog
-  | length areas /= length (nub areas) = invalidFutureStubCatalog
-  | any (`elem` reservedFutureStubTopLevelAreas) areas = invalidFutureStubCatalog
-  | not (all validFutureStubSlug areas) = invalidFutureStubCatalog
-  | areas /= allowedFutureStubAreas = invalidFutureStubCatalog
-  | otherwise = Right areas
+validateFutureStubAreaRegistry areas = do
+  reservedTopLevelAreas <-
+    validateReservedFutureStubTopLevelAreas reservedFutureStubTopLevelAreas
+  validateAreas reservedTopLevelAreas
+  where
+    validateAreas reservedTopLevelAreas
+      | null areas = invalidFutureStubCatalog
+      | length areas /= length (nub areas) = invalidFutureStubCatalog
+      | any (`elem` reservedTopLevelAreas) areas = invalidFutureStubCatalog
+      | not (all validFutureStubSlug areas) = invalidFutureStubCatalog
+      | areas /= allowedFutureStubAreas = invalidFutureStubCatalog
+      | otherwise = Right areas
 
 validateFutureStubArea :: Text -> Either ServerError Text
 validateFutureStubArea rawArea = do
