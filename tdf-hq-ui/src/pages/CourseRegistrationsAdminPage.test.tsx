@@ -20644,18 +20644,22 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips copied-form wrappers from first-run cohort labels', async () => {
     const titles = [
       'Copy of Beatmaking 101',
+      'Copy 2 of Beatmaking 101',
       'Duplicate of Beatmaking 101',
       'Clone of Beatmaking 101',
       'Cloned from Beatmaking 101',
       'Copia de Beatmaking 101',
+      'Copia 2 de Beatmaking 101',
       'Duplicado de Beatmaking 101',
       'Duplicada de Beatmaking 101',
       'Clon de Beatmaking 101',
       'Clonado de Beatmaking 101',
       'Clonada de Beatmaking 101',
       'Beatmaking 101 - copy',
+      'Beatmaking 101 - copy 2',
       'Beatmaking 101 - clone',
       'Beatmaking 101 (copia)',
+      'Beatmaking 101 (copia 2)',
       'Beatmaking 101 (duplicada)',
       'Beatmaking 101 [clonada]',
     ];
