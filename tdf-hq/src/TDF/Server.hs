@@ -11151,6 +11151,7 @@ sensitiveApiErrorFields =
   , "client_secret"
   , "id_token"
   , "refresh_token"
+  , "x-api-key"
   ]
 
 parseSensitiveApiErrorField :: Text -> Text -> Text -> Maybe (Text, Text)

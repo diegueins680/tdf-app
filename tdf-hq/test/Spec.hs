@@ -1651,7 +1651,8 @@ main = hspec $ do
                             , "message" .=
                                 ( "Authorization: Bearer sk-live-secret api_key=sk-query-secret "
                                     <> "{\"access_token\":\"token-secret\","
-                                    <> "\"client_secret\":\"client-secret\"}"
+                                    <> "\"client_secret\":\"client-secret\"} "
+                                    <> "X-Api-Key: sk-header-secret"
                                     :: Text
                                 )
                             ]
@@ -1662,10 +1663,12 @@ main = hspec $ do
                     msg `shouldSatisfy` Data.Text.isInfixOf "api_key=[redacted]"
                     msg `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
                     msg `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+                    msg `shouldSatisfy` Data.Text.isInfixOf "X-Api-Key: [redacted]"
                     msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-live-secret")
                     msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-query-secret")
                     msg `shouldSatisfy` (not . Data.Text.isInfixOf "token-secret")
                     msg `shouldSatisfy` (not . Data.Text.isInfixOf "client-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-header-secret")
                 Nothing ->
                     expectationFailure "Expected redacted upstream API error message"
 
