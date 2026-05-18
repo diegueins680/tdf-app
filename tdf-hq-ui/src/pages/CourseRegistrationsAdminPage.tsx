@@ -6415,7 +6415,7 @@ export default function CourseRegistrationsAdminPage() {
                         {combinedSingleChoiceContextSummary}
                       </Typography>
                     )}
-                    {showFirstRunFilterHelper && (
+                    {showFirstRunFilterHelper && !combinedSingleChoiceContextSummary && (
                       <Typography variant="caption" color="text.secondary">
                         {combinedSingleChoiceHelperText}
                       </Typography>

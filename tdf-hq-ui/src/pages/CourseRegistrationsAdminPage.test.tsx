@@ -9188,6 +9188,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('[data-testid="course-registration-single-choice-context"]')).toHaveLength(1);
       expect(countOccurrences(container, 'Fuente visible: landing.')).toBe(0);
       expect(countOccurrences(container, 'Límite actual: hasta 50 inscripciones.')).toBe(1);
+      expect(container.textContent).not.toContain('Vista única por ahora: una cohorte y un estado.');
+      expect(container.textContent).not.toContain('Usa Ajustar límite solo cuando necesites revisar un lote distinto.');
     });
 
     await cleanup();
