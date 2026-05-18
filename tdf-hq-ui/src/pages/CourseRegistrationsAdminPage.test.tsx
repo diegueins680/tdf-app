@@ -19701,6 +19701,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - link in bio',
       'Bio link: Beatmaking 101',
       'Enlace en bio para Beatmaking 101',
+      'Taplink - Beatmaking 101',
+      'Beatmaking 101 - solo.to link',
+      'bio.site page - Beatmaking 101',
+      'Bento.me portal for Beatmaking 101',
+      'Beatmaking 101 - Campsite.bio link',
     ];
 
     for (const title of titles) {
@@ -19717,7 +19722,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(copy).toContain(singleCohortInitialEmptyStateMessage);
         expect(copy).not.toContain(title);
-        expect(copy).not.toMatch(/link\s*tree|linktree|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio/i);
+        expect(copy).not.toMatch(
+          /link\s*tree|linktree|bio\s+link|link\s+in\s+bio|enlace\s+en\s+bio|tap\s*link|solo\.?to|bio\.?site|bento\.?me|campsite\.?bio/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.textContent?.trim(),
