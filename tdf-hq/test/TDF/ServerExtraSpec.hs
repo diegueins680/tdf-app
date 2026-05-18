@@ -487,6 +487,16 @@ spec = do
           :: Either String AssetCheckinRequest)
         `shouldSatisfy` isLeft
 
+    it "rejects null check-in fields instead of treating them as omitted" $ do
+      (A.eitherDecode
+        "{\"ciConditionIn\":\"Returned OK\",\"ciNotes\":null}"
+          :: Either String AssetCheckinRequest)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"ciPhotoUrl\":null}"
+          :: Either String AssetCheckinRequest)
+        `shouldSatisfy` isLeft
+
   describe "inventory asset upload multipart parsing" $ do
     it "trims explicit upload names and keeps omitted-name filename fallbacks" $ do
       case fromMultipart

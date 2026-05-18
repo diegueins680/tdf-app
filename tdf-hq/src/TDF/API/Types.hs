@@ -1169,7 +1169,12 @@ data AssetCheckinRequest = AssetCheckinRequest
   , ciPhotoUrl    :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AssetCheckinRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "AssetCheckinRequest"
+      ["ciConditionIn", "ciNotes", "ciPhotoUrl"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON AssetCheckinRequest
 
 data AssetQrDTO = AssetQrDTO
