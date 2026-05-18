@@ -1724,6 +1724,20 @@ const firstRunConsultationCallDescriptorSuffixPattern =
     'i',
   );
 
+const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|inboxes?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|inboxes?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
+
+const firstRunAdminWorkflowDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunAdminWorkflowDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunAdminWorkflowDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAdminWorkflowDescriptorPattern})\s*$`,
+    'i',
+  );
+
 const firstRunCourseEnrollmentConnectorPrefixPattern =
   /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -1833,6 +1847,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunReservationDescriptorPrefixPattern, '')
     .replace(firstRunSchedulingProviderStandalonePrefixPattern, '')
     .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
+    .replace(firstRunAdminWorkflowDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
     .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
@@ -1937,6 +1952,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
+    .replace(firstRunAdminWorkflowDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
