@@ -2347,6 +2347,29 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds shared internal-note context into busy-list search instead of rendering passive filter chrome', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
+      crAdminNotes: `Nota interna ${index + 1}.`,
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).toContain('Notas internas en todas las inscripciones visibles.');
+      expect(container.textContent).toContain('Busca dentro de las 8 inscripciones cargadas.');
+      expect(container.textContent).toContain(paymentWorkflowDossierScopeHint);
+      expect(countOccurrences(container, 'Notas internas')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('uses the search helper as the only notes explanation when hidden notes drive the match', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
       crAdminNotes: index < 2 ? 'Beca aprobada por coordinación.' : null,
@@ -13169,7 +13192,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps shared internal notes out of the busy-list search placeholder', async () => {
+  it('keeps shared internal notes out of the busy-list search placeholder while the helper owns the context', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, () => ({
         crAdminNotes: 'Todos pidieron factura.',
@@ -13184,7 +13207,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const searchInput = getInputByLabel(container, localSearchLabel);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
-      expect(hasExactText(container, 'Notas internas en todas las inscripciones visibles.')).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.textContent).toContain('Notas internas en todas las inscripciones visibles.');
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });

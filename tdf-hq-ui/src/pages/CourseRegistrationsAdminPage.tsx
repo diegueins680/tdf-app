@@ -4379,13 +4379,20 @@ export default function CourseRegistrationsAdminPage() {
   const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes && !hiddenLocalSearchMatchSummary
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';
+  const foldSharedNotesIntoBusySearch = showBusyListSearchOnboarding
+    && Boolean(sharedVisibleNotesSummary)
+    && !hasCustomFilters
+    && !viewHitsCurrentLimit
+    && limit === DEFAULT_LIMIT;
+  const showSharedNotesSummaryInList = Boolean(sharedVisibleNotesSummary)
+    && !foldSharedNotesIntoBusySearch;
   const sharedListContextSummaries = [
     sharedVisibleStatusSummary,
     shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
     sharedVisibleCreatedAtSummary,
     showSharedVisibleMissingContactSummary ? sharedVisibleMissingContactSummary : '',
-    sharedVisibleNotesSummary,
+    showSharedNotesSummaryInList ? sharedVisibleNotesSummary : '',
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
@@ -4553,7 +4560,7 @@ export default function CourseRegistrationsAdminPage() {
       || shouldShowSharedSourceSummary
       || sharedVisibleCreatedAtSummary
       || showSharedVisibleMissingContactSummary
-      || sharedVisibleNotesSummary
+      || showSharedNotesSummaryInList
     ),
   );
   const hideBusyListPassiveCurrentViewPanel = (
@@ -4591,6 +4598,9 @@ export default function CourseRegistrationsAdminPage() {
     && !hasSharedListContextSummary;
   const hiddenBusyListMissingContactContext = showBusyListSearchOnboarding
     ? sharedVisibleMissingContactSummary.replace(/\.$/, '')
+    : '';
+  const hiddenBusyListSharedNotesContext = foldSharedNotesIntoBusySearch
+    ? sharedVisibleNotesSummary.replace(/\.$/, '')
     : '';
   const hiddenBusyListCohortLoadingContext = hideBusyListPassiveCohortLoadingSummary
     ? cohortFilterLoadingMessage.replace(/\.$/, '')
@@ -4646,6 +4656,7 @@ export default function CourseRegistrationsAdminPage() {
     hiddenBusyListCohortUnavailableContext,
     busyListSharedCreatedAtContext,
     hiddenBusyListMissingContactContext,
+    hiddenBusyListSharedNotesContext,
   ].filter(Boolean).join('. ');
   const localSearchHelperText = !localSearchKey
     && hiddenBusyListContextSummary
