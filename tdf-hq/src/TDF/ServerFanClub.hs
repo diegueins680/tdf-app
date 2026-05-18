@@ -23,6 +23,8 @@ module TDF.ServerFanClub
   , validateFanClubInboxBodyInput
   , validateFanClubInboxReplyBodyInput
   , validateFanClubInboxStatusInput
+  , validateFanClubPostTitleInput
+  , validateFanClubPostContentInput
   , validateFanClubMemoryPathId
   , validateFanClubMemoryMutationTarget
   , validateFanClubMemoryReportReason
@@ -312,25 +314,45 @@ fanClubSecureArtistHandlers user artistId =
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
+          title <-
+            either throwError pure $
+              validateFanClubPostTitleInput (fcpReqTitle req)
+          content <-
+            either throwError pure $
+              validateFanClubPostContentInput (fcpReqContent req)
           parentKey <- resolveParentKey cid (fcpReqParentId req)
+          let mediaUrls =
+                if null (fcpReqMediaUrls req)
+                  then Nothing
+                  else Just (T.intercalate "," (fcpReqMediaUrls req))
           runDB $ do
             now <- liftIO getCurrentTime
             pid <- insert FanClubPost
               { fanClubPostClubId = cid
               , fanClubPostFanPartyId = auPartyId user
               , fanClubPostParentId = parentKey
-              , fanClubPostTitle = fcpReqTitle req
-              , fanClubPostContent = fcpReqContent req
-              , fanClubPostMediaUrls = if null (fcpReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcpReqMediaUrls req))
+              , fanClubPostTitle = title
+              , fanClubPostContent = content
+              , fanClubPostMediaUrls = mediaUrls
               , fanClubPostIsPinned = False
               , fanClubPostIsHidden = False
               , fanClubPostCreatedAt = now
               , fanClubPostUpdatedAt = Nothing
               }
             author <- getAuthorDTO (auPartyId user)
-            pure $ postToDTO pid
-              (FanClubPost cid (auPartyId user) parentKey (fcpReqTitle req) (fcpReqContent req) (if null (fcpReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcpReqMediaUrls req))) False False now Nothing)
-              0 author
+            let post =
+                  FanClubPost
+                    cid
+                    (auPartyId user)
+                    parentKey
+                    title
+                    content
+                    mediaUrls
+                    False
+                    False
+                    now
+                    Nothing
+            pure $ postToDTO pid post 0 author
 
     resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
     resolveParentKey _ Nothing = pure Nothing
@@ -1141,6 +1163,15 @@ validateFanClubInboxReplyBodyInput :: Text -> Either ServerError Text
 validateFanClubInboxReplyBodyInput =
   validateRequiredFanClubInboxText "replyBody" maxFanClubInboxBodyChars True
 
+validateFanClubPostTitleInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateFanClubPostTitleInput Nothing = Right Nothing
+validateFanClubPostTitleInput (Just rawTitle) =
+  validateOptionalFanClubInboxText "title" maxFanClubPostTitleChars False rawTitle
+
+validateFanClubPostContentInput :: Text -> Either ServerError Text
+validateFanClubPostContentInput =
+  validateRequiredFanClubInboxText "content" maxFanClubPostContentChars True
+
 validateOptionalFanClubInboxText
   :: Text
   -> Int
@@ -1199,6 +1230,12 @@ maxFanClubInboxSubjectChars = 160
 
 maxFanClubInboxBodyChars :: Int
 maxFanClubInboxBodyChars = 4096
+
+maxFanClubPostTitleChars :: Int
+maxFanClubPostTitleChars = 160
+
+maxFanClubPostContentChars :: Int
+maxFanClubPostContentChars = 4096
 
 invalidFanClubInboxTextChar :: Bool -> Char -> Bool
 invalidFanClubInboxTextChar allowMultiline ch =

@@ -33,6 +33,8 @@ import TDF.ServerFanClub
   , validateFanClubInboxBodyInput
   , validateFanClubInboxReplyBodyInput
   , validateFanClubOfficerRoleInput
+  , validateFanClubPostContentInput
+  , validateFanClubPostTitleInput
   , validateFanClubInboxSubjectInput
   , validateFanClubInboxStatusInput
   , validateFanClubMemoryMutationTarget
@@ -214,6 +216,29 @@ spec = do
         validateFanClubOfficerRoleInput "  "
       assertRejected 400 "role must be one of" $
         validateFanClubOfficerRoleInput "secretary"
+
+  describe "fan club post text validation" $ do
+    it "normalizes optional titles and required content before post persistence" $ do
+      validateFanClubPostTitleInput (Just "  Ensayo general  ")
+        `shouldBe` Right (Just "Ensayo general")
+      validateFanClubPostTitleInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubPostContentInput "  Primera linea\nsegunda linea  "
+        `shouldBe` Right "Primera linea\nsegunda linea"
+
+    it "rejects blank, oversized, or unsafe post text before DB fallback writes" $ do
+      assertRejected 400 "content is required" $
+        validateFanClubPostContentInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubPostTitleInput (Just (T.replicate 161 "a"))
+      assertRejected 400 "content must be 4096 characters or fewer" $
+        validateFanClubPostContentInput (T.replicate 4097 "a")
+      assertRejected 400 "unsupported control" $
+        validateFanClubPostTitleInput (Just "Hola\nClub")
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubPostTitleInput (Just ("Hola" <> "\x00A0" <> "club"))
+      assertRejected 400 "hidden formatting" $
+        validateFanClubPostContentInput ("Hola" <> "\x202E" <> "club")
 
   describe "fan club inbox text validation" $ do
     it "normalizes optional subjects and required bodies before inbox persistence" $ do
