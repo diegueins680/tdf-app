@@ -2133,6 +2133,38 @@ spec = do
           ncrConditionOut normalized `shouldBe` Just "Returned with stand"
           ncrNotes normalized `shouldBe` Just "Cableado completo\n\tListo para sala"
 
+    it "rejects control or hidden formatting in checkout payment currencies before normalizing payment metadata" $ do
+      let assertInvalid rawCurrency =
+            case normalizeCheckoutRequest
+              (AssetCheckoutRequest
+                (Just "party")
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                (Just "sale")
+                Nothing
+                (Just "ops@example.com")
+                Nothing
+                (Just "card")
+                Nothing
+                Nothing
+                (Just "1200.00")
+                (Just rawCurrency)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "paymentCurrency must not contain control characters"
+              Right _ ->
+                expectationFailure
+                  "Expected unsafe checkout payment currency to be rejected"
+      assertInvalid "USD\n"
+      assertInvalid ("US" <> T.singleton '\x200D' <> "D")
+
     it "rejects oversized or unsafe-control checkout condition and notes instead of storing ambiguous movement text" $ do
       let assertInvalid expectedMessage req =
             case normalizeCheckoutRequest req of

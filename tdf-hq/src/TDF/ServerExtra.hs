@@ -1196,13 +1196,18 @@ validateCheckoutAmountField fieldName rawValue = do
 validateCheckoutCurrency :: Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutCurrency Nothing = Right Nothing
 validateCheckoutCurrency (Just rawCurrency) =
-  case normalizeOptionalTextField (Just rawCurrency) of
-    Nothing -> Right Nothing
-    Just currency ->
-      let normalized = T.toUpper currency
-      in if T.length normalized == 3 && T.all isAsciiUpper normalized
-           then Right (Just normalized)
-           else Left err400 { errBody = "paymentCurrency must be a 3-letter ISO code" }
+  if T.any isUnsafePaymentTextChar rawCurrency
+    then Left err400
+      { errBody = "paymentCurrency must not contain control characters or hidden formatting characters"
+      }
+    else
+      case normalizeOptionalTextField (Just rawCurrency) of
+        Nothing -> Right Nothing
+        Just currency ->
+          let normalized = T.toUpper currency
+          in if T.length normalized == 3 && T.all isAsciiUpper normalized
+               then Right (Just normalized)
+               else Left err400 { errBody = "paymentCurrency must be a 3-letter ISO code" }
 
 validateCheckoutMoneyField :: Text -> Bool -> Maybe Text -> Either ServerError (Maybe Int)
 validateCheckoutMoneyField fieldName allowZero rawValue =
