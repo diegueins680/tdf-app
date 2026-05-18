@@ -609,6 +609,12 @@ instance FromJSON TicketPurchaseRequestDTO where
       , "ticketPurchaseBuyerEmail"
       ]
       o
+    rejectNullObjectFields
+      [ "ticketPurchaseBuyerPartyId"
+      , "ticketPurchaseBuyerName"
+      , "ticketPurchaseBuyerEmail"
+      ]
+      o
     tierId <-
       o .: "ticketPurchaseTierId"
         >>= normalizePositiveIdText "ticketPurchaseTierId"

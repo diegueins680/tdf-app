@@ -2243,6 +2243,31 @@ spec = do
                     expectationFailure
                         ("Expected null ticket code lookup to be rejected, got: " <> show payload)
 
+        it "rejects explicit null ticket purchase buyer fields instead of treating them as omitted fallbacks" $ do
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerPartyId\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerPartyId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer party id to be rejected, got: " <> show payload)
+
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerName\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerName must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer name to be rejected, got: " <> show payload)
+
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerEmail\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerEmail must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer email to be rejected, got: " <> show payload)
+
         it "rejects malformed ticket purchase tier ids before handler lookup fallback" $ do
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"   \",\"ticketPurchaseQuantity\":2}"
