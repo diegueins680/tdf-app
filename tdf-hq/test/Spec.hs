@@ -6364,7 +6364,9 @@ main = hspec $ do
                 "attachment file name must be 120 characters or fewer"
             assertInvalid "__--__" "attachment file name must include a usable name"
             assertInvalid "debug.html" "attachment file name extension is not allowed"
+            assertInvalid "debug.html.txt" "attachment file name extension is not allowed"
             assertInvalid "payload.exe" "attachment file name extension is not allowed"
+            assertInvalid "payload.exe.png" "attachment file name extension is not allowed"
             assertInvalid "script.JS" "attachment file name extension is not allowed"
             assertInvalid "vector.svg" "attachment file name extension is not allowed"
 

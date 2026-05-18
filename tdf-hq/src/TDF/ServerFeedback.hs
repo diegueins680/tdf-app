@@ -338,9 +338,10 @@ isPathSeparator ch = ch == '/' || ch == '\\'
 
 hasDisallowedFeedbackAttachmentExtension :: Text -> Bool
 hasDisallowedFeedbackAttachmentExtension name =
-  any (`T.isSuffixOf` loweredName) disallowedFeedbackAttachmentExtensions
+  any (`elem` extensionChain) disallowedFeedbackAttachmentExtensions
   where
     loweredName = T.toLower name
+    extensionChain = map ("." <>) (drop 1 (T.splitOn "." loweredName))
 
 disallowedFeedbackAttachmentExtensions :: [Text]
 disallowedFeedbackAttachmentExtensions =
