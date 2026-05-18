@@ -38,7 +38,21 @@ data SocialSyncPostIn = SocialSyncPostIn
 
 instance FromJSON SocialSyncPostIn where
   parseJSON value = do
-    rejectNullSocialSyncOptionalFields "SocialSyncPostIn" ["ingestSource"] value
+    rejectNullSocialSyncOptionalFields
+      "SocialSyncPostIn"
+      [ "caption"
+      , "permalink"
+      , "mediaUrls"
+      , "postedAt"
+      , "artistPartyId"
+      , "artistProfileId"
+      , "ingestSource"
+      , "likeCount"
+      , "commentCount"
+      , "shareCount"
+      , "viewCount"
+      ]
+      value
     post <- genericParseJSON defaultOptions
       { fieldLabelModifier = camelDrop 3
       , rejectUnknownFields = True

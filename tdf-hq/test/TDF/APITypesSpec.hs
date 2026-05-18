@@ -2451,10 +2451,52 @@ spec = do
                 "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"   \"}]}"
                 `shouldSatisfy` isLeft
 
-        it "rejects null ingest sources so only omitted values use the manual fallback" $
-            decodeSocialSyncIngest
-                "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
-                `shouldSatisfy` isLeft
+        it "rejects null optional post fields so omitted fields stay the only update fallback" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeSocialSyncIngest payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected null social sync field to be rejected, got: "
+                                    <> show value
+                                )
+            mapM_
+                (uncurry assertNullRejected)
+                [ ( "caption"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"caption\":null}]}"
+                  )
+                , ( "permalink"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"permalink\":null}]}"
+                  )
+                , ( "mediaUrls"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"mediaUrls\":null}]}"
+                  )
+                , ( "postedAt"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"postedAt\":null}]}"
+                  )
+                , ( "artistPartyId"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistPartyId\":null}]}"
+                  )
+                , ( "artistProfileId"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistProfileId\":null}]}"
+                  )
+                , ( "ingestSource"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
+                  )
+                , ( "likeCount"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"likeCount\":null}]}"
+                  )
+                , ( "commentCount"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"commentCount\":null}]}"
+                  )
+                , ( "shareCount"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"shareCount\":null}]}"
+                  )
+                , ( "viewCount"
+                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"viewCount\":null}]}"
+                  )
+                ]
 
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
