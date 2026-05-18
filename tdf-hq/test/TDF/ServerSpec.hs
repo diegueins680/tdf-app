@@ -6162,6 +6162,12 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected $
                 "{\"access_token\":\"access-token\","
                     <> "\"refresh_token\":\"refresh token\","
+                    <> "\"token_type\":\"Bearer\","
+                    <> "\"expires_in\":3600}"
+            assertRejected $
+                "{\"access_token\":\"access-token\","
+                    <> "\"refresh_token\":null,"
+                    <> "\"token_type\":\"Bearer\","
                     <> "\"expires_in\":3600}"
             assertRejected "{\"access_token\":\"access-token\",\"expires_in\":3600}"
             assertRejected $

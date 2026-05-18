@@ -223,7 +223,7 @@ data GoogleToken = GoogleToken
 instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
-    refreshToken <- o .:? "refresh_token" >>= traverse (parseGoogleTokenField "refresh_token")
+    refreshToken <- parseOptionalGoogleTokenField "refresh_token" o
     expiresIn <- o .: "expires_in"
     when (expiresIn <= (0 :: Int)) $
       fail "expires_in must be positive"
@@ -234,6 +234,14 @@ instance FromJSON GoogleToken where
       , expires_in = Just expiresIn
       , token_type = Just tokenType
       }
+
+parseOptionalGoogleTokenField :: Text -> Object -> Parser (Maybe Text)
+parseOptionalGoogleTokenField fieldName obj =
+  case AKeyMap.lookup (AKey.fromText fieldName) obj of
+    Nothing -> pure Nothing
+    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+    Just (String raw) -> Just <$> parseGoogleTokenField fieldName raw
+    Just _ -> fail (T.unpack fieldName <> " must be a string")
 
 parseGoogleTokenField :: Text -> Text -> Parser Text
 parseGoogleTokenField fieldName raw =
