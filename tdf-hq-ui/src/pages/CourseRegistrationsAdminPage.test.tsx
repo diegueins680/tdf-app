@@ -18984,6 +18984,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Sandbox: Formulario de Tally para Beatmaking 101',
       'Vista previa - Google Forms - Beatmaking 101',
       '[PRUEBA] Beatmaking 101',
+      '[ARCHIVED] Beatmaking 101',
+      'Archivado: Formulario de Tally para Beatmaking 101',
+      'Backup - Google Forms - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -18999,7 +19002,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toMatch(
-          /TEST|DEMO|Sample|Preview|Sandbox|Vista previa|PRUEBA|Typeform|Tally|Google Forms|registration page/i,
+          /TEST|DEMO|Sample|Preview|Sandbox|Vista previa|PRUEBA|ARCHIVED|Archivado|Backup|Typeform|Tally|Google Forms|registration page/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
@@ -19019,6 +19022,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 (Preview)',
       'Beatmaking 101 - DEMO',
       'Beatmaking 101: Vista previa',
+      'Beatmaking 101 [ARCHIVED]',
+      'Beatmaking 101 - respaldo',
     ];
 
     for (const title of titles) {
@@ -19036,7 +19041,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/DRAFT|Preview|DEMO|Vista previa/i);
+        expect(emptyState?.textContent).not.toMatch(/DRAFT|Preview|DEMO|Vista previa|ARCHIVED|respaldo/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
         expect(publicFormAction?.getAttribute('title')).toBe(
