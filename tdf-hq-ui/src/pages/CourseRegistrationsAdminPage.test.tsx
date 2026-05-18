@@ -8925,6 +8925,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips Coda form wrappers from first-run course guidance', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Coda form - Beatmaking 101' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const publicFormLink = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+      expect(emptyState?.textContent).not.toContain('Coda form');
+      expect(publicFormLink?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+      expect(publicFormLink?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a URL-only cohort slug as a readable filter instead of treating it as a configured form', async () => {
     listCohortsMock.mockResolvedValue([]);
     listRegistrationsMock.mockResolvedValue([]);
@@ -11537,6 +11562,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'jotform_form',
       'microsoft_forms',
       'airtable_form',
+      'coda_form',
+      'coda_forms',
       'hubspot_form',
       'hubspot_forms',
       'go_high_level_form',
@@ -11599,6 +11626,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Jotform form',
       'Microsoft forms',
       'Airtable form',
+      'Coda form',
+      'Coda forms',
       'Hubspot form',
       'Hubspot forms',
       'Go high level form',
