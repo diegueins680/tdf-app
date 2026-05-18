@@ -8,6 +8,7 @@ interface SocialEventsOverviewUiState {
   emptyEventsMessage: string | null;
   showFilters: boolean;
   showCalendar: boolean;
+  showRefreshAction: boolean;
 }
 
 interface SocialEventsCreateUiStateInput {
@@ -38,6 +39,7 @@ export function getSocialEventsOverviewUiState({
       emptyEventsMessage: null,
       showFilters: true,
       showCalendar: true,
+      showRefreshAction: true,
     };
   }
 
@@ -47,6 +49,7 @@ export function getSocialEventsOverviewUiState({
         'No hay eventos por venir para este filtro. Ajusta ciudad, tipo o estado para ampliar la busqueda.',
       showFilters: true,
       showCalendar: false,
+      showRefreshAction: true,
     };
   }
 
@@ -56,6 +59,7 @@ export function getSocialEventsOverviewUiState({
       : 'No hay eventos sociales por venir. Inicia sesion para crear el primero; el calendario aparecera cuando exista al menos un evento.',
     showFilters: false,
     showCalendar: false,
+    showRefreshAction: false,
   };
 }
 

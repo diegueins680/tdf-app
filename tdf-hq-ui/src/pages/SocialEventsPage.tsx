@@ -465,6 +465,7 @@ export default function SocialEventsPage() {
     filtersActive: eventFiltersActive,
     createFormOpen: createEventFormOpen,
   });
+  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
 
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, SocialEventDTO[]>();
@@ -1155,17 +1156,19 @@ export default function SocialEventsPage() {
               </TextField>
             </>
           )}
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={() => {
-              void eventsQuery.refetch();
-              void venuesQuery.refetch();
-            }}
-            disabled={eventsQuery.isFetching}
-          >
-            Refrescar
-          </Button>
+          {showRefreshAction && (
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => {
+                void eventsQuery.refetch();
+                void venuesQuery.refetch();
+              }}
+              disabled={eventsQuery.isFetching}
+            >
+              Refrescar
+            </Button>
+          )}
           {eventCreateUiState.showCreateToolbarAction && (
             <Button
               variant="contained"
