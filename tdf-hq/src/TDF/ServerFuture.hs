@@ -526,28 +526,31 @@ futureStubRequiredModule :: Text
 futureStubRequiredModule = moduleName ModuleAdmin
 
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
-validateFutureAdminConsoleCard card = do
-  allowedCardIds <- validateFutureAdminConsoleCardIds allowedFutureAdminConsoleCardIds
-  validateFutureAdminConsoleCardWithIds allowedCardIds card
+validateFutureAdminConsoleCard =
+  validateFutureAdminConsoleCardWithIds allowedFutureAdminConsoleCardIds
 
 validateFutureAdminConsoleCardWithIds
   :: [Text]
   -> AdminConsoleCard
   -> Either ServerError AdminConsoleCard
-validateFutureAdminConsoleCardWithIds allowedCardIds card
-  | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
-  | cardId card `notElem` allowedCardIds =
-      invalidFutureAdminConsoleMetadata
-  | implemented card = invalidFutureAdminConsoleMetadata
-  | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
-  | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
-  | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
-  | hasDuplicateFutureAdminConsoleBodyLines card = invalidFutureAdminConsoleMetadata
-  | title card /= expectedFutureAdminConsoleTitle (cardId card) =
-      invalidFutureAdminConsoleMetadata
-  | body card /= expectedFutureAdminConsoleBody (cardId card) =
-      invalidFutureAdminConsoleMetadata
-  | otherwise = Right card
+validateFutureAdminConsoleCardWithIds rawAllowedCardIds card = do
+  allowedCardIds <- validateFutureAdminConsoleCardIds rawAllowedCardIds
+  validateCard allowedCardIds
+  where
+    validateCard allowedCardIds
+      | not (validFutureStubSlug (cardId card)) = invalidFutureAdminConsoleMetadata
+      | cardId card `notElem` allowedCardIds =
+          invalidFutureAdminConsoleMetadata
+      | implemented card = invalidFutureAdminConsoleMetadata
+      | invalidCardText 120 (title card) = invalidFutureAdminConsoleMetadata
+      | null (body card) || length (body card) > 8 = invalidFutureAdminConsoleMetadata
+      | any (invalidCardText 240) (body card) = invalidFutureAdminConsoleMetadata
+      | hasDuplicateFutureAdminConsoleBodyLines card = invalidFutureAdminConsoleMetadata
+      | title card /= expectedFutureAdminConsoleTitle (cardId card) =
+          invalidFutureAdminConsoleMetadata
+      | body card /= expectedFutureAdminConsoleBody (cardId card) =
+          invalidFutureAdminConsoleMetadata
+      | otherwise = Right card
 
 expectedFutureAdminConsoleTitle :: Text -> Text
 expectedFutureAdminConsoleTitle cardIdValue

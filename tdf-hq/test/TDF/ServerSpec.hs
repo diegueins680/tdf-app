@@ -423,6 +423,7 @@ import TDF.ServerFuture
     , validateFutureAdminAccess
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleCardIds
+    , validateFutureAdminConsoleCardWithIds
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleRouteIn
@@ -12275,6 +12276,17 @@ spec = describe "TDF.Server helpers" $ do
                         Right value ->
                             expectationFailure
                                 ("Expected invalid admin console card, got: " <> show value)
+                assertInvalidWithIds cardIds card =
+                    case validateFutureAdminConsoleCardWithIds cardIds card of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid admin console card registry, got: "
+                                    <> show value
+                                )
 
             case validateFutureAdminConsoleCard validCard of
                 Right card ->
@@ -12283,6 +12295,11 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected valid admin console card, got: " <> show serverErr)
 
+            assertInvalidWithIds ["user-management"] validCard
+            assertInvalidWithIds ["api-tokens", "user-management"] validCard
+            assertInvalidWithIds
+                ["user-management", "api-tokens", "api-tokens"]
+                validCard
             assertInvalid (mkCard "User Management" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "unknown-card" "Gestión de usuarios" ["Roles"])
             assertInvalid (mkCard "api-tokens" "Gestión de usuarios" ["Roles"])
