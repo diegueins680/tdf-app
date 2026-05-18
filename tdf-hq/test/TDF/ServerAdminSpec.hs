@@ -578,6 +578,26 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected duplicate update roles to fail, got " <> show payload)
 
+        it "rejects explicit null user fields so admin defaults and no-op patches stay intentional" $ do
+            let expectRejected expectedMessage result =
+                    case result of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected explicit null user payload to fail, got " <> show payload)
+            expectRejected
+                "uacActive must be omitted instead of null"
+                (decodeUserAccountCreate "{\"uacPartyId\":42,\"uacActive\":null}")
+            expectRejected
+                "uacPassword must be omitted instead of null"
+                (decodeUserAccountCreate "{\"uacPartyId\":42,\"uacPassword\":null}")
+            expectRejected
+                "uauActive must be omitted instead of null"
+                (decodeUserAccountUpdate "{\"uauActive\":null}")
+            expectRejected
+                "uauRoles must be omitted instead of null"
+                (decodeUserAccountUpdate "{\"uauRoles\":null}")
+
     describe "ArtistReleaseUpsert FromJSON" $ do
         it "accepts canonical admin release write keys" $
             case decodeArtistReleaseUpsert

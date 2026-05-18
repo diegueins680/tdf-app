@@ -286,6 +286,10 @@ data UserAccountCreate = UserAccountCreate
 instance ToJSON UserAccountCreate
 instance FromJSON UserAccountCreate where
   parseJSON value = do
+    rejectNullOptionalFields
+      "UserAccountCreate"
+      ["uacUsername", "uacPassword", "uacActive", "uacRoles"]
+      value
     payload@UserAccountCreate{uacRoles} <- genericParseJSON strictObjectOptions value
     validateUniqueRolePayload "uacRoles" uacRoles
     pure payload
@@ -300,6 +304,10 @@ data UserAccountUpdate = UserAccountUpdate
 instance ToJSON UserAccountUpdate
 instance FromJSON UserAccountUpdate where
   parseJSON value = do
+    rejectNullOptionalFields
+      "UserAccountUpdate"
+      ["uauUsername", "uauPassword", "uauActive", "uauRoles"]
+      value
     payload@UserAccountUpdate{uauRoles} <- genericParseJSON strictObjectOptions value
     validateUniqueRolePayload "uauRoles" uauRoles
     pure payload
