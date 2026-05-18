@@ -402,10 +402,17 @@ const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
   const normalized = normalizeBackendStatusToken(value);
   if (
     normalized === 'pending'
+    || normalized === 'awaiting_payment'
+    || normalized === 'not_paid'
     || normalized === 'payment_pending'
+    || normalized === 'payment_due'
     || normalized === 'pago_pendiente'
+    || normalized === 'no_pagado'
     || normalized === 'pendiente_de_pago'
     || normalized === 'pendiente_pago'
+    || normalized === 'por_pagar'
+    || normalized === 'sin_pago'
+    || normalized === 'unpaid'
   ) {
     return 'pending_payment';
   }

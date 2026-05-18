@@ -4185,6 +4185,18 @@ describe('CourseRegistrationsAdminPage', () => {
         crId: 102,
         crFullName: 'Grace Hopper',
         crEmail: 'grace@example.com',
+        crStatus: 'awaiting_payment',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Katherine Johnson',
+        crEmail: 'katherine@example.com',
+        crStatus: 'unpaid',
+      }),
+      buildRegistration({
+        crId: 104,
+        crFullName: 'Hedy Lamarr',
+        crEmail: 'hedy@example.com',
         crStatus: 'paid',
       }),
     ]);
@@ -4194,18 +4206,22 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (1)');
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago').textContent?.trim()).toBe('Pendiente de pago (3)');
       expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado').textContent?.trim()).toBe('Pagado (1)');
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain(customStatusFilterUnavailableMessage);
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pagado');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Pendiente de pago');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Hedy Lamarr').textContent?.trim()).toBe('Pagado');
       expect(container.textContent).not.toContain('Pending');
+      expect(container.textContent).not.toContain('Awaiting Payment');
+      expect(container.textContent).not.toContain('Unpaid');
     });
 
     await act(async () => {
-      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper'));
       await flushPromises();
       await flushPromises();
     });
