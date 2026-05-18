@@ -19485,6 +19485,42 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips registration dashboard wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Registration dashboard - Beatmaking 101',
+      'Admin registration tracker - Beatmaking 101',
+      'Beatmaking 101 - student enrollment tracker',
+      'Panel de inscripciones - Beatmaking 101',
+      'Beatmaking 101 - tablero de matrícula',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /registration dashboard|registration tracker|enrollment tracker|panel de inscripciones|tablero de matr[ií]cula/i,
+        );
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips enrollment workflow descriptors from first-run cohort copy', async () => {
     const titles = [
       'Enrollment funnel - Beatmaking 101',
