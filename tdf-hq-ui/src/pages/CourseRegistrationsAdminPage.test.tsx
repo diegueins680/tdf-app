@@ -860,8 +860,8 @@ describe('CourseRegistrationsAdminPage', () => {
   it('treats generic no-contact placeholders as missing contact', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
-        crEmail: 'No registra correo',
-        crPhoneE164: 'No tiene número',
+        crEmail: 'Sin información',
+        crPhoneE164: 'No informado',
       }),
     ]);
 
@@ -876,8 +876,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
       expect(countOccurrences(container, 'Contacto pendiente en esta inscripción.')).toBe(1);
-      expect(container.textContent).not.toContain('No registra correo');
-      expect(container.textContent).not.toContain('No tiene número');
+      expect(container.textContent).not.toContain('Sin información');
+      expect(container.textContent).not.toContain('No informado');
       expect(container.textContent).not.toContain('Sin correo ni teléfono');
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
