@@ -137,7 +137,12 @@ data CourseRegistrationNotesUpdate = CourseRegistrationNotesUpdate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationNotesUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object obj) = do
+    case AesonKeyMap.lookup (AesonKey.fromText "notes") obj of
+      Nothing -> fail "CourseRegistrationNotesUpdate must include notes"
+      Just Null -> fail "notes must be a string; use an empty string to clear notes"
+      Just _ -> genericParseJSON strictObjectOptions value
+  parseJSON _ = fail "CourseRegistrationNotesUpdate must be an object"
 instance ToJSON CourseRegistrationNotesUpdate
 
 data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate

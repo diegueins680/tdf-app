@@ -608,12 +608,18 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "Course admin write payload FromJSON" $ do
-        it "accepts canonical status, receipt, and upsert payloads" $ do
+        it "accepts canonical status, notes, receipt, and upsert payloads" $ do
             case decodeCourseRegistrationStatusUpdate "{\"status\":\"paid\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course status update payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
                     statusVal `shouldBe` "paid"
+
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":\"Follow up after bank transfer\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical course notes update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationNotesUpdate notesVal) ->
+                    notesVal `shouldBe` Just "Follow up after bank transfer"
 
             case decodeCourseRegistrationReceiptCreate
                 "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}"
@@ -670,6 +676,9 @@ spec = do
             decodeCourseRegistrationStatusUpdate
                 "{\"status\":\"paid\",\"updatedBy\":\"admin\"}"
                 `shouldSatisfy` isLeft
+            decodeCourseRegistrationNotesUpdate
+                "{\"notes\":\"Follow up\",\"adminNotes\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
             decodeCourseRegistrationReceiptCreate
                 "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"status\":\"paid\"}"
                 `shouldSatisfy` isLeft
@@ -688,6 +697,29 @@ spec = do
             decodeCourseRegistrationReceiptUpdate
                 "{\"fileUrl\":null,\"fileName\":null,\"mimeType\":null,\"notes\":null}"
                 `shouldSatisfy` isLeft
+
+        it "requires explicit notes text so empty or null updates cannot clear notes accidentally" $ do
+            case decodeCourseRegistrationNotesUpdate "{}" of
+                Left err ->
+                    err `shouldContain` "CourseRegistrationNotesUpdate must include notes"
+                Right value ->
+                    expectationFailure
+                        ("Expected empty course notes update to fail, got: " <> show value)
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":null}" of
+                Left err ->
+                    err `shouldContain` "notes must be a string"
+                Right value ->
+                    expectationFailure
+                        ("Expected null course notes update to fail, got: " <> show value)
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":\"   \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected blank string course notes update to remain an explicit "
+                            <> "clear operation, got: "
+                            <> err
+                        )
+                Right (Courses.CourseRegistrationNotesUpdate notesVal) ->
+                    notesVal `shouldBe` Just "   "
 
         it "rejects explicit null receipt update fields so omitted fields stay unambiguous" $ do
             decodeCourseRegistrationReceiptUpdate
@@ -2428,6 +2460,8 @@ spec = do
     decodeFollowUpUpdate = eitherDecode
     decodeCourseRegistrationStatusUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationStatusUpdate
     decodeCourseRegistrationStatusUpdate = eitherDecode
+    decodeCourseRegistrationNotesUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationNotesUpdate
+    decodeCourseRegistrationNotesUpdate = eitherDecode
     decodeCourseRegistrationReceiptCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptCreate
     decodeCourseRegistrationReceiptCreate = eitherDecode
     decodeCourseRegistrationReceiptUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptUpdate
