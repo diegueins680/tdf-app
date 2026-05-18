@@ -4603,6 +4603,9 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchSharedPaidStatusSummary = hasLocalSearch
     && shouldShowSharedStatusSummary
     && singleSearchedKnownStatus === 'paid';
+  const localSearchSharedPendingPaymentStatusSummary = hasLocalSearch
+    && shouldShowSharedStatusSummary
+    && singleSearchedKnownStatus === 'pending_payment';
   const singleStatusSummarySupportsPaidRecovery =
     showSingleStatusSummaryInPageChrome && !showCohortFilterUnavailableSummary;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
@@ -4614,9 +4617,12 @@ export default function CourseRegistrationsAdminPage() {
     || shouldShowSharedStatusSummary;
   const shouldCompactRepeatedPaymentStatusActions = searchedRegistrations.length >= 2;
   const showRepeatedPaymentStatusIconActions = Boolean(
-    combinedSingleChoiceSummary || showSingleStatusSummaryInPageChrome || showActiveStatusFilterSummary
+    combinedSingleChoiceSummary
+    || showSingleStatusSummaryInPageChrome
+    || showActiveStatusFilterSummary
+    || localSearchSharedPendingPaymentStatusSummary
   )
-    && !hasLocalSearch
+    && (!hasLocalSearch || localSearchSharedPendingPaymentStatusSummary)
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow
     && useCompactStatusActionLabel

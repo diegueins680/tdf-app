@@ -10065,6 +10065,70 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts repeated pending-payment actions after local search when shared status owns the label', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crStatus: index % 2 === 0 ? 'paid' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Estado visible: Pendiente de pago.');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Cambiar estado para Nina Garcia"]')).toBeNull();
+
+      const ninaSimoneAction = getButtonByAriaLabel(
+        container,
+        paymentStatusIconButtonAriaLabel('Nina Simone'),
+      );
+      const ninaGarciaAction = getButtonByAriaLabel(
+        container,
+        paymentStatusIconButtonAriaLabel('Nina Garcia'),
+      );
+      expect(ninaSimoneAction.textContent?.trim()).toBe('');
+      expect(ninaGarciaAction.textContent?.trim()).toBe('');
+      expect(ninaSimoneAction.dataset['actionIcon']).toBe('payment-receipt');
+      expect(ninaGarciaAction.dataset['actionIcon']).toBe('payment-receipt');
+      expect(
+        container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]'),
+      ).toHaveLength(2);
+    });
+
+    await cleanup();
+  });
+
   it('uses the direct recovery hint when busy-list search leaves one cancelled registration', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => (
