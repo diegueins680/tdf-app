@@ -51,6 +51,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
+    , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
     , validateVenueCreateUpdateFields
@@ -256,6 +257,34 @@ spec = describe "social event handler helpers" $ do
         assertInvalid
             "offset must be 10000 or fewer"
             (validateSocialEventsListOffset (Just 10001))
+
+    it "rejects oversized or unsafe social event list filters before DB fallback scans" $ do
+        validateSocialEventsListFilter "city" Nothing `shouldBe` Right Nothing
+        validateSocialEventsListFilter "city" (Just "  Quito  ")
+            `shouldBe` Right (Just "Quito")
+        validateSocialEventsListFilter "q" (Just "   ")
+            `shouldBe` Right Nothing
+
+        let assertInvalid expectedMessage result =
+                case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ( "Expected social event list filter to be rejected, got: "
+                                <> show value
+                            )
+
+        assertInvalid
+            "city must be 120 characters or fewer"
+            (validateSocialEventsListFilter "city" (Just (T.replicate 121 "x")))
+        assertInvalid
+            "q must not contain control characters or hidden formatting characters"
+            (validateSocialEventsListFilter "q" (Just ("Quito" <> T.singleton '\n')))
+        assertInvalid
+            "name must not contain control characters or hidden formatting characters"
+            (validateSocialEventsListFilter "name" (Just ("DJ" <> T.singleton (chr 0x202E))))
 
     it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1

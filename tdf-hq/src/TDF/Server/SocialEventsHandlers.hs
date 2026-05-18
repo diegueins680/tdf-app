@@ -47,6 +47,7 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentCommentBody
   , validateEventCreateUpdateDimensions
   , validateSocialEventsListOffset
+  , validateSocialEventsListFilter
   , validateVenueCreateUpdateFields
   , validateEventCurrencyInput
   , TicketCheckInLookup(..)
@@ -539,6 +540,35 @@ validateSocialEventsListOffset (Just rawOffset)
 maxSocialEventsListOffset :: Int
 maxSocialEventsListOffset = 10000
 
+validateSocialEventsListFilter :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateSocialEventsListFilter _ Nothing = Right Nothing
+validateSocialEventsListFilter fieldName (Just rawFilter) =
+  let trimmed = T.strip rawFilter
+      err message =
+        Left err400
+          { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " " <> message))
+          }
+  in
+    if T.null trimmed
+      then Right Nothing
+      else if T.length trimmed > maxSocialEventsListFilterChars
+        then
+          err
+            ( "must be "
+                <> T.pack (show maxSocialEventsListFilterChars)
+                <> " characters or fewer"
+            )
+      else if T.any isUnsafeSocialEventsListFilterChar rawFilter
+        then err "must not contain control characters or hidden formatting characters"
+      else Right (Just trimmed)
+
+maxSocialEventsListFilterChars :: Int
+maxSocialEventsListFilterChars = 120
+
+isUnsafeSocialEventsListFilterChar :: Char -> Bool
+isUnsafeSocialEventsListFilterChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
 socialEventsServer user = eventsServer
                :<|> venuesServer
@@ -569,15 +599,16 @@ socialEventsServer user = eventsServer
       offset <- either throwError pure (validateSocialEventsListOffset mOffset)
       typeNeedle <- either throwError pure (parseEventTypeQueryParamEither mType)
       statusNeedle <- either throwError pure (parseEventStatusQueryParamEither mStatus)
+      cityFilterText <- either throwError pure $
+        validateSocialEventsListFilter "city" mCity
       startFilter <- case mStartAfter of
         Nothing -> pure []
         Just raw ->
           case iso8601ParseM (T.unpack raw) of
             Just t  -> pure [SocialEventStartTime >=. t]
             Nothing -> throwError err400 { errBody = "Invalid start_after value (expected ISO-8601 datetime)" }
-      cityFilter <- case fmap (T.toCaseFold . T.strip) mCity of
+      cityFilter <- case T.toCaseFold <$> cityFilterText of
         Nothing -> pure []
-        Just "" -> pure []
         Just cityNeedle -> do
           venueRows <- liftIO $ runSqlPool (selectList [] [LimitTo 2000]) envPool
           let ids =
@@ -836,15 +867,18 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       limit <- resolveLimit 200 500 mLimit
       offset <- either throwError pure (validateSocialEventsListOffset mOffset)
-      let searchNeedle = fmap (T.toCaseFold . T.strip) mQuery
+      cityFilterText <- either throwError pure $
+        validateSocialEventsListFilter "city" mCity
+      searchNeedle <- either throwError pure $
+        fmap T.toCaseFold <$> validateSocialEventsListFilter "q" mQuery
       nearFilter <- case mNear of
         Nothing -> pure Nothing
         Just raw ->
           case parseNearQueryEither raw of
             Left e -> throwError e
             Right parsed -> pure (Just parsed)
-      let filters = case mCity of
-                      Just c | not (T.null (T.strip c)) -> [VenueCity ==. Just (T.strip c)]
+      let filters = case cityFilterText of
+                      Just c -> [VenueCity ==. Just c]
                       _ -> []
       let hasTextQuery = maybe False (not . T.null) searchNeedle
           hasNearQuery = isJust nearFilter
@@ -1009,9 +1043,11 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       limit <- resolveLimit 500 1000 mLimit
       offset <- either throwError pure (validateSocialEventsListOffset mOffset)
-      let nameFilter = normalizeFilter mNameFilter
-          genreFilter = normalizeFilter mGenreFilter
-          hasFilter = isJust nameFilter || isJust genreFilter
+      nameFilter <- either throwError pure $
+        fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+      genreFilter <- either throwError pure $
+        fmap T.toCaseFold <$> validateSocialEventsListFilter "genre" mGenreFilter
+      let hasFilter = isJust nameFilter || isJust genreFilter
       rows <- liftIO $ runSqlPool
         (selectList []
           ([Desc ArtistProfileCreatedAt] ++
@@ -1036,13 +1072,6 @@ socialEventsServer user = eventsServer
         (if hasFilter
           then take limit (drop offset filtered)
           else filtered)
-
-    normalizeFilter :: Maybe T.Text -> Maybe T.Text
-    normalizeFilter mVal =
-      case fmap (T.toCaseFold . T.strip) mVal of
-        Nothing -> Nothing
-        Just t | T.null t -> Nothing
-        Just t -> Just t
 
     resolveLimit :: Int -> Int -> Maybe Int -> AppM Int
     resolveLimit defaultLimit maxLimit mVal =
