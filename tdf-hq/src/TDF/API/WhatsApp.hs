@@ -294,6 +294,8 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
             "Invalid name: must not contain control or hidden formatting characters"
               <> ", or non-ASCII spaces"
         }
+  | not (T.any isAlphaNum nameValue) =
+      Left err400 { errBody = "Invalid name: must include letters or numbers" }
   | T.length emailValue > maxLeadCompletionEmailChars =
       Left err400 { errBody = "Invalid email: must be 254 characters or fewer" }
   | not (isValidEmail emailValue) =

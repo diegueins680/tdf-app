@@ -11069,6 +11069,9 @@ main = hspec $ do
                     "ada@example.com"
                 )
                 "Invalid name: must not contain control or hidden formatting characters, or non-ASCII spaces"
+            assertInvalid
+                (CompleteReq validToken "---" "ada@example.com")
+                "Invalid name: must include letters or numbers"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada @example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
