@@ -1383,6 +1383,16 @@ const firstRunPaymentEvidenceDescriptorPrefixPattern =
 const firstRunPaymentEvidenceDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|invoices?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
 
+const firstRunAgreementDescriptorPattern = String.raw`(?:(?:(?:course|student|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release)(?:\s+(?:forms?|pages?|links?|urls?|portals?|packets?))?)|(?:(?:consent|release)\s+forms?|liability\s+waivers?|media\s+releases?|photo\s+releases?)|(?:(?:forms?|pages?|links?|urls?|portals?|packets?)\s+(?:for\s+)?(?:course|student|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release))|(?:(?:contratos?|acuerdos?|autorizaciones?|consentimientos?|exoneraciones?)\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad))|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|paquetes?)\s+de\s+(?:contrato|acuerdo|autorizaci[oó]n|consentimiento|exoneraci[oó]n)(?:\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad))?))`;
+const firstRunAgreementDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAgreementDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunAgreementDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunAgreementDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunSignupSheetDescriptorPrefixPattern =
   /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1826,6 +1836,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
+    .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
@@ -1933,6 +1944,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
+    .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')

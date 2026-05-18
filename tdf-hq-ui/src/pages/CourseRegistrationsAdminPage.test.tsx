@@ -17174,6 +17174,70 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips legal agreement wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Enrollment agreement for Beatmaking 101',
+      'Course contract - Beatmaking 101',
+      'Beatmaking 101 - student agreement page',
+      'Liability waiver form - Beatmaking 101',
+      'Media release for Beatmaking 101',
+      'Formulario de autorización - Beatmaking 101',
+      'Contrato de matrícula para Beatmaking 101',
+      'Beatmaking 101 - acuerdo de inscripción',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/agreement|contract|waiver|release|autorizaci[oó]n|contrato|acuerdo/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
+  it('keeps legal-agreement words when they are part of the course name', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'student-agreement-music-production', ccTitle: 'Student Agreement in Music Production' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Student Agreement in Music Production. La página pública ya está lista para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para in Music Production.');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/student-agreement-music-production"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Student Agreement in Music Production');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips sales and ticket-page descriptors from first-run cohort copy', async () => {
     const titles = [
       'Sales page - Beatmaking 101',
