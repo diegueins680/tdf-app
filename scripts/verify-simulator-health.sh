@@ -5,7 +5,7 @@
 # Usage: cd tdf-mobile && ../scripts/verify-simulator-health.sh
 
 set -e
-DEVICE="3C3D5759-6E10-480D-B768-2747B9B0D02A"
+DEVICE="8DB9DCE0-2F80-49C9-A614-F21DA3876B7B"
 APP_PATH="ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app"
 BUNDLE_ID="com.tdfrecords.mobile"
 
