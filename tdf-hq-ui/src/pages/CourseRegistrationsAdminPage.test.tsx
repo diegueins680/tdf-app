@@ -216,6 +216,7 @@ const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
 const copyVisibleSearchCsvLabel = 'Copiar CSV';
 const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
+const cohortFilterLabel = 'Formulario público';
 const localSearchLabel = 'Buscar inscripciones';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
@@ -1413,7 +1414,7 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
@@ -1514,7 +1515,7 @@ describe('CourseRegistrationsAdminPage', () => {
         status: 'paid',
         limit: 200,
       });
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       const activeStatusSummary = container.querySelector<HTMLElement>(
         '[data-testid="course-registration-active-status-summary"]',
       );
@@ -1552,7 +1553,8 @@ describe('CourseRegistrationsAdminPage', () => {
         status: undefined,
         limit: 200,
       });
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
+      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('Mostrando 2 inscripciones.');
       expect(countButtonsByText(container, copyVisibleCsvLabel(2))).toBe(0);
@@ -1588,7 +1590,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('beatmaking-101');
       expect(container.textContent).not.toContain('Beatmaking 101 (beatmaking-101)');
@@ -1617,7 +1619,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101-weekend');
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).toContain('Beatmaking 101 Weekend');
       expect(container.textContent).not.toContain('Beatmaking 101 (Weekend) (beatmaking-101-weekend)');
       expect(container.textContent).not.toContain('beatmaking-101-weekend');
@@ -1645,7 +1647,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=beatmaking-101');
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('Formulario público - Beatmaking 101');
       expect(container.textContent).not.toContain('Página pública para inscripciones');
@@ -2338,7 +2340,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('Cohorte disponible');
@@ -2364,8 +2366,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const secondRender = await renderPage(secondContainer);
 
     await waitForExpectation(() => {
-      expect(hasLabel(secondContainer, 'Curso / cohorte')).toBe(true);
-      expect(secondContainer.textContent).not.toContain('Formulario público');
+      expect(hasLabel(secondContainer, cohortFilterLabel)).toBe(true);
+      expect(secondContainer.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(secondContainer.textContent).not.toContain('Cohorte única por ahora.');
     });
 
@@ -2389,7 +2391,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Cohorte única por ahora.');
       expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(true);
@@ -2422,12 +2424,12 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pagado');
       expect(container.textContent).toContain('Estado único en esta vista.');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).not.toContain('Usa cohorte para cambiar la vista.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
@@ -2505,7 +2507,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
@@ -2540,7 +2542,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
@@ -2576,7 +2578,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.textContent).toContain('Formulario público');
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).toContain('Beatmaking 101 · Fuente: Instagram');
@@ -2663,7 +2665,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
@@ -2691,7 +2693,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
@@ -2725,7 +2727,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).toContain('Vista actual');
       expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
@@ -4017,7 +4019,7 @@ describe('CourseRegistrationsAdminPage', () => {
         '[data-testid="course-registration-status-filter-unavailable"]',
       );
 
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(customStatusSummary?.textContent).toContain(customStatusFilterUnavailableMessage);
       expect(countOccurrences(container, customStatusFilterUnavailableMessage)).toBe(1);
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
@@ -4109,7 +4111,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
 
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
@@ -8510,7 +8512,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Los filtros se aplican automáticamente al cambiar. Empieza por cohorte y estado; usa Ajustar límite solo cuando necesites revisar un lote distinto. Ajusta la vista o usa refrescar si esperabas resultados.',
       );
       expect(container.textContent).not.toContain('Vista filtrada:');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Esta vista ya está filtrada por ese estado.');
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Ajustar límite (50)')).toBe(false);
@@ -8638,7 +8640,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, loadLimitLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
     });
 
     await cleanup();
@@ -8815,7 +8817,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
@@ -12588,7 +12590,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
         'Nombre o contacto',
       );
@@ -12836,7 +12838,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto o fuente');
       expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(getDossierTriggers(container)).toHaveLength(9);
@@ -13498,7 +13500,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
     });
 
@@ -13514,7 +13516,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getDossierTriggers(container)).toHaveLength(1);
       expect(getButtonByAriaLabel(container, 'Abrir expediente de Nina Simone')).toBeTruthy();
       expect(container.textContent).toContain(`Mostrando 1 de 9 inscripciones cargadas. ${paidRecoveryScopeHint}`);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
@@ -13838,7 +13840,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Vista filtrada: cohorte Beatmaking 101 · estado pagado. No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain('Estado filtrado');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-active-status-summary"]')).toBeNull();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
@@ -14647,7 +14649,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(loadingState?.textContent).toContain(initialRegistrationLoadingMessage);
       expect(container.querySelector('[data-testid="course-registration-results-panel"]')).toBeNull();
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
@@ -14672,7 +14674,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('No se pudieron cargar las inscripciones: Backend unavailable');
       expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
       expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
@@ -14749,7 +14751,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Reintentar inscripciones')).toBe(1);
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(1);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(hasLabel(container, loadLimitLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
@@ -14796,7 +14798,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortFallback?.textContent).toContain('Formularios no disponibles');
       expect(cohortFallback?.textContent).not.toContain('Cohortes no disponibles');
       expect(cohortFallback?.textContent).not.toContain('reintenta cohortes');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-header-actions"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
@@ -14893,7 +14895,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortLoading?.textContent).toContain('Formularios cargando');
       expect(cohortLoading?.textContent).toContain(cohortFilterLoadingMessage);
       expect(cohortLoading?.textContent).not.toContain('Cohortes cargando');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.textContent).not.toContain('Cargando cohortes…');
       expect(container.textContent).not.toContain('Cargando formularios…');
       expect(container.querySelector('[data-testid="course-registration-initial-cohort-loading"]')).toBeNull();
@@ -14930,7 +14932,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(getDossierTriggers(container)).toHaveLength(9);
     });
 
@@ -14967,7 +14969,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortSummary?.textContent).toContain(emptyCohortFilterMessage);
       expect(cohortSummary?.textContent).not.toContain('Cohortes no configuradas');
       expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-loading"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).not.toBeNull();
@@ -15009,7 +15011,7 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(container.textContent).not.toContain('Cambia Estado para actualizar la lista.');
@@ -15063,7 +15065,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('tamaño del lote');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Cambiar estado:');
       expect(container.textContent).not.toContain('Vista actual');
@@ -19895,7 +19897,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(
@@ -19959,7 +19961,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(initialEmptyStateConfigMessage);
       expect(container.textContent).not.toContain(singleCohortInitialEmptyStateMessage);
       expect(container.textContent).not.toContain('Todavía no hay inscripciones para mostrar en esta vista.');
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
@@ -20059,7 +20061,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.querySelector('[data-testid="course-registration-initial-empty-state-new-tab-icon"]')).toBeNull();
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
       expect(emptyState?.querySelector('a[href^="/inscripcion/"]')).toBeNull();
-      expect(hasLabel(container, 'Curso / cohorte')).toBe(false);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
     });

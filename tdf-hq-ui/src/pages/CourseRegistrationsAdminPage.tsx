@@ -227,6 +227,7 @@ const MIN_PHONE_SEARCH_DIGITS = 4;
 const MIN_FULL_PHONE_MATCH_DIGITS = 7;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH = 64;
+const COHORT_FILTER_LABEL = 'Formulario público';
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
@@ -6413,7 +6414,7 @@ export default function CourseRegistrationsAdminPage() {
                     ) : (
                       <TextField
                         select
-                        label="Curso / cohorte"
+                        label={COHORT_FILTER_LABEL}
                         value={slug}
                         onChange={(e) => {
                           setHasUsedFilterControl(true);
