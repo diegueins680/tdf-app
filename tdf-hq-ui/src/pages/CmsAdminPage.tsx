@@ -306,16 +306,24 @@ export default function CmsAdminPage() {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(draftKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: string };
-      if (parsed.title !== undefined) setTitle(parsed.title);
-      if (parsed.payload !== undefined) setPayload(parsed.payload);
-      if (parsed.status && isContentStatus(parsed.status)) setStatus(parsed.status);
-      setEditingFromId(null);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: string };
+        setTitle(parsed.title ?? '');
+        setPayload(parsed.payload ?? '{}');
+        setStatus(parsed.status && isContentStatus(parsed.status) ? parsed.status : 'draft');
+        setEditingFromId(null);
+        return;
+      }
     } catch {
       // ignore broken drafts
     }
-  }, [draftKey]);
+
+    if (hasSlugSelection && slugFieldState.showCustomInput) return;
+    setTitle('');
+    setPayload('{}');
+    setStatus('draft');
+    setEditingFromId(null);
+  }, [draftKey, hasSlugSelection, slugFieldState.showCustomInput]);
 
   useEffect(() => {
     try {

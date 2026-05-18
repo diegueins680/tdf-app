@@ -153,6 +153,31 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const normalizeElementText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+const selectComboboxOption = async (root: ParentNode, currentText: string, optionText: string) => {
+  const combobox = Array.from(root.querySelectorAll<HTMLElement>('[role="combobox"]')).find(
+    (element) => normalizeElementText(element) === currentText,
+  );
+  if (!combobox) throw new Error(`Combobox not found: ${currentText}`);
+
+  await act(async () => {
+    combobox.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await flushPromises();
+  });
+
+  const option = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).find(
+    (element) => normalizeElementText(element) === optionText,
+  );
+  if (!option) throw new Error(`Combobox option not found: ${optionText}`);
+
+  await act(async () => {
+    option.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -977,6 +1002,58 @@ describe('CmsAdminPage', () => {
       );
       expect(container.textContent).toContain(
         'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.',
+      );
+    });
+
+    await cleanup();
+  });
+
+  it('starts a different built-in slug from a blank editor when no local draft exists', async () => {
+    listMock.mockImplementation((params) => Promise.resolve([
+      buildContent({
+        ccdSlug: params?.slug ?? 'records-public',
+        ccdTitle: params?.slug === 'fan-hub' ? 'Fan Hub publicado' : 'Landing principal',
+      }),
+    ]));
+    getPublicMock.mockImplementation((slug) => Promise.resolve(buildContent({
+      ccdSlug: slug,
+      ccdTitle: slug === 'fan-hub' ? 'Fan Hub publicado' : 'Landing principal',
+      ccdPayload: {
+        heroTitle: slug === 'fan-hub' ? 'Fans destacados' : 'Lanzamientos destacados',
+      },
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Título').value).toBe('Landing principal');
+      expect(getInputByLabel(container, 'Payload JSON').value).toContain('Lanzamientos destacados');
+      expect(container.textContent).toContain('Base: v4');
+    });
+
+    await selectComboboxOption(container, 'records-public', 'fan-hub');
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ slug: 'fan-hub', locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
+      expect(getInputByLabel(container, 'Título').value).toBe('');
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+      expect(container.textContent).not.toContain('Base: v4');
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(container.textContent).toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
     });
 
