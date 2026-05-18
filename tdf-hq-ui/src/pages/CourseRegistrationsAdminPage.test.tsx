@@ -10014,7 +10014,24 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'contacto pendiente');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'inscripciones con contacto pendiente');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Nina Sin Contacto');
+      expect(container.textContent).toContain('Camila Sin Contacto');
+      expect(container.textContent).not.toContain('Estudiante 1');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Contacto pendiente en todas las inscripciones visibles.');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'contactos pendientes');
       await flushPromises();
       await flushPromises();
     });

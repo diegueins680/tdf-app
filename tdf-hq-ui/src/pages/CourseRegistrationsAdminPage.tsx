@@ -2998,6 +2998,9 @@ const registrationContactStateSearchValues = (
   if (needsEmail && needsPhone) {
     values.push(
       'contacto pendiente',
+      'contactos pendientes',
+      'inscripciones con contacto pendiente',
+      'inscripciones visibles con contacto pendiente',
       'sin contacto',
       'sin correo ni teléfono',
       'sin correo ni telefono',
@@ -3006,11 +3009,29 @@ const registrationContactStateSearchValues = (
   }
 
   if (needsEmail) {
-    values.push('correo pendiente', 'email pendiente', 'sin correo', 'sin email');
+    values.push(
+      'correo pendiente',
+      'correos pendientes',
+      'email pendiente',
+      'emails pendientes',
+      'sin correo',
+      'sin correos',
+      'sin email',
+      'sin emails',
+    );
   }
 
   if (needsPhone) {
-    values.push('teléfono pendiente', 'telefono pendiente', 'sin teléfono', 'sin telefono');
+    values.push(
+      'teléfono pendiente',
+      'teléfonos pendientes',
+      'telefono pendiente',
+      'telefonos pendientes',
+      'sin teléfono',
+      'sin teléfonos',
+      'sin telefono',
+      'sin telefonos',
+    );
   }
 
   return values;
