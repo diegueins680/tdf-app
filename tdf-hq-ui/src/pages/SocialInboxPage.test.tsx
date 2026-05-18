@@ -526,6 +526,8 @@ describe('SocialInboxPage', () => {
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(container.textContent).not.toContain('No messages for this filter.');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
     });
 
     await cleanup();

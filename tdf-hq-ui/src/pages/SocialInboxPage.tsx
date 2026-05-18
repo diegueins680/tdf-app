@@ -1389,7 +1389,7 @@ export default function SocialInboxPage() {
   const showInboxLoadingState = !allChannelsLoaded && !hasAnyInboundMessage && !hasChannelLoadErrors;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const showReviewMessageProofGuidance = reviewMode && Boolean(activeAsset) && hasAnyInboundMessage;
-  const showReviewAssetSetupAction = !activeAsset || !hasAnyInboundMessage;
+  const showReviewAssetSetupAction = !activeAsset || (!hasAnyInboundMessage && !hasChannelLoadErrors);
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
