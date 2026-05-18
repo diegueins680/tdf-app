@@ -1159,7 +1159,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
       '',
     )
     .replace(
-      /\s*(?:[\[(]\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA)\s*[\])]|\s*(?::|-|\u2013|\u2014)\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA))\s*$/gi,
+      /\s*(?:[[(]\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA)\s*[\])]|\s*(?::|-|\u2013|\u2014)\s*(?:TODO|FIXME|DRAFT|BORRADOR|WIP|TEST|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA))\s*$/gi,
       '',
     )
     .replace(firstRunListMarkerPattern, '')
@@ -6619,7 +6619,10 @@ export default function CourseRegistrationsAdminPage() {
                 />
               </Box>
             </Collapse>
-            {showFirstRunFilterHelper && filtersHelpText && !showFilteredEmptyState && (
+            {showFirstRunFilterHelper
+              && filtersHelpText
+              && !showFilteredEmptyState
+              && !showEmptyCohortFilterSummary && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                 {filtersHelpText}
               </Typography>
