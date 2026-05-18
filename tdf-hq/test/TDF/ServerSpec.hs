@@ -8022,6 +8022,7 @@ spec = describe "TDF.Server helpers" $ do
                                     <> show providerVal
                                 )
             assertInvalid "   " "use null to clear it"
+            assertInvalid "---" "at least one ASCII letter or digit"
             assertInvalid "datafast/paypal" "ASCII letters"
             assertInvalid (T.replicate 65 "a") "64 characters or fewer"
 

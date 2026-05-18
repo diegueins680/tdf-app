@@ -8622,6 +8622,8 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Left err400 { errBody = "paymentProvider cannot be blank; use null to clear it" }
   | T.length normalized > 64 =
       Left err400 { errBody = "paymentProvider must be 64 characters or fewer" }
+  | not (T.any isPaymentProviderSlugAtom normalized) =
+      Left err400 { errBody = "paymentProvider must include at least one ASCII letter or digit" }
   | not (T.all isPaymentProviderSlugChar normalized) =
       Left err400
         { errBody =
@@ -8631,8 +8633,10 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Right (Just (Just normalized))
   where
     normalized = T.toLower (T.strip rawProvider)
+    isPaymentProviderSlugAtom ch =
+      isAsciiLower ch || isDigit ch
     isPaymentProviderSlugChar ch =
-      isAsciiLower ch || isDigit ch || ch == '-' || ch == '_'
+      isPaymentProviderSlugAtom ch || ch == '-' || ch == '_'
 
 marketplaceOrderStatusErrorBody :: BL.ByteString
 marketplaceOrderStatusErrorBody =
