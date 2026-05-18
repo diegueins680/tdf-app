@@ -160,8 +160,7 @@ const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonl
   return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
 };
 const initialEmptyStateConfigActionLabel = 'Crear curso';
-const initialEmptyStateMultiCohortActionLabel = 'Seleccionar formulario';
-const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
+const initialEmptyStateChooseFormActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
@@ -5053,9 +5052,9 @@ export default function CourseRegistrationsAdminPage() {
     }
     : {
       label: hasSingleCourseFirstRunVariants
-        ? initialEmptyStateSingleCourseVariantActionLabel
+        ? initialEmptyStateChooseFormActionLabel
         : hasMultipleAvailableCohorts
-          ? initialEmptyStateMultiCohortActionLabel
+          ? initialEmptyStateChooseFormActionLabel
           : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
       ariaLabel: hasSingleCourseFirstRunVariants

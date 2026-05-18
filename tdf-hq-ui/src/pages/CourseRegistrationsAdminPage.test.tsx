@@ -272,8 +272,7 @@ const singleCohortInitialEmptyStateMessage =
 const genericSingleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Crear curso';
-const initialEmptyStateMultiCohortActionLabel = 'Seleccionar formulario';
-const initialEmptyStateSingleCourseVariantActionLabel = 'Elegir formulario';
+const initialEmptyStateChooseFormActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
@@ -8836,7 +8835,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      ).toBe(initialEmptyStateChooseFormActionLabel);
       expect(container.textContent).not.toContain('No hay inscripciones con el límite actual');
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(countButtonsByText(container, 'Restablecer límite')).toBe(0);
@@ -8878,7 +8877,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Formulario público del curso Producción en vivo');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      ).toBe(initialEmptyStateChooseFormActionLabel);
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
@@ -8907,7 +8906,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Página de preventa de inscripción');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
-      ).toBe(initialEmptyStateMultiCohortActionLabel);
+      ).toBe(initialEmptyStateChooseFormActionLabel);
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
@@ -15617,7 +15616,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
       );
       expect(emptyState?.textContent).not.toMatch(/TODO|FIXME/);
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 2 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
       );
@@ -19911,7 +19910,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
       expect(emptyState?.textContent).not.toMatch(/VIP waitlist|Lista prioritaria|Priority list/i);
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
       );
@@ -20063,8 +20062,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(copy).not.toMatch(/Beacons|Stan Store|Koji/i);
       expect(copy).not.toContain('variantes públicas');
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
-      expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
-      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
+      expect(countOccurrences(emptyState!, initialEmptyStateChooseFormActionLabel)).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Seleccionar formulario');
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
       expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 formularios públicos de Beatmaking 101.');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
@@ -20563,11 +20562,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('Elegir formulario público');
       expect(emptyState?.textContent).not.toContain('Gestionar cursos');
       expect(emptyState?.textContent).not.toContain('Ver cursos configurados');
-      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateChooseFormActionLabel)).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Seleccionar formulario');
       expect(countOccurrences(emptyState!, 'formularios públicos')).toBe(1);
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(0);
       const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 2 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
@@ -20605,7 +20605,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(emptyState?.textContent).not.toContain('Producción Vocal');
       expect(emptyState?.textContent).not.toContain('DJ Lab');
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 4 formularios públicos: Beatmaking 101, Mixing Bootcamp, Producción Vocal y DJ Lab.',
       );
@@ -20640,7 +20640,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(emptyState?.textContent).not.toContain('Producción Vocal');
       expect(emptyState?.textContent).not.toContain('DJ Lab');
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 6 formularios públicos: Beatmaking 101, Mixing Bootcamp, Producción Vocal y 3 cursos más.',
       );
@@ -20675,7 +20675,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Beatmaking 101, beatmaking 101');
       expect(emptyState?.textContent).not.toContain('y 1 más');
-      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateChooseFormActionLabel)).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Seleccionar formulario');
       expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
     });
 
@@ -20705,7 +20706,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Beatmaking 101!');
       expect(emptyState?.textContent).not.toContain('Mixing Bootcamp:');
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
       );
@@ -20765,7 +20766,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
       expect(emptyState?.textContent).not.toMatch(/A\/B test|Variante B|Split test/i);
-      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateMultiCohortActionLabel);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
       expect(configAction?.getAttribute('title')).toBe(
         'Elegir entre 3 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
       );
@@ -20848,8 +20849,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).not.toContain('variantes públicas');
       expect(emptyState?.textContent).not.toContain('Elegir variante');
       expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
-      expect(countOccurrences(emptyState!, initialEmptyStateSingleCourseVariantActionLabel)).toBe(1);
-      expect(countOccurrences(emptyState!, initialEmptyStateMultiCohortActionLabel)).toBe(0);
+      expect(countOccurrences(emptyState!, initialEmptyStateChooseFormActionLabel)).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Seleccionar formulario');
       expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
       expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 formularios públicos de Beatmaking 101.');
       expect(emptyState?.textContent).not.toContain(
