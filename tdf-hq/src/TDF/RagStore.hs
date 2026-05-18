@@ -784,7 +784,39 @@ embedTexts cfg inputs
 
 shouldUseLocalEmbeddingFallback :: Text -> Bool
 shouldUseLocalEmbeddingFallback rawError =
-  not ("openai embeddings response invalid:" `T.isPrefixOf` T.toLower (T.strip rawError))
+  not responseShapeDrift && not credentialOrAccountFailure
+  where
+    msg = T.toLower (T.strip rawError)
+    responseShapeDrift =
+      "openai embeddings response invalid:" `T.isPrefixOf` msg
+    credentialOrAccountFailure =
+      any (`T.isInfixOf` msg)
+        [ "(status 401)"
+        , "(status 402)"
+        , "(status 403)"
+        , "(status 404)"
+        , "authentication"
+        , "authentication_error"
+        , "invalid_api_key"
+        , "invalid api key"
+        , "incorrect api key"
+        , "invalid model"
+        , "model_not_found"
+        , "model not found"
+        , "not a valid model"
+        , "unknown model"
+        , "unauthorized"
+        , "unauthorised"
+        , "permission_denied"
+        , "permission denied"
+        , "insufficient_quota"
+        , "quota"
+        , "billing"
+        , "billing_hard_limit"
+        , "payment_required"
+        , "payment required"
+        , "payment method"
+        ]
 
 localEmbeddings :: AppConfig -> [Text] -> [[Double]]
 localEmbeddings cfg inputs =

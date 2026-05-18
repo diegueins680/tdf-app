@@ -10533,6 +10533,18 @@ main = hspec $ do
             shouldUseLocalEmbeddingFallback
                 "  openai embeddings response invalid: Embedding response dimension mismatch  "
                 `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 401)."
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 403): permission_denied"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 429): insufficient_quota"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error: model_not_found"
+                `shouldBe` False
 
     describe "callOpenAIEmbeddingsWith" $
         it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
