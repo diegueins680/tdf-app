@@ -153,7 +153,12 @@ data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationReceiptCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationReceiptCreate"
+      ["fileName", "mimeType", "notes"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationReceiptCreate
 
 data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate

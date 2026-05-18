@@ -721,7 +721,16 @@ spec = do
                 Right (Courses.CourseRegistrationNotesUpdate notesVal) ->
                     notesVal `shouldBe` Just "   "
 
-        it "rejects explicit null receipt update fields so omitted fields stay unambiguous" $ do
+        it "rejects explicit null receipt create/update fields so omitted fields stay unambiguous" $ do
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"mimeType\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"notes\":null}"
+                `shouldSatisfy` isLeft
             decodeCourseRegistrationReceiptUpdate
                 "{\"fileUrl\":null,\"notes\":\"Replaced proof\"}"
                 `shouldSatisfy` isLeft
