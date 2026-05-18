@@ -725,7 +725,9 @@ data ChangePasswordRequest = ChangePasswordRequest
   , newPassword     :: Text
   } deriving (Show, Generic)
 instance FromJSON ChangePasswordRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields "ChangePasswordRequest" ["username"] value
+    genericParseJSON strictDecodeOptions value
 
 data PasswordResetRequest = PasswordResetRequest
   { email :: Text

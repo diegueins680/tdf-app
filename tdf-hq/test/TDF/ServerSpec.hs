@@ -4576,6 +4576,17 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"token\":\"reset-token\",\"newPassword\":\"supersecret\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null change-password usernames instead of silently using the auth-token fallback" $
+            case decodeChangePasswordRequest
+                "{\"username\":null,\"currentPassword\":\"old-secret\",\"newPassword\":\"new-secret\"}" of
+                Left decodeErr ->
+                    decodeErr `shouldContain` "username must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null change-password username to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "validateAdsInquiry" $ do
         it "normalizes contactable public ads inquiries before lead creation and auto-replies" $ do
             let inquiry =
