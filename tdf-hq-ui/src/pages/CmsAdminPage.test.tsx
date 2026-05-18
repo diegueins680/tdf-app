@@ -1220,6 +1220,25 @@ describe('CmsAdminPage', () => {
       expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
     });
 
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing en revisión');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Espera a que termine la búsqueda en vivo antes de guardar la primera versión.',
+      );
+      expect(container.textContent).not.toContain(
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
+      );
+    });
+
     await cleanup();
   });
 

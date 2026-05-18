@@ -742,6 +742,14 @@ export default function CmsAdminPage() {
   };
   const editorHasFirstVersionContentDraft =
     title.trim().length > 0 || (!payloadError && formattedPayload.trim() !== '{}');
+  const showFirstVersionLiveLookupGuard =
+    hasSlugSelection
+    && liveLookupPending
+    && !listQuery.isError
+    && !listDataInvalid
+    && versions.length === 0
+    && !liveContent
+    && editorHasFirstVersionContentDraft;
   const showFirstVersionEmptyDraftGuard =
     hasSlugSelection
     && !payloadError
@@ -752,6 +760,8 @@ export default function CmsAdminPage() {
     && !editorHasFirstVersionContentDraft;
   const statusHelperText = !hasSlugSelection
     ? 'Completa el slug para habilitar el estado y el guardado.'
+    : showFirstVersionLiveLookupGuard
+      ? 'Espera a que termine la búsqueda en vivo antes de guardar la primera versión.'
     : showFirstVersionEmptyDraftGuard
       ? 'Agrega un título o payload antes de guardar la primera versión.'
       : showLiveStartEmptyEditorGuard
@@ -759,16 +769,19 @@ export default function CmsAdminPage() {
         : baseStatusHelperText;
   const showStatusControl =
     hasSlugSelection
+    && !showFirstVersionLiveLookupGuard
     && !showFirstVersionEmptyDraftGuard
     && !showLiveStartEmptyEditorGuard;
   const canSaveVersion =
     hasSlugSelection
     && !payloadError
+    && !showFirstVersionLiveLookupGuard
     && !showFirstVersionEmptyDraftGuard
     && !showLiveStartEmptyEditorGuard;
   const showSaveVersionAction =
     hasSlugSelection
     && !liveEditorActionState.showLiveInSyncChip
+    && !showFirstVersionLiveLookupGuard
     && !showFirstVersionEmptyDraftGuard
     && !showLiveStartEmptyEditorGuard;
   const showFirstVersionHistoryGuidance =
@@ -778,6 +791,7 @@ export default function CmsAdminPage() {
     !listQuery.isError &&
     !listDataInvalid &&
     versions.length === 0 &&
+    !liveLookupUnresolved &&
     !hasActiveVersionFilters;
   const showVersionHistorySection =
     listQuery.isLoading ||
