@@ -6911,7 +6911,7 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleMissingContactSummary}
                   </Typography>
                 )}
-                {sharedVisibleNotesSummary && (
+                {showSharedNotesSummaryInList && (
                   <Typography
                     variant="body2"
                     color="text.secondary"

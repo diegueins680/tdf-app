@@ -2373,6 +2373,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps shared-note context in the busy mixed-status search helper instead of repeating it under status filters', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9, (index) => ({
+      crAdminNotes: `Nota interna ${index + 1}.`,
+      crStatus: index < 3 ? 'pending_payment' : index < 6 ? 'paid' : 'cancelled',
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).not.toBeNull();
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
+      expect(container.textContent).toContain('Notas internas en todas las inscripciones visibles.');
+      expect(countOccurrences(container, 'Notas internas en todas las inscripciones visibles.')).toBe(1);
+      expect(hasExactText(container, 'Nota interna 1.')).toBe(false);
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pendiente de pago')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Pagado')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Filtrar inscripciones por estado Cancelado')).toBeTruthy();
+    });
+
+    await cleanup();
+  });
+
   it('uses the search helper as the only notes explanation when hidden notes drive the match', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
       crAdminNotes: index < 2 ? 'Beca aprobada por coordinación.' : null,
