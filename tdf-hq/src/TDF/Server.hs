@@ -5607,16 +5607,22 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
                     <> T.pack (show maxCourseRegistrationUrlChars)
                     <> " characters or fewer"
             }
-      | "https://" `T.isPrefixOf` T.toLower urlVal
-          && TrialsServer.isValidHttpUrl urlVal
-          && not ("#" `T.isInfixOf` urlVal)
-        -> Right (Just urlVal)
-      | otherwise ->
+      | not ("https://" `T.isPrefixOf` T.toLower urlVal)
+          || not (TrialsServer.isValidHttpUrl urlVal)
+          || "#" `T.isInfixOf` urlVal ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL without a fragment"
             }
+      | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " path must not contain empty, dot, or dot-dot segments"
+            }
+      | otherwise ->
+          Right (Just urlVal)
 
 maxCourseRegistrationUrlChars :: Int
 maxCourseRegistrationUrlChars = 2048

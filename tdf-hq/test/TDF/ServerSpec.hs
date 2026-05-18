@@ -9944,6 +9944,22 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files.example.com/proof.pdf#preview"
             assertInvalid "attachmentUrl" ("https://files.example.com/proof" <> T.singleton '\x202E' <> "fdp")
 
+        it "rejects ambiguous course registration asset URL paths before storing uploaded proof metadata" $ do
+            let assertInvalid fieldName rawUrl =
+                    case validateCourseRegistrationUrlField fieldName (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "path must not contain empty, dot, or dot-dot segments"
+                        Right urlVal ->
+                            expectationFailure
+                                ( "Expected ambiguous course registration URL path to be rejected, got: "
+                                    <> show urlVal
+                                )
+            assertInvalid "fileUrl" "https://files.example.com/course/../admin.pdf"
+            assertInvalid "attachmentUrl" "https://files.example.com/course//proof.pdf"
+            assertInvalid "fileUrl" "https://files.example.com/course/%2e/receipt.pdf"
+
         it "rejects oversized course registration asset URLs before receipt or follow-up storage" $
             case validateCourseRegistrationUrlField
                     "fileUrl"
