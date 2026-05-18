@@ -1434,6 +1434,16 @@ const firstRunRosterDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunAttendanceDescriptorPattern = String.raw`(?:(?:(?:course|class|student|students?)\s+)?(?:attendance|check[-\s]?in|roll\s*call)\s+(?:forms?|pages?|links?|urls?|portals?|sheets?|lists?|trackers?)|(?:(?:forms?|pages?|links?|urls?|portals?|sheets?|lists?|trackers?)\s+(?:for\s+)?(?:(?:course|class|student|students?)\s+)?(?:attendance|check[-\s]?in|roll\s*call))|(?:(?:lista|listado|hoja|planilla|formulario|p[aá]gina|enlace|link|url|portal|registro)\s+(?:de|para)\s+(?:asistencia|check[-\s]?in|ingreso)(?:\s+(?:del?\s+curso|de\s+curso|de\s+clase|de\s+estudiantes?))?))`;
+const firstRunAttendanceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAttendanceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunAttendanceDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAttendanceDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunWorkshopDescriptorPrefixPattern =
   /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
 
@@ -1914,6 +1924,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunRosterDescriptorPrefixPattern, '')
+    .replace(firstRunAttendanceDescriptorPrefixPattern, '')
     .replace(firstRunWorkshopDescriptorPrefixPattern, '')
     .replace(firstRunClassDescriptorPrefixPattern, '')
     .replace(firstRunTrialLessonDescriptorPrefixPattern, '')
@@ -2027,6 +2038,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunRosterDescriptorSuffixPattern, '')
+    .replace(firstRunAttendanceDescriptorSuffixPattern, '')
     .replace(firstRunWorkshopDescriptorSuffixPattern, '')
     .replace(firstRunClassDescriptorSuffixPattern, '')
     .replace(firstRunTrialLessonDescriptorSuffixPattern, '')
