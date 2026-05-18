@@ -15,8 +15,11 @@ module TDF.API.Proposals
   ) where
 
 import           Data.Aeson (FromJSON (parseJSON), Options (rejectUnknownFields), ToJSON,
-                             Value (Object), (.:!), defaultOptions, genericParseJSON)
+                             Value (Null, Object), (.:!), defaultOptions, genericParseJSON)
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as KeyMap
 import           Data.Aeson.Types (Parser)
+import           Data.Foldable (traverse_)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -79,7 +82,16 @@ data ProposalCreate = ProposalCreate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectExplicitNullFields
+      "ProposalCreate"
+      [ "pcStatus"
+      , "pcLatex"
+      , "pcTemplateKey"
+      , "pcVersionNotes"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 
 data ProposalUpdate = ProposalUpdate
   { puTitle          :: Maybe Text
@@ -158,12 +170,32 @@ data ProposalVersionCreate = ProposalVersionCreate
 
 instance FromJSON ProposalVersionCreate where
   parseJSON value = do
+    rejectExplicitNullFields
+      "ProposalVersionCreate"
+      [ "pvcLatex"
+      , "pvcTemplateKey"
+      , "pvcNotes"
+      ]
+      value
     payload <- genericParseJSON strictObjectOptions value
     validateProposalVersionCreateContentSource payload
     pure payload
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+rejectExplicitNullFields :: Text -> [Text] -> Value -> Parser ()
+rejectExplicitNullFields _payloadName fieldNames (Object object) =
+  traverse_ rejectField fieldNames
+  where
+    rejectField fieldName =
+      case KeyMap.lookup (AesonKey.fromText fieldName) object of
+        Just Null ->
+          fail (T.unpack fieldName <> " must be omitted instead of null")
+        _ ->
+          pure ()
+rejectExplicitNullFields payloadName _ _ =
+  fail (T.unpack payloadName <> " must be an object")
 
 validateProposalVersionCreateContentSource :: ProposalVersionCreate -> Parser ()
 validateProposalVersionCreateContentSource payload = do

@@ -810,6 +810,28 @@ spec = do
             decodeProposalUpdate "{\"puTitle\":null}" `shouldSatisfy` isLeft
             decodeProposalUpdate "{\"puStatus\":null}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null proposal create fallback fields instead of treating them as omitted" $ do
+            let expectRejected :: String -> BL8.ByteString -> Expectation
+                expectRejected fieldName payload =
+                    case decodeProposalCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null " <> fieldName <> " to fail, got: " <> show value)
+            expectRejected
+                "pcStatus"
+                "{\"pcTitle\":\"Live session package\",\"pcStatus\":null,\"pcTemplateKey\":\"tdf_live_sessions\"}"
+            expectRejected
+                "pcLatex"
+                "{\"pcTitle\":\"Live session package\",\"pcLatex\":null,\"pcTemplateKey\":\"tdf_live_sessions\"}"
+            expectRejected
+                "pcTemplateKey"
+                "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":null}"
+            expectRejected
+                "pcVersionNotes"
+                "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":null}"
+
         it "rejects ambiguous proposal version content sources before handler fallback resolution" $ do
             decodeProposalVersionCreate
                 "{\"pvcNotes\":\"Regenerated PDF\"}"
@@ -820,6 +842,25 @@ spec = do
             decodeProposalVersionCreate
                 "{\"pvcLatex\":\"\\\\section{Hi}\",\"pvcTemplateKey\":\"tdf_live_sessions\"}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null proposal version fields before source validation" $ do
+            let expectRejected :: String -> BL8.ByteString -> Expectation
+                expectRejected fieldName payload =
+                    case decodeProposalVersionCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null " <> fieldName <> " to fail, got: " <> show value)
+            expectRejected
+                "pvcLatex"
+                "{\"pvcLatex\":null}"
+            expectRejected
+                "pvcTemplateKey"
+                "{\"pvcTemplateKey\":null}"
+            expectRejected
+                "pvcNotes"
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":null}"
 
     describe "PipelineCard payload FromJSON" $ do
         it "accepts canonical pipeline create and patch payloads" $ do
