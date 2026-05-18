@@ -7,6 +7,7 @@ import {
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
+  getBookingServiceEntryGateState,
   getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
   requiresEngineerForService,
@@ -214,6 +215,48 @@ describe('bookingsPageLogic', () => {
     })).toEqual({
       helperText: '',
       mode: 'catalog',
+    });
+  });
+
+  it('keeps initial service-catalog loading to one notice before showing dependent fields', () => {
+    expect(getBookingServiceEntryGateState({
+      serviceCatalogReady: false,
+      serviceLocked: false,
+      serviceType: '',
+    })).toEqual({
+      helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás elegir una plantilla o seleccionar el servicio.',
+      showDependentFields: false,
+      showServiceField: false,
+    });
+
+    expect(getBookingServiceEntryGateState({
+      serviceCatalogReady: true,
+      serviceLocked: false,
+      serviceType: '',
+    })).toEqual({
+      helperText: '',
+      showDependentFields: true,
+      showServiceField: true,
+    });
+
+    expect(getBookingServiceEntryGateState({
+      serviceCatalogReady: false,
+      serviceLocked: false,
+      serviceType: 'Mixing',
+    })).toEqual({
+      helperText: '',
+      showDependentFields: true,
+      showServiceField: true,
+    });
+
+    expect(getBookingServiceEntryGateState({
+      serviceCatalogReady: false,
+      serviceLocked: true,
+      serviceType: '',
+    })).toEqual({
+      helperText: '',
+      showDependentFields: true,
+      showServiceField: true,
     });
   });
 

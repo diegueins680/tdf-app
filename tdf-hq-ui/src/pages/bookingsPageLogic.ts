@@ -34,6 +34,12 @@ interface BookingServiceFallbackEntryState {
   templateHelperText: string;
 }
 
+interface BookingServiceEntryGateState {
+  helperText: string;
+  showDependentFields: boolean;
+  showServiceField: boolean;
+}
+
 interface BookingEngineerFieldState {
   helperText: string;
   label: string;
@@ -299,6 +305,30 @@ export const getBookingServiceFallbackEntryState = ({
     showTemplateField: true,
     templatePlaceholderLabel: 'Elige una plantilla',
     templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
+  };
+};
+
+export const getBookingServiceEntryGateState = ({
+  serviceCatalogReady,
+  serviceLocked,
+  serviceType,
+}: {
+  serviceCatalogReady: boolean;
+  serviceLocked: boolean;
+  serviceType: string;
+}): BookingServiceEntryGateState => {
+  if (serviceCatalogReady || serviceLocked || serviceType.trim() !== '') {
+    return {
+      helperText: '',
+      showDependentFields: true,
+      showServiceField: true,
+    };
+  }
+
+  return {
+    helperText: 'Cargando catálogo de servicios… En cuanto termine esta primera carga podrás elegir una plantilla o seleccionar el servicio.',
+    showDependentFields: false,
+    showServiceField: false,
   };
 };
 

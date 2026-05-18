@@ -41,6 +41,7 @@ import {
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
+  getBookingServiceEntryGateState,
   getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
   requiresEngineerForService,
@@ -359,6 +360,14 @@ export default function BookingsPage() {
     [customerOptions.length, customerPartyId, partiesQuery.data, partiesQuery.isLoading],
   );
   const serviceCatalogReady = !serviceCatalogQuery.isLoading;
+  const serviceEntryGateState = useMemo(
+    () => getBookingServiceEntryGateState({
+      serviceCatalogReady,
+      serviceLocked,
+      serviceType,
+    }),
+    [serviceCatalogReady, serviceLocked, serviceType],
+  );
   const showQuickTemplateField = shouldShowQuickBookingTemplate({
     hasServiceCatalog: serviceTypes.length > 0,
     mode,
@@ -1210,143 +1219,151 @@ const openDialogForRange = (start: Date, end: Date) => {
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-            {showTemplateSelector && (
-              <TextField
-                select
-                label="Plantilla de respaldo"
-                value={template}
-                onChange={(e) => {
-                  const val = String(e.target.value);
-                  setTemplate(val);
-                  if (val === '') {
-                    setAutoAssignMessage('');
-                    return;
-                  }
-                  setManualServiceFallbackOpen(false);
-                  const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
-                    rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
-                    recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
-                    mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
-                    curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
-                  };
-                  const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
-                    ? presetMap[val as keyof typeof presetMap]
-                    : undefined;
-                  if (preset) {
-                    setTitle(preset.title);
-                    setServiceType(preset.svc);
-                    setNotes((prev) => (prev ? prev : preset.note));
-                    const defaults = defaultRoomsForService(preset.svc);
-                    if (defaults.length) {
-                      setAssignedRoomIds(defaults.map((r) => r.roomId));
-                      setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
-                    }
-                  }
-                }}
-                helperText={serviceFallbackEntryState.templateHelperText}
-                fullWidth
-              >
-                <MenuItem value="" disabled>
-                  {serviceFallbackEntryState.templatePlaceholderLabel}
-                </MenuItem>
-                <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
-                <MenuItem value="recording">Recording (cabina + control)</MenuItem>
-                <MenuItem value="mix">Mix/Master (control room)</MenuItem>
-                <MenuItem value="curso">Curso/bloque</MenuItem>
-              </TextField>
-            )}
-            {serviceFallbackEntryState.showManualEntryToggle && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  setTemplate('');
-                  setManualServiceFallbackOpen(true);
-                }}
-                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-              >
-                {serviceFallbackEntryState.manualEntryToggleLabel}
-              </Button>
-            )}
-            {serviceFallbackEntryState.templateReturnActionLabel && (
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => {
-                  setTemplate('');
-                  setServiceType('');
-                  setAutoAssignMessage('');
-                  setManualServiceFallbackOpen(false);
-                }}
-                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-              >
-                {serviceFallbackEntryState.templateReturnActionLabel}
-              </Button>
-            )}
-            {serviceFieldState.mode === 'manual' && serviceFallbackEntryState.showManualEntryField ? (
-              <TextField
-                label="Servicio"
-                value={serviceType}
-                disabled={serviceLocked}
-                onChange={(e) => {
-                  setServiceType(e.target.value);
-                  setAutoAssignMessage('');
-                }}
-                helperText={serviceFieldHelperText}
-                placeholder="Ej. Recording, ensayo, podcast"
-                fullWidth
-              />
-            ) : (
-              <TextField
-                select
-                label="Servicio"
-                value={serviceType}
-                disabled={serviceLocked}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const wasDurationManual = durationManuallyAdjusted;
-                  const wasRoomsManual = roomsManuallyAdjusted;
-                  setDurationManuallyAdjusted(false);
-                  setRoomsManuallyAdjusted(false);
-                  setServiceType(value);
-                  const messageParts: string[] = [];
-                  if (!wasRoomsManual || assignedRoomIds.length === 0) {
-                    const defaults = defaultRoomsForService(value);
-                    if (defaults.length) {
-                      setAssignedRoomIds(defaults.map((room) => room.roomId));
-                      messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
+            {serviceEntryGateState.showServiceField ? (
+              <>
+                {showTemplateSelector && (
+                  <TextField
+                    select
+                    label="Plantilla de respaldo"
+                    value={template}
+                    onChange={(e) => {
+                      const val = String(e.target.value);
+                      setTemplate(val);
+                      if (val === '') {
+                        setAutoAssignMessage('');
+                        return;
+                      }
+                      setManualServiceFallbackOpen(false);
+                      const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
+                        rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
+                        recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
+                        mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
+                        curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
+                      };
+                      const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
+                        ? presetMap[val as keyof typeof presetMap]
+                        : undefined;
+                      if (preset) {
+                        setTitle(preset.title);
+                        setServiceType(preset.svc);
+                        setNotes((prev) => (prev ? prev : preset.note));
+                        const defaults = defaultRoomsForService(preset.svc);
+                        if (defaults.length) {
+                          setAssignedRoomIds(defaults.map((r) => r.roomId));
+                          setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
+                        }
+                      }
+                    }}
+                    helperText={serviceFallbackEntryState.templateHelperText}
+                    fullWidth
+                  >
+                    <MenuItem value="" disabled>
+                      {serviceFallbackEntryState.templatePlaceholderLabel}
+                    </MenuItem>
+                    <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
+                    <MenuItem value="recording">Recording (cabina + control)</MenuItem>
+                    <MenuItem value="mix">Mix/Master (control room)</MenuItem>
+                    <MenuItem value="curso">Curso/bloque</MenuItem>
+                  </TextField>
+                )}
+                {serviceFallbackEntryState.showManualEntryToggle && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setTemplate('');
+                      setManualServiceFallbackOpen(true);
+                    }}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+                  >
+                    {serviceFallbackEntryState.manualEntryToggleLabel}
+                  </Button>
+                )}
+                {serviceFallbackEntryState.templateReturnActionLabel && (
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => {
+                      setTemplate('');
+                      setServiceType('');
+                      setAutoAssignMessage('');
+                      setManualServiceFallbackOpen(false);
+                    }}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
+                  >
+                    {serviceFallbackEntryState.templateReturnActionLabel}
+                  </Button>
+                )}
+                {serviceFieldState.mode === 'manual' && serviceFallbackEntryState.showManualEntryField ? (
+                  <TextField
+                    label="Servicio"
+                    value={serviceType}
+                    disabled={serviceLocked}
+                    onChange={(e) => {
+                      setServiceType(e.target.value);
+                      setAutoAssignMessage('');
+                    }}
+                    helperText={serviceFieldHelperText}
+                    placeholder="Ej. Recording, ensayo, podcast"
+                    fullWidth
+                  />
+                ) : (
+                  <TextField
+                    select
+                    label="Servicio"
+                    value={serviceType}
+                    disabled={serviceLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const wasDurationManual = durationManuallyAdjusted;
+                      const wasRoomsManual = roomsManuallyAdjusted;
+                      setDurationManuallyAdjusted(false);
                       setRoomsManuallyAdjusted(false);
-                    }
-                  }
-                  if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
-                    const eng = engineerOptions[0]!;
-                    setEngineerName(eng.displayName);
-                    setEngineerPartyId(eng.partyId);
-                    messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
-                  }
-                  const minutes = defaultMinutesForService(value);
-                  const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
-                  if (!wasDurationManual && startDt.isValid && minutes > 0) {
-                    const endDt = startDt.plus({ minutes });
-                    setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
-                    messageParts.push(`Duración ajustada a ${minutes} min`);
-                    setDurationManuallyAdjusted(false);
-                  }
-                  setAutoAssignMessage(messageParts.join(' · '));
-                }}
-                helperText={serviceFieldHelperText}
-              >
-                <MenuItem value="">(Sin asignar)</MenuItem>
-                {serviceTypes.map((svc) => (
-                  <MenuItem key={svc.id} value={svc.name}>
-                    {formatServiceLabel(svc)}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-            {serviceLocked && (
+                      setServiceType(value);
+                      const messageParts: string[] = [];
+                      if (!wasRoomsManual || assignedRoomIds.length === 0) {
+                        const defaults = defaultRoomsForService(value);
+                        if (defaults.length) {
+                          setAssignedRoomIds(defaults.map((room) => room.roomId));
+                          messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
+                          setRoomsManuallyAdjusted(false);
+                        }
+                      }
+                      if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
+                        const eng = engineerOptions[0]!;
+                        setEngineerName(eng.displayName);
+                        setEngineerPartyId(eng.partyId);
+                        messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
+                      }
+                      const minutes = defaultMinutesForService(value);
+                      const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
+                      if (!wasDurationManual && startDt.isValid && minutes > 0) {
+                        const endDt = startDt.plus({ minutes });
+                        setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
+                        messageParts.push(`Duración ajustada a ${minutes} min`);
+                        setDurationManuallyAdjusted(false);
+                      }
+                      setAutoAssignMessage(messageParts.join(' · '));
+                    }}
+                    helperText={serviceFieldHelperText}
+                  >
+                    <MenuItem value="">(Sin asignar)</MenuItem>
+                    {serviceTypes.map((svc) => (
+                      <MenuItem key={svc.id} value={svc.name}>
+                        {formatServiceLabel(svc)}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+                {serviceLocked && (
+                  <Alert severity="info" variant="outlined">
+                    Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
+                  </Alert>
+                )}
+              </>
+            ) : (
               <Alert severity="info" variant="outlined">
-                Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
+                {serviceEntryGateState.helperText}
               </Alert>
             )}
             <Stack spacing={0.75}>
@@ -1408,89 +1425,93 @@ const openDialogForRange = (start: Date, end: Date) => {
                 {conflictAlertText}
               </Alert>
             )}
-            {missingEngineer && (
+            {serviceEntryGateState.showDependentFields && missingEngineer && (
               <Alert severity="warning">
                 Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
               </Alert>
             )}
-            {engineerFieldState.showField ? (
-              <Autocomplete
-                options={engineerOptions}
-                getOptionLabel={(option) => option.displayName}
-                loading={partiesQuery.isFetching}
-                value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
-                onChange={(_, value) => {
-                  setEngineerPartyId(value?.partyId ?? null);
-                  setEngineerName(value?.displayName ?? '');
-                }}
-                inputValue={engineerName}
-                onInputChange={(_, value, reason) => {
-                  if (reason === 'input') {
-                    setEngineerName(value);
-                    setEngineerPartyId(null);
-                  }
-                  if (reason === 'clear') {
-                    setEngineerName('');
-                    setEngineerPartyId(null);
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={engineerFieldState.label}
-                    helperText={engineerFieldState.helperText}
-                  />
-                )}
-                noOptionsText="Sin ingenieros en el catálogo"
-              />
-            ) : engineerFieldState.helperText ? (
-              <Alert severity="info" variant="outlined">
-                {engineerFieldState.helperText}
-              </Alert>
+            {serviceEntryGateState.showDependentFields ? (
+              engineerFieldState.showField ? (
+                <Autocomplete
+                  options={engineerOptions}
+                  getOptionLabel={(option) => option.displayName}
+                  loading={partiesQuery.isFetching}
+                  value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
+                  onChange={(_, value) => {
+                    setEngineerPartyId(value?.partyId ?? null);
+                    setEngineerName(value?.displayName ?? '');
+                  }}
+                  inputValue={engineerName}
+                  onInputChange={(_, value, reason) => {
+                    if (reason === 'input') {
+                      setEngineerName(value);
+                      setEngineerPartyId(null);
+                    }
+                    if (reason === 'clear') {
+                      setEngineerName('');
+                      setEngineerPartyId(null);
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={engineerFieldState.label}
+                      helperText={engineerFieldState.helperText}
+                    />
+                  )}
+                  noOptionsText="Sin ingenieros en el catálogo"
+                />
+              ) : engineerFieldState.helperText ? (
+                <Alert severity="info" variant="outlined">
+                  {engineerFieldState.helperText}
+                </Alert>
+              ) : null
             ) : null}
-            {roomsFieldState.showField ? (
-              <Autocomplete
-                multiple
-                options={rooms}
-                getOptionLabel={(option) => option.rName}
-                value={assignedRooms}
-                onChange={(_, value) => {
-                  setAssignedRoomIds(value.map((room) => room.roomId));
-                  setRoomsManuallyAdjusted(true);
-                }}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Salas asignadas"
-                    placeholder="Agregar/ajustar salas"
-                    helperText={roomsFieldState.helperText}
-                  />
-                )}
-                noOptionsText="No hay salas registradas"
-              />
-            ) : (
-              <Alert
-                severity="info"
-                variant="outlined"
-                action={roomsFieldState.setupActionLabel ? (
-                  <Button
-                    color="inherit"
-                    size="small"
-                    component={RouterLink}
-                    to="/estudio/salas"
-                  >
-                    {roomsFieldState.setupActionLabel}
-                  </Button>
-                ) : undefined}
-              >
-                {roomsFieldState.helperText}
-              </Alert>
-            )}
+            {serviceEntryGateState.showDependentFields ? (
+              roomsFieldState.showField ? (
+                <Autocomplete
+                  multiple
+                  options={rooms}
+                  getOptionLabel={(option) => option.rName}
+                  value={assignedRooms}
+                  onChange={(_, value) => {
+                    setAssignedRoomIds(value.map((room) => room.roomId));
+                    setRoomsManuallyAdjusted(true);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Salas asignadas"
+                      placeholder="Agregar/ajustar salas"
+                      helperText={roomsFieldState.helperText}
+                    />
+                  )}
+                  noOptionsText="No hay salas registradas"
+                />
+              ) : (
+                <Alert
+                  severity="info"
+                  variant="outlined"
+                  action={roomsFieldState.setupActionLabel ? (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      component={RouterLink}
+                      to="/estudio/salas"
+                    >
+                      {roomsFieldState.setupActionLabel}
+                    </Button>
+                  ) : undefined}
+                >
+                  {roomsFieldState.helperText}
+                </Alert>
+              )
+            ) : null}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}
