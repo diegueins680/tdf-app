@@ -1988,6 +1988,28 @@ main = hspec $ do
                     "WhatsApp API version aliases conflict"
                         `isInfixOf` show (err :: IOException)
 
+        it "compares normalized WhatsApp API version aliases before fallback selection" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_GRAPH_API_VERSION", Just " V21.0 ")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_API_VERSION", Just " V21.0 ")
+                , ("WA_API_VERSION", Just "v21.0")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waApiVersion cfg `shouldBe` Just "v21.0"
+
         it "normalizes WhatsApp verify token aliases before webhook verification" $
             withEnvOverrides
                 (clearWhatsAppProviderCredentialEnv ++

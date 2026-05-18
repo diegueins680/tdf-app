@@ -71,13 +71,14 @@ loadWhatsAppConfig = do
   mReg  <- lookupEnv "COURSE_REG_URL"
   mBase <- lookupEnv "HQ_APP_URL"
   mVersion <-
-    lookupFirstNonEmptyAliasEnv
+    lookupFirstNormalizedAliasEnv
       "WhatsApp API version"
+      normalizeWhatsAppApiVersion
       ["WA_GRAPH_API_VERSION", "WHATSAPP_API_VERSION"]
   slugVal <- either fail pure (Config.normalizeConfiguredCourseSlug mSlug)
   regUrl <- either fail pure (normalizeWhatsAppRegistrationUrl mReg)
   baseUrl <- either fail pure (normalizeWhatsAppAppBaseUrl mBase)
-  version <- either fail pure (normalizeWhatsAppApiVersion mVersion)
+  let version = maybe "v20.0" id mVersion
   let cfg = WhatsAppConfig
         { waToken       = tok
         , waPhoneId     = pid
@@ -117,6 +118,33 @@ nonEmptyString :: String -> Maybe String
 nonEmptyString raw =
   let trimmed = T.unpack (T.strip (T.pack raw))
   in if null trimmed then Nothing else Just trimmed
+
+lookupFirstNormalizedAliasEnv
+  :: String
+  -> (Maybe String -> Either String Text)
+  -> [String]
+  -> IO (Maybe Text)
+lookupFirstNormalizedAliasEnv label normalizeValue keys = do
+  values <- traverse lookupAlias keys
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstKey, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictKey, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstKey <> " and " <> conflictKey
+              <> " are both set with different values"
+  where
+    lookupAlias key = do
+      rawValue <- lookupEnv key
+      case rawValue >>= nonEmptyString of
+        Nothing -> pure Nothing
+        Just raw ->
+          case normalizeValue (Just raw) of
+            Left err -> fail err
+            Right normalized -> pure (Just (key, normalized))
 
 normalizeWhatsAppRegistrationUrl :: Maybe String -> Either String (Maybe Text)
 normalizeWhatsAppRegistrationUrl Nothing = Right Nothing
