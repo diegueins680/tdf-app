@@ -2988,6 +2988,18 @@ const buildHiddenLocalSearchMatchSummary = ({
   return `Algunas coincidencias vienen de ${fieldList}.`;
 };
 
+const hasUsableRegistrationRecordId = (registrationId: number | null | undefined) => (
+  typeof registrationId === 'number' && Number.isInteger(registrationId) && registrationId > 0
+);
+
+const registrationRecordLabel = (registrationId: number | null | undefined, lowercase = false) => {
+  const labelPrefix = lowercase ? 'registro' : 'Registro';
+  if (hasUsableRegistrationRecordId(registrationId)) {
+    return `${labelPrefix} #${registrationId}`;
+  }
+  return `${labelPrefix} sin número`;
+};
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
@@ -2997,7 +3009,7 @@ const registrationIdentityDisplay = (
   const trimmedName = normalizeRegistrationNameValue(fullName) ?? '';
   const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
   const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
-  const fallbackIdentity = registrationId == null ? 'Sin nombre' : `Registro #${registrationId}`;
+  const fallbackIdentity = registrationRecordLabel(registrationId);
 
   if (trimmedName) {
     return {
@@ -3109,7 +3121,12 @@ const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrat
     .map((kind) => {
       if (kind === 'email') return 'el correo';
       if (kind === 'phone') return 'el teléfono';
-      if (kind === 'record') return 'el número de registro';
+      if (kind === 'record') {
+        const recordIdentities = registrations.filter((reg) => registrationIdentityKind(reg) === 'record');
+        return recordIdentities.some((reg) => hasUsableRegistrationRecordId(reg.crId))
+          ? 'el número de registro'
+          : 'el registro';
+      }
       return 'el nombre';
     });
 
@@ -3141,7 +3158,7 @@ const registrationActionTargetLabel = (
   if (trimmedEmail) return trimmedEmail;
   const trimmedPhone = normalizeRegistrationContactValue(reg.crPhoneE164) ?? '';
   if (trimmedPhone) return trimmedPhone;
-  return `registro #${reg.crId}`;
+  return registrationRecordLabel(reg.crId, true);
 };
 
 const normalizeRegistrationActionTargetKey = (
@@ -3211,12 +3228,12 @@ const registrationActionTargetLabelWithContext = (
   const secondary = identity.secondary.trim();
   if (secondary && secondary !== missingContactSummary) {
     const disambiguatingContext = needsRecordDisambiguator
-      ? `${secondary} · registro #${reg.crId}`
+      ? `${secondary} · ${registrationRecordLabel(reg.crId, true)}`
       : secondary;
     return `${baseLabel} (${disambiguatingContext})`;
   }
 
-  return `${baseLabel} (registro #${reg.crId})`;
+  return `${baseLabel} (${registrationRecordLabel(reg.crId, true)})`;
 };
 
 const registrationListContextSummary = ({
@@ -7109,7 +7126,7 @@ export default function CourseRegistrationsAdminPage() {
                         )}
                         {showRowRegistrationDisambiguator && (
                           <Typography variant="caption" color="text.secondary">
-                            Registro #{reg.crId}
+                            {registrationRecordLabel(reg.crId)}
                           </Typography>
                         )}
                       </Box>

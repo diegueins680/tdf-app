@@ -1805,6 +1805,57 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('uses a readable record fallback when the backend omits a usable registration id', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 0,
+        crPartyId: null,
+        crFullName: null,
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        'Abre expediente desde el registro; las opciones de pago y estado incluyen Registrar pago. Contacto pendiente en esta inscripción.',
+      );
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de registro sin número').textContent?.trim()).toBe(
+        'Registro sin número',
+      );
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para registro sin número').textContent?.trim()).toBe(
+        'Pendiente de pago',
+      );
+      expect(container.textContent).not.toContain('Registro #0');
+      expect(container.textContent).not.toContain('registro #0');
+      expect(container.textContent).not.toContain('Sin nombre');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de registro sin número'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain('Registro sin número');
+      expect(dialog.textContent).toContain('Sin correo ni teléfono');
+      expect(dialog.textContent).not.toContain('Registro #0');
+      expect(dialog.textContent).not.toContain('registro #0');
+      expect(dialog.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
   it('uses unique registration ids and compact row actions instead of repeating generic fallbacks', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
