@@ -443,6 +443,7 @@ import TDF.ServerFuture
     , validateFutureStubMetadataIn
     , validateFutureStubPublishedId
     , validateFutureStubPublishedPath
+    , validateFutureStubAuthMetadata
     , validateFutureStubResponse
     , futureStubResponseForWithConsole
     )
@@ -12137,6 +12138,29 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "/stubs/admin//console"
             assertInvalid "/stubs/admin/console/"
             assertInvalid "/stubs/admin/console?preview=true"
+
+    describe "validateFutureStubAuthMetadata" $
+        it "keeps fallback discovery auth metadata canonical and duplicate-free" $ do
+            futureStubRequiredRoles `shouldBe` ["Admin", "Fan", "Customer"]
+            validateFutureStubAuthMetadata "Admin" futureStubRequiredRoles
+                `shouldBe` Right ("Admin", ["Admin", "Fan", "Customer"])
+
+            let assertInvalid requiredRole requiredRoles =
+                    case validateFutureStubAuthMetadata requiredRole requiredRoles of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub response"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid future stub auth metadata, got: "
+                                    <> show value
+                                )
+
+            assertInvalid "Manager" ["Admin", "Fan", "Customer"]
+            assertInvalid "Admin" ["Admin", "Customer", "Fan"]
+            assertInvalid "Admin" ["Admin", "Fan", "Fan"]
+            assertInvalid "Admin" ["Admin", "Fan", "Customer", "Manager"]
 
     describe "validateFutureStubResponse" $ do
         it "rejects malformed fallback discovery response envelopes before serving them" $ do

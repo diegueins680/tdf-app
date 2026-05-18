@@ -347,11 +347,13 @@ validateFutureStubResponse response =
     Right (area, endpoint)
       | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
-      | stubRequiredRole response /= futureStubRequiredRole -> invalidFutureStubResponse
-      | stubRequiredRoles response /= futureStubRequiredRoles -> invalidFutureStubResponse
       | stubRequiredModule response /= futureStubRequiredModule -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
+          (requiredRole, requiredRoles) <-
+            validateFutureStubAuthMetadata
+              (stubRequiredRole response)
+              (stubRequiredRoles response)
           responseId <- validateFutureStubPublishedId area endpoint (stubId response)
           path <- validateFutureStubPublishedPath area endpoint (stubPath response)
           Right response
@@ -361,8 +363,8 @@ validateFutureStubResponse response =
             , stubPath = path
             , stubMethod = futureStubMethod
             , stubStatus = "planned"
-            , stubRequiredRole = futureStubRequiredRole
-            , stubRequiredRoles = futureStubRequiredRoles
+            , stubRequiredRole = requiredRole
+            , stubRequiredRoles = requiredRoles
             , stubRequiredModule = futureStubRequiredModule
             , stubImplemented = False
             }
@@ -529,6 +531,44 @@ futureStubRequiredRoles =
 futureStubRequiredModule :: Text
 futureStubRequiredModule = moduleName ModuleAdmin
 
+canonicalFutureStubRequiredRole :: Text
+canonicalFutureStubRequiredRole = "Admin"
+
+canonicalFutureStubRequiredRoles :: [Text]
+canonicalFutureStubRequiredRoles =
+  [ "Admin"
+  , "Fan"
+  , "Customer"
+  ]
+
+validateFutureStubAuthMetadata
+  :: Text
+  -> [Text]
+  -> Either ServerError (Text, [Text])
+validateFutureStubAuthMetadata =
+  validateFutureAuthMetadataWith invalidFutureStubResponse
+
+validateFutureAdminConsoleAuthMetadata
+  :: Text
+  -> [Text]
+  -> Either ServerError (Text, [Text])
+validateFutureAdminConsoleAuthMetadata =
+  validateFutureAuthMetadataWith invalidFutureAdminConsoleMetadata
+
+validateFutureAuthMetadataWith
+  :: Either ServerError (Text, [Text])
+  -> Text
+  -> [Text]
+  -> Either ServerError (Text, [Text])
+validateFutureAuthMetadataWith invalid requiredRole requiredRoles
+  | futureStubRequiredRole /= canonicalFutureStubRequiredRole = invalid
+  | futureStubRequiredRoles /= canonicalFutureStubRequiredRoles = invalid
+  | requiredRole /= canonicalFutureStubRequiredRole = invalid
+  | requiredRoles /= canonicalFutureStubRequiredRoles = invalid
+  | requiredRole `notElem` requiredRoles = invalid
+  | length requiredRoles /= length (nub requiredRoles) = invalid
+  | otherwise = Right (requiredRole, requiredRoles)
+
 validateFutureAdminConsoleCard :: AdminConsoleCard -> Either ServerError AdminConsoleCard
 validateFutureAdminConsoleCard =
   validateFutureAdminConsoleCardWithIds allowedFutureAdminConsoleCardIds
@@ -590,12 +630,13 @@ validateFutureAdminConsoleView view
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
   | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
-  | viewRequiredRole view /= futureStubRequiredRole = invalidFutureAdminConsoleMetadata
-  | viewRequiredRoles view /= futureStubRequiredRoles =
-      invalidFutureAdminConsoleMetadata
   | viewRequiredModule view /= futureStubRequiredModule = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      (requiredRole, requiredRoles) <-
+        validateFutureAdminConsoleAuthMetadata
+          (viewRequiredRole view)
+          (viewRequiredRoles view)
       allowedCardIds <- validateFutureAdminConsoleCardIds allowedFutureAdminConsoleCardIds
       viewIdVal <- validateFutureAdminConsolePublishedId (viewId view)
       path <- validateFutureAdminConsolePublishedPath (viewPath view)
@@ -611,8 +652,8 @@ validateFutureAdminConsoleView view
           , viewPath = path
           , viewMethod = futureStubMethod
           , viewStatus = "preview"
-          , viewRequiredRole = futureStubRequiredRole
-          , viewRequiredRoles = futureStubRequiredRoles
+          , viewRequiredRole = requiredRole
+          , viewRequiredRoles = requiredRoles
           , viewRequiredModule = futureStubRequiredModule
           , viewImplemented = False
           , cards = validatedCards
