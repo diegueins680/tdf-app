@@ -44,6 +44,7 @@ import {
   getBookingServiceEntryGateState,
   getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
+  getBookingServiceInputVisibilityState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
@@ -393,6 +394,10 @@ export default function BookingsPage() {
       }),
     [manualServiceFallbackOpen, serviceFieldState.mode, showQuickTemplateField],
   );
+  const serviceInputVisibilityState = getBookingServiceInputVisibilityState({
+    serviceFallbackEntryState,
+    serviceFieldMode: serviceFieldState.mode,
+  });
   const serviceFieldHelperText =
     serviceFieldState.mode === 'manual'
       ? serviceType.trim()
@@ -1294,7 +1299,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     {serviceFallbackEntryState.templateReturnActionLabel}
                   </Button>
                 )}
-                {serviceFieldState.mode === 'manual' && serviceFallbackEntryState.showManualEntryField ? (
+                {serviceInputVisibilityState.showManualTextField ? (
                   <TextField
                     label="Servicio"
                     value={serviceType}
@@ -1307,7 +1312,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     placeholder="Ej. Recording, ensayo, podcast"
                     fullWidth
                   />
-                ) : (
+                ) : serviceInputVisibilityState.showCatalogSelect ? (
                   <TextField
                     select
                     label="Servicio"
@@ -1354,7 +1359,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                       </MenuItem>
                     ))}
                   </TextField>
-                )}
+                ) : null}
                 {serviceLocked && (
                   <Alert severity="info" variant="outlined">
                     Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.

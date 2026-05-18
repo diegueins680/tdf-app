@@ -10,6 +10,7 @@ import {
   getBookingServiceEntryGateState,
   getBookingServiceFallbackEntryState,
   getBookingServiceFieldState,
+  getBookingServiceInputVisibilityState,
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
@@ -162,20 +163,29 @@ describe('bookingsPageLogic', () => {
   });
 
   it('keeps the no-catalog fallback focused on one service-entry path at a time', () => {
-    expect(getBookingServiceFallbackEntryState({
+    const manualOnlyState = getBookingServiceFallbackEntryState({
       fallbackTemplatesActive: false,
       manualEntryRequested: false,
-    })).toEqual({
+    });
+    expect(manualOnlyState).toEqual({
       showManualEntryField: true,
       showManualEntryToggle: false,
       showTemplateField: false,
       templateHelperText: '',
     });
+    expect(getBookingServiceInputVisibilityState({
+      serviceFallbackEntryState: manualOnlyState,
+      serviceFieldMode: 'manual',
+    })).toEqual({
+      showCatalogSelect: false,
+      showManualTextField: true,
+    });
 
-    expect(getBookingServiceFallbackEntryState({
+    const templateOnlyState = getBookingServiceFallbackEntryState({
       fallbackTemplatesActive: true,
       manualEntryRequested: false,
-    })).toEqual({
+    });
+    expect(templateOnlyState).toEqual({
       manualEntryToggleLabel: 'Escribir servicio manualmente',
       showManualEntryField: false,
       showManualEntryToggle: true,
@@ -183,16 +193,39 @@ describe('bookingsPageLogic', () => {
       templatePlaceholderLabel: 'Elige una plantilla',
       templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
     });
+    expect(getBookingServiceInputVisibilityState({
+      serviceFallbackEntryState: templateOnlyState,
+      serviceFieldMode: 'manual',
+    })).toEqual({
+      showCatalogSelect: false,
+      showManualTextField: false,
+    });
 
-    expect(getBookingServiceFallbackEntryState({
+    const manualFallbackState = getBookingServiceFallbackEntryState({
       fallbackTemplatesActive: true,
       manualEntryRequested: true,
-    })).toEqual({
+    });
+    expect(manualFallbackState).toEqual({
       showManualEntryField: true,
       showManualEntryToggle: false,
       showTemplateField: false,
       templateReturnActionLabel: 'Volver a plantillas',
       templateHelperText: '',
+    });
+    expect(getBookingServiceInputVisibilityState({
+      serviceFallbackEntryState: manualFallbackState,
+      serviceFieldMode: 'manual',
+    })).toEqual({
+      showCatalogSelect: false,
+      showManualTextField: true,
+    });
+
+    expect(getBookingServiceInputVisibilityState({
+      serviceFallbackEntryState: manualOnlyState,
+      serviceFieldMode: 'catalog',
+    })).toEqual({
+      showCatalogSelect: true,
+      showManualTextField: false,
     });
   });
 

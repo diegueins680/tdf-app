@@ -34,6 +34,11 @@ interface BookingServiceFallbackEntryState {
   templateHelperText: string;
 }
 
+interface BookingServiceInputVisibilityState {
+  showCatalogSelect: boolean;
+  showManualTextField: boolean;
+}
+
 interface BookingServiceEntryGateState {
   helperText: string;
   showDependentFields: boolean;
@@ -307,6 +312,17 @@ export const getBookingServiceFallbackEntryState = ({
     templateHelperText: 'Usa una plantilla para precargar servicio, salas y notas. Si no aplica, abre la entrada manual.',
   };
 };
+
+export const getBookingServiceInputVisibilityState = ({
+  serviceFallbackEntryState,
+  serviceFieldMode,
+}: {
+  serviceFallbackEntryState: Pick<BookingServiceFallbackEntryState, 'showManualEntryField'>;
+  serviceFieldMode: BookingServiceFieldState['mode'];
+}): BookingServiceInputVisibilityState => ({
+  showCatalogSelect: serviceFieldMode === 'catalog',
+  showManualTextField: serviceFieldMode === 'manual' && serviceFallbackEntryState.showManualEntryField,
+});
 
 export const getBookingServiceEntryGateState = ({
   serviceCatalogReady,
