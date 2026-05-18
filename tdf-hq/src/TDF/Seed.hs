@@ -951,7 +951,6 @@ seededCredentialSeedingAllowed env =
         any
             hasNonEmptyEnv
             [ "FLY_APP_NAME"
-            , "KOYEB_APP_NAME"
             , "RENDER"
             , "RAILWAY_ENVIRONMENT"
             , "HEROKU_APP_NAME"

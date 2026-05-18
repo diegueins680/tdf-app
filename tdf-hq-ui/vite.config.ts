@@ -8,8 +8,6 @@ import packageJson from './package.json';
 function resolveGitSha() {
   const envKeys = [
     'VITE_UI_COMMIT',
-    'KOYEB_GIT_SHA',
-    'KOYEB_DEPLOYMENT_GIT_SHA',
     'SOURCE_COMMIT',
     'SOURCE_VERSION',
     'GIT_SHA',

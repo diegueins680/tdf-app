@@ -15569,7 +15569,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(formAction?.getAttribute('aria-describedby')).toBe(initialEmptyStateNewTabDescriptionId);
       expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
       expect(formAction?.getAttribute('target')).toBe('_blank');
-      expect(formAction?.getAttribute('rel')).toBe('noreferrer');
+      expect(formAction?.getAttribute('rel')).toBe('noopener noreferrer');
       expect(
         emptyState?.querySelector<HTMLElement>(`#${initialEmptyStateNewTabDescriptionId}`)?.textContent?.trim(),
       ).toBe(initialEmptyStateNewTabDescription);

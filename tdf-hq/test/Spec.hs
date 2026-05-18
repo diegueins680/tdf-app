@@ -450,7 +450,6 @@ clearSeedRuntimeEnv =
     map
         (\key -> (key, Nothing))
         [ "FLY_APP_NAME"
-        , "KOYEB_APP_NAME"
         , "RENDER"
         , "RAILWAY_ENVIRONMENT"
         , "HEROKU_APP_NAME"
@@ -592,8 +591,6 @@ main = hspec $ do
         it "blocks seeded demo credentials in hosted runtimes" $ do
             seededCredentialSeedingAllowed [("FLY_APP_NAME", "tdf-hq")]
                 `shouldBe` False
-            seededCredentialSeedingAllowed [("KOYEB_APP_NAME", "tdf-hq")]
-                `shouldBe` False
             seededCredentialSeedingAllowed [("FLY_APP_NAME", "   ")]
                 `shouldBe` True
 
@@ -628,8 +625,6 @@ main = hspec $ do
             let resetDbGuardMessage (Left msg) =
                     "RESET_DB=true is not allowed" `isInfixOf` msg
                 resetDbGuardMessage _ = False
-            validateDatabaseStartupSafety True False [("KOYEB_APP_NAME", "tdf-hq")]
-                `shouldSatisfy` resetDbGuardMessage
             validateDatabaseStartupSafety True False [("APP_ENV", "production")]
                 `shouldSatisfy` resetDbGuardMessage
             validateDatabaseStartupSafety True False []
@@ -649,11 +644,6 @@ main = hspec $ do
                 , "RENDER_GIT_COMMIT"
                 , "RENDER_GIT_COMMIT_SHA"
                 , "VERCEL_GIT_COMMIT_SHA"
-                , "KOYEB_GIT_SHA"
-                , "KOYEB_GIT_COMMIT"
-                , "KOYEB_GIT_COMMIT_SHA"
-                , "KOYEB_DEPLOYMENT_GIT_SHA"
-                , "KOYEB_DEPLOYMENT_GIT_COMMIT"
                 , "FLY_GIT_SHA"
                 ]
             buildTimeEnvKeys =
@@ -961,7 +951,6 @@ main = hspec $ do
                             "SEED_TRIGGER_TOKEN must be unset in hosted or production runtimes"
                                 `isInfixOf` show (err :: IOException)
             assertBlocked ("APP_ENV", Just "production")
-            assertBlocked ("KOYEB_APP_NAME", Just "tdf-hq")
 
         it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
             withEnvOverrides

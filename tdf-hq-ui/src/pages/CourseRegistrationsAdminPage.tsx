@@ -5088,7 +5088,7 @@ export default function CourseRegistrationsAdminPage() {
         ? `Abrir formulario público de ${specificFirstRunCohortLabel} en una pestaña nueva`
         : `${initialEmptyStateFormActionLabel} en una pestaña nueva`,
       target: '_blank',
-      rel: 'noreferrer',
+      rel: 'noopener noreferrer',
     }
     : {
       label: hasSingleCourseFirstRunVariants

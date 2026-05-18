@@ -455,7 +455,7 @@ ensureReadWriteTargetSession rawConn
 loadConfig :: IO AppConfig
 loadConfig = do
   -- Prefer a connection URL unless every keyword-style field is present.
-  -- Fly/Koyeb environments can expose partial PG* variables alongside DATABASE_URL.
+  -- Fly environments can expose partial PG* variables alongside DATABASE_URL.
   keywordDbEnvConfigured <- allEnvPresent
     [ ["DB_HOST", "PGHOST"]
     , ["DB_PORT", "PGPORT"]
@@ -753,7 +753,6 @@ loadConfig = do
         seedRuntimeEnvKeys
     seedRuntimeEnvKeys =
       [ "FLY_APP_NAME"
-      , "KOYEB_APP_NAME"
       , "RENDER"
       , "RAILWAY_ENVIRONMENT"
       , "HEROKU_APP_NAME"
@@ -772,7 +771,6 @@ loadConfig = do
           any
             hasNonEmptyEnv
             [ "FLY_APP_NAME"
-            , "KOYEB_APP_NAME"
             , "RENDER"
             , "RAILWAY_ENVIRONMENT"
             , "HEROKU_APP_NAME"
