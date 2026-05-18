@@ -73,7 +73,9 @@ instance ToJSON SignupOut; instance FromJSON SignupOut
 data InterestIn = InterestIn { interestType :: Text, subjectId :: Maybe Int, details :: Maybe Text, driveLink :: Maybe Text } deriving (Generic)
 instance ToJSON InterestIn
 instance FromJSON InterestIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "InterestIn" ["subjectId", "details", "driveLink"] value
+    genericParseJSON strictRequestObjectOptions value
 data InterestOut = InterestOut { leadId :: Int } deriving (Generic)
 instance ToJSON InterestOut; instance FromJSON InterestOut
 

@@ -842,6 +842,26 @@ spec = do
             :: Either String InterestIn)
         `shouldBe` True
 
+    it "rejects explicit null optional interest fields instead of treating them as fallback omissions" $ do
+      let decodeInterest rawPayload = A.eitherDecode rawPayload :: Either String InterestIn
+          assertNullRejected fieldName rawPayload =
+            case decodeInterest rawPayload of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right _ ->
+                expectationFailure
+                  ("Expected null public interest field to fail for " <> fieldName)
+
+      assertNullRejected
+        "subjectId"
+        "{\"interestType\":\"workshop\",\"subjectId\":null}"
+      assertNullRejected
+        "details"
+        "{\"interestType\":\"workshop\",\"details\":null}"
+      assertNullRejected
+        "driveLink"
+        "{\"interestType\":\"workshop\",\"driveLink\":null}"
+
     it "rejects blank interest types instead of creating unusable anonymous lead rows" $
       case validatePublicInterestInput (InterestIn "   " Nothing (Just "Looking for info") (Just "https://example.com")) of
         Left err -> do
