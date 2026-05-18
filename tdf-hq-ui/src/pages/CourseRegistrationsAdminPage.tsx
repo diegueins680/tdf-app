@@ -5085,6 +5085,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowEmailHistory(false);
     setDossierContextMenuAnchor(null);
     setReceiptMenuTarget(null);
+    setFollowUpMenuTarget(null);
     setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
     setShowNotesComposer(false);
     setReceiptForm(emptyReceiptForm());

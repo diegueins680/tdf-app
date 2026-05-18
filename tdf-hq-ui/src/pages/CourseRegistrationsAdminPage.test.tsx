@@ -7447,6 +7447,79 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('closes stale follow-up actions when admins move to another dossier', async () => {
+    const firstRegistration = buildRegistration();
+    const secondRegistration = buildRegistration({
+      crId: 102,
+      crPartyId: 10,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+    });
+    listRegistrationsMock.mockResolvedValue([firstRegistration, secondRegistration]);
+    getRegistrationDossierMock.mockImplementation((_slug, registrationId) =>
+      Promise.resolve(
+        registrationId === firstRegistration.crId
+          ? buildDossier({
+              crdRegistration: firstRegistration,
+              crdFollowUps: [buildFollowUp()],
+            })
+          : buildDossier({
+              crdRegistration: secondRegistration,
+              crdFollowUps: [],
+            }),
+      ),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace')).toBeTruthy();
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(document.body, 'Abrir acciones para seguimiento Confirmó transferencia'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, 'Editar seguimiento')).toBeTruthy();
+      expect(getMenuItemByText(document.body, 'Eliminar seguimiento')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Grace Hopper'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDialog().textContent).toContain('Grace Hopper');
+      expect(document.body.querySelector('[role="menuitem"][aria-label="Editar seguimiento Confirmó transferencia"]')).toBeNull();
+      expect(document.body.querySelector('[role="menuitem"][aria-label="Eliminar seguimiento Confirmó transferencia"]')).toBeNull();
+      expect(
+        Array.from(document.body.querySelectorAll('[role="menuitem"]')).some(
+          (el) => (el.textContent ?? '').trim() === 'Editar seguimiento',
+        ),
+      ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('keeps saved follow-up menus hidden while a new follow-up form owns the actions', async () => {
     getRegistrationDossierMock.mockResolvedValue(
       buildDossier({
