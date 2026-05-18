@@ -777,14 +777,9 @@ resolveScriptPath = do
       case normalizeConfiguredScriptPath rawPath of
         Right scriptPath -> validateConfiguredScriptPath scriptPath
         Left err -> pure (Left err)
-    Nothing -> do
-      mDefaultPath <-
-        firstExisting ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
-      pure $
-        maybe
-          (Left missingDefaultScriptMessage)
-          Right
-          mDefaultPath
+    Nothing ->
+      discoverDefaultScriptPath
+        ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
 
 validateConfiguredScriptPath :: FilePath -> IO (Either Text FilePath)
 validateConfiguredScriptPath scriptPath = do
@@ -817,6 +812,12 @@ blankConfiguredScriptMessage =
 missingDefaultScriptMessage :: Text
 missingDefaultScriptMessage =
   "Could not find scripts/generate-sri-invoice.mjs. Set SRI_INVOICE_SCRIPT to enable SRI emission."
+
+ambiguousDefaultScriptMessage :: [FilePath] -> Text
+ambiguousDefaultScriptMessage paths =
+  "Found multiple default SRI invoice scripts: "
+    <> T.intercalate ", " (map T.pack paths)
+    <> ". Set SRI_INVOICE_SCRIPT to choose one explicitly."
 
 normalizeConfiguredScriptPath :: String -> Either Text FilePath
 normalizeConfiguredScriptPath raw =
@@ -856,8 +857,21 @@ hasAmbiguousConfiguredScriptPathSegments scriptPath =
   normalise scriptPath /= scriptPath
     || any (`elem` [".", ".."]) (splitDirectories scriptPath)
 
-firstExisting :: [FilePath] -> IO (Maybe FilePath)
-firstExisting [] = pure Nothing
-firstExisting (candidate:rest) = do
+discoverDefaultScriptPath :: [FilePath] -> IO (Either Text FilePath)
+discoverDefaultScriptPath candidates = do
+  existing <- existingFiles candidates
+  pure $
+    case existing of
+      [] -> Left missingDefaultScriptMessage
+      [scriptPath] -> Right scriptPath
+      paths -> Left (ambiguousDefaultScriptMessage paths)
+
+existingFiles :: [FilePath] -> IO [FilePath]
+existingFiles [] = pure []
+existingFiles (candidate:rest) = do
   exists <- doesFileExist candidate
-  if exists then pure (Just candidate) else firstExisting rest
+  remaining <- existingFiles rest
+  pure $
+    if exists
+      then candidate : remaining
+      else remaining

@@ -25,9 +25,11 @@ import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory, setCurrentDirectory)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
+import System.FilePath ((</>))
 import System.IO (hClose)
-import System.IO.Temp (withSystemTempFile)
+import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import Web.PathPieces (toPathPiece)
 
@@ -4112,6 +4114,34 @@ main = hspec $ do
                                        ( "Expected non-normalized SRI script path to fail, got: "
                                            <> show value
                                        )
+
+        it "rejects ambiguous default SRI script discovery before invoking node" $
+            withSystemTempDirectory "tdf-sri-defaults" $ \tmpDir -> do
+                let parentScriptDir = tmpDir </> "scripts"
+                    childDir = tmpDir </> "tdf-hq"
+                    childScriptDir = childDir </> "scripts"
+                    scriptName = "generate-sri-invoice.mjs"
+                    scriptBody =
+                        "console.log('{\"ok\":true,\"status\":\"saved\",\"total\":90}')\n"
+                createDirectoryIfMissing True parentScriptDir
+                createDirectoryIfMissing True childScriptDir
+                writeFile (parentScriptDir </> scriptName) scriptBody
+                writeFile (childScriptDir </> scriptName) scriptBody
+                withEnvOverrides [("SRI_INVOICE_SCRIPT", Nothing)] $
+                    bracket getCurrentDirectory setCurrentDirectory $ \_ -> do
+                        setCurrentDirectory childDir
+                        result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                        case result of
+                            Left err -> do
+                                Data.Text.unpack err
+                                    `shouldContain` "Found multiple default SRI invoice scripts"
+                                Data.Text.unpack err
+                                    `shouldContain` "Set SRI_INVOICE_SCRIPT to choose one explicitly"
+                            Right value ->
+                                expectationFailure
+                                    ( "Expected ambiguous SRI script discovery to fail, got: "
+                                        <> show value
+                                    )
 
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
