@@ -4164,6 +4164,49 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts repeated custom-status row actions once the shared status is summarized', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crStatus: 'manual_review',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'manual_review',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const currentViewSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-current-view-summary"]',
+      );
+
+      expect(currentViewSummary?.textContent).toContain('Beatmaking 101 · Manual Review');
+      expect(container.textContent).toContain('Manual Review');
+      expect(countOccurrences(container, 'Manual Review')).toBe(1);
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+
+      const compactCustomStatusActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Cambiar estado para "]'),
+      );
+
+      expect(compactCustomStatusActions).toHaveLength(2);
+      expect(compactCustomStatusActions.every((action) => action.dataset['actionIcon'] === 'status-menu')).toBe(true);
+      expect(compactCustomStatusActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Ada Lovelace; estado actual: Manual Review',
+      ).getAttribute('title')).toBe('Cambiar estado para Ada Lovelace; actual: Manual Review');
+    });
+
+    await cleanup();
+  });
+
   it('uses busy-list search for custom statuses without adding the status fallback panel', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
@@ -4523,8 +4566,20 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      const customStatusActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Cambiar estado para "]'),
+      );
+      expect(customStatusActions).toHaveLength(2);
+      expect(customStatusActions.every((action) => action.dataset['actionIcon'] === 'status-menu')).toBe(true);
+      expect(customStatusActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Ada Lovelace; estado actual: Needs Review',
+      ).getAttribute('title')).toBe('Cambiar estado para Ada Lovelace; actual: Needs Review');
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Grace Hopper; estado actual: Needs Review',
+      ).getAttribute('title')).toBe('Cambiar estado para Grace Hopper; actual: Needs Review');
       expect(countOccurrences(container, 'Needs Review')).toBe(1);
       expect(countOccurrences(container, 'Usa Estado')).toBe(0);
       expect(countOccurrences(container, customStatusFilterUnavailableMessage)).toBe(1);
@@ -4567,9 +4622,24 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Katherine Johnson').textContent?.trim()).toBe('Cambiar estado');
+      const customStatusActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Cambiar estado para "]'),
+      );
+      expect(customStatusActions).toHaveLength(3);
+      expect(customStatusActions.every((action) => action.dataset['actionIcon'] === 'status-menu')).toBe(true);
+      expect(customStatusActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Ada Lovelace; estado actual: Needs Review',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Grace Hopper; estado actual: Needs Review',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Katherine Johnson; estado actual: Needs Review',
+      )).toBeTruthy();
       expect(countOccurrences(container, 'Needs Review')).toBe(1);
       expect(container.textContent).not.toContain('needs-review');
       expect(container.textContent).not.toContain('needs.review');
@@ -4605,8 +4675,20 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-single-custom-status-summary"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-status-filter-unavailable"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Cambiar estado');
-      expect(getButtonByAriaLabel(container, 'Cambiar estado para Grace Hopper').textContent?.trim()).toBe('Cambiar estado');
+      const customStatusActions = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Cambiar estado para "]'),
+      );
+      expect(customStatusActions).toHaveLength(2);
+      expect(customStatusActions.every((action) => action.dataset['actionIcon'] === 'status-menu')).toBe(true);
+      expect(customStatusActions.every((action) => action.textContent?.trim() === '')).toBe(true);
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Ada Lovelace; estado actual: Estado por revisar',
+      )).toBeTruthy();
+      expect(getButtonByAriaLabel(
+        container,
+        'Cambiar estado para Grace Hopper; estado actual: Estado por revisar',
+      )).toBeTruthy();
       expect(countOccurrences(container, 'Estado por revisar')).toBe(1);
     });
 
@@ -13170,15 +13252,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain(
         'Estado visible: Pagado. Mostrando una sola cohorte: Mixing Bootcamp. Fuente visible: referral.',
       );
-      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
-      expect(getButtonByAriaLabel(
-        container,
-        'Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual.',
-      )).toBeTruthy();
-      expect(getButtonByAriaLabel(
-        container,
-        'Filtrar inscripciones por estado Cancelado y limpiar la búsqueda actual.',
-      )).toBeTruthy();
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
+      expect(container.querySelector(
+        'button[aria-label="Filtrar inscripciones por estado Pendiente de pago y limpiar la búsqueda actual."]',
+      )).toBeNull();
+      expect(container.querySelector(
+        'button[aria-label="Filtrar inscripciones por estado Cancelado y limpiar la búsqueda actual."]',
+      )).toBeNull();
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Pagado"]')).toBeNull();
       const ninaSimoneAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Simone');
       const ninaGarciaAction = getButtonByAriaLabel(container, 'Marcar pago pendiente para Nina Garcia');
