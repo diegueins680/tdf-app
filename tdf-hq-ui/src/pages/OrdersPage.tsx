@@ -372,6 +372,7 @@ export default function OrdersPage() {
     : null;
   const showSingleSessionSummary = singleRow != null;
   const showSingleSessionBookingContext = singleRow ? !isMissingBookingContext(singleRow.bookingPrimary) : false;
+  const showSingleSessionServiceContext = singleRow ? hasDisplayValue(singleRow.service) : false;
   const showRefreshAction = totalRows > 1;
   const showHeaderCreateSessionAction =
     !showInitialLoadingState && !showInitialErrorState && !showFirstSessionEmptyState;
@@ -664,9 +665,11 @@ export default function OrdersPage() {
               <Typography variant="body2">
                 <Box component="span" sx={{ fontWeight: 600 }}>Horario:</Box> {singleRow.schedule}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
-              </Typography>
+              {showSingleSessionServiceContext && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
+                </Typography>
+              )}
               {showSingleSessionBookingContext && (
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
