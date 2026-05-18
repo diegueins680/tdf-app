@@ -26,7 +26,7 @@ module.exports = {
       type: 'ios.simulator',
       device: {
         type: 'iPhone 16',
-        id: '3C3D5759-6E10-480D-B768-2747B9B0D02A', // primary test device — do not change; other simulators experience simctl hangs
+        id: '8DB9DCE0-2F80-49C9-A614-F21DA3876B7B', // fresh simulator (2026-05-18); old 3C3D5759 corrupted/hung
       },
     },
   },
