@@ -14923,8 +14923,11 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       const searchInput = getInputByLabel(container, localSearchLabel);
 
-      expect(cohortLoading).not.toBeNull();
-      expect(cohortLoading?.textContent).toContain(cohortFilterLoadingMessage);
+      expect(cohortLoading).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.textContent).toContain(
+        `Pendiente de pago. ${cohortFilterLoadingMessage} Busca dentro de las 9 inscripciones cargadas.`,
+      );
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre o contacto');
       expect(searchInput.getAttribute('placeholder')).not.toContain('curso');
       expect(hasLabel(container, 'Curso / cohorte')).toBe(false);

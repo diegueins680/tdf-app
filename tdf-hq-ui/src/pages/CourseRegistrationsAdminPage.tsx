@@ -4222,6 +4222,11 @@ export default function CourseRegistrationsAdminPage() {
     && cohortsQuery.isLoading
     && hasVisibleRegistrations
     && !hasSlugFilter;
+  const hideBusyListPassiveCohortLoadingSummary = showBusyListSearchOnboarding
+    && showCohortFilterLoadingSummary
+    && !hasCustomFilters
+    && !hasVisibleCustomStatuses
+    && actionableStatusFilters.length <= 1;
   const showEmptyCohortFilterSummary = showCohortSelect
     && !cohortsQuery.isLoading
     && !cohortsQuery.isError
@@ -4540,6 +4545,9 @@ export default function CourseRegistrationsAdminPage() {
   const hiddenBusyListMissingContactContext = showBusyListSearchOnboarding
     ? sharedVisibleMissingContactSummary.replace(/\.$/, '')
     : '';
+  const hiddenBusyListCohortLoadingContext = hideBusyListPassiveCohortLoadingSummary
+    ? cohortFilterLoadingMessage.replace(/\.$/, '')
+    : '';
   const hiddenBusyListBaseContextSummary = hideBusyListPassiveCurrentViewPanel
     && !hideSingleResultLocalSearchPassiveCurrentView
     ? [
@@ -4571,6 +4579,7 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const hiddenBusyListContextSummary = [
     hiddenBusyListBaseContextSummary,
+    hiddenBusyListCohortLoadingContext,
     busyListSharedCreatedAtContext,
     hiddenBusyListMissingContactContext,
   ].filter(Boolean).join('. ');
@@ -4744,6 +4753,7 @@ export default function CourseRegistrationsAdminPage() {
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
     && !showFocusedEmptyLocalSearchState
+    && !hideBusyListPassiveCohortLoadingSummary
     && !hidePassiveFiltersDuringCappedEmptyLocalSearch
     && !showSingleResultWithOnlyPassiveFilterContext
     && !hideSingleResultLocalSearchPassiveFilterPanel
