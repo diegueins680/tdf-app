@@ -499,7 +499,7 @@ normalizeAuthPhoneNumber raw =
       plusIndex = T.findIndex (== '+') trimmed
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasUnsafeChars = T.any isUnsafeAuthPhoneChar trimmed
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =

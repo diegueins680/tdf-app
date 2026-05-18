@@ -353,6 +353,15 @@ signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
     assertRejected ("099" <> T.singleton (chr 0x2029) <> "1234567")
     assertRejected ("099" <> T.singleton (chr 0x200D) <> "1234567")
 
+  it "rejects non-ASCII phone separators before canonical E.164 persistence" $
+    case validateOptionalSignupPhone (Just ("099" <> T.singleton (chr 0x00A0) <> "1234567")) of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "phone must be a valid phone number"
+      Right value ->
+        expectationFailure
+          ("Expected non-ASCII signup phone separator to be rejected, got " <> show value)
+
 signupArtistClaimEmailSpec :: Spec
 signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
   it "allows unclaimed artist profiles with no stored email or the same normalized email" $ do
