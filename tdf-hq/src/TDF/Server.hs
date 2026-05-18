@@ -5850,7 +5850,7 @@ isValidEmailLocalPart localPart =
 
 isValidEmailLocalChar :: Char -> Bool
 isValidEmailLocalChar c =
-  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+  isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
@@ -5861,7 +5861,7 @@ isValidEmailDomainLabel label =
     && T.all isValidEmailDomainChar label
 
 isValidEmailDomainChar :: Char -> Bool
-isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
+isValidEmailDomainChar c = isAsciiLower c || isAsciiDecimalDigit c || c == '-'
 
 validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
 validateCourseRegistrationContactChannels mEmail mPhone

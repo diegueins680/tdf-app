@@ -9891,6 +9891,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user@example.c"
             assertInvalid "user()@example.com"
             assertInvalid "usér@example.com"
+            assertInvalid ("user" <> T.singleton '\x0661' <> "@example.com")
+            assertInvalid ("user@example" <> T.singleton '\x0661' <> ".com")
             assertInvalid (T.replicate 65 "a" <> "@example.com")
             assertInvalid ("ada@" <> T.replicate 64 "a" <> ".com")
             assertInvalid
@@ -9956,6 +9958,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "buyer@example.123" "buyerEmail inválido"
             assertInvalid "buyer@example.c" "buyerEmail inválido"
             assertInvalid "buyer()@example.com" "buyerEmail inválido"
+            assertInvalid ("buyer" <> T.singleton '\x0661' <> "@example.com") "buyerEmail inválido"
+            assertInvalid ("buyer@example" <> T.singleton '\x0661' <> ".com") "buyerEmail inválido"
 
     describe "validateMarketplaceBuyerPhone" $ do
         it "normalizes optional checkout phones before order and gateway persistence" $ do

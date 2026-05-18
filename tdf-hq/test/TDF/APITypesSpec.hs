@@ -1544,6 +1544,12 @@ spec = do
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.c\"}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada\\u0661@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example\\u0661.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"call me at 099 123 4567\"}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCheckout

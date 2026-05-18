@@ -728,7 +728,7 @@ isValidMarketplaceEmailLocalPart localPart =
 
 isValidMarketplaceEmailLocalChar :: Char -> Bool
 isValidMarketplaceEmailLocalChar c =
-  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+  isAsciiLower c || isAsciiDigitChar c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidMarketplaceEmailDomainLabel :: Text -> Bool
 isValidMarketplaceEmailDomainLabel label =
@@ -739,7 +739,7 @@ isValidMarketplaceEmailDomainLabel label =
     && T.all isValidMarketplaceEmailDomainChar label
 
 isValidMarketplaceEmailDomainChar :: Char -> Bool
-isValidMarketplaceEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
+isValidMarketplaceEmailDomainChar c = isAsciiLower c || isAsciiDigitChar c || c == '-'
 
 data MarketplaceOrderItemDTO = MarketplaceOrderItemDTO
   { moiListingId         :: Text
