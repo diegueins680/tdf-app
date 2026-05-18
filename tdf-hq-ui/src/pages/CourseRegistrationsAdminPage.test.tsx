@@ -17204,9 +17204,13 @@ describe('CourseRegistrationsAdminPage', () => {
       'Course contract - Beatmaking 101',
       'Beatmaking 101 - student agreement page',
       'Liability waiver form - Beatmaking 101',
+      'Parent consent form - Beatmaking 101',
+      'Beatmaking 101 - guardian permission slip',
       'Media release for Beatmaking 101',
       'Formulario de autorización - Beatmaking 101',
+      'Formulario de consentimiento de padres - Beatmaking 101',
       'Contrato de matrícula para Beatmaking 101',
+      'Beatmaking 101 - permiso de menor',
       'Beatmaking 101 - acuerdo de inscripción',
     ];
 
@@ -17223,7 +17227,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/agreement|contract|waiver|release|autorizaci[oó]n|contrato|acuerdo/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /agreement|contract|waiver|consent|permission|release|autorizaci[oó]n|consentimiento|contrato|acuerdo|permiso/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
