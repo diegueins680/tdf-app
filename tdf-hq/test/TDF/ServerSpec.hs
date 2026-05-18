@@ -12017,7 +12017,7 @@ spec = describe "TDF.Server helpers" $ do
                                 `shouldContain` "Invalid future stub catalog"
                         Right value ->
                             expectationFailure
-                                ( "Expected duplicate fallback discovery leaf labels to fail, got: "
+                                ( "Expected ambiguous fallback discovery endpoint labels to fail, got: "
                                     <> show value
                                 )
 
@@ -12028,6 +12028,14 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 [ ("crm", "parties/filters")
                 , ("crm", "filters")
+                ]
+            assertInvalid
+                [ ("crm", "parties/filters")
+                , ("crm", "filters/audit")
+                ]
+            assertInvalid
+                [ ("inventory", "assets/metadata")
+                , ("inventory", "metadata/workflow")
                 ]
             assertInvalid [(" crm", "parties/filters")]
             assertInvalid [("crm", "parties/filter s")]

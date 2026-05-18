@@ -338,6 +338,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubLeafRoute catalog
   if any (hasDuplicateLeaves validatedCatalog) mountedAreas
+       || any (hasLeafBranchCollision validatedCatalog) mountedAreas
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -354,10 +355,26 @@ validateFutureStubCatalogEndpointLeaves catalog = do
             ]
       in length leaves /= length (nub leaves)
 
+    hasLeafBranchCollision catalogForAreas area =
+      let areaEndpoints =
+            [ endpoint
+            | (entryArea, endpoint) <- catalogForAreas
+            , entryArea == area
+            ]
+          leaves = Set.fromList (map endpointLeaf areaEndpoints)
+          branchSegments = concatMap endpointBranchSegments areaEndpoints
+      in any (`Set.member` leaves) branchSegments
+
     endpointLeaf endpoint =
       case reverse (T.splitOn "/" endpoint) of
         leaf:_ -> leaf
         [] -> ""
+
+    endpointBranchSegments endpoint =
+      case T.splitOn "/" endpoint of
+        [] -> []
+        [_] -> []
+        segments -> init segments
 
 validateFutureStubCatalogTopLevelBoundaries
   :: [(Text, Text)]
