@@ -309,7 +309,44 @@ sanitizeGraphErrorChar ch
   | otherwise = ch
 
 redactInstagramGraphSecrets :: Text -> Text
-redactInstagramGraphSecrets = go Nothing
+redactInstagramGraphSecrets =
+  redactInstagramGraphBearerTokens . redactInstagramGraphFields
+
+redactInstagramGraphBearerTokens :: Text -> Text
+redactInstagramGraphBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchInstagramGraphBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchInstagramGraphBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchInstagramGraphBearerToken previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) = consumeValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between
+            || T.null tokenValue
+            || not (T.any isInstagramGraphBearerTokenAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+isInstagramGraphBearerTokenAtom :: Char -> Bool
+isInstagramGraphBearerTokenAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+redactInstagramGraphFields :: Text -> Text
+redactInstagramGraphFields = go Nothing
   where
     go _ textValue
       | T.null textValue = ""
