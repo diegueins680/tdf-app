@@ -6129,7 +6129,9 @@ export default function CourseRegistrationsAdminPage() {
                               <Link
                                 href={receipt.crrFileUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
+                                aria-label={`Abrir comprobante ${receiptLabel} en una pestaña nueva`}
+                                title={`Abrir comprobante ${receiptLabel} en una pestaña nueva`}
                                 underline="hover"
                                 color="text.primary"
                                 variant="subtitle2"
@@ -7955,7 +7957,14 @@ export default function CourseRegistrationsAdminPage() {
                                       {entry.crfNotes}
                                     </Typography>
                                     {entry.crfAttachmentUrl && (
-                                      <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
+                                      <Link
+                                        href={entry.crfAttachmentUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={`Abrir adjunto ${followUpAttachmentLabel} en una pestaña nueva`}
+                                        title={`Abrir adjunto ${followUpAttachmentLabel} en una pestaña nueva`}
+                                        underline="hover"
+                                      >
                                         <Stack direction="row" spacing={0.75} alignItems="center">
                                           <OpenInNewIcon sx={{ fontSize: 16 }} />
                                           <span>{followUpAttachmentLabel}</span>

@@ -6146,6 +6146,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Agregar comprobante')).toBeTruthy();
       const receiptLink = document.body.querySelector<HTMLAnchorElement>('a[href="https://example.com/receipt.pdf"]');
       expect(receiptLink?.textContent).toContain('receipt.pdf');
+      expect(receiptLink?.getAttribute('aria-label')).toBe('Abrir comprobante receipt.pdf en una pestaña nueva');
+      expect(receiptLink?.getAttribute('title')).toBe('Abrir comprobante receipt.pdf en una pestaña nueva');
+      expect(receiptLink?.getAttribute('rel')).toBe('noopener noreferrer');
       expect(document.body.textContent).not.toContain('Abrir comprobante');
       expect(document.body.textContent).not.toContain(receiptComposerHelpText);
       expect(document.body.textContent).not.toContain(editingReceiptComposerHelpText);
@@ -8307,8 +8310,20 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
+      const firstAttachment = document.body.querySelector<HTMLAnchorElement>('a[href="https://example.com/follow-up-401.png"]');
+      const secondAttachment = document.body.querySelector<HTMLAnchorElement>('a[href="https://example.com/follow-up-402.png"]');
       expect(document.body.textContent).toContain('Adjunto de Confirmó transferencia · #401');
       expect(document.body.textContent).toContain('Adjunto de Confirmó transferencia · #402');
+      expect(firstAttachment?.getAttribute('aria-label')).toBe(
+        'Abrir adjunto Adjunto de Confirmó transferencia · #401 en una pestaña nueva',
+      );
+      expect(firstAttachment?.getAttribute('title')).toBe(
+        'Abrir adjunto Adjunto de Confirmó transferencia · #401 en una pestaña nueva',
+      );
+      expect(secondAttachment?.getAttribute('aria-label')).toBe(
+        'Abrir adjunto Adjunto de Confirmó transferencia · #402 en una pestaña nueva',
+      );
+      expect(secondAttachment?.getAttribute('rel')).toBe('noopener noreferrer');
       expect(document.body.textContent).not.toContain('Abrir adjunto');
     });
 
