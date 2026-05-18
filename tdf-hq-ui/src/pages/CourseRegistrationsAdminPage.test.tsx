@@ -14959,7 +14959,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps capped default-list guidance scoped to search and empty-search states', async () => {
+  it('collapses the recovery-only limit editor after clearing capped empty search', async () => {
     const registrations = buildRegistrations(200, (index) => {
       if (index % 3 === 1) {
         return { crStatus: 'paid' };
@@ -15065,8 +15065,15 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(200);
       expect(container.textContent).not.toContain('No hay coincidencias para "sin coincidencias"');
-      expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(hasLabel(container, loadLimitLabel)).toBe(false);
+      expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, 'Ajustar límite'));
+      await flushPromises();
+      await flushPromises();
     });
 
     await act(async () => {

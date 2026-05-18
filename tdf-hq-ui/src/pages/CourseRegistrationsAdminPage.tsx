@@ -5399,6 +5399,13 @@ export default function CourseRegistrationsAdminPage() {
     setShowAdvancedFilters(false);
   };
 
+  const handleClearLocalSearch = () => {
+    setLocalSearch('');
+    if (showAdvancedFilters && hasLocalSearch && limit === DEFAULT_LIMIT) {
+      setShowAdvancedFilters(false);
+    }
+  };
+
   const handleToggleAdvancedFilters = () => {
     setHasUsedFilterControl(true);
     setShowAdvancedFilters((current) => !current);
@@ -6874,24 +6881,26 @@ export default function CourseRegistrationsAdminPage() {
                 </Button>
               </Stack>
             )}
-            <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
-              <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
-                <TextField
-                  label={LOAD_LIMIT_LABEL}
-                  type="number"
-                  inputProps={{ min: 1 }}
-                  value={limit}
-                  onChange={(e) => {
-                    setHasUsedFilterControl(true);
-                    setLocalSearch('');
-                    setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
-                  }}
-                  helperText={LOAD_LIMIT_HELPER_TEXT}
-                  fullWidth
-                  size="small"
-                />
-              </Box>
-            </Collapse>
+            {showAdvancedFilters && showAdvancedLimitControl && (
+              <Collapse in unmountOnExit>
+                <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
+                  <TextField
+                    label={LOAD_LIMIT_LABEL}
+                    type="number"
+                    inputProps={{ min: 1 }}
+                    value={limit}
+                    onChange={(e) => {
+                      setHasUsedFilterControl(true);
+                      setLocalSearch('');
+                      setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
+                    }}
+                    helperText={LOAD_LIMIT_HELPER_TEXT}
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              </Collapse>
+            )}
             {showFirstRunFilterHelper
               && filtersHelpText
               && !showFilteredEmptyState
@@ -7090,7 +7099,7 @@ export default function CourseRegistrationsAdminPage() {
                             edge="end"
                             size="small"
                             aria-label="Limpiar búsqueda"
-                            onClick={() => setLocalSearch('')}
+                            onClick={handleClearLocalSearch}
                           >
                             <ClearIcon fontSize="small" />
                           </IconButton>
@@ -7170,7 +7179,7 @@ export default function CourseRegistrationsAdminPage() {
                     </Button>
                   )}
                   {showEmptyLocalSearchAlertClearAction && (
-                    <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
+                    <Button color="inherit" size="small" onClick={handleClearLocalSearch}>
                       Limpiar búsqueda
                     </Button>
                   )}
