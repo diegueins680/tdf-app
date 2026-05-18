@@ -12462,6 +12462,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'tiktok_leadgen',
       'whatsapp_lead_form',
       'whatsapp_leadgen_form',
+      'whatsapp_form',
+      'whatsapp_registration_form',
+      'whatsapp_signup_form',
       'leads_de_instagram',
     ] as const;
     const hiddenSourceLabels = [
@@ -12487,6 +12490,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'TikTok leadgen',
       'WhatsApp lead form',
       'WhatsApp leadgen form',
+      'WhatsApp form',
+      'WhatsApp registration form',
+      'WhatsApp signup form',
       'Leads de Instagram',
     ];
     listRegistrationsMock.mockResolvedValue(
