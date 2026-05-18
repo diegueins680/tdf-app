@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity (..))
+import Database.Persist (Entity (..), Key)
 import Database.Persist.Sql (fromSqlKey, toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Server.Internal.Handler (runHandler)
@@ -18,6 +18,7 @@ import TDF.Models
   ( ElectionStatus (Upcoming)
   , FanClubCandidacy (..)
   , FanClubElection (..)
+  , FanFollow (..)
   , FanClubMemberProfile (..)
   , FanClubMemory (..)
   , FanClubOfficerRole (Coordinator, Secretary)
@@ -33,6 +34,7 @@ import TDF.ServerFanClub
   , validateFanClubInboxBodyInput
   , validateFanClubInboxReplyBodyInput
   , validateFanClubOfficerRoleInput
+  , validateFanClubPostAccess
   , validateFanClubPostContentInput
   , validateFanClubPostTitleInput
   , validateFanClubInboxSubjectInput
@@ -172,7 +174,8 @@ spec = do
         validateFanClubVoteSelectionIds [1, 2, 3, 4, 5, 6]
 
     it "rejects same-role ballot collisions before insertUnique can hide intent" $ do
-      let target candidacyId role =
+      let target :: Int64 -> FanClubOfficerRole -> (Key FanClubCandidacy, FanClubCandidacy)
+          target candidacyId role =
             (toSqlKey candidacyId, mkCandidacyWithRole 20 role)
       case validateFanClubVoteCandidacyTargets
         [ target 30 Coordinator
@@ -239,6 +242,37 @@ spec = do
         validateFanClubPostTitleInput (Just ("Hola" <> "\x00A0" <> "club"))
       assertRejected 400 "hidden formatting" $
         validateFanClubPostContentInput ("Hola" <> "\x202E" <> "club")
+
+  describe "fan club post access validation" $
+    it "requires followers or officers before creating fan-club posts" $ do
+      let artistKey = toSqlKey 42
+          follower = mkFollow 99 42
+          wrongArtistFollow = mkFollow 99 43
+          wrongFanFollow = mkFollow 100 42
+
+      validateFanClubPostAccess
+        artistKey
+        fanClubUser
+        False
+        (Just (Entity (toSqlKey 1) follower))
+        `shouldBe` Right ()
+      validateFanClubPostAccess artistKey fanClubUser True Nothing
+        `shouldBe` Right ()
+
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess artistKey fanClubUser False Nothing
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess
+          artistKey
+          fanClubUser
+          False
+          (Just (Entity (toSqlKey 2) wrongArtistFollow))
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess
+          artistKey
+          fanClubUser
+          False
+          (Just (Entity (toSqlKey 3) wrongFanFollow))
 
   describe "fan club inbox text validation" $ do
     it "normalizes optional subjects and required bodies before inbox persistence" $ do
@@ -324,6 +358,14 @@ mkPost clubId parentId =
     , fanClubPostIsHidden = False
     , fanClubPostCreatedAt = testTime
     , fanClubPostUpdatedAt = Nothing
+    }
+
+mkFollow :: Int64 -> Int64 -> FanFollow
+mkFollow fanId artistId =
+  FanFollow
+    { fanFollowFanPartyId = toSqlKey fanId
+    , fanFollowArtistPartyId = toSqlKey artistId
+    , fanFollowCreatedAt = testTime
     }
 
 mkMemberProfile :: Int64 -> FanClubMemberProfile

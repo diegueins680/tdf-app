@@ -10,6 +10,7 @@ module TDF.ServerFanClub
   , fanClubSecureArtistHandlers
   , validateFanClubArtistPathId
   , validateFanClubPostPathId
+  , validateFanClubPostAccess
   , validateFanClubPostMutationTarget
   , validateFanClubReplyParentTarget
   , validateFanClubElectionPathId
@@ -314,6 +315,7 @@ fanClubSecureArtistHandlers user artistId =
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
         Just (Entity cid _) -> do
+          requireFanClubPostAccess user artistKey
           title <-
             either throwError pure $
               validateFanClubPostTitleInput (fcpReqTitle req)
@@ -1290,6 +1292,30 @@ checkIsOfficer user artistKey = do
           mOfficer <- selectFirst
             [M.FanClubOfficerClubId ==. cid, M.FanClubOfficerFanPartyId ==. auPartyId user] []
           pure (isJust mOfficer)
+
+requireFanClubPostAccess :: AuthedUser -> PartyId -> AppM ()
+requireFanClubPostAccess user artistKey = do
+  (isOfficer, mFollow) <- runDB $ do
+    officerAccess <- checkIsOfficer user artistKey
+    follow <- getBy (UniqueFanFollow (auPartyId user) artistKey)
+    pure (officerAccess, follow)
+  either throwError pure $
+    validateFanClubPostAccess artistKey user isOfficer mFollow
+
+validateFanClubPostAccess
+  :: PartyId
+  -> AuthedUser
+  -> Bool
+  -> Maybe (Entity FanFollow)
+  -> Either ServerError ()
+validateFanClubPostAccess _ _ True _ =
+  Right ()
+validateFanClubPostAccess artistKey user False (Just (Entity _ follow))
+  | fanFollowFanPartyId follow == auPartyId user
+  , fanFollowArtistPartyId follow == artistKey =
+      Right ()
+validateFanClubPostAccess _ _ False _ =
+  Left err403 { errBody = "Debes seguir al artista para publicar en su club de fans" }
 
 validateFanClubArtistPathId :: Int64 -> Either ServerError PartyId
 validateFanClubArtistPathId rawArtistId
