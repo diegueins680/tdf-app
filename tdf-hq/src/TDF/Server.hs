@@ -10100,19 +10100,45 @@ userRolesServer user =
       userIdValid <- either throwError pure (validateUserRoleUserId userId)
       Env pool _ <- ask
       let credKey = toSqlKey userIdValid :: Key UserCredential
-      updated <- liftIO $ flip runSqlPool pool $ do
+      updateResult <- liftIO $ flip runSqlPool pool $ do
         mCred <- getEntity credKey
         case mCred of
-          Nothing -> pure False
+          Nothing -> pure (Left err404)
           Just (Entity _ cred) -> do
-            applyRoles (userCredentialPartyId cred) payloadRoles
-            pure True
-      unless updated $ throwError err404
+            let targetPartyId = userCredentialPartyId cred
+            case validateUserRoleUpdateScope user targetPartyId payloadRoles of
+              Left err -> pure (Left err)
+              Right () -> do
+                applyRoles targetPartyId payloadRoles
+                pure (Right ())
+      either throwError pure updateResult
       pure NoContent
 
 validateUserRoleUserId :: Int64 -> Either ServerError Int64
 validateUserRoleUserId =
   validatePositiveIdField "userId"
+
+validateUserRoleUpdateScope :: AuthedUser -> PartyId -> [RoleEnum] -> Either ServerError ()
+validateUserRoleUpdateScope AuthedUser{auPartyId = actorPartyId} targetPartyId nextRoles
+  | fromSqlKey targetPartyId <= 0 =
+      Left err500 { errBody = "Target user party id is invalid" }
+  | actorPartyId == targetPartyId =
+      case validateStrictAdminAccess selfAfterUpdate of
+        Right () -> Right ()
+        Left _ ->
+          Left err400
+            { errBody =
+                "Cannot change your own roles in a way that removes strict Admin access"
+            }
+  | otherwise =
+      Right ()
+  where
+    selfAfterUpdate =
+      AuthedUser
+        { auPartyId = targetPartyId
+        , auRoles = nextRoles
+        , auModules = modulesForRoles nextRoles
+        }
 
 loadUserRoleSummaries :: SqlPersistT IO [UserRoleSummaryDTO]
 loadUserRoleSummaries = do

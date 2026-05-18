@@ -162,6 +162,7 @@ import TDF.Server
     , validatePublicBookingDurationMinutes
     , validateRolePayload
     , validateStrictAdminAccess
+    , validateUserRoleUpdateScope
     , validateUserRoleUserId
     , validateServiceAdCatalogId
     , validateServiceAdDescription
@@ -11425,6 +11426,32 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected
                 "Admin module grants must match roles"
                 ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
+
+    describe "validateUserRoleUpdateScope" $ do
+        it "prevents strict admins from removing their own role-management access" $ do
+            validateUserRoleUpdateScope (mkUser [Admin]) (toSqlKey 2) [Fan]
+                `shouldBe` Right ()
+            validateUserRoleUpdateScope
+                (mkUser [Admin])
+                (toSqlKey 1)
+                [Admin, Fan, Customer]
+                `shouldBe` Right ()
+
+            let assertRejected roles =
+                    case validateUserRoleUpdateScope (mkUser [Admin]) (toSqlKey 1) roles of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "Cannot change your own roles in a way that removes strict Admin access"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected self role update to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertRejected [Fan, Customer]
+            assertRejected [Admin, Webmaster]
 
     describe "fan club post moderation invariants" $ do
         it "rejects non-positive moderation path ids before post fallback lookup" $
