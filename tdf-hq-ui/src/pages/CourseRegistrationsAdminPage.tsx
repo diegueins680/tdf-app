@@ -4544,7 +4544,9 @@ export default function CourseRegistrationsAdminPage() {
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
   const shouldCompactRepeatedPaymentStatusActions = searchedRegistrations.length >= 2;
-  const showRepeatedPaymentStatusIconActions = Boolean(combinedSingleChoiceSummary || showSingleStatusSummaryInPageChrome)
+  const showRepeatedPaymentStatusIconActions = Boolean(
+    combinedSingleChoiceSummary || showSingleStatusSummaryInPageChrome || showActiveStatusFilterSummary
+  )
     && !hasLocalSearch
     && !showBusyListSearchOnboarding
     && allVisibleRowsCanOpenPaymentWorkflow

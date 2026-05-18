@@ -3628,6 +3628,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('compacts repeated payment actions when the active status filter already states pending payment', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(3));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=pending-payment');
+
+    await waitForExpectation(() => {
+      const activeStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-active-status-summary"]',
+      );
+
+      expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
+      expect(activeStatusSummary?.textContent).toContain('Pendiente de pago');
+      expect(container.querySelectorAll('button[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelectorAll('button[data-action-icon="payment-receipt"]')).toHaveLength(3);
+      expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(3);
+      expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Estudiante 1')).textContent?.trim()).toBe('');
+      expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
+      expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
+      expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single filtered result focused on shared context instead of a lone status chip', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
