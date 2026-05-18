@@ -366,6 +366,7 @@ export default function OrdersPage() {
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
   const showInitialLoadingState = bookingsQuery.isLoading && bookingsQuery.data == null;
   const showInitialErrorState = Boolean(bookingsQuery.error) && totalRows === 0;
+  const showStaleErrorState = Boolean(bookingsQuery.error) && totalRows > 0;
   const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
   const singleRow = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 1
     ? (rows[0] ?? null)
@@ -373,7 +374,7 @@ export default function OrdersPage() {
   const showSingleSessionSummary = singleRow != null;
   const showSingleSessionBookingContext = singleRow ? !isMissingBookingContext(singleRow.bookingPrimary) : false;
   const showSingleSessionServiceContext = singleRow ? hasDisplayValue(singleRow.service) : false;
-  const showRefreshAction = totalRows > 1;
+  const showRefreshAction = totalRows > 1 && !showStaleErrorState;
   const showHeaderCreateSessionAction =
     !showInitialLoadingState && !showInitialErrorState && !showFirstSessionEmptyState;
   const showInlineCreateSessionAction = showFirstSessionEmptyState;
@@ -593,8 +594,17 @@ export default function OrdersPage() {
         </Stack>
       </Stack>
 
-      {bookingsQuery.error && !showInitialErrorState && (
-        <Alert severity="error">{bookingsQuery.error.message}</Alert>
+      {showStaleErrorState && bookingsQuery.error && (
+        <Alert
+          severity="error"
+          action={(
+            <Button color="inherit" size="small" onClick={handleRefresh} disabled={bookingsQuery.isFetching}>
+              Reintentar carga
+            </Button>
+          )}
+        >
+          No se pudieron actualizar las sesiones: {bookingsQuery.error.message}.
+        </Alert>
       )}
 
       <Paper variant="outlined">

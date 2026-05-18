@@ -284,6 +284,77 @@ describe('OrdersPage', () => {
     }
   });
 
+  it('keeps a failed refresh recovery beside the stale-load error instead of leaving a duplicate header refresh', async () => {
+    const bookings = [
+      {
+        bookingId: 101,
+        title: 'Tracking principal',
+        startsAt: '2026-04-13T10:00:00-05:00',
+        endsAt: '2026-04-13T12:00:00-05:00',
+        status: 'Confirmed',
+        serviceType: 'Mixing',
+        resources: [
+          { brRoomId: 'studio-a', brRoomName: 'Studio A', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+      {
+        bookingId: 102,
+        title: 'Master final',
+        startsAt: '2026-04-14T14:00:00-05:00',
+        endsAt: '2026-04-14T16:00:00-05:00',
+        status: 'Tentative',
+        serviceType: 'Mastering',
+        resources: [
+          { brRoomId: 'studio-b', brRoomName: 'Studio B', brRole: 'room' },
+        ],
+      } satisfies BookingDTO,
+    ];
+    listBookingsMock
+      .mockResolvedValueOnce(bookings)
+      .mockRejectedValueOnce(new Error('Gateway timeout'))
+      .mockResolvedValueOnce(bookings);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getRowByBookingId(container, 101)).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).not.toBeNull();
+      });
+
+      const headerRefresh = container.querySelector<HTMLElement>('button[aria-label="Actualizar lista de sesiones"]');
+      if (!headerRefresh) throw new Error('Header refresh button not found');
+      await clickButton(headerRefresh);
+
+      await waitForExpectation(() => {
+        expect(listBookingsMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('No se pudieron actualizar las sesiones: Gateway timeout.');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => buttonText(button) === 'Reintentar carga',
+          ),
+        ).toHaveLength(1);
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).toBeNull();
+        expect(getRowByBookingId(container, 101)).not.toBeNull();
+        expect(getRowByBookingId(container, 102)).not.toBeNull();
+      });
+
+      await clickButton(getButtonByText(container, 'Reintentar carga'));
+
+      await waitForExpectation(() => {
+        expect(listBookingsMock).toHaveBeenCalledTimes(3);
+        expect(container.textContent).not.toContain('No se pudieron actualizar las sesiones');
+        expect(container.querySelector('button[aria-label="Actualizar lista de sesiones"]')).not.toBeNull();
+        expect(getRowByBookingId(container, 101)).not.toBeNull();
+        expect(getRowByBookingId(container, 102)).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the one-row sessions table with a first-session summary and one edit action', async () => {
     listBookingsMock.mockResolvedValue([
       {
