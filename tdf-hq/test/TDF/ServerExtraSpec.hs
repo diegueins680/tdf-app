@@ -398,6 +398,61 @@ spec = do
         )
         "pcConcept must not contain control characters or hidden formatting characters"
 
+    it "rejects oversized payment text at the JSON boundary before handler fallbacks" $ do
+      let paymentCreateJson :: Text -> Text -> Text -> Text -> BL8.ByteString
+          paymentCreateJson currencyValue methodValue paidAtValue conceptValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= currencyValue
+                , "pcMethod" .= methodValue
+                , "pcPaidAt" .= paidAtValue
+                , "pcConcept" .= conceptValue
+                ]
+          basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected oversized payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        (paymentCreateJson "USDD" "cash" "2026-04-13" "Studio booking")
+        "pcCurrency must be 3 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" (T.replicate 65 "a") "2026-04-13" "Studio booking")
+        "pcMethod must be 64 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13Z" "Studio booking")
+        "pcPaidAt must be 10 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13" (T.replicate 241 "a"))
+        "pcConcept must be 240 characters or fewer"
+      assertInvalid
+        (basePaymentJson ("pcReference" .= T.replicate 161 "a"))
+        "pcReference must be 160 characters or fewer"
+      assertInvalid
+        (basePaymentJson ("pcPeriod" .= ("2026-044" :: Text)))
+        "pcPeriod must be 7 characters or fewer"
+      assertInvalid
+        ( basePaymentJson
+            ("pcAttachmentUrl" .= ("https://files.example.com/" <> T.replicate 2049 "a"))
+        )
+        "pcAttachmentUrl must be 2048 characters or fewer"
+
   describe "inventory checkout/check-in request JSON" $ do
     it "accepts canonical asset create and patch keys used by current clients" $ do
       case A.eitherDecode
