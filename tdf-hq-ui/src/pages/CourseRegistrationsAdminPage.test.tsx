@@ -13854,6 +13854,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('replaces unrelated status filters with one status summary for small same-status searches', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Nina Simone',
+        crEmail: 'nina1@example.com',
+        crStatus: 'paid',
+      }),
+      buildRegistration({
+        crId: 102,
+        crPartyId: 10,
+        crFullName: 'Nina Garcia',
+        crEmail: 'nina2@example.com',
+        crStatus: 'paid',
+      }),
+      ...buildRegistrations(7, (index) => ({
+        crId: 201 + index,
+        crPartyId: 30 + index,
+        crFullName: `Estudiante ${index + 1}`,
+        crEmail: `student${index + 1}@example.com`,
+        crStatus: index % 2 === 0 ? 'pending_payment' : 'cancelled',
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'nina');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.textContent).toContain('Estado visible: Pagado.');
+      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.textContent).not.toContain('Filtrar por estado');
+      expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(1);
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('clears local search when admins switch server filters so the list is not double-filtered', async () => {
     const pendingRegistrations = buildRegistrations(9);
     const initialRegistrations = [
