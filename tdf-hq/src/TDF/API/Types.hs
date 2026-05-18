@@ -907,7 +907,9 @@ data LabelTrackCreate = LabelTrackCreate
 
 instance ToJSON LabelTrackCreate
 instance FromJSON LabelTrackCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "LabelTrackCreate" ["ltcNote", "ltcOwnerId"] value
+    genericParseJSON strictObjectOptions value
 
 data LabelTrackUpdate = LabelTrackUpdate
   { ltuTitle  :: Maybe Text

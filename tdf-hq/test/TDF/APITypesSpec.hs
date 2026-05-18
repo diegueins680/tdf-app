@@ -1777,6 +1777,21 @@ spec = do
                     expectationFailure
                         ("Expected null label track status update to fail, got: " <> show value)
 
+        it "rejects explicit null label track create fallbacks so omission stays intentional" $ do
+            case decodeLabelTrackCreate "{\"ltcTitle\":\"Master final\",\"ltcNote\":null}" of
+                Left err ->
+                    err `shouldContain` "ltcNote must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track note to fail, got: " <> show value)
+
+            case decodeLabelTrackCreate "{\"ltcTitle\":\"Master final\",\"ltcOwnerId\":null}" of
+                Left err ->
+                    err `shouldContain` "ltcOwnerId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track owner to fail, got: " <> show value)
+
     describe "internship time-entry request FromJSON" $ do
         it "accepts canonical clock-in and clock-out payloads while trimming blank notes to omission" $ do
             case decodeClockIn "{}" of
