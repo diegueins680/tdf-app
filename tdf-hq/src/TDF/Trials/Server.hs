@@ -1347,6 +1347,12 @@ hasPublicLeadFallbackMarkers party =
 validatePublicLeadFallbackRelations :: PartyId -> AppM ()
 validatePublicLeadFallbackRelations partyId = do
   mArtistProfile <- selectFirst [Models.ArtistProfileArtistPartyId ==. partyId] []
+  mNonPublicLeadInterest <-
+    selectFirst
+      [ LeadInterestPartyId ==. partyId
+      , LeadInterestSource !=. "public_interest"
+      ]
+      []
   mTrialRequest <- selectFirst [TrialRequestPartyId ==. partyId] []
   mRole <- selectFirst [Models.PartyRolePartyId ==. partyId] []
   mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
@@ -1354,6 +1360,9 @@ validatePublicLeadFallbackRelations partyId = do
   when (isJust mArtistProfile) $
     liftIO $ throwIO err500
       { errBody = "Anonymous public lead fallback party has artist profile links" }
+  when (isJust mNonPublicLeadInterest) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has non-public lead interest links" }
   when (isJust mTrialRequest) $
     liftIO $ throwIO err500
       { errBody = "Anonymous public lead fallback party has trial request links" }

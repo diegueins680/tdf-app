@@ -257,6 +257,16 @@ spec = do
       (firstId, secondId, total) <- runInMemory $ do
         now <- liftIO getCurrentTime
         firstId <- ensurePublicLeadParty now
+        _ <- insert Trials.LeadInterest
+          { Trials.leadInterestPartyId = firstId
+          , Trials.leadInterestInterestType = "voice-lessons"
+          , Trials.leadInterestSubjectId = Nothing
+          , Trials.leadInterestDetails = Just "anonymous interest details"
+          , Trials.leadInterestSource = "public_interest"
+          , Trials.leadInterestDriveLink = Nothing
+          , Trials.leadInterestStatus = "Open"
+          , Trials.leadInterestCreatedAt = now
+          }
         secondId <- ensurePublicLeadParty now
         rows <- selectList [Models.PartyPrimaryEmail ==. Just "public-interest@tdf.local"] []
         pure (firstId, secondId, length rows)
@@ -411,6 +421,42 @@ spec = do
         Right partyId ->
           expectationFailure
             ("Expected fallback party profile link drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows with non-public lead interest links" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Trials.LeadInterest
+          { Trials.leadInterestPartyId = partyId
+          , Trials.leadInterestInterestType = "signup"
+          , Trials.leadInterestSubjectId = Nothing
+          , Trials.leadInterestDetails = Just "real signup details"
+          , Trials.leadInterestSource = "public_signup"
+          , Trials.leadInterestDriveLink = Nothing
+          , Trials.leadInterestStatus = "Open"
+          , Trials.leadInterestCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "non-public lead interest links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party lead interest drift to be rejected, got " <> show partyId)
 
     it "rejects fallback party rows that already own trial requests" $ do
       result <- (try $ runInMemory $ do
