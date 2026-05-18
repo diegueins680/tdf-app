@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
 import { isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';

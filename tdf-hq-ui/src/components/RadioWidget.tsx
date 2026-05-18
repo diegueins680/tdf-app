@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';

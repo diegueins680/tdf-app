@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 

@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {

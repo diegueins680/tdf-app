@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';

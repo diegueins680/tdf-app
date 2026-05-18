@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from './logger';
 const readEnvValue = (key: string): string | undefined => {
   const baked = (import.meta as unknown as { env?: Record<string, unknown> }).env?.[key];
   if (typeof baked === 'string' && baked.trim()) return baked.trim();

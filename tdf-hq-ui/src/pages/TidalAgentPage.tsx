@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../utils/logger';
 import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
