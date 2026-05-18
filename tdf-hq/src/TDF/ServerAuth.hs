@@ -28,6 +28,7 @@ module TDF.ServerAuth
   , selectUniquePasswordResetCredential
   , signupEmailExists
   , validateLoginRequest
+  , validatePasswordChangeUsernameInput
   , validateGoogleIdTokenInput
   , validateGoogleIdTokenInfo
   , validateAuthPassword
@@ -420,6 +421,19 @@ validateCurrentPasswordInput rawPassword
     passwordClean = T.strip rawPassword
     passwordError msg = err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
+validatePasswordChangeUsernameInput :: Text -> Either ServerError Text
+validatePasswordChangeUsernameInput rawUsername
+  | T.null usernameClean =
+      Left err400 { errBody = "Username is required" }
+  | T.length usernameClean > maxLoginIdentifierChars =
+      Left err400 { errBody = "Username must be 254 characters or fewer" }
+  | T.any invalidLoginIdentifierChar usernameClean =
+      Left err400 { errBody = loginIdentifierError }
+  | otherwise =
+      Right usernameClean
+  where
+    usernameClean = T.strip rawUsername
+
 validateSignupDisplayName :: Text -> Text -> Either ServerError Text
 validateSignupDisplayName rawFirst rawLast
   | T.null firstClean && T.null lastClean =
@@ -678,12 +692,10 @@ signup SignupRequest
 
 changePassword :: Maybe Text -> ChangePasswordRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 changePassword mAuthHeader ChangePasswordRequest{..} = do
-  let maybeUsernameClean = T.strip <$> username
   currentPasswordClean <- either throwError pure (validateCurrentPasswordInput currentPassword)
   newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
   Env pool _ <- ask
-  usernameClean <- resolveUsername pool maybeUsernameClean mAuthHeader
-  when (T.null usernameClean) $ throwBadRequest "Username is required"
+  usernameClean <- resolveUsername pool username mAuthHeader
   result <- liftIO $ flip runSqlPool pool $
     runChangePassword usernameClean currentPasswordClean newPasswordClean
   case result of
@@ -697,7 +709,8 @@ changePassword mAuthHeader ChangePasswordRequest{..} = do
   where
     resolveUsername pool mUsername header =
       case mUsername of
-        Just uname | not (T.null uname) -> pure uname
+        Just uname | not (T.null (T.strip uname)) ->
+          either throwError pure (validatePasswordChangeUsernameInput uname)
         _ -> do
           tokenValue <- case traverse parsePasswordChangeAuthToken header of
             Left err -> throwError err
@@ -707,7 +720,8 @@ changePassword mAuthHeader ChangePasswordRequest{..} = do
           case fmap T.strip mResolved of
             Nothing ->
               throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid or inactive session token") }
-            Just uname' -> pure uname'
+            Just uname' ->
+              either throwError pure (validatePasswordChangeUsernameInput uname')
 
 parsePasswordChangeAuthToken :: Text -> Either ServerError Text
 parsePasswordChangeAuthToken rawHeader =

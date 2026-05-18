@@ -34,6 +34,7 @@ import TDF.ServerAuth
   , validateGoogleIdTokenInput
   , validateLoginRequest
   , validateGoogleIdTokenInfo
+  , validatePasswordChangeUsernameInput
   , validatePasswordResetToken
   , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
@@ -48,6 +49,7 @@ spec = do
   moduleAccessSpec
   loginRequestSpec
   currentPasswordInputSpec
+  passwordChangeUsernameSpec
   passwordChangeAuthHeaderSpec
   tokenLabelUsernameSpec
   signupRoleSpec
@@ -206,6 +208,31 @@ currentPasswordInputSpec = describe "validateCurrentPasswordInput" $ do
     assertRejected
       "hidden formatting"
       ("old" <> T.singleton (chr 0x200D) <> "pass")
+
+passwordChangeUsernameSpec :: Spec
+passwordChangeUsernameSpec = describe "validatePasswordChangeUsernameInput" $ do
+  it "trims explicit usernames before password-change credential lookup" $
+    validatePasswordChangeUsernameInput " ada@example.com "
+      `shouldBe` Right "ada@example.com"
+
+  it "rejects malformed explicit usernames before password-change credential lookup" $ do
+    let hiddenFormat = T.singleton (chr 0x200D)
+        assertRejected label rawUsername =
+          case validatePasswordChangeUsernameInput rawUsername of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` label
+            Right value ->
+              expectationFailure
+                ("Expected invalid password-change username, got " <> show value)
+    assertRejected "Username is required" "   "
+    assertRejected "Username must be 254 characters or fewer" (T.replicate 255 "a")
+    assertRejected
+      "Username must not contain whitespace"
+      "ada example"
+    assertRejected
+      "hidden formatting"
+      ("ada" <> hiddenFormat <> "@example.com")
 
 passwordChangeAuthHeaderSpec :: Spec
 passwordChangeAuthHeaderSpec = describe "parsePasswordChangeAuthToken" $ do
