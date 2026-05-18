@@ -370,11 +370,6 @@ normalizeOptionalText = (>>= normalizeText)
 normalizeOptionalUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
 normalizeOptionalUpdate = fmap normalizeOptionalText
 
-normalizeLatex :: Maybe Text -> Maybe Text
-normalizeLatex Nothing = Nothing
-normalizeLatex (Just raw) =
-  if T.null (T.strip raw) then Nothing else Just raw
-
 normalizeText :: Text -> Maybe Text
 normalizeText raw =
   let trimmed = T.strip raw
@@ -681,9 +676,14 @@ resolveLatex mLatex mTemplateKey =
         Nothing -> throwError err404 { errBody = "Template not found" }
         Just template -> pure template
 
-validateProposalContentSource :: Maybe Text -> Maybe Text -> Either ServerError ProposalContentSource
-validateProposalContentSource mLatex mTemplateKey =
-  case (normalizeLatex mLatex, normalizeOptionalText mTemplateKey) of
+validateProposalContentSource
+  :: Maybe Text
+  -> Maybe Text
+  -> Either ServerError ProposalContentSource
+validateProposalContentSource mLatex mTemplateKey = do
+  latex <- validateOptionalProposalLatex mLatex
+  templateKey <- validateOptionalProposalTemplateKey mTemplateKey
+  case (latex, templateKey) of
     (Just latex, Nothing) ->
       Right (ProposalInlineLatex latex)
     (Nothing, Just rawKey) ->
@@ -692,6 +692,23 @@ validateProposalContentSource mLatex mTemplateKey =
       Left err400 { errBody = "latex or templateKey required" }
     (Just _, Just _) ->
       Left err400 { errBody = "Provide either latex or templateKey, not both" }
+
+validateOptionalProposalLatex :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalLatex Nothing = Right Nothing
+validateOptionalProposalLatex (Just rawLatex)
+  | T.null (T.strip rawLatex) =
+      Left err400 { errBody = "latex must not be blank" }
+  | otherwise =
+      Right (Just rawLatex)
+
+validateOptionalProposalTemplateKey :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalTemplateKey Nothing = Right Nothing
+validateOptionalProposalTemplateKey (Just rawTemplateKey) =
+  case normalizeText rawTemplateKey of
+    Nothing ->
+      Left err400 { errBody = "templateKey must not be blank" }
+    Just templateKey ->
+      Right (Just templateKey)
 
 validateTemplateKey :: Text -> Either ServerError Text
 validateTemplateKey raw =

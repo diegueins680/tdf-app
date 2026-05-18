@@ -351,6 +351,60 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
               ("Expected invalid notes create to fail, got: " <> show proposalDto)
         persistedProposalCount `shouldBe` (0 :: Int)
 
+  it "rejects blank proposal content source fields instead of silently falling back" $ do
+    let payload latexValue templateKeyValue =
+          ProposalCreate
+            { pcTitle = "Studio proposal"
+            , pcStatus = Nothing
+            , pcServiceKind = Nothing
+            , pcClientPartyId = Nothing
+            , pcContactName = Just "Ops"
+            , pcContactEmail = Just "ops@example.com"
+            , pcContactPhone = Just "+593991234567"
+            , pcPipelineCardId = Nothing
+            , pcNotes = Nothing
+            , pcLatex = latexValue
+            , pcTemplateKey = templateKeyValue
+            , pcVersionNotes = Nothing
+            }
+        assertRejected expectedMessage candidate = do
+          result <-
+            runProposalTest $ do
+              rejected <-
+                captureProposalError $
+                  createProposalHandlerFor (mkUser [Admin]) candidate
+              persistedProposalCount <-
+                runProposalSql $ do
+                  proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+                  pure (length proposals)
+              pure (rejected, persistedProposalCount)
+
+          case result of
+            Left err ->
+              expectationFailure
+                ( "Expected content-source rejection to be handled in the inner "
+                    <> "proposal action, got: "
+                    <> show err
+                )
+            Right (rejected, persistedProposalCount) -> do
+              case rejected of
+                Left err -> do
+                  errHTTPCode err `shouldBe` 400
+                  BL8.unpack (errBody err) `shouldContain` expectedMessage
+                Right proposalDto ->
+                  expectationFailure
+                    ( "Expected invalid content source create to fail, got: "
+                        <> show proposalDto
+                    )
+              persistedProposalCount `shouldBe` (0 :: Int)
+
+    assertRejected
+      "latex must not be blank"
+      (payload (Just "   ") (Just "tdf_live_sessions"))
+    assertRejected
+      "templateKey must not be blank"
+      (payload (Just "\\section{Hello}") (Just "   "))
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser
