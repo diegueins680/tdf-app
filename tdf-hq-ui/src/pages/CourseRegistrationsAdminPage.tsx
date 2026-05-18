@@ -1498,6 +1498,16 @@ const firstRunCampaignDescriptorPrefixPattern =
 const firstRunCampaignDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app|e-?mail|correo|newsletter|bolet[ií]n)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n))?)\s*$/i;
 
+const firstRunLaunchDescriptorPattern = String.raw`(?:course\s+launch(?:\s+(?:campaigns?|pages?|forms?|funnels?|links?|urls?|portals?))?|launch\s+(?:campaigns?|pages?|forms?|funnels?|links?|urls?|portals?)|(?:p[aá]gina|campaña|formulario|enlace|link|url|portal|embudo)\s+de\s+lanzamiento(?:\s+(?:del?\s+curso|de\s+curso))?|lanzamiento\s+(?:del?\s+curso|de\s+curso))`;
+const firstRunLaunchDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunLaunchDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunLaunchDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunLaunchDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunAdAssetDescriptorPattern = String.raw`(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app)\s+)?(?:ad\s*sets?|adsets?|ads?\s+groups?|ad\s+creatives?|ads?)|(?:anuncios?|conjuntos?\s+de\s+anuncios?)(?:\s+de\s+(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app))?)`;
 const firstRunAdAssetDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunAdAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
@@ -1896,6 +1906,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
+    .replace(firstRunLaunchDescriptorPrefixPattern, '')
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
     .replace(firstRunMessagingAutomationDescriptorPrefixPattern, '')
@@ -2007,6 +2018,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
+    .replace(firstRunLaunchDescriptorSuffixPattern, '')
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
     .replace(firstRunMessagingAutomationDescriptorSuffixPattern, '')
