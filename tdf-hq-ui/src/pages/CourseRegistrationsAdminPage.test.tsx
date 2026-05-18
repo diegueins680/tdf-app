@@ -11374,7 +11374,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('treats direct and organic website source labels as default plumbing in busy lists', async () => {
+  it('treats direct, organic, and homepage source labels as default plumbing in busy lists', async () => {
     const defaultSources = [
       'direct',
       'direct_web',
@@ -11385,6 +11385,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'website_organic',
       'trafico_directo',
       'trafico_organico',
+      'homepage',
+      'homepage_form',
+      'home_page',
+      'home_page_form',
+      'home_page_signup',
+      'formulario_de_pagina_de_inicio',
     ] as const;
     const hiddenSourceLabels = [
       'direct',
@@ -11396,6 +11402,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Website organic',
       'Trafico directo',
       'Trafico organico',
+      'homepage',
+      'Homepage form',
+      'Home page',
+      'Home page form',
+      'Home page signup',
+      'Formulario de pagina de inicio',
     ];
 
     listRegistrationsMock.mockResolvedValue(
@@ -11423,7 +11435,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockClear();
 
     await act(async () => {
-      setInputValue(getInputByLabel(container, localSearchLabel), 'organic website');
+      setInputValue(getInputByLabel(container, localSearchLabel), 'homepage form');
       await flushPromises();
       await flushPromises();
     });
@@ -11431,7 +11443,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(0);
       expect(container.textContent).toContain(
-        `No hay coincidencias para "organic website" en las ${defaultSources.length} inscripciones cargadas.`,
+        `No hay coincidencias para "homepage form" en las ${defaultSources.length} inscripciones cargadas.`,
       );
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
