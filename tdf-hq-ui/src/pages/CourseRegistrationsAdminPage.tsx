@@ -1473,6 +1473,16 @@ const firstRunCourseInfoAssetDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunCourseInfoPageDescriptorPattern = String.raw`(?:(?:course\s+)?(?:details?|information|info)\s+(?:pages?|links?|urls?|portals?)|(?:pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:details?|information|info)|(?:p[aá]gina|enlace|link|url|portal)\s+de\s+(?:informaci[oó]n|detalles?)\s+(?:del?\s+curso|de\s+curso)?|(?:informaci[oó]n|detalles?)\s+(?:del?\s+curso|de\s+curso)(?:\s+(?:p[aá]gina|enlace|link|url|portal))?)`;
+const firstRunCourseInfoPageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseInfoPageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseInfoPageDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseInfoPageDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCampaignDescriptorPrefixPattern =
   /^(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app|e-?mail|correo|newsletter|bolet[ií]n)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1874,6 +1884,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
+    .replace(firstRunCourseInfoPageDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
@@ -1983,6 +1994,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
+    .replace(firstRunCourseInfoPageDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')
     .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
