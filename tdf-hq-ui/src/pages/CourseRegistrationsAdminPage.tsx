@@ -1899,6 +1899,8 @@ const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
 
 const firstRunResponseSheetSuffixPattern =
   /\s*(?:\(|\[)\s*(?:(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?\s*(?:\)|\])\s*$/i;
+const firstRunResponseSheetPrefixPattern =
+  /^(?:(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?\s*(?:[-:/|]\s*)/i;
 
 const stripFirstRunResponseSheetSuffix = (title: string) =>
   title.replace(firstRunResponseSheetSuffixPattern, '').trim();
@@ -1907,6 +1909,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
   const trimmedTitle = title.trim();
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
+    .replace(firstRunResponseSheetPrefixPattern, '')
     .replace(firstRunUrlDescriptorPrefixPattern, '')
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
