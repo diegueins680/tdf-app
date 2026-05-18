@@ -276,17 +276,17 @@ spec = do
       assertInvalid "pcPeriod" (basePaymentJson ("pcPeriod" .= A.Null))
       assertInvalid "pcAttachmentUrl" (basePaymentJson ("pcAttachmentUrl" .= A.Null))
 
-    it "normalizes optional payment text at the JSON boundary" $ do
+    it "normalizes payment text at the JSON boundary" $ do
       let rawPayload =
             A.encode $
               A.object
                 [ "pcPartyId" .= (42 :: Int)
                 , "pcAmountCents" .= (12500 :: Int)
-                , "pcCurrency" .= ("USD" :: Text)
-                , "pcMethod" .= ("cash" :: Text)
+                , "pcCurrency" .= (" usd " :: Text)
+                , "pcMethod" .= (" cash " :: Text)
                 , "pcReference" .= ("  REC-42  " :: Text)
-                , "pcPaidAt" .= ("2026-04-13" :: Text)
-                , "pcConcept" .= ("Studio booking" :: Text)
+                , "pcPaidAt" .= (" 2026-04-13 " :: Text)
+                , "pcConcept" .= (" Studio booking " :: Text)
                 , "pcPeriod" .= (" 2026-04 " :: Text)
                 , "pcAttachmentUrl" .= (" https://files.example.com/receipt.pdf " :: Text)
                 ]
@@ -294,6 +294,10 @@ spec = do
         Left err ->
           expectationFailure ("Expected trimmed payment create payload to decode, got: " <> err)
         Right payload -> do
+          pcCurrency payload `shouldBe` "USD"
+          pcMethod payload `shouldBe` "cash"
+          pcPaidAt payload `shouldBe` "2026-04-13"
+          pcConcept payload `shouldBe` "Studio booking"
           pcReference payload `shouldBe` Just "REC-42"
           pcPeriod payload `shouldBe` Just "2026-04"
           pcAttachmentUrl payload `shouldBe` Just "https://files.example.com/receipt.pdf"
@@ -376,6 +380,9 @@ spec = do
       assertInvalid
         (paymentCreateJson "   " "cash" "2026-04-13" "Studio booking")
         "pcCurrency is required"
+      assertInvalid
+        (paymentCreateJson "EUR" "cash" "2026-04-13" "Studio booking")
+        "pcCurrency must be USD because manual payments are currently USD-only"
       assertInvalid
         (paymentCreateJson "USD" "\n" "2026-04-13" "Studio booking")
         "pcMethod is required"

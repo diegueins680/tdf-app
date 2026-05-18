@@ -45,16 +45,20 @@ instance FromJSON PaymentCreate where
     maybe (pure ()) (validatePositiveInt64Field "pcOrderId") (pcOrderId payload)
     maybe (pure ()) (validatePositiveInt64Field "pcInvoiceId") (pcInvoiceId payload)
     validatePositiveIntField "pcAmountCents" (pcAmountCents payload)
-    validateRequiredPaymentTextField "pcCurrency" (pcCurrency payload)
-    validateRequiredPaymentTextField "pcMethod" (pcMethod payload)
-    validateRequiredPaymentTextField "pcPaidAt" (pcPaidAt payload)
-    validateRequiredPaymentTextField "pcConcept" (pcConcept payload)
+    currencyValue <- validateRequiredPaymentCurrencyField "pcCurrency" (pcCurrency payload)
+    methodValue <- validateRequiredPaymentTextField "pcMethod" (pcMethod payload)
+    paidAtValue <- validateRequiredPaymentTextField "pcPaidAt" (pcPaidAt payload)
+    conceptValue <- validateRequiredPaymentTextField "pcConcept" (pcConcept payload)
     referenceValue <- validateOptionalPaymentTextField "pcReference" (pcReference payload)
     periodValue <- validateOptionalPaymentTextField "pcPeriod" (pcPeriod payload)
     attachmentUrlValue <-
       validateOptionalPaymentTextField "pcAttachmentUrl" (pcAttachmentUrl payload)
     pure payload
-      { pcReference = referenceValue
+      { pcCurrency = currencyValue
+      , pcMethod = methodValue
+      , pcPaidAt = paidAtValue
+      , pcConcept = conceptValue
+      , pcReference = referenceValue
       , pcPeriod = periodValue
       , pcAttachmentUrl = attachmentUrlValue
       }
@@ -91,9 +95,17 @@ validatePositiveIntField fieldName rawValue =
     then pure ()
     else fail (fieldName <> " must be a positive integer")
 
-validateRequiredPaymentTextField :: String -> Text -> Parser ()
+validateRequiredPaymentCurrencyField :: String -> Text -> Parser Text
+validateRequiredPaymentCurrencyField fieldName rawValue = do
+  value <- validateRequiredPaymentTextField fieldName rawValue
+  let normalized = T.toUpper value
+  if normalized == "USD"
+    then pure normalized
+    else fail (fieldName <> " must be USD because manual payments are currently USD-only")
+
+validateRequiredPaymentTextField :: String -> Text -> Parser Text
 validateRequiredPaymentTextField fieldName rawValue
-  | T.null (T.strip rawValue) =
+  | T.null value =
       fail (fieldName <> " is required")
   | T.any isUnsafePaymentCreateTextChar rawValue =
       fail
@@ -101,7 +113,9 @@ validateRequiredPaymentTextField fieldName rawValue
             <> " must not contain control characters or hidden formatting characters"
         )
   | otherwise =
-      pure ()
+      pure value
+  where
+    value = T.strip rawValue
 
 validateOptionalPaymentTextField :: String -> Maybe Text -> Parser (Maybe Text)
 validateOptionalPaymentTextField _ Nothing =
