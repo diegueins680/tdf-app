@@ -217,6 +217,7 @@ import TDF.ServerInstagramOAuth
       validateInstagramUsername )
 import TDF.Server
     ( buildWhatsappCtaFor,
+      buildCourseRegistrationUsernameCandidate,
       DriveApiResp (..),
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
@@ -11553,6 +11554,14 @@ main = hspec $ do
         it "preserves the collision suffix within the 60-character username budget" $ do
             let base = Data.Text.replicate 60 "a"
                 candidate = buildLiveSessionUsernameCollisionCandidate base "12"
+            Data.Text.length candidate `shouldBe` 60
+            candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
+            candidate `shouldNotBe` base
+
+    describe "buildCourseRegistrationUsernameCandidate" $ do
+        it "preserves course account collision suffixes inside the 60-character username budget" $ do
+            let base = Data.Text.replicate 60 "a"
+                candidate = buildCourseRegistrationUsernameCandidate base 12
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
