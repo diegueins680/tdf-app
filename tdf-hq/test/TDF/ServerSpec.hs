@@ -421,6 +421,8 @@ import TDF.ServerFuture
     , mountedFutureStubAreas
     , reservedFutureStubRoutes
     , validateFutureAdminAccess
+    , validateFutureAdminAccessWithBaselineRoles
+    , validateFutureAdminBaselineRoles
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleCardIds
     , validateFutureAdminConsoleCardWithIds
@@ -11519,6 +11521,43 @@ spec = describe "TDF.Server helpers" $ do
                             ( "Expected malformed Admin party id to be rejected, got: "
                                 <> show value
                             )
+
+        it "rejects drifted baseline-role policies before fallback discovery authorization" $ do
+            validateFutureAdminBaselineRoles [Fan, Customer]
+                `shouldBe` Right [Fan, Customer]
+
+            let assertPolicyRejected baselineRoles =
+                    case validateFutureAdminAccessWithBaselineRoles
+                        baselineRoles
+                        futureAdminUser of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin access policy"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected drifted fallback discovery access policy to fail, got: "
+                                    <> show value
+                                )
+
+            assertPolicyRejected []
+            assertPolicyRejected [Customer, Fan]
+            assertPolicyRejected [Fan, Fan]
+            assertPolicyRejected [Fan, Customer, Webmaster]
+
+            case validateFutureAdminAccessWithBaselineRoles
+                [Customer, Fan]
+                (mkUser [StudioManager]) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 403
+                    BL8.unpack (errBody serverErr) `shouldContain` "Admin role required"
+                    BL8.unpack (errBody serverErr)
+                        `shouldNotContain` "Invalid future admin access policy"
+                Right value ->
+                    expectationFailure
+                        ( "Expected non-admin fallback discovery access to be rejected, got: "
+                            <> show value
+                        )
 
     describe "validateFutureStubMetadata" $ do
         it "derives mounted fallback discovery areas from the canonical catalog" $ do

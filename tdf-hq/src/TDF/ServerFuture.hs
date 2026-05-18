@@ -145,30 +145,46 @@ adminConsoleCards =
   ]
 
 validateFutureAdminAccess :: AuthedUser -> Either ServerError ()
-validateFutureAdminAccess user
+validateFutureAdminAccess =
+  validateFutureAdminAccessWithBaselineRoles requiredFutureAdminBaselineRoles
+
+validateFutureAdminAccessWithBaselineRoles
+  :: [RoleEnum]
+  -> AuthedUser
+  -> Either ServerError ()
+validateFutureAdminAccessWithBaselineRoles baselineRoles user
   | Admin `notElem` auRoles user = Left err403 { errBody = "Admin role required" }
-  | fromSqlKey (auPartyId user) <= 0 =
-      Left err403 { errBody = "Valid admin party required" }
-  | length (auRoles user) /= length (nub (auRoles user)) =
-      Left err403 { errBody = "Admin role grants must be unique" }
-  | any (not . isFutureAdminRoleScope) (auRoles user) =
-      Left err403
-        { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }
-  | not (null missingBaselineRoles) =
-      Left err403
-        { errBody =
-            textBody $
-              "Admin fallback discovery requires baseline roles; missing: "
-                <> T.intercalate ", " (map roleToText missingBaselineRoles)
-        }
-  | not (ModuleAdmin `Set.member` auModules user) =
-      Left err403 { errBody = "Admin module access required" }
-  | auModules user /= modulesForRoles (auRoles user) =
-      Left err403 { errBody = "Admin module grants must match roles" }
-  | otherwise = Right ()
+  | otherwise =
+      case validateFutureAdminBaselineRoles baselineRoles of
+        Left serverErr -> Left serverErr
+        Right requiredBaselineRoles
+          | fromSqlKey (auPartyId user) <= 0 ->
+              Left err403 { errBody = "Valid admin party required" }
+          | length (auRoles user) /= length (nub (auRoles user)) ->
+              Left err403 { errBody = "Admin role grants must be unique" }
+          | any (not . isFutureAdminRoleScope) (auRoles user) ->
+              Left err403
+                { errBody = "Admin fallback discovery cannot be combined with non-baseline roles" }
+          | not (null (missingBaselineRoles requiredBaselineRoles)) ->
+              Left err403
+                { errBody =
+                    textBody $
+                      "Admin fallback discovery requires baseline roles; missing: "
+                        <> T.intercalate ", " (map roleToText (missingBaselineRoles requiredBaselineRoles))
+                }
+          | not (ModuleAdmin `Set.member` auModules user) ->
+              Left err403 { errBody = "Admin module access required" }
+          | auModules user /= modulesForRoles (auRoles user) ->
+              Left err403 { errBody = "Admin module grants must match roles" }
+          | otherwise -> Right ()
   where
-    missingBaselineRoles =
-      filter (`notElem` auRoles user) requiredFutureAdminBaselineRoles
+    missingBaselineRoles requiredBaselineRoles =
+      filter (`notElem` auRoles user) requiredBaselineRoles
+
+validateFutureAdminBaselineRoles :: [RoleEnum] -> Either ServerError [RoleEnum]
+validateFutureAdminBaselineRoles baselineRoles
+  | baselineRoles == canonicalFutureAdminBaselineRoles = Right baselineRoles
+  | otherwise = invalidFutureAdminAccessPolicy
 
 textBody :: Text -> BL.ByteString
 textBody =
@@ -180,6 +196,10 @@ isFutureAdminRoleScope role =
 
 requiredFutureAdminBaselineRoles :: [RoleEnum]
 requiredFutureAdminBaselineRoles =
+  canonicalFutureAdminBaselineRoles
+
+canonicalFutureAdminBaselineRoles :: [RoleEnum]
+canonicalFutureAdminBaselineRoles =
   [ Fan
   , Customer
   ]
@@ -885,6 +905,10 @@ invalidFutureStubCatalog =
 invalidFutureAdminConsoleMetadata :: Either ServerError a
 invalidFutureAdminConsoleMetadata =
   Left err500 { errBody = "Invalid future admin console metadata" }
+
+invalidFutureAdminAccessPolicy :: Either ServerError a
+invalidFutureAdminAccessPolicy =
+  Left err500 { errBody = "Invalid future admin access policy" }
 
 invalidFutureStubResponse :: Either ServerError a
 invalidFutureStubResponse =
