@@ -11878,6 +11878,7 @@ main = hspec $ do
                 "rider file name must be 160 characters or fewer"
             assertInvalid "___" "rider file name must include a usable name"
             assertInvalid "stage-setup.sh" "rider file name extension is not allowed"
+            assertInvalid "stage-setup.sh.pdf" "rider file name extension is not allowed"
             assertInvalid "stage-plot.HTML" "rider file name extension is not allowed"
 
     describe "validateLiveSessionRiderFileSize" $ do

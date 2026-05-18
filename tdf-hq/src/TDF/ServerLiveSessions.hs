@@ -497,9 +497,10 @@ isPathSeparator ch = ch == '/' || ch == '\\'
 
 hasDisallowedLiveSessionRiderExtension :: Text -> Bool
 hasDisallowedLiveSessionRiderExtension name =
-  any (`T.isSuffixOf` loweredName) disallowedLiveSessionRiderExtensions
+  any (`elem` extensionChain) disallowedLiveSessionRiderExtensions
   where
     loweredName = T.toLower name
+    extensionChain = map ("." <>) (drop 1 (T.splitOn "." loweredName))
 
 disallowedLiveSessionRiderExtensions :: [Text]
 disallowedLiveSessionRiderExtensions =
