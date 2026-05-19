@@ -12261,6 +12261,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats form response source containers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'typeform_responses',
+      'google_forms_responses',
+      'tally_submissions',
+      'jotform_submissions',
+      'hubspot_form_submissions',
+      'netlify_forms_submissions',
+      'forms.app_responses',
+      'course_registration_form_submissions',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Typeform responses',
+      'Google forms responses',
+      'Tally submissions',
+      'Jotform submissions',
+      'Hubspot form submissions',
+      'Netlify forms submissions',
+      'Forms app responses',
+      'Course registration form submissions',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'typeform responses');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "typeform responses" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats automation plumbing sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'zapier_webhook',

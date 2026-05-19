@@ -2325,17 +2325,29 @@ const sourceAliasKeyVariants = (sourceKey: string) => {
     ['url', 'urls'],
   ] as const;
 
-  for (const [singularSuffix, pluralSuffix] of pluralSuffixes) {
-    if (sourceKey.endsWith(` ${pluralSuffix}`)) {
-      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), ` ${singularSuffix}`));
-      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), ''));
-      variants.add(sourceKey.replace(new RegExp(`\\s+${pluralSuffix}$`), singularSuffix));
-    } else if (sourceKey.endsWith(` ${singularSuffix}`)) {
-      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), ` ${pluralSuffix}`));
-      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), ''));
-      variants.add(sourceKey.replace(new RegExp(`\\s+${singularSuffix}$`), singularSuffix));
-    } else if (sourceKey.endsWith(pluralSuffix)) {
-      variants.add(sourceKey.replace(new RegExp(`${pluralSuffix}$`), singularSuffix));
+  const addPluralVariants = (key: string) => {
+    for (const [singularSuffix, pluralSuffix] of pluralSuffixes) {
+      if (key.endsWith(` ${pluralSuffix}`)) {
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), ` ${singularSuffix}`));
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), ''));
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), singularSuffix));
+      } else if (key.endsWith(` ${singularSuffix}`)) {
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), ` ${pluralSuffix}`));
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), ''));
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), singularSuffix));
+      } else if (key.endsWith(pluralSuffix)) {
+        variants.add(key.replace(new RegExp(`${pluralSuffix}$`), singularSuffix));
+      }
+    }
+  };
+
+  addPluralVariants(sourceKey);
+
+  for (const containerSuffix of ['response', 'responses', 'submission', 'submissions']) {
+    if (sourceKey.endsWith(` ${containerSuffix}`)) {
+      const baseSourceKey = sourceKey.replace(new RegExp(`\\s+${containerSuffix}$`), '');
+      variants.add(baseSourceKey);
+      addPluralVariants(baseSourceKey);
     }
   }
 
