@@ -64,8 +64,24 @@ const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir
 const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
+const INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH = 48;
+const INITIAL_COHORT_LABEL_PREVIEW_MIN_LENGTH = 24;
 const cleanInitialCohortPreviewLabel = (label: string) =>
   label.trim().replace(/\s*[.!:;]+$/g, '').trim();
+const compactInitialCohortPreviewLabel = (label: string) => {
+  const cleanLabel = cleanInitialCohortPreviewLabel(label);
+  if (cleanLabel.length <= INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH) return cleanLabel;
+
+  const wordBoundaryPreview = cleanLabel
+    .slice(0, INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH)
+    .replace(/\s+\S*$/, '')
+    .trim();
+  const preview = wordBoundaryPreview.length >= INITIAL_COHORT_LABEL_PREVIEW_MIN_LENGTH
+    ? wordBoundaryPreview
+    : cleanLabel.slice(0, INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH).trim();
+
+  return `${cleanInitialCohortPreviewLabel(preview)}…`;
+};
 const normalizeInitialCohortPreviewKey = (label: string) =>
   cleanInitialCohortPreviewLabel(label)
     .normalize('NFD')
@@ -100,7 +116,9 @@ const formatInitialCohortLabelList = (labels: readonly string[]) => {
 
 const formatInitialCohortPreview = (labels: readonly string[]) => {
   const uniqueLabels = uniqueInitialCohortLabels(labels);
-  const visibleLabels = uniqueLabels.slice(0, INITIAL_COHORT_PREVIEW_LIMIT);
+  const visibleLabels = uniqueLabels
+    .slice(0, INITIAL_COHORT_PREVIEW_LIMIT)
+    .map(compactInitialCohortPreviewLabel);
   const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
   const hiddenCount = uniqueLabels.length > 1 ? hiddenUniqueLabelCount : 0;
 

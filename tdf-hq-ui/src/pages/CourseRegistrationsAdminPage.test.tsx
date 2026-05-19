@@ -21643,6 +21643,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps long multi-cohort first-run labels compact while preserving full action context', async () => {
+    const beatmakingTitle =
+      'Beatmaking 101 para productores avanzados con mentoría personalizada y revisión de portafolio';
+    const mixingTitle =
+      'Mixing Bootcamp para voces urbanas con laboratorio de mezcla extendido';
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: beatmakingTitle },
+      { ccSlug: 'mixing-bootcamp', ccTitle: mixingTitle },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 para productores avanzados con… y Mixing Bootcamp para voces urbanas con….',
+      );
+      expect(emptyState?.textContent).not.toContain(beatmakingTitle);
+      expect(emptyState?.textContent).not.toContain(mixingTitle);
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateChooseFormActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        `Elegir entre 2 formularios públicos: ${beatmakingTitle} y ${mixingTitle}.`,
+      );
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateMultiCohortActionAriaLabel);
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('summarizes very long multi-cohort action tooltips in the first-run empty state', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
