@@ -3788,7 +3788,7 @@ extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
             , fromMaybe "" meta
             ]
           fallbackId = senderId <> "-" <> toHashText fallbackBase
-          externalId = fromMaybe fallbackId (normalizeMetaWebhookExternalId mMid)
+      externalId <- normalizeMetaWebhookExternalId mMid <|> (fallbackId <$ mTs)
       pure (MetaInboundMessage IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = senderId

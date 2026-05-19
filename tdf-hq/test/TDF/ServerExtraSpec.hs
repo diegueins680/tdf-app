@@ -6225,6 +6225,31 @@ spec = do
                 igInboundText inbound `shouldBe` "hola"
             _ -> expectationFailure ("Expected an inbound event, got " <> show events)
 
+    it "does not synthesize a Meta external id when both id and timestamp are absent" $ do
+        let payload =
+                A.object
+                    [ "object" .= ("instagram" :: Text)
+                    , "entry"
+                        .=
+                            [ A.object
+                                [ "id" .= ("17841400000000000" :: Text)
+                                , "messaging"
+                                    .=
+                                        [ A.object
+                                            [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                                            , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
+                                            , "message"
+                                                .= A.object
+                                                    [ "mid" .= ("   " :: Text)
+                                                    , "text" .= ("hola" :: Text)
+                                                    ]
+                                            ]
+                                        ]
+                                ]
+                            ]
+                    ]
+        extractMetaInbound payload `shouldBe` []
+
     it "keeps malformed Meta message ids out of persisted webhook events" $ do
         let payload =
                 A.object
