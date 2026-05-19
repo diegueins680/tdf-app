@@ -4105,6 +4105,19 @@ main = hspec $ do
                         expectationFailure
                             ("Expected relative SRI script path to fail, got: " <> show value)
 
+        it "rejects non-JavaScript SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "/tmp/tdf-hq-sri-script.txt")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err -> do
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must point to a .mjs, .js, or .cjs Node script"
+                        Data.Text.unpack err
+                            `shouldNotContain` "does not point to an existing file"
+                    Right value ->
+                        expectationFailure
+                            ("Expected non-JavaScript SRI script path to fail, got: " <> show value)
+
         it "rejects non-normalized SRI_INVOICE_SCRIPT paths before filesystem discovery" $
             let expected = "SRI_INVOICE_SCRIPT must be a normalized absolute file path"
             in forM_

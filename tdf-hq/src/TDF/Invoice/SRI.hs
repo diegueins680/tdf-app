@@ -782,15 +782,15 @@ resolveScriptPath = do
         ["scripts/generate-sri-invoice.mjs", "../scripts/generate-sri-invoice.mjs"]
 
 validateConfiguredScriptPath :: FilePath -> IO (Either Text FilePath)
-validateConfiguredScriptPath scriptPath = do
-  exists <- doesFileExist scriptPath
-  pure $
-    if not exists
-      then Left (missingConfiguredScriptMessage scriptPath)
-      else
-        if isNodeScriptPath scriptPath
+validateConfiguredScriptPath scriptPath
+  | not (isNodeScriptPath scriptPath) =
+      pure (Left (invalidConfiguredScriptMessage scriptPath))
+  | otherwise = do
+      exists <- doesFileExist scriptPath
+      pure $
+        if exists
           then Right scriptPath
-          else Left (invalidConfiguredScriptMessage scriptPath)
+          else Left (missingConfiguredScriptMessage scriptPath)
 
 isNodeScriptPath :: FilePath -> Bool
 isNodeScriptPath scriptPath =
