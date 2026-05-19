@@ -4452,6 +4452,8 @@ export default function CourseRegistrationsAdminPage() {
   const showCappedEmptyLocalSearchLimitEditor = showEmptyLocalSearchResults
     && viewHitsCurrentLimit
     && showAdvancedFilters;
+  const hidePassiveFilterChromeDuringEmptySearchRecovery =
+    hidePassiveFiltersDuringEmptyLocalSearch || showCappedEmptyLocalSearchLimitEditor;
   const showFilteredEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && hasManualFilters
     && !cohortsQuery.isError
@@ -5113,7 +5115,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFirstRunFilterHelper = showFilterOnboardingCopy
     && !showSingleResultWithoutHiddenLimit
     && !showBusyListSearchOnboarding
-    && !hidePassiveFiltersDuringEmptyLocalSearch;
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
@@ -5361,7 +5363,7 @@ export default function CourseRegistrationsAdminPage() {
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
   const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch
-    && !hidePassiveFiltersDuringEmptyLocalSearch
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery
     && !hideBusyListPassiveSingleStatusSummary
     && (
       showSingleStatusSummaryBlock
@@ -5371,13 +5373,13 @@ export default function CourseRegistrationsAdminPage() {
       || displayedActionableStatusFilters.length > 0
     );
   const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
-    && !hidePassiveFiltersDuringEmptyLocalSearch
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery
     && !hideBusyListPassiveSingleCohortSummary
     && !hideSingleResultSearchPassiveCohortSummary;
   const showInlineEmptyCohortFilterGuidance = showEmptyCohortFilterSummary && showStatusFilterColumn;
   const showEmptyCohortFilterSummaryBlock = showEmptyCohortFilterSummary && !showInlineEmptyCohortFilterGuidance;
   const showCohortSelectControl = showCohortSelect && !showInlineEmptyCohortFilterGuidance;
-  const showCohortFilterColumn = !hidePassiveFiltersDuringEmptyLocalSearch
+  const showCohortFilterColumn = !hidePassiveFilterChromeDuringEmptySearchRecovery
     && !hideCohortFilterForSingleLocalSearchResult
     && (
       showCohortSelectControl

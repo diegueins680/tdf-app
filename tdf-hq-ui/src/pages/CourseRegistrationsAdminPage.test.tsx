@@ -15636,6 +15636,22 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
     });
 
+    await act(async () => {
+      clickButton(getButtonByText(container, emptySearchLimitRecoveryLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, loadLimitLabel)).toBe(true);
+      expect(hasLabel(container, cohortFilterLabel)).toBe(false);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
+      expect(container.querySelector('[data-testid="course-registration-single-status-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-filter-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
+      expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(0);
+    });
+
     await cleanup();
   });
 
