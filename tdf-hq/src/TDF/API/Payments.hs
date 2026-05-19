@@ -10,16 +10,19 @@ import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
   , generalCategory
   , isControl
+  , isDigit
   )
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Time (Day, defaultTimeLocale, parseTimeM)
 import           GHC.Generics (Generic)
 import           Servant
 import           Data.Aeson (FromJSON (parseJSON), ToJSON, Value (Null), defaultOptions, eitherDecode, genericParseJSON, rejectUnknownFields, withObject)
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (Object, Parser)
+import           Text.Read (readMaybe)
 
 import           TDF.API.Types (LooseJSON)
 
@@ -47,10 +50,10 @@ instance FromJSON PaymentCreate where
     validatePositiveIntField "pcAmountCents" (pcAmountCents payload)
     currencyValue <- validateRequiredPaymentCurrencyField "pcCurrency" (pcCurrency payload)
     methodValue <- validateRequiredPaymentTextField "pcMethod" 64 (pcMethod payload)
-    paidAtValue <- validateRequiredPaymentTextField "pcPaidAt" 10 (pcPaidAt payload)
+    paidAtValue <- validateRequiredPaymentDateField "pcPaidAt" (pcPaidAt payload)
     conceptValue <- validateRequiredPaymentTextField "pcConcept" 240 (pcConcept payload)
     referenceValue <- validateOptionalPaymentTextField "pcReference" 160 (pcReference payload)
-    periodValue <- validateOptionalPaymentTextField "pcPeriod" 7 (pcPeriod payload)
+    periodValue <- validateOptionalPaymentPeriodField "pcPeriod" (pcPeriod payload)
     attachmentUrlValue <-
       validateOptionalPaymentTextField "pcAttachmentUrl" 2048 (pcAttachmentUrl payload)
     pure payload
@@ -136,6 +139,53 @@ validateOptionalPaymentTextField fieldName maxLength (Just rawValue)
       pure (Just value)
   where
     value = T.strip rawValue
+
+validateRequiredPaymentDateField :: String -> Text -> Parser Text
+validateRequiredPaymentDateField fieldName rawValue = do
+  value <- validateRequiredPaymentTextField fieldName 10 rawValue
+  case parsePaymentDate value of
+    Just _ -> pure value
+    Nothing -> fail (fieldName <> " must be a valid date in YYYY-MM-DD format")
+
+parsePaymentDate :: Text -> Maybe Day
+parsePaymentDate value
+  | hasPaymentDateShape value =
+      parseTimeM False defaultTimeLocale "%Y-%m-%d" (T.unpack value)
+  | otherwise =
+      Nothing
+
+hasPaymentDateShape :: Text -> Bool
+hasPaymentDateShape value =
+  case T.splitOn "-" value of
+    [yearPart, monthPart, dayPart] ->
+      T.length yearPart == 4
+        && T.length monthPart == 2
+        && T.length dayPart == 2
+        && T.all isDigit (yearPart <> monthPart <> dayPart)
+    _ ->
+      False
+
+validateOptionalPaymentPeriodField :: String -> Maybe Text -> Parser (Maybe Text)
+validateOptionalPaymentPeriodField fieldName rawValue = do
+  mValue <- validateOptionalPaymentTextField fieldName 7 rawValue
+  case mValue of
+    Nothing -> pure Nothing
+    Just value
+      | hasPaymentPeriodShape value -> pure (Just value)
+      | otherwise -> fail (fieldName <> " must be in YYYY-MM format")
+
+hasPaymentPeriodShape :: Text -> Bool
+hasPaymentPeriodShape value =
+  case T.splitOn "-" value of
+    [yearPart, monthPart]
+      | T.length yearPart == 4
+          && T.length monthPart == 2
+          && T.all isDigit (yearPart <> monthPart) ->
+              case readMaybe (T.unpack monthPart) :: Maybe Int of
+                Just monthNumber -> monthNumber >= 1 && monthNumber <= 12
+                Nothing -> False
+    _ ->
+      False
 
 isUnsafePaymentCreateTextChar :: Char -> Bool
 isUnsafePaymentCreateTextChar ch =

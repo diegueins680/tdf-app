@@ -40,6 +40,7 @@ import qualified TDF.API.Calendar as CalAPI
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
+import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
@@ -791,6 +792,42 @@ main = hspec $ do
                 `shouldSatisfy` isNothing
             parseToolCallParams (callWithName "tdf_health_check?verbose=true")
                 `shouldSatisfy` isNothing
+
+    describe "PaymentCreate JSON contract" $ do
+        let paymentJson paidAt period =
+                A.object
+                    [ "pcPartyId" .= (1 :: Int)
+                    , "pcAmountCents" .= (2500 :: Int)
+                    , "pcCurrency" .= ("usd" :: Text)
+                    , "pcMethod" .= ("cash" :: Text)
+                    , "pcPaidAt" .= (paidAt :: Text)
+                    , "pcConcept" .= ("Manual class payment" :: Text)
+                    , "pcPeriod" .= (period :: Text)
+                    ]
+            decodePayment paidAt period =
+                eitherDecode @PaymentCreate (A.encode (paymentJson paidAt period))
+            failsWith expected result =
+                case result of
+                    Left err -> expected `isInfixOf` err
+                    Right _ -> False
+
+        it "accepts valid manual payment dates and periods at the API boundary" $
+            case decodePayment "2026-05-19" "2026-05" of
+                Left err ->
+                    expectationFailure ("Expected valid payment payload, got: " <> err)
+                Right payment -> do
+                    pcPaidAt payment `shouldBe` "2026-05-19"
+                    pcPeriod payment `shouldBe` Just "2026-05"
+
+        it "rejects impossible payment dates before handler fallback parsing" $
+            decodePayment "2026-02-31" "2026-02"
+                `shouldSatisfy`
+                    failsWith "pcPaidAt must be a valid date in YYYY-MM-DD format"
+
+        it "rejects malformed payment periods before manual payment storage" $
+            decodePayment "2026-05-19" "2026-13"
+                `shouldSatisfy`
+                    failsWith "pcPeriod must be in YYYY-MM format"
 
     describe "loadConfig" $ do
         it "rejects malformed APP_PORT instead of booting on an unintended port" $ do
