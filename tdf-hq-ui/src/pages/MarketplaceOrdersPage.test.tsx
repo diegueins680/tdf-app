@@ -580,6 +580,52 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps a single filtered order focused without the duplicate header refresh action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'Los filtros dejaron una sola orden visible. Revísala aquí y usa Limpiar filtros para volver a comparar pedidos.',
+        );
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses preset shortcuts into one quick-view control instead of four duplicate filter actions', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
