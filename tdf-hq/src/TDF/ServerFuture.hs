@@ -335,12 +335,14 @@ validateFutureStubCatalogEndpointLeaves
   -> Either ServerError [(Text, Text)]
 validateFutureStubCatalogEndpointLeaves catalog = do
   mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
+  reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubLeafRoute catalog
   if any (hasDuplicateLeaves validatedCatalog) mountedAreas
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
+       || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -379,6 +381,20 @@ validateFutureStubCatalogEndpointLeaves catalog = do
     isAmbiguousLeafPair (leftLeaf, rightLeaf) =
       leftLeaf /= rightLeaf
         && (leftLeaf `T.isPrefixOf` rightLeaf || rightLeaf `T.isPrefixOf` leftLeaf)
+
+    hasReservedLeafCollision reservedRoutes catalogForAreas area =
+      let reservedLeaves =
+            Set.fromList
+              [ endpointLeaf endpoint
+              | (reservedArea, endpoint) <- reservedRoutes
+              , reservedArea == area
+              ]
+          catalogLeaves =
+            [ endpointLeaf endpoint
+            | (entryArea, endpoint) <- catalogForAreas
+            , entryArea == area
+            ]
+      in any (`Set.member` reservedLeaves) catalogLeaves
 
     leafPairs [] = []
     leafPairs (leaf:remaining) =
