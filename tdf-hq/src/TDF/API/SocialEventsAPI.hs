@@ -156,6 +156,8 @@ validateUploadName label rawName
         )
   | T.any isPathSeparator rawName =
       Left (label <> " must not contain path separators")
+  | hasDangerousInnerUploadExtension rawName =
+      Left (label <> " must not hide executable or document extensions")
   | not (hasNonEmptyUploadBaseName rawName) =
       Left (label <> " must include a non-empty base name")
   | T.length (T.strip rawName) > maxUploadNameLength =
@@ -167,6 +169,45 @@ maxUploadNameLength = 180
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasDangerousInnerUploadExtension :: Text -> Bool
+hasDangerousInnerUploadExtension rawName =
+  any (`elem` dangerousInnerUploadExtensionSegments) innerExtensions
+  where
+    parts = T.splitOn "." (T.toLower (T.strip rawName))
+    extensions = drop 1 parts
+    innerExtensions =
+      case reverse extensions of
+        [] -> []
+        (_finalExtension:rest) -> reverse rest
+
+dangerousInnerUploadExtensionSegments :: [Text]
+dangerousInnerUploadExtensionSegments =
+  [ "bat"
+  , "cmd"
+  , "com"
+  , "doc"
+  , "docx"
+  , "exe"
+  , "htm"
+  , "html"
+  , "jar"
+  , "js"
+  , "mjs"
+  , "pdf"
+  , "php"
+  , "ppt"
+  , "pptx"
+  , "ps1"
+  , "rtf"
+  , "scr"
+  , "sh"
+  , "svg"
+  , "svgz"
+  , "xls"
+  , "xlsx"
+  , "xhtml"
+  ]
 
 isUnsafeUploadNameChar :: Char -> Bool
 isUnsafeUploadNameChar ch =

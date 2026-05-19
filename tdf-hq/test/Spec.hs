@@ -7831,6 +7831,29 @@ main = hspec $ do
                     []
                     [mkEventImageFile "file" (Data.Text.replicate 181 "a" <> ".png")])
 
+        it "rejects hidden executable, vector, or document extensions before event image storage" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected dangerous event image upload name to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    [("name", "poster.pdf.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster.svgz.png"])
+
         it "rejects non-image or mismatched upload metadata before handler storage fallbacks run" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation
                 assertInvalid expectedMessage multipart =
