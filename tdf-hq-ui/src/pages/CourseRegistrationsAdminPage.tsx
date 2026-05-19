@@ -1637,10 +1637,10 @@ const firstRunCrmProviderFormDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunEmergingSocialLeadDescriptorPrefixPattern =
-  /^(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:(?:lead(?:\s+gen|\s+ads?)?|instant)\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:lead(?:\s+gen|\s+ads?)?\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:(?:lead(?:\s+gen|\s+ads?)?|instant)\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
 const firstRunMessagingAutomationProviderPattern = String.raw`(?:many\s*chat|manychat|instagram|ig|facebook|fb|meta|messenger|whats\s*app)`;
 const firstRunMessagingAutomationChannelPattern = String.raw`(?:dm|direct\s+messages?|messages?|mensaje\s+directo|inbox|chat|messenger)`;

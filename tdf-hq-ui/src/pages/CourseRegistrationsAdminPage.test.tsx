@@ -16756,6 +16756,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Meta instant form - Beatmaking 101',
       'Beatmaking 101 - Instagram instant form',
       'FB instant forms for Beatmaking 101',
+      'TikTok instant form - Beatmaking 101',
+      'Beatmaking 101 - TikTok instant forms',
     ];
 
     for (const title of titles) {
@@ -16777,6 +16779,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Meta instant form');
         expect(emptyState?.textContent).not.toContain('Instagram instant form');
         expect(emptyState?.textContent).not.toContain('FB instant forms');
+        expect(emptyState?.textContent).not.toContain('TikTok instant form');
+        expect(emptyState?.textContent).not.toContain('TikTok instant forms');
         expect(countOccurrences(emptyState!, 'Google')).toBe(0);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
