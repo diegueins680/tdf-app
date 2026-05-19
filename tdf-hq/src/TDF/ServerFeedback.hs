@@ -269,6 +269,11 @@ validateFeedbackAttachmentContentType rawContentType
         { errBody =
             "attachment content type must not contain control characters or hidden formatting characters"
         }
+  | hasAttachmentContentTypeNameParameter cleaned =
+      Left err400
+        { errBody =
+            "attachment content type must not include filename parameters"
+        }
   | mediaType `elem` allowedFeedbackAttachmentContentTypes =
       Right mediaType
   | otherwise =
@@ -282,6 +287,14 @@ validateFeedbackAttachmentContentType rawContentType
 
 maxFeedbackAttachmentContentTypeChars :: Int
 maxFeedbackAttachmentContentTypeChars = 100
+
+hasAttachmentContentTypeNameParameter :: Text -> Bool
+hasAttachmentContentTypeNameParameter contentType =
+  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+  where
+    isNameParameter rawParameter =
+      let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
+      in key `elem` ["name", "name*", "filename", "filename*"]
 
 allowedFeedbackAttachmentContentTypes :: [Text]
 allowedFeedbackAttachmentContentTypes =
