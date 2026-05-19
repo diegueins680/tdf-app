@@ -307,6 +307,25 @@ signupRoleSpec = describe "validateRequestedSignupRoles" $ do
       Right value ->
         expectationFailure ("Expected null signup roles to be rejected, got " <> show value)
 
+  it "rejects null signup artist relationship fields instead of using empty fallbacks" $ do
+    let assertNullRejected fieldName =
+          let rawSignup =
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
+                  <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
+                  <> "\"" <> fieldName <> "\":null}"
+          in case A.eitherDecode rawSignup :: Either String SignupRequest of
+            Left err ->
+              err `shouldContain` (fieldName <> " must be omitted instead of null")
+            Right value ->
+              expectationFailure
+                ( "Expected null signup "
+                    <> fieldName
+                    <> " to be rejected, got "
+                    <> show value
+                )
+    assertNullRejected "fanArtistIds"
+    assertNullRejected "claimArtistId"
+
   it "rejects duplicate requested roles instead of silently collapsing signup intent" $
     case validateRequestedSignupRoles (Just [Artist, Fan, Artist]) of
       Left err -> do

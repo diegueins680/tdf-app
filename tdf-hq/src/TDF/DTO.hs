@@ -716,7 +716,10 @@ data SignupRequest = SignupRequest
   } deriving (Show, Generic)
 instance FromJSON SignupRequest where
   parseJSON value = do
-    rejectNullOptionalFields "SignupRequest" ["roles"] value
+    rejectNullOptionalFields
+      "SignupRequest"
+      ["roles", "fanArtistIds", "claimArtistId"]
+      value
     genericParseJSON strictDecodeOptions value
 
 data ChangePasswordRequest = ChangePasswordRequest
