@@ -5833,6 +5833,11 @@ export default function CourseRegistrationsAdminPage() {
     setDossierFlash(null);
   };
 
+  const handleOpenFollowUpComposer = () => {
+    setShowFollowUpComposer(true);
+    setDossierFlash(null);
+  };
+
   const handleReceiptUpload = (files: DriveFileInfo[]) => {
     const file = files[0];
     if (!file) return;
@@ -5976,6 +5981,7 @@ export default function CourseRegistrationsAdminPage() {
     handleCloseFollowUpMenu();
     setShowFollowUpComposer(true);
     setShowFollowUpDetails(true);
+    setDossierFlash(null);
     setFollowUpForm({
       editingId: entry.crfId,
       entryType: entry.crfEntryType,
@@ -7849,7 +7855,7 @@ export default function CourseRegistrationsAdminPage() {
             title={optionalDossierFollowUpActionLabel}
             onClick={() => {
               handleCloseDossierContextMenu();
-              setShowFollowUpComposer(true);
+              handleOpenFollowUpComposer();
             }}
           >
             {optionalDossierFollowUpActionLabel}
@@ -8005,7 +8011,7 @@ export default function CourseRegistrationsAdminPage() {
                       {showDirectInlineEmptyFollowUpAction && (
                         <Button
                           variant="outlined"
-                          onClick={() => setShowFollowUpComposer(true)}
+                          onClick={handleOpenFollowUpComposer}
                         >
                           {optionalDossierFollowUpActionLabel}
                         </Button>
@@ -8164,7 +8170,7 @@ export default function CourseRegistrationsAdminPage() {
                         <Button
                           size="small"
                           variant="contained"
-                          onClick={() => setShowFollowUpComposer(true)}
+                          onClick={handleOpenFollowUpComposer}
                         >
                           Agregar seguimiento
                         </Button>
@@ -8353,7 +8359,7 @@ export default function CourseRegistrationsAdminPage() {
                                 <Button
                                   size="small"
                                   variant="text"
-                                  onClick={() => setShowFollowUpComposer(true)}
+                                  onClick={handleOpenFollowUpComposer}
                                   aria-label={markPaidOptionalFollowUpAccessibleLabel}
                                   title={markPaidOptionalFollowUpAccessibleLabel}
                                 >
@@ -8364,7 +8370,7 @@ export default function CourseRegistrationsAdminPage() {
                               <Alert
                                 severity="info"
                                 action={(
-                                  <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
+                                  <Button color="inherit" size="small" onClick={handleOpenFollowUpComposer}>
                                     Registrar primer seguimiento
                                   </Button>
                                 )}
