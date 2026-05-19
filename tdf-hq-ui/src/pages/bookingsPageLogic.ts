@@ -477,13 +477,26 @@ export const getBookingOptionalDetailsState = ({
 export const getBookingConflictAlertText = (conflictTitles: (string | null | undefined)[]) => {
   if (conflictTitles.length === 0) return null;
 
-  const visibleTitles = conflictTitles
-    .slice(0, 3)
-    .map((title) => {
-      const trimmed = title?.trim();
-      return trimmed && trimmed.length > 0 ? trimmed : 'reserva';
-    })
-    .join(', ');
+  const labelCounts = new Map<string, number>();
+  const labels = conflictTitles.map((title) => {
+    const trimmed = title?.trim();
+    return trimmed && trimmed.length > 0 ? trimmed : 'reserva';
+  });
+  labels.forEach((label) => {
+    labelCounts.set(label, (labelCounts.get(label) ?? 0) + 1);
+  });
 
-  return `Conflicto con ${conflictTitles.length} reserva(s): ${visibleTitles}. Ajusta horario o salas.`;
+  const visibleLabels = Array.from(labelCounts.entries())
+    .slice(0, 3)
+    .map(([label, count]) => (count > 1 ? `${label} (${count})` : label));
+  const hiddenLabelCount = Math.max(0, labelCounts.size - visibleLabels.length);
+  const visibleSummaryParts = hiddenLabelCount > 0
+    ? [...visibleLabels, `${hiddenLabelCount} más`]
+    : visibleLabels;
+  const visibleTitles = visibleSummaryParts.length <= 1
+    ? visibleSummaryParts[0] ?? 'reserva'
+    : `${visibleSummaryParts.slice(0, -1).join(', ')} y ${visibleSummaryParts[visibleSummaryParts.length - 1]}`;
+  const reservationCount = `${conflictTitles.length} reserva${conflictTitles.length === 1 ? '' : 's'}`;
+
+  return `Conflicto con ${reservationCount}: ${visibleTitles}. Ajusta horario o salas.`;
 };

@@ -454,8 +454,11 @@ describe('bookingsPageLogic', () => {
 
   it('keeps room conflict guidance in one specific warning with a capped conflict list', () => {
     expect(getBookingConflictAlertText([])).toBeNull();
-    expect(getBookingConflictAlertText(['Mix principal', 'Ensayo tarde', null, 'Podcast'])).toBe(
-      'Conflicto con 4 reserva(s): Mix principal, Ensayo tarde, reserva. Ajusta horario o salas.',
+    expect(getBookingConflictAlertText(['Mix principal'])).toBe(
+      'Conflicto con 1 reserva: Mix principal. Ajusta horario o salas.',
+    );
+    expect(getBookingConflictAlertText(['Mix principal', 'Mix principal', 'Ensayo tarde', null, 'Podcast'])).toBe(
+      'Conflicto con 5 reservas: Mix principal (2), Ensayo tarde, reserva y 1 más. Ajusta horario o salas.',
     );
   });
 
