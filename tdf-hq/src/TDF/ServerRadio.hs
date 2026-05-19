@@ -118,6 +118,11 @@ validateRadioStreamUrl rawUrl
       Left authorityErr
   | T.any (not . isAscii) streamUrl =
       Left err400 { errBody = "streamUrl must contain only ASCII URL characters" }
+  | hasAmbiguousRadioBasePath streamUrl =
+      Left err400
+        { errBody =
+            "streamUrl path must not contain empty, dot, or dot-dot segments"
+        }
   | otherwise =
       Right streamUrl
   where
@@ -312,14 +317,15 @@ hasAmbiguousRadioBasePath :: Text -> Bool
 hasAmbiguousRadioBasePath rawUrl =
   any isAmbiguousPathSegment pathSegments
   where
-    noScheme =
-      fromMaybe rawUrl $
-        T.stripPrefix "https://" rawUrl
-          <|> T.stripPrefix "http://" rawUrl
-          <|> T.stripPrefix "rtmps://" rawUrl
-          <|> T.stripPrefix "rtmp://" rawUrl
-    pathWithQueryOrFragment = T.dropWhile (/= '/') noScheme
-    path = T.takeWhile (\ch -> ch /= '?' && ch /= '#') pathWithQueryOrFragment
+    lowerUrl = T.toLower rawUrl
+    noScheme
+      | "https://" `T.isPrefixOf` lowerUrl = T.drop 8 rawUrl
+      | "http://" `T.isPrefixOf` lowerUrl = T.drop 7 rawUrl
+      | "rtmps://" `T.isPrefixOf` lowerUrl = T.drop 8 rawUrl
+      | "rtmp://" `T.isPrefixOf` lowerUrl = T.drop 7 rawUrl
+      | otherwise = rawUrl
+    authorityAndPath = T.takeWhile (\ch -> ch /= '?' && ch /= '#') noScheme
+    path = T.dropWhile (/= '/') authorityAndPath
     trimmedPath = T.dropWhileEnd (== '/') path
     pathSegments =
       if T.null trimmedPath

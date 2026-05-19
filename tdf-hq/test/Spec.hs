@@ -8671,6 +8671,10 @@ main = hspec $ do
             validateRadioStreamUrl "  HTTPS://radio.example.com/live  "
                 `shouldBe` Right "HTTPS://radio.example.com/live"
 
+        it "allows slash-like query values without treating them as path segments" $
+            validateRadioStreamUrl "https://radio.example.com/live?relay=/edge/../main"
+                `shouldBe` Right "https://radio.example.com/live?relay=/edge/../main"
+
         it "accepts explicit numeric ports, including bracketed IPv6 hosts" $ do
             validateRadioStreamUrl "https://radio.example.com:8443/live"
                 `shouldBe` Right "https://radio.example.com:8443/live"
@@ -8892,6 +8896,21 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not include user info"
                 Right _ -> expectationFailure "Expected userinfo-bearing streamUrl to be rejected"
+
+        it "rejects ambiguous stream URL paths before metadata fetches can resolve a different endpoint" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "streamUrl path must not contain empty, dot, or dot-dot segments"
+                        Right value ->
+                            expectationFailure
+                                ("Expected ambiguous streamUrl path to be rejected, got " <> show value)
+            assertInvalid "https://radio.example.com//live"
+            assertInvalid "https://radio.example.com/live/./main"
+            assertInvalid "https://radio.example.com/live/../admin"
 
         it "rejects non-http stream URLs before they can be stored" $
             case validateRadioStreamUrl "ftp://radio.example.com/live" of
