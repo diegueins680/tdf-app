@@ -13426,9 +13426,12 @@ payPalApprovalUrlToken :: Text -> Maybe Text
 payPalApprovalUrlToken rawApprovalUrl = do
   (_, _, pathAndQuery) <- payPalApprovalUrlParts rawApprovalUrl
   query <- T.stripPrefix "/checkoutnow?" pathAndQuery
-  case mapMaybe payPalApprovalUrlTokenParam (T.splitOn "&" query) of
-    [token] | isValidPayPalOrderId token -> Just token
+  token <- case T.splitOn "&" query of
+    [singleParam] -> payPalApprovalUrlTokenParam singleParam
     _ -> Nothing
+  if isValidPayPalOrderId token
+    then Just token
+    else Nothing
 
 payPalApprovalUrlTokenParam :: Text -> Maybe Text
 payPalApprovalUrlTokenParam =
