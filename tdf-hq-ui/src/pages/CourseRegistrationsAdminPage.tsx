@@ -61,7 +61,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Crea el primer curso y su formulario público para recibir solicitudes aquí.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Crea el primer curso; allí se configura el formulario público.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const cleanInitialCohortPreviewLabel = (label: string) =>
@@ -171,7 +171,7 @@ const initialCohortRetryLabel = 'Reintentar formularios';
 const unavailableCohortFilterLabel = 'Formularios públicos no disponibles';
 const unavailableCohortFilterRetryLabel = 'Reintentar formularios públicos';
 const unavailableCohortFilterRetryTitle = 'Reintenta solo los formularios públicos; la lista visible no se recarga.';
-const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
+const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
 const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el selector por formulario volverá cuando se recupere esa información.';

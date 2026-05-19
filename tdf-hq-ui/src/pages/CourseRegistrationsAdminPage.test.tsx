@@ -264,7 +264,7 @@ const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}; estado actual: Pendiente de pago`;
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. Crea el primer curso y su formulario público para recibir solicitudes aquí.';
+  'Todavía no hay inscripciones. Crea el primer curso; allí se configura el formulario público.';
 const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
@@ -276,7 +276,7 @@ const initialEmptyStateChooseFormActionLabel = 'Elegir formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
-const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso con formulario público';
+const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso';
 const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
 const initialEmptyStateSingleCourseVariantActionAriaLabel =
   'Ver formularios públicos de este curso para elegir cuál compartir primero';
@@ -21311,8 +21311,10 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
       expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+      expect(emptyState?.textContent).not.toContain('Crea el primer curso y su formulario público');
       expect(emptyState?.textContent).not.toContain('Configura el primer formulario público');
       expect(emptyState?.textContent).not.toContain('para empezar a recibirlas aquí');
+      expect(countOccurrences(emptyState!, initialEmptyStateConfigActionLabel)).toBe(1);
       expect(countButtonsByText(emptyState!, 'Configurar formulario')).toBe(0);
       expect(emptyState?.textContent).not.toContain('pago, seguimiento y correos');
       expect(emptyState?.textContent).not.toContain('curso inicial');
