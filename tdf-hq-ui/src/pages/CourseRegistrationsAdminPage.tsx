@@ -5358,10 +5358,11 @@ export default function CourseRegistrationsAdminPage() {
     : hasHiddenStatusFilters
       ? 'Solo aparecen estados con inscripciones en esta vista.'
       : '';
+  const showStatusFilterCounts = hasVisibleRegistrations && !hasLocalSearch;
   const showStatusFilterCaption = !showBusyListSearchOnboarding
     && !hasLocalSearch
     && !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
-  const showStatusFilterCounts = hasVisibleRegistrations && !hasLocalSearch;
+  const statusFilterCaption = showStatusFilterCounts ? 'Estado' : 'Filtrar por estado';
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
@@ -7149,7 +7150,7 @@ export default function CourseRegistrationsAdminPage() {
                         <Stack spacing={1}>
                           {showStatusFilterCaption && (
                             <Typography variant="caption" color="text.secondary">
-                              Filtrar por estado
+                              {statusFilterCaption}
                             </Typography>
                           )}
                           <Stack

@@ -2539,7 +2539,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Beatmaking 101');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Cohorte única por ahora.');
-      expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
+      expect(hasExactText(container, 'Estado')).toBe(true);
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
       expect(container.textContent).not.toContain('Usa Estado para cambiar la vista.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
@@ -3976,7 +3977,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps row status actions scan-friendly while the filter group carries the status label', async () => {
+  it('keeps the status filter caption compact while row actions carry per-registration status', async () => {
     const pendingRegistration = buildRegistration();
     const paidRegistration = buildRegistration({
       crId: 102,
@@ -4006,8 +4007,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasExactText(container, 'Filtrar por estado')).toBe(true);
-      expect(hasExactText(container, 'Estado')).toBe(false);
+      expect(hasExactText(container, 'Estado')).toBe(true);
+      expect(hasExactText(container, 'Filtrar por estado')).toBe(false);
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(3);
       expect(container.querySelector('[aria-label="Filtrar inscripciones por estado Todos"]')).toBeNull();
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
