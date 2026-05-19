@@ -543,8 +543,8 @@ const buildAutomaticFilterHelpText = ({
   if (!hasStatusFilterControl) return '';
 
   const filterStartingPoint = hasCohortFilterControl
-    ? 'Cambia cohorte o estado para actualizar la lista.'
-    : 'Cambia Estado para actualizar la lista.';
+    ? 'Los filtros actualizan la lista automáticamente.'
+    : 'El estado actualiza la lista automáticamente.';
   const limitGuidance = showAdvancedLimitControl
     ? 'Usa Ajustar límite solo si necesitas otro lote.'
     : 'Ajustar límite aparecerá cuando se llene el lote.';

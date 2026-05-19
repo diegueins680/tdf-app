@@ -2518,6 +2518,43 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps first-run filter help user-facing without repeating cohort jargon', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration(),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const filterPanel = container.querySelector<HTMLElement>('[data-testid="course-registration-filter-panel"]');
+
+      expect(filterPanel).not.toBeNull();
+      expect(hasLabel(container, cohortFilterLabel)).toBe(true);
+      expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
+      expect(filterPanel?.textContent).toContain(
+        'Los filtros actualizan la lista automáticamente. Ajustar límite aparecerá cuando se llene el lote.',
+      );
+      expect(filterPanel?.textContent).not.toContain('Cambia cohorte');
+      expect(filterPanel?.textContent).not.toContain('Empieza por cohorte');
+      expect(filterPanel?.textContent).not.toContain('Curso / cohorte');
+    });
+
+    await cleanup();
+  });
+
   it('replaces a single cohort selector with context copy and restores it when multiple cohorts exist', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
