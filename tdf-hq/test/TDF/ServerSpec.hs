@@ -12039,6 +12039,10 @@ spec = describe "TDF.Server helpers" $ do
                 ]
             assertInvalid [(" crm", "parties/filters")]
             assertInvalid [("crm", "parties/filter s")]
+            assertInvalid
+                [ ("crm", "parties/filter")
+                , ("crm", "leads/filter-advanced")
+                ]
 
     describe "validateFutureStubCatalogResponses" $ do
         it "distinguishes malformed fallback discovery responses from catalog drift" $ do

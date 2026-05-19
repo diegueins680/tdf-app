@@ -339,6 +339,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
       traverse validateFutureStubLeafRoute catalog
   if any (hasDuplicateLeaves validatedCatalog) mountedAreas
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
+       || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -364,6 +365,23 @@ validateFutureStubCatalogEndpointLeaves catalog = do
           leaves = Set.fromList (map endpointLeaf areaEndpoints)
           branchSegments = concatMap endpointBranchSegments areaEndpoints
       in any (`Set.member` leaves) branchSegments
+
+    hasLeafPrefixCollision catalogForAreas area =
+      any isAmbiguousLeafPair (leafPairs leaves)
+      where
+        leaves =
+          [ endpointLeaf endpoint
+          | (entryArea, endpoint) <- catalogForAreas
+          , entryArea == area
+          ]
+
+    isAmbiguousLeafPair (leftLeaf, rightLeaf) =
+      leftLeaf /= rightLeaf
+        && (leftLeaf `T.isPrefixOf` rightLeaf || rightLeaf `T.isPrefixOf` leftLeaf)
+
+    leafPairs [] = []
+    leafPairs (leaf:remaining) =
+      map ((,) leaf) remaining <> leafPairs remaining
 
     endpointLeaf endpoint =
       case reverse (T.splitOn "/" endpoint) of
