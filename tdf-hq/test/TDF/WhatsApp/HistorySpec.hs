@@ -330,6 +330,38 @@ spec = do
       firstStatus `shouldBe` Just "unknown"
       secondStatus `shouldBe` Just "read"
 
+    it "rejects malformed delivery external ids before status lookup" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          unsafeExternalId = "wamid.delivery" <> T.singleton '\n' <> "X-Injected"
+          deliveryUpdate externalId = WhatsAppDeliveryUpdate
+            { wduExternalId = externalId
+            , wduStatus = "read"
+            , wduRecipientId = Nothing
+            , wduOccurredAt = Nothing
+            , wduDeliveryError = Nothing
+            , wduStatusPayload = Nothing
+            }
+      (mMalformedUpdateKey, unsafeStatus, mSafeUpdateKey, safeMessageKey, safeStatus) <-
+        runWhatsAppHistorySql $ do
+          unsafeKey <- insert (seedWhatsAppMessage now unsafeExternalId "outgoing")
+          safeKey <- insert (seedWhatsAppMessage now "wamid.delivery-safe" "outgoing")
+          malformed <- applyWhatsAppDeliveryUpdate now (deliveryUpdate unsafeExternalId)
+          safe <- applyWhatsAppDeliveryUpdate now (deliveryUpdate " wamid.delivery-safe ")
+          unsafeStored <- get unsafeKey
+          safeStored <- get safeKey
+          pure
+            ( entityKey <$> malformed
+            , ME.whatsAppMessageDeliveryStatus <$> unsafeStored
+            , entityKey <$> safe
+            , safeKey
+            , ME.whatsAppMessageDeliveryStatus <$> safeStored
+            )
+
+      mMalformedUpdateKey `shouldBe` Nothing
+      unsafeStatus `shouldBe` Just "sent"
+      mSafeUpdateKey `shouldBe` Just safeMessageKey
+      safeStatus `shouldBe` Just "read"
+
   describe "recordOutgoingWhatsAppMessage" $ do
     it "records blank provider message ids as failed while allocating a safe fallback id" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)

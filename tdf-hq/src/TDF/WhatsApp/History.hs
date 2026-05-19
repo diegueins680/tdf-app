@@ -398,12 +398,12 @@ applyWhatsAppDeliveryUpdate
   -> WhatsAppDeliveryUpdate
   -> SqlPersistT IO (Maybe (Entity ME.WhatsAppMessage))
 applyWhatsAppDeliveryUpdate now WhatsAppDeliveryUpdate{..} = do
-  let externalId = nonEmptyOr "" wduExternalId
+  let mExternalId = normalizeStoredWhatsAppExternalId wduExternalId
       statusVal = normalizeWhatsAppDeliveryStatus wduStatus
       updateTs = wduOccurredAt <|> Just now
-  if T.null externalId
-    then pure Nothing
-    else do
+  case mExternalId of
+    Nothing -> pure Nothing
+    Just externalId -> do
       mRow <- getBy (ME.UniqueWhatsAppMessage externalId)
       case mRow of
         Nothing -> pure Nothing
