@@ -1617,7 +1617,9 @@ socialEventsServer user = eventsServer
           Just statusVal -> pure [EventTicketOrderStatus ==. statusVal]
       let filters = [EventTicketOrderEventId ==. eventKey] ++ buyerFilters ++ statusFilters
       rows <- liftIO $ runSqlPool (selectList filters [Desc EventTicketOrderPurchasedAt, LimitTo 200]) envPool
-      forM rows $ \orderEnt@(Entity orderKey _) -> do
+      forM rows $ \orderEnt@(Entity orderKey orderRow) -> do
+        _ <- either throwError pure
+          (validateStoredTicketOrderStatus (Just (eventTicketOrderStatus orderRow)))
         tickets <- liftIO $ runSqlPool (selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]) envPool
         pure (ticketOrderEntityToDTO orderEnt tickets)
 
@@ -2459,9 +2461,10 @@ normalizeInvitationStatus mStatus =
 
 normalizeTicketOrderStatus :: Maybe T.Text -> T.Text
 normalizeTicketOrderStatus mStatus =
-  case mStatus >>= parseTicketOrderStatus of
+  case cleanMaybeText mStatus of
     Nothing -> "pending"
-    Just s -> s
+    Just rawStatus ->
+      fromMaybe (T.toLower rawStatus) (parseTicketOrderStatus rawStatus)
 
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =

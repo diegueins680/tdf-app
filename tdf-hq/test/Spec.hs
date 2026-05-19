@@ -8400,14 +8400,16 @@ main = hspec $ do
                 Right _ -> expectationFailure "Expected Infinity radius to be rejected"
 
     describe "normalizeTicketOrderStatus" $ do
-        it "defaults to pending for empty/unknown values" $ do
+        it "defaults to pending only for omitted or blank values" $ do
             normalizeTicketOrderStatus Nothing `shouldBe` "pending"
             normalizeTicketOrderStatus (Just "  ") `shouldBe` "pending"
-            normalizeTicketOrderStatus (Just "unknown") `shouldBe` "pending"
 
         it "normalizes valid statuses" $ do
             normalizeTicketOrderStatus (Just "PAID") `shouldBe` "paid"
             normalizeTicketOrderStatus (Just "canceled") `shouldBe` "cancelled"
+
+        it "does not mask unsupported persisted statuses as pending" $
+            normalizeTicketOrderStatus (Just " Unknown ") `shouldBe` "unknown"
 
     describe "normalizeTicketStatus" $ do
         it "defaults to issued when missing" $ do
