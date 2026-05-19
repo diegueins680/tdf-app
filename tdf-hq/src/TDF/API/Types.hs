@@ -1292,7 +1292,12 @@ data PipelineCardCreate = PipelineCardCreate
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardCreate where
-  parseJSON = genericParseJSON (prefixedStrictObjectOptions 3)
+  parseJSON value = do
+    rejectNullOptionalFields
+      "PipelineCardCreate"
+      ["artist", "stage", "sortOrder", "notes"]
+      value
+    genericParseJSON (prefixedStrictObjectOptions 3) value
 
 data PipelineCardUpdate = PipelineCardUpdate
   { pcuTitle     :: Maybe Text

@@ -909,6 +909,14 @@ spec = do
                 "{\"title\":\"Final Quote\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null pipeline create fallbacks so omitted defaults stay intentional" $
+            case decodePipelineCardCreate "{\"title\":\"Demo Lead\",\"artist\":null}" of
+                Left err ->
+                    err `shouldContain` "artist must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null pipeline artist create fallback to fail, got: " <> show value)
+
         it "rejects null non-clearable pipeline patch fields instead of treating them as omitted" $ do
             decodePipelineCardUpdate
                 "{\"title\":null,\"notes\":\"Keep note\"}"
