@@ -1482,9 +1482,13 @@ main = hspec $ do
                             )
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page/123"
+            assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" ".page_123"
+            assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page_123."
             assertInvalid "FACEBOOK_PAGE_ID" "page?debug=1"
             assertInvalid "FACEBOOK_PAGE_ID" "---"
+            assertInvalid "FACEBOOK_PAGE_ID" "_page"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "..."
+            assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784_"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
 
         it "normalizes configured Google client ids before Google login audience checks" $ do

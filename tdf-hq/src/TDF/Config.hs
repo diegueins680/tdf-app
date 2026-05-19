@@ -1266,6 +1266,7 @@ normalizeConfiguredGraphNodeId envName rawNodeId
   | T.null nodeId = Right Nothing
   | T.length nodeId > 128 = invalid
   | not (T.any isGraphNodeIdAtom nodeId) = invalid
+  | not (isGraphNodeIdAtom (T.head nodeId) && isGraphNodeIdAtom (T.last nodeId)) = invalid
   | T.any (not . isGraphNodeIdChar) nodeId = invalid
   | otherwise = Right (Just nodeId)
   where
@@ -1274,7 +1275,7 @@ normalizeConfiguredGraphNodeId envName rawNodeId
       Left
         ( envName
             <> " must be a Graph node id using only ASCII letters, numbers, "
-            <> "'.', '_' or '-' with at least one letter or number (128 chars max)"
+            <> "'.', '_' or '-' starting and ending with a letter or number (128 chars max)"
         )
     isGraphNodeIdAtom ch =
       (ch >= 'a' && ch <= 'z')
