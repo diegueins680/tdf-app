@@ -549,6 +549,8 @@ validateGoogleCalendarHtmlLink rawLink
       Left "Google Calendar htmlLink must not contain a fragment"
   | not (isGoogleCalendarHtmlLink htmlLink) =
       Left "Google Calendar htmlLink must be a Google Calendar web link"
+  | not (hasSingleGoogleCalendarHtmlLinkEventId htmlLink) =
+      Left "Google Calendar htmlLink must include exactly one eid query parameter"
   | otherwise =
       Right htmlLink
   where
@@ -568,6 +570,18 @@ isGoogleCalendarHtmlLink rawUrl =
              _ -> False
     Nothing ->
       False
+
+hasSingleGoogleCalendarHtmlLinkEventId :: Text -> Bool
+hasSingleGoogleCalendarHtmlLinkEventId rawUrl =
+  case [ rawParam
+       | rawParam <- queryParams rawUrl
+       , isNamedQueryParam "eid" rawParam
+       ] of
+    [rawParam] ->
+      case queryParamValue rawParam of
+        Just rawEventId -> not (T.null (T.strip rawEventId))
+        Nothing -> False
+    _ -> False
 
 googleCalendarHtmlLinkHosts :: [Text]
 googleCalendarHtmlLinkHosts =

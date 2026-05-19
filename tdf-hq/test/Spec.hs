@@ -5362,6 +5362,9 @@ main = hspec $ do
             assertRejected "http://www.google.com/calendar/event?eid=abc123"
             assertRejected "https://evil.example.com/calendar/event?eid=abc123"
             assertRejected "https://www.google.com/search?q=calendar"
+            assertRejected "https://www.google.com/calendar/event"
+            assertRejected "https://www.google.com/calendar/event?eid="
+            assertRejected "https://www.google.com/calendar/event?eid=abc123&eid=def456"
             assertRejected " https://www.google.com/calendar/event?eid=abc123 "
             assertRejected "https://www.google.com/calendar/event?eid=abc123#fragment"
 
