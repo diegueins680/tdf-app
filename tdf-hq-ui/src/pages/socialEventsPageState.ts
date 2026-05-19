@@ -83,7 +83,7 @@ export function getSocialEventsOverviewUiState({
         'No hay eventos por venir para este filtro. Ajusta ciudad, tipo o estado para ampliar la busqueda.',
       showFilters: true,
       showCalendar: false,
-      showRefreshAction: true,
+      showRefreshAction: false,
     };
   }
 

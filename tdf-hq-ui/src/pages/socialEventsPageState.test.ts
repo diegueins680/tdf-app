@@ -19,7 +19,7 @@ describe('getSocialEventsOverviewUiState', () => {
     });
   });
 
-  it('uses filter-specific empty guidance without restoring the empty calendar', () => {
+  it('uses filter-specific empty guidance without restoring empty calendar or refresh chrome', () => {
     expect(getSocialEventsOverviewUiState({
       canCreateEvent: true,
       eventCount: 0,
@@ -29,7 +29,7 @@ describe('getSocialEventsOverviewUiState', () => {
         'No hay eventos por venir para este filtro. Ajusta ciudad, tipo o estado para ampliar la busqueda.',
       showFilters: true,
       showCalendar: false,
-      showRefreshAction: true,
+      showRefreshAction: false,
     });
   });
 
