@@ -12188,7 +12188,9 @@ spec = describe "TDF.Server helpers" $ do
                                 )
 
             assertBoundaryConflict [("admin", "console/settings")]
+            assertBoundaryConflict [("admin", "console-preview")]
             assertBoundaryConflict [("admin", "seed")]
+            assertBoundaryConflict [("admin", "seed-audit")]
             assertBoundaryConflict [("crm", "parties"), ("crm", "parties/list-columns")]
             assertBoundaryConflict [("crm", "parties/list-columns"), ("crm", "parties")]
 

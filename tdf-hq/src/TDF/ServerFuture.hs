@@ -274,6 +274,11 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
             | reservedRoute <- validatedReservedRoutes
             , catalogRoute <- validatedCatalog
             ]
+       || any reservedSiblingSegmentCollision
+            [ (reservedRoute, catalogRoute)
+            | reservedRoute <- validatedReservedRoutes
+            , catalogRoute <- validatedCatalog
+            ]
        || any routesOverlap (routePairs validatedCatalog)
     then invalidFutureStubCatalog
     else Right validatedCatalog
@@ -291,6 +296,22 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
       where
         reservedSegments = T.splitOn "/" reservedEndpoint
         endpointSegments = T.splitOn "/" endpoint
+
+    reservedSiblingSegmentCollision
+      ((reservedArea, reservedEndpoint), catalogRoute@(area, endpoint)) =
+      area == reservedArea
+        && catalogRoute `notElem` allowedFutureStubReservedSiblingRoutes
+        && any segmentsOverlap
+             [ (reservedSegment, endpointSegment)
+             | reservedSegment <- T.splitOn "/" reservedEndpoint
+             , endpointSegment <- T.splitOn "/" endpoint
+             ]
+
+    segmentsOverlap (reservedSegment, endpointSegment) =
+      reservedSegment /= endpointSegment
+        && ( reservedSegment `T.isPrefixOf` endpointSegment
+             || endpointSegment `T.isPrefixOf` reservedSegment
+           )
 
     routePairs [] = []
     routePairs (catalogRoute:remaining) =
@@ -480,6 +501,13 @@ allowedFutureStubReservedTopLevelEndpointRoutes =
   -- /stubs/packages/catalog is a real package-catalog placeholder; only the
   -- top-level /stubs/catalog route is reserved for discovery.
   [ packagesCatalogStub
+  ]
+
+allowedFutureStubReservedSiblingRoutes :: [(Text, Text)]
+allowedFutureStubReservedSiblingRoutes =
+  -- /stubs/admin/seed is a reserved mutating route. The read-only policy
+  -- placeholder intentionally documents that surface without mounting it.
+  [ adminSeedPolicyStub
   ]
 
 validateReservedFutureStubTopLevelAreas :: [Text] -> Either ServerError [Text]
