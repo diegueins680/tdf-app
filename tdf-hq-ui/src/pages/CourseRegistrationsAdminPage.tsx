@@ -4867,12 +4867,13 @@ export default function CourseRegistrationsAdminPage() {
     ? sharedListContextSummaries.join(' ')
     : '';
   const copyCsvButtonLabel = showLocalSearchUtilityRow
-    ? 'Copiar CSV'
+    ? 'Copiar resultados'
     : `Copiar CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`;
-  const copyCsvButtonAccessibleLabel =
-    `Copiar ${formatCsvRegistrationCountLabel(searchedRegistrations.length)} visibles como CSV`;
+  const copyCsvButtonAccessibleLabel = showLocalSearchUtilityRow
+    ? `Copiar resultados de búsqueda como CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`
+    : `Copiar ${formatCsvRegistrationCountLabel(searchedRegistrations.length)} visibles como CSV`;
   const copyCsvButtonTitle = showLocalSearchUtilityRow
-    ? 'Copia solo los resultados visibles de la búsqueda.'
+    ? 'Copia solo los resultados visibles de la búsqueda como CSV.'
     : 'Copia solo las inscripciones visibles de esta vista.';
   const visibleCsvScopeKey = useMemo(
     () => JSON.stringify(

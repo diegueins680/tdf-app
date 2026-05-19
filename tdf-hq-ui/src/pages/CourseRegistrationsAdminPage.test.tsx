@@ -214,7 +214,7 @@ const normalizePaymentPendingLabel = 'Normalizar a pendiente';
 const normalizeCancelledLabel = 'Normalizar a cancelado';
 const reopenPendingLabel = 'Reabrir como pendiente';
 const copyVisibleCsvLabel = (count: number) => `Copiar CSV (${count} inscripci${count === 1 ? 'ón' : 'ones'})`;
-const copyVisibleSearchCsvLabel = 'Copiar CSV';
+const copyVisibleSearchCsvLabel = 'Copiar resultados';
 const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const cohortFilterLabel = 'Formulario público';
 const localSearchLabel = 'Buscar inscripciones';
@@ -15095,8 +15095,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(searchUtilities).not.toBeNull();
       const copyButton = getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel);
       expect(copyButton).toBeTruthy();
-      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
-      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda.');
+      expect(copyButton.getAttribute('aria-label')).toBe('Copiar resultados de búsqueda como CSV (2 inscripciones)');
+      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda como CSV.');
+      expect(countButtonsByText(searchUtilities!, 'Copiar CSV')).toBe(0);
       expect(countButtonsByText(searchUtilities!, staleCopyVisibleSearchCsvLabel)).toBe(0);
       expect(countButtonsByText(searchUtilities!, copyVisibleCsvLabel(2))).toBe(0);
       expect(countButtonsByText(searchUtilities!, 'Limpiar búsqueda')).toBe(0);
@@ -15189,7 +15190,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (button) => button.textContent?.trim().startsWith('Copiar CSV'),
+          (button) => (button.getAttribute('aria-label') ?? '').includes('como CSV'),
         ),
       ).toBe(false);
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
@@ -15318,8 +15319,9 @@ describe('CourseRegistrationsAdminPage', () => {
       const copyButton = getButtonByText(container, copyVisibleSearchCsvLabel);
       expect(copyButton).toBeTruthy();
       expect(copyButton.textContent?.trim()).toBe(copyVisibleSearchCsvLabel);
-      expect(copyButton.getAttribute('aria-label')).toBe('Copiar 2 inscripciones visibles como CSV');
-      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda.');
+      expect(copyButton.getAttribute('aria-label')).toBe('Copiar resultados de búsqueda como CSV (2 inscripciones)');
+      expect(copyButton.getAttribute('title')).toBe('Copia solo los resultados visibles de la búsqueda como CSV.');
+      expect(countButtonsByText(container, 'Copiar CSV')).toBe(0);
       expect(countButtonsByText(container, staleCopyVisibleSearchCsvLabel)).toBe(0);
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).not.toContain('Mostrando 9 inscripciones en esta vista.');
@@ -16362,7 +16364,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(Array.from(container.querySelectorAll('button')).some((el) => (el.textContent ?? '').trim() === 'Refrescar lista')).toBe(false);
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
+          (el) => (el.getAttribute('aria-label') ?? '').includes('como CSV'),
         ),
       ).toBe(false);
     });
@@ -21884,7 +21886,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, 'Refrescar lista')).toBe(0);
       expect(
         Array.from(container.querySelectorAll('button')).some(
-          (el) => (el.textContent ?? '').trim().startsWith('Copiar CSV'),
+          (el) => (el.getAttribute('aria-label') ?? '').includes('como CSV'),
         ),
       ).toBe(false);
     });
