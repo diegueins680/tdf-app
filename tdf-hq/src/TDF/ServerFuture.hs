@@ -396,7 +396,10 @@ validateFutureStubCatalogEndpointLeaves catalog = do
     hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreasValue catalogForAreas =
       let reservedTopLevelAreaSet = Set.fromList reservedTopLevelAreasValue
       in any
-          (any (`Set.member` reservedTopLevelAreaSet) . T.splitOn "/" . snd)
+          (\route@(_area, endpoint) ->
+             route `notElem` allowedFutureStubReservedTopLevelEndpointRoutes
+               && any (`Set.member` reservedTopLevelAreaSet) (T.splitOn "/" endpoint)
+          )
           catalogForAreas
 
     hasReservedLeafCollision reservedRoutes catalogForAreas area =
@@ -470,6 +473,13 @@ requiredReservedFutureStubTopLevelAreas :: [Text]
 requiredReservedFutureStubTopLevelAreas =
   -- /stubs/catalog is the discovery index, not a generic stub area.
   [ "catalog"
+  ]
+
+allowedFutureStubReservedTopLevelEndpointRoutes :: [(Text, Text)]
+allowedFutureStubReservedTopLevelEndpointRoutes =
+  -- /stubs/packages/catalog is a real package-catalog placeholder; only the
+  -- top-level /stubs/catalog route is reserved for discovery.
+  [ packagesCatalogStub
   ]
 
 validateReservedFutureStubTopLevelAreas :: [Text] -> Either ServerError [Text]

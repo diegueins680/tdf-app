@@ -12296,6 +12296,8 @@ spec = describe "TDF.Server helpers" $ do
                     [ ("crm", "parties/filters")
                     , ("inventory", "assets/filters")
                     ]
+            validateFutureStubCatalogEndpointLeaves [("packages", "catalog")]
+                `shouldBe` Right [("packages", "catalog")]
 
             let assertInvalid catalog =
                     case validateFutureStubCatalogEndpointLeaves catalog of
