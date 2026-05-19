@@ -39,7 +39,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON, omitNothingFields)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -3784,6 +3784,10 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       (validateStoredGoogleCalendarOAuthToken "refresh token")
       (Cal.googleCalendarConfigRefreshToken cfg)
   tokenTypeVal <- validateStoredGoogleCalendarTokenType (Cal.googleCalendarConfigTokenType cfg)
+  validateStoredGoogleCalendarOAuthState
+    accessTokenVal
+    tokenTypeVal
+    (Cal.googleCalendarConfigTokenExpiresAt cfg)
   Right
     ( Entity
         cfgId
@@ -3809,6 +3813,24 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       Left err500
         { errBody = "Stored Google Calendar config ownerId is invalid"
         }
+
+validateStoredGoogleCalendarOAuthState
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe UTCTime
+  -> Either ServerError ()
+validateStoredGoogleCalendarOAuthState Nothing (Just _) _ =
+  invalidStoredCalendarOAuthState
+validateStoredGoogleCalendarOAuthState Nothing _ (Just _) =
+  invalidStoredCalendarOAuthState
+validateStoredGoogleCalendarOAuthState _ _ _ =
+  Right ()
+
+invalidStoredCalendarOAuthState :: Either ServerError a
+invalidStoredCalendarOAuthState =
+  Left err500
+    { errBody = "Stored Google Calendar OAuth state is invalid"
+    }
 
 encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =

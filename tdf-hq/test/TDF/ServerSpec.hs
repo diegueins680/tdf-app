@@ -6899,6 +6899,12 @@ spec = describe "TDF.Server helpers" $ do
                             { Cal.googleCalendarConfigTokenType = mTokenType
                             }
                         )
+                withTokenExpiry mExpiresAt (Entity key cfg) =
+                    Entity key
+                        ( cfg
+                            { Cal.googleCalendarConfigTokenExpiresAt = mExpiresAt
+                            }
+                        )
                 validWithWhitespace =
                     withTokenType (Just " bearer ") $
                         withTokens
@@ -6919,6 +6925,18 @@ spec = describe "TDF.Server helpers" $ do
                         (Just "access-token")
                         (Just ("refresh" <> T.singleton '\x202E' <> "token"))
                         (calendarConfigEntity 1 "primary")
+                invalidOrphanTokenType =
+                    withTokenType (Just "Bearer") $
+                        withTokens
+                            Nothing
+                            (Just "refresh-token")
+                            (calendarConfigEntity 1 "primary")
+                invalidOrphanExpiry =
+                    withTokenExpiry (Just calendarConfigFixtureTime) $
+                        withTokens
+                            Nothing
+                            (Just "refresh-token")
+                            (calendarConfigEntity 1 "primary")
                 assertInvalid label candidate =
                     case selectUniqueCalendarConfigFallback [candidate] of
                         Left err -> do
@@ -6929,6 +6947,17 @@ spec = describe "TDF.Server helpers" $ do
                         Right value ->
                             expectationFailure
                                 ( "Expected malformed Calendar OAuth token to fail, got: "
+                                    <> show (fmap (fromSqlKey . entityKey) value)
+                                )
+                assertInvalidState candidate =
+                    case selectUniqueCalendarConfigFallback [candidate] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL8.unpack (errBody err)
+                                `shouldContain` "Stored Google Calendar OAuth state is invalid"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Calendar OAuth state to fail, got: "
                                     <> show (fmap (fromSqlKey . entityKey) value)
                                 )
 
@@ -6946,6 +6975,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "token_type" invalidTokenType
             assertInvalid "access token" invalidAccessToken
             assertInvalid "refresh token" invalidRefreshToken
+            assertInvalidState invalidOrphanTokenType
+            assertInvalidState invalidOrphanExpiry
 
         it "rejects impossible stored fallback config ids before publishing them" $
             case selectUniqueCalendarConfigFallback
