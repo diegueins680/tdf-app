@@ -1560,6 +1560,8 @@ instance FromJSON RolePayload where
         case unknownKeys of
           key:_ -> fail ("Unknown field in RolePayload: " <> T.unpack key)
           [] -> pure ()
+        rejectNullRolePayloadKey "role" o
+        rejectNullRolePayloadKey "value" o
         mRole <- o .:? "role"
         mValue <- o .:? "value"
         case (mRole, mValue) of
@@ -1568,6 +1570,12 @@ instance FromJSON RolePayload where
           (Nothing, Nothing) -> fail "Expected role object with either 'role' or 'value'"
           (Just _, Just _) -> fail "Expected role object with exactly one of 'role' or 'value'"
       _        -> fail "Expected role string or object with exactly one of 'role' or 'value'"
+
+rejectNullRolePayloadKey :: Text -> Object -> Parser ()
+rejectNullRolePayloadKey fieldName obj =
+  case AKM.lookup (AKey.fromText fieldName) obj of
+    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+    _ -> pure ()
 
 instance MimeUnrender PlainText RolePayload where
   mimeUnrender _ = decodeUtf8RolePayload

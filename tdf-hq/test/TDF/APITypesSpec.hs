@@ -83,6 +83,10 @@ spec = do
         it "rejects unexpected object keys so role assignment cannot silently ignore over-posted fields" $
             decodeRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null role fields instead of treating them as fallback omissions" $ do
+            decodeRole "{\"role\":null,\"value\":\"Teacher\"}" `shouldSatisfy` isLeft
+            decodeRole "{\"role\":\"Teacher\",\"value\":null}" `shouldSatisfy` isLeft
+
     describe "RolePayload LooseJSON MimeUnrender" $ do
         it "still accepts plain text role bodies sent as application/json" $
             decodeLooseRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
