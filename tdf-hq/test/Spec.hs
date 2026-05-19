@@ -9908,17 +9908,19 @@ main = hspec $ do
                         ("Expected fan contract access to be rejected, got: " <> show value)
 
     describe "validateContractId" $ do
-        it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
-            validateContractId " 550e8400-e29b-41d4-a716-446655440000 "
+        it "accepts canonical UUID-shaped contract ids" $
+            validateContractId "550e8400-e29b-41d4-a716-446655440000"
                 `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
 
-        it "rejects non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
+        it "rejects non-canonical or non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
             let assertInvalid raw = case validateContractId raw of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL.unpack (errBody err) `shouldContain` "Invalid contract id"
                     Right value ->
                         expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
+            assertInvalid " 550e8400-e29b-41d4-a716-446655440000 "
+            assertInvalid "550E8400-E29B-41D4-A716-446655440000"
             assertInvalid "contract-123"
             assertInvalid "../contracts/store"
             assertInvalid "00000000-0000-0000-0000-000000000000"
@@ -10133,6 +10135,15 @@ main = hspec $ do
                     Data.Text.unpack err `shouldContain` "Stored contract id does not match requested contract id"
                 Right _ ->
                     expectationFailure "Expected stored contract id mismatch to be rejected"
+
+        it "rejects non-canonical requested route ids before matching stored contract envelopes" $
+            case decodeStoredContractFor
+                " 550e8400-e29b-41d4-a716-446655440000 "
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Requested contract id is not canonical"
+                Right _ ->
+                    expectationFailure "Expected non-canonical requested contract id to be rejected"
 
         it "rejects stored contracts whose top-level kind disagrees with payload.kind" $
             case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"nda\",\"payload\":{\"kind\":\"msa\",\"amountCents\":25000},\"created_at\":\"2026-01-01T00:00:00Z\"}" of

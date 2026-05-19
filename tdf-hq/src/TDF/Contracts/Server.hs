@@ -145,7 +145,7 @@ decodeStoredContract bytes =
 
 decodeStoredContractFor :: Text -> BL.ByteString -> Either Text StoredContract
 decodeStoredContractFor rawExpectedId bytes = do
-  expectedId <- validateStoredContractId rawExpectedId
+  expectedId <- validateRequestedContractId rawExpectedId
   stored <- decodeStoredContract bytes
   if scId stored == expectedId
     then Right stored
@@ -184,6 +184,14 @@ validateStoredContractId rawId =
       | otherwise -> Right (toText uuid)
     Nothing -> Left "Stored contract id is invalid"
 
+validateRequestedContractId :: Text -> Either Text Text
+validateRequestedContractId rawId =
+  case validateStoredContractId rawId of
+    Left _ -> Left "Requested contract id is invalid"
+    Right contractId
+      | rawId == contractId -> Right contractId
+      | otherwise -> Left "Requested contract id is not canonical"
+
 validateCanonicalStoredContractKind :: Text -> Either Text Text
 validateCanonicalStoredContractKind rawKind = do
   kind <- validateStoredContractKind rawKind
@@ -203,11 +211,9 @@ firstServerErrorText =
 
 validateContractId :: Text -> Either ServerError Text
 validateContractId raw =
-  case UUID.fromText (T.strip raw) of
-    Just uuid
-      | isNilUuid uuid -> invalidContractId
-      | otherwise -> Right (toText uuid)
-    Nothing -> invalidContractId
+  case validateRequestedContractId raw of
+    Right contractId -> Right contractId
+    Left _ -> invalidContractId
   where
     invalidContractId =
       Left err400
