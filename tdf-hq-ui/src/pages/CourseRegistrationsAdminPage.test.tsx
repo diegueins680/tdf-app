@@ -3867,6 +3867,66 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('folds a shared source into the active status summary instead of adding another helper row', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'live-production', ccTitle: 'Producción en vivo' },
+    ]);
+    const paidRegistration = buildRegistration({
+      crId: 102,
+      crFullName: 'Grace Hopper',
+      crEmail: 'grace@example.com',
+      crCourseSlug: 'beatmaking-101',
+      crStatus: 'paid',
+      crSource: 'meta_ads',
+    });
+    const secondPaidRegistration = buildRegistration({
+      crId: 103,
+      crFullName: 'Katherine Johnson',
+      crEmail: 'katherine@example.com',
+      crCourseSlug: 'live-production',
+      crStatus: 'paid',
+      crSource: 'Meta ads',
+    });
+    const pendingRegistration = buildRegistration({
+      crId: 104,
+      crFullName: 'Annie Easley',
+      crEmail: 'annie@example.com',
+      crCourseSlug: 'live-production',
+      crStatus: 'pending_payment',
+      crSource: 'landing',
+    });
+
+    listRegistrationsMock.mockImplementation((params) => Promise.resolve(
+      params?.status === 'paid'
+        ? [paidRegistration, secondPaidRegistration]
+        : [pendingRegistration, paidRegistration, secondPaidRegistration],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?status=paid');
+
+    await waitForExpectation(() => {
+      const activeStatusSummary = container.querySelector<HTMLElement>(
+        '[data-testid="course-registration-active-status-summary"]',
+      );
+
+      expect(activeStatusSummary).not.toBeNull();
+      expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
+      expect(activeStatusSummary?.textContent).toContain('Pagado · Fuente: Meta ads');
+      expect(countOccurrences(activeStatusSummary!, 'Fuente: Meta ads')).toBe(1);
+      expect(container.textContent).not.toContain('Fuente visible: Meta ads.');
+      expect(container.textContent).not.toContain('Mostrando una sola fuente: Meta ads.');
+      expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
+      expect(countOccurrences(container, 'Fuente: Meta ads')).toBe(1);
+      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).toContain('Cohorte: Producción en vivo');
+    });
+
+    await cleanup();
+  });
+
   it('uses direct payment-pending actions once the active filter already states paid status', async () => {
     const paidRegistration = buildRegistration({
       crId: 102,

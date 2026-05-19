@@ -4791,9 +4791,6 @@ export default function CourseRegistrationsAdminPage() {
     && !singleAvailableCohortLabel
     && !hasEffectiveSlugFilter;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
-  const shouldShowSharedSourceSummary = hasNamedVisibleSource
-    && !combinedSingleChoiceSourceSummary
-    && !standaloneSingleChoiceInlineSourceSummary;
   const activeStatusFilterIsOnlyStatusOption = hasStatusFilter
     && actionableStatusFilters.length === 1
     && actionableStatusFilters[0] === status;
@@ -4806,6 +4803,16 @@ export default function CourseRegistrationsAdminPage() {
       || loadedRegistrationCount === 1
       || activeStatusFilterIsOnlyStatusOption
     );
+  const activeStatusInlineSourceSummary = showActiveStatusFilterSummary
+    && hasNamedVisibleSource
+    && !combinedSingleChoiceSourceSummary
+    && !standaloneSingleChoiceInlineSourceSummary
+    ? `Fuente: ${singleVisibleSourceLabel}`
+    : '';
+  const shouldShowSharedSourceSummary = hasNamedVisibleSource
+    && !combinedSingleChoiceSourceSummary
+    && !standaloneSingleChoiceInlineSourceSummary
+    && !activeStatusInlineSourceSummary;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
@@ -7092,6 +7099,7 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                           <Typography variant="body2" fontWeight={600}>
                             {statusFilterLabels[status]}
+                            {activeStatusInlineSourceSummary ? ` · ${activeStatusInlineSourceSummary}` : ''}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             La vista filtrada ya muestra solo este estado.
