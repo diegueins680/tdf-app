@@ -1593,6 +1593,8 @@ export default function AdminUsersPage() {
                   size="small"
                   fullWidth
                   placeholder={searchInputPlaceholder}
+                  autoComplete="off"
+                  inputProps={{ spellCheck: false }}
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">

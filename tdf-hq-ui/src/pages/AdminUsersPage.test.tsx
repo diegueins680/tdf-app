@@ -5757,6 +5757,41 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps admin search hints in the page instead of browser suggestion chrome', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({ userId: 101, username: 'ada-admin' }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-ops',
+        partyName: 'Grace Hopper',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-view',
+        partyName: 'Linus QA',
+        primaryEmail: 'linus@example.com',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabelText(container, 'Buscar usuarios');
+        expect(searchInput.getAttribute('placeholder')).toBe('Nombre, usuario o contacto');
+        expect(searchInput.getAttribute('autocomplete')).toBe('off');
+        expect(searchInput.getAttribute('spellcheck')).toBe('false');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps access search guidance concise without losing role or module matches', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
