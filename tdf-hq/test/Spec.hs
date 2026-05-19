@@ -312,6 +312,8 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentMediaType,
     normalizeMomentReaction,
     normalizePositivePartyIdText,
+    validateMomentMediaDimension,
+    validateMomentMediaDuration,
     validateStoredBudgetLineDimensions,
     validateStoredFinanceEntryDimensions,
     parseEventStatusQueryParamEither,
@@ -8252,6 +8254,35 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "Moment comment body must be 500 characters or less"
                 Right value ->
                     expectationFailure ("Expected oversize moment comment to fail, got " <> show value)
+
+        it "rejects invalid moment media dimensions instead of silently dropping them" $ do
+            validateMomentMediaDimension "Moment media width" Nothing `shouldBe` Right Nothing
+            validateMomentMediaDimension "Moment media width" (Just 1080)
+                `shouldBe` Right (Just 1080)
+            validateMomentMediaDimension "Moment media height" (Just 720)
+                `shouldBe` Right (Just 720)
+            validateMomentMediaDuration Nothing `shouldBe` Right Nothing
+            validateMomentMediaDuration (Just 0) `shouldBe` Right (Just 0)
+            validateMomentMediaDuration (Just 180000) `shouldBe` Right (Just 180000)
+
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid moment media dimension to fail, got " <> show value)
+
+            assertInvalid
+                (validateMomentMediaDimension "Moment media width" (Just 0))
+                "Moment media width must be greater than 0"
+            assertInvalid
+                (validateMomentMediaDimension "Moment media height" (Just (-5)))
+                "Moment media height must be greater than 0"
+            assertInvalid
+                (validateMomentMediaDuration (Just (-1)))
+                "Moment media duration must be 0 or greater"
 
     describe "parseFollowerQueryParamEither" $ do
         it "canonicalizes numeric follower query params before delete lookups" $ do

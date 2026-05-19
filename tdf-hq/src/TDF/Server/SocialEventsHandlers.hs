@@ -45,6 +45,8 @@ module TDF.Server.SocialEventsHandlers
   , normalizeMomentReaction
   , normalizeMomentCaption
   , normalizeMomentCommentBody
+  , validateMomentMediaDimension
+  , validateMomentMediaDuration
   , validateEventCreateUpdateDimensions
   , validateSocialEventsListOffset
   , validateSocialEventsListFilter
@@ -1401,10 +1403,16 @@ socialEventsServer user = eventsServer
       mediaUrl <- maybe (throwError err400 { errBody = "Moment media URL is required" }) pure (cleanMaybeText (Just emCreateMediaUrl))
       mediaType <- maybe (throwError err400 { errBody = "Moment media type must be image or video" }) pure (normalizeMomentMediaType emCreateMediaType)
       caption <- either throwError pure (normalizeMomentCaption emCreateCaption)
+      mediaWidth <-
+        either throwError pure
+          (validateMomentMediaDimension "Moment media width" emCreateMediaWidth)
+      mediaHeight <-
+        either throwError pure
+          (validateMomentMediaDimension "Moment media height" emCreateMediaHeight)
+      mediaDurationMs <-
+        either throwError pure
+          (validateMomentMediaDuration emCreateMediaDurationMs)
       let authorName = resolveMomentAuthorName currentPartyId emCreateAuthorName
-          mediaWidth = normalizePositiveIntMaybe emCreateMediaWidth
-          mediaHeight = normalizePositiveIntMaybe emCreateMediaHeight
-          mediaDurationMs = normalizeNonNegativeIntMaybe emCreateMediaDurationMs
       momentKey <- liftIO $ runSqlPool
         (insert EventMoment
           { eventMomentEventId = eventKey
@@ -2671,17 +2679,23 @@ normalizeMomentCommentBody rawBody =
           Left err400 { errBody = "Moment comment body must be 500 characters or less" }
       | otherwise -> Right bodyVal
 
-normalizePositiveIntMaybe :: Maybe Int -> Maybe Int
-normalizePositiveIntMaybe mValue =
-  case mValue of
-    Just value | value > 0 -> Just value
-    _ -> Nothing
+validateMomentMediaDimension :: T.Text -> Maybe Int -> Either ServerError (Maybe Int)
+validateMomentMediaDimension _ Nothing = Right Nothing
+validateMomentMediaDimension fieldName (Just value)
+  | value > 0 = Right (Just value)
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+        }
 
-normalizeNonNegativeIntMaybe :: Maybe Int -> Maybe Int
-normalizeNonNegativeIntMaybe mValue =
-  case mValue of
-    Just value | value >= 0 -> Just value
-    _ -> Nothing
+validateMomentMediaDuration :: Maybe Int -> Either ServerError (Maybe Int)
+validateMomentMediaDuration Nothing = Right Nothing
+validateMomentMediaDuration (Just value)
+  | value >= 0 = Right (Just value)
+  | otherwise =
+      Left err400 { errBody = "Moment media duration must be 0 or greater" }
 
 resolveMomentAuthorName :: T.Text -> Maybe T.Text -> T.Text
 resolveMomentAuthorName currentParty mAuthorName =
