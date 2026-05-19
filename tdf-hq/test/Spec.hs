@@ -9808,6 +9808,9 @@ main = hspec $ do
             assertInvalid "+1234567890123456" "contactPhone must be a valid phone number"
             assertInvalid "call me at 099 123 4567" "contactPhone must be a valid phone number"
             assertInvalid "+593 99\n123 4567" "contactPhone must not contain control characters"
+            assertInvalid
+                ("+593 99" <> Data.Text.singleton '\x202E' <> "123 4567")
+                "contactPhone must not contain hidden formatting characters"
 
     describe "validateOptionalProposalNotes" $ do
         it "normalizes blank proposal notes and preserves multiline notes" $ do

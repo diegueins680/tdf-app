@@ -445,6 +445,9 @@ validateOptionalProposalContactPhone (Just rawPhone) =
   case normalizeOptionalText (Just rawPhone) of
     Nothing -> Right Nothing
     Just phoneVal
+      | T.any isHiddenProposalFormattingChar phoneVal ->
+          Left err400
+            { errBody = "contactPhone must not contain hidden formatting characters" }
       | T.any isControl phoneVal ->
           Left err400 { errBody = "contactPhone must not contain control characters" }
       | otherwise ->
@@ -485,7 +488,11 @@ validateOptionalProposalClientPartyId (Just rawClientPartyId)
 
 isUnsafeProposalInlineTextChar :: Char -> Bool
 isUnsafeProposalInlineTextChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch || isHiddenProposalFormattingChar ch
+
+isHiddenProposalFormattingChar :: Char -> Bool
+isHiddenProposalFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 proposalInlineTextError :: Text -> BL.ByteString
 proposalInlineTextError fieldName =
