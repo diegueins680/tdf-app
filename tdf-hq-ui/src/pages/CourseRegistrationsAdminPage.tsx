@@ -1596,7 +1596,7 @@ const firstRunStaticFormBackendDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunEmergingFormProviderPattern =
-  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery)`;
+  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery|qualtrics|question\s*pro|questionpro|survey\s*sparrow|surveysparrow)`;
 const firstRunEmergingFormProviderDescriptorPattern =
   String.raw`(?:(?:${firstRunEmergingFormProviderPattern})\s+(?:(?:lead|quiz|survey|questionnaire|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?|funnels?|flows?|quiz(?:zes)?|surveys?|questionnaires?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|embudos?|flujos?|cuestionarios?|encuestas?)\s+(?:de\s+)?(?:${firstRunEmergingFormProviderPattern}))`;
 const firstRunEmergingFormProviderDescriptorPrefixPattern = new RegExp(
@@ -2912,6 +2912,19 @@ const defaultPublicFormSourceKeys = new Set([
   'survey monkey forms',
   'surveymonkey',
   'surveymonkey form',
+  'qualtrics',
+  'qualtrics form',
+  'qualtrics survey',
+  'question pro',
+  'question pro form',
+  'questionpro',
+  'questionpro form',
+  'surveysparrow',
+  'surveysparrow form',
+  'surveysparrow survey',
+  'survey sparrow',
+  'survey sparrow form',
+  'survey sparrow survey',
   'fillout form',
   'fillout forms',
   'cognito form',

@@ -12577,6 +12577,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'perspective.co_form',
       'perspective_funnel',
       'feathery_intake_form',
+      'qualtrics_survey',
+      'questionpro_form',
+      'survey_sparrow_survey',
     ] as const;
     const hiddenSourceLabels = [
       'Heyflow registration form',
@@ -12587,6 +12590,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Perspective co form',
       'Perspective funnel',
       'Feathery intake form',
+      'Qualtrics survey',
+      'Questionpro form',
+      'Survey sparrow survey',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
@@ -16973,6 +16979,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Landbot registration flow - Beatmaking 101',
       'Beatmaking 101 - Perspective.co funnel',
       'Feathery form - Beatmaking 101',
+      'Qualtrics survey - Beatmaking 101',
+      'QuestionPro registration form for Beatmaking 101',
+      'Beatmaking 101 - SurveySparrow questionnaire',
     ];
 
     for (const title of titles) {
@@ -17019,7 +17028,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toMatch(/ConvertKit|Kit sign-up|Kit lead|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Substack/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
-        expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery/i);
+        expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery|Qualtrics|QuestionPro|SurveySparrow/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
