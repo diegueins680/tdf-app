@@ -38,7 +38,12 @@ import           Data.Maybe                 (catMaybes, fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (getCurrentTime)
+import           Data.Time
+  ( NominalDiffTime
+  , UTCTime
+  , addUTCTime
+  , getCurrentTime
+  )
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, runSqlPool, toSqlKey)
 import           Servant
@@ -59,6 +64,9 @@ maxSocialSyncUrlChars = 2048
 
 maxSocialSyncCaptionChars :: Int
 maxSocialSyncCaptionChars = 8192
+
+maxSocialSyncPostedAtFutureSkewSeconds :: NominalDiffTime
+maxSocialSyncPostedAtFutureSkewSeconds = 5 * 60
 
 data ValidatedSocialSyncPost = ValidatedSocialSyncPost
   { vsspPayload          :: SocialSyncPostIn
@@ -101,6 +109,8 @@ socialSyncServer user =
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
       validatedPosts <- either throwError pure (validateSocialSyncIngestPosts ssirPosts)
+      either throwError pure $
+        mapM_ (validateSocialSyncPostedAt now . sspPostedAt . vsspPayload) validatedPosts
       resolvedPosts <- traverse resolveSocialSyncArtistReferences validatedPosts
       results <- forM resolvedPosts $ \ValidatedSocialSyncPost{..} -> do
         let tagList = classifyTags (sspCaption payload)
@@ -288,6 +298,17 @@ validateSocialSyncMetricCounts payload = do
   validateOptionalSocialSyncMetricCount "commentCount" (sspCommentCount payload)
   validateOptionalSocialSyncMetricCount "shareCount" (sspShareCount payload)
   validateOptionalSocialSyncMetricCount "viewCount" (sspViewCount payload)
+
+validateSocialSyncPostedAt :: UTCTime -> Maybe UTCTime -> Either ServerError ()
+validateSocialSyncPostedAt _ Nothing = Right ()
+validateSocialSyncPostedAt now (Just postedAt)
+  | postedAt <= addUTCTime maxSocialSyncPostedAtFutureSkewSeconds now = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "postedAt must not be more than five minutes in the future")
+        }
 
 validateOptionalSocialSyncMetricCount :: Text -> Maybe Int -> Either ServerError ()
 validateOptionalSocialSyncMetricCount _ Nothing = Right ()

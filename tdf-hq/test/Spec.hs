@@ -7184,6 +7184,43 @@ main = hspec $ do
             length posts `shouldBe` 0
             length runs `shouldBe` 0
 
+        it "rejects future postedAt values before recording ingest audit rows" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-future"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt =
+                                Just
+                                    ( UTCTime
+                                        (fromGregorian 2999 1 1)
+                                        (secondsToDiffTime 0)
+                                    )
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "postedAt must not be more than five minutes in the future"
+                Right response ->
+                    expectationFailure
+                        ("Expected future postedAt ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
         it "normalizes captions before persisting summary and tag data" $ do
             let request =
                     SocialSyncIngestRequest
