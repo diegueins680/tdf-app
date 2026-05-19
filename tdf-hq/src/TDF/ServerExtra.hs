@@ -223,6 +223,7 @@ validateCheckoutTargetParty mTargetParty =
           Left err400
             { errBody =
                 "targetParty must not contain control characters or hidden formatting characters"
+                  <> ", or Unicode space lookalikes"
             }
       | not (T.any isAlphaNum targetParty) ->
           Left err400 { errBody = "targetParty must contain at least one letter or digit" }
@@ -231,7 +232,9 @@ validateCheckoutTargetParty mTargetParty =
 
 isUnsafeCheckoutTargetPartyChar :: Char -> Bool
 isUnsafeCheckoutTargetPartyChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 inventoryServer
   :: ( MonadReader Env m

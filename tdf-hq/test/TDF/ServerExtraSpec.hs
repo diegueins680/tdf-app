@@ -2114,6 +2114,14 @@ spec = do
         "targetParty must not contain control characters or hidden formatting characters"
         (validateCheckoutTargets TargetParty (Just ("Crew" <> "\x202E" <> "A")) Nothing Nothing)
       assertInvalid
+        "Unicode space lookalikes"
+        ( validateCheckoutTargets
+            TargetParty
+            (Just ("Backline" <> "\x00A0" <> "Crew"))
+            Nothing
+            Nothing
+        )
+      assertInvalid
         "targetParty must be 160 characters or fewer"
         (validateCheckoutTargets TargetParty (Just (T.replicate 161 "a")) Nothing Nothing)
       assertInvalid
