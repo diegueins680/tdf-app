@@ -1420,6 +1420,12 @@ const firstRunTemplateDescriptorPrefixPattern =
 const firstRunTemplateDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))\s*$/i;
 
+const firstRunTestDraftDescriptorPrefixPattern =
+  /^(?:(?:(?:draft|staging|sandbox|test)\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))|(?:(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:draft|staging|sandbox|test))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:prueba|borrador))|(?:(?:prueba|borrador)\s+de\s+(?:formulario|p[aá]gina|portal|enlace|link|url))|(?:draft|staging|sandbox|borrador))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTestDraftDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:draft|staging|sandbox|test)\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))|(?:(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:draft|staging|sandbox|test))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:prueba|borrador))|(?:(?:prueba|borrador)\s+de\s+(?:formulario|p[aá]gina|portal|enlace|link|url))|(?:draft|staging|sandbox|borrador))\s*$/i;
+
 const firstRunCopyDescriptorPrefixPattern =
   /^(?:(?:copy|duplicates?|duplicated)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+of(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:clone|cloned)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+(?:of|from)(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:copia|duplicad[oa]s?|clon(?:ad[oa])?)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+de(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*))\s*/i;
 
@@ -2131,6 +2137,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCohortDescriptorPrefixPattern, '')
     .replace(firstRunVariantDescriptorPrefixPattern, '')
     .replace(firstRunTemplateDescriptorPrefixPattern, '')
+    .replace(firstRunTestDraftDescriptorPrefixPattern, '')
     .replace(firstRunCopyDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
@@ -2252,6 +2259,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCohortDescriptorSuffixPattern, '')
     .replace(firstRunVariantDescriptorSuffixPattern, '')
     .replace(firstRunTemplateDescriptorSuffixPattern, '')
+    .replace(firstRunTestDraftDescriptorSuffixPattern, '')
     .replace(firstRunCopyDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')

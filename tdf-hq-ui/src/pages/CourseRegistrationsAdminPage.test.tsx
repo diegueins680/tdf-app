@@ -22359,6 +22359,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('deduplicates test and draft first-run form labels before listing ready forms', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'beatmaking-101-test', ccTitle: 'Test form - Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp-draft', ccTitle: 'Mixing Bootcamp - draft page' },
+      { ccSlug: 'mixing-bootcamp-stage', ccTitle: 'Formulario de prueba - Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Hay 4 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, 'Mixing Bootcamp')).toBe(1);
+      expect(emptyState?.textContent).not.toMatch(/test form|draft page|formulario de prueba/i);
+      expect(emptyState?.textContent).not.toContain('y 2 cursos más');
+      expect(configAction?.textContent?.trim()).toBe(initialEmptyStateReviewFormsActionLabel);
+      expect(configAction?.getAttribute('title')).toBe(
+        'Elegir entre 4 formularios públicos: Beatmaking 101 y Mixing Bootcamp.',
+      );
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips copied-form wrappers from first-run cohort labels', async () => {
     const titles = [
       'Copy of Beatmaking 101',
