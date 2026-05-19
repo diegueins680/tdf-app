@@ -1504,6 +1504,16 @@ const firstRunPriorityWaitlistDescriptorPrefixPattern =
 const firstRunPriorityWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))\s*$/i;
 
+const firstRunInvitationDescriptorPattern = String.raw`(?:(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?|access))?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:registration|enrollment|application|access))?|(?:formulario|p[aá]gina|registro|inscripci[oó]n|matr[ií]cula|acceso)\s+(?:de|para|por|con)\s+invitaci[oó]n|invitaci[oó]n\s+(?:al|a\s+la|del?|de|para)\s+(?:curso|clase|programa|cohorte|inscripci[oó]n|registro|matr[ií]cula))`;
+const firstRunInvitationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunInvitationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunInvitationDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunInvitationDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunLeadMagnetDescriptorPrefixPattern =
   /^(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -1973,6 +1983,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunProgramDescriptorPrefixPattern, '')
     .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
+    .replace(firstRunInvitationDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
@@ -2089,6 +2100,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunProgramDescriptorSuffixPattern, '')
     .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
+    .replace(firstRunInvitationDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
