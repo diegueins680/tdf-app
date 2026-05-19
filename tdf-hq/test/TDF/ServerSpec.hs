@@ -12068,6 +12068,8 @@ spec = describe "TDF.Server helpers" $ do
                 [ ("inventory", "assets/metadata")
                 , ("inventory", "metadata/workflow")
                 ]
+            assertInvalid [("crm", "admin/settings")]
+            assertInvalid [("inventory", "crm/assets")]
             assertInvalid [("crm", "users/console")]
             assertInvalid [("inventory", "seed")]
             assertInvalid [("admin", "users/console")]

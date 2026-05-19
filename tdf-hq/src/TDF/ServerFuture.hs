@@ -342,6 +342,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
   if any (hasDuplicateLeaves validatedCatalog) mountedAreas
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
+       || hasMountedAreaSegmentCollision mountedAreas validatedCatalog
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
     then invalidFutureStubCatalog
@@ -382,6 +383,12 @@ validateFutureStubCatalogEndpointLeaves catalog = do
     isAmbiguousLeafPair (leftLeaf, rightLeaf) =
       leftLeaf /= rightLeaf
         && (leftLeaf `T.isPrefixOf` rightLeaf || rightLeaf `T.isPrefixOf` leftLeaf)
+
+    hasMountedAreaSegmentCollision mountedAreasValue catalogForAreas =
+      let mountedAreaSet = Set.fromList mountedAreasValue
+      in any
+          (any (`Set.member` mountedAreaSet) . T.splitOn "/" . snd)
+          catalogForAreas
 
     hasReservedLeafCollision reservedRoutes catalogForAreas area =
       let reservedLeaves =
