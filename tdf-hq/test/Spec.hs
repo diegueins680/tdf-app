@@ -5639,6 +5639,7 @@ main = hspec $ do
             assertInvalid
                 ("Checkout " <> "\x202E" <> "diap")
                 "title must not contain control characters or hidden formatting characters"
+            assertInvalid "!!!" "title must include letters or numbers"
             assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
 
     describe "validateFeedbackDescription" $ do

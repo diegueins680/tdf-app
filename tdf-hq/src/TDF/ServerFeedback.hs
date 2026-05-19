@@ -205,6 +205,8 @@ validateFeedbackTitle rawTitle
         { errBody =
             "title must not contain control characters or hidden formatting characters"
         }
+  | not (T.any isAlphaNum title) =
+      Left err400 { errBody = "title must include letters or numbers" }
   | otherwise =
       Right title
   where
