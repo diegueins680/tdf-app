@@ -20738,6 +20738,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Student center - Beatmaking 101',
       'Beatmaking 101 - learning centre',
       'LMS portal: Beatmaking 101',
+      'LMS enrollment area - Beatmaking 101',
+      'Learning management system portal - Beatmaking 101',
+      'Beatmaking 101 - LMS registration dashboard',
+      'Beatmaking 101 - learning management system student hub',
       'Campus virtual - Beatmaking 101',
       'Digital campus - Beatmaking 101',
       'Beatmaking 101 - aula virtual',
@@ -20759,7 +20763,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(copy).toContain(singleCohortInitialEmptyStateMessage);
         expect(copy).not.toContain(title);
         expect(copy).not.toMatch(
-          /student\s+portal|learner\s+dashboard|student\s+center|learning\s+centre|lms\s+portal|campus\s+virtual|digital\s+campus|aula\s+virtual|centro\s+de\s+estudiantes/i,
+          /student\s+portal|learner\s+dashboard|student\s+center|learning\s+centre|lms\s+(?:portal|enrollment\s+area|registration\s+dashboard)|learning\s+management\s+system\s+(?:portal|student\s+hub)|campus\s+virtual|digital\s+campus|aula\s+virtual|centro\s+de\s+estudiantes/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
