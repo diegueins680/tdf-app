@@ -17877,6 +17877,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Enlace de inscripción - Beatmaking 101',
       'Beatmaking 101 - enlace de inscripción',
       'Enlace público de inscripción - Beatmaking 101',
+      'Vínculo público de inscripción - Beatmaking 101',
+      'Beatmaking 101 - vinculo público para inscripción',
       'Beatmaking 101 - URL pública para inscripción',
       'URL de inscripción - Beatmaking 101',
       'Beatmaking 101 - URL de inscripción',
@@ -17896,8 +17898,8 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(/(?:registration|enrollment|sign[-\s]?up)\s+(?:link|url)/i);
-        expect(emptyState?.textContent).not.toMatch(/(?:link|enlace|url)\s+de\s+inscripci[oó]n/i);
-        expect(emptyState?.textContent).not.toMatch(/(?:link|enlace|url)\s+p[uú]blic[oa]s?\s+(?:de|para)\s+inscripci[oó]n/i);
+        expect(emptyState?.textContent).not.toMatch(/(?:link|enlace|v[ií]nculo|url)\s+de\s+inscripci[oó]n/i);
+        expect(emptyState?.textContent).not.toMatch(/(?:link|enlace|v[ií]nculo|url)\s+p[uú]blic[oa]s?\s+(?:de|para)\s+inscripci[oó]n/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
