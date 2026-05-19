@@ -24,7 +24,7 @@ import           Data.Bits (xor)
 import           Data.Int (Int64)
 import           Data.List (find, foldl', nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
-import           Data.Foldable (for_, toList)
+import           Data.Foldable (for_)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory
@@ -39,7 +39,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON, omitNothingFields)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -134,11 +134,7 @@ import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
 import           TDF.ServerFanClub (fanClubPublicGetClub, fanClubPublicGetEvents, fanClubSecureListMyClubs, fanClubSecureArtistHandlers)
 import           TDF.Trials.API (TrialsAPI)
-import qualified TDF.Trials.Server as TrialsServer
-  ( hasAmbiguousPublicUrlPath
-  , isValidHttpUrl
-  , trialsServer
-  )
+import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl, trialsServer)
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (VersionInfo(..), getVersionInfo)
@@ -205,7 +201,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
-import           Network.HTTP.Types.URI (urlDecode, urlEncode, renderQuery, renderSimpleQuery)
+import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.CMS.Models as CMS
@@ -223,7 +219,7 @@ data GoogleToken = GoogleToken
 instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
-    refreshToken <- parseOptionalGoogleTokenField "refresh_token" o
+    refreshToken <- o .:? "refresh_token" >>= traverse (parseGoogleTokenField "refresh_token")
     expiresIn <- o .: "expires_in"
     when (expiresIn <= (0 :: Int)) $
       fail "expires_in must be positive"
@@ -235,14 +231,6 @@ instance FromJSON GoogleToken where
       , token_type = Just tokenType
       }
 
-parseOptionalGoogleTokenField :: Text -> Object -> Parser (Maybe Text)
-parseOptionalGoogleTokenField fieldName obj =
-  case AKeyMap.lookup (AKey.fromText fieldName) obj of
-    Nothing -> pure Nothing
-    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
-    Just (String raw) -> Just <$> parseGoogleTokenField fieldName raw
-    Just _ -> fail (T.unpack fieldName <> " must be a string")
-
 parseGoogleTokenField :: Text -> Text -> Parser Text
 parseGoogleTokenField fieldName raw =
   let clean = T.strip raw
@@ -250,13 +238,11 @@ parseGoogleTokenField fieldName raw =
        then fail (T.unpack fieldName <> " must not be blank")
        else if T.any (\ch -> isSpace ch || isControl ch) clean
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
-       else if T.any isHiddenDriveOAuthTokenChar clean
-         then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
-       else if T.any (not . isAscii) clean
-         then fail (T.unpack fieldName <> " must contain only ASCII characters")
-       else if T.length clean > maxDriveOAuthTokenChars
-         then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
-       else pure clean
+         else if T.any isHiddenDriveOAuthTokenChar clean
+           then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
+           else if T.length clean > maxDriveOAuthTokenChars
+             then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
+             else pure clean
 
 maxDriveOAuthTokenChars :: Int
 maxDriveOAuthTokenChars = 4096
@@ -280,11 +266,6 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o -> do
     parsedItems <- o .: "items"
-    when (length parsedItems > maxGoogleCalendarPageItems) $
-      fail $
-        "Google Calendar page must contain "
-          <> show maxGoogleCalendarPageItems
-          <> " items or fewer"
     itemIds <- forM (zip [(0 :: Int)..] parsedItems) $ uncurry validateGoogleCalendarPageItem
     when (length itemIds /= Set.size (Set.fromList itemIds)) $
       fail "Google Calendar page must not contain duplicate event ids"
@@ -297,9 +278,6 @@ instance FromJSON GoogleEventsPage where
       , nextPageToken = nextPage
       , nextSyncToken = nextSync
       }
-
-maxGoogleCalendarPageItems :: Int
-maxGoogleCalendarPageItems = 2000
 
 parseGoogleCursorField :: Text -> Text -> Parser Text
 parseGoogleCursorField = parseGoogleTokenField
@@ -356,13 +334,6 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
             (fail . googleCalendarPageFieldError idx fieldName)
             (const (pure ()))
             (validateGoogleCalendarHtmlLink rawText)
-      | T.length rawText > googleCalendarPageTextFieldMaxChars fieldName ->
-          fail
-            ( fieldLabel
-                <> " must be "
-                <> show (googleCalendarPageTextFieldMaxChars fieldName)
-                <> " characters or fewer"
-            )
       | T.any isUnsupportedGoogleCalendarPageTextChar rawText ->
           fail
             ( fieldLabel
@@ -436,52 +407,15 @@ validateGoogleCalendarPageAttendeesField idx eventObj =
   case AKeyMap.lookup "attendees" eventObj of
     Nothing -> pure ()
     Just Null -> pure ()
-    Just (Array attendeesValue) -> do
-      attendeeEmails <-
-        forM
-          (zip [(0 :: Int)..] (toList attendeesValue))
-          (uncurry (validateGoogleCalendarPageAttendee idx))
-      let presentEmails = catMaybes attendeeEmails
-      when (length presentEmails /= Set.size (Set.fromList presentEmails)) $
-        fail (fieldLabel <> " must not contain duplicate attendee emails")
+    Just (Array attendeesValue) ->
+      for_ attendeesValue $ \attendee ->
+        case attendee of
+          Object _ -> pure ()
+          _ -> fail (fieldLabel <> " must contain only attendee objects")
     Just _ ->
       fail (fieldLabel <> " must be an array")
   where
     fieldLabel = "items[" <> show idx <> "].attendees"
-
-validateGoogleCalendarPageAttendee :: Int -> Int -> Value -> Parser (Maybe Text)
-validateGoogleCalendarPageAttendee itemIdx attendeeIdx (Object attendeeObj) =
-  case AKeyMap.lookup "email" attendeeObj of
-    Nothing -> pure Nothing
-    Just Null -> pure Nothing
-    Just (String rawEmail) ->
-      Just <$> validateGoogleCalendarAttendeeEmail itemIdx attendeeIdx rawEmail
-    Just _ ->
-      fail (googleCalendarAttendeeFieldLabel itemIdx attendeeIdx "email" <> " must be a string")
-validateGoogleCalendarPageAttendee itemIdx _ _ =
-  fail ("items[" <> show itemIdx <> "].attendees must contain only attendee objects")
-
-validateGoogleCalendarAttendeeEmail :: Int -> Int -> Text -> Parser Text
-validateGoogleCalendarAttendeeEmail itemIdx attendeeIdx rawEmail
-  | T.null emailVal =
-      fail (fieldLabel <> " must not be blank")
-  | emailVal /= rawEmail =
-      fail (fieldLabel <> " must not include surrounding whitespace")
-  | T.any isUnsupportedGoogleCalendarPageTextChar emailVal =
-      fail (fieldLabel <> " must not contain unsupported control or formatting characters")
-  | not (isValidCourseRegistrationEmail normalizedEmail) =
-      fail (fieldLabel <> " must be a valid email address")
-  | otherwise =
-      pure normalizedEmail
-  where
-    fieldLabel = googleCalendarAttendeeFieldLabel itemIdx attendeeIdx "email"
-    emailVal = T.strip rawEmail
-    normalizedEmail = T.toLower emailVal
-
-googleCalendarAttendeeFieldLabel :: Int -> Int -> Text -> String
-googleCalendarAttendeeFieldLabel itemIdx attendeeIdx fieldName =
-  "items[" <> show itemIdx <> "].attendees[" <> show attendeeIdx <> "]."
-    <> T.unpack fieldName
 
 validateGoogleCalendarIsoTimestamp :: Text -> Text -> Either Text Text
 validateGoogleCalendarIsoTimestamp fieldName rawTimestamp =
@@ -549,8 +483,6 @@ validateGoogleCalendarHtmlLink rawLink
       Left "Google Calendar htmlLink must not contain a fragment"
   | not (isGoogleCalendarHtmlLink htmlLink) =
       Left "Google Calendar htmlLink must be a Google Calendar web link"
-  | not (hasSingleGoogleCalendarHtmlLinkEventId htmlLink) =
-      Left "Google Calendar htmlLink must include exactly one eid query parameter"
   | otherwise =
       Right htmlLink
   where
@@ -571,38 +503,11 @@ isGoogleCalendarHtmlLink rawUrl =
     Nothing ->
       False
 
-hasSingleGoogleCalendarHtmlLinkEventId :: Text -> Bool
-hasSingleGoogleCalendarHtmlLinkEventId rawUrl =
-  case [ rawParam
-       | rawParam <- queryParams rawUrl
-       , isNamedQueryParam "eid" rawParam
-       ] of
-    [rawParam] ->
-      case queryParamValue rawParam of
-        Just rawEventId -> not (T.null (T.strip rawEventId))
-        Nothing -> False
-    _ -> False
-
 googleCalendarHtmlLinkHosts :: [Text]
 googleCalendarHtmlLinkHosts =
   [ "www.google.com"
   , "calendar.google.com"
   ]
-
-googleCalendarPageTextFieldMaxChars :: Text -> Int
-googleCalendarPageTextFieldMaxChars "description" = maxGoogleCalendarPageDescriptionChars
-googleCalendarPageTextFieldMaxChars "summary" = maxGoogleCalendarPageSummaryChars
-googleCalendarPageTextFieldMaxChars "location" = maxGoogleCalendarPageLocationChars
-googleCalendarPageTextFieldMaxChars _ = maxGoogleCalendarPageSummaryChars
-
-maxGoogleCalendarPageSummaryChars :: Int
-maxGoogleCalendarPageSummaryChars = 1024
-
-maxGoogleCalendarPageLocationChars :: Int
-maxGoogleCalendarPageLocationChars = 1024
-
-maxGoogleCalendarPageDescriptionChars :: Int
-maxGoogleCalendarPageDescriptionChars = 10000
 
 isUnsupportedGoogleCalendarPageTextChar :: Char -> Bool
 isUnsupportedGoogleCalendarPageTextChar ch =
@@ -800,8 +705,6 @@ validateMcpNameField fieldName rawName = do
       ( T.unpack fieldName
           <> " must use only ASCII lowercase letters, numbers, '/', '_' or '-'"
       )
-  when (hasEmptyMcpNameSegment name) $
-    fail (T.unpack fieldName <> " must not contain empty path segments")
   pure name
 
 isMcpNameChar :: Char -> Bool
@@ -809,10 +712,6 @@ isMcpNameChar ch =
   isAsciiLower ch
     || isDigit ch
     || ch `elem` ("/_-" :: String)
-
-hasEmptyMcpNameSegment :: Text -> Bool
-hasEmptyMcpNameSegment name =
-  any T.null (T.splitOn "/" name)
 
 isUnsafeMcpNameChar :: Char -> Bool
 isUnsafeMcpNameChar ch =
@@ -1667,52 +1566,32 @@ validateWhatsAppReplyExternalId = ServerExtra.validateSocialReplyExternalId
 
 parseBoolParam :: Maybe Text -> Either ServerError Bool
 parseBoolParam Nothing = Right False
-parseBoolParam (Just raw)
-  | T.any isUnsafeQueryFilterChar raw =
-      invalidUnsafeQueryFilter "repliedOnly"
-  | otherwise =
-      case T.toCaseFold (T.strip raw) of
-        "true" -> Right True
-        "1" -> Right True
-        "yes" -> Right True
-        "false" -> Right False
-        "0" -> Right False
-        "no" -> Right False
-        "" -> invalidRepliedOnly
-        _ -> invalidRepliedOnly
+parseBoolParam (Just raw) =
+  case T.toCaseFold (T.strip raw) of
+    "true" -> Right True
+    "1" -> Right True
+    "yes" -> Right True
+    "false" -> Right False
+    "0" -> Right False
+    "no" -> Right False
+    "" -> invalidRepliedOnly
+    _ -> invalidRepliedOnly
   where
     invalidRepliedOnly =
       Left err400 { errBody = "repliedOnly must be omitted or one of: true, false, 1, 0, yes, no" }
 
 parseDirectionParam :: Maybe Text -> Either ServerError (Maybe Text)
 parseDirectionParam Nothing = Right Nothing
-parseDirectionParam (Just raw)
-  | T.any isUnsafeQueryFilterChar raw =
-      invalidUnsafeQueryFilter "direction"
-  | otherwise =
-      case T.toCaseFold (T.strip raw) of
-        "" -> invalidDirection
-        "all" -> Right Nothing
-        "incoming" -> Right (Just "incoming")
-        "outgoing" -> Right (Just "outgoing")
-        _ -> invalidDirection
+parseDirectionParam (Just raw) =
+  case T.toCaseFold (T.strip raw) of
+    "" -> invalidDirection
+    "all" -> Right Nothing
+    "incoming" -> Right (Just "incoming")
+    "outgoing" -> Right (Just "outgoing")
+    _ -> invalidDirection
   where
     invalidDirection =
       Left err400 { errBody = "direction must be omitted or one of: all, incoming, outgoing" }
-
-isUnsafeQueryFilterChar :: Char -> Bool
-isUnsafeQueryFilterChar ch =
-  isControl ch
-    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-
-invalidUnsafeQueryFilter :: Text -> Either ServerError a
-invalidUnsafeQueryFilter fieldName =
-  Left err400
-    { errBody =
-        BL.fromStrict $
-          TE.encodeUtf8 $
-            fieldName <> " must not contain control or formatting characters"
-    }
 
 validateWhatsAppReplyTarget
   :: Text
@@ -2371,7 +2250,7 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   either throwError pure (validateDriveAccess user)
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
-  mFolderEnv <- liftIO $ lookupEnvText "DRIVE_UPLOAD_FOLDER_ID"
+  mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   fileSize <- liftIO (getFileSize (fdPayload duFile))
@@ -2704,8 +2583,6 @@ validateDriveRefreshTokenWith baseError fieldName rawToken
       invalid " must not contain hidden formatting characters"
   | T.any isSpace tokenVal =
       invalid " must not contain whitespace"
-  | T.any (not . isAscii) tokenVal =
-      invalid " must contain only ASCII characters"
   | T.length tokenVal > maxDriveOAuthTokenChars =
       invalid " must be 4096 characters or fewer"
   | otherwise =
@@ -2728,8 +2605,6 @@ validateDriveAuthorizationCode rawCode =
              then Left err400 { errBody = "code must not contain hidden formatting characters" }
            else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
-           else if T.any (not . isAscii) codeVal
-           then Left err400 { errBody = "code must contain only ASCII characters" }
            else if T.length codeVal > maxDriveOAuthTokenChars
            then Left err400 { errBody = "code must be 4096 characters or fewer" }
            else Right codeVal
@@ -2757,18 +2632,10 @@ resolveDriveRedirectUri cfg mProvided = do
   configuredRedirectUri <-
     validateConfiguredDriveRedirectUri
       (resolveConfiguredAppBase cfg <> "/oauth/google-drive/callback")
-  case mProvided of
-    Nothing ->
-      Right configuredRedirectUri
-    Just rawRedirect
-      | T.null (T.strip rawRedirect) ->
-          Left err400
-            { errBody =
-                "redirectUri must be omitted instead of blank to use the configured "
-                  <> "Google Drive OAuth callback URL"
-            }
-      | otherwise ->
-          validateProvidedRedirectUri configuredRedirectUri rawRedirect
+  maybe
+    (Right configuredRedirectUri)
+    (validateProvidedRedirectUri configuredRedirectUri)
+    (cleanOptional mProvided)
   where
     validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
       redirectUri <- validateDriveRedirectUri rawRedirect
@@ -2968,12 +2835,6 @@ validateOptionalDriveClientCredential envName rawCredential =
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   envName <> " must not contain hidden formatting characters"
-            }
-      | T.any (not . isAscii) credential ->
-          Left err503
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  envName <> " must contain only ASCII characters"
             }
       | T.length credential > maxDriveOAuthTokenChars ->
           Left err503
@@ -3219,18 +3080,14 @@ validateCalendarSyncWindow
   -> Maybe UTCTime
   -> Either ServerError ()
 validateCalendarSyncWindow mSyncCursor mFrom mTo =
-  case validateGoogleCalendarSyncCursor mSyncCursor of
-    Left err -> Left err
-    Right (Just _) | isJust (mFrom <|> mTo) ->
+  case (validateGoogleCalendarSyncCursor mSyncCursor, mFrom <|> mTo) of
+    (Left err, _) -> Left err
+    (Right (Just _), Just _) ->
       Left err400
         { errBody =
             "Calendar sync range cannot be combined with an existing Google sync cursor"
         }
-    Right _ ->
-      case (mFrom, mTo) of
-        (Just fromVal, Just toVal) | toVal < fromVal ->
-          Left err400 { errBody = "from must be on or before to" }
-        _ -> Right ()
+    _ -> Right ()
 
 validateGoogleCalendarSyncCursor :: Maybe Text -> Either ServerError (Maybe Text)
 validateGoogleCalendarSyncCursor Nothing = Right Nothing
@@ -3262,16 +3119,6 @@ validateStoredGoogleCalendarAccessToken (Just rawToken) =
 validateStoredGoogleCalendarRefreshToken :: Text -> Either ServerError Text
 validateStoredGoogleCalendarRefreshToken =
   validateStoredGoogleCalendarOAuthToken "refresh token"
-
-validateStoredGoogleCalendarTokenType :: Maybe Text -> Either ServerError (Maybe Text)
-validateStoredGoogleCalendarTokenType Nothing = Right Nothing
-validateStoredGoogleCalendarTokenType (Just rawTokenType) =
-  case parseEither parseGoogleTokenType rawTokenType of
-    Right tokenTypeVal -> Right (Just tokenTypeVal)
-    Left _ ->
-      Left err500
-        { errBody = "Stored Google Calendar token_type is invalid"
-        }
 
 validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
 validateStoredGoogleCalendarOAuthToken label rawToken
@@ -3325,8 +3172,6 @@ validateGoogleCalendarEventStatus rawStatus
       Left "Google Calendar event status must not be blank"
   | T.any isControl statusVal =
       Left "Google Calendar event status must not contain control characters"
-  | T.any isHiddenDriveOAuthTokenChar statusVal =
-      Left "Google Calendar event status must not contain hidden formatting characters"
   | T.any isSpace statusVal =
       Left "Google Calendar event status must not contain whitespace"
   | statusVal `elem` calendarEventStatuses =
@@ -3348,8 +3193,6 @@ validateGoogleCalendarEventId rawEventId
       Left "Google Calendar event id must not contain hidden formatting characters"
   | T.any isSpace eventIdVal =
       Left "Google Calendar event id must not contain whitespace"
-  | T.any (not . isAscii) eventIdVal =
-      Left "Google Calendar event id must contain only ASCII characters"
   | otherwise =
       Right eventIdVal
   where
@@ -3789,30 +3632,7 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       Left _ -> invalidStoredCalendarId
   unless (calendarIdVal == storedCalendarId) invalidStoredCalendarId
   syncCursorVal <- validateGoogleCalendarSyncCursor (Cal.googleCalendarConfigSyncCursor cfg)
-  accessTokenVal <-
-    traverse
-      (validateStoredGoogleCalendarOAuthToken "access token")
-      (Cal.googleCalendarConfigAccessToken cfg)
-  refreshTokenVal <-
-    traverse
-      (validateStoredGoogleCalendarOAuthToken "refresh token")
-      (Cal.googleCalendarConfigRefreshToken cfg)
-  tokenTypeVal <- validateStoredGoogleCalendarTokenType (Cal.googleCalendarConfigTokenType cfg)
-  validateStoredGoogleCalendarOAuthState
-    accessTokenVal
-    tokenTypeVal
-    (Cal.googleCalendarConfigTokenExpiresAt cfg)
-  Right
-    ( Entity
-        cfgId
-        ( cfg
-            { Cal.googleCalendarConfigAccessToken = accessTokenVal
-            , Cal.googleCalendarConfigRefreshToken = refreshTokenVal
-            , Cal.googleCalendarConfigTokenType = tokenTypeVal
-            , Cal.googleCalendarConfigSyncCursor = syncCursorVal
-            }
-        )
-    )
+  Right (Entity cfgId cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal })
   where
     storedCalendarId = Cal.googleCalendarConfigCalendarId cfg
     invalidStoredCalendarConfigId =
@@ -3827,24 +3647,6 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       Left err500
         { errBody = "Stored Google Calendar config ownerId is invalid"
         }
-
-validateStoredGoogleCalendarOAuthState
-  :: Maybe Text
-  -> Maybe Text
-  -> Maybe UTCTime
-  -> Either ServerError ()
-validateStoredGoogleCalendarOAuthState Nothing (Just _) _ =
-  invalidStoredCalendarOAuthState
-validateStoredGoogleCalendarOAuthState Nothing _ (Just _) =
-  invalidStoredCalendarOAuthState
-validateStoredGoogleCalendarOAuthState _ _ _ =
-  Right ()
-
-invalidStoredCalendarOAuthState :: Either ServerError a
-invalidStoredCalendarOAuthState =
-  Left err500
-    { errBody = "Stored Google Calendar OAuth state is invalid"
-    }
 
 encodeGooglePathSegment :: Text -> Text
 encodeGooglePathSegment =
@@ -5385,20 +5187,20 @@ validateAdsInquiryContactChannels mEmail mPhone
 validateAdsInquiryChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsInquiryChannel Nothing = Right Nothing
 validateAdsInquiryChannel (Just rawChannel) =
-  let channel = T.strip rawChannel
-      channelVal = T.toLower channel
-  in if T.null channel
-       then Left err400 { errBody = "channel must be omitted instead of blank" }
-       else if T.length channelVal <= 64
-             && T.all isChannelChar channelVal
-             && T.any isChannelAtom channelVal
-            then Right (Just channelVal)
-            else
-              Left err400
-                { errBody =
-                    "channel must be an ASCII keyword using letters, numbers, underscores, "
-                      <> "or hyphens (64 chars max)"
-                }
+  case normalizeOptionalInput (Just rawChannel) of
+    Nothing -> Right Nothing
+    Just channel ->
+      let channelVal = T.toLower channel
+      in if T.length channelVal <= 64
+            && T.all isChannelChar channelVal
+            && T.any isChannelAtom channelVal
+           then Right (Just channelVal)
+           else
+             Left err400
+               { errBody =
+                   "channel must be an ASCII keyword using letters, numbers, underscores, "
+                     <> "or hyphens (64 chars max)"
+               }
   where
     isChannelChar ch = isAsciiLower ch || isDigit ch || ch == '_' || ch == '-'
     isChannelAtom ch = isAsciiLower ch || isDigit ch
@@ -5465,8 +5267,7 @@ validatePublicBookingFullName rawName =
       | T.any isUnsafePublicBookingLabelChar nameVal ->
           Left err400
             { errBody =
-                "nombre no debe contener caracteres de control, "
-                  <> "marcas Unicode invisibles o espacios Unicode ambiguos"
+                "nombre no debe contener caracteres de control o marcas Unicode invisibles"
             }
       | otherwise ->
           Right nameVal
@@ -5483,8 +5284,7 @@ validatePublicBookingServiceType rawServiceType =
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
-                "serviceType no debe contener caracteres de control, "
-                  <> "marcas Unicode invisibles o espacios Unicode ambiguos"
+                "serviceType no debe contener caracteres de control o marcas Unicode invisibles"
             }
       | otherwise ->
           Right serviceTypeVal
@@ -5497,13 +5297,10 @@ validateOptionalBookingServiceType (Just rawServiceType) =
     Just serviceTypeVal
       | T.length serviceTypeVal > 120 ->
           Left err400 { errBody = "serviceType must be 120 characters or fewer" }
-      | not (hasPublicBookingLabelContent serviceTypeVal) ->
-          Left err400 { errBody = "serviceType must include letters or numbers" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
-                "serviceType must not contain control characters, "
-                  <> "hidden formatting characters, or Unicode separator spaces"
+                "serviceType must not contain control characters or hidden formatting characters"
             }
       | otherwise ->
           Right (Just serviceTypeVal)
@@ -5512,7 +5309,6 @@ isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-    || (generalCategory ch == Space && ch /= ' ')
 
 hasPublicBookingLabelContent :: Text -> Bool
 hasPublicBookingLabelContent = T.any isAlphaNum
@@ -5681,22 +5477,15 @@ validateCourseRegistrationUrlField fieldName (Just rawUrl) =
                     <> T.pack (show maxCourseRegistrationUrlChars)
                     <> " characters or fewer"
             }
-      | not ("https://" `T.isPrefixOf` T.toLower urlVal)
-          || not (TrialsServer.isValidHttpUrl urlVal)
-          || "#" `T.isInfixOf` urlVal ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " must be an absolute https URL without a fragment"
-            }
-      | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " path must not contain empty, dot, or dot-dot segments"
-            }
+      | "https://" `T.isPrefixOf` T.toLower urlVal
+          && TrialsServer.isValidHttpUrl urlVal
+        -> Right (Just urlVal)
       | otherwise ->
-          Right (Just urlVal)
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must be an absolute https URL"
+            }
 
 maxCourseRegistrationUrlChars :: Int
 maxCourseRegistrationUrlChars = 2048
@@ -5805,32 +5594,21 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                     <> T.pack (show maxCoursePublicUrlChars)
                     <> " characters or fewer"
             }
-      | not ("https://" `T.isPrefixOf` T.toLower urlVal)
-          || not (TrialsServer.isValidHttpUrl urlVal) ->
+      | "https://" `T.isPrefixOf` T.toLower urlVal
+          && TrialsServer.isValidHttpUrl urlVal ->
+          if fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal)
+            then
+              Left err400
+                { errBody =
+                    "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
+                }
+            else Right (Just urlVal)
+      | otherwise ->
           Left err400
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must be an absolute https URL"
             }
-      | "#" `T.isInfixOf` urlVal ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " must not include a URL fragment"
-            }
-      | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " path must not contain empty, dot, or dot-dot segments"
-            }
-      | fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal) ->
-          Left err400
-            { errBody =
-                "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
-            }
-      | otherwise ->
-          Right (Just urlVal)
 
 maxCoursePublicUrlChars :: Int
 maxCoursePublicUrlChars = 2048
@@ -5896,7 +5674,7 @@ isValidEmailLocalPart localPart =
 
 isValidEmailLocalChar :: Char -> Bool
 isValidEmailLocalChar c =
-  isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
@@ -5907,7 +5685,7 @@ isValidEmailDomainLabel label =
     && T.all isValidEmailDomainChar label
 
 isValidEmailDomainChar :: Char -> Bool
-isValidEmailDomainChar c = isAsciiLower c || isAsciiDecimalDigit c || c == '-'
+isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
 
 validateCourseRegistrationContactChannels :: Maybe Text -> Maybe Text -> Either ServerError ()
 validateCourseRegistrationContactChannels mEmail mPhone
@@ -6096,17 +5874,12 @@ generateUniqueUsername base partyId = go (0 :: Int)
     fallback = "tdf-user-" <> T.pack (show (fromSqlKey partyId))
     root = if T.null baseClean then fallback else baseClean
     go attempt = do
-      let candidate = buildCourseRegistrationUsernameCandidate root attempt
+      let suffix = if attempt == 0 then "" else "-" <> T.pack (show attempt)
+          candidate = T.take 60 (root <> suffix)
       conflict <- getBy (UniqueCredentialUsername candidate)
       case conflict of
         Nothing -> pure candidate
         Just _  -> go (attempt + 1)
-
-buildCourseRegistrationUsernameCandidate :: Text -> Int -> Text
-buildCourseRegistrationUsernameCandidate root attempt =
-  let suffix = if attempt <= 0 then "" else "-" <> T.pack (show attempt)
-      rootBudget = max 0 (60 - T.length suffix)
-  in T.take 60 (T.take rootBudget root <> suffix)
 
 slugify :: Text -> Text
 slugify =
@@ -6127,84 +5900,28 @@ findExistingRegistration
   -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
 findExistingRegistration slugVal mEmail mPhone = do
   byEmail <- case mEmail of
-    Nothing -> pure (Right Nothing)
-    Just e  -> selectCourseRegistrationFallback
-      "email"
+    Nothing -> pure Nothing
+    Just e  -> selectFirst
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationEmail ==. Just e
       ]
+      [Desc ME.CourseRegistrationCreatedAt]
   byPhone <- case mPhone of
-    Nothing -> pure (Right Nothing)
-    Just p -> selectCourseRegistrationFallback
-      "phone"
+    Nothing -> pure Nothing
+    Just p -> selectFirst
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationPhoneE164 ==. Just p
       ]
-  pure $ do
-    emailHit <- byEmail
-    phoneHit <- byPhone
-    case (emailHit, phoneHit) of
-      (Just emailRow, Just phoneRow)
-        | entityKey emailRow /= entityKey phoneRow ->
-            Left err409
-              { errBody =
-                  "email and phone match different course registrations"
-              }
-      _ ->
-        Right (emailHit <|> phoneHit)
-
-selectCourseRegistrationFallback
-  :: Text
-  -> [Filter ME.CourseRegistration]
-  -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
-selectCourseRegistrationFallback contactLabel filters = do
-  pendingMatches <-
-    selectList
-      (filters ++ [ME.CourseRegistrationStatus ==. "pending_payment"])
-      [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
-  case pendingMatches of
-    [] -> do
-      fallbackMatches <-
-        selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
-      pure $ do
-        validatedFallbackMatches <-
-          traverse validateStoredCourseRegistrationFallbackRow fallbackMatches
-        case validatedFallbackMatches of
-          [] -> Right Nothing
-          [fallbackRow] -> Right (Just fallbackRow)
-          _ ->
-            Left err409
-              { errBody =
-                  BL.fromStrict $
-                    TE.encodeUtf8
-                      ( "Multiple course registrations match this "
-                          <> contactLabel
-                          <> "; resolve duplicate rows before using public registration fallback"
-                      )
-              }
-    [pendingRow] -> pure (Right (Just pendingRow))
+      [Desc ME.CourseRegistrationCreatedAt]
+  pure $ case (byEmail, byPhone) of
+    (Just emailHit, Just phoneHit)
+      | entityKey emailHit /= entityKey phoneHit ->
+          Left err409
+            { errBody =
+                "email and phone match different course registrations"
+            }
     _ ->
-      pure $
-        Left err409
-          { errBody =
-              BL.fromStrict $
-                TE.encodeUtf8
-                  ( "Multiple pending course registrations match this "
-                      <> contactLabel
-                      <> "; resolve duplicate pending rows before updating a public registration"
-                  )
-          }
-
-validateStoredCourseRegistrationFallbackRow
-  :: Entity ME.CourseRegistration
-  -> Either ServerError (Entity ME.CourseRegistration)
-validateStoredCourseRegistrationFallbackRow row@(Entity _ reg) =
-  case normalizeCourseRegistrationStatus (ME.courseRegistrationStatus reg) of
-    Just _ -> Right row
-    Nothing ->
-      Left err500
-        { errBody = "Stored course registration status is invalid"
-        }
+      Right (byEmail <|> byPhone)
 
 -- Health
 health :: AppM TDF.API.HealthStatus
@@ -7403,11 +7120,10 @@ resolveServiceMarketplaceBookingEntity rawBookingId = do
 
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
+  when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
+    throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
   catalogId <- either throwError pure (validateServiceAdCatalogId sacServiceCatalogId)
-  roleTag <- either throwError pure (validateServiceAdRoleTag sacRoleTag)
-  headline <- either throwError pure (validateServiceAdHeadline sacHeadline)
-  description <- either throwError pure (validateServiceAdDescription sacDescription)
   currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
@@ -7421,9 +7137,9 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
   let record = ServiceAd
         { serviceAdProviderPartyId = auPartyId user
         , serviceAdServiceCatalogId = Just catalogKey
-        , serviceAdRoleTag = roleTag
-        , serviceAdHeadline = headline
-        , serviceAdDescription = description
+        , serviceAdRoleTag = T.strip sacRoleTag
+        , serviceAdHeadline = T.strip sacHeadline
+        , serviceAdDescription = normalizeOptionalInput sacDescription
         , serviceAdFeeCents = sacFeeCents
         , serviceAdCurrency = currency
         , serviceAdSlotMinutes = slotMinutes
@@ -8459,21 +8175,9 @@ validateOptionalCmsPayload :: Maybe Value -> Either ServerError (Maybe Value)
 validateOptionalCmsPayload Nothing = Right Nothing
 validateOptionalCmsPayload (Just Null) =
   Left err400 { errBody = "payload must be omitted instead of JSON null" }
-validateOptionalCmsPayload payload@(Just value@(Object _))
-  | BL.length (encode value) > fromIntegral maxCmsPayloadBytes =
-      Left err400
-        { errBody =
-            BL.fromStrict . TE.encodeUtf8 $
-              "payload must be "
-                <> T.pack (show maxCmsPayloadBytes)
-                <> " bytes or fewer"
-        }
-  | otherwise = Right payload
+validateOptionalCmsPayload payload@(Just (Object _)) = Right payload
 validateOptionalCmsPayload (Just _) =
   Left err400 { errBody = "payload must be a JSON object when present" }
-
-maxCmsPayloadBytes :: Int
-maxCmsPayloadBytes = 256 * 1024
 
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
@@ -8760,8 +8464,6 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Left err400 { errBody = "paymentProvider cannot be blank; use null to clear it" }
   | T.length normalized > 64 =
       Left err400 { errBody = "paymentProvider must be 64 characters or fewer" }
-  | not (T.any isPaymentProviderSlugAtom normalized) =
-      Left err400 { errBody = "paymentProvider must include at least one ASCII letter or digit" }
   | not (T.all isPaymentProviderSlugChar normalized) =
       Left err400
         { errBody =
@@ -8771,10 +8473,8 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Right (Just (Just normalized))
   where
     normalized = T.toLower (T.strip rawProvider)
-    isPaymentProviderSlugAtom ch =
-      isAsciiLower ch || isDigit ch
     isPaymentProviderSlugChar ch =
-      isPaymentProviderSlugAtom ch || ch == '-' || ch == '_'
+      isAsciiLower ch || isDigit ch || ch == '-' || ch == '_'
 
 marketplaceOrderStatusErrorBody :: BL.ByteString
 marketplaceOrderStatusErrorBody =
@@ -8866,16 +8566,6 @@ validateStoredPayPalOrderId rawStoredOrderId
   where
     storedOrderId = T.strip rawStoredOrderId
 
-validatePayPalCaptureOrderState :: Text -> Either ServerError ()
-validatePayPalCaptureOrderState rawStatus = do
-  status <- validateStoredMarketplaceOrderStatus rawStatus
-  case status of
-    "paypal_pending" -> Right ()
-    "paid" ->
-      Left err409 { errBody = "PayPal order has already been captured" }
-    _ ->
-      Left err409 { errBody = "Order is not awaiting PayPal capture" }
-
 normalizeMarketplaceOrderStatus :: Text -> Maybe Text
 normalizeMarketplaceOrderStatus rawStatus =
   case normalizeMarketplaceOrderStatusParts rawStatus of
@@ -8963,77 +8653,6 @@ validateServiceAdCatalogId Nothing =
 validateServiceAdCatalogId (Just rawCatalogId) =
   validatePositiveIdField "serviceCatalogId" rawCatalogId
 
-validateServiceAdRoleTag :: Text -> Either ServerError Text
-validateServiceAdRoleTag =
-  validateServiceAdRequiredText "roleTag" 80
-
-validateServiceAdHeadline :: Text -> Either ServerError Text
-validateServiceAdHeadline =
-  validateServiceAdRequiredText "headline" 160
-
-validateServiceAdDescription :: Maybe Text -> Either ServerError (Maybe Text)
-validateServiceAdDescription Nothing = Right Nothing
-validateServiceAdDescription (Just rawDescription) =
-  case normalizeOptionalInput (Just rawDescription) of
-    Nothing -> Right Nothing
-    Just description
-      | T.length description > 1000 ->
-          Left err400 { errBody = "description must be 1000 characters or fewer" }
-      | T.any isUnsafeServiceAdDescriptionChar description ->
-          Left err400
-            { errBody =
-                "description must not contain control characters other than tabs "
-                  <> "or line breaks, hidden formatting characters, or Unicode separators"
-            }
-      | otherwise ->
-          Right (Just description)
-
-validateServiceAdRequiredText :: Text -> Int -> Text -> Either ServerError Text
-validateServiceAdRequiredText fieldName maxChars rawText =
-  case normalizeOptionalInput (Just rawText) of
-    Nothing ->
-      Left err400
-        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
-        }
-    Just textVal
-      | T.length textVal > maxChars ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName
-                    <> " must be "
-                    <> T.pack (show maxChars)
-                    <> " characters or fewer"
-            }
-      | T.any isUnsafeServiceAdSingleLineChar textVal ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName
-                    <> " must not contain control characters, hidden formatting "
-                    <> "characters, or Unicode separators"
-            }
-      | not (T.any isAlphaNum textVal) ->
-          Left err400
-            { errBody =
-                BL.fromStrict . TE.encodeUtf8 $
-                  fieldName <> " must include letters or numbers"
-            }
-      | otherwise ->
-          Right textVal
-
-isUnsafeServiceAdSingleLineChar :: Char -> Bool
-isUnsafeServiceAdSingleLineChar ch =
-  isControl ch
-    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-    || (generalCategory ch == Space && ch /= ' ')
-
-isUnsafeServiceAdDescriptionChar :: Char -> Bool
-isUnsafeServiceAdDescriptionChar ch =
-  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
-    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
-    || (generalCategory ch == Space && ch /= ' ')
-
 validateServiceAdCurrency :: Maybe Text -> Either ServerError Text
 validateServiceAdCurrency = validateCurrencyCode
 
@@ -9119,11 +8738,6 @@ validateEngineer svc mEngineerId mEngineerName
   | Just engineerName <- mEngineerName
   , T.any isUnsafeEngineerNameFormattingChar (T.strip engineerName) =
       Left "engineerName no debe contener marcas Unicode invisibles"
-  | Just engineerName <- mEngineerName
-  , let engineerNameVal = T.strip engineerName
-  , not (T.null engineerNameVal)
-  , not (hasPublicBookingLabelContent engineerNameVal) =
-      Left "engineerName debe incluir letras o números"
   | requiresEngineer svc && isNothing mEngineerId && maybe True T.null (fmap T.strip mEngineerName) =
       Left "Selecciona un ingeniero para grabación/mezcla/mastering"
   | otherwise = Right ()
@@ -9624,7 +9238,6 @@ createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
   either throwBadRequest pure (validateInvoiceLineItemCount ciLineItems)
   currency <- either throwError pure (validateCurrencyCode ciCurrency)
-  number <- either throwBadRequest pure (validateInvoiceNumber ciNumber)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
@@ -9635,6 +9248,7 @@ createInvoice user CreateInvoiceReq{..} = do
   now <- liftIO getCurrentTime
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
+      number   = normalizeOptionalText ciNumber
       subtotal = sum (map plSubtotal preparedLines)
       taxTotal = sum (map plTax preparedLines)
       grand    = sum (map plTotal preparedLines)
@@ -9769,27 +9383,6 @@ validateInvoiceLineItemCount lineItems
           <> " line items"
   | otherwise =
       Right ()
-
-validateInvoiceNumber :: Maybe Text -> Either Text (Maybe Text)
-validateInvoiceNumber rawNumber =
-  case normalizeOptionalText rawNumber of
-    Nothing -> Right Nothing
-    Just number
-      | T.length number > maxInvoiceNumberChars ->
-          Left $
-            "Invoice number must be "
-              <> T.pack (show maxInvoiceNumberChars)
-              <> " characters or fewer"
-      | T.any isUnsafeInvoiceNumberChar number ->
-          Left "Invoice number must not contain control characters or Unicode formatting marks"
-      | otherwise -> Right (Just number)
-
-maxInvoiceNumberChars :: Int
-maxInvoiceNumberChars = 64
-
-isUnsafeInvoiceNumberChar :: Char -> Bool
-isUnsafeInvoiceNumberChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
 prepareLine CreateInvoiceLineReq{..} = do
@@ -10185,45 +9778,19 @@ userRolesServer user =
       userIdValid <- either throwError pure (validateUserRoleUserId userId)
       Env pool _ <- ask
       let credKey = toSqlKey userIdValid :: Key UserCredential
-      updateResult <- liftIO $ flip runSqlPool pool $ do
+      updated <- liftIO $ flip runSqlPool pool $ do
         mCred <- getEntity credKey
         case mCred of
-          Nothing -> pure (Left err404)
+          Nothing -> pure False
           Just (Entity _ cred) -> do
-            let targetPartyId = userCredentialPartyId cred
-            case validateUserRoleUpdateScope user targetPartyId payloadRoles of
-              Left err -> pure (Left err)
-              Right () -> do
-                applyRoles targetPartyId payloadRoles
-                pure (Right ())
-      either throwError pure updateResult
+            applyRoles (userCredentialPartyId cred) payloadRoles
+            pure True
+      unless updated $ throwError err404
       pure NoContent
 
 validateUserRoleUserId :: Int64 -> Either ServerError Int64
 validateUserRoleUserId =
   validatePositiveIdField "userId"
-
-validateUserRoleUpdateScope :: AuthedUser -> PartyId -> [RoleEnum] -> Either ServerError ()
-validateUserRoleUpdateScope AuthedUser{auPartyId = actorPartyId} targetPartyId nextRoles
-  | fromSqlKey targetPartyId <= 0 =
-      Left err500 { errBody = "Target user party id is invalid" }
-  | actorPartyId == targetPartyId =
-      case validateStrictAdminAccess selfAfterUpdate of
-        Right () -> Right ()
-        Left _ ->
-          Left err400
-            { errBody =
-                "Cannot change your own roles in a way that removes strict Admin access"
-            }
-  | otherwise =
-      Right ()
-  where
-    selfAfterUpdate =
-      AuthedUser
-        { auPartyId = targetPartyId
-        , auRoles = nextRoles
-        , auModules = modulesForRoles nextRoles
-        }
 
 loadUserRoleSummaries :: SqlPersistT IO [UserRoleSummaryDTO]
 loadUserRoleSummaries = do
@@ -10340,12 +9907,12 @@ validatePublicAdsAssistPartyId (Just _) =
 validateAdsAssistChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsAssistChannel Nothing = Right Nothing
 validateAdsAssistChannel (Just rawChannel) =
-  let channel = T.toLower (T.strip rawChannel)
-  in if T.null channel
-       then Left err400 { errBody = "channel must be omitted instead of blank" }
-       else if channel == "instagram" || channel == "facebook" || channel == "whatsapp"
-         then Right (Just channel)
-         else Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+  case T.toLower <$> normalizeOptionalInput (Just rawChannel) of
+    Nothing -> Right Nothing
+    Just "instagram" -> Right (Just "instagram")
+    Just "facebook" -> Right (Just "facebook")
+    Just "whatsapp" -> Right (Just "whatsapp")
+    _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
@@ -10474,13 +10041,12 @@ adsAssistPublic req = do
   finalReply <-
     case reply of
       Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
-      Left err
-        | shouldUseAdsAssistNoAiFallback err ->
-            pure (adsAssistNoAiFallback (envConfig env))
-      Left err ->
-        throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
-      _ ->
-        throwError err502 { errBody = "No pude generar una respuesta automática en este momento." }
+      Left err -> do
+        liftIO $ hPutStrLn stderr ("[ads/assist] AI generation failed, using fallback. Error: " <> T.unpack err)
+        pure (adsAssistNoAiFallback (envConfig env))
+      _ -> do
+        liftIO $ hPutStrLn stderr "[ads/assist] AI generation returned empty, using fallback."
+        pure (adsAssistNoAiFallback (envConfig env))
   pure AdsAssistResponse
     { aasReply = finalReply
     , aasUsedExamples = map adExampleToDTO examples
@@ -10492,8 +10058,17 @@ shouldUseAdsAssistNoAiFallback rawError =
   errorMessage == "openai_api_key no configurada"
     || errorMessage == "no pude generar una respuesta automática en este momento."
     || shouldRetryWithFallbackModel 404 rawError
+    || isAuthError errorMessage
   where
     errorMessage = T.toLower (T.strip rawError)
+    isAuthError msg =
+      any (`T.isInfixOf` msg)
+        [ "invalid authentication"
+        , "invalid api key"
+        , "incorrect api key"
+        , "authentication_error"
+        , "unauthorized"
+        ]
 
 adsAssistNoAiFallback :: AppConfig -> Text
 adsAssistNoAiFallback cfg =
@@ -10762,7 +10337,7 @@ instance FromJSON OpenAIChatMessage where
 data ChatCompletionReq = ChatCompletionReq
   { model :: Text
   , messages :: [OpenAIChatMessage]
-  , temperature :: Maybe Int
+  , temperature :: Maybe Double
   } deriving (Show, Generic)
 
 instance ToJSON ChatCompletionReq where
@@ -10945,9 +10520,6 @@ shouldRetryWithFallbackModel status rawMessage =
       , "invalid model name"
       , "not a valid model"
       , "model_not_found"
-      , "invalid temperature"
-      , "temperature is not supported"
-      , "only 1 is allowed for this model"
       ]
     nonFallbackMarkers =
       [ "rate limit"
@@ -11324,20 +10896,13 @@ matchSensitiveApiErrorField previous textValue
 sensitiveApiErrorFields :: [Text]
 sensitiveApiErrorFields =
   [ "access_token"
-  , "accesstoken"
   , "api_key"
   , "api-key"
   , "apikey"
   , "authorization"
-  , "bearer_token"
-  , "bearertoken"
   , "client_secret"
-  , "clientsecret"
   , "id_token"
-  , "idtoken"
   , "refresh_token"
-  , "refreshtoken"
-  , "x-api-key"
   ]
 
 parseSensitiveApiErrorField :: Text -> Text -> Text -> Maybe (Text, Text)
@@ -11991,6 +11556,7 @@ confirmDatafastPayment mOrderId mResourcePath = do
   now <- liftIO getCurrentTime
   code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
   let success = isDfPaymentSuccess code
+      pending = isDfPaymentPending code
   when success $
     either throwError pure $
       validateDatafastSuccessfulPaymentAmountAndCurrency
@@ -12015,14 +11581,12 @@ confirmDatafastPayment mOrderId mResourcePath = do
     validateOptionalDatafastMetadataField
       "Datafast acquirer code"
       (dfpResultDetails statusResp >>= dfrdAcquirerCode)
-  (nextStatus, paidAtVal) <-
-    either throwError pure $
-      resolveDatafastPaymentState
-        now
-        (ME.marketplaceOrderStatus order)
-        code
-        (ME.marketplaceOrderPaidAt order)
-  let updateFields =
+  let nextStatus
+        | success = "paid"
+        | pending = "datafast_pending"
+        | otherwise = "datafast_failed"
+      paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
+      updateFields =
         [ ME.MarketplaceOrderStatus =. nextStatus
         , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
         , ME.MarketplaceOrderPaidAt =. paidAtVal
@@ -12107,8 +11671,6 @@ capturePaypalOrder PaypalCaptureReq{..} = do
   case mOrder of
     Nothing -> throwError err404
     Just order -> do
-      either throwError pure $
-        validatePayPalCaptureOrderState (ME.marketplaceOrderStatus order)
       paypalOrderIdForCapture <- either throwError pure $
         validatePayPalCaptureOrderReference
           (ME.marketplaceOrderPaypalOrderId order)
@@ -12332,15 +11894,15 @@ isValidDatafastCheckoutId checkoutId =
 
 isDatafastCheckoutIdAtom :: Char -> Bool
 isDatafastCheckoutIdAtom c =
-  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c
+  isAsciiUpper c || isAsciiLower c || isDigit c
 
 isDatafastCheckoutIdChar :: Char -> Bool
 isDatafastCheckoutIdChar c =
-  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("-_." :: String)
+  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_." :: String)
 
 isDatafastResourcePathChar :: Char -> Bool
 isDatafastResourcePathChar c =
-  isAsciiUpper c || isAsciiLower c || isAsciiDecimalDigit c || c `elem` ("-_./" :: String)
+  isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("-_./" :: String)
 
 invalidDatafastCheckoutId :: Either ServerError a
 invalidDatafastCheckoutId =
@@ -12379,29 +11941,6 @@ isDfPaymentSuccess code =
 
 isDfPaymentPending :: Text -> Bool
 isDfPaymentPending code = code == "000.200.000"
-
-resolveDatafastPaymentState
-  :: UTCTime
-  -> Text
-  -> Text
-  -> Maybe UTCTime
-  -> Either ServerError (Text, Maybe UTCTime)
-resolveDatafastPaymentState now currentStatus resultCode currentPaidAt = do
-  currentStatusVal <- validateStoredMarketplaceOrderStatus currentStatus
-  case (isPaidMarketplaceOrderStatus currentStatusVal, currentPaidAt) of
-    (True, Just paidAt) ->
-      Right ("paid", Just paidAt)
-    (True, Nothing) ->
-      Left err500
-        { errBody = "Stored paid marketplace order is missing paidAt"
-        }
-    (False, _)
-      | isDfPaymentSuccess resultCode ->
-          Right ("paid", Just now)
-      | isDfPaymentPending resultCode ->
-          Right ("datafast_pending", currentPaidAt)
-      | otherwise ->
-          Right ("datafast_failed", currentPaidAt)
 
 validateDatafastResultCodeField :: Text -> Either ServerError Text
 validateDatafastResultCodeField rawCode
@@ -12481,12 +12020,10 @@ validateDatafastPaymentCurrencyField (Just rawCurrency) =
 
 parseDatafastAmountCents :: Text -> Maybe Int
 parseDatafastAmountCents rawAmount =
-  if T.length amount > maxDatafastAmountChars
-    then Nothing
-    else case T.splitOn "." amount of
-      [whole] -> parseParts whole "0"
-      [whole, fraction] -> parseParts whole fraction
-      _ -> Nothing
+  case T.splitOn "." amount of
+    [whole] -> parseParts whole "0"
+    [whole, fraction] -> parseParts whole fraction
+    _ -> Nothing
   where
     amount = T.strip rawAmount
 
@@ -12518,9 +12055,6 @@ parseDecimalDigits rawDigits =
 isAsciiDecimalDigit :: Char -> Bool
 isAsciiDecimalDigit ch =
   ch >= '0' && ch <= '9'
-
-maxDatafastAmountChars :: Int
-maxDatafastAmountChars = 32
 
 listMarketplaceOrders :: AuthedUser -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [MarketplaceOrderDTO]
 listMarketplaceOrders user mStatus mLimit mOffset = do
@@ -12797,37 +12331,28 @@ resolveMarketplaceOrderPaidAtForStatus
   -> Maybe UTCTime
   -> Maybe (Maybe UTCTime)
   -> Either ServerError (Maybe UTCTime)
-resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput = do
-  currentStatusVal <- validateStoredMarketplaceOrderStatus currentStatus
-  let statusFinal = fromMaybe currentStatusVal mNextStatus
-      isExplicitPaidAtForNonPaidStatus =
-        not (isPaidMarketplaceOrderStatus statusFinal)
-          && maybe False isJust paidAtInput
-      paidAtBase =
-        case paidAtInput of
-          Nothing -> currentPaidAt
-          Just value -> value
-      paidAtFinal =
-        if isNothing paidAtInput
-            && maybe False isPaidMarketplaceOrderStatus mNextStatus
-            && isNothing currentPaidAt
-          then Just now
-          else paidAtBase
-  if isExplicitPaidAtForNonPaidStatus
-    then Left err400 { errBody = "paidAt can only be set when status is paid" }
-    else
-      if isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal
-        then Left err400 { errBody = "paidAt is required when status is paid" }
-        else Right paidAtFinal
-
-validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
-validateStoredMarketplaceOrderStatus rawStatus =
-  case validateMarketplaceOrderStatusValue
-    "Stored marketplace order status is invalid"
-    "Stored marketplace order status is invalid"
-    rawStatus of
-      Right status -> Right status
-      Left _ -> Left err500 { errBody = "Stored marketplace order status is invalid" }
+resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaidAt paidAtInput
+  | isExplicitPaidAtForNonPaidStatus =
+      Left err400 { errBody = "paidAt can only be set when status is paid" }
+  | isPaidMarketplaceOrderStatus statusFinal && isNothing paidAtFinal =
+      Left err400 { errBody = "paidAt is required when status is paid" }
+  | otherwise =
+      Right paidAtFinal
+  where
+    statusFinal = fromMaybe currentStatus mNextStatus
+    isExplicitPaidAtForNonPaidStatus =
+      not (isPaidMarketplaceOrderStatus statusFinal)
+        && maybe False isJust paidAtInput
+    paidAtBase =
+      case paidAtInput of
+        Nothing -> currentPaidAt
+        Just value -> value
+    paidAtFinal =
+      if isNothing paidAtInput
+          && maybe False isPaidMarketplaceOrderStatus mNextStatus
+          && isNothing currentPaidAt
+        then Just now
+        else paidAtBase
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =
@@ -13118,11 +12643,7 @@ validateDatafastBaseUrl mRawBase
       Right (T.unpack (canonicalDatafastBaseUrl cleanBase))
   where
     rawBase = maybe "https://test.oppwa.com" T.pack mRawBase
-    rawBaseTrimmed = T.strip rawBase
-    cleanBase =
-      case T.unsnoc rawBaseTrimmed of
-        Just (baseWithoutTrailingSlash, '/') -> baseWithoutTrailingSlash
-        _ -> rawBaseTrimmed
+    cleanBase = T.dropWhileEnd (== '/') (T.strip rawBase)
 
     isHttpsOrigin rawUrl =
       T.all (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 rawUrl)
@@ -13131,7 +12652,7 @@ validateDatafastBaseUrl mRawBase
       case datafastOriginParts rawUrl of
         Just (host, portSuffix) ->
           (host == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` host)
-            && T.null portSuffix
+            && (T.null portSuffix || portSuffix == ":443")
         Nothing ->
           False
 
@@ -13499,16 +13020,13 @@ payPalApprovalUrlToken :: Text -> Maybe Text
 payPalApprovalUrlToken rawApprovalUrl = do
   (_, _, pathAndQuery) <- payPalApprovalUrlParts rawApprovalUrl
   query <- T.stripPrefix "/checkoutnow?" pathAndQuery
-  token <- case T.splitOn "&" query of
-    [singleParam] -> payPalApprovalUrlTokenParam singleParam
+  case T.splitOn "&" query of
+    [param] -> do
+      token <- T.stripPrefix "token=" param
+      if isValidPayPalOrderId token
+        then Just token
+        else Nothing
     _ -> Nothing
-  if isValidPayPalOrderId token
-    then Just token
-    else Nothing
-
-payPalApprovalUrlTokenParam :: Text -> Maybe Text
-payPalApprovalUrlTokenParam =
-  T.stripPrefix "token="
 
 capturePaypalOrderRemote
   :: Manager
@@ -13926,7 +13444,6 @@ cmsAdminServer user =
             updateWhere
               [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
               , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
-              , CMS.CmsContentStatus ==. "published"
               ]
               [ CMS.CmsContentStatus =. "archived" ]
             update contentKey
@@ -14075,7 +13592,7 @@ instance FromJSON DriveMetaResp where
 
 decodeDriveMetaResourceKeyIfSuccessful :: Int -> BL.ByteString -> Maybe Text
 decodeDriveMetaResourceKeyIfSuccessful responseStatus responseBodyBytes
-  | responseStatus /= 200 = Nothing
+  | responseStatus < 200 || responseStatus >= 300 = Nothing
   | otherwise =
       case eitherDecode responseBodyBytes of
         Right (DriveMetaResp key) -> key
@@ -14244,11 +13761,6 @@ resolveDrivePublicUrlAfterPermission
   mWebContentLink
   mUploadResourceKey
   mMetaResourceKey
-  | hasConflictingDriveResourceKeys
-      [ sanitizeDriveResourceKey mUploadResourceKey
-      , sanitizeDriveResourceKey mMetaResourceKey
-      ] =
-      Nothing
   | permissionStatus >= 200 && permissionStatus < 300 =
       Just (resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey)
   | otherwise =
@@ -14354,18 +13866,7 @@ singleDriveIdQueryParam rawUrl =
 
 drivePathSegments :: Text -> [Text]
 drivePathSegments rawUrl =
-  case T.stripPrefix "/" path of
-    Nothing ->
-      []
-    Just rawPathBody ->
-      let pathBody = T.dropWhileEnd (== '/') rawPathBody
-          segments =
-            if T.null pathBody
-              then []
-              else T.splitOn "/" pathBody
-      in if any isAmbiguousDrivePathSegment segments
-           then []
-           else segments
+  filter (not . T.null) (T.splitOn "/" path)
   where
     remainder = T.drop 8 rawUrl
     afterAuthority =
@@ -14373,10 +13874,6 @@ drivePathSegments rawUrl =
         (\c -> c /= '/' && c /= '?' && c /= '#')
         remainder
     path = T.takeWhile (\c -> c /= '?' && c /= '#') afterAuthority
-
-isAmbiguousDrivePathSegment :: Text -> Bool
-isAmbiguousDrivePathSegment segment =
-  T.null segment || segment == "." || segment == ".."
 
 queryParams :: Text -> [Text]
 queryParams url =
@@ -14479,25 +13976,8 @@ dropNamedQueryParam paramName url =
 
 isNamedQueryParam :: Text -> Text -> Bool
 isNamedQueryParam paramName rawParam =
-  case decodeAsciiQueryParamName (fst (T.breakOn "=" rawParam)) of
-    Just decodedName -> T.toLower decodedName == T.toLower paramName
-    Nothing -> False
-
-decodeAsciiQueryParamName :: Text -> Maybe Text
-decodeAsciiQueryParamName rawName =
-  if T.all validQueryParamNameChar decodedName
-    then Just decodedName
-    else Nothing
-  where
-    decodedName =
-      TE.decodeUtf8With TEE.lenientDecode $
-        urlDecode True (TE.encodeUtf8 rawName)
-
-validQueryParamNameChar :: Char -> Bool
-validQueryParamNameChar ch =
-  isAscii ch
-    && not (isControl ch)
-    && ch `notElem` (" \t\r\n=&?#%" :: String)
+  let rawName = fst (T.breakOn "=" rawParam)
+  in T.toLower rawName == T.toLower paramName
 
 appendQueryParam :: Text -> Text -> Text -> Text
 appendQueryParam paramName paramValue url =
