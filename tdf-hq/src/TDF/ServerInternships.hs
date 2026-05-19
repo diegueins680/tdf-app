@@ -29,7 +29,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
-import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectFirst, selectList, update, (==.), (=.), (<-.))
+import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectList, update, (==.), (=.), (<-.))
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
@@ -77,6 +77,17 @@ validateInternTaskProgressUpdate (Just rawProgress)
       Left err400 { errBody = "taskProgress must be between 0 and 100" }
   | otherwise =
       Right (Just rawProgress)
+
+selectUniqueActiveInternTimeEntry
+  :: [Entity ME.InternTimeEntry]
+  -> Either ServerError (Maybe (Entity ME.InternTimeEntry))
+selectUniqueActiveInternTimeEntry [] = Right Nothing
+selectUniqueActiveInternTimeEntry [entry] = Right (Just entry)
+selectUniqueActiveInternTimeEntry _ =
+  Left err409
+    { errBody =
+        "Multiple active clock-ins found; resolve time entries before changing clock state"
+    }
 
 validateInternPermissionDateRange :: Day -> Maybe Day -> Either ServerError ()
 validateInternPermissionDateRange _ Nothing = Right ()
@@ -690,7 +701,12 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
-      active <- withPool $ selectFirst [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing] [Desc ME.InternTimeEntryClockIn]
+      activeEntries <-
+        withPool $
+          selectList
+            [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing]
+            [Desc ME.InternTimeEntryClockIn, LimitTo 2]
+      active <- either throwError pure (selectUniqueActiveInternTimeEntry activeEntries)
       when (isJust active) $
         throwError err409 { errBody = "Already clocked in" }
       ent <- withPool $ do
@@ -711,7 +727,12 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
-      mOpen <- withPool $ selectFirst [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing] [Desc ME.InternTimeEntryClockIn]
+      openEntries <-
+        withPool $
+          selectList
+            [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing]
+            [Desc ME.InternTimeEntryClockIn, LimitTo 2]
+      mOpen <- either throwError pure (selectUniqueActiveInternTimeEntry openEntries)
       case mOpen of
         Nothing -> throwError err404 { errBody = "No active clock-in" }
         Just (Entity entryId entry) -> do
