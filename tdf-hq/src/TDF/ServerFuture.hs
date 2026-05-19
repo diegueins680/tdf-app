@@ -369,6 +369,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
        || hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreas validatedCatalog
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
+       || hasReservedSegmentLabelCollision reservedRoutes validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -442,6 +443,24 @@ validateFutureStubCatalogEndpointLeaves catalog = do
       in any
           ((`Set.member` reservedLeaves) . endpointLeaf . snd)
           catalogForAreas
+
+    hasReservedSegmentLabelCollision reservedRoutesForAreas catalogForAreas =
+      let reservedSegments =
+            Set.toList $
+              Set.fromList (concatMap (T.splitOn "/" . snd) reservedRoutesForAreas)
+      in any (routeHasReservedSegmentLabel reservedSegments) catalogForAreas
+
+    routeHasReservedSegmentLabel reservedSegments route@(_area, endpoint)
+      | route `elem` allowedFutureStubReservedSiblingRoutes = False
+      | otherwise =
+          any
+            (\segment -> any (segmentsOverlap segment) reservedSegments)
+            (T.splitOn "/" endpoint)
+
+    segmentsOverlap segment reservedSegment =
+      segment == reservedSegment
+        || reservedSegment `T.isPrefixOf` segment
+        || segment `T.isPrefixOf` reservedSegment
 
     leafPairs [] = []
     leafPairs (leaf:remaining) =

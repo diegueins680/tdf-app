@@ -12300,6 +12300,8 @@ spec = describe "TDF.Server helpers" $ do
                     ]
             validateFutureStubCatalogEndpointLeaves [("packages", "catalog")]
                 `shouldBe` Right [("packages", "catalog")]
+            validateFutureStubCatalogEndpointLeaves [("admin", "seed-policy")]
+                `shouldBe` Right [("admin", "seed-policy")]
 
             let assertInvalid catalog =
                     case validateFutureStubCatalogEndpointLeaves catalog of
@@ -12332,7 +12334,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid [("crm", "admin/settings")]
             assertInvalid [("inventory", "crm/assets")]
             assertInvalid [("crm", "users/console")]
+            assertInvalid [("crm", "console/settings")]
             assertInvalid [("inventory", "seed")]
+            assertInvalid [("crm", "seed-policy")]
             assertInvalid [("admin", "users/console")]
             assertInvalid [("admin", "jobs/seed")]
             assertInvalid [("crm", "catalog")]
