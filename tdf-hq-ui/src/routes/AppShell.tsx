@@ -86,6 +86,7 @@ export function Shell() {
     location.pathname === '/inicio'
     || location.pathname.startsWith('/records')
     || location.pathname.startsWith('/marketplace')
+    || location.pathname.startsWith('/operacion/ordenes-marketplace')
     || location.pathname.startsWith('/social/inbox')
     || location.pathname.startsWith('/configuracion/cursos')
     || location.pathname.startsWith('/configuracion/inscripciones-curso')

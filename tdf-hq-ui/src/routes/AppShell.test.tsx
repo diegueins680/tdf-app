@@ -59,6 +59,7 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
             />
             <Route path="/configuracion/usuarios-admin" element={<main>Admin users body</main>} />
             <Route path="/social/inbox" element={<main>Social inbox admin body</main>} />
+            <Route path="/operacion/ordenes-marketplace" element={<main>Marketplace orders admin body</main>} />
             <Route path="/configuracion/estado" element={<main>System status body</main>} />
             <Route path="/inicio" element={<main>Home body</main>} />
           </Route>
@@ -125,6 +126,20 @@ describe('Shell', () => {
 
     try {
       expect(container.textContent).toContain('Social inbox admin body');
+      expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
+      expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides global floating helpers on the dense marketplace orders admin page', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/operacion/ordenes-marketplace');
+
+    try {
+      expect(container.textContent).toContain('Marketplace orders admin body');
       expect(container.querySelector('[data-testid="api-status-chip"]')).toBeNull();
       expect(container.querySelector('[data-testid="chatkit-launcher"]')).toBeNull();
     } finally {
