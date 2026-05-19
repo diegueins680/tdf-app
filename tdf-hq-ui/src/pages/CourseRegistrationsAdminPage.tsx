@@ -67,7 +67,7 @@ const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH = 48;
 const INITIAL_COHORT_LABEL_PREVIEW_MIN_LENGTH = 24;
 const cleanInitialCohortPreviewLabel = (label: string) =>
-  label.trim().replace(/\s*[.!:;]+$/g, '').trim();
+  label.trim().replace(/^[¿¡]+\s*/g, '').replace(/\s*[.!?:;¿¡]+$/g, '').trim();
 const compactInitialCohortPreviewLabel = (label: string) => {
   const cleanLabel = cleanInitialCohortPreviewLabel(label);
   if (cleanLabel.length <= INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH) return cleanLabel;
