@@ -17985,6 +17985,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - recibo pago',
       'Factura de pago para Beatmaking 101',
       'Beatmaking 101 - evidencia de pago',
+      'Confirmación de pago para Beatmaking 101',
+      'Beatmaking 101 - confirmaciones de pago',
     ];
 
     for (const title of titles) {
