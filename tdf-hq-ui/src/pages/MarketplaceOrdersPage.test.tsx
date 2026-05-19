@@ -2449,6 +2449,53 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps the current order status out of the change menu so no-op actions are not offered', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: 'paypal',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(normalizeText(getSelectTriggerByLabel(document.body, 'Nuevo estado').textContent)).toBe('Sin cambios');
+        expect(document.body.textContent).toContain('Estado:');
+        expect(document.body.textContent).toContain('Pendiente');
+      });
+
+      const statusTrigger = getSelectTriggerByLabel(document.body, 'Nuevo estado');
+      await act(async () => {
+        statusTrigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const optionTexts = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]'))
+          .map((element) => normalizeText(element.textContent));
+
+        expect(optionTexts).toContain('Sin cambios');
+        expect(optionTexts).toContain('Pagado');
+        expect(optionTexts).not.toContain('Pendiente');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides the payment shortcut once a paid order already has payment data recorded', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

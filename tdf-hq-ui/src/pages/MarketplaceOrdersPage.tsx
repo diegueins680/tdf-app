@@ -705,6 +705,9 @@ export default function MarketplaceOrdersPage() {
   const showLatestStatusChangeSummary = selectedStatusHistory.length === 1 && Boolean(latestStatusChange);
   const showStatusHistorySection = selectedStatusHistory.length > 1;
   const showSelectedContactEmptyState = Boolean(selectedOrder && !selectedBuyerEmail && !selectedBuyerPhone);
+  const availableStatusUpdatePresets = selectedOrder
+    ? STATUS_PRESETS.filter((statusPreset) => statusPreset.value !== selectedOrder.moStatus)
+    : STATUS_PRESETS;
 
   return (
     <Box p={2}>
@@ -1343,7 +1346,7 @@ export default function MarketplaceOrdersPage() {
                             <MenuItem value="">
                               <em>Sin cambios</em>
                             </MenuItem>
-                            {STATUS_PRESETS.map((st) => (
+                            {availableStatusUpdatePresets.map((st) => (
                               <MenuItem key={st.value} value={st.value}>
                                 {st.label}
                               </MenuItem>
