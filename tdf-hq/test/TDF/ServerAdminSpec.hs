@@ -598,6 +598,14 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "uauRoles must be omitted instead of null"
                 (decodeUserAccountUpdate "{\"uauRoles\":null}")
 
+        it "rejects empty admin user updates instead of returning a successful no-op patch" $
+            case decodeUserAccountUpdate "{}" of
+                Left err ->
+                    err `shouldContain` "UserAccountUpdate must include at least one field"
+                Right payload ->
+                    expectationFailure
+                        ("Expected empty user update to fail, got " <> show payload)
+
     describe "ArtistReleaseUpsert FromJSON" $ do
         it "accepts canonical admin release write keys" $
             case decodeArtistReleaseUpsert

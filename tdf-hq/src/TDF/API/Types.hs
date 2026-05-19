@@ -309,9 +309,14 @@ instance FromJSON UserAccountUpdate where
       "UserAccountUpdate"
       ["uauUsername", "uauPassword", "uauActive", "uauRoles"]
       value
-    payload@UserAccountUpdate{uauRoles} <- genericParseJSON strictObjectOptions value
+    payload@UserAccountUpdate{uauUsername, uauPassword, uauActive, uauRoles} <-
+      genericParseJSON strictObjectOptions value
     validateUniqueRolePayload "uauRoles" uauRoles
-    pure payload
+    case (uauUsername, uauPassword, uauActive, uauRoles) of
+      (Nothing, Nothing, Nothing, Nothing) ->
+        fail "UserAccountUpdate must include at least one field"
+      _ ->
+        pure payload
 
 data AccountStatusDTO = AccountStatusActive | AccountStatusInactive
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
