@@ -12091,6 +12091,12 @@ spec = describe "TDF.Server helpers" $ do
                 reservedFutureStubRoutes
                 [("crm", "console settings")]
             assertInvalidBoundaryInput
+                reservedFutureStubRoutes
+                [("crm", "constructor/settings")]
+            assertInvalidBoundaryInput
+                reservedFutureStubRoutes
+                [("crm", "prototype/settings")]
+            assertInvalidBoundaryInput
                 [("admin", "seed"), ("admin", "seed")]
                 [("crm", "console/settings")]
             assertInvalidBoundaryInput

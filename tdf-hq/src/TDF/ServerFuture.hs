@@ -1025,10 +1025,17 @@ validFutureStubSlug :: Text -> Bool
 validFutureStubSlug slug =
   not (T.null slug)
     && T.length slug <= 64
+    && slug `notElem` reservedFutureStubSlugLabels
     && validFutureStubSlugStart (T.head slug)
     && T.last slug /= '-'
     && not ("--" `T.isInfixOf` slug)
     && T.all validFutureStubSlugChar slug
+
+reservedFutureStubSlugLabels :: [Text]
+reservedFutureStubSlugLabels =
+  [ "constructor"
+  , "prototype"
+  ]
 
 validFutureStubSlugStart :: Char -> Bool
 validFutureStubSlugStart ch =
