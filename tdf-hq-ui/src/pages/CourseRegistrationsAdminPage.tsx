@@ -1390,6 +1390,12 @@ const firstRunCourseNounDescriptorPrefixPattern =
 const firstRunCourseNounDescriptorSuffixPattern =
   /(?:\s*[-:/|]\s*|\s+(?:de|del|para(?:\s+el)?|for)\s+)(?:curso|course|clase|class|programa|program)\s*$/i;
 
+const firstRunWorkspaceBrandDescriptorPrefixPattern =
+  /^(?:tdf(?:\s+(?:records?|academy|school|label|hq))?|the\s+domo\s+factory)\s*[-:/|]\s*/i;
+
+const firstRunWorkspaceBrandDescriptorSuffixPattern =
+  /\s*[-:/|]\s*(?:tdf(?:\s+(?:records?|academy|school|label|hq))?|the\s+domo\s+factory)\s*$/i;
+
 const firstRunUntitledDescriptorPrefixPattern =
   /^(?:(?:untitled|sin\s+t[ií]tulo)(?=\s*(?:[-:/|]|$))|untitled\s+(?:forms?|pages?|portals?|links?|urls?)|new\s+(?:forms?|pages?|portals?|links?|urls?)|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2117,6 +2123,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunSpanishRegistrationNounPrefixPattern, '')
+    .replace(firstRunWorkspaceBrandDescriptorPrefixPattern, '')
     .replace(firstRunUntitledDescriptorPrefixPattern, '')
     .replace(firstRunNumberedGenericFormDescriptorPrefixPattern, '')
     .replace(firstRunOnboardingDescriptorPrefixPattern, '')
@@ -2237,6 +2244,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunWorkspaceBrandDescriptorSuffixPattern, '')
     .replace(firstRunUntitledDescriptorSuffixPattern, '')
     .replace(firstRunNumberedGenericFormDescriptorSuffixPattern, '')
     .replace(firstRunOnboardingDescriptorSuffixPattern, '')
