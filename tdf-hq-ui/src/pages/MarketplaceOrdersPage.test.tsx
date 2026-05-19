@@ -83,7 +83,7 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
   ...overrides,
 });
 
-const orderSearchLabel = 'Buscar por comprador, contacto o ID';
+const orderSearchLabel = 'Buscar por comprador, contacto o pedido';
 const firstOrderEmptyStateMessage =
   'Todavía no hay órdenes. Comparte el marketplace para recibir la primera; cuando llegue, aparecerá aquí con estado, pago y datos del comprador.';
 
@@ -519,6 +519,37 @@ describe('MarketplaceOrdersPage', () => {
         );
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps order search phrased around visible order language without browser suggestion chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({ moOrderId: 'order-1' }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabel(container, orderSearchLabel);
+
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(1);
+        expect(countLabelsByText(container, 'Buscar por comprador, contacto o ID')).toBe(0);
+        expect(searchInput.getAttribute('autocomplete')).toBe('off');
+        expect(searchInput.getAttribute('spellcheck')).toBe('false');
       });
     } finally {
       await cleanup();

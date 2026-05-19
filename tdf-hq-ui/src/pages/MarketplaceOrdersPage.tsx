@@ -735,12 +735,14 @@ export default function MarketplaceOrdersPage() {
             <Grid item xs={12} md={5} lg={4}>
               <TextField
                 fullWidth
-                label="Buscar por comprador, contacto o ID"
+                label="Buscar por comprador, contacto o pedido"
                 value={search}
+                autoComplete="off"
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                   const nextSearch = e.target.value;
                   setSearch(nextSearch.trim() === '' ? '' : nextSearch);
                 }}
+                inputProps={{ spellCheck: false }}
                 InputProps={{
                   endAdornment: hasSearchInput ? (
                     <InputAdornment position="end">
