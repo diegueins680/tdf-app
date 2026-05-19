@@ -11971,7 +11971,6 @@ confirmDatafastPayment mOrderId mResourcePath = do
   now <- liftIO getCurrentTime
   code <- either throwError pure (validateDatafastResultCodeField (dfrCode (dfpResult statusResp)))
   let success = isDfPaymentSuccess code
-      pending = isDfPaymentPending code
   when success $
     either throwError pure $
       validateDatafastSuccessfulPaymentAmountAndCurrency
@@ -11996,12 +11995,14 @@ confirmDatafastPayment mOrderId mResourcePath = do
     validateOptionalDatafastMetadataField
       "Datafast acquirer code"
       (dfpResultDetails statusResp >>= dfrdAcquirerCode)
-  let nextStatus
-        | success = "paid"
-        | pending = "datafast_pending"
-        | otherwise = "datafast_failed"
-      paidAtVal = if success then Just now else ME.marketplaceOrderPaidAt order
-      updateFields =
+  (nextStatus, paidAtVal) <-
+    either throwError pure $
+      resolveDatafastPaymentState
+        now
+        (ME.marketplaceOrderStatus order)
+        code
+        (ME.marketplaceOrderPaidAt order)
+  let updateFields =
         [ ME.MarketplaceOrderStatus =. nextStatus
         , ME.MarketplaceOrderPaymentProvider =. Just "datafast"
         , ME.MarketplaceOrderPaidAt =. paidAtVal
@@ -12358,6 +12359,29 @@ isDfPaymentSuccess code =
 
 isDfPaymentPending :: Text -> Bool
 isDfPaymentPending code = code == "000.200.000"
+
+resolveDatafastPaymentState
+  :: UTCTime
+  -> Text
+  -> Text
+  -> Maybe UTCTime
+  -> Either ServerError (Text, Maybe UTCTime)
+resolveDatafastPaymentState now currentStatus resultCode currentPaidAt = do
+  currentStatusVal <- validateStoredMarketplaceOrderStatus currentStatus
+  case (isPaidMarketplaceOrderStatus currentStatusVal, currentPaidAt) of
+    (True, Just paidAt) ->
+      Right ("paid", Just paidAt)
+    (True, Nothing) ->
+      Left err500
+        { errBody = "Stored paid marketplace order is missing paidAt"
+        }
+    (False, _)
+      | isDfPaymentSuccess resultCode ->
+          Right ("paid", Just now)
+      | isDfPaymentPending resultCode ->
+          Right ("datafast_pending", currentPaidAt)
+      | otherwise ->
+          Right ("datafast_failed", currentPaidAt)
 
 validateDatafastResultCodeField :: Text -> Either ServerError Text
 validateDatafastResultCodeField rawCode

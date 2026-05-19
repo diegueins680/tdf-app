@@ -245,6 +245,7 @@ import TDF.Server
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
       validateOptionalDatafastMetadataField,
+      resolveDatafastPaymentState,
       validateDatafastCredential,
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
@@ -5965,6 +5966,29 @@ main = hspec $ do
                 "Datafast auth code"
                 ("AUTH" <> Data.Text.singleton '\x202E' <> "123")
             assertInvalid "Datafast acquirer code" (Data.Text.replicate 513 "A")
+
+    describe "resolveDatafastPaymentState" $ do
+        it "keeps paid Datafast orders terminal across repeated or stale confirmations" $ do
+            let now = UTCTime (fromGregorian 2026 5 15) (secondsToDiffTime 43200)
+                paidAt = addUTCTime (-3600) now
+
+            resolveDatafastPaymentState now "datafast_pending" "000.000.000" Nothing
+                `shouldBe` Right ("paid", Just now)
+            resolveDatafastPaymentState now "datafast_pending" "000.200.000" Nothing
+                `shouldBe` Right ("datafast_pending", Nothing)
+            resolveDatafastPaymentState now "paid" "000.000.000" (Just paidAt)
+                `shouldBe` Right ("paid", Just paidAt)
+            resolveDatafastPaymentState now "paid" "800.100.100" (Just paidAt)
+                `shouldBe` Right ("paid", Just paidAt)
+
+            case resolveDatafastPaymentState now "paid" "000.000.000" Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err)
+                        `shouldContain` "Stored paid marketplace order is missing paidAt"
+                Right value ->
+                    expectationFailure
+                        ("Expected missing paidAt invariant failure, got " <> show value)
 
     describe "validatePayPalApprovalUrl" $ do
         it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do
