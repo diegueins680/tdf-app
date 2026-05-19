@@ -2381,7 +2381,18 @@ const sourceAliasKeyVariants = (sourceKey: string) => {
 
   addPluralVariants(sourceKey);
 
-  for (const containerSuffix of ['response', 'responses', 'submission', 'submissions']) {
+  for (const containerSuffix of [
+    'entry',
+    'entries',
+    'record',
+    'records',
+    'response',
+    'responses',
+    'result',
+    'results',
+    'submission',
+    'submissions',
+  ]) {
     if (sourceKey.endsWith(` ${containerSuffix}`)) {
       const baseSourceKey = sourceKey.replace(new RegExp(`\\s+${containerSuffix}$`), '');
       variants.add(baseSourceKey);
