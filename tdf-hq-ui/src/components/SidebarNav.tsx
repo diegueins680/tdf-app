@@ -69,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Comunidad', path: '/fans' },
       { label: 'Tienda', path: '/marketplace' },
-      { label: 'Lanzamientos', path: '/records' },
+      { label: 'Lanzamientos públicos', path: '/records' },
       { label: 'Conexiones', path: '/social' },
       { label: 'Instagram', path: '/social/instagram' },
       { label: 'Chat', path: '/chat' },

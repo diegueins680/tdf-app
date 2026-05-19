@@ -4,7 +4,7 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   inicio: 'Inicio',
   marketplace: 'Tienda',
   fans: 'Comunidad',
-  records: 'Lanzamientos',
+  records: 'Lanzamientos públicos',
   'mi-profesor': 'Portal del profesor',
   crm: 'CRM',
   contactos: 'Contactos',
