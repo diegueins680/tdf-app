@@ -11310,13 +11310,19 @@ matchSensitiveApiErrorField previous textValue
 sensitiveApiErrorFields :: [Text]
 sensitiveApiErrorFields =
   [ "access_token"
+  , "accesstoken"
   , "api_key"
   , "api-key"
   , "apikey"
   , "authorization"
+  , "bearer_token"
+  , "bearertoken"
   , "client_secret"
+  , "clientsecret"
   , "id_token"
+  , "idtoken"
   , "refresh_token"
+  , "refreshtoken"
   , "x-api-key"
   ]
 

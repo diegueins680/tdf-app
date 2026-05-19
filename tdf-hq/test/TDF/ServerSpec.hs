@@ -5928,6 +5928,25 @@ spec = describe "TDF.Server helpers" $ do
             formatted `shouldSatisfy` (notElem '\n')
             length formatted `shouldSatisfy` (<= 560)
 
+        it "redacts camelCase upstream token fields before returning Drive upload errors" $ do
+            let formatted =
+                    formatDriveUploadFailure
+                        403
+                        ( BL8.pack $
+                            "{\"accessToken\":\"ya29.drive-secret\","
+                                <> "\"refreshToken\":\"1//refresh-secret\","
+                                <> "\"clientSecret\":\"client-secret\","
+                                <> "\"bearerToken\":\"df-bearer\"}"
+                        )
+            formatted `shouldContain` "\"accessToken\":\"[redacted]\""
+            formatted `shouldContain` "\"refreshToken\":\"[redacted]\""
+            formatted `shouldContain` "\"clientSecret\":\"[redacted]\""
+            formatted `shouldContain` "\"bearerToken\":\"[redacted]\""
+            formatted `shouldNotContain` "ya29.drive-secret"
+            formatted `shouldNotContain` "1//refresh-secret"
+            formatted `shouldNotContain` "client-secret"
+            formatted `shouldNotContain` "df-bearer"
+
     describe "formatGoogleOAuthFailure" $ do
         it "bounds and sanitizes upstream OAuth failures before Drive or Calendar fallback handling" $ do
             let formatted =
