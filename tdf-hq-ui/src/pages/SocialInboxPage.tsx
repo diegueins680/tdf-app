@@ -58,7 +58,7 @@ const reviewSelectedAssetEmptyStateTitle = 'Waiting for the first inbound messag
 const reviewSelectedAssetEmptyStateMessage =
   'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.';
 const normalInboxReadySubtitle = 'Mensajes entrantes y respuestas por canal.';
-const normalInboxLoadingSubtitle = 'Cargando mensajes entrantes antes de mostrar filtros y canales.';
+const normalInboxLoadingSubtitle = 'Preparando inbox social.';
 const normalInboxEmptySubtitle = 'Primer mensaje entrante pendiente.';
 const normalInboxErrorSubtitle = 'No se pudieron cargar los canales del inbox.';
 

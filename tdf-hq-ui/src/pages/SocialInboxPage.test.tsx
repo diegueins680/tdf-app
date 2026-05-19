@@ -411,11 +411,13 @@ describe('SocialInboxPage', () => {
     const { cleanup } = await renderPage(container, '/social/inbox');
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
-        'Cargando mensajes entrantes antes de mostrar filtros y canales.',
-      );
+      expect(container.textContent).toContain('Preparando inbox social.');
       expect(container.textContent).toContain(
         'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.',
+      );
+      expect(countTextOccurrences(container, 'filtros y canales')).toBe(1);
+      expect(container.textContent).not.toContain(
+        'Cargando mensajes entrantes antes de mostrar filtros y canales.',
       );
       expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
