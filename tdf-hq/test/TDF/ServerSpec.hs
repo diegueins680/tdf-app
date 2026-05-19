@@ -9619,15 +9619,18 @@ spec = describe "TDF.Server helpers" $ do
                         ( BL8.pack
                             ( "POST /messages?access_token=page-token"
                                 <> "&appsecret_proof=proof failed: "
+                                <> "Authorization: Bearer page-bearer-token "
                                 <> "{\"error\":{\"message\":\"client_secret=app-secret\","
                                 <> "\"code\":190}}"
                             )
                         )
             formatted `shouldSatisfy` T.isInfixOf "access_token=[redacted]"
             formatted `shouldSatisfy` T.isInfixOf "appsecret_proof=[redacted]"
+            formatted `shouldSatisfy` T.isInfixOf "Bearer [redacted]"
             formatted `shouldSatisfy` T.isInfixOf "client_secret=[redacted]"
             formatted `shouldSatisfy` T.isInfixOf "\"code\":190"
             formatted `shouldNotSatisfy` T.isInfixOf "page-token"
+            formatted `shouldNotSatisfy` T.isInfixOf "page-bearer-token"
             formatted `shouldNotSatisfy` T.isInfixOf "app-secret"
 
     describe "validateSocialReplyBody" $ do

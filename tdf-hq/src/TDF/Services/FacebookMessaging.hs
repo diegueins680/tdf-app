@@ -91,7 +91,44 @@ truncateGraphErrorBody bodyTxt
   | otherwise = T.take maxFacebookGraphErrorBodyChars bodyTxt <> "..."
 
 redactFacebookGraphSecrets :: Text -> Text
-redactFacebookGraphSecrets = go Nothing
+redactFacebookGraphSecrets =
+  redactFacebookGraphBearerTokens . redactFacebookGraphFields
+
+redactFacebookGraphBearerTokens :: Text -> Text
+redactFacebookGraphBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchFacebookGraphBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchFacebookGraphBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchFacebookGraphBearerToken previous textValue
+  | not (isFacebookSecretFieldBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) = consumeValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between
+            || T.null tokenValue
+            || not (T.any isFacebookGraphBearerTokenAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+isFacebookGraphBearerTokenAtom :: Char -> Bool
+isFacebookGraphBearerTokenAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+redactFacebookGraphFields :: Text -> Text
+redactFacebookGraphFields = go Nothing
   where
     go _ textValue
       | T.null textValue = ""
