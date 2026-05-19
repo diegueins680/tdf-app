@@ -12291,6 +12291,70 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats import and migration sources as admin plumbing in busy lists', async () => {
+    const defaultSources = [
+      'manual_import',
+      'bulk_upload',
+      'csv_import',
+      'legacy_migration',
+      'data_migration',
+      'database_import',
+      'seed_data',
+      'importacion_manual',
+      'migracion_de_datos',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Manual import',
+      'Bulk upload',
+      'Csv import',
+      'Legacy migration',
+      'Data migration',
+      'Database import',
+      'Seed data',
+      'Importacion manual',
+      'Migracion de datos',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'manual import');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "manual import" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats link-in-bio source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'linktree_link',
