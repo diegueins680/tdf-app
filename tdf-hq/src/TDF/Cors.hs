@@ -18,7 +18,7 @@ import Data.Char
   , ord
   , toLower
   )
-import Data.List (dropWhileEnd, intercalate, isSuffixOf, nub)
+import Data.List (dropWhileEnd, intercalate, isInfixOf, isSuffixOf, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
 
@@ -262,12 +262,17 @@ parseHttpBaseOrigin raw
       BS.null suffix
         || ( "/" `BS.isPrefixOf` suffix
              && not (hasAmbiguousBasePath suffix)
+             && not (hasEncodedAmbiguousBasePath suffix)
              && not (BS.any (\c -> c == '?' || c == '#' || c == '\\') suffix)
            )
 
     hasAmbiguousBasePath suffix =
       hasRepeatedPathSeparator suffix
         || any (`elem` ["..", "."]) (BS.split '/' (BS.drop 1 suffix))
+
+    hasEncodedAmbiguousBasePath suffix =
+      let lowered = BS.unpack (BS.map toLower suffix)
+      in any (`isInfixOf` lowered) ["%2e", "%2f", "%5c"]
 
     hasRepeatedPathSeparator suffix =
       BS.length suffix >= 2
