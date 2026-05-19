@@ -248,16 +248,28 @@ validateSignupArtistClaimEmail signupEmail storedArtistEmail =
 
 validateSignupFanArtistIds :: Maybe [Int64] -> Either ServerError [Int64]
 validateSignupFanArtistIds Nothing = Right []
-validateSignupFanArtistIds (Just rawArtistIds) = do
-  artistIds <- traverse validateArtistId rawArtistIds
-  if length (nub artistIds) == length artistIds
-    then Right artistIds
-    else
+validateSignupFanArtistIds (Just rawArtistIds)
+  | length rawArtistIds > maxSignupFanArtistIds =
       Left err400
         { errBody =
             BL.fromStrict
-              (TE.encodeUtf8 "fanArtistIds must not contain duplicate artist ids")
+              ( TE.encodeUtf8
+                  ( "fanArtistIds must include "
+                      <> T.pack (show maxSignupFanArtistIds)
+                      <> " artists or fewer"
+                  )
+              )
         }
+  | otherwise = do
+      artistIds <- traverse validateArtistId rawArtistIds
+      if length (nub artistIds) == length artistIds
+        then Right artistIds
+        else
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "fanArtistIds must not contain duplicate artist ids")
+            }
   where
     validateArtistId artistId
       | artistId > 0 = Right artistId
@@ -267,6 +279,9 @@ validateSignupFanArtistIds (Just rawArtistIds) = do
                 BL.fromStrict
                   (TE.encodeUtf8 "fanArtistIds must contain only positive integers")
             }
+
+maxSignupFanArtistIds :: Int
+maxSignupFanArtistIds = 50
 
 validateSignupFanArtistTargets :: [Int64] -> SqlPersistT IO (Either ServerError [Int64])
 validateSignupFanArtistTargets artistIds =

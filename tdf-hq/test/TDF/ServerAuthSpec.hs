@@ -39,6 +39,7 @@ import TDF.ServerAuth
   , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
   , validateSignupDisplayName
+  , validateSignupFanArtistIds
   , validateSignupGoogleIdToken
   , validateOptionalSignupPhone
   )
@@ -56,6 +57,7 @@ spec = do
   signupDisplayNameSpec
   signupGoogleIdTokenSpec
   signupPhoneSpec
+  signupFanArtistIdsSpec
   signupArtistClaimEmailSpec
   passwordResetTokenSpec
   googleIdTokenInputSpec
@@ -425,6 +427,19 @@ signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
         , '\x0664'
         , '\x0665'
         ]
+
+signupFanArtistIdsSpec :: Spec
+signupFanArtistIdsSpec = describe "validateSignupFanArtistIds" $
+  it "rejects oversized fan artist lists before signup target fallback lookup" $ do
+    let artistIds = [1..51] :: [Int64]
+    case validateSignupFanArtistIds (Just artistIds) of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err)
+          `shouldContain` "fanArtistIds must include 50 artists or fewer"
+      Right value ->
+        expectationFailure
+          ("Expected oversized fanArtistIds to be rejected, got " <> show value)
 
 signupArtistClaimEmailSpec :: Spec
 signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
