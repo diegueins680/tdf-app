@@ -1362,6 +1362,12 @@ const firstRunUntitledDescriptorPrefixPattern =
 const firstRunUntitledDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:untitled(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|new\s+(?:forms?|pages?|portals?|links?|urls?)|sin\s+t[ií]tulo|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))\s*$/i;
 
+const firstRunNumberedGenericFormDescriptorPrefixPattern =
+  /^(?:(?:forms?|formularios?)\s*(?:#?\s*\d+|n(?:o|[úu]mero)\.?\s*\d+))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunNumberedGenericFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:forms?|formularios?)\s*(?:#?\s*\d+|n(?:o|[úu]mero)\.?\s*\d+))\s*$/i;
+
 const firstRunVariantDescriptorPrefixPattern =
   /^(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2049,6 +2055,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunSpanishRegistrationNounPrefixPattern, '')
     .replace(firstRunUntitledDescriptorPrefixPattern, '')
+    .replace(firstRunNumberedGenericFormDescriptorPrefixPattern, '')
     .replace(firstRunOnboardingDescriptorPrefixPattern, '')
     .replace(firstRunOrientationDescriptorPrefixPattern, '')
     .replace(firstRunCohortDescriptorPrefixPattern, '')
@@ -2164,6 +2171,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunUntitledDescriptorSuffixPattern, '')
+    .replace(firstRunNumberedGenericFormDescriptorSuffixPattern, '')
     .replace(firstRunOnboardingDescriptorSuffixPattern, '')
     .replace(firstRunOrientationDescriptorSuffixPattern, '')
     .replace(firstRunCohortDescriptorSuffixPattern, '')
