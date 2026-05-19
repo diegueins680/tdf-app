@@ -84,6 +84,8 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
 });
 
 const orderSearchLabel = 'Buscar por comprador, contacto o ID';
+const firstOrderEmptyStateMessage =
+  'Todavía no hay órdenes. Comparte el marketplace para recibir la primera; cuando llegue, aparecerá aquí con estado, pago y datos del comprador.';
 
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
@@ -330,9 +332,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
-        expect(container.textContent).toContain(
-          'Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.',
-        );
+        expect(container.textContent).toContain(firstOrderEmptyStateMessage);
+        expect(container.textContent).not.toContain('búsqueda, filtros y exportación');
+        expect(container.textContent).not.toContain('revisar la bandeja');
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(container.textContent).not.toContain('0 pagados');
         expect(container.textContent).not.toContain('0 pendientes');

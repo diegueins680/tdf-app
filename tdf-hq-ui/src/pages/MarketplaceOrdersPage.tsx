@@ -145,6 +145,8 @@ const shouldShowBuyerPhoneDetail = (
 };
 const MIN_PHONE_SEARCH_DIGITS = 4;
 const MIN_DEFAULT_CSV_EXPORT_ORDERS = 8;
+const FIRST_ORDER_EMPTY_STATE_MESSAGE =
+  'Todavía no hay órdenes. Comparte el marketplace para recibir la primera; cuando llegue, aparecerá aquí con estado, pago y datos del comprador.';
 const formatPaymentProvider = (value?: string | null) => (
   normalizeProviderFilterValue(value) ? getMarketplacePaymentProviderLabel(value ?? '') : '—'
 );
@@ -1006,7 +1008,7 @@ export default function MarketplaceOrdersPage() {
                 </Button>
               )}
             >
-              Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.
+              {FIRST_ORDER_EMPTY_STATE_MESSAGE}
             </Alert>
           )}
           {singleVisibleOrder && (
