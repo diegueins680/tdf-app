@@ -11041,8 +11041,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).not.toContain('Mostrando 9 de 9 inscripciones cargadas.');
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -11225,8 +11225,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('No hay coincidencias para "999"');
       expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -11262,8 +11262,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('No hay coincidencias para "0999"');
       expect(container.textContent).not.toContain('Mostrando 0 de 9 inscripciones cargadas.');
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -11301,8 +11301,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Para buscar por teléfono, usa al menos 4 dígitos del número.',
       );
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
@@ -14654,7 +14654,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('uses one explicit empty-search recovery action instead of an icon-only clear control', async () => {
+  it('keeps empty-search clear attached to the field so the recovery alert stays focused', async () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
 
     const container = document.createElement('div');
@@ -14689,13 +14689,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Vista única por ahora');
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
@@ -14748,8 +14748,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch?.getAttribute('aria-label')).toBe(
         `Beatmaking 101 · Pendiente de pago. No hay coincidencias para "${longQuery}" en las 9 inscripciones cargadas.`,
       );
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
@@ -14798,14 +14798,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Estado filtrado');
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-active-status-summary"]')).toBeNull();
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
@@ -15470,11 +15470,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Buscar en más registros')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(container.querySelectorAll('[aria-label^="Filtrar inscripciones por estado "]')).toHaveLength(0);
@@ -15496,12 +15496,12 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(0);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
       expect(countButtonsByText(container, 'Ocultar límite')).toBe(0);
-      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 
     await act(async () => {
-      clickButton(getButtonByText(container, 'Limpiar búsqueda'));
+      clickButton(getButtonByAriaLabel(container, 'Limpiar búsqueda'));
       await flushPromises();
       await flushPromises();
     });
@@ -15598,13 +15598,13 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(limitRecoveryAction.getAttribute('title')).toBe(emptySearchLimitRecoveryTitle);
       expect(countButtonsByText(emptySearch!, 'Aumentar límite')).toBe(0);
       expect(countButtonsByText(emptySearch!, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(1);
+      expect(countButtonsByText(emptySearch!, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain('Estado disponible');
       expect(countButtonsByText(container, emptySearchLimitRecoveryLabel)).toBe(1);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(0);
-      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(1);
-      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+      expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
+      expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
     });
 
     await cleanup();

@@ -4723,9 +4723,7 @@ export default function CourseRegistrationsAdminPage() {
     : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
-  const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchResults;
-  const showEmptyLocalSearchAlertClearAction = showEmptyLocalSearchResults
-    && !showLocalSearchInlineClearAction;
+  const showLocalSearchInlineClearAction = hasLocalSearch;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -7450,25 +7448,18 @@ export default function CourseRegistrationsAdminPage() {
               data-testid="course-registration-empty-local-search"
               aria-label={emptyLocalSearchResultsAccessibleLabel}
               title={emptyLocalSearchResultsAccessibleLabel}
-              action={showEmptyLocalSearchLimitRecoveryAction || showEmptyLocalSearchAlertClearAction ? (
+              action={showEmptyLocalSearchLimitRecoveryAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {showEmptyLocalSearchLimitRecoveryAction && (
-                    <Button
-                      color="inherit"
-                      size="small"
-                      onClick={handleToggleAdvancedFilters}
-                      aria-expanded={showAdvancedFilters}
-                      aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
-                      title={emptyLocalSearchLimitRecoveryTitle}
-                    >
-                      {emptyLocalSearchLimitRecoveryLabel}
-                    </Button>
-                  )}
-                  {showEmptyLocalSearchAlertClearAction && (
-                    <Button color="inherit" size="small" onClick={handleClearLocalSearch}>
-                      Limpiar búsqueda
-                    </Button>
-                  )}
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleToggleAdvancedFilters}
+                    aria-expanded={showAdvancedFilters}
+                    aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
+                    title={emptyLocalSearchLimitRecoveryTitle}
+                  >
+                    {emptyLocalSearchLimitRecoveryLabel}
+                  </Button>
                 </Stack>
               ) : undefined}
             >
