@@ -5385,20 +5385,20 @@ validateAdsInquiryContactChannels mEmail mPhone
 validateAdsInquiryChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsInquiryChannel Nothing = Right Nothing
 validateAdsInquiryChannel (Just rawChannel) =
-  case normalizeOptionalInput (Just rawChannel) of
-    Nothing -> Right Nothing
-    Just channel ->
-      let channelVal = T.toLower channel
-      in if T.length channelVal <= 64
-            && T.all isChannelChar channelVal
-            && T.any isChannelAtom channelVal
-           then Right (Just channelVal)
-           else
-             Left err400
-               { errBody =
-                   "channel must be an ASCII keyword using letters, numbers, underscores, "
-                     <> "or hyphens (64 chars max)"
-               }
+  let channel = T.strip rawChannel
+      channelVal = T.toLower channel
+  in if T.null channel
+       then Left err400 { errBody = "channel must be omitted instead of blank" }
+       else if T.length channelVal <= 64
+             && T.all isChannelChar channelVal
+             && T.any isChannelAtom channelVal
+            then Right (Just channelVal)
+            else
+              Left err400
+                { errBody =
+                    "channel must be an ASCII keyword using letters, numbers, underscores, "
+                      <> "or hyphens (64 chars max)"
+                }
   where
     isChannelChar ch = isAsciiLower ch || isDigit ch || ch == '_' || ch == '-'
     isChannelAtom ch = isAsciiLower ch || isDigit ch
