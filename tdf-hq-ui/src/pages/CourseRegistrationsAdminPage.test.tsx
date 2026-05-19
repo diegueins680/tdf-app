@@ -17083,8 +17083,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Google Sheets enrollment rows for Beatmaking 101',
       'Notion database - Beatmaking 101',
       'Beatmaking 101 - Coda intake list',
+      'Excel registration workbook - Beatmaking 101',
+      'Beatmaking 101 - Microsoft Excel enrollment sheet',
       'Tabla de Airtable para Beatmaking 101',
       'Hoja de cálculo de Google para Beatmaking 101',
+      'Hoja de Excel para Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -17101,7 +17104,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /Airtable|Google Sheets|Notion|Coda|tabla|base de datos|hoja de c[aá]lculo|\brows?\b|\blists?\b/i,
+          /Airtable|Google Sheets|Notion|Coda|Excel|tabla|base de datos|hoja de c[aá]lculo|\bworkbooks?\b|\brows?\b|\blists?\b/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);

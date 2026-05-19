@@ -1667,7 +1667,7 @@ const firstRunAutomationPlumbingDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
-const firstRunDataSourceDescriptorPattern = String.raw`(?:(?:airtable|notion|coda|google\s*sheets?|google\s*sheet)\s+(?:(?:course\s+)?(?:registration|enrollment|lead|intake|student|sign[-\s]?up)\s+)?(?:tables?|views?|databases?|spreadsheets?|sheets?|rows?|bases?|lists?)|(?:tables?|views?|databases?|spreadsheets?|sheets?|rows?|bases?|lists?)\s+(?:for\s+)?(?:airtable|notion|coda|google\s*sheets?|google\s*sheet)|(?:tabla|vista|base\s+de\s+datos|hoja\s+de\s+c[aá]lculo|lista)\s+(?:de|para)\s+(?:airtable|notion|coda|google)|hoja\s+de\s+c[aá]lculo\s+de\s+google)`;
+const firstRunDataSourceDescriptorPattern = String.raw`(?:(?:airtable|notion|coda|google\s*sheets?|google\s*sheet|(?:microsoft\s+)?excel)\s+(?:(?:course\s+)?(?:registration|enrollment|lead|intake|student|sign[-\s]?up)\s+)?(?:tables?|views?|databases?|spreadsheets?|sheets?|workbooks?|rows?|bases?|lists?)|(?:tables?|views?|databases?|spreadsheets?|sheets?|workbooks?|rows?|bases?|lists?)\s+(?:for\s+)?(?:airtable|notion|coda|google\s*sheets?|google\s*sheet|(?:microsoft\s+)?excel)|(?:tabla|vista|base\s+de\s+datos|hoja\s+de\s+c[aá]lculo|lista)\s+(?:de|para)\s+(?:airtable|notion|coda|google|(?:microsoft\s+)?excel)|hoja\s+de\s+c[aá]lculo\s+de\s+google|hojas?\s+de\s+(?:microsoft\s+)?excel)`;
 const firstRunDataSourceDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunDataSourceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
   'i',
