@@ -1344,6 +1344,16 @@ const firstRunAssessmentDescriptorPrefixPattern =
 const firstRunAssessmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
+const firstRunCertificateArtifactDescriptorPattern = String.raw`(?:(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?(?:\s+(?:forms?|pages?|portals?|packets?|links?|urls?))?|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|solicitud(?:es)?)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:certificados?|certificaci[oó]n|constancias?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)|(?:certificados?|certificaci[oó]n|constancias?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)\s+(?:formularios?|p[aá]ginas?|portales?|paquetes?|enlaces?|links?|urls?|solicitud(?:es)?))`;
+const firstRunCertificateArtifactDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCertificateArtifactDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCertificateArtifactDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCertificateArtifactDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCohortDescriptorPrefixPattern =
   /^(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*[-:/|]\s*/i;
 
@@ -2064,6 +2074,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCopyDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
+    .replace(firstRunCertificateArtifactDescriptorPrefixPattern, '')
     .replace(firstRunApplicationDescriptorPrefixPattern, '')
     .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
     .replace(
@@ -2180,6 +2191,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCopyDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')
+    .replace(firstRunCertificateArtifactDescriptorSuffixPattern, '')
     .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .replace(
