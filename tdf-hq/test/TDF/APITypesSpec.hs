@@ -979,6 +979,17 @@ spec = do
                 "{\"suInputListRows\":[{\"channelNumber\":1,\"mic\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null non-clearable session patch fields instead of treating them as omitted" $ do
+            decodeSessionUpdate
+                "{\"suStatus\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suRoomIds\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suInputListRows\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
         it "accepts canonical payloads and trims request inputs" $ do
             case decodeInstagramOAuthExchange

@@ -1454,11 +1454,27 @@ instance FromJSON SessionUpdate where
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
         providedKeys = map AKey.toText (AKM.keys o)
+        nonClearableKeys =
+          [ "suService"
+          , "suStartAt"
+          , "suEndAt"
+          , "suEngineerRef"
+          , "suRoomIds"
+          , "suInputListRows"
+          , "suStatus"
+          ]
+        nullNonClearableKeys =
+          [ key
+          | key <- nonClearableKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
     case unknownKeys of
       key:_ -> fail ("Unknown field in SessionUpdate: " <> T.unpack key)
       []
         | null providedKeys ->
             fail "SessionUpdate must include at least one field"
+        | key:_ <- nullNonClearableKeys ->
+            fail (T.unpack key <> " must be omitted instead of null")
         | otherwise ->
             SessionUpdate
               <$> o .:! "suBookingRef"
