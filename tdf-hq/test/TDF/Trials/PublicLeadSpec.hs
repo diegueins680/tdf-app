@@ -1041,6 +1041,8 @@ spec = do
       assertRejected "http://localhost/folder"
       assertRejected "http://127.0.0.1/folder"
       assertRejected "https://example.com/folder\\file"
+      assertRejected "https://example.com/folder%ZZ"
+      assertRejected "https://example.com/folder/%2"
       assertRejected "https://[2001:4860:4860::8888]/folder"
       assertRejected "https://[:::]/folder"
       assertRejected "https://[::1]/folder"
@@ -1087,16 +1089,16 @@ spec = do
       case (A.eitherDecode "{\"name\":null,\"active\":false}" :: Either String SubjectUpdate) of
         Left err ->
           err `shouldContain` "name must be omitted instead of null"
-        Right value ->
+        Right _ ->
           expectationFailure
-            ("Expected null subject name patch to be rejected, got " <> show value)
+            "Expected null subject name patch to be rejected, but it decoded successfully"
 
       case (A.eitherDecode "{\"active\":null}" :: Either String SubjectUpdate) of
         Left err ->
           err `shouldContain` "active must be omitted instead of null"
-        Right value ->
+        Right _ ->
           expectationFailure
-            ("Expected null subject active patch to be rejected, got " <> show value)
+            "Expected null subject active patch to be rejected, but it decoded successfully"
 
   describe "StudentCreate request decoding" $ do
     it "accepts canonical private student create payloads" $ do
@@ -1273,9 +1275,9 @@ spec = do
       case (A.eitherDecode "{\"name\":\"Piano\",\"active\":null}" :: Either String SubjectCreate) of
         Left err ->
           err `shouldContain` "active must be omitted instead of null"
-        Right value ->
+        Right _ ->
           expectationFailure
-            ("Expected null subject active default to be rejected, got " <> show value)
+            "Expected null subject active default to be rejected, but it decoded successfully"
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do

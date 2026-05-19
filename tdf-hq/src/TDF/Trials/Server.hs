@@ -903,6 +903,7 @@ hasAmbiguousPublicUrlPath rawUrl =
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl
   | T.any invalidUrlChar trimmed = False
+  | hasMalformedPercentEncoding trimmed = False
   | "http://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 7 trimmed)
   | "https://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 8 trimmed)
   | otherwise = False
@@ -915,6 +916,17 @@ isValidHttpUrl rawUrl
         || isControl ch
         || ch == '\\'
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+    hasMalformedPercentEncoding url =
+      case T.breakOn "%" url of
+        (_, rest)
+          | T.null rest -> False
+          | otherwise ->
+              case T.unpack (T.take 3 rest) of
+                ['%', firstHex, secondHex]
+                  | isHexDigit firstHex && isHexDigit secondHex ->
+                      hasMalformedPercentEncoding (T.drop 3 rest)
+                _ -> True
 
     hasValidAuthority remainder =
       let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
