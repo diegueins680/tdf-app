@@ -1733,6 +1733,15 @@ const firstRunDataSourceDescriptorSuffixPattern = new RegExp(
   String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunDataSourceDescriptorPattern})\s*$`,
   'i',
 );
+const firstRunDataImportDescriptorPattern = String.raw`(?:(?:(?:manual|admin|backend|bulk|legacy|data|database|seed|system|registration|enrollment|student|course)\s+)?(?:imports?|uploads?|migrations?)|(?:csv|xlsx?|excel|spreadsheet|sheet)\s+(?:imports?|uploads?)|(?:imported|migrated)\s+(?:registrations?|enrollments?|students?|data)|(?:carga|importaci[oó]n|migraci[oó]n)(?:\s+(?:manual|masiva|csv|excel|xlsx|de\s+datos|del?\s+curso|de\s+inscripciones?))?|(?:datos|inscripciones?|matr[ií]culas?|estudiantes?|alumnos?)\s+(?:importad[oa]s?|migrad[oa]s?))`;
+const firstRunDataImportDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDataImportDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunDataImportDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunDataImportDescriptorPattern})\s*$`,
+  'i',
+);
 
 const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
 const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|servers?|servidor(?:es)?|workspaces?|espacios?\s+de\s+trabajo|broadcast\s+(?:lists?|channels?)|announcement\s+channels?|listas?\s+de\s+difusi[oó]n|canal(?:es)?\s+de\s+(?:difusi[oó]n|anuncios|avisos|novedades)|(?:group|community|chat|channel|servers?)\s+(?:invites?|invite\s+links?|invitation\s+links?)|(?:invites?|invite\s+links?|invitation\s+links?)|(?:invitaci[oó]n|enlace(?:\s+de\s+invitaci[oó]n)?|link|url)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:grupo|comunidad|chat|canal|servidor(?:es)?))`;
@@ -1994,6 +2003,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunShortlinkDescriptorPrefixPattern, '')
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
+    .replace(firstRunDataImportDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunStaticFormBackendDescriptorPrefixPattern, '')
     .replace(firstRunEmergingFormProviderDescriptorPrefixPattern, '')
@@ -2113,6 +2123,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunShortlinkDescriptorSuffixPattern, '')
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
+    .replace(firstRunDataImportDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunStaticFormBackendDescriptorSuffixPattern, '')
     .replace(firstRunEmergingFormProviderDescriptorSuffixPattern, '')
