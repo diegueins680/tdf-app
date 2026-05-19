@@ -30,6 +30,7 @@ import Database.Persist.Sqlite (createSqlitePool, runSqlite)
 import TDF.API
     ( AdsInquiry (..)
     , CreateBookingReq (..)
+    , CmsContentDTO (..)
     , PublicBookingReq (..)
     , UpdateBookingReq (..)
     , WhatsAppConsentStatus (..)
@@ -3864,6 +3865,63 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid CMS content id, got: " <> show (fromSqlKey contentKey))
             assertInvalid 0
             assertInvalid (-7)
+
+    describe "cms admin publish handler" $
+        it "archives only currently published siblings when publishing a draft version" $ do
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool (runMigration CMS.migrateCMS) pool
+            let now = UTCTime (fromGregorian 2026 5 18) (secondsToDiffTime 36000)
+                cmsContent versionVal statusVal =
+                    CMS.CmsContent
+                        { CMS.cmsContentSlug = "home"
+                        , CMS.cmsContentLocale = "es"
+                        , CMS.cmsContentVersion = versionVal
+                        , CMS.cmsContentStatus = statusVal
+                        , CMS.cmsContentTitle = Nothing
+                        , CMS.cmsContentPayload = Nothing
+                        , CMS.cmsContentCreatedBy = Nothing
+                        , CMS.cmsContentCreatedAt = now
+                        , CMS.cmsContentUpdatedAt = now
+                        , CMS.cmsContentPublishedAt =
+                            if statusVal == "published" then Just now else Nothing
+                        }
+            (publishedId, targetDraftId, siblingDraftId) <- runSqlPool
+                ( do
+                    previousPublished <- insert (cmsContent 1 "published")
+                    targetDraft <- insert (cmsContent 2 "draft")
+                    siblingDraft <- insert (cmsContent 3 "draft")
+                    pure (previousPublished, targetDraft, siblingDraft)
+                )
+                pool
+            let _listContent :<|> _createContent :<|> publishContent :<|> _deleteContent =
+                    cmsAdminServer (mkUser [Webmaster])
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = marketplaceTestConfig False
+                        }
+            result <- runHandler $
+                runReaderT (publishContent (fromIntegral (fromSqlKey targetDraftId))) env
+            case result of
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected CMS draft publish to succeed, got: " <> show serverErr)
+                Right publishedDto ->
+                    ccdStatus publishedDto `shouldBe` "published"
+
+            statuses <- runSqlPool
+                ( do
+                    previousPublished <- get publishedId
+                    targetDraft <- get targetDraftId
+                    siblingDraft <- get siblingDraftId
+                    pure
+                        ( fmap CMS.cmsContentStatus previousPublished
+                        , fmap CMS.cmsContentStatus targetDraft
+                        , fmap CMS.cmsContentStatus siblingDraft
+                        )
+                )
+                pool
+            statuses `shouldBe` (Just "archived", Just "published", Just "draft")
 
     describe "cms admin delete handler" $
         it "returns 404 for valid ids that do not map to CMS content rows" $ do

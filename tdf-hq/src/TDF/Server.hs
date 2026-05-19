@@ -13828,6 +13828,7 @@ cmsAdminServer user =
             updateWhere
               [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
               , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
+              , CMS.CmsContentStatus ==. "published"
               ]
               [ CMS.CmsContentStatus =. "archived" ]
             update contentKey
