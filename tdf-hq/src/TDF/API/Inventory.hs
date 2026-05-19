@@ -60,6 +60,8 @@ validateUploadName rawName
       Left "Asset upload name must not contain path separators"
   | T.null (imageExtension rawName) =
       Left "Asset upload name must include a supported image extension"
+  | hasDangerousInnerUploadExtension rawName =
+      Left "Asset upload file name must not hide executable or document extensions"
   | otherwise =
       Right (Just rawName)
 
@@ -80,6 +82,8 @@ validateBrowserFileName file =
        then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
        else if T.any isPathSeparator fileName
          then Left "Uploaded file name must not contain path separators"
+         else if hasDangerousInnerUploadExtension fileName
+           then Left "Uploaded file name must not hide executable or document extensions"
          else Right ()
 
 isUnsafeUploadNameChar :: Char -> Bool
@@ -178,6 +182,33 @@ imageExtension =
 
 allImageExtensions :: [Text]
 allImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+
+hasDangerousInnerUploadExtension :: Text -> Bool
+hasDangerousInnerUploadExtension rawName =
+  any (`elem` dangerousInnerUploadExtensionSegments) innerExtensions
+  where
+    parts = T.splitOn "." (T.toLower (T.strip rawName))
+    extensions = drop 1 parts
+    innerExtensions =
+      case reverse extensions of
+        [] -> []
+        (_finalExtension:rest) -> reverse rest
+
+dangerousInnerUploadExtensionSegments :: [Text]
+dangerousInnerUploadExtensionSegments =
+  [ "bat"
+  , "cmd"
+  , "com"
+  , "exe"
+  , "htm"
+  , "html"
+  , "js"
+  , "mjs"
+  , "php"
+  , "ps1"
+  , "sh"
+  , "svg"
+  ]
 
 maxAssetUploadFileNameChars :: Int
 maxAssetUploadFileNameChars = 218

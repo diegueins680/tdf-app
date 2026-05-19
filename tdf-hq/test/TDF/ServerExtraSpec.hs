@@ -714,6 +714,27 @@ spec = do
           [mkAssetUploadFile "camera.jpg"]
         )
 
+    it "rejects hidden executable or document extensions before storage filename fallbacks" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected dangerous asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart
+          [("name", "front-room.exe.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "checkout-proof.SVG.jpg"])
+
     it "rejects non-image asset uploads before inventory storage can persist them" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =
