@@ -335,6 +335,8 @@ validateFutureStubCatalogEndpointLeaves
   -> Either ServerError [(Text, Text)]
 validateFutureStubCatalogEndpointLeaves catalog = do
   mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
+  reservedTopLevelAreas <-
+    validateReservedFutureStubTopLevelAreas reservedFutureStubTopLevelAreas
   reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
@@ -343,6 +345,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
        || hasMountedAreaSegmentCollision mountedAreas validatedCatalog
+       || hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreas validatedCatalog
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
     then invalidFutureStubCatalog
@@ -388,6 +391,12 @@ validateFutureStubCatalogEndpointLeaves catalog = do
       let mountedAreaSet = Set.fromList mountedAreasValue
       in any
           (any (`Set.member` mountedAreaSet) . T.splitOn "/" . snd)
+          catalogForAreas
+
+    hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreasValue catalogForAreas =
+      let reservedTopLevelAreaSet = Set.fromList reservedTopLevelAreasValue
+      in any
+          (any (`Set.member` reservedTopLevelAreaSet) . T.splitOn "/" . snd)
           catalogForAreas
 
     hasReservedLeafCollision reservedRoutes catalogForAreas area =
