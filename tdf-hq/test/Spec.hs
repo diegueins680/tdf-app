@@ -4655,7 +4655,21 @@ main = hspec $ do
                 (err502 { errBody = "Facebook request failed (503): service unavailable" })
                 `shouldBe` True
             shouldFallbackToShortInstagramToken
+                ( err502
+                    { errBody =
+                        "Facebook request failed: StatusCodeException statusCode = 503 service unavailable"
+                    }
+                )
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
                 (err502 { errBody = "Facebook request failed (400): invalid token" })
+                `shouldBe` False
+            shouldFallbackToShortInstagramToken
+                ( err502
+                    { errBody =
+                        "Facebook request failed: StatusCodeException statusCode = 400 invalid token"
+                    }
+                )
                 `shouldBe` False
             shouldFallbackToShortInstagramToken
                 (err502 { errBody = "Facebook parse error: missing access_token" })

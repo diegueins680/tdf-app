@@ -637,26 +637,51 @@ shouldFallbackToShortInstagramToken err =
     && isRecoverableFacebookRequestFailure (errBody err)
 
 isRecoverableFacebookRequestFailure :: ByteString -> Bool
-isRecoverableFacebookRequestFailure body
-  | "Facebook request failed: " `BL.isPrefixOf` body = True
-  | otherwise =
-      case facebookRequestFailureStatus body of
-        Just status -> status == 429 || status >= 500
-        Nothing -> False
+isRecoverableFacebookRequestFailure body =
+  case facebookRequestFailureStatus body of
+    Just status -> status == 429 || status >= 500
+    Nothing -> "Facebook request failed: " `BL.isPrefixOf` body
 
 facebookRequestFailureStatus :: ByteString -> Maybe Int
-facebookRequestFailureStatus body = do
+facebookRequestFailureStatus body =
+  case facebookRequestFailureParenthesizedStatus bodyText of
+    Just status -> Just status
+    Nothing -> facebookRequestFailureExceptionStatus bodyText
+  where
+    bodyText = TE.decodeUtf8With lenientDecode (BL.toStrict body)
+
+facebookRequestFailureParenthesizedStatus :: Text -> Maybe Int
+facebookRequestFailureParenthesizedStatus body = do
   rest <-
     T.stripPrefix
       "Facebook request failed ("
-      (TE.decodeUtf8With lenientDecode (BL.toStrict body))
+      body
   let (statusText, suffix) = T.breakOn ")" rest
   case T.stripPrefix "):" suffix of
     Nothing -> Nothing
-    Just _ ->
-      case readMaybe (T.unpack statusText) of
-        Just status | status >= 100 && status <= 599 -> Just status
-        _ -> Nothing
+    Just _ -> parseFacebookHttpStatus statusText
+
+facebookRequestFailureExceptionStatus :: Text -> Maybe Int
+facebookRequestFailureExceptionStatus body = do
+  rest <- T.stripPrefix "Facebook request failed: " body
+  let (_, statusMarker) = T.breakOn "statusCode" rest
+  if T.null statusMarker
+    then Nothing
+    else do
+      let afterMarker = T.drop (T.length ("statusCode" :: Text)) statusMarker
+          afterSpaces = T.dropWhile (== ' ') afterMarker
+      afterEquals <- T.stripPrefix "=" afterSpaces
+      let statusText = T.takeWhile isAsciiDigit (T.dropWhile (== ' ') afterEquals)
+      parseFacebookHttpStatus statusText
+
+parseFacebookHttpStatus :: Text -> Maybe Int
+parseFacebookHttpStatus statusText =
+  case readMaybe (T.unpack statusText) of
+    Just status | status >= 100 && status <= 599 -> Just status
+    _ -> Nothing
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 requestFacebookUser
   :: (MonadError ServerError m, MonadIO m)
