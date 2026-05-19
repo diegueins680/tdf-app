@@ -20572,6 +20572,41 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips short-link wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Bitly link - Beatmaking 101',
+      'TinyURL URL for Beatmaking 101',
+      'Beatmaking 101 - Rebrandly short link',
+      'Enlace corto para Beatmaking 101',
+      'Beatmaking 101 - link corto',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const copy = emptyState?.textContent ?? '';
+        expect(emptyState).not.toBeNull();
+        expect(copy).toContain(singleCohortInitialEmptyStateMessage);
+        expect(copy).not.toContain(title);
+        expect(copy).not.toMatch(/bitly|tinyurl|rebrandly|enlace corto|link corto/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips course-community wrappers from first-run cohort copy', async () => {
     const titles = [
       'Course community - Beatmaking 101',

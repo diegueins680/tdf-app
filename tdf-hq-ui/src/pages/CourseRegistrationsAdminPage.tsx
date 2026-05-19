@@ -1135,6 +1135,16 @@ const firstRunUrlDescriptorSuffixPattern = new RegExp(
   String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunUrlDescriptorPattern})\s*$`,
   'i',
 );
+const firstRunShortlinkProviderPattern = String.raw`(?:bit\s*\.?\s*ly|bitly|tiny\s*url|tinyurl|rebrandly|short\s*\.?\s*io|shortio|cutt\s*\.?\s*ly|cuttly|t\s*\.?\s*ly|tly)`;
+const firstRunShortlinkDescriptorPattern = String.raw`(?:(?:${firstRunShortlinkProviderPattern})(?:\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:(?:short|tracking|redirect)\s+)?(?:links?|urls?|pages?|forms?))?|(?:(?:short|tracking|redirect)\s+links?|link\s+shorteners?|shortened\s+urls?|short\s+urls?)|(?:enlaces?|links?|urls?)\s+cort[oa]s?|acortadores?\s+de\s+enlaces?)`;
+const firstRunShortlinkDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunShortlinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunShortlinkDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunShortlinkDescriptorPattern})\s*$`,
+  'i',
+);
 
 const firstRunCohortHtmlEntities: Record<string, string> = {
   amp: '&',
@@ -1924,6 +1934,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
   const strippedTitle = normalizedTitle
     .replace(firstRunResponseSheetPrefixPattern, '')
     .replace(firstRunUrlDescriptorPrefixPattern, '')
+    .replace(firstRunShortlinkDescriptorPrefixPattern, '')
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
@@ -2039,6 +2050,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
   const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const strippedTitle = normalizedTitle
     .replace(firstRunUrlDescriptorSuffixPattern, '')
+    .replace(firstRunShortlinkDescriptorSuffixPattern, '')
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
