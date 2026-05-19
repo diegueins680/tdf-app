@@ -1776,6 +1776,16 @@ const firstRunGenericEventDescriptorPrefixPattern =
 const firstRunGenericEventDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:event|evento)\s+(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|signup|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:formulario|p[aá]gina|portal|enlace|link|url|registro|inscripci[oó]n|reserva|rsvp)\s+(?:de|para(?:\s+el)?)\s+eventos?)\s*$/i;
 
+const firstRunTicketingDescriptorPattern = String.raw`(?:(?:(?:ticketing|box\s*office)\s+(?:forms?|pages?|links?|urls?|portals?|checkouts?))|(?:(?:forms?|pages?|links?|urls?|portals?|checkouts?)\s+(?:for\s+)?(?:ticketing|box\s*office))|(?:(?:boleter[ií]a|taquilla)\s+(?:del?\s+curso|de\s+curso))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url|checkout)\s+(?:de|para)\s+(?:boleter[ií]a|taquilla)))`;
+const firstRunTicketingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunTicketingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunTicketingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunTicketingDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunInquiryDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2057,6 +2067,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunGenericEventDescriptorPrefixPattern, '')
+    .replace(firstRunTicketingDescriptorPrefixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorPrefixPattern, '')
     .replace(firstRunNoCodeLandingDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
@@ -2177,6 +2188,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunGenericEventDescriptorSuffixPattern, '')
+    .replace(firstRunTicketingDescriptorSuffixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorSuffixPattern, '')
     .replace(firstRunNoCodeLandingDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
