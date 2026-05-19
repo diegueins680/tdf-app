@@ -12810,6 +12810,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'luma_event_page',
       'meetup_event_registration',
       'meetup_registration_page',
+      'ticket_tailor_registration_page',
+      'ticket_tailor_event_page',
+      'humanitix_registration_page',
+      'eventzilla_event_page',
+      'sympla_registration_page',
+      'entradium_event_page',
       'event_registration_page',
       'event_signup_page',
       'formulario_de_eventbrite',
@@ -12821,6 +12827,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Luma event page',
       'Meetup event registration',
       'Meetup registration page',
+      'Ticket tailor registration page',
+      'Ticket tailor event page',
+      'Humanitix registration page',
+      'Eventzilla event page',
+      'Sympla registration page',
+      'Entradium event page',
       'Event registration page',
       'Event signup page',
       'Formulario de eventbrite',
@@ -17285,6 +17297,11 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - event signup page',
       'Beatmaking 101 - Lu.ma event page',
       'Meetup event registration page for Beatmaking 101',
+      'Ticket Tailor registration page - Beatmaking 101',
+      'Beatmaking 101 - Humanitix event page',
+      'Eventzilla reservation page for Beatmaking 101',
+      'Beatmaking 101 - Sympla event page',
+      'Entradium booking page - Beatmaking 101',
       'Formulario de Eventbrite para Beatmaking 101',
     ];
 
@@ -17301,7 +17318,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Eventbrite|Lu\.?ma|Meetup/i);
+        expect(emptyState?.textContent).not.toMatch(/Eventbrite|Lu\.?ma|Meetup|Ticket Tailor|Humanitix|Eventzilla|Sympla|Entradium/i);
         expect(emptyState?.textContent).not.toMatch(/event registration|signup page/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(

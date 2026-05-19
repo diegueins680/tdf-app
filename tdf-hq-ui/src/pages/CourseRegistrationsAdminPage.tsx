@@ -1692,10 +1692,10 @@ const firstRunCommunityGroupDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunEventPlatformDescriptorPrefixPattern =
-  /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+events?(?:\s+(?:page|portal))?(?:\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
+  /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+events?(?:\s+(?:page|portal))?(?:\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
 
 const firstRunEventPlatformDescriptorSuffixPattern =
-  /(?:\s*[-:/|]\s*(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+events?(?:\s+(?:page|portal))?|\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup)\s+events?(?:\s+(?:page|portal))?|\s*(?:[-:/|]\s*)?(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup))\s*$/i;
+  /(?:\s*[-:/|]\s*(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+events?(?:\s+(?:page|portal))?|\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)\s+events?(?:\s+(?:page|portal))?|\s*(?:[-:/|]\s*)?(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium))\s*$/i;
 
 const firstRunGenericEventDescriptorPrefixPattern =
   /^(?:(?:event|evento)\s+(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|signup|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:formulario|p[aá]gina|portal|enlace|link|url|registro|inscripci[oó]n|reserva|rsvp)\s+(?:de|para(?:\s+el)?)\s+eventos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
@@ -2764,6 +2764,23 @@ const defaultPublicFormSourceKeys = new Set([
   'meetup event page',
   'meetup event registration',
   'meetup registration page',
+  'ticket tailor',
+  'ticket tailor event page',
+  'ticket tailor registration page',
+  'tickettailor',
+  'tickettailor event page',
+  'humanitix',
+  'humanitix event page',
+  'humanitix registration page',
+  'eventzilla',
+  'eventzilla event page',
+  'eventzilla registration page',
+  'sympla',
+  'sympla event page',
+  'sympla registration page',
+  'entradium',
+  'entradium event page',
+  'entradium registration page',
   'event registration',
   'event registration page',
   'event signup page',
