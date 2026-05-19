@@ -4693,7 +4693,10 @@ main = hspec $ do
                 "Facebook page name must not be blank"
             assertInvalid
                 (facebookPagePayload "page-123" "TDF\\nHQ" "page-token")
-                "Facebook page name must not contain control characters"
+                "Facebook page name must not contain control"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF\\u2028HQ" "page-token")
+                "Facebook page name must not contain control, separator, or hidden formatting characters"
             assertInvalid
                 (facebookPagePayload "page-123" "TDF HQ" "page token")
                 "Facebook page access_token must not contain whitespace"

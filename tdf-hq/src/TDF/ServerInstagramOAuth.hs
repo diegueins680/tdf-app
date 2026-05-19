@@ -27,7 +27,7 @@ import           Data.Aeson.Types           (Parser, parseEither)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.Char
-  ( GeneralCategory(Format)
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
   , isAlphaNum
   , isControl
@@ -142,14 +142,14 @@ normalizeFacebookRequiredText fieldName maxChars rawText =
        else if T.any isUnsafeFacebookGraphTextChar textValue
          then fail $
            fieldLabel
-             <> " must not contain control characters or hidden formatting characters"
+             <> " must not contain control, separator, or hidden formatting characters"
        else if T.length textValue > maxChars
          then fail (fieldLabel <> " must be " <> show maxChars <> " characters or fewer")
        else pure textValue
 
 isUnsafeFacebookGraphTextChar :: Char -> Bool
 isUnsafeFacebookGraphTextChar ch =
-  isControl ch || generalCategory ch == Format
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizeFacebookTokenType :: Maybe Text -> Parser Text
 normalizeFacebookTokenType Nothing = pure "bearer"
