@@ -12154,6 +12154,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'forms.app_form',
       'formspree_form',
       'formsite_form',
+      'wpforms_form',
+      'ninja_forms',
+      'formidable_forms_form',
+      'fluent_forms_form',
       '123_form_builder_form',
       '123formbuilder_form',
     ] as const;
@@ -12218,6 +12222,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Forms app form',
       'Formspree form',
       'Formsite form',
+      'Wpforms form',
+      'Ninja forms',
+      'Formidable forms form',
+      'Fluent forms form',
       '123 form builder form',
       '123formbuilder form',
     ];
@@ -17000,6 +17008,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Formspree form - Beatmaking 101',
       'Formulario de Formspree para Beatmaking 101',
       'Beatmaking 101 - Formsite form',
+      'WPForms registration form - Beatmaking 101',
+      'Ninja Forms for Beatmaking 101',
+      'Beatmaking 101 - Formidable Forms',
+      'Formulario de Fluent Forms para Beatmaking 101',
       '123FormBuilder - Beatmaking 101',
       'Beatmaking 101 - 123 Forms Builder',
       'Netlify Forms - Beatmaking 101',
@@ -17085,6 +17097,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Forms.app');
         expect(emptyState?.textContent).not.toContain('Formspree');
         expect(emptyState?.textContent).not.toContain('Formsite');
+        expect(emptyState?.textContent).not.toMatch(/WPForms|Ninja Forms|Formidable Forms|Fluent Forms/i);
         expect(emptyState?.textContent).not.toMatch(/123\s*Forms?\s*Builder/i);
         expect(emptyState?.textContent).not.toMatch(/Netlify|Formkeep|Formbold|Formspark|Formsubmit|Getform|Basin|Formcarry/i);
         expect(emptyState?.textContent).not.toContain('Wufoo');
