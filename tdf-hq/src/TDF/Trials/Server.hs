@@ -183,7 +183,7 @@ normalizePhone raw =
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
         isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
-      hasUnsafeChars = T.any isUnsafePhoneChar trimmed
+      hasUnsafeChars = T.any isUnsafePhoneChar raw
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -204,7 +204,9 @@ normalizePhone raw =
 
 isUnsafePhoneChar :: Char -> Bool
 isUnsafePhoneChar ch =
-  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 validateOptionalPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPhone Nothing = Right Nothing

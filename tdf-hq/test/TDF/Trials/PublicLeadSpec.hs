@@ -187,7 +187,7 @@ spec = do
       assertRejected "12345"
       assertRejected "+1234567890123456"
 
-    it "rejects control or hidden phone separators instead of normalizing forged contact data" $ do
+    it "rejects control, hidden, or lookalike phone separators instead of normalizing forged contact data" $ do
       let assertRejected rawPhone = do
             result <-
               tryCreateOrFetchParty
@@ -203,6 +203,8 @@ spec = do
       assertRejected "099\n1234567"
       assertRejected ("099" <> T.singleton '\x2028' <> "1234567")
       assertRejected ("099" <> T.singleton '\x202E' <> "1234567")
+      assertRejected ("099" <> T.singleton '\x00A0' <> "1234567")
+      assertRejected (T.singleton '\x00A0' <> "0991234567")
 
     it "rejects malformed emails instead of creating unusable parties" $ do
       let assertRejected rawEmail = do
