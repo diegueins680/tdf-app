@@ -11201,6 +11201,26 @@ main = hspec $ do
             case validateHookVerifyRequest
                     (Just "subscribe")
                     (Just "challenge-123")
+                    (Just ("secr" <> Data.Text.singleton '\x00E9' <> "t"))
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must contain visible ASCII characters only"
+                Right _ -> expectationFailure "Expected non-ASCII hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just (Data.Text.replicate 513 "a"))
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must be 512 characters or fewer"
+                Right _ -> expectationFailure "Expected oversized hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
                     (Just " secret ")
                     (Just "secret") of
                 Left err -> do
@@ -11238,6 +11258,26 @@ main = hspec $ do
                     BL.unpack (errBody err)
                         `shouldContain` "WhatsApp verify token is misconfigured"
                 Right _ -> expectationFailure "Expected hidden-format verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just ("secr" <> Data.Text.singleton '\x00E9' <> "t")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected non-ASCII verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just (Data.Text.replicate 513 "a")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected oversized verify-token config to be rejected"
 
     describe "extractFirstWebhookMessage" $ do
         it "scans all webhook entries and changes before treating a batch as no-message" $ do

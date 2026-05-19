@@ -159,14 +159,21 @@ normalizeWhatsAppVerifyToken :: Text -> Either String Text
 normalizeWhatsAppVerifyToken rawToken
   | T.null token =
       Left "Invalid WhatsApp verify token: token is required"
+  | T.length token > maxWhatsAppVerifyTokenChars =
+      Left "Invalid WhatsApp verify token: token must be 512 characters or fewer"
   | T.any isWhitespaceOrControlChar token =
       Left "Invalid WhatsApp verify token: must not contain whitespace or control characters"
   | T.any isHiddenFormattingChar token =
       Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
+  | T.any (not . isVisibleAsciiHeaderChar) token =
+      Left "Invalid WhatsApp verify token: must contain visible ASCII characters only"
   | otherwise =
       Right token
   where
     token = T.strip rawToken
+
+maxWhatsAppVerifyTokenChars :: Int
+maxWhatsAppVerifyTokenChars = 512
 
 normalizeWhatsAppPhoneNumberId :: Text -> Either String Text
 normalizeWhatsAppPhoneNumberId rawPhoneId

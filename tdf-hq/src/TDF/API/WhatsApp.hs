@@ -408,10 +408,20 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
+                      | T.length verifyToken > maxHookVerifyTokenChars ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must be 512 characters or fewer"
+                            }
                       | T.any isUnsafeVerifyTokenChar verifyToken ->
                           Left err400
                             { errBody =
                                 "hub.verify_token must not contain control characters or whitespace; hidden formatting characters are not allowed"
+                            }
+                      | T.any (not . isVisibleAsciiVerifyTokenChar) verifyToken ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must contain visible ASCII characters only"
                             }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
@@ -440,7 +450,11 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Nothing ->
           Left err503 { errBody = "WhatsApp verify token not configured" }
         Just txt
+          | T.length txt > maxHookVerifyTokenChars ->
+              Left err503 { errBody = "WhatsApp verify token is misconfigured" }
           | T.any isUnsafeVerifyTokenChar txt ->
+              Left err503 { errBody = "WhatsApp verify token is misconfigured" }
+          | T.any (not . isVisibleAsciiVerifyTokenChar) txt ->
               Left err503 { errBody = "WhatsApp verify token is misconfigured" }
           | otherwise ->
               Right txt
@@ -474,5 +488,11 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
     isUnsafeVerifyTokenChar ch =
       isControl ch || isSpace ch || isHiddenFormattingChar ch
 
+    isVisibleAsciiVerifyTokenChar ch =
+      ch >= '!' && ch <= '~'
+
     isUnsafeHookModeChar ch =
       isControl ch || isSpace ch || isHiddenFormattingChar ch
+
+    maxHookVerifyTokenChars :: Int
+    maxHookVerifyTokenChars = 512

@@ -122,6 +122,10 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp access token: token must be 4096 characters or fewer"
       normalizeWhatsAppVerifyToken ("webhook" <> T.singleton '\x202E' <> "secret")
         `shouldBe` Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
+      normalizeWhatsAppVerifyToken ("secr" <> T.singleton '\x00E9' <> "t")
+        `shouldBe` Left "Invalid WhatsApp verify token: must contain visible ASCII characters only"
+      normalizeWhatsAppVerifyToken (T.replicate 513 "a")
+        `shouldBe` Left "Invalid WhatsApp verify token: token must be 512 characters or fewer"
       normalizeWhatsAppPhoneNumberId "   "
         `shouldBe` Left "Invalid WhatsApp phone number id: id is required"
       normalizeWhatsAppPhoneNumberId "123/messages"
