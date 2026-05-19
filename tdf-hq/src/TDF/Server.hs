@@ -10697,11 +10697,11 @@ instance FromJSON OpenAIChatMessage where
 data ChatCompletionReq = ChatCompletionReq
   { model :: Text
   , messages :: [OpenAIChatMessage]
-  , temperature :: Int
+  , temperature :: Maybe Int
   } deriving (Show, Generic)
 
 instance ToJSON ChatCompletionReq where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_', omitNothingFields = True }
 
 data ChatChoice = ChatChoice
   { message :: OpenAIChatMessage
@@ -10799,7 +10799,7 @@ requestOpenAIChat manager reqBase key modelName messages = do
   let body = encode ChatCompletionReq
         { model = modelName
         , messages = messages
-        , temperature = 1
+        , temperature = Nothing
         }
       req =
         reqBase
@@ -10880,6 +10880,9 @@ shouldRetryWithFallbackModel status rawMessage =
       , "invalid model name"
       , "not a valid model"
       , "model_not_found"
+      , "invalid temperature"
+      , "temperature is not supported"
+      , "only 1 is allowed for this model"
       ]
     nonFallbackMarkers =
       [ "rate limit"
@@ -10945,7 +10948,6 @@ tidalAgentServer user TidalAgentRequest{..} = do
             [ object ["role" .= ("system" :: Text), "content" .= tidalSystemPrompt]
             , object ["role" .= ("user" :: Text), "content" .= prompt]
             ]
-        , "temperature" .= (1 :: Int)
         , "max_tokens" .= (300 :: Int)
         ]
       req =

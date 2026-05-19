@@ -643,6 +643,10 @@ validateClassSessionPathId :: Int -> Either ServerError Int
 validateClassSessionPathId =
   validatePositiveIntField "classSessionId"
 
+validateSubjectPathId :: Int -> Either ServerError Int
+validateSubjectPathId =
+  validatePositiveIntField "subjectId"
+
 validateOptionalClassSessionNotes :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalClassSessionNotes =
   validateOptionalPublicTextField "notes" 2000
@@ -1669,7 +1673,9 @@ privateTrialsServer user@AuthedUser{..} =
     updateSubjectH :: Int -> SubjectUpdate -> AppM SubjectDTO
     updateSubjectH subjectIdInt SubjectUpdate{..} = do
       ensureModuleAccess ModuleAdmin
-      let sid = intKey subjectIdInt :: Key Subject
+      subjectIdValue <-
+        either (liftIO . throwIO) pure (validateSubjectPathId subjectIdInt)
+      let sid = intKey subjectIdValue :: Key Subject
       when (maybe False (T.null . T.strip) name) $ liftIO $ throwIO err400 { errBody = "El nombre es obligatorio" }
       mSubject <- get sid
       case mSubject of
@@ -1691,7 +1697,9 @@ privateTrialsServer user@AuthedUser{..} =
     deleteSubjectH :: Int -> AppM NoContent
     deleteSubjectH subjectIdInt = do
       ensureModuleAccess ModuleAdmin
-      let sid = intKey subjectIdInt :: Key Subject
+      subjectIdValue <-
+        either (liftIO . throwIO) pure (validateSubjectPathId subjectIdInt)
+      let sid = intKey subjectIdValue :: Key Subject
       mSubj <- get sid
       case mSubj of
         Nothing -> liftIO $ throwIO err404

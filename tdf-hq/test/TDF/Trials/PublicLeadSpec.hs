@@ -48,6 +48,7 @@ import TDF.Trials.API
   , PurchaseOut
   , SignupIn (..)
   , SubjectCreate (SubjectCreate)
+  , SubjectDTO
   , SubjectUpdate (..)
   , TrialQueueItem
   )
@@ -71,6 +72,7 @@ import TDF.Trials.Server
   , validatePublicSubjectSelection
   , validatePublicTrialRequestInput
   , validatePublicTrialPartyId
+  , validateSubjectPathId
   , validateTeacherSubjectIdsInput
   , validateTeacherStudentLinkInput
   , validateTrialAvailabilityUpsertInput
@@ -1138,6 +1140,25 @@ spec = do
           "{\"displayName\":null,\"email\":null,\"phone\":null,\"notes\":null}"
             :: Either String StudentUpdate)
         `shouldBe` True
+
+  describe "private subject mutation path ids" $ do
+    it "rejects non-positive subject ids before update or delete lookups" $ do
+      let assertRejected expectedMessage action = do
+            result <- try $ runTrialsInMemory action
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid subject path id to be rejected"
+      validateSubjectPathId 7 `shouldBe` Right 7
+      mapM_
+        (\rawSubjectId -> do
+          assertRejected "subjectId must be a positive integer" $
+            privateSubjectUpdateHandler rawSubjectId (SubjectUpdate (Just "Piano") Nothing)
+          assertRejected "subjectId must be a positive integer" $
+            privateSubjectDeleteHandler rawSubjectId)
+        [0, -3]
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
@@ -3122,6 +3143,18 @@ privateAvailabilityDeleteHandler :: Int -> SqlPersistT IO NoContent
 privateAvailabilityDeleteHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> availabilityDeleteH :<|> _ = privateTrialsServer adminUser
   in availabilityDeleteH
+
+privateSubjectUpdateHandler :: Int -> SubjectUpdate -> SqlPersistT IO SubjectDTO
+privateSubjectUpdateHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> updateH :<|> _ =
+        privateTrialsServer adminUser
+  in updateH
+
+privateSubjectDeleteHandler :: Int -> SqlPersistT IO NoContent
+privateSubjectDeleteHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> deleteH :<|> _ =
+        privateTrialsServer adminUser
+  in deleteH
 
 privateTeacherClassesHandler
   :: Int

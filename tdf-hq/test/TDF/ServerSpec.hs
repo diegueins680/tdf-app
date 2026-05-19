@@ -5411,6 +5411,18 @@ spec = describe "TDF.Server helpers" $ do
                 403
                 "insufficient_quota: The requested model gpt-expired does not exist."
                 `shouldBe` False
+            shouldRetryWithFallbackModel
+                400
+                "INVALID_REQUEST_ERROR: INVALID TEMPERATURE: ONLY 1 IS ALLOWED FOR THIS MODEL"
+                `shouldBe` True
+            shouldRetryWithFallbackModel
+                400
+                "Invalid temperature: temperature is not supported for this model"
+                `shouldBe` True
+            shouldRetryWithFallbackModel
+                400
+                "invalid temperature: only 1 is allowed"
+                `shouldBe` True
 
     describe "resolveWorkflowId" $ do
         it "uses the configured ChatKit workflow only when the request override is omitted" $ do
