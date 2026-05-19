@@ -343,6 +343,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
+       || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -395,6 +396,12 @@ validateFutureStubCatalogEndpointLeaves catalog = do
             , entryArea == area
             ]
       in any (`Set.member` reservedLeaves) catalogLeaves
+
+    hasReservedLeafLabelCollision reservedRoutesForAreas catalogForAreas =
+      let reservedLeaves = Set.fromList (map (endpointLeaf . snd) reservedRoutesForAreas)
+      in any
+          ((`Set.member` reservedLeaves) . endpointLeaf . snd)
+          catalogForAreas
 
     leafPairs [] = []
     leafPairs (leaf:remaining) =
