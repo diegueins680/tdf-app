@@ -1344,7 +1344,7 @@ const firstRunTemplateDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))\s*$/i;
 
 const firstRunCopyDescriptorPrefixPattern =
-  /^(?:(?:copy|duplicate)(?:\s*[-#]?\s*\d+)?\s+of|(?:clone|cloned)(?:\s*[-#]?\s*\d+)?\s+(?:of|from)|(?:copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?\s+de)\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:copy|duplicates?|duplicated)(?:\s*[-#]?\s*\d+)?(?:\s+of|\s*[-:/|]\s*)|(?:clone|cloned)(?:\s*[-#]?\s*\d+)?(?:\s+(?:of|from)|\s*[-:/|]\s*)|(?:copia|duplicad[oa]s?|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?(?:\s+de|\s*[-:/|]\s*))\s*/i;
 
 const firstRunCopyDescriptorSuffixPattern =
   /\s*(?:(?:[-:/|]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|clone|cloned|copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?\s*(?:\)|\])?\s*$/i;
