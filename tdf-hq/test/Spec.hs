@@ -223,6 +223,7 @@ import TDF.Server
       DriveApiResp (..),
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
+      driveUploadServer,
       parseMcpRequest,
       parseToolCallParams,
       resolveDriveRedirectUri,
@@ -6260,6 +6261,53 @@ main = hspec $ do
                 (Just (Data.Text.replicate 4097 "a"))
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
+
+    describe "driveUploadServer folder fallback" $ do
+        it "rejects blank DRIVE_UPLOAD_FOLDER_ID before token fallback or upload work" $
+            withSystemTempFile "drive-upload.txt" $ \uploadPath handle -> do
+                hClose handle
+                BL.writeFile uploadPath "x"
+                let user =
+                        AuthedUser
+                            { auPartyId = toSqlKey 7
+                            , auRoles = [Admin]
+                            , auModules = modulesForRoles [Admin]
+                            }
+                    form =
+                        DriveUploadForm
+                            { duFile =
+                                FileData
+                                    { fdInputName = "file"
+                                    , fdFileName = "drive-upload.txt"
+                                    , fdFileCType = "text/plain"
+                                    , fdPayload = uploadPath
+                                    }
+                            , duFolderId = Nothing
+                            , duName = Just "drive-upload.txt"
+                            , duAccessToken = Nothing
+                            }
+                    unusedEnv =
+                        Env
+                            { envPool = error "envPool should be unused by Drive folder validation"
+                            , envConfig = error "envConfig should be unused by Drive folder validation"
+                            }
+                result <-
+                    withEnvOverrides
+                        [ ("DRIVE_UPLOAD_FOLDER_ID", Just "   ")
+                        , ("DRIVE_REFRESH_TOKEN", Nothing)
+                        , ("DRIVE_ACCESS_TOKEN", Nothing)
+                        ]
+                        (runHandler (runReaderT (driveUploadServer user Nothing form) unusedEnv))
+                case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 500
+                        BL.unpack (errBody err)
+                            `shouldContain` "DRIVE_UPLOAD_FOLDER_ID must not be blank"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected blank Drive folder fallback to be rejected, got "
+                                <> show value
+                            )
 
     describe "validateConfiguredDriveRefreshToken" $ do
         it "rejects malformed configured refresh tokens before upload fallback refreshes OAuth" $ do

@@ -2349,7 +2349,7 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   either throwError pure (validateDriveAccess user)
   providedToken <-
     either throwError pure (resolveProvidedDriveAccessToken mAccessToken duAccessToken)
-  mFolderEnv <- liftIO $ lookupEnvTextNonEmpty "DRIVE_UPLOAD_FOLDER_ID"
+  mFolderEnv <- liftIO $ lookupEnvText "DRIVE_UPLOAD_FOLDER_ID"
   folder <- either throwError pure (resolveDriveUploadFolderId duFolderId mFolderEnv)
   nameOverride <- either throwError pure (resolveDriveUploadName duName (fdFileName duFile))
   fileSize <- liftIO (getFileSize (fdPayload duFile))
