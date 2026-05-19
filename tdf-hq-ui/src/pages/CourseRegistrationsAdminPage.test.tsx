@@ -11494,6 +11494,79 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps Spanish source placeholders out of busy-list rows and search', async () => {
+    const placeholderSources = [
+      'no_registra',
+      'no_registrado',
+      'no_informado',
+      'sin_registrar',
+      'sin_registro',
+      'no_reportado',
+      'no_aplica',
+      'no_disponible',
+      null,
+    ] as const;
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(placeholderSources.length, (index) => ({
+        crSource: placeholderSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).not.toContain('Fuente:');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(container.textContent).not.toContain('No registra');
+      expect(container.textContent).not.toContain('No informado');
+      expect(container.textContent).not.toContain('Sin registrar');
+      expect(getDossierTriggers(container)).toHaveLength(placeholderSources.length);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Abrir expediente de Estudiante 1'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const dialog = getDialog();
+      expect(dialog.textContent).toContain('Estudiante 1');
+      expect(dialog.textContent).not.toContain('Fuente:');
+      expect(dialog.textContent).not.toContain('No registra');
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cerrar'));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'no registra');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "no registra" en las ${placeholderSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats waitlist source wrappers as default plumbing in busy lists', async () => {
     const defaultSources = [
       'waitlist',

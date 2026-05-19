@@ -2346,8 +2346,18 @@ const placeholderMetadataValueKeys = new Set([
   'not available',
   'not tracked',
   'no campaign',
+  'no informa',
+  'no informada',
+  'no informado',
+  'no registra',
+  'no registrada',
+  'no registrado',
+  'no reportada',
+  'no reportado',
   'no aplica',
   'no disponible',
+  'sin registrar',
+  'sin registro',
   'tbd',
 ].map(normalizeSourceAliasKey));
 
