@@ -106,7 +106,9 @@ data SubjectCreate = SubjectCreate
   } deriving (Generic)
 instance ToJSON SubjectCreate
 instance FromJSON SubjectCreate where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SubjectCreate" ["active"] value
+    genericParseJSON strictRequestObjectOptions value
 
 data SubjectUpdate = SubjectUpdate
   { name   :: Maybe Text
@@ -115,6 +117,7 @@ data SubjectUpdate = SubjectUpdate
 instance ToJSON SubjectUpdate
 instance FromJSON SubjectUpdate where
   parseJSON value = do
+    rejectNullOptionalFields "SubjectUpdate" ["name", "active"] value
     payload@(SubjectUpdate nameValue activeValue) <- genericParseJSON strictRequestObjectOptions value
     case (nameValue, activeValue) of
       (Nothing, Nothing) ->

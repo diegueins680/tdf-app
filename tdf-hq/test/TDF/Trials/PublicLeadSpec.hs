@@ -1081,6 +1081,21 @@ spec = do
         (A.eitherDecode "{}" :: Either String SubjectUpdate)
         `shouldBe` True
 
+    it "rejects explicit null subject patch fields instead of silently omitting them" $ do
+      case (A.eitherDecode "{\"name\":null,\"active\":false}" :: Either String SubjectUpdate) of
+        Left err ->
+          err `shouldContain` "name must be omitted instead of null"
+        Right value ->
+          expectationFailure
+            ("Expected null subject name patch to be rejected, got " <> show value)
+
+      case (A.eitherDecode "{\"active\":null}" :: Either String SubjectUpdate) of
+        Left err ->
+          err `shouldContain` "active must be omitted instead of null"
+        Right value ->
+          expectationFailure
+            ("Expected null subject active patch to be rejected, got " <> show value)
+
   describe "StudentCreate request decoding" $ do
     it "accepts canonical private student create payloads" $ do
       let payload = BL8.pack $ concat
@@ -1251,6 +1266,14 @@ spec = do
       isLeft
         (A.eitherDecode "{\"name\":\"Piano\",\"active\":false,\"roomIds\":[1]}" :: Either String SubjectCreate)
         `shouldBe` True
+
+    it "rejects explicit null subject create defaults instead of falling back to active" $
+      case (A.eitherDecode "{\"name\":\"Piano\",\"active\":null}" :: Either String SubjectCreate) of
+        Left err ->
+          err `shouldContain` "active must be omitted instead of null"
+        Right value ->
+          expectationFailure
+            ("Expected null subject active default to be rejected, got " <> show value)
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do
