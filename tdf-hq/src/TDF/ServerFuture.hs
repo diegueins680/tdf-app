@@ -20,6 +20,7 @@ import           Data.Char
       )
   , generalCategory
   , isControl
+  , ord
   )
 import           Data.List            (group, isPrefixOf, nub)
 import qualified Data.Set             as Set
@@ -833,6 +834,7 @@ invalidCardText maxLength value =
     stripped = T.strip value
     invalidCardChar ch =
       isControl ch
+        || ord ch > 0xFF
         || generalCategory ch
              `elem` [ EnclosingMark
                     , Format

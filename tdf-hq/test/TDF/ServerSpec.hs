@@ -12579,6 +12579,10 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` True
             invalidCardText 120 ("Gestio" <> T.singleton '\x0301' <> "n de usuarios")
                 `shouldBe` True
+            invalidCardText 120 ("T" <> T.singleton '\x043E' <> "kens API")
+                `shouldBe` True
+            invalidCardText 120 ("Tokens API " <> T.singleton '\x1F511')
+                `shouldBe` True
             invalidCardText 120 ("Tokens" <> T.singleton '\xE000' <> "API")
                 `shouldBe` True
 
