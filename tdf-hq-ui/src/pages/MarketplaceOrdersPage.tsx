@@ -374,15 +374,18 @@ export default function MarketplaceOrdersPage() {
     || Boolean(fromDate)
     || Boolean(toDate)
     || activePaidOnlyFilter;
-  const showSearchWithExtraFilters = hasSearchInput && hasNonSearchFiltersActive;
-  const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
-  const filtersActiveCount =
+  const nonSearchFiltersActiveCount =
     (statusFilter !== 'all' ? 1 : 0) +
     (providerFilter !== 'all' ? 1 : 0) +
-    (search.trim() ? 1 : 0) +
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (activePaidOnlyFilter ? 1 : 0);
+  const showIndividualFilterDeletes = nonSearchFiltersActiveCount > 1;
+  const showSearchWithExtraFilters = hasSearchInput && hasNonSearchFiltersActive;
+  const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
+  const filtersActiveCount =
+    nonSearchFiltersActiveCount +
+    (search.trim() ? 1 : 0);
   const visiblePaidCount = filtered.filter((o) => isPaidOrderStatus(o.moStatus)).length;
   const visiblePendingCount = Math.max(filtered.length - visiblePaidCount, 0);
   const showVisibleOrderBreakdown = visiblePaidCount > 0 && visiblePendingCount > 0;
@@ -921,18 +924,40 @@ export default function MarketplaceOrdersPage() {
                     </Button>
                   )}
                   {statusFilter !== 'all' && (
-                    <Chip size="small" label={`Estado: ${statusLabel(statusFilter)}`} onDelete={() => setStatusFilter('all')} />
+                    <Chip
+                      size="small"
+                      label={`Estado: ${statusLabel(statusFilter)}`}
+                      onDelete={showIndividualFilterDeletes ? () => setStatusFilter('all') : undefined}
+                    />
                   )}
                   {providerFilter !== 'all' && (
                     <Chip
                       size="small"
                       label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
-                      onDelete={() => setProviderFilter('all')}
+                      onDelete={showIndividualFilterDeletes ? () => setProviderFilter('all') : undefined}
                     />
                   )}
-                  {fromDate && <Chip size="small" label={`Desde: ${fromDate}`} onDelete={() => setFromDate('')} />}
-                  {toDate && <Chip size="small" label={`Hasta: ${toDate}`} onDelete={() => setToDate('')} />}
-                  {activePaidOnlyFilter && <Chip size="small" label="Con pago" onDelete={() => setPaidOnly(false)} />}
+                  {fromDate && (
+                    <Chip
+                      size="small"
+                      label={`Desde: ${fromDate}`}
+                      onDelete={showIndividualFilterDeletes ? () => setFromDate('') : undefined}
+                    />
+                  )}
+                  {toDate && (
+                    <Chip
+                      size="small"
+                      label={`Hasta: ${toDate}`}
+                      onDelete={showIndividualFilterDeletes ? () => setToDate('') : undefined}
+                    />
+                  )}
+                  {activePaidOnlyFilter && (
+                    <Chip
+                      size="small"
+                      label="Con pago"
+                      onDelete={showIndividualFilterDeletes ? () => setPaidOnly(false) : undefined}
+                    />
+                  )}
                   <Button onClick={clearFilters} variant="text">
                     {clearFiltersActionLabel}
                   </Button>

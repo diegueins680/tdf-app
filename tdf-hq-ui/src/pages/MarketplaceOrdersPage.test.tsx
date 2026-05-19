@@ -146,6 +146,11 @@ const queryActionByText = (root: ParentNode, labelText: string) =>
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ) ?? null;
 
+const countActionsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
+    (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
+  ).length;
+
 const getInputByLabel = (root: ParentNode, labelText: string) => {
   const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
     (element) => (element.textContent ?? '').replace('*', '').trim() === labelText,
@@ -838,6 +843,56 @@ describe('MarketplaceOrdersPage', () => {
         expect(copiedUrl.searchParams.has('q')).toBe(false);
         expect(copiedUrl.searchParams.has('from')).toBe(false);
         expect(copiedUrl.searchParams.has('to')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps a lone active filter chip passive so the tray has one clear reset action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar otros filtros')).toBeNull();
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Estado: Pagado');
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
       });
     } finally {
       await cleanup();
