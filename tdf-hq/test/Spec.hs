@@ -1130,6 +1130,11 @@ main = hspec $ do
             assertInvalid "bad_domain.example.com"
             assertInvalid "bad..example.com"
             assertInvalid "-bad.example.com"
+            assertInvalid "localhost"
+            assertInvalid "com"
+            assertInvalid "127.0.0.1"
+            assertInvalid "example.c"
+            assertInvalid "example.123"
 
         it "rejects malformed session cookie paths before emitting ambiguous Set-Cookie headers" $ do
             let assertInvalid rawPath =

@@ -988,7 +988,11 @@ normalizeSessionCookieDomain (Just rawDomain)
       invalid
   | T.isPrefixOf "." canonical || T.isSuffixOf "." canonical =
       invalid
-  | any (not . isValidDomainLabel) (T.splitOn "." canonical) =
+  | length domainLabels < 2 =
+      invalid
+  | any (not . isValidDomainLabel) domainLabels =
+      invalid
+  | not (isValidCookieDomainTopLabel (last domainLabels)) =
       invalid
   | otherwise =
       Right (Just canonical)
@@ -999,6 +1003,7 @@ normalizeSessionCookieDomain (Just rawDomain)
       case T.stripPrefix "." lowered of
         Just rest -> rest
         Nothing -> lowered
+    domainLabels = T.splitOn "." canonical
     invalid =
       Left
         "SESSION_COOKIE_DOMAIN must be a cookie domain without scheme, port, path, whitespace, separators, or control characters"
@@ -1013,6 +1018,10 @@ normalizeSessionCookieDomain (Just rawDomain)
         && T.all isDomainChar label
     isDomainChar ch =
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
+    isValidCookieDomainTopLabel label =
+      T.length label >= 2 && T.any isDomainLetter label
+    isDomainLetter ch =
+      ch >= 'a' && ch <= 'z'
 
 validateSessionCookieName :: Maybe String -> IO Text
 validateSessionCookieName rawName =
