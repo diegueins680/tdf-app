@@ -235,6 +235,7 @@ const COHORT_FILTER_LABEL = 'Formulario público';
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
+const LOCAL_SEARCH_COMPACT_CONTEXT_TITLE = 'Otros datos: estado, curso, fuente, origen o nota cuando existan.';
 const missingContactSummary = 'Sin correo ni teléfono';
 const registrationStatusNeedsReviewLabel = 'Estado por revisar';
 const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
@@ -4393,6 +4394,9 @@ export default function CourseRegistrationsAdminPage() {
     }),
     [hasDedicatedCohortFilterPath, registrations],
   );
+  const localSearchInputTitle = localSearchPlaceholder.includes('otros datos')
+    ? LOCAL_SEARCH_COMPACT_CONTEXT_TITLE
+    : undefined;
   const hasCustomStatusSearch = useMemo(
     () => hasSearchableCustomRegistrationStatus(registrations),
     [registrations],
@@ -7246,7 +7250,10 @@ export default function CourseRegistrationsAdminPage() {
                   size="small"
                   fullWidth
                   autoComplete="off"
-                  inputProps={{ spellCheck: false }}
+                  inputProps={{
+                    spellCheck: false,
+                    title: localSearchInputTitle,
+                  }}
                   data-testid="course-registration-local-search"
                   InputProps={{
                     startAdornment: (

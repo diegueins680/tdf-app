@@ -218,6 +218,7 @@ const copyVisibleSearchCsvLabel = 'Copiar CSV';
 const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const cohortFilterLabel = 'Formulario público';
 const localSearchLabel = 'Buscar inscripciones';
+const localSearchCompactContextTitle = 'Otros datos: estado, curso, fuente, origen o nota cuando existan.';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
 const emptySearchLimitRecoveryLabel = 'Revisar más registros';
@@ -10807,6 +10808,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       const searchInput = getInputByLabel(container, localSearchLabel);
       expect(searchInput.getAttribute('placeholder')).toBe('Nombre, contacto, registro u otros datos');
+      expect(searchInput.getAttribute('title')).toBe(localSearchCompactContextTitle);
       expect(searchInput.getAttribute('placeholder')).not.toContain('nota');
       expect(searchInput.getAttribute('placeholder')).not.toContain('estado');
       expect(searchInput.getAttribute('placeholder')).not.toContain('fuente');
