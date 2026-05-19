@@ -8,14 +8,17 @@ import Data.Aeson
   ( FromJSON (parseJSON)
   , Options
   , ToJSON
+  , Value (Null)
   , defaultOptions
   , genericParseJSON
   , rejectUnknownFields
   , withObject
+  , (.:?)
   )
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time (UTCTime)
 
 strictObjectOptions :: Options
@@ -164,7 +167,43 @@ data ClassSessionUpdate = ClassSessionUpdate
   } deriving (Show, Generic)
 instance ToJSON ClassSessionUpdate
 instance FromJSON ClassSessionUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "ClassSessionUpdate" $ \object -> do
+    let allowedKeys =
+          [ "teacherId"
+          , "subjectId"
+          , "studentId"
+          , "startAt"
+          , "endAt"
+          , "roomId"
+          , "bookingId"
+          , "notes"
+          ]
+        providedKeys =
+          map AesonKey.toText (AesonKeyMap.keys object)
+        unexpectedKeys =
+          filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AesonKeyMap.lookup (AesonKey.fromText key) object == Just Null
+          ]
+    case unexpectedKeys of
+      key:_ -> fail ("Unknown field in ClassSessionUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "ClassSessionUpdate must include at least one field"
+            else
+              ClassSessionUpdate
+                <$> object .:? "teacherId"
+                <*> object .:? "subjectId"
+                <*> object .:? "studentId"
+                <*> object .:? "startAt"
+                <*> object .:? "endAt"
+                <*> object .:? "roomId"
+                <*> object .:? "bookingId"
+                <*> object .:? "notes"
 
 data StudentCreate = StudentCreate
   { fullName :: Text

@@ -11968,6 +11968,27 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+        it "rejects empty or null-only patch bodies before class-session handlers run fallback updates" $ do
+            isLeft
+                ( eitherDecode
+                    "{}"
+                    :: Either String TrialsDTO.ClassSessionUpdate
+                )
+                `shouldBe` True
+
+            case
+                ( eitherDecode
+                    "{\"notes\":null}"
+                    :: Either String TrialsDTO.ClassSessionUpdate
+                ) of
+                Left err ->
+                    err `shouldContain` "notes must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null class-session notes patch to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "buildLiveSessionUsernameCollisionCandidate" $ do
         it "preserves the collision suffix within the 60-character username budget" $ do
             let base = Data.Text.replicate 60 "a"
