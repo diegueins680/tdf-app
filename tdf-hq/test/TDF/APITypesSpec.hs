@@ -2150,6 +2150,12 @@ spec = do
             decodeEnroll
                 "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"REF\\u202E42\"}"
                 `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"\\u00A0\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"\\t\"}"
+                `shouldSatisfy` isLeft
             decodeReferralClaim
                 "{\"email\":\"ada@example.com\",\"code\":\"REF\\n42\"}"
                 `shouldSatisfy` isLeft

@@ -181,7 +181,8 @@ isUnsafeAcademyPlatformChar ch =
 optionalAcademyReferralCode :: Maybe Text -> Parser (Maybe Text)
 optionalAcademyReferralCode Nothing = pure Nothing
 optionalAcademyReferralCode (Just raw)
-  | T.null (T.strip raw) = pure Nothing
+  | T.null (T.strip raw) && not (T.any isUnsafeAcademyReferralCodeBlankChar raw) =
+      pure Nothing
   | otherwise = Just <$> requiredAcademyReferralCode raw
 
 requiredAcademyReferralCode :: Text -> Parser Text
@@ -191,7 +192,11 @@ requiredAcademyReferralCode raw =
 validateAcademyReferralCode :: Text -> Either Text Text
 validateAcademyReferralCode raw =
   let codeValue = T.toUpper (T.strip raw)
-  in if T.null codeValue
+  in if T.any isControl raw
+       then Left "referral code must not contain control characters"
+       else if T.any isUnsafeAcademyReferralCodeBlankChar raw
+         then Left "referral code must not contain hidden Unicode formatting marks or non-ASCII spaces"
+       else if T.null codeValue
        then Left "referral code must not be blank"
        else if T.length codeValue > maxAcademyReferralCodeChars
          then Left "referral code must be 128 characters or fewer"
@@ -205,6 +210,11 @@ validateAcademyReferralCode raw =
 
 maxAcademyReferralCodeChars :: Int
 maxAcademyReferralCodeChars = 128
+
+isUnsafeAcademyReferralCodeBlankChar :: Char -> Bool
+isUnsafeAcademyReferralCodeBlankChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 isNonVisibleAscii :: Char -> Bool
 isNonVisibleAscii ch = ch < '!' || ch > '~'
