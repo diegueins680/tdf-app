@@ -235,7 +235,7 @@ const dossierScopeHint =
 const dossierLinkScopeHint =
   'Abre expediente desde el nombre.';
 const paymentWorkflowDossierScopeHint =
-  'Abre expediente desde el nombre; las opciones de pago y estado incluyen Registrar pago.';
+  'Abre expediente desde el nombre; pago y estado están en una sola acción.';
 const dossierOnlyScopeHint =
   'Abre expediente desde el nombre; las opciones de estado abren acciones rápidas.';
 const customStatusNormalizationScopeHint =
@@ -247,17 +247,17 @@ const paidRecoveryScopeHint =
 const emailDossierScopeHint =
   'Abre expediente desde el correo; las opciones de estado muestran acciones.';
 const emailPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el correo; las opciones de pago y estado incluyen Registrar pago.';
+  'Abre expediente desde el correo; pago y estado están en una sola acción.';
 const phonePaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el teléfono; las opciones de pago y estado incluyen Registrar pago.';
+  'Abre expediente desde el teléfono; pago y estado están en una sola acción.';
 const recordDossierScopeHint =
   'Abre expediente desde el número de registro; las opciones de estado muestran acciones.';
 const recordPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el número de registro; las opciones de pago y estado incluyen Registrar pago.';
+  'Abre expediente desde el número de registro; pago y estado están en una sola acción.';
 const recordDossierLinkScopeHint =
   'Abre expediente desde el número de registro.';
 const mixedIdentityPaymentWorkflowDossierScopeHint =
-  'Abre expediente desde el nombre, el correo o el número de registro; las opciones de pago y estado incluyen Registrar pago.';
+  'Abre expediente desde el nombre, el correo o el número de registro; pago y estado están en una sola acción.';
 const mixedIdentityDossierLinkScopeHint =
   'Abre expediente desde el nombre, el correo o el número de registro.';
 const dossierErrorRetryLabel = 'Reintentar expediente';
@@ -1856,7 +1856,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
-        'Abre expediente desde el registro; las opciones de pago y estado incluyen Registrar pago. Contacto pendiente en esta inscripción.',
+        'Abre expediente desde el registro; pago y estado están en una sola acción. Contacto pendiente en esta inscripción.',
       );
       expect(getButtonByAriaLabel(container, 'Abrir expediente de registro sin número').textContent?.trim()).toBe(
         'Registro sin número',

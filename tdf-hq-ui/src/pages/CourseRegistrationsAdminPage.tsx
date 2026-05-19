@@ -208,7 +208,7 @@ const buildCompactDossierScopeHint = (targetLabel: string) =>
 const buildDossierLinkScopeHint = (targetLabel: string) =>
   `Abre expediente desde ${targetLabel}.`;
 const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
-  `Abre expediente desde ${targetLabel}; las opciones de pago y estado incluyen Registrar pago.`;
+  `Abre expediente desde ${targetLabel}; pago y estado están en una sola acción.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
   `Abre expediente desde ${targetLabel}; las opciones de estado abren acciones rápidas.`;
 const buildCustomStatusNormalizationScopeHint = (targetLabel: string) =>
