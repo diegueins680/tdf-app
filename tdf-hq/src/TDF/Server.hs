@@ -6166,19 +6166,22 @@ selectCourseRegistrationFallback contactLabel filters = do
     [] -> do
       fallbackMatches <-
         selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
-      pure $ case fallbackMatches of
-        [] -> Right Nothing
-        [fallbackRow] -> Right (Just fallbackRow)
-        _ ->
-          Left err409
-            { errBody =
-                BL.fromStrict $
-                  TE.encodeUtf8
-                    ( "Multiple course registrations match this "
-                        <> contactLabel
-                        <> "; resolve duplicate rows before using public registration fallback"
-                    )
-            }
+      pure $ do
+        validatedFallbackMatches <-
+          traverse validateStoredCourseRegistrationFallbackRow fallbackMatches
+        case validatedFallbackMatches of
+          [] -> Right Nothing
+          [fallbackRow] -> Right (Just fallbackRow)
+          _ ->
+            Left err409
+              { errBody =
+                  BL.fromStrict $
+                    TE.encodeUtf8
+                      ( "Multiple course registrations match this "
+                          <> contactLabel
+                          <> "; resolve duplicate rows before using public registration fallback"
+                      )
+              }
     [pendingRow] -> pure (Right (Just pendingRow))
     _ ->
       pure $
@@ -6191,6 +6194,17 @@ selectCourseRegistrationFallback contactLabel filters = do
                       <> "; resolve duplicate pending rows before updating a public registration"
                   )
           }
+
+validateStoredCourseRegistrationFallbackRow
+  :: Entity ME.CourseRegistration
+  -> Either ServerError (Entity ME.CourseRegistration)
+validateStoredCourseRegistrationFallbackRow row@(Entity _ reg) =
+  case normalizeCourseRegistrationStatus (ME.courseRegistrationStatus reg) of
+    Just _ -> Right row
+    Nothing ->
+      Left err500
+        { errBody = "Stored course registration status is invalid"
+        }
 
 -- Health
 health :: AppM TDF.API.HealthStatus

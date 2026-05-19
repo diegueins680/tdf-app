@@ -4342,6 +4342,42 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected duplicate historical registration fallback to fail, got: " <> show value)
 
+        it "rejects invalid stored statuses before using the historical registration fallback" $ do
+            fallbackResult <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                insert_ ME.CourseRegistration
+                    { ME.courseRegistrationCourseSlug = "produccion-musical"
+                    , ME.courseRegistrationPartyId = Nothing
+                    , ME.courseRegistrationFullName = Nothing
+                    , ME.courseRegistrationEmail = Just "stale@example.com"
+                    , ME.courseRegistrationPhoneE164 = Nothing
+                    , ME.courseRegistrationSource = "landing"
+                    , ME.courseRegistrationStatus = "refunded"
+                    , ME.courseRegistrationAdminNotes = Nothing
+                    , ME.courseRegistrationHowHeard = Nothing
+                    , ME.courseRegistrationUtmSource = Nothing
+                    , ME.courseRegistrationUtmMedium = Nothing
+                    , ME.courseRegistrationUtmCampaign = Nothing
+                    , ME.courseRegistrationUtmContent = Nothing
+                    , ME.courseRegistrationCreatedAt = now
+                    , ME.courseRegistrationUpdatedAt = now
+                    }
+                findExistingRegistration
+                    "produccion-musical"
+                    (Just "stale@example.com")
+                    Nothing
+
+            case fallbackResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Stored course registration status is invalid"
+                Right value ->
+                    expectationFailure
+                        ( "Expected invalid stored registration status to fail, got: "
+                            <> show value
+                        )
+
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
