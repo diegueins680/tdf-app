@@ -265,7 +265,7 @@ const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}; estado actual: Pendiente de pago`;
 const initialEmptyStateConfigMessage =
-  'Todavía no hay inscripciones. Crea el primer curso; allí se configura el formulario público.';
+  'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
 const initialEmptyStateMultiCohortMessage =
   'Hay 2 formularios públicos listos para recibir la primera inscripción: Beatmaking 101 y Mixing Bootcamp.';
 const singleCohortInitialEmptyStateMessage =
@@ -21442,6 +21442,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptyState?.textContent).toContain(initialEmptyStateConfigMessage);
       expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
       expect(emptyState?.textContent).not.toContain('Crea el primer curso y su formulario público');
+      expect(emptyState?.textContent).not.toContain('Crea el primer curso; allí se configura');
       expect(emptyState?.textContent).not.toContain('Configura el primer formulario público');
       expect(emptyState?.textContent).not.toContain('para empezar a recibirlas aquí');
       expect(countOccurrences(emptyState!, initialEmptyStateConfigActionLabel)).toBe(1);

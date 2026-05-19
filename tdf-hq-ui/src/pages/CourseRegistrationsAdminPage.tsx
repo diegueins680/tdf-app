@@ -61,7 +61,7 @@ const firstReceiptComposerHelpText = 'Este formulario ya está abierto para regi
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
 const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Crea el primer curso; allí se configura el formulario público.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
 const INITIAL_COHORT_PREVIEW_LIMIT = 2;
 const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
 const cleanInitialCohortPreviewLabel = (label: string) =>
