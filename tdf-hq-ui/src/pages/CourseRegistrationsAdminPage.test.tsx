@@ -20308,6 +20308,9 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       '[DRAFT] Typeform registration page - Beatmaking 101',
       'BORRADOR: Formulario de Tally para Beatmaking 101',
+      '[PENDING] Typeform registration page - Beatmaking 101',
+      'Pendiente: Formulario de Tally para Beatmaking 101',
+      'Por publicar - Google Forms - Beatmaking 101',
       'WIP - Google Forms - Beatmaking 101',
     ];
 
@@ -20323,7 +20326,7 @@ describe('CourseRegistrationsAdminPage', () => {
         const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
-        expect(emptyState?.textContent).not.toMatch(/DRAFT|BORRADOR|WIP|Typeform|Tally|Google Forms|registration page/i);
+        expect(emptyState?.textContent).not.toMatch(/DRAFT|BORRADOR|PENDING|Pendiente|Por publicar|WIP|Typeform|Tally|Google Forms|registration page/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
@@ -20384,8 +20387,11 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips trailing generated-state markers from first-run cohort copy', async () => {
     const titles = [
       'Beatmaking 101 [DRAFT]',
+      'Beatmaking 101 [PENDING]',
       'Beatmaking 101 (Preview)',
       'Beatmaking 101 [UAT]',
+      'Beatmaking 101 - pendiente',
+      'Beatmaking 101: por publicar',
       'Beatmaking 101 - interno',
       'Beatmaking 101 - DEMO',
       'Beatmaking 101: Vista previa',
@@ -20408,7 +20414,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/DRAFT|Preview|UAT|interno|DEMO|Vista previa|ARCHIVED|respaldo/i);
+        expect(emptyState?.textContent).not.toMatch(/DRAFT|PENDING|Preview|UAT|pendiente|por publicar|interno|DEMO|Vista previa|ARCHIVED|respaldo/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
         expect(publicFormAction?.getAttribute('title')).toBe(
