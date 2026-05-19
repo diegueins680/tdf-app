@@ -629,6 +629,7 @@ isNonPublicIpv6 host =
     || isLinkLocal firstSegment
     || isSiteLocal firstSegment
     || maybe False isNonPublicIpv4 (sixToFourIpv4Octets host)
+    || maybe False isNonPublicIpv4 (nat64Ipv4Octets host)
     || maybe False isNonPublicIpv4 (embeddedIpv4Octets host)
   where
     segments = T.splitOn ":" host
@@ -662,6 +663,13 @@ sixToFourIpv4Octets host =
     Just (prefix:hi:lo:_)
       | prefix == 0x2002 ->
           Just (hi `div` 256, hi `mod` 256, lo `div` 256, lo `mod` 256)
+    _ -> Nothing
+
+nat64Ipv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+nat64Ipv4Octets host =
+  case parseIpv6Hextets host of
+    Just [0x0064, 0xff9b, 0, 0, 0, 0, hi, lo] ->
+      Just (hi `div` 256, hi `mod` 256, lo `div` 256, lo `mod` 256)
     _ -> Nothing
 
 embeddedIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)

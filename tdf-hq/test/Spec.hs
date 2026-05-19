@@ -8861,6 +8861,7 @@ main = hspec $ do
             assertPrivateTarget "https://[0:0:0:0:0:ffff:c0a8:117]/live"
             assertPrivateTarget "https://[2002:0a00:0001::]/live"
             assertPrivateTarget "https://[2002:c0a8:0117::]/live"
+            assertPrivateTarget "https://[64:ff9b::127.0.0.1]/live"
 
         it "rejects reserved IP ranges before metadata/import fetches can target them" $ do
             let assertReservedTarget rawUrl =
