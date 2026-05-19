@@ -224,6 +224,7 @@ import TDF.Server
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
       driveUploadServer,
+      maxGoogleCalendarPageItems,
       parseMcpRequest,
       parseToolCallParams,
       resolveDriveRedirectUri,
@@ -5129,6 +5130,27 @@ main = hspec $ do
                     parsedItems `shouldBe` []
                     nextPage `shouldBe` Nothing
                     nextSync `shouldBe` Just "cursor-1"
+
+        it "rejects oversized Google Calendar pages before sync fallback accumulation" $ do
+            let eventPayload n =
+                    A.object
+                        [ "id" .= ("event-" <> Data.Text.pack (show n) :: Text)
+                        ]
+                oversizedPage =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ eventPayload n
+                                | n <- [1 .. maxGoogleCalendarPageItems + 1]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+            case eitherDecode oversizedPage :: Either String GoogleEventsPage of
+                Left err ->
+                    err `shouldContain` "Google Calendar page must contain 2000 items or fewer"
+                Right page ->
+                    expectationFailure
+                        ("Expected oversized Google Calendar page to fail, got: " <> show page)
 
         it "rejects malformed or ambiguous Google Calendar cursors before sync fallback handling" $ do
             case eitherDecode "{\"items\":[],\"nextPageToken\":\" page-cursor \",\"nextSyncToken\":null}" of
