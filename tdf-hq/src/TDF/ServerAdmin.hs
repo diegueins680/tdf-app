@@ -1269,6 +1269,8 @@ validateSocialUnholdIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialUnholdIdentifier fieldName value
   | T.length value > 256 =
       invalid (" must be 256 characters or fewer")
+  | not (T.any isAlphaNum value) =
+      invalid (" must include letters or numbers")
   | T.any isControl value =
       invalid (" must not contain control characters")
   | T.any isSpace value =

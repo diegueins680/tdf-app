@@ -1319,6 +1319,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "externalId must not contain whitespace"
                 (validateSocialUnholdLookup (Just "ig mid 1") Nothing)
             assertInvalid
+                "externalId must include letters or numbers"
+                (validateSocialUnholdLookup (Just "---") Nothing)
+            assertInvalid
                 "senderId must not contain control characters"
                 (validateSocialUnholdLookup Nothing (Just ("wa:+593" <> T.singleton '\NUL')))
             assertInvalid
