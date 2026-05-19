@@ -1986,10 +1986,18 @@ const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
   return trimmedTitle;
 };
 
-const firstRunResponseSheetSuffixPattern =
-  /\s*(?:\(|\[)\s*(?:(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?\s*(?:\)|\])\s*$/i;
-const firstRunResponseSheetPrefixPattern =
-  /^(?:(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?\s*(?:[-:/|]\s*)/i;
+const firstRunResponseSheetProviderPattern =
+  String.raw`(?:(?:google\s*)?(?:sheets?|forms?)|(?:microsoft\s+)?excel)`;
+const firstRunResponseSheetDescriptorPattern =
+  String.raw`(?:(?:${firstRunResponseSheetProviderPattern}\s+)?(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?`;
+const firstRunResponseSheetSuffixPattern = new RegExp(
+  String.raw`\s*(?:(?:\(|\[)\s*(?:${firstRunResponseSheetDescriptorPattern})\s*(?:\)|\])|(?:[-:/|]\s*)(?:${firstRunResponseSheetDescriptorPattern}))\s*$`,
+  'i',
+);
+const firstRunResponseSheetPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunResponseSheetDescriptorPattern})\s*(?:[-:/|]\s*)`,
+  'i',
+);
 
 const stripFirstRunResponseSheetSuffix = (title: string) =>
   title.replace(firstRunResponseSheetSuffixPattern, '').trim();

@@ -21480,29 +21480,39 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('strips spreadsheet response suffixes from first-run cohort labels', async () => {
-    listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101 (Responses)' }]);
-    listRegistrationsMock.mockResolvedValue([]);
+  it('strips spreadsheet response wrappers from first-run cohort labels', async () => {
+    const titles = [
+      'Beatmaking 101 (Responses)',
+      'Google Sheet responses - Beatmaking 101',
+      'Excel form responses - Beatmaking 101',
+      'Beatmaking 101 - Google Sheets responses',
+    ];
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderPage(container);
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
 
-    await waitForExpectation(() => {
-      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
-      const formAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
 
-      expect(emptyState).not.toBeNull();
-      expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
-      expect(emptyState?.textContent).not.toContain('Responses');
-      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
-      expect(formAction?.textContent?.trim()).toBe(initialEmptyStateFormActionLabel);
-      expect(formAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
-      expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
-      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
-    });
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const formAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
 
-    await cleanup();
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/responses?|google sheets?|excel/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(formAction?.textContent?.trim()).toBe(initialEmptyStateFormActionLabel);
+        expect(formAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(formAction?.getAttribute('title')).toBe('Abrir formulario público de Beatmaking 101 en una pestaña nueva');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
   });
 
   it('waits for cohort context before showing first-run empty-state actions', async () => {
