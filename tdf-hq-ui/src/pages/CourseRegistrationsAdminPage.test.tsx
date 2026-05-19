@@ -18249,13 +18249,17 @@ describe('CourseRegistrationsAdminPage', () => {
       'Payment button for Beatmaking 101',
       'Online payment form - Beatmaking 101',
       'Payment plan form - Beatmaking 101',
+      'Payment plan application - Beatmaking 101',
+      'Installment request - Beatmaking 101',
       'Beatmaking 101 - payment-plan page',
       'Formulario de pago - Beatmaking 101',
       'Formulario de pago en línea - Beatmaking 101',
       'Formulario de plan de pago - Beatmaking 101',
+      'Solicitud de plan de pagos - Beatmaking 101',
       'Botón de pago - Beatmaking 101',
       'Beatmaking 101 - página de pago',
       'Beatmaking 101 - enlace de planes de pagos',
+      'Beatmaking 101 - solicitud de cuotas',
       'Beatmaking 101 - página de checkout online',
       'Enlace de pago para Beatmaking 101',
       'Deposit form - Beatmaking 101',
@@ -18289,7 +18293,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|stripe|datafast|kushki|paymentez|deuna|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|deposit|dep[oó]sito|abono|receipt|proof|invoice|comprobante|recibo|factura|evidencia/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|stripe|datafast|kushki|paymentez|deuna|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|receipt|proof|invoice|comprobante|recibo|factura|evidencia/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
