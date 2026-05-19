@@ -507,13 +507,13 @@ validateSignupGoogleIdToken (Just rawToken)
 normalizeAuthPhoneNumber :: Text -> Maybe Text
 normalizeAuthPhoneNumber raw =
   let trimmed = T.strip raw
-      onlyDigits = T.filter isDigit trimmed
+      onlyDigits = T.filter isAsciiPhoneDigit trimmed
       digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isDigit trimmed
+      firstDigitIndex = T.findIndex isAsciiPhoneDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
+        isAsciiPhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
       hasUnsafeChars = T.any isUnsafeAuthPhoneChar trimmed
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
@@ -532,6 +532,10 @@ normalizeAuthPhoneNumber raw =
          || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isAsciiPhoneDigit :: Char -> Bool
+isAsciiPhoneDigit ch =
+  ch >= '0' && ch <= '9'
 
 isUnsafeAuthPhoneChar :: Char -> Bool
 isUnsafeAuthPhoneChar ch =

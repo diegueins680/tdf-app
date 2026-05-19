@@ -308,11 +308,13 @@ signupRoleSpec = describe "validateRequestedSignupRoles" $ do
         expectationFailure ("Expected null signup roles to be rejected, got " <> show value)
 
   it "rejects null signup artist relationship fields instead of using empty fallbacks" $ do
-    let assertNullRejected fieldName =
+    let assertNullRejected :: String -> Expectation
+        assertNullRejected fieldName =
           let rawSignup =
-                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
-                  <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
-                  <> "\"" <> fieldName <> "\":null}"
+                BL8.pack $
+                  "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
+                    <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
+                    <> "\"" <> fieldName <> "\":null}"
           in case A.eitherDecode rawSignup :: Either String SignupRequest of
             Left err ->
               err `shouldContain` (fieldName <> " must be omitted instead of null")
@@ -399,14 +401,30 @@ signupPhoneSpec = describe "validateOptionalSignupPhone" $ do
     assertRejected ("099" <> T.singleton (chr 0x2029) <> "1234567")
     assertRejected ("099" <> T.singleton (chr 0x200D) <> "1234567")
 
-  it "rejects non-ASCII phone separators before canonical E.164 persistence" $
-    case validateOptionalSignupPhone (Just ("099" <> T.singleton (chr 0x00A0) <> "1234567")) of
-      Left err -> do
-        errHTTPCode err `shouldBe` 400
-        BL8.unpack (errBody err) `shouldContain` "phone must be a valid phone number"
-      Right value ->
-        expectationFailure
-          ("Expected non-ASCII signup phone separator to be rejected, got " <> show value)
+  it "rejects non-ASCII phone digits and separators before canonical E.164 persistence" $ do
+    let assertRejected rawPhone =
+          case validateOptionalSignupPhone (Just rawPhone) of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "phone must be a valid phone number"
+            Right value ->
+              expectationFailure
+                ("Expected non-ASCII signup phone to be rejected, got " <> show value)
+    assertRejected ("099" <> T.singleton (chr 0x00A0) <> "1234567")
+    assertRejected $
+      T.pack
+        [ '+'
+        , '\x0665'
+        , '\x0669'
+        , '\x0663'
+        , '\x0669'
+        , '\x0669'
+        , '\x0661'
+        , '\x0662'
+        , '\x0663'
+        , '\x0664'
+        , '\x0665'
+        ]
 
 signupArtistClaimEmailSpec :: Spec
 signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
