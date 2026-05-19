@@ -4305,6 +4305,43 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected duplicate pending registration fallback to fail, got: " <> show value)
 
+        it "rejects duplicate historical contact matches instead of choosing the newest fallback" $ do
+            duplicateResult <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                let mkRegistration statusVal createdAt =
+                        ME.CourseRegistration
+                            { ME.courseRegistrationCourseSlug = "produccion-musical"
+                            , ME.courseRegistrationPartyId = Nothing
+                            , ME.courseRegistrationFullName = Nothing
+                            , ME.courseRegistrationEmail = Just "repeat@example.com"
+                            , ME.courseRegistrationPhoneE164 = Nothing
+                            , ME.courseRegistrationSource = "landing"
+                            , ME.courseRegistrationStatus = statusVal
+                            , ME.courseRegistrationAdminNotes = Nothing
+                            , ME.courseRegistrationHowHeard = Nothing
+                            , ME.courseRegistrationUtmSource = Nothing
+                            , ME.courseRegistrationUtmMedium = Nothing
+                            , ME.courseRegistrationUtmCampaign = Nothing
+                            , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationCreatedAt = createdAt
+                            , ME.courseRegistrationUpdatedAt = createdAt
+                            }
+                insert_ (mkRegistration "paid" now)
+                insert_ (mkRegistration "cancelled" (addUTCTime 60 now))
+                findExistingRegistration
+                    "produccion-musical"
+                    (Just "repeat@example.com")
+                    Nothing
+
+            case duplicateResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Multiple course registrations match this email"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate historical registration fallback to fail, got: " <> show value)
+
     describe "loadAuthedUser" $
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do

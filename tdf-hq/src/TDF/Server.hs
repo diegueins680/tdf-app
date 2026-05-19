@@ -6163,7 +6163,22 @@ selectCourseRegistrationFallback contactLabel filters = do
       (filters ++ [ME.CourseRegistrationStatus ==. "pending_payment"])
       [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
   case pendingMatches of
-    [] -> Right <$> selectFirst filters [Desc ME.CourseRegistrationCreatedAt]
+    [] -> do
+      fallbackMatches <-
+        selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
+      pure $ case fallbackMatches of
+        [] -> Right Nothing
+        [fallbackRow] -> Right (Just fallbackRow)
+        _ ->
+          Left err409
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8
+                    ( "Multiple course registrations match this "
+                        <> contactLabel
+                        <> "; resolve duplicate rows before using public registration fallback"
+                    )
+            }
     [pendingRow] -> pure (Right (Just pendingRow))
     _ ->
       pure $
