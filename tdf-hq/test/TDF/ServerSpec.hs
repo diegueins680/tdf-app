@@ -373,6 +373,7 @@ import TDF.Server
     , formatGoogleOAuthFailure
     , decodeDriveMetaResourceKeyIfSuccessful
     , resolveDrivePublicUrl
+    , resolveDrivePublicUrlAfterPermission
     , resolveWorkflowId
     , openAIChatRequestErrorMessage
     , shouldRetryWithFallbackModel
@@ -6327,6 +6328,24 @@ spec = describe "TDF.Server helpers" $ do
                 Nothing
                 `shouldBe`
                     "https://drive.google.com/download/file-123?resourcekey=rk-123"
+
+        it "withholds public Drive URLs when explicit resource-key sources conflict" $ do
+            resolveDrivePublicUrlAfterPermission
+                200
+                "file-123"
+                Nothing
+                (Just "rk-upload")
+                (Just "rk-meta")
+                `shouldBe` Nothing
+
+            resolveDrivePublicUrlAfterPermission
+                200
+                "file-123"
+                (Just "https://drive.google.com/download/file-123?resourcekey=stale")
+                (Just "rk-shared")
+                (Just " rk-shared ")
+                `shouldBe`
+                    Just "https://drive.google.com/download/file-123?resourcekey=rk-shared"
 
         it "does not let ambiguous upstream resource-key params suppress known Drive resource keys" $ do
             resolveDrivePublicUrl

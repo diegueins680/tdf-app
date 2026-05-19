@@ -14185,6 +14185,11 @@ resolveDrivePublicUrlAfterPermission
   mWebContentLink
   mUploadResourceKey
   mMetaResourceKey
+  | hasConflictingDriveResourceKeys
+      [ sanitizeDriveResourceKey mUploadResourceKey
+      , sanitizeDriveResourceKey mMetaResourceKey
+      ] =
+      Nothing
   | permissionStatus >= 200 && permissionStatus < 300 =
       Just (resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey)
   | otherwise =
