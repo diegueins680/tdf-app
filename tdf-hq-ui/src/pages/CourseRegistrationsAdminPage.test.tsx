@@ -15289,7 +15289,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('clears stale CSV feedback when visible rows update under the same filters', async () => {
+  it('clears stale CSV feedback when visible export content changes under the same filters', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -15354,7 +15354,15 @@ describe('CourseRegistrationsAdminPage', () => {
       queryClient.setQueryData(
         ['admin', 'course-registrations', { slug: '', status: 'all', limit: 200 }],
         [
-          firstNina,
+          {
+            ...firstNina,
+            crFullName: 'Nina Simone Actualizada',
+            crEmail: 'nina.actualizada@example.com',
+          },
+          {
+            ...secondNina,
+            crPhoneE164: '+593999000222',
+          },
           ...buildRegistrations(7, (index) => ({
             crId: 301 + index,
             crPartyId: 40 + index,
@@ -15368,9 +15376,9 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getDossierTriggers(container)).toHaveLength(2);
       expect(container.textContent).not.toContain('CSV copiado');
-      expect(countButtonsByText(container, copyVisibleSearchCsvLabel)).toBe(0);
+      expect(getButtonByText(container, copyVisibleSearchCsvLabel)).toBeTruthy();
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);
     });
 

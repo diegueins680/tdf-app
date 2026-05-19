@@ -4743,9 +4743,18 @@ export default function CourseRegistrationsAdminPage() {
     ? 'Copia solo los resultados visibles de la búsqueda.'
     : 'Copia solo las inscripciones visibles de esta vista.';
   const visibleCsvScopeKey = useMemo(
-    () => searchedRegistrations
-      .map((reg) => `${reg.crCourseSlug}:${reg.crId}:${reg.crStatus}:${reg.crUpdatedAt}`)
-      .join('|'),
+    () => JSON.stringify(
+      searchedRegistrations.map((reg) => [
+        reg.crId,
+        reg.crCourseSlug,
+        reg.crFullName ?? '',
+        reg.crEmail ?? '',
+        reg.crPhoneE164 ?? '',
+        reg.crStatus,
+        reg.crCreatedAt,
+        reg.crUpdatedAt,
+      ]),
+    ),
     [searchedRegistrations],
   );
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
