@@ -5385,8 +5385,13 @@ main = hspec $ do
         it "rejects hidden formatting marks in Calendar ids before fallback lookups" $ do
             CalAPI.normalizeCalendarId " primary "
                 `shouldBe` Right "primary"
+            CalAPI.normalizeCalendarId "en.ec#holiday@group.v.calendar.google.com"
+                `shouldBe` Right "en.ec#holiday@group.v.calendar.google.com"
             CalAPI.normalizeCalendarId ("primary" <> Data.Text.singleton '\x200B')
                 `shouldBe` Left "calendarId must not contain hidden formatting characters"
+            CalAPI.normalizeCalendarId "primary?alt=json"
+                `shouldBe`
+                    Left "calendarId must not contain URL path or query delimiters"
             validateGoogleCalendarEventId ("event-123" <> Data.Text.singleton '\x202E')
                 `shouldBe` Left "Google Calendar event id must not contain hidden formatting characters"
 

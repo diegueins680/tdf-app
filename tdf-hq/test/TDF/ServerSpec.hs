@@ -6763,6 +6763,14 @@ spec = describe "TDF.Server helpers" $ do
                 "calendarId must not contain control characters"
                 (validateCalendarEventListQuery (Just "pri\nmary") Nothing Nothing Nothing)
             assertInvalid
+                "calendarId must not contain URL path or query delimiters"
+                ( validateCalendarEventListQuery
+                    (Just "primary?alt=json")
+                    Nothing
+                    Nothing
+                    Nothing
+                )
+            assertInvalid
                 "calendarId must not contain whitespace"
                 (validateCalendarEventListQuery (Just "team calendar") Nothing Nothing Nothing)
             assertInvalid
@@ -6873,17 +6881,22 @@ spec = describe "TDF.Server helpers" $ do
                         )
 
         it "rejects a malformed stored fallback config before returning it" $
-            case selectUniqueCalendarConfigFallback
-                    [calendarConfigEntity 1 " primary "] of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 500
-                    BL8.unpack (errBody err)
-                        `shouldContain` "Stored Google Calendar config calendarId is invalid"
-                Right value ->
-                    expectationFailure
-                        ( "Expected malformed Calendar config fallback to fail, got: "
-                            <> show (fmap (fromSqlKey . entityKey) value)
-                        )
+            forM_
+                [ " primary "
+                , "primary?alt=json"
+                ]
+                $ \malformedCalendarId ->
+                    case selectUniqueCalendarConfigFallback
+                            [calendarConfigEntity 1 malformedCalendarId] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL8.unpack (errBody err)
+                                `shouldContain` "Stored Google Calendar config calendarId is invalid"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed Calendar config fallback to fail, got: "
+                                    <> show (fmap (fromSqlKey . entityKey) value)
+                                )
 
         it "rejects malformed stored OAuth tokens before returning a config fallback" $ do
             let withTokens mAccessToken mRefreshToken (Entity key cfg) =

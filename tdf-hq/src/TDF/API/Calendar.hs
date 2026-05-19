@@ -59,13 +59,15 @@ normalizeCalendarId raw =
        then Left "calendarId must not be blank"
        else if T.any isControl trimmed
          then Left "calendarId must not contain control characters"
-         else if T.any isHiddenCalendarIdChar trimmed
-           then Left "calendarId must not contain hidden formatting characters"
-         else if T.any isSpace trimmed
-           then Left "calendarId must not contain whitespace"
-          else if T.length trimmed > maxCalendarIdChars
-            then Left "calendarId must be 1024 characters or fewer"
-           else Right trimmed
+       else if T.any isHiddenCalendarIdChar trimmed
+         then Left "calendarId must not contain hidden formatting characters"
+       else if T.any isCalendarIdUrlDelimiter trimmed
+         then Left "calendarId must not contain URL path or query delimiters"
+       else if T.any isSpace trimmed
+         then Left "calendarId must not contain whitespace"
+       else if T.length trimmed > maxCalendarIdChars
+         then Left "calendarId must be 1024 characters or fewer"
+       else Right trimmed
 
 maxCalendarIdChars :: Int
 maxCalendarIdChars = 1024
@@ -73,6 +75,10 @@ maxCalendarIdChars = 1024
 isHiddenCalendarIdChar :: Char -> Bool
 isHiddenCalendarIdChar ch =
   generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isCalendarIdUrlDelimiter :: Char -> Bool
+isCalendarIdUrlDelimiter ch =
+  ch `elem` ("/?" :: String)
 
 requiredCalendarId :: Text -> Parser Text
 requiredCalendarId raw =
