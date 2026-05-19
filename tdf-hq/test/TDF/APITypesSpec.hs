@@ -611,6 +611,20 @@ spec = do
                 "{\"notes\":\"Moved reminder to next week\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null follow-up fields except the reminder clear operation" $ do
+            decodeFollowUpCreate
+                "{\"entryType\":null,\"notes\":\"Client asked to pay tomorrow\"}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpCreate
+                "{\"notes\":\"Client asked to pay tomorrow\",\"nextFollowUpAt\":null}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpUpdate
+                "{\"subject\":null,\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpUpdate
+                "{\"notes\":null,\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
     describe "Course admin write payload FromJSON" $ do
         it "accepts canonical status, notes, receipt, and upsert payloads" $ do
             case decodeCourseRegistrationStatusUpdate "{\"status\":\"paid\"}" of

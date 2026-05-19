@@ -200,7 +200,12 @@ data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationFollowUpCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationFollowUpCreate"
+      ["entryType", "subject", "attachmentUrl", "attachmentName", "nextFollowUpAt"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationFollowUpCreate
 
 data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
@@ -214,6 +219,10 @@ data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
 
 instance FromJSON CourseRegistrationFollowUpUpdate where
   parseJSON value@(Object o) = do
+    rejectNullOptionalFields
+      "CourseRegistrationFollowUpUpdate"
+      ["entryType", "subject", "notes", "attachmentUrl", "attachmentName"]
+      value
     CourseRegistrationFollowUpUpdateParsed
       { entryType = parsedEntryType
       , subject = parsedSubject
