@@ -202,12 +202,16 @@ dangerousInnerUploadExtensionSegments =
   , "exe"
   , "htm"
   , "html"
+  , "jar"
   , "js"
   , "mjs"
   , "php"
   , "ps1"
+  , "scr"
   , "sh"
   , "svg"
+  , "svgz"
+  , "xhtml"
   ]
 
 maxAssetUploadFileNameChars :: Int

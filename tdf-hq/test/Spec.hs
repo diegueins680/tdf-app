@@ -7623,6 +7623,30 @@ main = hspec $ do
                         { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
                     ])
 
+        it "rejects hidden executable or vector extensions before storage filename fallbacks" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String Inventory.AssetUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected dangerous inventory asset upload name to be "
+                                    <> "rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (Inventory.aufFile parsed))
+                                )
+
+            assertInvalid
+                "Asset upload file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    [("name", "amp.jar.png")]
+                    [mkEventImageFile "file" "amp.png"])
+            assertInvalid
+                "Uploaded file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster.svgz.png"])
+
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
             case fromMultipart
