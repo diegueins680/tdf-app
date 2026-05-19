@@ -2407,11 +2407,14 @@ validateInvitationStatusUpdateInput (Just rawStatus) =
       Just <$> validateInvitationStatusInput (Just rawStatus)
 
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
-validateEventArtistIds artists = do
-  artistKeys <- traverse validateArtistId artists
-  if Set.size (Set.fromList artistKeys) == length artistKeys
-    then Right artistKeys
-    else Left err400 { errBody = "eventArtists[].artistId must be unique" }
+validateEventArtistIds artists
+  | length artists > maxEventArtistsPerEvent =
+      Left err400 { errBody = "eventArtists supports at most 50 artists" }
+  | otherwise = do
+      artistKeys <- traverse validateArtistId artists
+      if Set.size (Set.fromList artistKeys) == length artistKeys
+        then Right artistKeys
+        else Left err400 { errBody = "eventArtists[].artistId must be unique" }
   where
     validateArtistId artist =
       case artistId artist of
@@ -2423,6 +2426,9 @@ validateEventArtistIds artists = do
               case readMaybe (T.unpack normalizedArtistId) :: Maybe Int64 of
                 Just artistIdValue -> Right (toSqlKey artistIdValue)
                 Nothing -> Left err400 { errBody = "eventArtists[].artistId must be a positive integer" }
+
+maxEventArtistsPerEvent :: Int
+maxEventArtistsPerEvent = 50
 
 validateArtistName :: T.Text -> Either ServerError T.Text
 validateArtistName rawName

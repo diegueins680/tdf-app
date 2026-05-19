@@ -977,6 +977,13 @@ spec = describe "TDF.Server helpers" $ do
                     , eventArtistRef (Just "42")
                     ]
                 )
+            assertInvalid
+                "eventArtists supports at most 50 artists"
+                ( validateEventArtistIds
+                    [ eventArtistRef (Just (T.pack (show (n :: Int))))
+                    | n <- [1 .. 51]
+                    ]
+                )
 
     describe "validateUserRoleUserId" $
         it "rejects non-positive admin user-role path ids before credential lookup" $ do
