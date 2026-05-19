@@ -44,7 +44,11 @@ import {
 import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
-import { getSocialEventsCreateUiState, getSocialEventsOverviewUiState } from './socialEventsPageState';
+import {
+  getSocialEventsCreateUiState,
+  getSocialEventsFinanceSummaryUiState,
+  getSocialEventsOverviewUiState,
+} from './socialEventsPageState';
 
 interface InvitationState {
   partyId: string;
@@ -1434,6 +1438,9 @@ export default function SocialEventsPage() {
             const budgetLines = budgetLineQueries[index]?.data ?? [];
             const financeEntries = financeEntryQueries[index]?.data ?? [];
             const financeSummary = financeSummaryQueries[index]?.data ?? null;
+            const financeSummaryUiState = financeSummary
+              ? getSocialEventsFinanceSummaryUiState(financeSummary)
+              : null;
             const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
             const purchaseDraft = ticketPurchases[eventId] ?? {
               tierId: tiers[0]?.ticketTierId ?? '',
@@ -1872,21 +1879,25 @@ export default function SocialEventsPage() {
                             ) : financeSummary ? (
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                                  <Chip size="small" label={`Ingresos: ${formatMoney(financeSummary.efsActualIncomeCents, financeSummary.efsCurrency)}`} color="success" />
-                                  <Chip size="small" label={`Gastos: ${formatMoney(financeSummary.efsActualExpenseCents, financeSummary.efsCurrency)}`} color="warning" />
-                                  <Chip size="small" label={`Neto: ${formatMoney(financeSummary.efsNetCents, financeSummary.efsCurrency)}`} />
-                                  <Chip size="small" label={`Utilización: ${formatPercent(financeSummary.efsBudgetUtilizationPct)}`} variant="outlined" />
-                                  <Chip size="small" label={`CxP: ${formatMoney(financeSummary.efsAccountsPayableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`CxC: ${formatMoney(financeSummary.efsAccountsReceivableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Contratos comprometidos: ${formatMoney(financeSummary.efsContractCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Contratos pagados: ${formatMoney(financeSummary.efsContractPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Compras comprometidas: ${formatMoney(financeSummary.efsProcurementCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Compras pagadas: ${formatMoney(financeSummary.efsProcurementPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Activos: ${formatMoney(financeSummary.efsAssetInvestmentCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Pasivo neto: ${formatMoney(financeSummary.efsLiabilityBalanceCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Tickets pagados: ${formatMoney(financeSummary.efsTicketPaidRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Tickets reembolsados: ${formatMoney(financeSummary.efsTicketRefundedRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  {financeSummaryUiState?.metrics.map((metric) => (
+                                    <Chip
+                                      key={metric.key}
+                                      size="small"
+                                      label={`${metric.label}: ${
+                                        metric.valueType === 'percent'
+                                          ? formatPercent(metric.value)
+                                          : formatMoney(metric.value, financeSummary.efsCurrency)
+                                      }`}
+                                      color={metric.color}
+                                      variant={metric.variant}
+                                    />
+                                  ))}
                                 </Stack>
+                                {financeSummaryUiState?.omittedEmptyDetailSummary && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {financeSummaryUiState.omittedEmptyDetailSummary}
+                                  </Typography>
+                                )}
                                 <Stack direction="row" spacing={1}>
                                   <Button
                                     size="small"

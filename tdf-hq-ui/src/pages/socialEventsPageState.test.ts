@@ -1,4 +1,8 @@
-import { getSocialEventsCreateUiState, getSocialEventsOverviewUiState } from './socialEventsPageState';
+import {
+  getSocialEventsCreateUiState,
+  getSocialEventsFinanceSummaryUiState,
+  getSocialEventsOverviewUiState,
+} from './socialEventsPageState';
 
 describe('getSocialEventsOverviewUiState', () => {
   it('hides empty calendar chrome on first run and points admins to the first event', () => {
@@ -98,5 +102,61 @@ describe('getSocialEventsCreateUiState', () => {
       showCreateForm: false,
       showCreateToolbarAction: false,
     });
+  });
+});
+
+describe('getSocialEventsFinanceSummaryUiState', () => {
+  const buildFinanceSummary = (overrides = {}) => ({
+    efsActualIncomeCents: 0,
+    efsActualExpenseCents: 0,
+    efsNetCents: 0,
+    efsBudgetUtilizationPct: null,
+    efsAccountsPayableCents: 0,
+    efsAccountsReceivableCents: 0,
+    efsContractCommittedCents: 0,
+    efsContractPaidCents: 0,
+    efsProcurementCommittedCents: 0,
+    efsProcurementPaidCents: 0,
+    efsAssetInvestmentCents: 0,
+    efsLiabilityBalanceCents: 0,
+    efsTicketPaidRevenueCents: 0,
+    efsTicketRefundedRevenueCents: 0,
+    ...overrides,
+  });
+
+  it('keeps first-run finance summaries to core chips plus one omitted-zero explanation', () => {
+    const state = getSocialEventsFinanceSummaryUiState(buildFinanceSummary());
+
+    expect(state.metrics.map((metric) => metric.label)).toEqual([
+      'Ingresos',
+      'Gastos',
+      'Neto',
+      'Utilizacion',
+    ]);
+    expect(state.omittedEmptyDetailCount).toBe(10);
+    expect(state.omittedEmptyDetailSummary).toBe(
+      'Los detalles financieros en cero se omiten hasta que tengan movimiento.',
+    );
+  });
+
+  it('restores only finance detail chips that have movement', () => {
+    const state = getSocialEventsFinanceSummaryUiState(buildFinanceSummary({
+      efsAccountsPayableCents: 15000,
+      efsContractPaidCents: -2500,
+      efsTicketPaidRevenueCents: 40000,
+    }));
+
+    expect(state.metrics.map((metric) => metric.label)).toEqual([
+      'Ingresos',
+      'Gastos',
+      'Neto',
+      'Utilizacion',
+      'CxP',
+      'Contratos pagados',
+      'Tickets pagados',
+    ]);
+    expect(state.omittedEmptyDetailCount).toBe(7);
+    expect(state.metrics.some((metric) => metric.label === 'CxC')).toBe(false);
+    expect(state.metrics.some((metric) => metric.label === 'Tickets reembolsados')).toBe(false);
   });
 });
