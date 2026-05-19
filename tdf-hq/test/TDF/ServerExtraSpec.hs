@@ -1363,6 +1363,18 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "inventory/manual.pdf"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/folder/no-extension"))
 
+    it "rejects ambiguous external asset photo URL paths before storing proof links" $ do
+      let expectedMessage = "photoUrl path must not contain empty, dot, or dot-dot segments"
+          assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected ambiguous asset photo URL path error, got " <> show value)
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory/../roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory/%2e%2e/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory//roland.jpg"))
+
     it "rejects oversized asset photo URLs before storing opaque inventory metadata" $ do
       let oversizedUrl =
             "https://cdn.example.com/" <> T.replicate 2049 "a" <> ".jpg"

@@ -2387,6 +2387,11 @@ validateAssetPhotoUrl (Just rawUrl) =
       | "https://" `T.isPrefixOf` T.toLower trimmedUrl
           && TrialsServer.isValidHttpUrl trimmedUrl
           && not ("#" `T.isInfixOf` trimmedUrl)
+          && TrialsServer.hasAmbiguousPublicUrlPath trimmedUrl ->
+          Left err400 { errBody = "photoUrl path must not contain empty, dot, or dot-dot segments" }
+      | "https://" `T.isPrefixOf` T.toLower trimmedUrl
+          && TrialsServer.isValidHttpUrl trimmedUrl
+          && not ("#" `T.isInfixOf` trimmedUrl)
           && hasSupportedAssetPhotoUrlExtension trimmedUrl ->
           Right (Just trimmedUrl)
       | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
