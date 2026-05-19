@@ -365,6 +365,7 @@ export default function CourseBuilderPage() {
   }, []);
 
   useEffect(() => {
+    if (!hasLocalEditsRef.current) return;
     const payload = buildPayload();
     try {
       window.localStorage.setItem(COURSE_DRAFT_STORAGE_KEY, JSON.stringify(payload));
@@ -459,6 +460,7 @@ export default function CourseBuilderPage() {
     } catch {
       // ignore
     }
+    hasLocalEditsRef.current = false;
     draftLoadedRef.current = false;
     setHasDraft(false);
   };

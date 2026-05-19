@@ -139,6 +139,37 @@ const clickButton = async (button: HTMLElement) => {
   });
 };
 
+const getInputByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => text(element).replace('*', '').trim() === labelText,
+  );
+  if (!label) throw new Error(`Input label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  const input = inputId
+    ? label.ownerDocument.getElementById(inputId)
+    : label.querySelector('input,textarea');
+  if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) {
+    throw new Error(`Input not found for label: ${labelText}`);
+  }
+
+  return input;
+};
+
+const changeInputValue = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype =
+    input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Input value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 describe('CourseBuilderPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -165,6 +196,34 @@ describe('CourseBuilderPage', () => {
     upsertMock.mockReset();
     getMetadataMock.mockResolvedValue(buildMetadata());
     upsertMock.mockResolvedValue(buildMetadata());
+  });
+
+  it('waits for a real local edit before creating a browser draft', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getMetadataMock).toHaveBeenCalledWith('produccion-musical-abr-2026');
+        expect(window.localStorage.getItem('tdf-course-builder-draft')).toBeNull();
+        expect(text(container)).not.toContain('Hay un borrador local guardado.');
+      });
+
+      const detailsSection = document.getElementById('detalles');
+      if (!detailsSection) throw new Error('Details section not found');
+      await changeInputValue(getInputByLabelText(detailsSection, 'Título'), 'Curso editado por admin');
+
+      await waitForExpectation(() => {
+        const rawDraft = window.localStorage.getItem('tdf-course-builder-draft');
+        expect(rawDraft).not.toBeNull();
+        expect(JSON.parse(rawDraft ?? '{}')).toMatchObject({
+          title: 'Curso editado por admin',
+        });
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('keeps the course-builder shortcuts aligned with their sections and avoids repeating the slug in the header', async () => {
