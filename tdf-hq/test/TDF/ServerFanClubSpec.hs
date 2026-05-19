@@ -42,6 +42,8 @@ import TDF.ServerFanClub
   , validateFanClubMemoryMutationTarget
   , validateFanClubMemoryPathId
   , validateFanClubMemoryReportReason
+  , validateFanClubMemoryDescriptionInput
+  , validateFanClubMemoryTitleInput
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
@@ -134,6 +136,31 @@ spec = do
         validateFanClubMemoryReportReason ("spam" <> "\x202E" <> "visible")
       assertRejected 400 "unsupported control" $
         validateFanClubMemoryReportReason ("spam" <> "\NUL" <> "visible")
+
+  describe "fan club memory text validation" $ do
+    it "normalizes required titles and optional descriptions before memory persistence" $ do
+      validateFanClubMemoryTitleInput "  Ensayo general  "
+        `shouldBe` Right "Ensayo general"
+      validateFanClubMemoryDescriptionInput (Just "  Primera linea\nsegunda linea  ")
+        `shouldBe` Right (Just "Primera linea\nsegunda linea")
+      validateFanClubMemoryDescriptionInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubMemoryDescriptionInput Nothing
+        `shouldBe` Right Nothing
+
+    it "rejects blank, oversized, or unsafe memory text before DB fallback writes" $ do
+      assertRejected 400 "title is required" $
+        validateFanClubMemoryTitleInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubMemoryTitleInput (T.replicate 161 "a")
+      assertRejected 400 "description must be 4096 characters or fewer" $
+        validateFanClubMemoryDescriptionInput (Just (T.replicate 4097 "a"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubMemoryTitleInput "Recuerdo\nprivado"
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubMemoryTitleInput ("Recuerdo" <> "\x00A0" <> "privado")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubMemoryDescriptionInput (Just ("Hola" <> "\x202E" <> "club"))
 
   describe "validateFanClubElectionMutationTarget" $ do
     it "requires URL artist-club ownership before mutating an election" $ do

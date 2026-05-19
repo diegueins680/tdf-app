@@ -26,6 +26,8 @@ module TDF.ServerFanClub
   , validateFanClubInboxStatusInput
   , validateFanClubPostTitleInput
   , validateFanClubPostContentInput
+  , validateFanClubMemoryTitleInput
+  , validateFanClubMemoryDescriptionInput
   , validateFanClubMemoryPathId
   , validateFanClubMemoryMutationTarget
   , validateFanClubMemoryReportReason
@@ -584,6 +586,10 @@ fanClubSecureArtistHandlers user artistId =
 
     createClubMemory aId req = do
       artistKey <- requireArtistKey aId
+      title <- either throwError pure $
+        validateFanClubMemoryTitleInput (fcmReqTitle req)
+      description <- either throwError pure $
+        validateFanClubMemoryDescriptionInput (fcmReqDescription req)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -610,8 +616,8 @@ fanClubSecureArtistHandlers user artistId =
                 }
           mid <- insert FanClubMemory
             { fanClubMemoryMemberProfileId = profileId
-            , fanClubMemoryTitle = fcmReqTitle req
-            , fanClubMemoryDescription = fcmReqDescription req
+            , fanClubMemoryTitle = title
+            , fanClubMemoryDescription = description
             , fanClubMemoryMediaUrls = if null (fcmReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcmReqMediaUrls req))
             , fanClubMemoryIsHidden = False
             , fanClubMemoryIsDeleted = False
@@ -623,8 +629,8 @@ fanClubSecureArtistHandlers user artistId =
             , fcmMemberProfileId = fromSqlKey profileId
             , fcmMemberName = sppDisplayName author
             , fcmMemberAvatarUrl = sppAvatarUrl author
-            , fcmTitle = fcmReqTitle req
-            , fcmDescription = fcmReqDescription req
+            , fcmTitle = title
+            , fcmDescription = description
             , fcmMediaUrls = fcmReqMediaUrls req
             , fcmIsHidden = False
             , fcmIsDeleted = False
@@ -1174,6 +1180,19 @@ validateFanClubPostContentInput :: Text -> Either ServerError Text
 validateFanClubPostContentInput =
   validateRequiredFanClubInboxText "content" maxFanClubPostContentChars True
 
+validateFanClubMemoryTitleInput :: Text -> Either ServerError Text
+validateFanClubMemoryTitleInput =
+  validateRequiredFanClubInboxText "title" maxFanClubMemoryTitleChars False
+
+validateFanClubMemoryDescriptionInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateFanClubMemoryDescriptionInput Nothing = Right Nothing
+validateFanClubMemoryDescriptionInput (Just rawDescription) =
+  validateOptionalFanClubInboxText
+    "description"
+    maxFanClubMemoryDescriptionChars
+    True
+    rawDescription
+
 validateOptionalFanClubInboxText
   :: Text
   -> Int
@@ -1238,6 +1257,12 @@ maxFanClubPostTitleChars = 160
 
 maxFanClubPostContentChars :: Int
 maxFanClubPostContentChars = 4096
+
+maxFanClubMemoryTitleChars :: Int
+maxFanClubMemoryTitleChars = 160
+
+maxFanClubMemoryDescriptionChars :: Int
+maxFanClubMemoryDescriptionChars = 4096
 
 invalidFanClubInboxTextChar :: Bool -> Char -> Bool
 invalidFanClubInboxTextChar allowMultiline ch =
