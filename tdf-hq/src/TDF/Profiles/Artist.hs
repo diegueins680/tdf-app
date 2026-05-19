@@ -13,7 +13,6 @@ module TDF.Profiles.Artist
   , fetchArtistProfileMap
   ) where
 
-import           Control.Applicative       ((<|>))
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Data.Char                 ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                            , generalCategory
@@ -37,6 +36,7 @@ import           TDF.DTO                   ( ArtistProfileDTO(..)
                                            )
 import           TDF.Models
 import qualified TDF.Models                as M
+import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)
 
 cleanOptionalText :: Maybe Text -> Maybe Text
 cleanOptionalText = (>>= nonBlank)
@@ -109,20 +109,13 @@ validateArtistProfileUrl fieldName (Just rawUrl) =
       | isAbsoluteArtistProfileHttpUrl urlVal ->
           Right (Just urlVal)
       | otherwise ->
-          Left (fieldName <> " must be an absolute http or https URL")
+          Left (fieldName <> " must be an absolute public http or https URL")
 
 maxArtistProfileUrlChars :: Int
 maxArtistProfileUrlChars = 2048
 
 isAbsoluteArtistProfileHttpUrl :: Text -> Bool
-isAbsoluteArtistProfileHttpUrl rawUrl =
-  case T.stripPrefix "https://" lowerUrl <|> T.stripPrefix "http://" lowerUrl of
-    Just remainder ->
-      not (T.null (T.takeWhile (`notElem` ("/?#" :: String)) remainder))
-    Nothing ->
-      False
-  where
-    lowerUrl = T.toLower rawUrl
+isAbsoluteArtistProfileHttpUrl = TrialsServer.isValidHttpUrl
 
 isUnsafeArtistProfileUrlChar :: Char -> Bool
 isUnsafeArtistProfileUrlChar ch =

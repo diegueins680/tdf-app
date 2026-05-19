@@ -96,7 +96,7 @@ spec = do
                             expectationFailure ("Expected invalid profile URL error, got " <> show value)
             assertInvalid
                 (baseProfileUpsert { apuWebsiteUrl = Just "javascript:alert(1)" })
-                "websiteUrl must be an absolute http or https URL"
+                "websiteUrl must be an absolute public http or https URL"
             assertInvalid
                 (baseProfileUpsert { apuHeroImageUrl = Just "https://cdn.tdf/hero image.jpg" })
                 "heroImageUrl must not contain whitespace"
@@ -109,7 +109,16 @@ spec = do
                 "youtubeUrl must not contain whitespace"
             assertInvalid
                 (baseProfileUpsert { apuSpotifyUrl = Just "https://" })
-                "spotifyUrl must be an absolute http or https URL"
+                "spotifyUrl must be an absolute public http or https URL"
+            assertInvalid
+                (baseProfileUpsert { apuHeroImageUrl = Just "http://localhost:5173/hero.jpg" })
+                "heroImageUrl must be an absolute public http or https URL"
+            assertInvalid
+                (baseProfileUpsert { apuWebsiteUrl = Just "https://artist.example@evil.test" })
+                "websiteUrl must be an absolute public http or https URL"
+            assertInvalid
+                (baseProfileUpsert { apuFeaturedVideoUrl = Just "https://127.0.0.1/private" })
+                "featuredVideoUrl must be an absolute public http or https URL"
             assertInvalid
                 (baseProfileUpsert { apuFeaturedVideoUrl = Just (T.replicate 2049 "a") })
                 "featuredVideoUrl must be 2048 characters or fewer"
