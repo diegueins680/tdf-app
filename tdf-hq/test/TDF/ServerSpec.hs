@@ -9025,6 +9025,17 @@ spec = describe "TDF.Server helpers" $ do
                     " https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123 "
                 ]
                 `shouldBe` Right "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-abc_123"
+            resolvePayPalApprovalUrl
+                [ PayPalLink
+                    "approve"
+                    ( "https://www.sandbox.paypal.com/checkoutnow?"
+                        <> "useraction=commit&token=ORDER-abc_123"
+                    )
+                ]
+                `shouldBe` Right
+                    ( "https://www.sandbox.paypal.com/checkoutnow?"
+                        <> "useraction=commit&token=ORDER-abc_123"
+                    )
 
         it "rejects approval links from a different PayPal environment" $ do
             let liveLinks =
@@ -9116,6 +9127,14 @@ spec = describe "TDF.Server helpers" $ do
                 [ PayPalLink
                     "approve"
                     "https://www.sandbox.paypal.com/checkoutnow?token=---"
+                ]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [ PayPalLink
+                    "approve"
+                    ( "https://www.sandbox.paypal.com/checkoutnow?"
+                        <> "token=ORDER-123&token=ORDER-456"
+                    )
                 ]
 
     describe "validatePayPalCaptureOrderId" $ do
