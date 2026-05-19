@@ -559,7 +559,17 @@ data PublicBookingReq = PublicBookingReq
   , pbResourceIds      :: Maybe [Text]
   } deriving (Show, Generic)
 instance FromJSON PublicBookingReq where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+  parseJSON value = do
+    withObject "PublicBookingReq" rejectAmbiguousDurationFallback value
+    genericParseJSON defaultOptions { rejectUnknownFields = True } value
+    where
+      rejectAmbiguousDurationFallback obj =
+        case AesonKeyMap.lookup (AesonKey.fromText "pbDurationMinutes") obj of
+          Just Null ->
+            fail $
+              "pbDurationMinutes must be omitted instead of null "
+                <> "to use the default 60-minute duration"
+          _ -> pure ()
 
 data PublicEngineerDTO = PublicEngineerDTO
   { peId   :: Int64

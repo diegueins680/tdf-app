@@ -10467,6 +10467,26 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null duration fallbacks so public forms must omit the field for the default" $
+            case decodePublicBookingRequest
+                ( "{"
+                    <> "\"pbFullName\":\"Ana Perez\","
+                    <> "\"pbEmail\":\"ana@example.com\","
+                    <> "\"pbServiceType\":\"mixing\","
+                    <> "\"pbStartsAt\":\"2026-04-20T15:00:00Z\","
+                    <> "\"pbDurationMinutes\":null"
+                    <> "}"
+                ) of
+                Left decodeErr ->
+                    decodeErr
+                        `shouldContain`
+                            "pbDurationMinutes must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null public booking duration to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "resolveResourcesForBooking" $ do
         it "rejects oversized explicit room id shapes before lookup fallback can echo them" $ do
             let assertInvalid expected result =
