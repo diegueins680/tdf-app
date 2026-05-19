@@ -1356,10 +1356,10 @@ const firstRunTemplateDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))\s*$/i;
 
 const firstRunCopyDescriptorPrefixPattern =
-  /^(?:(?:copy|duplicates?|duplicated)(?:\s*[-#]?\s*\d+)?(?:\s+of|\s*[-:/|]\s*)|(?:clone|cloned)(?:\s*[-#]?\s*\d+)?(?:\s+(?:of|from)|\s*[-:/|]\s*)|(?:copia|duplicad[oa]s?|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?(?:\s+de|\s*[-:/|]\s*))\s*/i;
+  /^(?:(?:copy|duplicates?|duplicated)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+of(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:clone|cloned)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+(?:of|from)(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:copia|duplicad[oa]s?|clon(?:ad[oa])?)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+de(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*))\s*/i;
 
 const firstRunCopyDescriptorSuffixPattern =
-  /\s*(?:(?:[-:/|]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|clone|cloned|copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#]?\s*\d+)?\s*(?:\)|\])?\s*$/i;
+  /\s*(?:(?:[-:/|_]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|clone|cloned|copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#_]?\s*\d+)?\s*(?:\)|\])?\s*$/i;
 
 const firstRunRegistrationLinkDescriptorPrefixPattern =
   /^(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
