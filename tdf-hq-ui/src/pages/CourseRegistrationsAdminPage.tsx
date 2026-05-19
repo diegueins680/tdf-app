@@ -1816,10 +1816,10 @@ const firstRunInquiryDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
 const firstRunSurveyDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:survey|questionnaire)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?(?:survey|questionnaire|feedback|evaluation)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?|feedback\s+forms?|evaluations?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunSurveyDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:survey|questionnaire)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:survey|questionnaire|feedback|evaluation)\s+(?:forms?|pages?|portals?|requests?)|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?|feedback\s+forms?|evaluations?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
 
 const firstRunInfoSessionDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:info(?:rmation)?\s+session|orientation|open\s+house)\s+(?:form|page|signup|sign[-\s]?up|registration)|(?:formulario|p[aá]gina|registro|inscripci[oó]n(?:es)?)\s+de\s+(?:sesi[oó]n\s+informativa|orientaci[oó]n|clase\s+abierta)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
@@ -2326,7 +2326,7 @@ const hasCohortTitleFormattingWorthPreserving = (label: string) => (
   Array.from(label).some((character) => character.charCodeAt(0) > 0x7f) || /\b[A-Z]{2,}\b/.test(label)
 );
 
-const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
+export const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const fallbackLabel = stripFirstRunCohortDescriptorFallback(humanizeCohortSlug(slug) || slug);
   const title = stripFirstRunCohortPresentationMarkers(cohort.ccTitle ?? '');
