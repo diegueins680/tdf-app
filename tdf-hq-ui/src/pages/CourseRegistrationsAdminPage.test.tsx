@@ -16642,6 +16642,14 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - Formsite form',
       '123FormBuilder - Beatmaking 101',
       'Beatmaking 101 - 123 Forms Builder',
+      'Netlify Forms - Beatmaking 101',
+      'Formulario de Formkeep para Beatmaking 101',
+      'Formbold form - Beatmaking 101',
+      'Beatmaking 101 - Formspark registration form',
+      'Formsubmit link for Beatmaking 101',
+      'Beatmaking 101 - Getform',
+      'Basin form - Beatmaking 101',
+      'Beatmaking 101 - Formcarry form',
       'Wufoo form for Beatmaking 101',
       'Formstack - Beatmaking 101',
       'Zoho Forms for Beatmaking 101',
@@ -16715,6 +16723,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Formspree');
         expect(emptyState?.textContent).not.toContain('Formsite');
         expect(emptyState?.textContent).not.toMatch(/123\s*Forms?\s*Builder/i);
+        expect(emptyState?.textContent).not.toMatch(/Netlify|Formkeep|Formbold|Formspark|Formsubmit|Getform|Basin|Formcarry/i);
         expect(emptyState?.textContent).not.toContain('Wufoo');
         expect(emptyState?.textContent).not.toContain('Formstack');
         expect(emptyState?.textContent).not.toContain('Zoho');
