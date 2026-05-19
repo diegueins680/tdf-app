@@ -85,6 +85,7 @@ import           Data.Char
   , generalCategory
   , isAlphaNum
   , isAscii
+  , isAsciiLower
   , isAsciiUpper
   , isControl
   , isHexDigit
@@ -2574,8 +2575,16 @@ isValidSocialEventEmail candidate =
         && not (T.null domain)
         && not (T.any (`elem` (" \t\n\r" :: String)) candidate)
         && T.isInfixOf "." domain
+        && hasValidSocialEventEmailFinalDomainLabel domain
         && all isValidSocialEventEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+hasValidSocialEventEmailFinalDomainLabel :: T.Text -> Bool
+hasValidSocialEventEmailFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 isValidSocialEventEmailLocalPart :: T.Text -> Bool
 isValidSocialEventEmailLocalPart localPart =

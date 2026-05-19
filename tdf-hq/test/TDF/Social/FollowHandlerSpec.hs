@@ -54,6 +54,7 @@ import TDF.Server.SocialEventsHandlers
     , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
+    , validateTicketPurchaseBuyerEmail
     , validateTicketPurchaseBuyerName
     , validateVenueCreateUpdateFields
     )
@@ -300,6 +301,23 @@ spec = describe "social event handler helpers" $ do
             Right value ->
                 expectationFailure
                     ("Expected punctuation-only buyer name to be rejected, got: " <> show value)
+
+    it "rejects ambiguous ticket buyer email final domains before creating ticket orders" $ do
+        validateTicketPurchaseBuyerEmail (Just "  Fan+Ticket@Example.COM  ")
+            `shouldBe` Right (Just "fan+ticket@example.com")
+
+        let assertInvalid rawEmail =
+                case validateTicketPurchaseBuyerEmail (Just rawEmail) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err)
+                            `shouldContain` "ticketPurchaseBuyerEmail must be a valid email address"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid buyer email to be rejected, got: " <> show value)
+
+        assertInvalid "fan@example.123"
+        assertInvalid "fan@example.c"
 
     it "rejects malformed stored event metadata before publishing event DTO fallbacks" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
