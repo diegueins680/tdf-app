@@ -2161,6 +2161,9 @@ const stripFirstRunCohortDescriptorFallback = (label: string) => {
   return strippedLabel || label.trim();
 };
 
+const readableFirstRunCohortFallbackLabel = (slug: string) =>
+  stripFirstRunCohortDescriptorFallback(readableCohortFallbackLabel(slug));
+
 const isGenericFirstRunCohortLabel = (label: string) => {
   const strippedLabel = stripFirstRunCohortDescriptorSuffix(
     stripFirstRunCohortDescriptorPrefix(label),
@@ -3866,7 +3869,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortOptionLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, readableCohortFallbackLabel(selectedSlug));
+      bySlug.set(selectedSlug, readableFirstRunCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -3878,7 +3881,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortSummaryLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, readableCohortFallbackLabel(selectedSlug));
+      bySlug.set(selectedSlug, readableFirstRunCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);

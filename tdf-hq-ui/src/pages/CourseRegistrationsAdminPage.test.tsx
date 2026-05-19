@@ -9246,6 +9246,31 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips public-form wrappers from URL-only cohort fallbacks before showing filtered-empty copy', async () => {
+    listCohortsMock.mockResolvedValue([]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?slug=public-registration-form-beatmaking-101');
+
+    await waitForExpectation(() => {
+      expect(listRegistrationsMock).toHaveBeenCalledWith({
+        slug: 'public-registration-form-beatmaking-101',
+        status: undefined,
+        limit: 200,
+      });
+      expect(container.querySelector('[data-testid="course-registration-initial-empty-state"]')).toBeNull();
+      expect(container.textContent).toContain('No hay inscripciones para Beatmaking 101.');
+      expect(container.textContent).not.toContain('Public Registration Form Beatmaking 101');
+      expect(container.textContent).not.toContain('public-registration-form-beatmaking-101');
+      expect(countButtonsByText(container, 'Quitar filtro de formulario')).toBe(1);
+      expect(container.querySelector('a[href="/inscripcion/public-registration-form-beatmaking-101"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps tiny limit-only views focused on reset instead of export chrome', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
