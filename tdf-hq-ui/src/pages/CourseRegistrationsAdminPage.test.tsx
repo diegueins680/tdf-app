@@ -19068,6 +19068,69 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips portfolio-submission wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Portfolio submission form - Beatmaking 101',
+      'Demo reel upload page for Beatmaking 101',
+      'Beatmaking 101 - portfolio review request',
+      'Formulario de portafolio - Beatmaking 101',
+      'Beatmaking 101 - envio de demo',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /portfolio submission|demo reel upload|portfolio review|formulario de portafolio|env[ií]o de demo/i,
+        );
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
+        expect(
+          emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
+        ).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
+  it('keeps legitimate portfolio course titles in first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'portfolio-review-production', ccTitle: 'Portfolio Review for Producers' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      expect(emptyState).not.toBeNull();
+      expect(emptyState?.textContent).toContain(
+        'Todavía no hay inscripciones para Portfolio Review for Producers. La página pública ya está lista para recibir la primera.',
+      );
+      expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para for Producers.');
+      expect(
+        emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/portfolio-review-production"]')?.getAttribute('aria-label'),
+      ).toBe('Abrir formulario público de Portfolio Review for Producers');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps legitimate ingreso course titles in first-run cohort copy', async () => {
     listCohortsMock.mockResolvedValue([{ ccSlug: 'ingreso-programacion', ccTitle: 'Ingreso a la programación' }]);
     listRegistrationsMock.mockResolvedValue([]);

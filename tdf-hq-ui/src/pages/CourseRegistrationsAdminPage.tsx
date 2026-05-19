@@ -1354,6 +1354,20 @@ const firstRunAssessmentDescriptorPrefixPattern =
 const firstRunAssessmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
+const firstRunPortfolioAssetDescriptorPattern =
+  String.raw`(?:portfolio|demo(?:\s+reel)?|showreel|audition\s+tape)`;
+const firstRunPortfolioSubmissionActionDescriptorPattern =
+  String.raw`(?:(?:submissions?|uploads?|requests?|applications?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|reviews?\s+(?:requests?|forms?|pages?|portals?|links?|urls?)|forms?|pages?|portals?|links?|urls?)`;
+const firstRunPortfolioSubmissionDescriptorPattern = String.raw`(?:(?:(?:student|artist|music|course)\s+)?${firstRunPortfolioAssetDescriptorPattern}\s+${firstRunPortfolioSubmissionActionDescriptorPattern}|${firstRunPortfolioSubmissionActionDescriptorPattern}\s+(?:for\s+)?(?:(?:student|artist|music|course)\s+)?${firstRunPortfolioAssetDescriptorPattern}|(?:formulario|p[aá]gina|portal|enlace|link|url|solicitud(?:es)?|env[ií]o|env[ií]os|subida|subidas|carga|cargas)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:portafolio|portfolio|demo|reel|showreel|audici[oó]n)|(?:portafolio|portfolio|demo|reel|showreel|audici[oó]n)\s+(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|env[ií]os?|subidas?|cargas?))`;
+const firstRunPortfolioSubmissionDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPortfolioSubmissionDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPortfolioSubmissionDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPortfolioSubmissionDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCertificateArtifactDescriptorPattern = String.raw`(?:(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?(?:\s+(?:forms?|pages?|portals?|packets?|links?|urls?))?|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|solicitud(?:es)?)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:certificados?|certificaci[oó]n|constancias?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)|(?:certificados?|certificaci[oó]n|constancias?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)\s+(?:formularios?|p[aá]ginas?|portales?|paquetes?|enlaces?|links?|urls?|solicitud(?:es)?))`;
 const firstRunCertificateArtifactDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunCertificateArtifactDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2113,6 +2127,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCopyDescriptorPrefixPattern, '')
     .replace(firstRunAuditionDescriptorPrefixPattern, '')
     .replace(firstRunAssessmentDescriptorPrefixPattern, '')
+    .replace(firstRunPortfolioSubmissionDescriptorPrefixPattern, '')
     .replace(firstRunCertificateArtifactDescriptorPrefixPattern, '')
     .replace(firstRunApplicationDescriptorPrefixPattern, '')
     .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
@@ -2232,6 +2247,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCopyDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')
+    .replace(firstRunPortfolioSubmissionDescriptorSuffixPattern, '')
     .replace(firstRunCertificateArtifactDescriptorSuffixPattern, '')
     .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
