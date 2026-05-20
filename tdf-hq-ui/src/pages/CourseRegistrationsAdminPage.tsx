@@ -1679,6 +1679,16 @@ const firstRunCourseInfoPageDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunFaqPageDescriptorPattern = String.raw`(?:(?:course\s+)?(?:faqs?|frequently\s+asked\s+questions?|questions?\s+and\s+answers?|q\s*&\s*a)(?:\s+(?:pages?|links?|urls?|portals?))?|(?:pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:faqs?|frequently\s+asked\s+questions?|questions?\s+and\s+answers?|q\s*&\s*a)|(?:p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:preguntas\s+frecuentes|faq|faqs|preguntas\s+y\s+respuestas)|(?:preguntas\s+frecuentes|faq|faqs|preguntas\s+y\s+respuestas)(?:\s+(?:del?\s+curso|de\s+curso))?(?:\s+(?:p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunFaqPageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunFaqPageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunFaqPageDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunFaqPageDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCampaignDescriptorPrefixPattern =
   /^(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app|e-?mail|correo|newsletter|bolet[ií]n)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2161,6 +2171,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorPrefixPattern, '')
+    .replace(firstRunFaqPageDescriptorPrefixPattern, '')
     .replace(firstRunCampaignDescriptorPrefixPattern, '')
     .replace(firstRunLaunchDescriptorPrefixPattern, '')
     .replace(firstRunAdAssetDescriptorPrefixPattern, '')
@@ -2290,6 +2301,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorSuffixPattern, '')
+    .replace(firstRunFaqPageDescriptorSuffixPattern, '')
     .replace(firstRunCampaignDescriptorSuffixPattern, '')
     .replace(firstRunLaunchDescriptorSuffixPattern, '')
     .replace(firstRunAdAssetDescriptorSuffixPattern, '')

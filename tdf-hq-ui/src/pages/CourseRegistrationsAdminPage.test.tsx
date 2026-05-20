@@ -22217,6 +22217,39 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips FAQ page wrappers from first-run cohort copy', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-faq', ccTitle: 'Course FAQ page - Beatmaking 101' },
+      { ccSlug: 'beatmaking-questions', ccTitle: 'Frequently asked questions for Beatmaking 101' },
+      { ccSlug: 'beatmaking-preguntas', ccTitle: 'Beatmaking 101 - preguntas y respuestas del curso' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+      const configAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]');
+      const copy = emptyState?.textContent ?? '';
+
+      expect(emptyState).not.toBeNull();
+      expect(copy).toContain(
+        'Hay 3 formularios públicos de Beatmaking 101 listos para recibir la primera inscripción.',
+      );
+      expect(copy).not.toMatch(/faq|frequently asked questions|q&a|preguntas frecuentes|preguntas y respuestas/i);
+      expect(copy).not.toContain('Course FAQ page - Beatmaking 101');
+      expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+      expect(countOccurrences(emptyState!, initialEmptyStateReviewFormsActionLabel)).toBe(1);
+      expect(configAction?.getAttribute('aria-label')).toBe(initialEmptyStateSingleCourseVariantActionAriaLabel);
+      expect(configAction?.getAttribute('title')).toBe('Elegir entre 3 formularios públicos de Beatmaking 101.');
+      expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+    });
+
+    await cleanup();
+  });
+
   it('strips schedule-page wrappers from first-run cohort copy', async () => {
     const titles = [
       'Course schedule page - Beatmaking 101',
