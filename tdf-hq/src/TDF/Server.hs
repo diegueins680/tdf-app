@@ -276,6 +276,11 @@ data GoogleEventsPage = GoogleEventsPage
 instance FromJSON GoogleEventsPage where
   parseJSON = withObject "GoogleEventsPage" $ \o -> do
     parsedItems <- o .: "items"
+    when (length parsedItems > maxGoogleCalendarPageItems) $
+      fail $
+        "Google Calendar page must contain "
+          <> show maxGoogleCalendarPageItems
+          <> " items or fewer"
     itemIds <- forM (zip [(0 :: Int)..] parsedItems) $ uncurry validateGoogleCalendarPageItem
     when (length itemIds /= Set.size (Set.fromList itemIds)) $
       fail "Google Calendar page must not contain duplicate event ids"
@@ -288,6 +293,9 @@ instance FromJSON GoogleEventsPage where
       , nextPageToken = nextPage
       , nextSyncToken = nextSync
       }
+
+maxGoogleCalendarPageItems :: Int
+maxGoogleCalendarPageItems = 2000
 
 parseGoogleCursorField :: Text -> Text -> Parser Text
 parseGoogleCursorField = parseGoogleTokenField
@@ -344,6 +352,13 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
             (fail . googleCalendarPageFieldError idx fieldName)
             (const (pure ()))
             (validateGoogleCalendarHtmlLink rawText)
+      | T.length rawText > googleCalendarPageTextFieldLimit fieldName ->
+          fail
+            ( fieldLabel
+                <> " must be "
+                <> show (googleCalendarPageTextFieldLimit fieldName)
+                <> " characters or fewer"
+            )
       | T.any isUnsupportedGoogleCalendarPageTextChar rawText ->
           fail
             ( fieldLabel
@@ -354,6 +369,10 @@ validateGoogleCalendarPageTextField idx eventObj fieldName =
       fail (fieldLabel <> " must be a string")
   where
     fieldLabel = "items[" <> show idx <> "]." <> T.unpack fieldName
+
+googleCalendarPageTextFieldLimit :: Text -> Int
+googleCalendarPageTextFieldLimit "description" = 10000
+googleCalendarPageTextFieldLimit _ = 1024
 
 googleCalendarPageFieldError :: Int -> Text -> Text -> String
 googleCalendarPageFieldError idx fieldName message =
