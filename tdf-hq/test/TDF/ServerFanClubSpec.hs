@@ -36,6 +36,7 @@ import TDF.ServerFanClub
   , validateFanClubOfficerRoleInput
   , validateFanClubPostAccess
   , validateFanClubPostContentInput
+  , validateFanClubMediaUrlsInput
   , validateFanClubPostTitleInput
   , validateFanClubInboxSubjectInput
   , validateFanClubInboxStatusInput
@@ -273,6 +274,30 @@ spec = do
         validateFanClubPostTitleInput (Just ("Hola" <> "\x00A0" <> "club"))
       assertRejected 400 "hidden formatting" $
         validateFanClubPostContentInput ("Hola" <> "\x202E" <> "club")
+
+  describe "fan club media URL validation" $ do
+    it "normalizes media lists before comma-delimited storage" $
+      validateFanClubMediaUrlsInput
+        "mediaUrls"
+        [ " https://cdn.tdf.app/fans/uno.jpg "
+        , "https://cdn.tdf.app/fans/dos.png"
+        ]
+        `shouldBe` Right
+          [ "https://cdn.tdf.app/fans/uno.jpg"
+          , "https://cdn.tdf.app/fans/dos.png"
+          ]
+
+    it "rejects media URLs that would split ambiguously in storage" $ do
+      assertRejected 400 "must not include blank URLs" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a.jpg", "   "]
+      assertRejected 400 "must not contain commas" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a,b.jpg"]
+      assertRejected 400 "must not contain hidden formatting" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a.jpg" <> "\x202E"]
+      assertRejected 400 "must include at most 10 URLs" $
+        validateFanClubMediaUrlsInput
+          "mediaUrls"
+          (replicate 11 "https://cdn.tdf.app/a.jpg")
 
   describe "fan club post access validation" $
     it "requires followers or officers before creating fan-club posts" $ do

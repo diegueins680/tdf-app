@@ -26,6 +26,7 @@ module TDF.ServerFanClub
   , validateFanClubInboxStatusInput
   , validateFanClubPostTitleInput
   , validateFanClubPostContentInput
+  , validateFanClubMediaUrlsInput
   , validateFanClubMemoryTitleInput
   , validateFanClubMemoryDescriptionInput
   , validateFanClubMemoryPathId
@@ -89,6 +90,10 @@ runDB action = do
 
 throwBadRequest :: Text -> AppM a
 throwBadRequest msg = throwError Servant.err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+badRequestText :: Text -> ServerError
+badRequestText msg =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
 -- ============================================================================
 -- Public handlers
@@ -328,11 +333,14 @@ fanClubSecureArtistHandlers user artistId =
           content <-
             either throwError pure $
               validateFanClubPostContentInput (fcpReqContent req)
+          mediaUrlValues <-
+            either throwError pure $
+              validateFanClubMediaUrlsInput "mediaUrls" (fcpReqMediaUrls req)
           parentKey <- resolveParentKey cid (fcpReqParentId req)
           let mediaUrls =
-                if null (fcpReqMediaUrls req)
+                if null mediaUrlValues
                   then Nothing
-                  else Just (T.intercalate "," (fcpReqMediaUrls req))
+                  else Just (T.intercalate "," mediaUrlValues)
           runDB $ do
             now <- liftIO getCurrentTime
             pid <- insert FanClubPost
@@ -602,6 +610,8 @@ fanClubSecureArtistHandlers user artistId =
         validateFanClubMemoryTitleInput (fcmReqTitle req)
       description <- either throwError pure $
         validateFanClubMemoryDescriptionInput (fcmReqDescription req)
+      mediaUrlValues <- either throwError pure $
+        validateFanClubMediaUrlsInput "mediaUrls" (fcmReqMediaUrls req)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -630,7 +640,10 @@ fanClubSecureArtistHandlers user artistId =
             { fanClubMemoryMemberProfileId = profileId
             , fanClubMemoryTitle = title
             , fanClubMemoryDescription = description
-            , fanClubMemoryMediaUrls = if null (fcmReqMediaUrls req) then Nothing else Just (T.intercalate "," (fcmReqMediaUrls req))
+            , fanClubMemoryMediaUrls =
+                if null mediaUrlValues
+                  then Nothing
+                  else Just (T.intercalate "," mediaUrlValues)
             , fanClubMemoryIsHidden = False
             , fanClubMemoryIsDeleted = False
             , fanClubMemoryCreatedAt = now
@@ -1227,6 +1240,45 @@ validateFanClubPostTitleInput (Just rawTitle) =
 validateFanClubPostContentInput :: Text -> Either ServerError Text
 validateFanClubPostContentInput =
   validateRequiredFanClubInboxText "content" maxFanClubPostContentChars True
+
+validateFanClubMediaUrlsInput :: Text -> [Text] -> Either ServerError [Text]
+validateFanClubMediaUrlsInput fieldName rawUrls
+  | length rawUrls > maxFanClubMediaUrls =
+      Left (badRequestText (fieldName <> " must include at most 10 URLs"))
+  | otherwise =
+      traverse (validateFanClubMediaUrlInput fieldName) rawUrls
+
+validateFanClubMediaUrlInput :: Text -> Text -> Either ServerError Text
+validateFanClubMediaUrlInput fieldName rawUrl
+  | T.null mediaUrl =
+      Left (badRequestText (fieldName <> " must not include blank URLs"))
+  | T.length mediaUrl > maxFanClubMediaUrlChars =
+      Left (badRequestText (fieldName <> " entries must be 2048 characters or fewer"))
+  | T.any isSpace mediaUrl =
+      Left (badRequestText (fieldName <> " entries must not contain whitespace"))
+  | T.any isControl mediaUrl =
+      Left (badRequestText (fieldName <> " entries must not contain control characters"))
+  | T.any isHiddenFanClubMediaUrlChar mediaUrl =
+      Left
+        ( badRequestText
+            (fieldName <> " entries must not contain hidden formatting characters")
+        )
+  | T.any (== ',') mediaUrl =
+      Left (badRequestText (fieldName <> " entries must not contain commas"))
+  | otherwise =
+      Right mediaUrl
+  where
+    mediaUrl = T.strip rawUrl
+
+maxFanClubMediaUrls :: Int
+maxFanClubMediaUrls = 10
+
+maxFanClubMediaUrlChars :: Int
+maxFanClubMediaUrlChars = 2048
+
+isHiddenFanClubMediaUrlChar :: Char -> Bool
+isHiddenFanClubMediaUrlChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateFanClubMemoryTitleInput :: Text -> Either ServerError Text
 validateFanClubMemoryTitleInput =
