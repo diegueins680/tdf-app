@@ -224,24 +224,9 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const shortcutItems = useMemo<NavShortcutItem[]>(() => {
     const itemByPath = new Map(flatAllowedItems.map((item) => [item.path, item]));
     const currentPath = location.pathname;
-    const moduleShortcutCandidates = [
-      '/inicio',
-      '/crm/contactos',
-      '/mi-profesor',
-      '/escuela/clases',
-      '/estudio/calendario',
-      '/label/artistas',
-      '/label/tracks',
-      '/operacion/inventario',
-      '/finanzas/pagos',
-      '/practicas',
-    ].filter((path) => canUsePath(path));
-    const preferredPaths = [
-      ...recentPaths.filter((path) => path !== currentPath),
-      ...moduleShortcutCandidates.filter((path) => path !== currentPath),
-    ];
     const seen = new Set<string>();
-    return preferredPaths
+    return recentPaths
+      .filter((path) => path !== currentPath)
       .map((path) => itemByPath.get(path))
       .filter((item): item is NavShortcutItem => item != null)
       .filter((item) => {
@@ -250,7 +235,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         return true;
       })
       .slice(0, 6);
-  }, [canUsePath, flatAllowedItems, location.pathname, recentPaths]);
+  }, [flatAllowedItems, location.pathname, recentPaths]);
 
   const ensureExpandedDefaults = (groups: NavGroupView[]) => {
     const next = new Set<string>();

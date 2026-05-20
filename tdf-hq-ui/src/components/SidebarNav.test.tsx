@@ -64,6 +64,21 @@ describe('SidebarNav', () => {
     window.localStorage.clear();
   });
 
+  it('hides default shortcut duplicates until there are actual recent admin destinations', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/configuracion/inscripciones-curso');
+
+    try {
+      expect(container.textContent).not.toContain('ATAJOS');
+      expect(container.querySelector('a[href="/inicio"]')).toBeNull();
+      expect(container.querySelector('a[href="/crm/contactos"]')).toBeNull();
+      expect(container.querySelector('a[href="/configuracion/inscripciones-curso"]')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the current admin page out of shortcuts so navigation does not repeat the active destination', async () => {
     window.localStorage.setItem(
       'tdf-quick-nav-recents',
