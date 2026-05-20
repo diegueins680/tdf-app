@@ -710,6 +710,20 @@ spec = do
                 "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"extra\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null course upsert fields so fallback metadata stays unambiguous" $ do
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":null,\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":null,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":null}],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":null}]}"
+                `shouldSatisfy` isLeft
+
         it "rejects empty course receipt updates instead of accepting timestamp-only patches" $ do
             decodeCourseRegistrationReceiptUpdate "{}" `shouldSatisfy` isLeft
             decodeCourseRegistrationReceiptUpdate

@@ -271,7 +271,9 @@ data CourseSessionIn = CourseSessionIn
   , order :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON CourseSessionIn where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "CourseSessionIn" ["order"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseSessionIn
 
 data CourseSyllabusIn = CourseSyllabusIn
@@ -280,7 +282,9 @@ data CourseSyllabusIn = CourseSyllabusIn
   , order  :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON CourseSyllabusIn where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "CourseSyllabusIn" ["order"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseSyllabusIn
 
 data CourseUpsert = CourseUpsert
@@ -307,7 +311,24 @@ data CourseUpsert = CourseUpsert
   , syllabus             :: [CourseSyllabusIn]
   } deriving (Show, Generic)
 instance FromJSON CourseUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseUpsert"
+      [ "subtitle"
+      , "format"
+      , "duration"
+      , "sessionStartHour"
+      , "sessionDurationHours"
+      , "locationLabel"
+      , "locationMapUrl"
+      , "whatsappCtaUrl"
+      , "landingUrl"
+      , "instructorName"
+      , "instructorBio"
+      , "instructorAvatarUrl"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseUpsert
 
 type CoursesPublicAPI =
