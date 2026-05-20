@@ -6,7 +6,7 @@ _Last updated: 2026-05-19 18:20 UTC by tdf-label-release_
 
 | Metric | Value |
 |--------|-------|
-| Consecutive Detox PASSes | **17** (since 2026-05-19 17:26 UTC) |
+| Consecutive Detox PASSes | **19** (since 2026-05-20 10:59 UTC) |
 | Primary Simulator | `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` (iPhone 16) |
 | Binary | 32.2 MB Mach-O universal, built 2026-05-16 04:38 UTC (`glow-shore`) |
 | EAS iOS Build Status | **No preview/production build since 5/18** — last build `86317f8c-...` canceled |
