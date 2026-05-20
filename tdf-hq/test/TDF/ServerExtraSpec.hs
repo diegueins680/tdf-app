@@ -798,22 +798,44 @@ spec = do
           [mkAssetUploadFile "front-room.jpg"]
         )
 
-    it "rejects unsafe MIME parameters before trusting the upload content type" $
+    it "rejects unsafe MIME parameters before trusting the upload content type" $ do
+      let assertInvalid expectedMessage contentType =
+            case fromMultipart
+              (mkAssetUploadMultipart
+                []
+                [ (mkAssetUploadFile "front-room.jpg")
+                    { fdFileCType = contentType }
+                ]
+              )
+                :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected unsafe asset upload MIME type to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload MIME type must not contain control characters"
+        "image/jpeg;\nContent-Type: text/html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; filename=front-room.html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; name=front-room.html"
+
       case fromMultipart
         (mkAssetUploadMultipart
           []
-          [ (mkAssetUploadFile "front-room.jpg")
-              { fdFileCType = "image/jpeg;\nContent-Type: text/html" }
-          ]
+          [(mkAssetUploadFile "front-room.jpg") { fdFileCType = "image/jpeg; charset=binary" }]
         )
           :: Either String AssetUploadForm of
         Left err ->
-          err `shouldContain` "Asset upload MIME type must not contain control characters"
+          expectationFailure ("Expected safe MIME parameter to parse, got: " <> err)
         Right payload ->
-          expectationFailure
-            ( "Expected unsafe asset upload MIME type to be rejected, got file: "
-                <> T.unpack (fdFileName (aufFile payload))
-            )
+          fdFileName (aufFile payload) `shouldBe` "front-room.jpg"
 
     it "rejects conflicting upload name and browser filename extensions" $
       case fromMultipart

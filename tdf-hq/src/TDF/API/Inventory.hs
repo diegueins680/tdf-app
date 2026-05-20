@@ -127,6 +127,8 @@ allowedImageExtensions :: Text -> Either Text [Text]
 allowedImageExtensions rawContentType
   | T.any isUnsafeUploadNameChar rawContentType =
       Left "Asset upload MIME type must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+  | hasUploadContentTypeNameParameter rawContentType =
+      Left "Asset upload MIME type must not include filename parameters"
   | otherwise =
       case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
         "image/jpeg" -> Right [".jpg", ".jpeg"]
@@ -135,6 +137,14 @@ allowedImageExtensions rawContentType
         "image/gif"  -> Right [".gif"]
         _ ->
           Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
+
+hasUploadContentTypeNameParameter :: Text -> Bool
+hasUploadContentTypeNameParameter contentType =
+  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+  where
+    isNameParameter rawParameter =
+      let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
+      in key `elem` ["name", "name*", "filename", "filename*"]
 
 resolveImageExtension :: Maybe Text -> FileData Tmp -> Either Text Text
 resolveImageExtension nameTxt file =
