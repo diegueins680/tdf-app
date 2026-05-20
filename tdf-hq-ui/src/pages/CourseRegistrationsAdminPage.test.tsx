@@ -17890,6 +17890,12 @@ describe('CourseRegistrationsAdminPage', () => {
       'Coursera enrollment page - Beatmaking 101',
       'Beatmaking 101 - Skillshare registration page',
       'Beatmaking 101 - edX enrollment portal',
+      'Canvas LMS enrollment page - Beatmaking 101',
+      'Google Classroom signup link for Beatmaking 101',
+      'Schoology registration portal - Beatmaking 101',
+      'Blackboard Learn registration page - Beatmaking 101',
+      'Beatmaking 101 - LearnDash course page',
+      'TalentLMS enrollment page - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -17905,7 +17911,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Moodle|Hotmart|Podia|LearnWorlds|ClickFunnels|GHL|GoHighLevel|HighLevel|LeadConnector|Kartra|Systeme\.io|Mighty Networks|Skool|Circle\.so|Udemy|Coursera|Skillshare|edX/i);
+        expect(emptyState?.textContent).not.toMatch(/Kajabi|Teachable|Thinkific|Moodle|Hotmart|Podia|LearnWorlds|ClickFunnels|GHL|GoHighLevel|HighLevel|LeadConnector|Kartra|Systeme\.io|Mighty Networks|Skool|Circle\.so|Udemy|Coursera|Skillshare|edX|Canvas LMS|Google Classroom|Schoology|Blackboard Learn|LearnDash|TalentLMS/i);
         expect(emptyState?.textContent).not.toMatch(/checkout|enrollment page|registration portal|course signup|registration funnel/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
