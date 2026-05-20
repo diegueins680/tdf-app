@@ -16,6 +16,7 @@ module TDF.ServerFeedback
   , validateFeedbackAttachmentSize
   , validateFeedbackAttachmentContentType
   , validateFeedbackAttachmentFileName
+  , validateFeedbackAttachmentMetadata
   , sanitizeFeedbackAttachmentFileName
   ) where
 
@@ -41,7 +42,7 @@ import           Database.Persist.Sql       (runSqlPool)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
 import           System.Directory           (createDirectoryIfMissing, getFileSize)
-import           System.FilePath            ((</>), takeFileName)
+import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
 import qualified Data.ByteString.Lazy       as BL
 import           Data.UUID.V4               (nextRandom)
@@ -98,8 +99,8 @@ feedbackServer user = submitFeedback
 
     validateAndStoreAttachment :: FileData Tmp -> m FilePath
     validateAndStoreAttachment file@FileData{..} = do
-      safeName <- either throwError pure (validateFeedbackAttachmentFileName fdFileName)
-      _ <- either throwError pure (validateFeedbackAttachmentContentType fdFileCType)
+      (safeName, _) <-
+        either throwError pure (validateFeedbackAttachmentMetadata fdFileName fdFileCType)
       size <- liftIO (getFileSize fdPayload)
       either throwError pure (validateFeedbackAttachmentSize size)
       liftIO (storeAttachment safeName file)
@@ -311,6 +312,35 @@ allowedFeedbackAttachmentContentTypes =
 isUnsafeAttachmentContentTypeChar :: Char -> Bool
 isUnsafeAttachmentContentTypeChar ch =
   isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateFeedbackAttachmentMetadata :: Text -> Text -> Either ServerError (Text, Text)
+validateFeedbackAttachmentMetadata rawName rawContentType = do
+  safeName <- validateFeedbackAttachmentFileName rawName
+  mediaType <- validateFeedbackAttachmentContentType rawContentType
+  validateFeedbackAttachmentExtension mediaType safeName
+  Right (safeName, mediaType)
+
+validateFeedbackAttachmentExtension :: Text -> Text -> Either ServerError ()
+validateFeedbackAttachmentExtension mediaType safeName =
+  let extension = T.toLower (T.pack (takeExtension (T.unpack safeName)))
+  in if extension `elem` allowedFeedbackAttachmentExtensions mediaType
+       then Right ()
+       else
+         Left err400
+           { errBody = "attachment file name extension must match its content type" }
+
+allowedFeedbackAttachmentExtensions :: Text -> [Text]
+allowedFeedbackAttachmentExtensions mediaType =
+  case mediaType of
+    "application/csv" -> [".csv"]
+    "application/pdf" -> [".pdf"]
+    "image/gif" -> [".gif"]
+    "image/jpeg" -> [".jpg", ".jpeg"]
+    "image/png" -> [".png"]
+    "image/webp" -> [".webp"]
+    "text/csv" -> [".csv"]
+    "text/plain" -> [".txt", ".text", ".log", ".md"]
+    _ -> []
 
 validateFeedbackAttachmentFileName :: Text -> Either ServerError Text
 validateFeedbackAttachmentFileName rawName

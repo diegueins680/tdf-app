@@ -204,6 +204,7 @@ import TDF.ServerFeedback
       validateFeedbackAttachmentSize,
       validateFeedbackAttachmentContentType,
       validateFeedbackAttachmentFileName,
+      validateFeedbackAttachmentMetadata,
       validateFeedbackTitle,
       validateFeedbackConsent,
       validateFeedbackSeverity,
@@ -6739,6 +6740,32 @@ main = hspec $ do
             assertInvalid
                 "application/javascript"
                 "attachment content type must be a PDF, image, plain text, or CSV file"
+
+    describe "validateFeedbackAttachmentMetadata" $ do
+        it "accepts attachment filenames only when their extensions match the content type" $ do
+            validateFeedbackAttachmentMetadata
+                "  screenshot.JPG  "
+                " Image/JPEG; charset=binary "
+                `shouldBe` Right ("screenshot.JPG", "image/jpeg")
+            validateFeedbackAttachmentMetadata "debug log.txt" "text/plain"
+                `shouldBe` Right ("debug-log.txt", "text/plain")
+            validateFeedbackAttachmentMetadata "export.csv" "application/csv"
+                `shouldBe` Right ("export.csv", "application/csv")
+
+        it "rejects mismatched or missing attachment extensions before feedback storage" $ do
+            let assertInvalid rawName rawContentType =
+                    case validateFeedbackAttachmentMetadata rawName rawContentType of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "attachment file name extension must match its content type"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment metadata, got " <> show value)
+            assertInvalid "screenshot.png" "application/pdf"
+            assertInvalid "report.pdf" "image/png"
+            assertInvalid "debug-log" "text/plain"
 
     describe "feedback multipart parsing" $ do
         it "accepts omitted consent as false and normalizes explicit truthy values" $ do
