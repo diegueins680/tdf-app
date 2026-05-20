@@ -1027,6 +1027,13 @@ const isInactiveStatusSearchQuery = (value: string) => {
     && queryVariants.every((query) => INACTIVE_STATUS_SEARCH_VALUES.includes(query));
 };
 
+const hasInactiveStatusSearchToken = (value: string) => {
+  const queryTokens = getSearchTokens(value);
+
+  return queryTokens.some((token) => INACTIVE_STATUS_SEARCH_VALUES.includes(token))
+    && !queryTokens.some((token) => ACTIVE_STATUS_SEARCH_VALUES.includes(token));
+};
+
 const isStatusOnlySearchQuery = (value: string) =>
   isActiveStatusSearchQuery(value) || isInactiveStatusSearchQuery(value);
 
@@ -1208,10 +1215,12 @@ export default function AdminUsersPage() {
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
   const hasActiveStatusSearch = hasActiveSearch && isActiveStatusSearchQuery(searchQuery);
   const hasInactiveStatusSearch = hasActiveSearch && isInactiveStatusSearchQuery(searchQuery);
+  const hasInactiveStatusSearchIntent = hasActiveSearch
+    && (hasInactiveStatusSearch || hasInactiveStatusSearchToken(searchQuery));
   const hasStatusSearch = hasActiveStatusSearch || hasInactiveStatusSearch;
   const showReviewInactiveSearchEmptyAction =
     showSearchEmptyState && !includeInactive && !hasActiveStatusSearch;
-  const reviewInactiveSearchEmptyActionLabel = hasInactiveStatusSearch
+  const reviewInactiveSearchEmptyActionLabel = hasInactiveStatusSearchIntent
     ? ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION
     : ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION;
   const hasConfirmedNoInactiveUsers =

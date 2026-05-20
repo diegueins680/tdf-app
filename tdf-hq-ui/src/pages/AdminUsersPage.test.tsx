@@ -5490,6 +5490,78 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('keeps mixed inactive identity searches on the direct inactive-search action', async () => {
+    listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
+      buildUser({
+        userId: 101,
+        partyId: 9,
+        username: 'ada-admin',
+        partyName: 'Ada Admin',
+      }),
+      buildUser({
+        userId: 102,
+        partyId: 44,
+        username: 'grace-admin',
+        partyName: 'Grace Admin',
+        primaryEmail: 'grace@example.com',
+      }),
+      buildUser({
+        userId: 103,
+        partyId: 55,
+        username: 'linus-admin',
+        partyName: 'Linus Admin',
+        primaryEmail: 'linus@example.com',
+      }),
+      ...(includeInactive
+        ? [
+            buildUser({
+              userId: 104,
+              partyId: 66,
+              username: 'maria-admin',
+              partyName: 'María Admin',
+              active: false,
+            }),
+          ]
+        : []),
+    ]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Buscar usuarios');
+        expect(getCheckboxByLabelText(container, 'Incluir inactivos').checked).toBe(false);
+      });
+
+      await changeInputValue(getInputByLabelText(container, 'Buscar usuarios'), 'maria inactiva');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'No hay coincidencias para "maria inactiva" entre los usuarios activos.',
+        );
+        expect(getButtonsByText(container, 'Buscar cuentas inactivas')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Buscar también en cuentas inactivas')).toHaveLength(0);
+        expect(hasExactText(container, 'Buscar también en inactivos')).toBe(false);
+        expect(container.querySelector('[data-testid^="admin-user-row-"]')).toBeNull();
+      });
+
+      await clickButton(getButtonsByText(container, 'Buscar cuentas inactivas')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listUsersMock).toHaveBeenLastCalledWith(true);
+        expect(getRenderedRowUserIds(container)).toEqual([104]);
+        expect(getPageGuidance(container)).toBe(
+          'Resultado único inactivo. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.',
+        );
+        expect(getButtonsByText(container, 'Buscar cuentas inactivas')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('treats status-only inactive searches as scope filters instead of fuzzy identity matches', async () => {
     listUsersMock.mockImplementation((includeInactive = false) => Promise.resolve([
       buildUser({
