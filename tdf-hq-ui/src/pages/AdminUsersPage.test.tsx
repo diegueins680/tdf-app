@@ -942,6 +942,42 @@ describe('AdminUsersPage', () => {
     }
   });
 
+  it('treats por-completar placeholders as missing data instead of usable contact or access', async () => {
+    listUsersMock.mockResolvedValue([
+      buildUser({
+        userId: 101,
+        username: 'pending-admin',
+        primaryEmail: 'Por completar',
+        primaryPhone: 'Por completar',
+        whatsapp: 'Por completar',
+        roles: ['Por completar'],
+        modules: ['Por completar'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getPageGuidance(container)).toBe(
+          'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Acceso de este usuario: Sin acceso asignado.',
+        );
+
+        const row = getRowByUserId(container, 101);
+        expect(row.textContent).not.toContain('Por completar');
+        expect(row.textContent).not.toContain('Roles:');
+        expect(row.textContent).not.toContain('Módulos:');
+        expect(row.textContent).not.toContain('Sin acceso asignado');
+        expect(getButtonsByText(row, 'WhatsApp')).toHaveLength(0);
+        expect(row.querySelector('[aria-label^="Abrir WhatsApp para "]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('ignores unregistered-data placeholders so the first-user view does not show fake contact or access values', async () => {
     listUsersMock.mockResolvedValue([
       buildUser({
