@@ -5,12 +5,12 @@ Do not switch simulator, app path, bundle id, backend lane, or test plan.
 
 ## Frozen lane of record
 
-- Simulator id: `3C3D5759-6E10-480D-B768-2747B9B0D02A`
+- Simulator id: `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B`
 - App path: `/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app`
 - Bundle id: `com.tdfrecords.app`
 - Step 1: `cd '/Users/diegosaa/GitHub/tdf-app/tdf-mobile' && npx expo start --dev-client --host localhost`
-- Step 2: `xcrun simctl install 3C3D5759-6E10-480D-B768-2747B9B0D02A '/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app'`
-- Step 3: `xcrun simctl launch 3C3D5759-6E10-480D-B768-2747B9B0D02A com.tdfrecords.app`
+- Step 2: `xcrun simctl install 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B '/Users/diegosaa/GitHub/tdf-app/tdf-mobile/ios/build/Build/Products/Release-iphonesimulator/TDFRecords.app'`
+- Step 3: `xcrun simctl launch 8DB9DCE0-2F80-49C9-A614-F21DA3876B7B com.tdfrecords.app`
 - Baseline smoke evidence anchor: `/Users/diegosaa/.openclaw/orgs/tdf-label/evidence/ios-six-category-smoke-20260426-2055`
 
 ## Pre-rerun gate
