@@ -1,6 +1,6 @@
 # TDF Label — Release Readiness
 
-_Last updated: 2026-05-20 07:20 GMT-5 by tdf-label-release_
+_Last updated: 2026-05-20 13:07 GMT-5 by tdf-label-release_
 
 ## Current Baseline
 
@@ -33,10 +33,10 @@ _Last updated: 2026-05-20 07:20 GMT-5 by tdf-label-release_
 | Profile | preview |
 | Distribution | internal |
 | Version | 1.0.0 |
-| Build Number | 13 |
-| Commit | `e50656e` (A/B experiment infrastructure) |
-| Started | 2026-05-20 07:07:57 AM |
-| Finished | 2026-05-20 07:14:26 AM |
+| Build Number | 14 |
+| Commit | `132a5fba8` (fix: update frozen lane simulator UUID) |
+| Started | 2026-05-20 13:07:00 PM |
+| Finished | 2026-05-20 13:07:00 PM |
 | IPA URL | https://expo.dev/artifacts/eas/6Cc91jFMt9UvTeTNAvLXRB.ipa |
 
 ## Quick Commands
