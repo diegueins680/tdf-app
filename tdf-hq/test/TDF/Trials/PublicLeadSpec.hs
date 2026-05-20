@@ -1834,6 +1834,24 @@ spec = do
         )
         `shouldBe` True
 
+    it "rejects explicit null availability fallback fields so only omission can mean fallback" $ do
+      let assertNullRejected fieldName payload =
+            case A.eitherDecode (BL8.pack payload) :: Either String TrialAvailabilityUpsert of
+              Left decodeErr ->
+                decodeErr `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right value ->
+                expectationFailure
+                  ("Expected null availability field to fail, got " <> show value)
+      assertNullRejected
+        "availabilityId"
+        "{\"availabilityId\":null,\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"teacherId\":2}"
+      assertNullRejected
+        "notes"
+        "{\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"notes\":null,\"teacherId\":2}"
+      assertNullRejected
+        "teacherId"
+        "{\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"teacherId\":null}"
+
   describe "validateTrialAvailabilityUpsertInput" $ do
     let mkAvailability availabilityIdValue subjectIdValue notesValue teacherIdValue =
           TrialAvailabilityUpsert

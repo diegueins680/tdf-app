@@ -102,7 +102,17 @@ data TrialAvailabilityUpsert = TrialAvailabilityUpsert
   } deriving (Show, Generic)
 instance ToJSON TrialAvailabilityUpsert
 instance FromJSON TrialAvailabilityUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    withObject "TrialAvailabilityUpsert" rejectNullOptionalAvailabilityFields value
+    genericParseJSON strictObjectOptions value
+    where
+      rejectNullOptionalAvailabilityFields object =
+        mapM_ rejectNullOptionalField ["availabilityId", "notes", "teacherId"]
+        where
+          rejectNullOptionalField fieldName =
+            case AesonKeyMap.lookup (AesonKey.fromString fieldName) object of
+              Just Null -> fail (fieldName <> " must be omitted instead of null")
+              _         -> pure ()
 
 data TrialAssignIn = TrialAssignIn
   { teacherId :: Int
