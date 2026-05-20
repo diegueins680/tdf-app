@@ -31,6 +31,10 @@ module TDF.ServerFanClub
   , validateFanClubMemoryPathId
   , validateFanClubMemoryMutationTarget
   , validateFanClubMemoryReportReason
+  , validateFanClubEventTitleInput
+  , validateFanClubEventDescriptionInput
+  , validateFanClubEventLocationInput
+  , validateFanClubEventTimeRange
   ) where
 
 import           Control.Arrow          ((&&&))
@@ -50,7 +54,7 @@ import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
-import           Data.Time              (getCurrentTime)
+import           Data.Time              (UTCTime, getCurrentTime)
 
 import           Database.Persist       (Entity(..), Key, (=.), (==.), (<-.), SelectOpt(Asc, Desc)
                                          , get, getBy, insert, insertUnique, selectFirst, selectList, update, count)
@@ -411,6 +415,14 @@ fanClubSecureArtistHandlers user artistId =
       artistKey <- requireArtistKey aId
       isOfficer <- runDB $ checkIsOfficer user artistKey
       unless isOfficer $ throwError err403 { errBody = "Solo la directiva puede crear eventos" }
+      title <- either throwError pure $
+        validateFanClubEventTitleInput (fcevTitle req)
+      description <- either throwError pure $
+        validateFanClubEventDescriptionInput (fcevDescription req)
+      location <- either throwError pure $
+        validateFanClubEventLocationInput (fcevLocation req)
+      either throwError pure $
+        validateFanClubEventTimeRange (fcevStartsAt req) (fcevEndsAt req)
       mClub <- runDB $ getBy (UniqueFanClubArtist artistKey)
       case mClub of
         Nothing -> throwError err404 { errBody = "Club no encontrado" }
@@ -418,22 +430,22 @@ fanClubSecureArtistHandlers user artistId =
           now <- liftIO getCurrentTime
           eid <- insert FanClubEvent
             { fanClubEventClubId = cid
-            , fanClubEventTitle = fcevTitle req
-            , fanClubEventDescription = fcevDescription req
+            , fanClubEventTitle = title
+            , fanClubEventDescription = description
             , fanClubEventStartsAt = fcevStartsAt req
             , fanClubEventEndsAt = fcevEndsAt req
-            , fanClubEventLocation = fcevLocation req
+            , fanClubEventLocation = location
             , fanClubEventIsArtistConcert = False
             , fanClubEventCreatedByPartyId = Just (auPartyId user)
             , fanClubEventCreatedAt = now
             }
           pure $ FanClubEventDTO
             { fceId = fromSqlKey eid
-            , fceTitle = fcevTitle req
-            , fceDescription = fcevDescription req
+            , fceTitle = title
+            , fceDescription = description
             , fceStartsAt = fcevStartsAt req
             , fceEndsAt = fcevEndsAt req
-            , fceLocation = fcevLocation req
+            , fceLocation = location
             , fceIsArtistConcert = False
             , fceCreatedBy = Just (fromSqlKey (auPartyId user))
             }
@@ -1142,6 +1154,42 @@ validateFanClubMemoryReportReason =
 
 maxFanClubMemoryReportReasonChars :: Int
 maxFanClubMemoryReportReasonChars = 500
+
+validateFanClubEventTitleInput :: Text -> Either ServerError Text
+validateFanClubEventTitleInput =
+  validateRequiredFanClubInboxText "title" maxFanClubEventTitleChars False
+
+validateFanClubEventDescriptionInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateFanClubEventDescriptionInput Nothing = Right Nothing
+validateFanClubEventDescriptionInput (Just rawDescription) =
+  validateOptionalFanClubInboxText
+    "description"
+    maxFanClubEventDescriptionChars
+    True
+    rawDescription
+
+validateFanClubEventLocationInput :: Maybe Text -> Either ServerError (Maybe Text)
+validateFanClubEventLocationInput Nothing = Right Nothing
+validateFanClubEventLocationInput (Just rawLocation) =
+  validateOptionalFanClubInboxText
+    "location"
+    maxFanClubEventLocationChars
+    False
+    rawLocation
+
+validateFanClubEventTimeRange :: Maybe UTCTime -> Maybe UTCTime -> Either ServerError ()
+validateFanClubEventTimeRange (Just startsAt) (Just endsAt)
+  | endsAt <= startsAt = Left err400 { errBody = "endsAt must be after startsAt" }
+validateFanClubEventTimeRange _ _ = Right ()
+
+maxFanClubEventTitleChars :: Int
+maxFanClubEventTitleChars = 160
+
+maxFanClubEventDescriptionChars :: Int
+maxFanClubEventDescriptionChars = 4096
+
+maxFanClubEventLocationChars :: Int
+maxFanClubEventLocationChars = 240
 
 validateFanClubOfficerRoleInput :: Text -> Either ServerError FanClubOfficerRole
 validateFanClubOfficerRoleInput rawRole =

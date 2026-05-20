@@ -44,6 +44,10 @@ import TDF.ServerFanClub
   , validateFanClubMemoryReportReason
   , validateFanClubMemoryDescriptionInput
   , validateFanClubMemoryTitleInput
+  , validateFanClubEventDescriptionInput
+  , validateFanClubEventLocationInput
+  , validateFanClubEventTimeRange
+  , validateFanClubEventTitleInput
   , validateFanClubReplyParentTarget
   , validateFanClubVoteCandidacyTargets
   , validateFanClubVoteCandidacyTarget
@@ -327,6 +331,41 @@ spec = do
         validateFanClubInboxSubjectInput (Just ("Hola" <> "\x00A0" <> "directiva"))
       assertRejected 400 "unsupported control" $
         validateFanClubInboxReplyBodyInput ("Hola" <> "\NUL" <> "ops")
+
+  describe "fan club event input validation" $ do
+    it "normalizes event text and rejects unsafe fields before event persistence" $ do
+      validateFanClubEventTitleInput "  Reunión del club  "
+        `shouldBe` Right "Reunión del club"
+      validateFanClubEventDescriptionInput (Just "  Linea uno\nlinea dos  ")
+        `shouldBe` Right (Just "Linea uno\nlinea dos")
+      validateFanClubEventLocationInput (Just "  Sala A  ")
+        `shouldBe` Right (Just "Sala A")
+      validateFanClubEventLocationInput (Just "   ")
+        `shouldBe` Right Nothing
+
+      assertRejected 400 "title is required" $
+        validateFanClubEventTitleInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubEventTitleInput (T.replicate 161 "a")
+      assertRejected 400 "description must be 4096 characters or fewer" $
+        validateFanClubEventDescriptionInput (Just (T.replicate 4097 "a"))
+      assertRejected 400 "location must be 240 characters or fewer" $
+        validateFanClubEventLocationInput (Just (T.replicate 241 "a"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubEventTitleInput "Reunión\nclub"
+      assertRejected 400 "hidden formatting" $
+        validateFanClubEventDescriptionInput (Just ("Agenda" <> "\x202E" <> "oculta"))
+
+    it "rejects event end times that are not after start times" $ do
+      let startsAt = testTime
+          endsAt = UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 3600)
+      validateFanClubEventTimeRange (Just startsAt) (Just endsAt)
+        `shouldBe` Right ()
+
+      assertRejected 400 "endsAt must be after startsAt" $
+        validateFanClubEventTimeRange (Just startsAt) (Just startsAt)
+      assertRejected 400 "endsAt must be after startsAt" $
+        validateFanClubEventTimeRange (Just endsAt) (Just startsAt)
 
   describe "validateFanClubInboxStatusInput" $ do
     it "normalizes supported inbox statuses before persistence" $ do
