@@ -155,7 +155,9 @@ instance ToJSON ClassSessionOut; instance FromJSON ClassSessionOut
 data AttendIn = AttendIn { attended :: Bool, notes :: Maybe Text } deriving (Generic)
 instance ToJSON AttendIn
 instance FromJSON AttendIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "AttendIn" ["notes"] value
+    genericParseJSON strictRequestObjectOptions value
 
 data CommissionDTO = CommissionDTO { teacherId :: Int, amountCents :: Int, basisCents :: Int, percent :: Double } deriving (Generic)
 instance ToJSON CommissionDTO; instance FromJSON CommissionDTO

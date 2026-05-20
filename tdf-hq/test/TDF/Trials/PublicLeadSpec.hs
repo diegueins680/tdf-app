@@ -77,6 +77,7 @@ import TDF.Trials.Server
   , validateTeacherStudentLinkInput
   , validateTrialAvailabilityUpsertInput
   , validateTrialScheduleInput
+  , resolveAttendNotesUpdate
   )
 import qualified TDF.Models as Models
 import TDF.Trials.Models (Subject (..))
@@ -1701,6 +1702,39 @@ spec = do
             :: Either String AttendIn
         )
         `shouldBe` True
+
+    it "preserves omitted attendance notes and rejects null notes before persistence" $ do
+      case A.eitherDecode "{\"attended\":true}" of
+        Left decodeErr ->
+          expectationFailure ("Expected omitted attendance notes to decode, got: " <> decodeErr)
+        Right req@(AttendIn attendedValue notesValue) -> do
+          attendedValue `shouldBe` True
+          notesValue `shouldBe` Nothing
+          case resolveAttendNotesUpdate req of
+            Right Nothing -> pure ()
+            Right _ ->
+              expectationFailure "Expected omitted attendance notes to produce no note update"
+            Left err ->
+              expectationFailure
+                ("Expected omitted attendance notes to validate, got " <> BL8.unpack (errBody err))
+
+      case A.eitherDecode "{\"attended\":true,\"notes\":\"   \"}" of
+        Left decodeErr ->
+          expectationFailure ("Expected blank attendance notes to decode, got: " <> decodeErr)
+        Right req ->
+          case resolveAttendNotesUpdate req of
+            Right (Just Nothing) -> pure ()
+            Right _ ->
+              expectationFailure "Expected blank attendance notes to produce an explicit clear"
+            Left err ->
+              expectationFailure
+                ("Expected blank attendance notes to validate, got " <> BL8.unpack (errBody err))
+
+      case (A.eitherDecode "{\"attended\":true,\"notes\":null}" :: Either String AttendIn) of
+        Left decodeErr ->
+          decodeErr `shouldContain` "notes must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null attendance notes to be rejected"
 
   describe "validateOptionalClassSessionNotes" $ do
     it "normalizes class-session notes before attendance or update persistence" $ do

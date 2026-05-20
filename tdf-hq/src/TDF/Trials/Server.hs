@@ -653,6 +653,14 @@ validateOptionalClassSessionNotes :: Maybe Text -> Either ServerError (Maybe Tex
 validateOptionalClassSessionNotes =
   validateOptionalPublicTextField "notes" 2000
 
+resolveAttendNotesUpdate :: AttendIn -> Either ServerError (Maybe (Maybe Text))
+resolveAttendNotesUpdate AttendIn{..} =
+  case notes of
+    Nothing ->
+      Right Nothing
+    Just rawNotes ->
+      Just <$> validateOptionalClassSessionNotes (Just rawNotes)
+
 badRequestText :: Text -> ServerError
 badRequestText message =
   err400 { errBody = BL8.pack (T.unpack message) }
@@ -2084,7 +2092,7 @@ privateTrialsServer user@AuthedUser{..} =
             Nothing -> liftIO $ throwIO err500
 
     attendH :: Int -> AttendIn -> AppM ClassSessionOut
-    attendH rawClassId AttendIn{..} = do
+    attendH rawClassId attendReq@AttendIn{..} = do
       ensureSchoolAccess
       classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
@@ -2094,12 +2102,12 @@ privateTrialsServer user@AuthedUser{..} =
         Just sess -> do
           unless (isSchoolStaff || Trials.classSessionTeacherId sess == auPartyId) $
             liftIO $ throwIO err403
-          notesValue <- either (liftIO . throwIO) pure (validateOptionalClassSessionNotes notes)
+          notesUpdate <- either (liftIO . throwIO) pure (resolveAttendNotesUpdate attendReq)
           let duration = classSessionConsumedMinutes sess
           update cid
-            [ ClassSessionAttended =. attended
-            , ClassSessionNotes    =. notesValue
-            ]
+            ( [ClassSessionAttended =. attended]
+                ++ maybe [] (\value -> [ClassSessionNotes =. value]) notesUpdate
+            )
           pure (ClassSessionOut (entityKeyInt cid) duration)
 
     commissionsH :: Maybe UTCTime -> Maybe UTCTime -> Maybe Int -> AppM [CommissionDTO]
