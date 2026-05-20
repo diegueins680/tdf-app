@@ -373,6 +373,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
   if any (hasDuplicateLeaves validatedCatalog) mountedAreas
        || any (hasLeafBranchCollision validatedCatalog) mountedAreas
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
+       || any (hasSegmentPrefixCollision validatedCatalog) mountedAreas
        || hasMountedAreaSegmentCollision mountedAreas validatedCatalog
        || hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreas validatedCatalog
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
@@ -405,7 +406,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
       in any (`Set.member` leaves) branchSegments
 
     hasLeafPrefixCollision catalogForAreas area =
-      any isAmbiguousLeafPair (leafPairs leaves)
+      any isAmbiguousLabelPair (labelPairs leaves)
       where
         leaves =
           [ endpointLeaf endpoint
@@ -413,9 +414,20 @@ validateFutureStubCatalogEndpointLeaves catalog = do
           , entryArea == area
           ]
 
-    isAmbiguousLeafPair (leftLeaf, rightLeaf) =
-      leftLeaf /= rightLeaf
-        && (leftLeaf `T.isPrefixOf` rightLeaf || rightLeaf `T.isPrefixOf` leftLeaf)
+    hasSegmentPrefixCollision catalogForAreas area =
+      any isAmbiguousLabelPair (labelPairs segments)
+      where
+        segments =
+          nub
+            [ segment
+            | (entryArea, endpoint) <- catalogForAreas
+            , entryArea == area
+            , segment <- T.splitOn "/" endpoint
+            ]
+
+    isAmbiguousLabelPair (leftLabel, rightLabel) =
+      leftLabel /= rightLabel
+        && (leftLabel `T.isPrefixOf` rightLabel || rightLabel `T.isPrefixOf` leftLabel)
 
     hasMountedAreaSegmentCollision mountedAreasValue catalogForAreas =
       let mountedAreaSet = Set.fromList mountedAreasValue
@@ -470,9 +482,9 @@ validateFutureStubCatalogEndpointLeaves catalog = do
         || reservedSegment `T.isPrefixOf` segment
         || segment `T.isPrefixOf` reservedSegment
 
-    leafPairs [] = []
-    leafPairs (leaf:remaining) =
-      map ((,) leaf) remaining <> leafPairs remaining
+    labelPairs [] = []
+    labelPairs (label:remaining) =
+      map ((,) label) remaining <> labelPairs remaining
 
     endpointLeaf endpoint =
       case reverse (T.splitOn "/" endpoint) of
