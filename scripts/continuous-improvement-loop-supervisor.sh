@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="${1:-${CONTINUOUS_LOOP_CONFIG:-$ROOT/scripts/continuous-improvement-loop.codex.json}}"
 STATE_DIR="${CONTINUOUS_LOOP_STATE_DIR:-$ROOT/tmp/continuous-improvement-loop}"
 LOG_FILE="${CONTINUOUS_LOOP_LOG_FILE:-$ROOT/tmp/continuous-improvement-loop.log}"
+LOG_MAX_SIZE_BYTES="${CONTINUOUS_LOOP_LOG_MAX_SIZE_BYTES:-104857600}"  # 100 MB default
 PID_FILE="${CONTINUOUS_LOOP_PID_FILE:-$ROOT/tmp/continuous-improvement-loop.pid}"
 CHILD_PID_FILE="${CONTINUOUS_LOOP_CHILD_PID_FILE:-$STATE_DIR/child.pid}"
 STATUS_FILE="${CONTINUOUS_LOOP_STATUS_FILE:-$STATE_DIR/status.json}"
@@ -38,6 +39,9 @@ export CONTINUOUS_LOOP_CONFIG="$CONFIG"
 export CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS="$CHILD_TIMEOUT_SECONDS"
 
 log() {
+  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
+  fi
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
 }
 
