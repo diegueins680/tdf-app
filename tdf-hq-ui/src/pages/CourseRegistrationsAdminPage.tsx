@@ -5859,6 +5859,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCopyCsv = async () => {
     if (searchedRegistrations.length < 2) return;
+    setHasUsedFilterControl(true);
     const header = ['id', 'slug', 'nombre', 'email', 'telefono', 'estado', 'creado'];
     const rows = searchedRegistrations.map((reg) => [
       reg.crId,

@@ -15675,6 +15675,42 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('retires first-run list guidance after copying the visible CSV', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=9');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(getButtonByText(container, copyVisibleCsvLabel(9))).toBeTruthy();
+      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(1);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, copyVisibleCsvLabel(9)));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(writeTextMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('CSV copiado');
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
+      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(0);
+      expect(countButtonsByText(container, copyVisibleCsvLabel(9))).toBe(0);
+    });
+
+    await cleanup();
+  });
+
   it('keeps failed CSV copy feedback as one utility message instead of repeating the copy action', async () => {
     const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockRejectedValue(new Error('clipboard denied'));
     Object.defineProperty(navigator, 'clipboard', {
