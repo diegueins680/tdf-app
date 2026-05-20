@@ -1632,6 +1632,16 @@ const firstRunInvitationDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunNotificationSignupDescriptorPattern = String.raw`(?:(?:course\s+)?(?:reminders?|notifications?|alerts?)\s+(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)|(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)|(?:formulario|p[aá]gina|enlace|link|url|portal|suscripci[oó]n|registro)\s+(?:de|para(?:\s+el)?)\s+(?:recordatorios?|notificaciones?|alertas?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:recordatorios?|notificaciones?|alertas?)\s+(?:del?\s+curso|de\s+curso)?\s*(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|suscripciones?|registros?))`;
+const firstRunNotificationSignupDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunNotificationSignupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunNotificationSignupDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunNotificationSignupDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunLeadMagnetDescriptorPrefixPattern =
   /^(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2144,6 +2154,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunInvitationDescriptorPrefixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
@@ -2272,6 +2283,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunInvitationDescriptorSuffixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')

@@ -93,6 +93,29 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips reminder and notification signup wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Course reminder signup - Beatmaking 101',
+      'Alert subscription for Beatmaking 101',
+      'Beatmaking 101 - notification form',
+      'Formulario de recordatorios - Beatmaking 101',
+      'Beatmaking 101 - registro de notificaciones',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate alert and notification course titles when they are not signup artifacts', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'alerts-engineering-lab', ccTitle: 'Live Alerts for Engineers' }),
+    ).toBe('Live Alerts for Engineers');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'notification-design', ccTitle: 'Notification Design for Creators' }),
+    ).toBe('Notification Design for Creators');
+  });
+
   it('keeps legitimate course-change topics when they are not request artifacts', () => {
     expect(
       cohortFirstRunLabel({ ccSlug: 'refund-policy', ccTitle: 'Refund Policy for Creators' }),
