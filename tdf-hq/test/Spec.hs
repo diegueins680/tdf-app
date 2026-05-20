@@ -11039,6 +11039,9 @@ main = hspec $ do
                 "OpenAI embeddings error (status 503)."
                 `shouldBe` True
             shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 400): invalid_request_error"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
                 "OpenAI embeddings response invalid: Embedding response size mismatch"
                 `shouldBe` False
             shouldUseLocalEmbeddingFallback
