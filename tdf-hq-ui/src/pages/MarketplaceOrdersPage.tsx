@@ -407,6 +407,8 @@ export default function MarketplaceOrdersPage() {
     !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 1;
   const showEmptyOrdersState =
     !showFirstOrderEmptyState && !ordersQuery.isLoading && !ordersQuery.isError && filtered.length === 0;
+  const showInitialOrdersErrorState = ordersQuery.isError && orders.length === 0;
+  const ordersErrorMessage = ordersQuery.error?.message ?? 'Error al cargar órdenes';
   const showFilteredSingleOrderSummary = showSingleVisibleOrderSummary && !showSingleOrderFocusedState;
   const singleVisibleOrder = showSingleVisibleOrderSummary ? (filtered[0] ?? null) : null;
   const singleVisibleBuyerIdentity = singleVisibleOrder ? getOrderBuyerIdentity(singleVisibleOrder) : '';
@@ -447,7 +449,7 @@ export default function MarketplaceOrdersPage() {
       ? `Editar ${advancedFiltersButtonSubject}`
       : `Mostrar ${advancedFiltersButtonSubject}`;
   const showHeaderRefreshAction =
-    Boolean(ordersQuery.error)
+    (Boolean(ordersQuery.error) && !showInitialOrdersErrorState)
     || (
       !ordersQuery.isLoading
       && !showEmptyOrdersState
@@ -1015,7 +1017,18 @@ export default function MarketplaceOrdersPage() {
           ) : null}
         />
         <CardContent>
-          {ordersQuery.isError && <Alert severity="error">{ordersQuery.error?.message ?? 'Error al cargar órdenes'}</Alert>}
+          {ordersQuery.isError && (
+            <Alert
+              severity="error"
+              action={showInitialOrdersErrorState ? (
+                <Button color="inherit" size="small" onClick={handleRefresh}>
+                  Reintentar órdenes
+                </Button>
+              ) : undefined}
+            >
+              {ordersErrorMessage}
+            </Alert>
+          )}
           {ordersQuery.isLoading && <Typography color="text.secondary">Cargando órdenes...</Typography>}
           {showFirstOrderEmptyState && (
             <Alert

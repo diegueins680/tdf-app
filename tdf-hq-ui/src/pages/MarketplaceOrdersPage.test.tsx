@@ -383,6 +383,40 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps an initial marketplace load failure attached to one contextual retry action', async () => {
+    listOrdersMock
+      .mockRejectedValueOnce(new Error('backend unavailable'))
+      .mockResolvedValueOnce([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('backend unavailable');
+        expect(queryActionByText(container, 'Reintentar órdenes')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+      });
+
+      const initialCallCount = listOrdersMock.mock.calls.length;
+
+      await clickActionByText(container, 'Reintentar órdenes');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(container.textContent).toContain(firstOrderEmptyStateMessage);
+        expect(queryActionByText(container, 'Reintentar órdenes')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces the first marketplace order row with a focused summary and one explicit open action', async () => {
     listOrdersMock.mockResolvedValue([buildOrder()]);
 
