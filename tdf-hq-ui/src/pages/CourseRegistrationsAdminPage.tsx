@@ -55,6 +55,7 @@ type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
+const markPaidEvidenceComposerHelpText = 'La evidencia es opcional: guárdala solo si necesitas documentar el pago antes de marcarlo pagado.';
 const emptyReceiptAlertMessage = 'El primer comprobante documenta el pago y habilita Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const emptyReceiptEvidenceAlertMessage = 'Agrega evidencia solo si necesitas documentar este pago. Se guardará aquí con un enlace para revisarla después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
@@ -6130,12 +6131,19 @@ export default function CourseRegistrationsAdminPage() {
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
+  const hasReceipts = receipts.length > 0;
+  const isMarkPaidReceiptComposer = isMarkPaidIntent && showReceiptComposer && !hasReceipts;
+  const isOptionalPaymentEvidenceComposer = isMarkPaidIntent
+    && canMarkPaid
+    && showReceiptComposer
+    && !hasReceipts
+    && receiptForm.editingId == null;
   const hasMarkedPaidInCurrentDossier =
     isMarkPaidIntent && selectedDossierId != null && markedPaidRegistrationId === selectedDossierId;
   const activeRegistrationStatus = hasMarkedPaidInCurrentDossier
     ? 'paid'
     : activeRegistration?.crStatus ?? '';
-  const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
+  const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier && !isOptionalPaymentEvidenceComposer;
   const showActiveRegistrationStatusChip = Boolean(activeRegistrationStatus)
     && !(isMarkPaidIntent && showMarkPaidAction);
   const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
@@ -6170,7 +6178,6 @@ export default function CourseRegistrationsAdminPage() {
   const groupedDossierContextActionsAccessibleLabel = groupedDossierContextActionsLabel === optionalDossierContextActionsFallbackLabel
     ? groupedDossierContextActionsExpandedLabel
     : groupedDossierContextActionsLabel;
-  const hasReceipts = receipts.length > 0;
   const activeRegistrationKnownStatus = activeRegistrationStatus
     ? normalizeKnownRegistrationStatus(activeRegistrationStatus)
     : null;
@@ -6208,11 +6215,9 @@ export default function CourseRegistrationsAdminPage() {
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
   const showReceiptSaveAction = canSubmitReceipt || receiptForm.editingId != null;
   const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
-  const receiptSectionHelpText = (
-    selectedDossier?.intent === 'markPaid'
-    && showReceiptComposer
-    && !hasReceipts
-  )
+  const receiptSectionHelpText = isOptionalPaymentEvidenceComposer
+    ? markPaidEvidenceComposerHelpText
+    : isMarkPaidReceiptComposer
     ? markPaidReceiptSectionHelpText
     : showReceiptComposer && receiptForm.editingId != null
       ? editingReceiptComposerHelpText
@@ -6234,17 +6239,23 @@ export default function CourseRegistrationsAdminPage() {
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
-  const isMarkPaidFirstReceiptFlow = selectedDossier?.intent === 'markPaid'
+  const isMarkPaidFirstReceiptFlow = isMarkPaidIntent
     && !dossierQuery.isLoading
     && !dossierQuery.isError
     && !hasReceipts
     && receiptForm.editingId == null;
   const receiptCancelLabel = isMarkPaidFirstReceiptFlow
-    ? 'Cerrar pago'
+    ? isOptionalPaymentEvidenceComposer
+      ? 'Cancelar evidencia'
+      : 'Cerrar pago'
     : receiptForm.editingId == null
       ? 'Cancelar comprobante'
       : 'Cancelar edición de comprobante';
   const handleCancelReceiptComposer = () => {
+    if (isOptionalPaymentEvidenceComposer) {
+      resetReceiptComposer();
+      return;
+    }
     if (isMarkPaidFirstReceiptFlow) {
       setSelectedDossier(null);
       return;

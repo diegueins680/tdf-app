@@ -182,6 +182,8 @@ const emptyReceiptAlertMessage =
   'El primer comprobante documenta el pago y habilita Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
 const emptyReceiptEvidenceAlertMessage =
   'Agrega evidencia solo si necesitas documentar este pago. Se guardará aquí con un enlace para revisarla después.';
+const markPaidEvidenceComposerHelpText =
+  'La evidencia es opcional: guárdala solo si necesitas documentar el pago antes de marcarlo pagado.';
 const receiptComposerHelpText =
   'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText =
@@ -5966,6 +5968,77 @@ describe('CourseRegistrationsAdminPage', () => {
           (item) => (item.textContent ?? '').trim() === 'Agregar seguimiento',
         ),
       ).toBe(false);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps optional payment evidence separate from the primary mark-paid action', async () => {
+    getRegistrationDossierMock.mockResolvedValue(buildDossier({ crdCanMarkPaid: true }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getMenuItemByText(document.body, openPaymentWorkflowLabel)).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickElement(getMenuItemByText(document.body, openPaymentWorkflowLabel));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Confirmar pago de inscripción');
+      expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar evidencia')).toBeTruthy();
+      expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
+      expect(document.body.textContent).not.toContain(markPaidEvidenceComposerHelpText);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Agregar evidencia'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(markPaidEvidenceComposerHelpText);
+      expect(document.body.textContent).not.toContain(
+        'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.',
+      );
+      expect(countButtonsByText(document.body, 'Marcar pagado')).toBe(0);
+      expect(getButtonByText(document.body, 'Cancelar evidencia')).toBeTruthy();
+      expect(countButtonsByText(document.body, 'Cerrar pago')).toBe(0);
+      expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(0);
+      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(document.body, 'Cancelar evidencia'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Confirmar pago de inscripción');
+      expect(getButtonByText(document.body, 'Marcar pagado')).toBeTruthy();
+      expect(getButtonByText(document.body, 'Agregar evidencia')).toBeTruthy();
+      expect(document.body.textContent).toContain(emptyReceiptEvidenceAlertMessage);
+      expect(document.body.textContent).not.toContain(markPaidEvidenceComposerHelpText);
+      expect(countButtonsByText(document.body, 'Cancelar evidencia')).toBe(0);
     });
 
     await cleanup();
