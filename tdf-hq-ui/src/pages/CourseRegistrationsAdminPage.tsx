@@ -7721,94 +7721,104 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       )}
-                      {useStatusIconAction ? (
-                        <Tooltip title={statusIconActionTitle}>
-                          <span>
-                            <IconButton
-                              size="small"
-                              color={registrationStatusButtonColor(reg.crStatus)}
-                              title={statusIconActionTitle}
-                              aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
-                              aria-haspopup="menu"
-                              data-action-icon={statusIconActionIsPaymentWorkflow ? 'payment-receipt' : 'status-menu'}
-                              disabled={isUpdating}
-                              onClick={(event) => {
-                                handleOpenStatusMenu(event.currentTarget, reg);
-                              }}
-                            >
-                              {statusIconActionIsPaymentWorkflow ? (
-                                <ReceiptLongIcon fontSize="small" />
-                              ) : (
-                                <MoreVertIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      ) : useDirectPendingRecoveryIconAction ? (
-                        <Tooltip title={directPendingRecoveryActionTitle}>
-                          <span>
-                            <IconButton
-                              size="small"
-                              color={registrationStatusButtonColor('pending_payment')}
-                              title={directPendingRecoveryActionTitle}
-                              aria-label={directPendingRecoveryActionLabel}
-                              data-action-icon="pending-recovery"
-                              disabled={isUpdating}
-                              onClick={() => {
+                      <Box
+                        data-testid={`course-registration-row-actions-${reg.crId}`}
+                        sx={{
+                          ml: 'auto',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {useStatusIconAction ? (
+                          <Tooltip title={statusIconActionTitle}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={registrationStatusButtonColor(reg.crStatus)}
+                                title={statusIconActionTitle}
+                                aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
+                                aria-haspopup="menu"
+                                data-action-icon={statusIconActionIsPaymentWorkflow ? 'payment-receipt' : 'status-menu'}
+                                disabled={isUpdating}
+                                onClick={(event) => {
+                                  handleOpenStatusMenu(event.currentTarget, reg);
+                                }}
+                              >
+                                {statusIconActionIsPaymentWorkflow ? (
+                                  <ReceiptLongIcon fontSize="small" />
+                                ) : (
+                                  <MoreVertIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        ) : useDirectPendingRecoveryIconAction ? (
+                          <Tooltip title={directPendingRecoveryActionTitle}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={registrationStatusButtonColor('pending_payment')}
+                                title={directPendingRecoveryActionTitle}
+                                aria-label={directPendingRecoveryActionLabel}
+                                data-action-icon="pending-recovery"
+                                disabled={isUpdating}
+                                onClick={() => {
+                                  handleCloseStatusMenu();
+                                  handleQuickStatus(reg, 'pending_payment');
+                                }}
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'currentColor',
+                                }}
+                              >
+                                <UndoIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="text"
+                            color={
+                              useDirectPendingRecoveryAction
+                                ? registrationStatusButtonColor('pending_payment')
+                                : registrationStatusButtonColor(reg.crStatus)
+                            }
+                            endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
+                            title={
+                              useDirectPendingRecoveryAction
+                                ? directPendingRecoveryActionTitle
+                                : statusMenuButtonTitle(reg.crStatus, rowActionTarget)
+                            }
+                            aria-label={
+                              useDirectPendingRecoveryAction
+                                ? directPendingRecoveryActionLabel
+                                : usePaymentStatusMenuLabel
+                                ? paymentStatusMenuButtonAriaLabel(rowActionTarget)
+                                : `Cambiar estado para ${rowActionTarget}`
+                            }
+                            aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
+                            disabled={isUpdating}
+                            onClick={(event) => {
+                              if (useDirectPendingRecoveryAction) {
                                 handleCloseStatusMenu();
                                 handleQuickStatus(reg, 'pending_payment');
-                              }}
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'currentColor',
-                              }}
-                            >
-                              <UndoIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        <Button
-                          size="small"
-                          variant="text"
-                          color={
-                            useDirectPendingRecoveryAction
-                              ? registrationStatusButtonColor('pending_payment')
-                              : registrationStatusButtonColor(reg.crStatus)
-                          }
-                          endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
-                          title={
-                            useDirectPendingRecoveryAction
-                              ? directPendingRecoveryActionTitle
-                              : statusMenuButtonTitle(reg.crStatus, rowActionTarget)
-                          }
-                          aria-label={
-                            useDirectPendingRecoveryAction
-                              ? directPendingRecoveryActionLabel
-                              : usePaymentStatusMenuLabel
-                              ? paymentStatusMenuButtonAriaLabel(rowActionTarget)
-                              : `Cambiar estado para ${rowActionTarget}`
-                          }
-                          aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
-                          disabled={isUpdating}
-                          onClick={(event) => {
-                            if (useDirectPendingRecoveryAction) {
-                              handleCloseStatusMenu();
-                              handleQuickStatus(reg, 'pending_payment');
-                              return;
-                            }
+                                return;
+                              }
 
-                            handleOpenStatusMenu(event.currentTarget, reg);
-                          }}
-                        >
-                          {useDirectPendingRecoveryAction
-                            ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
-                            : usePaymentStatusMenuLabel
-                            ? paymentStatusMenuButtonLabel
-                            : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
-                        </Button>
-                      )}
-                      <Box sx={{ flexGrow: 1 }} />
+                              handleOpenStatusMenu(event.currentTarget, reg);
+                            }}
+                          >
+                            {useDirectPendingRecoveryAction
+                              ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
+                              : usePaymentStatusMenuLabel
+                              ? paymentStatusMenuButtonLabel
+                              : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
+                          </Button>
+                        )}
+                      </Box>
                     </Box>
                   );
                 })}

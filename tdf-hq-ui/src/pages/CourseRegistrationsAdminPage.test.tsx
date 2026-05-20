@@ -1089,6 +1089,14 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
       expect(container.querySelectorAll('button[aria-label^="Abrir expediente de "]')).toHaveLength(2);
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(2);
+      const rowActionRails = Array.from(
+        container.querySelectorAll<HTMLElement>('[data-testid^="course-registration-row-actions-"]'),
+      );
+      expect(rowActionRails).toHaveLength(2);
+      expect(rowActionRails.every((rail) => (
+        rail.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]').length === 1
+        && rail.querySelector('button[aria-label^="Abrir expediente de "]') === null
+      ))).toBe(true);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(container.textContent).not.toContain('Abrir expediente');
       expect(container.textContent).not.toContain('Estado: Pendiente de pago');
