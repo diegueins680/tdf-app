@@ -1011,6 +1011,23 @@ spec = do
                 "{\"suInputListRows\":[{\"channelNumber\":1,\"mic\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null session create fallback fields instead of treating them as omitted" $ do
+            case decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "scStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null session status fallback to fail, got: " <> show value)
+
+            case decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scInputListRows\":null}" of
+                Left err ->
+                    err `shouldContain` "scInputListRows must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null session input-list fallback to fail, got: " <> show value)
+
         it "rejects null non-clearable session patch fields instead of treating them as omitted" $ do
             decodeSessionUpdate
                 "{\"suStatus\":null,\"suNotes\":\"Keep this note\"}"

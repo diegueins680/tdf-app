@@ -1409,7 +1409,12 @@ data SessionCreate = SessionCreate
 
 instance ToJSON SessionCreate
 instance FromJSON SessionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "SessionCreate"
+      ["scInputListRows", "scStatus"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data SessionUpdate = SessionUpdate
   { suBookingRef          :: Maybe (Maybe Text)
