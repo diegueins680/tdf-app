@@ -281,6 +281,10 @@ start_child() {
   fi
 
   json_update "starting" "launching-child" "Starting bounded loop child" "" "" "$restart_count" "$stale_restart_count"
+  # Rotate log if oversized before spawning child, so the >> redirect always appends to a fresh file
+  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
+  fi
   CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE="$STATUS_FILE" \
   CONTINUOUS_LOOP_LOG_FILE="$LOG_FILE" \
   CONTINUOUS_LOOP_PID_FILE="$PID_FILE" \
