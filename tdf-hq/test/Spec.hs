@@ -12495,6 +12495,28 @@ main = hspec $ do
                 Right payload ->
                     lsiContactPhone payload `shouldBe` Just "+593991234567"
 
+        it "requires exact YYYY-MM-DD session dates before intake persistence" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("sessionDate", " 2026-05-20 ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected canonical sessionDate to parse, got: " <> err)
+                Right payload ->
+                    lsiSessionDate payload `shouldBe` Just (fromGregorian 2026 5 20)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("sessionDate", "2026-5-20")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Invalid date format for sessionDate"
+                Right payload ->
+                    expectationFailure
+                        ("Expected loose sessionDate to be rejected, got: " <> show payload)
+
         it "accepts the canonical frontend musician and setlist keys instead of requiring internal prefixes" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")

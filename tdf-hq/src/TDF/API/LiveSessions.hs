@@ -580,10 +580,25 @@ resolveLiveSessionSetlistSortOrders songs = go Set.empty [] 0 songs
 
 readMaybeDay :: Text -> Either String Day
 readMaybeDay txt =
-  maybe
-    (Left "Invalid date format for sessionDate (expected YYYY-MM-DD)")
-    Right
-    (parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack txt) :: Maybe Day)
+  let value = T.strip txt
+  in if hasIsoDateShape value
+       then
+         maybe
+           (Left "Invalid date format for sessionDate (expected YYYY-MM-DD)")
+           Right
+           (parseTimeM False defaultTimeLocale "%Y-%m-%d" (T.unpack value) :: Maybe Day)
+       else Left "Invalid date format for sessionDate (expected YYYY-MM-DD)"
+
+hasIsoDateShape :: Text -> Bool
+hasIsoDateShape value =
+  case T.splitOn "-" value of
+    [yearPart, monthPart, dayPart] ->
+      T.length yearPart == 4
+        && T.length monthPart == 2
+        && T.length dayPart == 2
+        && T.all isDigit (yearPart <> monthPart <> dayPart)
+    _ ->
+      False
 
 withAliasedObject :: String -> [Text] -> (Object -> Parser a) -> Value -> Parser a
 withAliasedObject label allowedFields parser = withObject label $ \obj -> do
