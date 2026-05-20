@@ -904,7 +904,9 @@ callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
               Right OpenAIErrorResp{..} ->
                 pure
                   ( Left
-                      ( "OpenAI embeddings error: "
+                      ( "OpenAI embeddings error (status "
+                          <> T.pack (show status)
+                          <> "): "
                           <> sanitizeOpenAIEmbeddingErrorMessage (oeMessage oeError)
                       )
                   )

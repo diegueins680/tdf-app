@@ -11066,6 +11066,9 @@ main = hspec $ do
                 "OpenAI embeddings error (status 503)."
                 `shouldBe` True
             shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 400): payload too large"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
                 "OpenAI embeddings error (status 400): invalid_request_error"
                 `shouldBe` False
             shouldUseLocalEmbeddingFallback
