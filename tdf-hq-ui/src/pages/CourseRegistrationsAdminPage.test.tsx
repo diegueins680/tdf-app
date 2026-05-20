@@ -13243,13 +13243,17 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('treats social lead-form sources as default public-form plumbing in busy lists', async () => {
+  it('treats ad lead-form sources as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'facebook_lead_ad',
       'facebook_lead_ads_form',
       'facebook_lead_form',
       'facebook_leadgen_form',
       'facebook_ads_lead_form',
+      'google_lead_ads_form',
+      'google_lead_form',
+      'google_ads_lead_form',
+      'google_ads_leadgen',
       'fb_leads',
       'fb_lead_form',
       'fb_leadgen',
@@ -13267,6 +13271,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'meta_leads',
       'meta_ads_lead_form',
       'meta_ads_leadgen',
+      'youtube_lead_ads_form',
+      'youtube_lead_form',
+      'youtube_ads_lead_form',
+      'youtube_ads_leadgen',
       'linkedin_lead_gen_form',
       'linkedin_leadgen_form',
       'tiktok_lead_form',
@@ -13284,6 +13292,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Facebook lead form',
       'Facebook leadgen form',
       'Facebook ads lead form',
+      'Google lead ads form',
+      'Google lead form',
+      'Google ads lead form',
+      'Google ads leadgen',
       'Fb leads',
       'Fb lead form',
       'Fb leadgen',
@@ -13301,6 +13313,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Meta leads',
       'Meta ads lead form',
       'Meta ads leadgen',
+      'YouTube lead ads form',
+      'YouTube lead form',
+      'YouTube ads lead form',
+      'YouTube ads leadgen',
       'LinkedIn lead gen form',
       'LinkedIn leadgen form',
       'TikTok lead form',
