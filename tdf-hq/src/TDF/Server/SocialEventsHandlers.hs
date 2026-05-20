@@ -2343,9 +2343,17 @@ normalizePositiveIdentifierText rawIdentifier =
 
 normalizePositiveIdentifier :: T.Text -> Maybe Int64
 normalizePositiveIdentifier rawIdentifier =
-  case readMaybe (T.unpack (T.strip rawIdentifier)) of
-    Just identifier | identifier > 0 -> Just identifier
-    _ -> Nothing
+  let trimmed = T.strip rawIdentifier
+  in if T.null trimmed || not (T.all isAsciiDecimalDigit trimmed)
+       then Nothing
+       else
+         case readMaybe (T.unpack trimmed) of
+           Just identifier | identifier > 0 -> Just identifier
+           _ -> Nothing
+
+isAsciiDecimalDigit :: Char -> Bool
+isAsciiDecimalDigit ch =
+  ch >= '0' && ch <= '9'
 
 parseFollowerQueryParamEither :: Maybe T.Text -> Either ServerError T.Text
 parseFollowerQueryParamEither mFollower =
@@ -3057,9 +3065,9 @@ parseVenueIdEither =
 
 parseInt64Either :: T.Text -> T.Text -> Either ServerError Int64
 parseInt64Either label raw =
-  case readMaybe (T.unpack (T.strip raw)) :: Maybe Int64 of
-    Just n | n > 0 -> Right n
-    _ ->
+  case normalizePositiveIdentifier raw of
+    Just n -> Right n
+    Nothing ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
         }

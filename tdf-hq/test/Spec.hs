@@ -8320,6 +8320,8 @@ main = hspec $ do
                             expectationFailure ("Expected invalid venue id to be rejected, got " <> show (fromSqlKey value))
             assertInvalid "   "
             assertInvalid "venue-42"
+            assertInvalid "+42"
+            assertInvalid "0x2a"
             assertInvalid "0"
             assertInvalid "-5"
 
@@ -8330,6 +8332,9 @@ main = hspec $ do
         it "rejects blank and non-numeric ids" $ do
             normalizePositivePartyIdText "   " `shouldBe` Nothing
             normalizePositivePartyIdText "abc" `shouldBe` Nothing
+            normalizePositivePartyIdText "+42" `shouldBe` Nothing
+            normalizePositivePartyIdText "0x2a" `shouldBe` Nothing
+            normalizePositivePartyIdText (Data.Text.singleton '\x0661') `shouldBe` Nothing
 
     describe "moment normalizers" $ do
         it "normalizes supported media types and reactions" $ do
