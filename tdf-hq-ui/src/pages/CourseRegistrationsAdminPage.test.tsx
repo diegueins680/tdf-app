@@ -12588,6 +12588,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'constant_contact_form',
       'keap_form',
       'infusionsoft_form',
+      'mautic_form',
+      'mautic_landing_page',
+      'rd_station_form',
+      'rd_station_landing_page',
       'substack_signup_page',
       'substack_form',
       'crm_lead_form',
@@ -12657,6 +12661,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Constant contact form',
       'Keap form',
       'Infusionsoft form',
+      'Mautic form',
+      'Mautic landing page',
+      'Rd station form',
+      'Rd station landing page',
       'Substack signup page',
       'Substack form',
       'CRM lead form',
@@ -17690,6 +17698,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Constant Contact signup page for Beatmaking 101',
       'Beatmaking 101 - Keap intake form',
       'Infusionsoft registration page - Beatmaking 101',
+      'Mautic signup form - Beatmaking 101',
+      'RD Station landing page for Beatmaking 101',
+      'Formulario de RD Station para Beatmaking 101',
       'Substack signup page - Beatmaking 101',
       'Beatmaking 101 - Substack form',
       'Formulario de Substack para Beatmaking 101',
@@ -17754,7 +17765,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Squarespace');
         expect(emptyState?.textContent).not.toContain('Leadpages');
         expect(emptyState?.textContent).not.toContain('Notion form');
-        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Kit sign-up|Kit lead|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Substack/i);
+        expect(emptyState?.textContent).not.toMatch(/ConvertKit|Kit sign-up|Kit lead|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Mautic|RD Station|Substack/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
         expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery|Qualtrics|QuestionPro|SurveySparrow/i);
