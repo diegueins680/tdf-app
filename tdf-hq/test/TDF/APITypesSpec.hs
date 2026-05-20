@@ -1673,6 +1673,32 @@ spec = do
                     expectationFailure
                         ("Expected null checkout disposition to fail, got: " <> show value)
 
+        it "rejects null checkout metadata fields so omission is the only fallback signal" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeAssetCheckout payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected null checkout metadata field to fail, got: "
+                                    <> show value
+                                )
+            mapM_
+                (uncurry assertNullRejected)
+                [ ( "coTargetParty"
+                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":null,\"coDisposition\":\"loan\"}"
+                  )
+                , ( "coPaymentAmount"
+                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coPaymentAmount\":null}"
+                  )
+                , ( "coDueAt"
+                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coDueAt\":null}"
+                  )
+                , ( "coNotes"
+                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coNotes\":null}"
+                  )
+                ]
+
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate

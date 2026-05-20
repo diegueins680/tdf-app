@@ -1180,6 +1180,26 @@ instance FromJSON AssetCheckoutRequest where
       "AssetCheckoutRequest"
       ["coTargetKind", "coDisposition"]
       value
+    rejectNullOptionalFields
+      "AssetCheckoutRequest"
+      [ "coTargetSession"
+      , "coTargetParty"
+      , "coTargetRoom"
+      , "coTermsAndConditions"
+      , "coHolderEmail"
+      , "coHolderPhone"
+      , "coPaymentType"
+      , "coPaymentInstallments"
+      , "coPaymentReference"
+      , "coPaymentAmount"
+      , "coPaymentCurrency"
+      , "coPaymentOutstanding"
+      , "coPhotoUrl"
+      , "coDueAt"
+      , "coConditionOut"
+      , "coNotes"
+      ]
+      value
     genericParseJSON strictObjectOptions value
 instance ToJSON AssetCheckoutRequest
 
