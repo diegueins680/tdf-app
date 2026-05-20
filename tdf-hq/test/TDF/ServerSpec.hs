@@ -339,6 +339,7 @@ import TDF.Server
     , validateAdsAssistRequest
     , resolveAdsAssistExampleScope
     , shouldUseAdsAssistNoAiFallback
+    , resolveAdsAssistFinalReply
     , validateAdCreativeLandingUrl
     , validateAdCreativeExternalId
     , validateAdsAdminName
@@ -5079,6 +5080,35 @@ spec = describe "TDF.Server helpers" $ do
             shouldUseAdsAssistNoAiFallback
                 "OpenAI chat request failed: model_not_found while connecting"
                 `shouldBe` False
+
+        it "surfaces non-fallback model failures instead of sending the generic course reply" $ do
+            let cfg = marketplaceTestConfig False
+                assert502 expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` expectedMessage
+                        Right reply ->
+                            expectationFailure
+                                ( "Expected ads assist final reply to be rejected, got: "
+                                    <> show reply
+                                )
+
+            resolveAdsAssistFinalReply cfg (Right "  SEND: Hola  ")
+                `shouldBe` Right "SEND: Hola"
+            case resolveAdsAssistFinalReply cfg (Left "OPENAI_API_KEY no configurada") of
+                Right reply ->
+                    reply `shouldSatisfy` T.isInfixOf "Curso de Producción Musical"
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected no-AI ads assist fallback, got: " <> show serverErr)
+            assert502
+                "rate limit exceeded"
+                (resolveAdsAssistFinalReply cfg (Left "rate limit exceeded"))
+            assert502
+                "empty reply"
+                (resolveAdsAssistFinalReply cfg (Right "   "))
 
     describe "validateAdCreativeLandingUrl" $ do
         it "normalizes optional HTTPS ad landing URLs before creative writes persist them" $ do

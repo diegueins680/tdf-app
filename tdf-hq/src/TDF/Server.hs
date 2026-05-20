@@ -10039,36 +10039,48 @@ adsAssistPublic req = do
   kb <- liftIO $ retrieveRagContext (envConfig env) (envPool env) body
   reply <- liftIO $ runRagChatWithStatus (envConfig env) kb examples body channel
   finalReply <-
-    case reply of
-      Right txt | not (T.null (T.strip txt)) -> pure (T.strip txt)
-      Left err -> do
-        liftIO $ hPutStrLn stderr ("[ads/assist] AI generation failed, using fallback. Error: " <> T.unpack err)
-        pure (adsAssistNoAiFallback (envConfig env))
-      _ -> do
-        liftIO $ hPutStrLn stderr "[ads/assist] AI generation returned empty, using fallback."
-        pure (adsAssistNoAiFallback (envConfig env))
+    case resolveAdsAssistFinalReply (envConfig env) reply of
+      Right txt -> do
+        case reply of
+          Left err | shouldUseAdsAssistNoAiFallback err ->
+            liftIO $
+              hPutStrLn stderr
+                ("[ads/assist] AI generation unavailable, using fallback. Error: " <> T.unpack err)
+          _ -> pure ()
+        pure txt
+      Left serverErr -> do
+        liftIO $ hPutStrLn stderr "[ads/assist] AI generation failed without fallback."
+        throwError serverErr
   pure AdsAssistResponse
     { aasReply = finalReply
     , aasUsedExamples = map adExampleToDTO examples
     , aasKnowledgeUsed = kb
     }
 
+resolveAdsAssistFinalReply :: AppConfig -> Either Text Text -> Either ServerError Text
+resolveAdsAssistFinalReply _ (Right reply) =
+  case nonEmptyText reply of
+    Just cleanReply -> Right cleanReply
+    Nothing ->
+      Left err502 { errBody = "Ads assist model returned an empty reply" }
+resolveAdsAssistFinalReply cfg (Left err)
+  | shouldUseAdsAssistNoAiFallback err =
+      Right (adsAssistNoAiFallback cfg)
+  | otherwise =
+      let safeMessage = fromMaybe "upstream AI error" (sanitizeApiErrorMessage err)
+      in Left err502
+          { errBody =
+              BL.fromStrict $
+                TE.encodeUtf8 ("Ads assist upstream error: " <> safeMessage)
+          }
+
 shouldUseAdsAssistNoAiFallback :: Text -> Bool
 shouldUseAdsAssistNoAiFallback rawError =
   errorMessage == "openai_api_key no configurada"
     || errorMessage == "no pude generar una respuesta automática en este momento."
     || shouldRetryWithFallbackModel 404 rawError
-    || isAuthError errorMessage
   where
     errorMessage = T.toLower (T.strip rawError)
-    isAuthError msg =
-      any (`T.isInfixOf` msg)
-        [ "invalid authentication"
-        , "invalid api key"
-        , "incorrect api key"
-        , "authentication_error"
-        , "unauthorized"
-        ]
 
 adsAssistNoAiFallback :: AppConfig -> Text
 adsAssistNoAiFallback cfg =
