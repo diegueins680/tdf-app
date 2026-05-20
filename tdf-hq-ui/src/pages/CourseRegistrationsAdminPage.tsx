@@ -363,7 +363,10 @@ const normalizeContactPlaceholderKey = (value: string) =>
 
 const isPlaceholderContactValue = (value: string) => {
   const placeholderKey = normalizeContactPlaceholderKey(value);
-  return placeholderKey === '' || CONTACT_PLACEHOLDER_VALUE_KEYS.has(placeholderKey);
+  const compactDigits = placeholderKey.replace(/\s+/g, '');
+  return placeholderKey === ''
+    || CONTACT_PLACEHOLDER_VALUE_KEYS.has(placeholderKey)
+    || /^0+$/.test(compactDigits);
 };
 
 const normalizeRegistrationContactValue = (value?: string | null) => {

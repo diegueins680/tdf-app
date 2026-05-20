@@ -1038,6 +1038,34 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats zero-filled contact exports as missing contact', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crEmail: '0',
+        crPhoneE164: '000-000-0000',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
+        `${paymentWorkflowDossierScopeHint} Contacto pendiente en esta inscripción.`,
+      );
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe('Ada Lovelace');
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
+      expect(countOccurrences(container, 'Contacto pendiente en esta inscripción.')).toBe(1);
+      expect(container.textContent).not.toContain('000-000-0000');
+      expect(container.textContent).not.toContain('Sin correo ni teléfono');
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-list-utilities"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps the dossier loading state focused instead of showing premature empty prompts', async () => {
     getRegistrationDossierMock.mockImplementation(() => new Promise(() => undefined));
 
