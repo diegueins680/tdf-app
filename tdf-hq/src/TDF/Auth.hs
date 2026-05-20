@@ -391,9 +391,9 @@ lookupCookie cookieName rawHeader =
 
 matchingCookieValues :: Text -> Text -> [Text]
 matchingCookieValues cookieName rawHeader = do
-  (namePart, valuePart) <- map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
-  let name = T.strip namePart
-      value = T.strip valuePart
+  (namePart, valuePart) <- map (breakOnEquals . stripAsciiSpaces) (T.splitOn ";" rawHeader)
+  let name = stripAsciiSpaces namePart
+      value = stripAsciiSpaces valuePart
   guard (name == cookieName)
   pure value
   where
@@ -403,7 +403,7 @@ matchingCookieValues cookieName rawHeader = do
 
 validateAuthToken :: Text -> Either Text Text
 validateAuthToken rawToken =
-  let token = T.strip rawToken
+  let token = stripAsciiSpaces rawToken
   in if T.null token
        then Left "Missing or invalid auth token"
        else if T.length token > authTokenMaxLength
