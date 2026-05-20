@@ -559,6 +559,53 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('opens order rows from the keyboard without adding repeated open buttons', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const rows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(countActionsByText(container, 'Abrir orden')).toBe(0);
+        expect(rows[0]?.getAttribute('tabindex')).toBe('0');
+        expect(rows[0]?.getAttribute('aria-label')).toBe('Abrir orden order-2 de Grace Hopper');
+      });
+
+      const firstRow = container.querySelector<HTMLTableRowElement>('tbody tr');
+      if (!firstRow) throw new Error('Order row not found');
+
+      await act(async () => {
+        firstRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Pedido order-2');
+        expect(dialog?.textContent).toContain('Comprador: Grace Hopper');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps order search phrased around visible order language without browser suggestion chrome', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({ moOrderId: 'order-1' }),

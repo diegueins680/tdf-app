@@ -1163,8 +1163,22 @@ export default function MarketplaceOrdersPage() {
                     <TableRow
                       key={order.moOrderId}
                       hover
+                      tabIndex={0}
+                      aria-label={`Abrir orden ${order.moOrderId} de ${buyerIdentity}`}
                       onClick={() => openOrder(order.moOrderId)}
-                      sx={{ cursor: 'pointer' }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        openOrder(order.moOrderId);
+                      }}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:focus-visible': {
+                          outline: '2px solid',
+                          outlineColor: 'primary.main',
+                          outlineOffset: -2,
+                        },
+                      }}
                     >
                       <TableCell>
                         <Stack spacing={0.5}>
