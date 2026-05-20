@@ -1512,6 +1512,16 @@ const firstRunPaymentEvidenceDescriptorPrefixPattern =
 const firstRunPaymentEvidenceDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|invoices?|vouchers?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?|vouchers?\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?|vouchers?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?|confirmaci[oó]n(?:es)?\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
 
+const firstRunCourseChangeRequestDescriptorPattern = String.raw`(?:(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?)\s+(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)|(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?)|(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+(?:de|para)\s+(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula))?|(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula)(?:\s+(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunCourseChangeRequestDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseChangeRequestDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseChangeRequestDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseChangeRequestDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunAgreementDescriptorPattern = String.raw`(?:(?:(?:course|student|parent|guardian|minor|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release|permission\s+slips?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|packets?))?)|(?:(?:consent|release)\s+forms?|permission\s+slips?|liability\s+waivers?|media\s+releases?|photo\s+releases?)|(?:(?:forms?|pages?|links?|urls?|portals?|packets?)\s+(?:for\s+)?(?:course|student|parent|guardian|minor|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release|permission\s+slips?))|(?:(?:contratos?|acuerdos?|autorizaciones?|consentimientos?|exoneraciones?|permisos?)\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad|representantes?|tutor(?:es)?|menor(?:es)?|padres?|madres?))|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|paquetes?)\s+de\s+(?:contrato|acuerdo|autorizaci[oó]n|consentimiento|exoneraci[oó]n|permiso)(?:\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad|representantes?|tutor(?:es)?|menor(?:es)?|padres?|madres?))?))`;
 const firstRunAgreementDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunAgreementDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
@@ -2081,6 +2091,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
+    .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunRosterDescriptorPrefixPattern, '')
@@ -2206,6 +2217,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
+    .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunRosterDescriptorSuffixPattern, '')

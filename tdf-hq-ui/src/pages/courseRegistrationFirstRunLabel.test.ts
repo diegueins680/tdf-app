@@ -40,4 +40,29 @@ describe('cohortFirstRunLabel', () => {
       cohortFirstRunLabel({ ccSlug: 'producer-evaluation', ccTitle: 'Evaluation for Producers' }),
     ).toBe('Evaluation for Producers');
   });
+
+  it('strips course-change request wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Course cancellation request - Beatmaking 101',
+      'Beatmaking 101 - refund request form',
+      'Withdrawal page for Beatmaking 101',
+      'Beatmaking 101 - reschedule request',
+      'Solicitud de reembolso - Beatmaking 101',
+      'Beatmaking 101 - formulario de retiro del curso',
+      'Solicitud de reprogramación para Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate course-change topics when they are not request artifacts', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'refund-policy', ccTitle: 'Refund Policy for Creators' }),
+    ).toBe('Refund Policy for Creators');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'schedule-change-workshop', ccTitle: 'Schedule Change Workshop' }),
+    ).toBe('Schedule Change Workshop');
+  });
 });
