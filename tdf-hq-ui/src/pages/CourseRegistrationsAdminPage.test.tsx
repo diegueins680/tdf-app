@@ -21516,6 +21516,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Claim a seat - Beatmaking 101',
       'Book your place for Beatmaking 101',
       'Join the cohort - Beatmaking 101',
+      'Join course waitlist - Beatmaking 101',
+      'Beatmaking 101 - join course waitlist',
+      'Únete a la lista de espera - Beatmaking 101',
+      'Beatmaking 101 - únete a la lista de espera',
       'Reserva tu cupo - Beatmaking 101',
       'Aparta tu lugar para Beatmaking 101',
       'Beatmaking 101 - asegura tu cupo',
@@ -21535,7 +21539,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /reserve your spot|save your seat|claim a seat|book your place|join the cohort|reserva tu cupo|aparta tu lugar|asegura tu cupo/i,
+          /reserve your spot|save your seat|claim a seat|book your place|join the cohort|join course waitlist|lista de espera|reserva tu cupo|aparta tu lugar|asegura tu cupo/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
