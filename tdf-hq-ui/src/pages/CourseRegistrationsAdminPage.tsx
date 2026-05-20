@@ -348,6 +348,7 @@ const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   'sin whatsapp',
   'sin actualizar',
   'tbd',
+  't b d',
 ]);
 
 const normalizeContactPlaceholderKey = (value: string) =>
@@ -355,7 +356,7 @@ const normalizeContactPlaceholderKey = (value: string) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[.!?:;]+$/g, '')
-    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/[^a-z0-9]+/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase('es');
