@@ -2630,6 +2630,27 @@ spec = do
             decodeTrialRequest
                 "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\",\"label\":\"after work\"}]}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null trial contact fields instead of treating them as fallback omissions" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeTrialRequest payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null trial request field to fail, got: " <> show value)
+            assertNullRejected
+                "notes"
+                "{\"subjectId\":7,\"preferred\":[],\"notes\":null}"
+            assertNullRejected
+                "fullName"
+                "{\"subjectId\":7,\"preferred\":[],\"fullName\":null}"
+            assertNullRejected
+                "email"
+                "{\"subjectId\":7,\"preferred\":[],\"email\":null}"
+            assertNullRejected
+                "phone"
+                "{\"subjectId\":7,\"preferred\":[],\"phone\":null}"
   where
     decodeRole = eitherDecode
     decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)

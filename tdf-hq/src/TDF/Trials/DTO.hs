@@ -45,12 +45,20 @@ instance ToJSON TrialRequestIn
 instance FromJSON TrialRequestIn where
   parseJSON value = do
     withObject "TrialRequestIn" rejectPublicPartyId value
+    withObject "TrialRequestIn" rejectNullOptionalTrialFields value
     genericParseJSON strictObjectOptions value
     where
       rejectPublicPartyId object
         | AesonKeyMap.member (AesonKey.fromString "partyId") object =
             fail "TrialRequestIn.partyId must be omitted on the public endpoint"
         | otherwise = pure ()
+      rejectNullOptionalTrialFields object =
+        mapM_ rejectNullOptionalField ["notes", "fullName", "email", "phone"]
+        where
+          rejectNullOptionalField fieldName =
+            case AesonKeyMap.lookup (AesonKey.fromString fieldName) object of
+              Just Null -> fail (fieldName <> " must be omitted instead of null")
+              _         -> pure ()
 
 data TrialRequestOut = TrialRequestOut
   { requestId   :: Int
