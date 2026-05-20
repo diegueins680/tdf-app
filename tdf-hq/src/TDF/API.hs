@@ -710,10 +710,24 @@ data AdsInquiry = AdsInquiry
   , aiChannel :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AdsInquiry where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = camelDrop 2
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    withObject "AdsInquiry" rejectNullInquiryFallbacks raw
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 2
+      , rejectUnknownFields = True
+      }
+      raw
+    where
+      rejectNullInquiryFallbacks obj =
+        rejectNullOptionalRequestFields
+          [ ("name", "name must be omitted instead of null")
+          , ("email", "email must be omitted instead of null")
+          , ("phone", "phone must be omitted instead of null")
+          , ("course", "course must be omitted instead of null")
+          , ("message", "message must be omitted instead of null")
+          , ("channel", "channel must be omitted instead of null")
+          ]
+          obj
 
 data AdsInquiryDTO = AdsInquiryDTO
   { aidInquiryId :: Int

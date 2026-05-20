@@ -466,6 +466,24 @@ spec = do
                 "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"message\":\"Quiero info\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null inquiry fields so contact omission stays intentional" $ do
+            let assertNullRejected fieldName rawPayload =
+                    case decodeAdsInquiry rawPayload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null ads inquiry field to fail, got: " <> show payload)
+            mapM_
+                (uncurry assertNullRejected)
+                [ ("name", "{\"name\":null,\"email\":\"ada@example.com\"}")
+                , ("email", "{\"name\":\"Ada\",\"email\":null}")
+                , ("phone", "{\"name\":\"Ada\",\"phone\":null}")
+                , ("course", "{\"name\":\"Ada\",\"course\":null}")
+                , ("message", "{\"name\":\"Ada\",\"message\":null}")
+                , ("channel", "{\"name\":\"Ada\",\"channel\":null}")
+                ]
+
     describe "AdsAssistRequest FromJSON" $ do
         it "accepts canonical public ads assist payloads" $
             case decodeAdsAssist
