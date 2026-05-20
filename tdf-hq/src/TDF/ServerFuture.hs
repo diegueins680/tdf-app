@@ -228,6 +228,7 @@ validateFutureStubMetadataIn catalog rawArea rawEndpoint = do
 
 validateFutureStubCatalog :: [(Text, Text)] -> Either ServerError [(Text, Text)]
 validateFutureStubCatalog catalog = do
+  canonicalCatalog <- validateAllowedFutureStubMetadata allowedFutureStubMetadata
   reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
   normalized <-
     either (const invalidFutureStubCatalog) Right $
@@ -236,9 +237,16 @@ validateFutureStubCatalog catalog = do
   _ <- validateFutureStubCatalogTopLevelBoundaries normalized
   _ <- validateFutureStubCatalogAreaOrder normalized
   _ <- validateFutureStubCatalogEndpointLeaves normalized
-  if normalized /= allowedFutureStubMetadata || length normalized /= length (nub normalized)
+  if normalized /= canonicalCatalog || length normalized /= length (nub normalized)
     then invalidFutureStubCatalog
     else Right normalized
+
+validateAllowedFutureStubMetadata
+  :: [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateAllowedFutureStubMetadata metadata
+  | metadata == canonicalFutureStubMetadata = Right metadata
+  | otherwise = invalidFutureStubCatalog
 
 validateReservedFutureStubRoutes :: [(Text, Text)] -> Either ServerError [(Text, Text)]
 validateReservedFutureStubRoutes routes = do
@@ -991,6 +999,10 @@ experienceAuditingStub = ("experience", "auditing")
 
 allowedFutureStubMetadata :: [(Text, Text)]
 allowedFutureStubMetadata =
+  canonicalFutureStubMetadata
+
+canonicalFutureStubMetadata :: [(Text, Text)]
+canonicalFutureStubMetadata =
   [ accessLoginOptionsStub
   , accessModuleBehaviourStub
   , accessSessionPolicyStub

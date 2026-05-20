@@ -414,6 +414,7 @@ import TDF.ServerFuture
     ( allowedFutureAdminConsoleCardIds
     , allowedFutureStubMetadata
     , allowedFutureStubAreas
+    , canonicalFutureStubMetadata
     , deriveFutureStubAreas
     , futureStubId
     , futureStubResponseFor
@@ -455,6 +456,7 @@ import TDF.ServerFuture
     , validateFutureStubRequiredModule
     , validateFutureStubAuthMetadata
     , validateFutureStubResponse
+    , validateAllowedFutureStubMetadata
     , futureStubResponseForWithConsole
     )
 import TDF.ServerFanClub
@@ -12063,6 +12065,50 @@ spec = describe "TDF.Server helpers" $ do
                 "parties/list-columns"
 
     describe "validateFutureStubCatalog" $ do
+        it "pins the mounted fallback discovery registry to its canonical shape" $ do
+            canonicalFutureStubMetadata
+                `shouldBe` [ ("access", "login-options")
+                           , ("access", "module-behaviour")
+                           , ("access", "session-policy")
+                           , ("crm", "parties/list-columns")
+                           , ("crm", "parties/filters")
+                           , ("crm", "parties/detail-tabs")
+                           , ("scheduling", "bookings/views")
+                           , ("scheduling", "sessions/creation")
+                           , ("scheduling", "rooms/features")
+                           , ("packages", "catalog")
+                           , ("packages", "purchase-flow")
+                           , ("invoicing", "composer")
+                           , ("invoicing", "status-flow")
+                           , ("inventory", "assets/metadata")
+                           , ("inventory", "assets/workflow")
+                           , ("inventory", "stock")
+                           , ("admin", "seed-policy")
+                           , ("experience", "navigation")
+                           , ("experience", "feedback")
+                           , ("experience", "offline")
+                           , ("experience", "design")
+                           , ("experience", "auditing")
+                           ]
+            validateAllowedFutureStubMetadata allowedFutureStubMetadata
+                `shouldBe` Right canonicalFutureStubMetadata
+
+            let assertInvalid metadata =
+                    case validateAllowedFutureStubMetadata metadata of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected drifted fallback discovery registry to fail, got: "
+                                    <> show value
+                                )
+
+            assertInvalid (drop 1 canonicalFutureStubMetadata)
+            assertInvalid (reverse canonicalFutureStubMetadata)
+            assertInvalid (("crm", "parties/export") : drop 1 canonicalFutureStubMetadata)
+
         it "rejects drifted, duplicate, or malformed fallback discovery catalog entries" $ do
             case validateFutureStubCatalog allowedFutureStubMetadata of
                 Right catalog ->
