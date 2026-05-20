@@ -1578,7 +1578,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
-      expect(activeStatusSummary?.textContent).toContain(
+      expect(activeStatusSummary?.textContent).not.toContain(
         'La vista filtrada ya muestra solo este estado.',
       );
       expect(activeStatusSummary?.textContent).not.toContain('Restablecer vista');

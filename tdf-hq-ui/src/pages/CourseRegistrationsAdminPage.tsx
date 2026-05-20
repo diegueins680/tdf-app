@@ -5275,6 +5275,10 @@ export default function CourseRegistrationsAdminPage() {
     && !showScopedCopyCsvAction
     && !showScopedCopyMessage;
   const showFilteredResetAction = showFilteredResetActionCandidate && !showInlineActiveStatusResetAction;
+  const showActiveStatusSummaryHelper = showActiveStatusFilterSummary
+    && !showInlineActiveStatusResetAction
+    && !showFilteredResetAction
+    && !activeViewSummaryMessage;
   const showFilteredEmptyStateResetAction = hasManualFilters;
   const showFilteredEmptyStateRefreshAction = !hasManualFilters && !cohortsQuery.isError;
   const filteredUtilitySummaryMessage = useMemo(
@@ -7159,9 +7163,11 @@ export default function CourseRegistrationsAdminPage() {
                             {statusFilterLabels[status]}
                             {activeStatusInlineSourceSummary ? ` · ${activeStatusInlineSourceSummary}` : ''}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            La vista filtrada ya muestra solo este estado.
-                          </Typography>
+                          {showActiveStatusSummaryHelper && (
+                            <Typography variant="caption" color="text.secondary">
+                              La vista filtrada ya muestra solo este estado.
+                            </Typography>
+                          )}
                           {showInlineActiveStatusResetAction && (
                             <Button
                               size="small"
