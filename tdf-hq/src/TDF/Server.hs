@@ -219,7 +219,7 @@ data GoogleToken = GoogleToken
 instance FromJSON GoogleToken where
   parseJSON = withObject "GoogleToken" $ \o -> do
     accessToken <- o .: "access_token" >>= parseGoogleTokenField "access_token"
-    refreshToken <- o .:? "refresh_token" >>= traverse (parseGoogleTokenField "refresh_token")
+    refreshToken <- parseOptionalGoogleRefreshToken o
     expiresIn <- o .: "expires_in"
     when (expiresIn <= (0 :: Int)) $
       fail "expires_in must be positive"
@@ -231,6 +231,14 @@ instance FromJSON GoogleToken where
       , token_type = Just tokenType
       }
 
+parseOptionalGoogleRefreshToken :: Object -> Parser (Maybe Text)
+parseOptionalGoogleRefreshToken o =
+  case AKeyMap.lookup "refresh_token" o of
+    Nothing -> pure Nothing
+    Just Null -> fail "refresh_token must be omitted or a string"
+    Just (String raw) -> Just <$> parseGoogleTokenField "refresh_token" raw
+    Just _ -> fail "refresh_token must be a string"
+
 parseGoogleTokenField :: Text -> Text -> Parser Text
 parseGoogleTokenField fieldName raw =
   let clean = T.strip raw
@@ -240,6 +248,8 @@ parseGoogleTokenField fieldName raw =
          then fail (T.unpack fieldName <> " must not contain whitespace or control characters")
          else if T.any isHiddenDriveOAuthTokenChar clean
            then fail (T.unpack fieldName <> " must not contain hidden formatting characters")
+           else if T.any (not . isAscii) clean
+             then fail (T.unpack fieldName <> " must contain only ASCII characters")
            else if T.length clean > maxDriveOAuthTokenChars
              then fail (T.unpack fieldName <> " must be 4096 characters or fewer")
              else pure clean

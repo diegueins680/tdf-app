@@ -6385,9 +6385,17 @@ spec = describe "TDF.Server helpers" $ do
         it "rejects malformed Google OAuth token responses before refresh-token fallback handling" $ do
             let assertRejected rawPayload =
                     (eitherDecode rawPayload :: Either String GoogleToken) `shouldSatisfy` isLeft
+                assertRejectedWith expectedMessage rawPayload =
+                    case eitherDecode rawPayload :: Either String GoogleToken of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right token ->
+                            expectationFailure
+                                ( "Expected malformed Google token response to fail, got: "
+                                    <> show token
+                                )
             assertRejected "{\"access_token\":\"   \",\"expires_in\":3600}"
             assertRejected "{\"access_token\":\"access-token\\nInjected\",\"expires_in\":3600}"
-            assertRejected $
+            assertRejectedWith "access_token must contain only ASCII characters" $
                 A.encode $
                     object
                         [ "access_token" .= ("access-tok\233n" :: Text)
@@ -6399,7 +6407,15 @@ spec = describe "TDF.Server helpers" $ do
                     <> "\"refresh_token\":\"refresh token\","
                     <> "\"token_type\":\"Bearer\","
                     <> "\"expires_in\":3600}"
-            assertRejected $
+            assertRejectedWith "refresh_token must contain only ASCII characters" $
+                A.encode $
+                    object
+                        [ "access_token" .= ("access-token" :: Text)
+                        , "refresh_token" .= ("refresh-tok\233n" :: Text)
+                        , "token_type" .= ("Bearer" :: Text)
+                        , "expires_in" .= (3600 :: Int)
+                        ]
+            assertRejectedWith "refresh_token must be omitted or a string" $
                 "{\"access_token\":\"access-token\","
                     <> "\"refresh_token\":null,"
                     <> "\"token_type\":\"Bearer\","
