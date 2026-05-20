@@ -13489,6 +13489,79 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats manual admin source wrappers as default list plumbing in busy lists', async () => {
+    const defaultSources = [
+      'manual_registration',
+      'manual_enrollment',
+      'manual_signup',
+      'admin_registration',
+      'admin_enrollment',
+      'admin_signup',
+      'back_office_registration',
+      'backoffice_registration',
+      'internal_registration',
+      'registro_manual',
+      'inscripcion_manual',
+      'matricula_manual',
+      'registro_interno',
+      'inscripcion_interna',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Manual registration',
+      'Manual enrollment',
+      'Manual signup',
+      'Admin registration',
+      'Admin enrollment',
+      'Admin signup',
+      'Back office registration',
+      'Backoffice registration',
+      'Internal registration',
+      'Registro manual',
+      'Inscripcion manual',
+      'Matricula manual',
+      'Registro interno',
+      'Inscripcion interna',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'manual registration');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "manual registration" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats event-platform source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'eventbrite_registration_page',
