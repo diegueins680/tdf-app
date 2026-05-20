@@ -3705,6 +3705,20 @@ spec = do
         Right value ->
           expectationFailure ("Expected nil UUID QR token lookup to fail, got " <> show value)
 
+    it "rejects non-exact QR token captures before trimming can resolve another path value" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid exact QR asset fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        (" " <> canonicalToken <> " ")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid asset QR token"
+        Right value ->
+          expectationFailure ("Expected whitespace-padded QR token lookup to fail, got " <> show value)
+
     it "normalizes UUID casing so copied QR links still resolve the intended asset" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key

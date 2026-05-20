@@ -2868,14 +2868,30 @@ parseCanonicalPathPiece raw = do
   pure parsed
 
 validateAssetQrToken :: Text -> Either ServerError Text
-validateAssetQrToken rawToken =
-  case UUID.fromText (T.strip rawToken) of
-    Just uuid ->
-      let canonicalToken = UUID.toText uuid
-      in if canonicalToken == "00000000-0000-0000-0000-000000000000"
-           then Left err400 { errBody = "Invalid asset QR token" }
-           else Right canonicalToken
-    Nothing -> Left err400 { errBody = "Invalid asset QR token" }
+validateAssetQrToken rawToken
+  | rawToken /= T.strip rawToken || T.any isUnsafeAssetQrTokenChar rawToken =
+      Left invalidAssetQrTokenError
+  | otherwise =
+      case UUID.fromText rawToken of
+        Just uuid ->
+          let canonicalToken = UUID.toText uuid
+          in if canonicalToken == "00000000-0000-0000-0000-000000000000"
+               then Left invalidAssetQrTokenError
+               else if T.toLower rawToken /= canonicalToken
+                 then Left invalidAssetQrTokenError
+                 else Right canonicalToken
+        Nothing -> Left invalidAssetQrTokenError
+
+isUnsafeAssetQrTokenChar :: Char -> Bool
+isUnsafeAssetQrTokenChar ch =
+  not (isAscii ch)
+    || isControl ch
+    || isSpace ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+invalidAssetQrTokenError :: ServerError
+invalidAssetQrTokenError =
+  err400 { errBody = "Invalid asset QR token" }
 
 normalizeOptionalTextField :: Maybe Text -> Maybe Text
 normalizeOptionalTextField Nothing = Nothing
