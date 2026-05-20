@@ -10539,6 +10539,10 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(container.textContent).toContain('Estado visible: Pendiente de pago.');
+      expect(container.textContent).toContain(
+        `Mostrando 2 de 9 inscripciones cargadas. ${paymentWorkflowDossierScopeHint}`,
+      );
+      expect(countOccurrences(container, paymentWorkflowDossierScopeHint)).toBe(1);
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countButtonsByText(container, paymentStatusMenuButtonLabel)).toBe(0);
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Simone"]')).toBeNull();

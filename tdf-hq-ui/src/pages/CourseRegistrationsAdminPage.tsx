@@ -4787,6 +4787,23 @@ export default function CourseRegistrationsAdminPage() {
           : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
     }`
     : '';
+  const localSearchSharedActionHint = localSearchNarrowsRegistrations
+    && searchedRegistrations.length > 1
+    ? (() => {
+      const targetLabel = registrationIdentityTargetLabel(searchedRegistrations);
+
+      if (singleSearchedKnownStatus === 'paid') return buildPaidRecoveryScopeHint(targetLabel);
+      if (singleSearchedKnownStatus === 'cancelled') return buildPendingRecoveryScopeHint(targetLabel);
+      if (
+        singleSearchedKnownStatus === 'pending_payment'
+        && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus))
+      ) {
+        return buildPaymentWorkflowScopeHint(targetLabel);
+      }
+
+      return '';
+    })()
+    : '';
   const loadedSearchScopeHint = buildLoadedSearchScopeHint(loadedRegistrationCount);
   const localSearchLoadedScopeHint = hasCustomFilters
     ? `${loadedSearchScopeHint.replace(/\.$/, '')} sin cambiar filtros.`
@@ -4800,6 +4817,7 @@ export default function CourseRegistrationsAdminPage() {
           singleVisibleMissingContactSummary,
           hiddenLocalSearchMatchSummary,
           localSearchSingleResultActionHint.trim(),
+          localSearchSharedActionHint,
         ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
           ? [
