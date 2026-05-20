@@ -3660,8 +3660,34 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
       Right val -> Right val
       Left _ -> invalidStoredCalendarId
   unless (calendarIdVal == storedCalendarId) invalidStoredCalendarId
+  accessTokenVal <-
+    traverse
+      (validateStoredGoogleCalendarOAuthToken "access token")
+      (Cal.googleCalendarConfigAccessToken cfg)
+  refreshTokenVal <-
+    traverse
+      validateStoredGoogleCalendarRefreshToken
+      (Cal.googleCalendarConfigRefreshToken cfg)
+  tokenTypeVal <-
+    validateStoredGoogleCalendarTokenType (Cal.googleCalendarConfigTokenType cfg)
+  when
+    ( isNothing accessTokenVal
+        && (isJust refreshTokenVal
+              || isJust tokenTypeVal
+              || isJust (Cal.googleCalendarConfigTokenExpiresAt cfg)
+           )
+    )
+    invalidStoredCalendarOAuthState
   syncCursorVal <- validateGoogleCalendarSyncCursor (Cal.googleCalendarConfigSyncCursor cfg)
-  Right (Entity cfgId cfg { Cal.googleCalendarConfigSyncCursor = syncCursorVal })
+  Right
+    ( Entity cfgId
+        cfg
+          { Cal.googleCalendarConfigAccessToken = accessTokenVal
+          , Cal.googleCalendarConfigRefreshToken = refreshTokenVal
+          , Cal.googleCalendarConfigTokenType = tokenTypeVal
+          , Cal.googleCalendarConfigSyncCursor = syncCursorVal
+          }
+    )
   where
     storedCalendarId = Cal.googleCalendarConfigCalendarId cfg
     invalidStoredCalendarConfigId =
@@ -3675,6 +3701,21 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
     invalidStoredCalendarOwnerId =
       Left err500
         { errBody = "Stored Google Calendar config ownerId is invalid"
+        }
+    invalidStoredCalendarOAuthState =
+      Left err500
+        { errBody = "Stored Google Calendar OAuth state is invalid"
+        }
+
+validateStoredGoogleCalendarTokenType :: Maybe Text -> Either ServerError (Maybe Text)
+validateStoredGoogleCalendarTokenType Nothing = Right Nothing
+validateStoredGoogleCalendarTokenType (Just rawTokenType) = do
+  tokenTypeVal <- validateStoredGoogleCalendarOAuthToken "token_type" rawTokenType
+  if T.toLower tokenTypeVal == "bearer"
+    then Right (Just "Bearer")
+    else
+      Left err500
+        { errBody = "Stored Google Calendar token_type is invalid"
         }
 
 encodeGooglePathSegment :: Text -> Text
