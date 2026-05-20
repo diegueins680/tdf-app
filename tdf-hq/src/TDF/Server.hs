@@ -10349,11 +10349,10 @@ instance FromJSON OpenAIChatMessage where
 data ChatCompletionReq = ChatCompletionReq
   { model :: Text
   , messages :: [OpenAIChatMessage]
-  , temperature :: Maybe Double
   } deriving (Show, Generic)
 
 instance ToJSON ChatCompletionReq where
-  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_', omitNothingFields = True }
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = camelTo2 '_' }
 
 data ChatChoice = ChatChoice
   { message :: OpenAIChatMessage
@@ -10451,7 +10450,6 @@ requestOpenAIChat manager reqBase key modelName messages = do
   let body = encode ChatCompletionReq
         { model = modelName
         , messages = messages
-        , temperature = Nothing
         }
       req =
         reqBase
@@ -10532,6 +10530,8 @@ shouldRetryWithFallbackModel status rawMessage =
       , "invalid model name"
       , "not a valid model"
       , "model_not_found"
+      , "temperature is not supported"
+      , "invalid temperature"
       ]
     nonFallbackMarkers =
       [ "rate limit"

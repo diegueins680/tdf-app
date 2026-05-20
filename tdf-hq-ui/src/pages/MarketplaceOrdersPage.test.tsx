@@ -930,6 +930,67 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps compound filter chips passive so the tray has one clear reset action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+      moCreatedAt: '2030-01-01T12:00:00.000Z',
+      moUpdatedAt: '2030-01-01T12:00:00.000Z',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).not.toBeNull();
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(countLabelsByText(container, 'Desde')).toBe(1);
+      });
+
+      await setInputValue(getInputByLabel(container, 'Desde'), '2030-01-01');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(container.textContent).toContain('Desde: 2030-01-01');
+        expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Estado: Pagado');
+        expect(container.textContent).not.toContain('Desde: 2030-01-01');
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps active status filters visible when the server returns an empty filtered result', async () => {
     const pendingOrder = buildOrder({
       moOrderId: 'order-1',

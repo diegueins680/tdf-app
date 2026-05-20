@@ -380,7 +380,6 @@ export default function MarketplaceOrdersPage() {
     (fromDate ? 1 : 0) +
     (toDate ? 1 : 0) +
     (activePaidOnlyFilter ? 1 : 0);
-  const showIndividualFilterDeletes = nonSearchFiltersActiveCount > 1;
   const showSearchWithExtraFilters = hasSearchInput && hasNonSearchFiltersActive;
   const showSearchOwnedFilterHelper = hasSearchInput && !hasNonSearchFiltersActive;
   const filtersActiveCount =
@@ -932,35 +931,30 @@ export default function MarketplaceOrdersPage() {
                     <Chip
                       size="small"
                       label={`Estado: ${statusLabel(statusFilter)}`}
-                      onDelete={showIndividualFilterDeletes ? () => setStatusFilter('all') : undefined}
                     />
                   )}
                   {providerFilter !== 'all' && (
                     <Chip
                       size="small"
                       label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
-                      onDelete={showIndividualFilterDeletes ? () => setProviderFilter('all') : undefined}
                     />
                   )}
                   {fromDate && (
                     <Chip
                       size="small"
                       label={`Desde: ${fromDate}`}
-                      onDelete={showIndividualFilterDeletes ? () => setFromDate('') : undefined}
                     />
                   )}
                   {toDate && (
                     <Chip
                       size="small"
                       label={`Hasta: ${toDate}`}
-                      onDelete={showIndividualFilterDeletes ? () => setToDate('') : undefined}
                     />
                   )}
                   {activePaidOnlyFilter && (
                     <Chip
                       size="small"
                       label="Con pago"
-                      onDelete={showIndividualFilterDeletes ? () => setPaidOnly(false) : undefined}
                     />
                   )}
                   <Button onClick={clearFilters} variant="text">
