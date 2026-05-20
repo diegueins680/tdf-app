@@ -5847,6 +5847,29 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected blank Drive access token to be rejected, got: " <> show (duAccessToken payload))
 
+        it "rejects malformed access tokens before Drive credential fallback resolution" $ do
+            let assertInvalid rawToken expectedMessage =
+                    case fromMultipart
+                        (mkDriveMultipart [("accessToken", rawToken)] [mkDriveUploadFile "fallback.pdf"])
+                        :: Either String DriveUploadForm of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected malformed Drive access token to be rejected, got: "
+                                    <> show (duAccessToken payload)
+                                )
+            assertInvalid "token with space" "accessToken must not contain whitespace"
+            assertInvalid "token\NULInjected" "accessToken must not contain control characters"
+            assertInvalid
+                ("token" <> T.singleton '\x202E' <> "Injected")
+                "accessToken must not contain hidden formatting characters"
+            assertInvalid
+                ("token" <> T.singleton '\233')
+                "accessToken must contain only ASCII characters"
+            assertInvalid
+                (T.replicate 4097 "a")
+                "accessToken must be 4096 characters or fewer"
+
         it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation
                 assertInvalid expectedMessage multipart =

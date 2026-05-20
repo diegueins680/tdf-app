@@ -17,6 +17,12 @@ import           Servant.Multipart  ( FileData
                                      , Tmp
                                      , fdInputName
                                      )
+import           Data.Char          ( GeneralCategory(Format)
+                                     , generalCategory
+                                     , isAscii
+                                     , isControl
+                                     , isSpace
+                                     )
 import qualified Data.Text         as T
 
 import           TDF.API.Types      ( DriveTokenExchangeRequest
@@ -64,7 +70,7 @@ instance FromMultipart Tmp DriveUploadForm where
             let trimmed = T.strip value
             in if T.null trimmed
                 then Left (T.unpack name <> " must not be blank")
-                else Right (Just trimmed)
+                else Just <$> validateMultipartAccessToken name trimmed
 
       lookupSingleInput name mp =
         case filter (\(Input nm _) -> nm == name) (inputs mp) of
@@ -96,6 +102,27 @@ instance FromMultipart Tmp DriveUploadForm where
             | file <- files mp
             , fdInputName file `notElem` expectedFiles
             ]
+
+validateMultipartAccessToken :: Text -> Text -> Either String Text
+validateMultipartAccessToken fieldName token
+  | T.length token > 4096 =
+      Left (fieldLabel <> " must be 4096 characters or fewer")
+  | T.any isSpace token =
+      Left (fieldLabel <> " must not contain whitespace")
+  | T.any isControl token =
+      Left (fieldLabel <> " must not contain control characters")
+  | T.any isHiddenFormattingChar token =
+      Left (fieldLabel <> " must not contain hidden formatting characters")
+  | T.any (not . isAscii) token =
+      Left (fieldLabel <> " must contain only ASCII characters")
+  | otherwise =
+      Right token
+  where
+    fieldLabel = T.unpack fieldName
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch == Format
 
 type DriveAPI =
   "drive" :> "upload"
