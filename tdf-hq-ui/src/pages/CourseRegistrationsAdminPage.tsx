@@ -1476,6 +1476,16 @@ const firstRunQrRegistrationDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunPromoAssetDescriptorPattern = String.raw`(?:(?:(?:course|registration|enrollment|sign[-\s]?up|signup)\s+)?(?:flyers?|posters?|banners?|promo(?:tional)?\s+(?:assets?|creatives?))(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:course|registration|enrollment|sign[-\s]?up|signup)\s+)?(?:flyers?|posters?|banners?|promo(?:tional)?\s+(?:assets?|creatives?))|(?:afiches?|carteles?|volantes?|banners?|piezas?\s+promocional(?:es)?|creativ[oa]s?\s+promocional(?:es)?)\s+(?:de|para)\s+(?:inscripci[oó]n|registro|matr[ií]cula|curso)|(?:inscripci[oó]n|registro|matr[ií]cula)\s+(?:afiches?|carteles?|volantes?|banners?|piezas?\s+promocional(?:es)?))`;
+const firstRunPromoAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPromoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPromoAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPromoAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunEnrollmentFlowDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|pipelines?|landing(?:\s+pages?)?)|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2105,6 +2115,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunUrlDescriptorPrefixPattern, '')
     .replace(firstRunShortlinkDescriptorPrefixPattern, '')
     .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunPromoAssetDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunDataImportDescriptorPrefixPattern, '')
     .replace(firstRunAdLeadFormDescriptorPrefixPattern, '')
@@ -2232,6 +2243,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunUrlDescriptorSuffixPattern, '')
     .replace(firstRunShortlinkDescriptorSuffixPattern, '')
     .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunPromoAssetDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunDataImportDescriptorSuffixPattern, '')
     .replace(firstRunAdLeadFormDescriptorSuffixPattern, '')
