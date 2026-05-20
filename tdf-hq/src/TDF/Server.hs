@@ -2675,7 +2675,7 @@ resolveDriveRedirectUri cfg mProvided = do
   maybe
     (Right configuredRedirectUri)
     (validateProvidedRedirectUri configuredRedirectUri)
-    (cleanOptional mProvided)
+    mProvided
   where
     validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
       redirectUri <- validateDriveRedirectUri rawRedirect
@@ -2689,11 +2689,14 @@ resolveDriveRedirectUri cfg mProvided = do
 
 validateDriveRedirectUri :: Text -> Either ServerError Text
 validateDriveRedirectUri rawRedirect =
-  case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
-    Right (Just uri)
-      | isSafeDriveRedirectUri uri -> Right uri
-      | otherwise -> invalid
-    _ -> invalid
+  if T.null (T.strip rawRedirect)
+    then Left err400 { errBody = "redirectUri must be omitted instead of blank" }
+    else
+      case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
+        Right (Just uri)
+          | isSafeDriveRedirectUri uri -> Right uri
+          | otherwise -> invalid
+        _ -> invalid
   where
     invalid =
       Left err400
