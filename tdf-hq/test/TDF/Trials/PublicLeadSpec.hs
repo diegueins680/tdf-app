@@ -1490,6 +1490,26 @@ spec = do
         )
         `shouldBe` True
 
+    it "rejects explicit null purchase fallbacks so discounts, taxes, and links require omission" $ do
+      let assertRejected fieldName =
+            isLeft
+              ( A.eitherDecode
+                  ( "{\"studentId\":1,\"packageId\":2,\"priceCents\":12000,\""
+                      <> fieldName
+                      <> "\":null}"
+                  )
+                  :: Either String PurchaseIn
+              )
+              `shouldBe` True
+      mapM_
+        assertRejected
+        [ "discountCents"
+        , "taxCents"
+        , "sellerId"
+        , "commissionedTeacherId"
+        , "trialRequestId"
+        ]
+
   describe "private purchases" $ do
     it "rejects missing referenced rows before persisting an orphan purchase" $ do
       let assertRejected expectedMessage buildPurchase = do
