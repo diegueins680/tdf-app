@@ -487,6 +487,15 @@ spec = do
           :: Either String AssetUpdate)
         `shouldSatisfy` isLeft
 
+    it "rejects explicit null asset photo fallbacks so asset creation defaults require omission" $
+      case (A.eitherDecode
+        "{\"cName\":\"Roland Juno-106\",\"cCategory\":\"Synth\",\"cPhotoUrl\":null}"
+          :: Either String AssetCreate) of
+        Left err -> err `shouldContain` "cPhotoUrl must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null asset photo fallback to be rejected, got: " <> show payload)
+
     it
       "rejects empty or null-only asset patch bodies before inventory handler fallback validation"
       $ do

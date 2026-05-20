@@ -958,7 +958,9 @@ data AssetCreate = AssetCreate
 
 instance ToJSON AssetCreate
 instance FromJSON AssetCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "AssetCreate" ["cPhotoUrl"] value
+    genericParseJSON strictObjectOptions value
 
 data AssetUpdate = AssetUpdate
   { uName       :: Maybe Text
