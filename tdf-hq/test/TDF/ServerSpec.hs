@@ -7200,6 +7200,25 @@ spec = describe "TDF.Server helpers" $ do
                             <> show (fmap (fromSqlKey . entityKey) value)
                         )
 
+        it "rejects impossible stored fallback config timestamps before publishing them" $
+            let impossibleTimeline =
+                    let Entity key cfg = calendarConfigEntity 1 "primary"
+                    in Entity key
+                        cfg
+                            { Cal.googleCalendarConfigUpdatedAt =
+                                addUTCTime (-60) (Cal.googleCalendarConfigCreatedAt cfg)
+                            }
+            in case selectUniqueCalendarConfigFallback [impossibleTimeline] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Stored Google Calendar config timestamps are invalid"
+                Right value ->
+                    expectationFailure
+                        ( "Expected impossible Calendar config timestamps to fail, got: "
+                            <> show (fmap (fromSqlKey . entityKey) value)
+                        )
+
         it "surfaces malformed stored configs before ambiguous fallback conflicts" $
             case selectUniqueCalendarConfigFallback
                     [ calendarConfigEntity 1 "primary"

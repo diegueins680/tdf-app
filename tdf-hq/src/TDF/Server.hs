@@ -3652,6 +3652,9 @@ validateStoredCalendarConfig
   -> Either ServerError (Entity Cal.GoogleCalendarConfig)
 validateStoredCalendarConfig (Entity cfgId cfg) = do
   unless (fromSqlKey cfgId > 0) invalidStoredCalendarConfigId
+  when
+    (Cal.googleCalendarConfigUpdatedAt cfg < Cal.googleCalendarConfigCreatedAt cfg)
+    invalidStoredCalendarTimestamps
   case Cal.googleCalendarConfigOwnerId cfg of
     Just ownerId | fromSqlKey ownerId <= 0 -> invalidStoredCalendarOwnerId
     _ -> pure ()
@@ -3705,6 +3708,10 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
     invalidStoredCalendarOAuthState =
       Left err500
         { errBody = "Stored Google Calendar OAuth state is invalid"
+        }
+    invalidStoredCalendarTimestamps =
+      Left err500
+        { errBody = "Stored Google Calendar config timestamps are invalid"
         }
 
 validateStoredGoogleCalendarTokenType :: Maybe Text -> Either ServerError (Maybe Text)
