@@ -20,7 +20,7 @@ _Last updated: 2026-05-20 07:15 GMT-5 by tdf-label-ceo_
 
 ### Physical-Device Google OAuth
 
-**Status:** Waived until 2026-05-21.
+**Status:** Review scheduled for 2026-05-21 (tomorrow).
 **Next action:** Test Google OAuth flow on physical device with new `.ipa`.
 **Install link:** https://expo.dev/accounts/cuco.saa/projects/tdf-mobile/builds/2d8b5544-4304-4a19-a018-42c83930bce9
 
