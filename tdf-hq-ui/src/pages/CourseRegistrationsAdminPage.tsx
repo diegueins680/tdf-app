@@ -2397,6 +2397,7 @@ const sourceLabelSpecialWords = new Map([
   ['sms', 'SMS'],
   ['tiktok', 'TikTok'],
   ['utm', 'UTM'],
+  ['wa', 'WhatsApp'],
   ['wati', 'WATI'],
   ['whatsapp', 'WhatsApp'],
   ['youtube', 'YouTube'],
@@ -2433,7 +2434,7 @@ const dedupeAdjacentSourceWords = (words: readonly string[]) => {
 
 const humanizeDelimitedSourceLabel = (source: string) => {
   const hasDelimitedParts = /[_./-]/.test(source);
-  const hasCamelCaseParts = /[a-z0-9][A-Z]/.test(source);
+  const hasCamelCaseParts = !/\s/.test(source) && /[a-z0-9][A-Z]/.test(source);
   if (!hasDelimitedParts && !hasCamelCaseParts) {
     return sourceLabelSpecialWords.get(source.trim().toLocaleLowerCase('es')) ?? source;
   }

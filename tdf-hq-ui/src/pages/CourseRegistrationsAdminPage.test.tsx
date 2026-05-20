@@ -2902,6 +2902,35 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats abbreviated WhatsApp form sources as default form noise', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crSource: 'wa_form',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crSource: 'whatsapp_form',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Beatmaking 101 · Pendiente de pago');
+      expect(container.textContent).not.toContain('Fuente:');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(container.textContent).not.toContain('wa_form');
+      expect(container.textContent).not.toContain('WhatsApp form');
+      expect(getDossierTriggers(container)).toHaveLength(2);
+    });
+
+    await cleanup();
+  });
+
   it('omits passive single-choice context when the default view has only one registration', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
