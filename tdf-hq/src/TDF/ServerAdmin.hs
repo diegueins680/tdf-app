@@ -1330,21 +1330,29 @@ validateBrainEntryId =
 
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
 validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
-  case T.toLower (T.strip rawMode) of
-    "reply" ->
-      case mReplyToMessageId of
-        Nothing ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
-        Just replyId
-          | replyId <= 0 ->
-              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId debe ser un entero positivo") }
-          | otherwise -> Right "reply"
-    "notify"
-      | isJust mReplyToMessageId ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId solo se permite en mode=reply") }
-      | otherwise -> Right "notify"
-    _ ->
-      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+  if T.any isUnsupportedAdminAuditChar rawMode
+    then
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mode no debe contener caracteres de control o formato no soportados")
+        }
+    else
+      case T.toLower (T.strip rawMode) of
+        "reply" ->
+          case mReplyToMessageId of
+            Nothing ->
+              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
+            Just replyId
+              | replyId <= 0 ->
+                  Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId debe ser un entero positivo") }
+              | otherwise -> Right "reply"
+        "notify"
+          | isJust mReplyToMessageId ->
+              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId solo se permite en mode=reply") }
+          | otherwise -> Right "notify"
+        _ ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
 
 validateAdminWhatsAppMessageBody :: Text -> Either ServerError Text
 validateAdminWhatsAppMessageBody rawBody

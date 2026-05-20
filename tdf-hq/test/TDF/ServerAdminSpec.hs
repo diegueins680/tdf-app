@@ -785,6 +785,12 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
             assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
             assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))
+            assertInvalid
+                "control o formato"
+                (validateAdminWhatsAppSendMode "reply\n" (Just 42))
+            assertInvalid
+                "control o formato"
+                (validateAdminWhatsAppSendMode ("re" <> T.singleton '\x202E' <> "ply") (Just 42))
 
     describe "validateAdminWhatsAppMessageBody" $ do
         it "trims admin WhatsApp text while preserving multiline formatting" $ do
