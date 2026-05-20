@@ -11829,6 +11829,75 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats generic form-submission containers as source noise in busy lists', async () => {
+    const defaultSources = [
+      'form_submission',
+      'forms_submissions',
+      'form_entries',
+      'form_responses',
+      'form_results',
+      'submission',
+      'submissions',
+      'new_submission',
+      'new_submissions',
+      'new_form_submission',
+      'new_form_entries',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Form submission',
+      'Forms submissions',
+      'Form entries',
+      'Form responses',
+      'Form results',
+      'submission',
+      'submissions',
+      'New submission',
+      'New submissions',
+      'New form submission',
+      'New form entries',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'form submission');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "form submission" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats plural public-form source containers as default plumbing in busy lists', async () => {
     const defaultSources = [
       'course_registration_pages',
