@@ -1538,6 +1538,40 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected oversized invoice to be rejected, got: " <> show invoice)
 
+        it "rejects aggregate invoice totals that exceed the backend amount range before persistence" $ do
+            let largeLine =
+                    CreateInvoiceLineReq
+                        { cilDescription = "Large license installment"
+                        , cilQuantity = 1
+                        , cilUnitCents = (maxBound :: Int) `div` 2 + 1
+                        , cilTaxBps = Nothing
+                        , cilServiceOrderId = Nothing
+                        , cilPackagePurchaseId = Nothing
+                        }
+                oversizedInvoice =
+                    DTO.CreateInvoiceReq
+                        42
+                        Nothing
+                        Nothing
+                        Nothing
+                        [largeLine, largeLine]
+                        Nothing
+
+            result <-
+                runHandler $
+                    runReaderT
+                        (createInvoice (mkUser [Accounting]) oversizedInvoice)
+                        (error "createInvoice should reject oversized totals before reading Env")
+
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "Invoice subtotal exceeds supported invoice amount"
+                Right invoice ->
+                    expectationFailure
+                        ("Expected oversized invoice total to be rejected, got: " <> show invoice)
+
     describe "invoice and receipt lookup ids" $
         it "rejects non-positive lookup ids before treating them as missing rows" $ do
             let assertInvalid expectedMessage action = do

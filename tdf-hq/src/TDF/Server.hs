@@ -9318,6 +9318,18 @@ createInvoice user CreateInvoiceReq{..} = do
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
+  subtotal <- either throwBadRequest pure $
+    validatePreparedCents
+      "Invoice subtotal"
+      (sum (map (toInteger . plSubtotal) preparedLines))
+  taxTotal <- either throwBadRequest pure $
+    validatePreparedCents
+      "Invoice tax"
+      (sum (map (toInteger . plTax) preparedLines))
+  grand <- either throwBadRequest pure $
+    validatePreparedCents
+      "Invoice total"
+      (sum (map (toInteger . plTotal) preparedLines))
   Env pool _ <- ask
   customerKey <- do
     resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
@@ -9326,9 +9338,6 @@ createInvoice user CreateInvoiceReq{..} = do
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
       number   = normalizeOptionalText ciNumber
-      subtotal = sum (map plSubtotal preparedLines)
-      taxTotal = sum (map plTax preparedLines)
-      grand    = sum (map plTotal preparedLines)
       invoiceRecord = Invoice
         { invoiceCustomerId    = customerKey
         , invoiceIssueDate     = day
