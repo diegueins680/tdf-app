@@ -4965,6 +4965,9 @@ export default function CourseRegistrationsAdminPage() {
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
+  const sharedVisibleCohortSummary = shouldShowSharedCohortSummary
+    ? `Formulario público visible: ${singleVisibleCohortLabel}.`
+    : '';
   const visibleRegistrationsMissingContactCount =
     searchedRegistrations.filter(registrationNeedsContact).length;
   const sharedVisibleMissingContactSummary = formatVisibleMissingContactSummary(
@@ -5000,7 +5003,7 @@ export default function CourseRegistrationsAdminPage() {
     && !foldSharedNotesIntoBusySearch;
   const sharedListContextSummaries = [
     sharedVisibleStatusSummary,
-    shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
+    sharedVisibleCohortSummary,
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
     sharedVisibleCreatedAtSummary,
     showSharedVisibleMissingContactSummary ? sharedVisibleMissingContactSummary : '',
@@ -7484,7 +7487,7 @@ export default function CourseRegistrationsAdminPage() {
                     color="text.secondary"
                     sx={{ mt: shouldShowSharedStatusSummary ? 0.75 : 1.5 }}
                   >
-                    Mostrando una sola cohorte: {singleVisibleCohortLabel}.
+                    {sharedVisibleCohortSummary}
                   </Typography>
                 )}
                 {shouldShowSharedSourceSummary && (

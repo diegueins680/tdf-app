@@ -1711,7 +1711,8 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(activeStatusSummary?.textContent).toContain('Estado filtrado');
       expect(activeStatusSummary?.textContent).toContain('Pagado');
-      expect(container.textContent).toContain('Mostrando una sola cohorte: Beatmaking 101.');
+      expect(container.textContent).toContain('Formulario público visible: Beatmaking 101.');
+      expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101.');
       expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(false);
       expect(getDossierTriggers(container)).toHaveLength(2);
     });
@@ -2680,7 +2681,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Vista actual');
-      expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101.');
+      expect(container.textContent).not.toContain('Formulario público visible: Beatmaking 101.');
     });
 
     await cleanup();
@@ -2726,7 +2727,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(true);
       expect(hasExactText(container, 'Cohorte: Legacy Workshop')).toBe(true);
       expect(container.textContent).not.toContain('Cohorte: legacy-workshop');
-      expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101.');
+      expect(container.textContent).not.toContain('Formulario público visible: Beatmaking 101.');
     });
 
     await cleanup();
@@ -3467,7 +3468,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countOccurrences(
         container,
-        'Mostrando una sola cohorte: Beatmaking 101. Fuente visible: Instagram.',
+        'Formulario público visible: Beatmaking 101. Fuente visible: Instagram.',
       )).toBe(1);
       expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram.');
       expect(container.textContent).not.toContain('Fuente: Instagram');
@@ -14080,7 +14081,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Carlos Vega');
       expect(container.textContent).not.toContain('Estudiante 1');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
-      expect(container.textContent).toContain('Mostrando una sola cohorte: Producción en vivo.');
+      expect(container.textContent).toContain('Formulario público visible: Producción en vivo.');
       expect(container.textContent).not.toContain('No hay coincidencias para "produccion"');
       expect(listRegistrationsMock).not.toHaveBeenCalled();
     });
@@ -14325,7 +14326,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Garcia');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
       expect(container.textContent).toContain(
-        'Estado visible: Pagado. Mostrando una sola cohorte: Mixing Bootcamp. Fuente visible: referral.',
+        'Estado visible: Pagado. Formulario público visible: Mixing Bootcamp. Fuente visible: referral.',
       );
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).toBeNull();
       expect(container.querySelector(
