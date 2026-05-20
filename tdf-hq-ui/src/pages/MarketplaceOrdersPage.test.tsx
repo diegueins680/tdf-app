@@ -737,6 +737,7 @@ describe('MarketplaceOrdersPage', () => {
           'Los filtros dejaron una sola orden visible. Revísala aquí y usa Limpiar filtros para volver a comparar pedidos.',
         );
         expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(container.querySelector('table')).toBeNull();
       });
@@ -924,6 +925,16 @@ describe('MarketplaceOrdersPage', () => {
         moPaidAt: '2030-01-02T12:30:00.000Z',
         moCreatedAt: '2030-01-02T12:00:00.000Z',
         moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-3',
+        moCartId: 'cart-3',
+        moBuyerName: 'Katherine Johnson',
+        moBuyerEmail: 'katherine@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-03T12:30:00.000Z',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
       }),
     ]);
 

@@ -439,6 +439,7 @@ export default function MarketplaceOrdersPage() {
   const showListChrome = !ordersQuery.isLoading && (filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState));
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
+  const showCopyFiltersLinkAction = filtersActiveCount > 0 && !showSingleVisibleOrderSummary;
   const showFilterTrayHelper = showSearchOwnedFilterHelper && !showEmptyOrdersState;
   const showPaidOnlyAdvancedFilter = !statusFilterImpliesPaid;
   const hasAdvancedFiltersActive = Boolean(fromDate) || Boolean(toDate) || activePaidOnlyFilter;
@@ -924,7 +925,7 @@ export default function MarketplaceOrdersPage() {
               {showActiveFiltersTray ? (
                 <>
                   <Box flex={1} />
-                  {filtersActiveCount > 0 && (
+                  {showCopyFiltersLinkAction && (
                     <Button size="small" onClick={copyFiltersLink}>
                       Copiar enlace de filtros
                     </Button>
