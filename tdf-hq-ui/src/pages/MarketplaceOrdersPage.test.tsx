@@ -2128,6 +2128,43 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('replaces one-item order detail tables with a compact item summary', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-one-item',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.textContent).toContain('Items: 1 × Vintage Mic');
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+
+        expect(dialog).not.toBeNull();
+        expect(dialog?.querySelector('[data-testid="marketplace-single-item-detail"]')).not.toBeNull();
+        expect(dialog?.textContent).toContain('Vintage Mic');
+        expect(dialog?.textContent).toContain('1 × USD $100.00 · Subtotal USD $100.00');
+        expect(dialog?.querySelector('table')).toBeNull();
+        expect(dialog?.textContent).not.toContain('Producto');
+        expect(dialog?.textContent).not.toContain('Cantidad');
+        expect(dialog?.textContent).not.toContain('Precio');
+        expect(dialog?.textContent).not.toContain('SubtotalSubtotal');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces empty order item detail tables with one clear empty state', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

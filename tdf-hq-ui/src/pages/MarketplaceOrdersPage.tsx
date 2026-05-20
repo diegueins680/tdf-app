@@ -1455,7 +1455,21 @@ export default function MarketplaceOrdersPage() {
                 )}
                 <Divider />
                 <Typography variant="h6">Items</Typography>
-                {selectedOrder.moItems.length > 0 ? (
+                {selectedOrder.moItems.length === 1 ? (
+                  <Stack
+                    spacing={0.5}
+                    data-testid="marketplace-single-item-detail"
+                  >
+                    <Typography variant="body2" fontWeight={600}>
+                      {selectedOrder.moItems[0]?.moiTitle}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedOrder.moItems[0]?.moiQuantity} × {selectedOrder.moItems[0]?.moiUnitPriceDisplay}
+                      {' · '}
+                      Subtotal {selectedOrder.moItems[0]?.moiSubtotalDisplay}
+                    </Typography>
+                  </Stack>
+                ) : selectedOrder.moItems.length > 1 ? (
                   <Table size="small">
                     <TableHead>
                       <TableRow>
