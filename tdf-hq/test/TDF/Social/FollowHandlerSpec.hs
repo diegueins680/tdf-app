@@ -146,6 +146,18 @@ spec = describe "social event handler helpers" $ do
                 , eiuName = Just "poster.png"
                 }
         assertInvalid
+            "Uploaded image name must not contain leading, trailing, or repeated dots"
+            EventImageUploadForm
+                { eiuFile = mkEventImageUploadFile "camera.png"
+                , eiuName = Just "poster..png"
+                }
+        assertInvalid
+            "Uploaded browser file name must not contain leading, trailing, or repeated dots"
+            EventImageUploadForm
+                { eiuFile = mkEventImageUploadFile "poster..png"
+                , eiuName = Nothing
+                }
+        assertInvalid
             "Uploaded image extension must match its MIME type"
             EventImageUploadForm
                 { eiuFile = mkEventImageUploadFile "camera.jpg"

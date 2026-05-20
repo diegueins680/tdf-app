@@ -160,6 +160,8 @@ validateUploadName label rawName
       Left (label <> " must not hide executable or document extensions")
   | not (hasNonEmptyUploadBaseName rawName) =
       Left (label <> " must include a non-empty base name")
+  | hasEmptyUploadNameSegment rawName =
+      Left (label <> " must not contain leading, trailing, or repeated dots")
   | T.length (T.strip rawName) > maxUploadNameLength =
       Left (label <> " must be 180 characters or fewer")
   | otherwise = Right ()
@@ -169,6 +171,12 @@ maxUploadNameLength = 180
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasEmptyUploadNameSegment :: Text -> Bool
+hasEmptyUploadNameSegment rawName =
+  let name = T.strip rawName
+      segments = T.splitOn "." name
+  in not (T.null name) && any T.null segments
 
 hasDangerousInnerUploadExtension :: Text -> Bool
 hasDangerousInnerUploadExtension rawName =
