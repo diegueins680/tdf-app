@@ -63,6 +63,20 @@ describe('cohortFirstRunLabel', () => {
     ).toBe('Evaluation for Producers');
   });
 
+  it('strips WhatsApp deep-link wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'wa.me link - Beatmaking 101',
+      'WhatsApp chat link - Beatmaking 101',
+      'WhatsApp deep link for Beatmaking 101',
+      'Enlace de WhatsApp para Beatmaking 101',
+      'Beatmaking 101 - link de wa.me',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips course-change request wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'Course cancellation request - Beatmaking 101',

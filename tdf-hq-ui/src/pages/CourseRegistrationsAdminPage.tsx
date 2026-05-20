@@ -1794,9 +1794,9 @@ const firstRunEmergingSocialLeadDescriptorPrefixPattern =
 const firstRunEmergingSocialLeadDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:(?:lead(?:\s+gen|\s+ads?)?|instant)\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
 
-const firstRunMessagingAutomationProviderPattern = String.raw`(?:many\s*chat|manychat|instagram|ig|facebook|fb|meta|messenger|whats\s*app)`;
+const firstRunMessagingAutomationProviderPattern = String.raw`(?:many\s*chat|manychat|instagram|ig|facebook|fb|meta|messenger|whats\s*app|wa\s*\.?\s*me)`;
 const firstRunMessagingAutomationChannelPattern = String.raw`(?:dm|direct\s+messages?|messages?|mensaje\s+directo|inbox|chat|messenger)`;
-const firstRunMessagingAutomationWorkflowPattern = String.raw`(?:automation|automations|automated\s+reply|bots?|flows?|funnels?|intake|leads?|registration|enrollment|sign[-\s]?up|click[-\s]?to[-\s]?chat|keywords?|keyword\s+triggers?|triggers?|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|embudos?|palabras?\s+clave|disparadores?|respuestas?(?:\s+autom[aá]ticas?)?)`;
+const firstRunMessagingAutomationWorkflowPattern = String.raw`(?:automation|automations|automated\s+reply|bots?|flows?|funnels?|intake|leads?|registration|enrollment|sign[-\s]?up|click[-\s]?to[-\s]?chat|chat\s+links?|deep\s+links?|links?|urls?|keywords?|keyword\s+triggers?|triggers?|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|embudos?|enlaces?|palabras?\s+clave|disparadores?|respuestas?(?:\s+autom[aá]ticas?)?)`;
 const firstRunMessagingAutomationDescriptorPattern = String.raw`(?:(?:(?:${firstRunMessagingAutomationProviderPattern}\s+)?${firstRunMessagingAutomationChannelPattern}\s+${firstRunMessagingAutomationWorkflowPattern}|${firstRunMessagingAutomationProviderPattern}\s+${firstRunMessagingAutomationWorkflowPattern})(?:\s+(?:forms?|pages?|links?|urls?|flows?|funnels?))?|${firstRunMessagingAutomationWorkflowPattern}\s+(?:de|para)\s+(?:${firstRunMessagingAutomationChannelPattern}|${firstRunMessagingAutomationProviderPattern}))`;
 const firstRunMessagingAutomationDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunMessagingAutomationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
