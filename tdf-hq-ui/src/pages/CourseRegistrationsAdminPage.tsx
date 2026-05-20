@@ -561,11 +561,11 @@ const buildAutomaticFilterHelpText = ({
   if (!hasStatusFilterControl) return '';
 
   const filterStartingPoint = hasCohortFilterControl
-    ? 'Los filtros actualizan la lista automáticamente.'
-    : 'El estado actualiza la lista automáticamente.';
+    ? 'Los filtros se aplican al instante.'
+    : 'El estado se aplica al instante.';
   const limitGuidance = showAdvancedLimitControl
-    ? 'Usa Ajustar límite solo si necesitas otro lote.'
-    : 'Ajustar límite aparecerá cuando se llene el lote.';
+    ? 'Cambia el límite solo si necesitas cargar otra cantidad.'
+    : 'El límite aparece solo si la vista llega al máximo cargado.';
   const emptySuffix = hasVisibleRegistrations
     ? ''
     : ' Si esperabas resultados, ajusta la vista o refresca.';
