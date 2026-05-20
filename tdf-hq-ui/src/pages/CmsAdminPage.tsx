@@ -707,7 +707,7 @@ export default function CmsAdminPage() {
     : liveLookupFailed && hasSamplePayload
     ? 'No pudimos confirmar si ya existe una versión en vivo. Reintenta la carga en vivo antes de partir de un ejemplo.'
     : liveContent
-    ? 'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.'
+    ? 'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.'
     : samplePayload
       ? editorMatchesSamplePayload
         ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
@@ -732,7 +732,7 @@ export default function CmsAdminPage() {
             ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
             : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
         : editorHasMetadataDraft
-          ? 'El payload editable ya coincide con la versión en vivo. Usa "Usar versión en vivo" para descartar cambios de título o estado.'
+          ? 'El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.'
           : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
@@ -772,7 +772,7 @@ export default function CmsAdminPage() {
     : showFirstVersionEmptyDraftGuard
       ? 'Agrega un título o payload antes de guardar la primera versión.'
       : showLiveStartEmptyEditorGuard
-        ? 'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.'
+        ? 'Parte de la versión en vivo o empieza un borrador propio antes de guardar.'
         : baseStatusHelperText;
   const showStatusControl =
     hasSlugSelection

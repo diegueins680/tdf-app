@@ -266,7 +266,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps live-start copy out of the editor helper when the alert already owns it', async () => {
+  it('keeps the live-start action label on the button instead of repeating it in helper copy', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -278,7 +278,11 @@ describe('CmsAdminPage', () => {
         'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
       expect(guidance?.textContent).not.toContain('Usar versión en vivo');
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(container.textContent).toContain(
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
+      );
+      expect(container.textContent).not.toContain(
         'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
     });
@@ -399,7 +403,7 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).not.toContain('Cargar última publicada');
       expect(container.textContent).not.toContain('Revertir a en vivo');
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(container.textContent).not.toContain('La página pública se abre con el botón principal de arriba.');
       expect(container.textContent).not.toContain('Para editar lo publicado');
@@ -417,7 +421,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(container.textContent).not.toContain(
         'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
@@ -517,7 +521,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
@@ -536,7 +540,7 @@ describe('CmsAdminPage', () => {
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
       );
       expect(container.textContent).not.toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
@@ -561,7 +565,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).not.toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
@@ -575,11 +579,11 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Usa "Usar versión en vivo" para descartar cambios de título o estado.',
+        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.',
       );
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(container.textContent).not.toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(guidance?.textContent).not.toContain('El comparador aparecerá');
       expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
@@ -853,7 +857,7 @@ describe('CmsAdminPage', () => {
       await waitForExpectation(() => {
         expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
         expect(container.textContent).toContain(
-          'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+          'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
         );
       });
 
@@ -902,7 +906,7 @@ describe('CmsAdminPage', () => {
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
       expect(container.textContent).toContain(
-        'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+        'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
       );
       expect(container.textContent).toContain(
         'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
@@ -1053,7 +1057,7 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).not.toContain('Base: v4');
       expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
@@ -1355,7 +1359,7 @@ describe('CmsAdminPage', () => {
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
       expect(container.textContent).toContain(
-        'Usa "Usar versión en vivo" o empieza un borrador propio antes de guardar.',
+        'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
       );
       expect(container.textContent).toContain('2 versiones');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
