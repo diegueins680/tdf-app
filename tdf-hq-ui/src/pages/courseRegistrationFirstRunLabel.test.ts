@@ -15,6 +15,28 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
 const { cohortFirstRunLabel } = await import('./CourseRegistrationsAdminPage');
 
 describe('cohortFirstRunLabel', () => {
+  it('strips ad-platform lead form wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Google Ads lead form - Beatmaking 101',
+      'Beatmaking 101 - YouTube ads lead page',
+      'Formulario de leads de Google Ads - Beatmaking 101',
+      'LinkedIn lead ads form - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate ad-platform course titles when they are not lead form artifacts', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'google-ads-for-producers', ccTitle: 'Google Ads for Producers' }),
+    ).toBe('Google Ads for Producers');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'youtube-ads-masterclass', ccTitle: 'YouTube Ads Masterclass' }),
+    ).toBe('YouTube Ads Masterclass');
+  });
+
   it('strips feedback and evaluation descriptors before first-run copy uses the cohort label', () => {
     const titles = [
       'Course feedback form - Beatmaking 101',
