@@ -13109,13 +13109,26 @@ payPalApprovalUrlToken :: Text -> Maybe Text
 payPalApprovalUrlToken rawApprovalUrl = do
   (_, _, pathAndQuery) <- payPalApprovalUrlParts rawApprovalUrl
   query <- T.stripPrefix "/checkoutnow?" pathAndQuery
-  case T.splitOn "&" query of
-    [param] -> do
-      token <- T.stripPrefix "token=" param
-      if isValidPayPalOrderId token
-        then Just token
-        else Nothing
-    _ -> Nothing
+  collectPayPalApprovalUrlToken
+    (T.splitOn "&" query)
+    []
+    False
+
+collectPayPalApprovalUrlToken :: [Text] -> [Text] -> Bool -> Maybe Text
+collectPayPalApprovalUrlToken [] [token] _ = Just token
+collectPayPalApprovalUrlToken [] _ _ = Nothing
+collectPayPalApprovalUrlToken (rawParam:remaining) tokens seenUserAction =
+  case T.breakOn "=" rawParam of
+    ("token", rawValue)
+      | "=" `T.isPrefixOf` rawValue
+      , let token = T.drop 1 rawValue
+      , isValidPayPalOrderId token ->
+          collectPayPalApprovalUrlToken remaining (token : tokens) seenUserAction
+    ("useraction", "=commit")
+      | not seenUserAction ->
+          collectPayPalApprovalUrlToken remaining tokens True
+    _ ->
+      Nothing
 
 capturePaypalOrderRemote
   :: Manager

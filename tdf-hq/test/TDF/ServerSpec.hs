@@ -9446,6 +9446,28 @@ spec = describe "TDF.Server helpers" $ do
                         <> "token=ORDER-123&token=ORDER-456"
                     )
                 ]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [ PayPalLink
+                    "approve"
+                    ( "https://www.sandbox.paypal.com/checkoutnow?"
+                        <> "token=ORDER-123&redirect=https://evil.example"
+                    )
+                ]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [ PayPalLink
+                    "approve"
+                    ( "https://www.sandbox.paypal.com/checkoutnow?"
+                        <> "useraction=commit&useraction=commit&token=ORDER-123"
+                    )
+                ]
+            assertInvalid
+                "PayPal returned an invalid approval URL"
+                [ PayPalLink
+                    "approve"
+                    "https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123&"
+                ]
 
     describe "validatePayPalCaptureOrderId" $ do
         it "trims path-safe PayPal order ids before capture" $ do
