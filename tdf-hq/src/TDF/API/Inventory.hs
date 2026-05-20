@@ -58,6 +58,8 @@ validateUploadName rawName
       Left "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
   | T.any isPathSeparator rawName =
       Left "Asset upload name must not contain path separators"
+  | hasEmptyUploadNameSegment rawName =
+      Left "Asset upload file name must not contain leading, trailing, or repeated dots"
   | T.null (imageExtension rawName) =
       Left "Asset upload name must include a supported image extension"
   | hasDangerousInnerUploadExtension rawName =
@@ -67,6 +69,15 @@ validateUploadName rawName
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasEmptyUploadNameSegment :: Text -> Bool
+hasEmptyUploadNameSegment rawName =
+  let name = T.strip rawName
+      segments = T.splitOn "." name
+  in not (T.null name)
+       && case segments of
+         ["", extensionOnly] | not (T.null extensionOnly) -> False
+         _ -> any T.null segments
 
 rejectAmbiguousFileName :: Maybe Text -> FileData Tmp -> Either Text ()
 rejectAmbiguousFileName nameTxt file =
@@ -82,6 +93,8 @@ validateBrowserFileName file =
        then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
        else if T.any isPathSeparator fileName
          then Left "Uploaded file name must not contain path separators"
+         else if hasEmptyUploadNameSegment fileName
+           then Left "Uploaded file name must not contain leading, trailing, or repeated dots"
          else if hasDangerousInnerUploadExtension fileName
            then Left "Uploaded file name must not hide executable or document extensions"
          else Right ()

@@ -629,6 +629,33 @@ spec = do
       assertInvalid
         (mkAssetUploadMultipart [] [mkAssetUploadFile "----.jpg"])
 
+    it "rejects leading, trailing, or repeated dots before inventory filename fallback storage" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected dotted asset upload filename to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart
+          [("name", "front..room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart
+          [("name", ".front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room..jpg"])
+
     it "rejects browser filenames with control characters instead of silently rewriting them into stored asset names" $
       case fromMultipart
         (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\nshot.jpg"])
