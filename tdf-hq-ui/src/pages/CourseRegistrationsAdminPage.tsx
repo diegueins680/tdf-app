@@ -6279,7 +6279,7 @@ export default function CourseRegistrationsAdminPage() {
   const hasAnyInlineDossierContextAction = showInlineEmptyNotesAction || showInlineEmptyFollowUpAction;
   const hasMultipleInlineDossierContextActions = showInlineEmptyNotesAction && showInlineEmptyFollowUpAction;
   const showGroupedDossierContextActions = hasAnyInlineDossierContextAction
-    && (hasMultipleInlineDossierContextActions || hasPrimaryDossierAction);
+    && hasMultipleInlineDossierContextActions;
   const showDirectInlineEmptyNotesAction = showInlineEmptyNotesAction && !showGroupedDossierContextActions;
   const showDirectInlineEmptyFollowUpAction = showInlineEmptyFollowUpAction && !showGroupedDossierContextActions;
   const showDossierActionRow = hasPrimaryDossierAction
