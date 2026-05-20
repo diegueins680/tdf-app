@@ -273,7 +273,7 @@ const singleCohortInitialEmptyStateMessage =
 const genericSingleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const initialEmptyStateConfigActionLabel = 'Crear curso';
-const initialEmptyStateReviewFormsActionLabel = 'Revisar formularios';
+const initialEmptyStateReviewFormsActionLabel = 'Escoger formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
 const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
 const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
@@ -9197,6 +9197,7 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       expect(emptyState).not.toBeNull();
       expect(emptyState?.textContent).toContain(initialEmptyStateMultiCohortMessage);
+      expect(emptyState?.textContent).not.toContain('Revisar formularios');
       expect(
         emptyState?.querySelector<HTMLAnchorElement>('a[href="/configuracion/cursos"]')?.textContent?.trim(),
       ).toBe(initialEmptyStateReviewFormsActionLabel);
