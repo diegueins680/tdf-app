@@ -487,7 +487,7 @@ loadConfig = do
         case validateDbSslMode envName rawMode of
           Left msg -> fail msg
           Right mode -> pure (Just mode)
-  appPortVal <- lookupEnv "APP_PORT" >>= validatePositiveIntEnv "APP_PORT" 8080
+  appPortVal <- lookupEnv "APP_PORT" >>= validatePortEnv "APP_PORT" 8080
   rdbEnv     <- lookupEnv "RESET_DB"
   sdbEnv     <- lookupEnv "SEED_DB"
   migEnv     <- lookupEnv "RUN_MIGRATIONS"

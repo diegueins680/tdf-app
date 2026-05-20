@@ -836,11 +836,12 @@ main = hspec $ do
                     withEnvOverrides
                         [ ("APP_PORT", Just rawPort) ]
                         $ loadConfig `shouldThrow` \err ->
-                            "APP_PORT must be a positive integer"
+                            "APP_PORT must be a port number between 1 and 65535"
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "not-a-port"
             assertInvalid "0"
             assertInvalid "-1"
+            assertInvalid "70000"
 
             withEnvOverrides
                 [ ("APP_PORT", Just " 9090 ") ]
