@@ -246,7 +246,9 @@ describe('CourseBuilderPage', () => {
       await waitForExpectation(() => {
         expect(text(container)).toContain('Crear curso');
         expect(text(container)).not.toContain('Slug:');
-        expect(text(document.getElementById('detalles'))).toContain('Slug (auto)');
+        expect(text(document.getElementById('detalles'))).not.toContain('Slug (auto)');
+        expect(countLabelsByText(document.getElementById('detalles') ?? container, 'Landing URL')).toBe(1);
+        expect(text(document.getElementById('detalles'))).toContain('Slug sugerido:');
         expect(text(document.getElementById('detalles'))).toContain('Instructor principal');
         expect(text(document.getElementById('detalles'))).not.toContain('Cargar curso existente');
         expect(text(document.getElementById('sesiones'))).toContain('Sesiones');

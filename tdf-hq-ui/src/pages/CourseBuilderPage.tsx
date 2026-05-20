@@ -315,6 +315,9 @@ export default function CourseBuilderPage() {
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
+  const landingUrlHelperText = canResetLanding
+    ? `Editaste la URL. Slug sugerido: ${slug}.`
+    : `Slug sugerido: ${slug}.`;
   const existingCourseLoaderOpen = showExistingCourseLoader || Boolean(loadError);
 
   useLayoutEffect(() => {
@@ -589,20 +592,11 @@ export default function CourseBuilderPage() {
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
-                label="Slug (auto)"
-                fullWidth
-                value={slug}
-                InputProps={{ readOnly: true }}
-                helperText="Se genera con el título y la fecha de inicio."
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
                 label="Landing URL"
                 fullWidth
                 value={landingUrl}
                 onChange={(e) => handleLandingUrlChange(e.target.value)}
-                helperText={canResetLanding ? 'Editaste la URL; puedes restablecer la sugerida.' : undefined}
+                helperText={landingUrlHelperText}
               />
               {canResetLanding && (
                 <Box sx={{ mt: 0.5 }}>
