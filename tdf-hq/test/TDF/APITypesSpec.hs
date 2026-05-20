@@ -485,6 +485,22 @@ spec = do
                 "{\"aarMessage\":\"Responder al lead\",\"message\":\"typoed duplicate\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback selectors so assist context omission stays intentional" $ do
+            let assertNullRejected fieldName rawPayload =
+                    case decodeAdsAssist rawPayload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null ads assist selector to fail, got: " <> show payload)
+            mapM_
+                (uncurry assertNullRejected)
+                [ ("aarAdId", "{\"aarMessage\":\"Responder al lead\",\"aarAdId\":null}")
+                , ("aarCampaignId", "{\"aarMessage\":\"Responder al lead\",\"aarCampaignId\":null}")
+                , ("aarChannel", "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":null}")
+                , ("aarPartyId", "{\"aarMessage\":\"Responder al lead\",\"aarPartyId\":null}")
+                ]
+
     describe "Ads admin write payload FromJSON" $ do
         it "accepts canonical campaign, ad creative, and example write payloads" $ do
             case decodeCampaignUpsert

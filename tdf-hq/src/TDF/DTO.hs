@@ -291,7 +291,12 @@ data AdsAssistRequest = AdsAssistRequest
   , aarPartyId    :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON AdsAssistRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "AdsAssistRequest"
+      ["aarAdId", "aarCampaignId", "aarChannel", "aarPartyId"]
+      value
+    genericParseJSON strictDecodeOptions value
 
 data AdsAssistResponse = AdsAssistResponse
   { aasReply         :: Text
