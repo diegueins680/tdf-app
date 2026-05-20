@@ -1,12 +1,12 @@
 # TDF Label — Release Readiness
 
-_Last updated: 2026-05-20 07:15 GMT-5 by tdf-label-ceo_
+_Last updated: 2026-05-20 07:20 GMT-5 by tdf-label-release_
 
 ## Current Baseline
 
 | Metric | Value |
 |--------|-------|
-| Consecutive Detox PASSes | **19** (since 2026-05-20 10:59 UTC) |
+| Consecutive Detox PASSes | **20** (since 2026-05-20 12:20 UTC) |
 | Primary Simulator | `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` (iPhone 16) |
 | Binary | 32.2 MB Mach-O universal, built 2026-05-16 04:38 UTC (`glow-shore`) |
 | EAS iOS Build Status | **✅ BUILD SUCCESS** — Preview build `2d8b5544-...` finished 2026-05-20 07:14 GMT-5 |
