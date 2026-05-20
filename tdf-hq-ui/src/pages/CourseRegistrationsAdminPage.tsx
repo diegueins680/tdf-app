@@ -6471,6 +6471,14 @@ export default function CourseRegistrationsAdminPage() {
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
   const statusMenuActionTargetLabel = statusMenuReg ? getActionTargetLabelForRegistration(statusMenuReg) : '';
+  const showStatusMenuCancelSeparator = Boolean(
+    statusMenuReg
+    && canCancelRegistrationFromStatus(statusMenuReg.crStatus)
+    && (
+      canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus)
+      || canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment')
+    ),
+  );
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
   const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
   const receiptMenuActionLabel = receiptMenuReceipt
@@ -8039,10 +8047,18 @@ export default function CourseRegistrationsAdminPage() {
             {pendingStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
+        {showStatusMenuCancelSeparator && (
+          <Divider
+            component="li"
+            data-testid="course-registration-status-menu-cancel-separator"
+            sx={{ my: 0.5 }}
+          />
+        )}
         {statusMenuReg && canCancelRegistrationFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
             aria-label={`${cancelStatusMenuLabel(statusMenuReg.crStatus)} para ${statusMenuActionTargetLabel}`}
             title={`Usa esta acción para ${cancelStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
+            sx={{ color: 'error.main' }}
             onClick={() => {
               handleCloseStatusMenu();
               handleQuickStatus(statusMenuReg, 'cancelled');

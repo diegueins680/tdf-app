@@ -6928,6 +6928,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('separates cancellation from payment actions in the status menu', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace'));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const paymentMenuItem = getMenuItemByText(document.body, openPaymentWorkflowLabel);
+      const cancelMenuItem = getMenuItemByText(document.body, 'Cancelar inscripción');
+      const separator = document.body.querySelector<HTMLElement>(
+        '[data-testid="course-registration-status-menu-cancel-separator"]',
+      );
+
+      expect(separator).not.toBeNull();
+      expect(Array.from(document.body.querySelectorAll('[role="menuitem"]')).map((element) => (
+        (element.textContent ?? '').trim()
+      ))).toEqual([openPaymentWorkflowLabel, 'Cancelar inscripción']);
+      expect(paymentMenuItem.compareDocumentPosition(separator!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(separator!.compareDocumentPosition(cancelMenuItem) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(cancelMenuItem.getAttribute('title')).toBe('Usa esta acción para cancelar la inscripción.');
+    });
+
+    await cleanup();
+  });
+
   it('closes the first payment workflow directly instead of reopening the empty receipt prompt', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
