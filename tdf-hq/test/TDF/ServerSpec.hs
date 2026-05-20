@@ -13696,6 +13696,21 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "instagram" "https://instagram.com.evil.example/p/post42/"
             assertInvalid "instagram" "https://www.instagram.com:444/p/post42/"
 
+        it "rejects root social sync permalinks before storing ambiguous fallback links" $ do
+            let assertInvalid platform rawUrl =
+                    case SocialSync.validateSocialSyncPermalinkForPlatform platform (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "permalink must include a post path"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected root social sync permalink to be rejected, got: "
+                                    <> show value
+                                )
+            assertInvalid "instagram" "https://www.instagram.com/"
+            assertInvalid "facebook" "https://facebook.com?story_fbid=42"
+
     describe "hasSocialSyncAccess" $ do
         it "denies baseline and non-admin staff sessions" $ do
             hasSocialSyncAccess (mkUser [Fan, Customer]) `shouldBe` False

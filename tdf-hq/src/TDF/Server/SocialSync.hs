@@ -509,6 +509,12 @@ validateSocialSyncPermalinkForPlatform rawPlatform rawPermalink = do
 validateSocialSyncPermalinkPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateSocialSyncPermalinkPlatform _ Nothing = Right Nothing
 validateSocialSyncPermalinkPlatform platform (Just url)
+  | not (socialSyncPermalinkHasPath url) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "permalink must include a post path")
+        }
   | permalinkMatchesSocialSyncPlatform platform url = Right (Just url)
   | otherwise =
       Left err400
@@ -543,6 +549,27 @@ socialSyncPublicHttpsHost rawUrl =
          in if T.null host || not (T.null portSuffix || portSuffix == ":443")
               then Nothing
               else Just host
+
+socialSyncPermalinkHasPath :: Text -> Bool
+socialSyncPermalinkHasPath rawUrl =
+  let trimmed = T.strip rawUrl
+      lowerUrl = T.toLower trimmed
+  in case T.stripPrefix "https://" lowerUrl of
+       Nothing -> False
+       Just remainder ->
+         let pathWithQueryOrFragment =
+               T.dropWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') remainder
+             path =
+               case T.uncons pathWithQueryOrFragment of
+                 Just ('/', suffix) ->
+                   "/" <> T.takeWhile (\ch -> ch /= '?' && ch /= '#') suffix
+                 _ -> ""
+             segments =
+               filter (not . T.null) $
+                 T.splitOn "/" $
+                   T.dropWhile (== '/') $
+                     T.dropWhileEnd (== '/') path
+         in not (null segments)
 
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing
