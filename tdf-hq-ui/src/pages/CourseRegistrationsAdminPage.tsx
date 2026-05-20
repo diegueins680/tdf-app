@@ -5169,7 +5169,7 @@ export default function CourseRegistrationsAdminPage() {
     hiddenBusyListMissingContactContext,
     hiddenBusyListSharedNotesContext,
   ].filter(Boolean).join('. ');
-  const localSearchHelperText = !localSearchKey
+  const visibleLocalSearchHelperText = !localSearchKey
     && hiddenBusyListContextSummary
     && baseLocalSearchHelperText
     ? `${hiddenBusyListContextSummary}. ${baseLocalSearchHelperText.replace(' sin cambiar filtros.', '.')}`
@@ -5228,6 +5228,15 @@ export default function CourseRegistrationsAdminPage() {
     limit,
     visibleActiveFilterSummary,
   ]);
+  const localSearchOwnsActiveViewSummary = Boolean(
+    hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && activeViewSummaryMessage
+    && !showEmptyLocalSearchResults,
+  );
+  const localSearchHelperText = localSearchOwnsActiveViewSummary && visibleLocalSearchHelperText
+    ? `${activeViewSummaryMessage} ${visibleLocalSearchHelperText}`
+    : visibleLocalSearchHelperText;
   const showInlineSummaryResetAction = Boolean(
     combinedSingleChoiceSummary
     && hasCustomFilters
@@ -5256,10 +5265,15 @@ export default function CourseRegistrationsAdminPage() {
   const showFilteredEmptyStateRefreshAction = !hasManualFilters && !cohortsQuery.isError;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
-      activeViewSummaryMessage,
+      localSearchOwnsActiveViewSummary ? '' : activeViewSummaryMessage,
       showUtilityCountSummary ? visibleRegistrationsSummary : '',
     ].filter(Boolean).join(' '),
-    [activeViewSummaryMessage, showUtilityCountSummary, visibleRegistrationsSummary],
+    [
+      activeViewSummaryMessage,
+      localSearchOwnsActiveViewSummary,
+      showUtilityCountSummary,
+      visibleRegistrationsSummary,
+    ],
   );
   const standaloneUtilitySummaryMessage = useMemo(
     () => [
@@ -5307,8 +5321,7 @@ export default function CourseRegistrationsAdminPage() {
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
-      Boolean(activeViewSummaryMessage)
-      || showUtilityCountSummary
+      Boolean(filteredUtilitySummaryMessage)
       || showScopedCopyCsvAction
       || showScopedCopyMessage
       || showFilteredResetAction

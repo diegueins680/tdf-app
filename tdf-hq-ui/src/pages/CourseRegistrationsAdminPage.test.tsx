@@ -15238,7 +15238,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps filtered reset actions hidden while local search already owns the narrowed registration view', async () => {
+  it('folds filtered scope into local search when search already owns the narrowed registration view', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -15294,10 +15294,11 @@ describe('CourseRegistrationsAdminPage', () => {
       );
 
       expect(getDossierTriggers(container)).toHaveLength(2);
-      expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
-      expect(filterUtilities).not.toBeNull();
-      expect(filterUtilities?.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
-      expect(filterUtilities?.textContent).not.toContain('(beatmaking-101)');
+      expect(container.textContent).toContain(
+        'Vista filtrada: cohorte Beatmaking 101. Mostrando 2 de 9 inscripciones cargadas.',
+      );
+      expect(filterUtilities).toBeNull();
+      expect(container.textContent).not.toContain('(beatmaking-101)');
       expect(countButtonsByText(container, 'Restablecer vista')).toBe(0);
       expect(searchUtilities).not.toBeNull();
       expect(getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel)).toBeTruthy();
