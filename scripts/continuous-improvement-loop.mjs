@@ -175,6 +175,25 @@ function loopEnvironment(context) {
   };
 }
 
+async function shutdownBootedSimulators() {
+  try {
+    const { stdout } = await execFileAsync('sh', ['-c', 'xcrun simctl list devices | grep Booted | grep -oE "[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}" || true'], { maxBuffer: 1024 * 1024 });
+    const uuids = stdout.trim().split('\n').filter(Boolean);
+    if (uuids.length === 0) return;
+    console.log(`Shutting down ${uuids.length} booted simulator(s) before build…`);
+    for (const udid of uuids) {
+      try {
+        await execFileAsync('xcrun', ['simctl', 'shutdown', udid]);
+        console.log(`  shutdown ${udid}`);
+      } catch (e) {
+        console.warn(`  failed to shutdown ${udid}: ${e.message}`);
+      }
+    }
+  } catch (e) {
+    // simctl not available or other error — ignore
+  }
+}
+
 async function readConfig(configPath) {
   if (!configPath) return {};
   const raw = await fs.readFile(configPath, 'utf8');
@@ -1497,6 +1516,7 @@ async function runIteration(repoRoot, config, iteration) {
 
     await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
     logStep(`Iteration ${iteration}: implementation`);
+    await shutdownBootedSimulators();
     await runShellCommand(config.implementationCommand, repoRoot, context, {
       stepName: 'Implementation',
     });
