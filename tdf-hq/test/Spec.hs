@@ -883,6 +883,26 @@ main = hspec $ do
                     cfg <- loadConfig
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 2525
 
+        it "rejects malformed SMTP_TLS instead of silently disabling TLS" $ do
+            let configuredSmtp extra =
+                    [ ("SMTP_HOST", Just "smtp.example.com")
+                    , ("SMTP_USER", Just "mailer")
+                    , ("SMTP_PASS", Just "secret")
+                    , ("SMTP_FROM", Just "tdf@example.com")
+                    ] <> extra
+
+            withEnvOverrides
+                (configuredSmtp [("SMTP_TLS", Just " off ")])
+                $ do
+                    cfg <- loadConfig
+                    fmap smtpUseTLS (emailConfig cfg) `shouldBe` Just False
+
+            withEnvOverrides
+                (configuredSmtp [("SMTP_TLS", Just "maybe")])
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_TLS must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
         it "rejects SMTP_USERNAME/SMTP_USER conflicts before choosing a fallback" $ do
             withEnvOverrides
                 [ ("SMTP_PORT", Just "587")

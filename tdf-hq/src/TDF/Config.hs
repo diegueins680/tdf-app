@@ -793,12 +793,6 @@ loadConfig = do
             _ -> Nothing
         isProductionValue raw =
           T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
-    asBool v = case fmap toLower v of
-      "true"  -> True
-      "1"     -> True
-      "yes"   -> True
-      "on"    -> True
-      _       -> False
     validateSeedTriggerToken runtimeEnv mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> pure Nothing
@@ -839,8 +833,7 @@ loadConfig = do
               Just email -> pure email
               Nothing -> fail "SMTP_FROM must be a valid email address"
             name <- normalizeSmtpFromName mFromName
-            let
-                useTls = maybe True asBool mTls
+            useTls <- validateStartupBooleanFlag "SMTP_TLS" True mTls
             portVal <- validatePortEnv "SMTP_PORT" 587 mPort
             pure $
               Just EmailConfig
