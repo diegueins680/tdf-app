@@ -831,6 +831,26 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"uDisplayName\":\"Ada Updated\",\"primaryEmail\":\"ignored@example.com\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty CRM party updates instead of returning a silent no-op success" $
+            case decodePartyUpdate "{}" of
+                Left decodeErr ->
+                    decodeErr `shouldContain` "PartyUpdate must include at least one field"
+                Right payload ->
+                    expectationFailure
+                        ("Expected empty party update to fail, got: " <> show payload)
+
+        it "rejects explicit null CRM party update fields instead of treating them as omissions" $ do
+            let assertNullRejected fieldName rawPayload =
+                    case decodePartyUpdate rawPayload of
+                        Left decodeErr ->
+                            decodeErr `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null party update field to fail, got: " <> show payload)
+
+            assertNullRejected "uDisplayName" "{\"uDisplayName\":null}"
+            assertNullRejected "uIsOrg" "{\"uIsOrg\":null}"
+
         it "normalizes valid CRM display names before persistence" $ do
             validatePartyDisplayName "  Ada Lovelace  "
                 `shouldBe` Right "Ada Lovelace"

@@ -24,6 +24,7 @@ import qualified Data.Text as T
 import           Data.Int (Int64)
 import           Data.Time (UTCTime, Day)
 import           Data.Char (toLower)
+import           Data.Maybe (isJust)
 
 import           Database.Persist (Entity(..))
 import           Database.Persist.Sql (fromSqlKey)
@@ -443,7 +444,41 @@ data PartyUpdate = PartyUpdate
   , uNotes            :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON PartyUpdate where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields "PartyUpdate" partyUpdateFieldNames value
+    update <- genericParseJSON strictDecodeOptions value
+    if partyUpdateHasAnyField update
+      then pure update
+      else fail "PartyUpdate must include at least one field"
+
+partyUpdateFieldNames :: [Text]
+partyUpdateFieldNames =
+  [ "uLegalName"
+  , "uDisplayName"
+  , "uIsOrg"
+  , "uTaxId"
+  , "uPrimaryEmail"
+  , "uPrimaryPhone"
+  , "uWhatsapp"
+  , "uInstagram"
+  , "uEmergencyContact"
+  , "uNotes"
+  ]
+
+partyUpdateHasAnyField :: PartyUpdate -> Bool
+partyUpdateHasAnyField PartyUpdate{..} =
+  or
+    [ isJust uLegalName
+    , isJust uDisplayName
+    , isJust uIsOrg
+    , isJust uTaxId
+    , isJust uPrimaryEmail
+    , isJust uPrimaryPhone
+    , isJust uWhatsapp
+    , isJust uInstagram
+    , isJust uEmergencyContact
+    , isJust uNotes
+    ]
 
 toPartyDTO :: Bool -> Entity Party -> PartyDTO
 toPartyDTO = toPartyDTOWithBand Nothing
