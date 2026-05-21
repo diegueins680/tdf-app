@@ -431,10 +431,13 @@ validateFutureStubCatalogEndpointLeaves catalog = do
         && (leftLabel `T.isPrefixOf` rightLabel || rightLabel `T.isPrefixOf` leftLabel)
 
     hasMountedAreaSegmentCollision mountedAreasValue catalogForAreas =
-      let mountedAreaSet = Set.fromList mountedAreasValue
-      in any
-          (any (`Set.member` mountedAreaSet) . T.splitOn "/" . snd)
-          catalogForAreas
+      any
+        (\(_area, endpoint) ->
+           any
+             (\segment -> any (segmentsOverlap segment) mountedAreasValue)
+             (T.splitOn "/" endpoint)
+        )
+        catalogForAreas
 
     hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreasValue catalogForAreas =
       any
