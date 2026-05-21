@@ -19242,6 +19242,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Reservation payment page for Beatmaking 101',
       'Formulario de depósito para Beatmaking 101',
       'Beatmaking 101 - página de abono',
+      'Bank transfer form - Beatmaking 101',
+      'Wire transfer page for Beatmaking 101',
+      'Datos de transferencia bancaria - Beatmaking 101',
+      'Beatmaking 101 - transferencia bancaria',
       'Payment receipt - Beatmaking 101',
       'Payment proof page for Beatmaking 101',
       'Proof of payment - Beatmaking 101',
@@ -19273,7 +19277,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|schedule|tuition|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|cronograma|calendario|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|receipt|proof|invoice|voucher|comprobante|recibo|factura|evidencia/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|schedule|tuition|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|cronograma|calendario|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|bank\s+transfer|wire\s+transfer|transferencia|receipt|proof|invoice|voucher|comprobante|recibo|factura|evidencia/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
