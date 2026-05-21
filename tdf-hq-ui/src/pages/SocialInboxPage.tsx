@@ -1389,7 +1389,7 @@ export default function SocialInboxPage() {
   const showInboxLoadingState = !allChannelsLoaded && !hasAnyInboundMessage && !hasChannelLoadErrors;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const showReviewMessageProofGuidance = reviewMode && Boolean(activeAsset) && hasAnyInboundMessage;
-  const showReviewAssetSetupAction = !activeAsset || (!hasAnyInboundMessage && !hasChannelLoadErrors);
+  const showReviewAssetSetupAction = !activeAsset;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
@@ -1541,7 +1541,7 @@ export default function SocialInboxPage() {
             )}
             {showReviewAssetSetupAction && (
               <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
-                {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
+                Select asset in Instagram setup
               </Button>
             )}
           </Stack>

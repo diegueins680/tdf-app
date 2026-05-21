@@ -331,8 +331,8 @@ describe('SocialInboxPage', () => {
         container,
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       )).toBe(0);
-      expect(countInstagramSetupLinks(container)).toBe(1);
-      expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
       expect(container.textContent).not.toContain('Open Instagram setup');
       expect(container.textContent).not.toContain('Re-select asset');
