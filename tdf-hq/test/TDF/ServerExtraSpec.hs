@@ -302,6 +302,41 @@ spec = do
           pcPeriod payload `shouldBe` Just "2026-04"
           pcAttachmentUrl payload `shouldBe` Just "https://files.example.com/receipt.pdf"
 
+    it "rejects malformed payment attachment URLs at the JSON boundary before handler fallbacks" $ do
+      let basePaymentJson attachmentUrlValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= ("USD" :: Text)
+                , "pcMethod" .= ("cash" :: Text)
+                , "pcPaidAt" .= ("2026-04-13" :: Text)
+                , "pcConcept" .= ("Studio booking" :: Text)
+                , "pcAttachmentUrl" .= attachmentUrlValue
+                ]
+          assertInvalid attachmentUrlValue expectedMessage =
+            case A.eitherDecode (basePaymentJson attachmentUrlValue) :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment attachment URL to fail, got: " <> show payload)
+
+      assertInvalid
+        ("proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("http://files.example.com/proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files/proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files.example.com/proof.pdf#page=2" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files.example.com//proof.pdf" :: Text)
+        "pcAttachmentUrl path must not contain empty, dot, or dot-dot segments"
+
     it "rejects blank or unsafe optional payment text before manual payment handler fallbacks" $ do
       let basePaymentJson extraField =
             A.encode $
