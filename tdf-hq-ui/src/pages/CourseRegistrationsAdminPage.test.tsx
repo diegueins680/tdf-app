@@ -20836,10 +20836,13 @@ describe('CourseRegistrationsAdminPage', () => {
       'Course inquiry form - Beatmaking 101',
       'Course enquiry form - Beatmaking 101',
       'Course interest form - Beatmaking 101',
+      'Expression of interest - Beatmaking 101',
+      'Beatmaking 101 - expression of interest form',
       'Beatmaking 101 - course inquiry page',
       'Beatmaking 101 - course enquiry page',
       'Beatmaking 101 - course interest page',
       'Formulario de consulta del curso - Beatmaking 101',
+      'Expresión de interés del curso - Beatmaking 101',
       'Beatmaking 101 - formulario de interés del curso',
     ];
 
@@ -20859,8 +20862,10 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Course inquiry');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Course enquiry');
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Course interest');
+        expect(emptyState?.textContent).not.toMatch(/expression of interest|expresi[oó]n de inter[eé]s/i);
         expect(emptyState?.textContent).not.toContain('Todavía no hay inscripciones para Formulario de consulta');
         expect(emptyState?.textContent).not.toContain('formulario de interés');
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

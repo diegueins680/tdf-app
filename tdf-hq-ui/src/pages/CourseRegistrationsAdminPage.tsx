@@ -1897,10 +1897,10 @@ const firstRunTicketingDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunInquiryDescriptorPrefixPattern =
-  /^(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:course\s+)?expression\s+of\s+interest(?:\s+(?:forms?|pages?))?|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|expresi[oó]n\s+de\s+inter[eé]s(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunInquiryDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:course\s+)?expression\s+of\s+interest(?:\s+(?:forms?|pages?))?|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|expresi[oó]n\s+de\s+inter[eé]s(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
 
 const firstRunSurveyDescriptorPrefixPattern =
   /^(?:(?:course\s+)?(?:survey|questionnaire|feedback|evaluation)\s+(?:forms?|pages?|portals?|requests?)|(?:post[-\s]?course|end[-\s]?of[-\s]?course|exit|satisfaction|nps)\s+(?:surveys?|questionnaires?|feedback|evaluations?)(?:\s+(?:forms?|pages?|portals?|requests?))?|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?|feedback\s+forms?|evaluations?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario)\s+de\s+satisfacci[oó]n|(?:evaluaci[oó]n|retroalimentaci[oó]n)\s+final(?:\s+(?:del?\s+curso|de\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
