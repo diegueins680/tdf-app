@@ -19026,12 +19026,16 @@ describe('CourseRegistrationsAdminPage', () => {
       'Online payment form - Beatmaking 101',
       'Payment plan form - Beatmaking 101',
       'Payment plan application - Beatmaking 101',
+      'Payment schedule - Beatmaking 101',
+      'Tuition payment schedule for Beatmaking 101',
       'Installment request - Beatmaking 101',
       'Beatmaking 101 - payment-plan page',
       'Formulario de pago - Beatmaking 101',
       'Formulario de pago en línea - Beatmaking 101',
       'Formulario de plan de pago - Beatmaking 101',
       'Solicitud de plan de pagos - Beatmaking 101',
+      'Cronograma de pagos - Beatmaking 101',
+      'Beatmaking 101 - calendario de pagos',
       'Botón de pago - Beatmaking 101',
       'Beatmaking 101 - página de pago',
       'Beatmaking 101 - enlace de planes de pagos',
@@ -19073,7 +19077,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|receipt|proof|invoice|voucher|comprobante|recibo|factura|evidencia/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|schedule|tuition|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|cronograma|calendario|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|receipt|proof|invoice|voucher|comprobante|recibo|factura|evidencia/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),

@@ -1556,6 +1556,16 @@ const firstRunPaymentDescriptorPrefixPattern =
 const firstRunPaymentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|hotmart|kiwify|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment(?:[-\s]+plans?)?|installment(?:\s+plans?)?|checkout|deposit|down\s*payment|reservation\s+payment)\s+(?:applications?|requests?|forms?|pages?|links?|urls?|portals?|buttons?)|checkout)|(?:formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?|solicitud(?:es)?)\s+de\s+(?:pago|plan(?:es)?\s+de\s+pagos?|cuotas?|checkout|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago|plan(?:es)?\s+de\s+pagos?|cuotas?|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?)\s+(?:del?\s+curso|de\s+curso))\s*$/i;
 
+const firstRunPaymentScheduleDescriptorPattern = String.raw`(?:(?:tuition\s+)?payment\s+schedules?(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:cronogramas?|calendarios?|tablas?)\s+(?:de|para)\s+pagos?(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunPaymentScheduleDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPaymentScheduleDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPaymentScheduleDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPaymentScheduleDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunPaymentEvidenceDescriptorPrefixPattern =
   /^(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|invoices?|vouchers?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?|vouchers?\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?|vouchers?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?|confirmaci[oó]n(?:es)?\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2201,6 +2211,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunOpenEnrollmentDescriptorPrefixPattern, '')
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
+    .replace(firstRunPaymentScheduleDescriptorPrefixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
     .replace(firstRunBillingDescriptorPrefixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
@@ -2333,6 +2344,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunOpenEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
+    .replace(firstRunPaymentScheduleDescriptorSuffixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
     .replace(firstRunBillingDescriptorSuffixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
