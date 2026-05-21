@@ -357,15 +357,17 @@ validateRadioImportSources Nothing = Right defaultRadioImportSources
 validateRadioImportSources (Just rawSources)
   | any (T.null . T.strip) rawSources =
       Left err400 { errBody = "sources must not include blank entries" }
+  | hasDuplicateCanonicalSource cleanedSources =
+      Left err400 { errBody = "sources must not include duplicate entries" }
   | otherwise =
-      case dedupeCanonicalSources (map (T.strip . canonicalRadioImportSource) rawSources) of
+      case cleanedSources of
         [] ->
           Left err400 { errBody = "sources must include at least one public http(s) URL" }
-        cleanedSources
-          | length cleanedSources > maxRadioImportSources ->
+        sources
+          | length sources > maxRadioImportSources ->
               Left err400 { errBody = "sources must include at most 8 public http(s) URLs" }
           | otherwise ->
-              traverse validateExplicitSource cleanedSources
+              traverse validateExplicitSource sources
   where
     validateExplicitSource source =
       case validateRadioStreamUrl source of
@@ -381,16 +383,21 @@ validateRadioImportSources (Just rawSources)
                 (TE.encodeUtf8 (T.replace "streamUrl" "source" bodyText))
           }
 
-    dedupeCanonicalSources =
-      reverse
-        . fst
+    cleanedSources =
+      map (T.strip . canonicalRadioImportSource) rawSources
+
+    hasDuplicateCanonicalSource =
+      fst
         . foldl'
-            (\(deduped, seen) source ->
-               let sourceKey = T.toLower source
-               in if Map.member sourceKey seen
-                    then (deduped, seen)
-                    else (source : deduped, Map.insert sourceKey () seen))
-            ([], Map.empty)
+            (\acc@(hasDuplicate, seen) source ->
+               if hasDuplicate
+                 then acc
+                 else
+                   let sourceKey = T.toLower source
+                   in if Map.member sourceKey seen
+                        then (True, seen)
+                        else (False, Map.insert sourceKey () seen))
+            (False, Map.empty)
 
 maxRadioImportSources :: Int
 maxRadioImportSources = 8

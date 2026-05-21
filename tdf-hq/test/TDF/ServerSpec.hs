@@ -764,6 +764,20 @@ spec = describe "TDF.Server helpers" $ do
                 Right sources ->
                     sources `shouldBe` ["https://stations.example.com/streams.csv"]
 
+        it "rejects duplicate explicit import sources after canonicalization" $
+            case Radio.validateRadioImportSources
+                (Just
+                    [ "https://github.com/mikepierce/internet-radio-streams"
+                    , "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
+                    ])
+             of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "sources must not include duplicate entries"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate radio import sources to be rejected, got: " <> show value)
+
         it "requires HTTPS for public radio transmission listen bases" $
             case Radio.validateRadioTransmissionPublicBase "http://radio.example.com/live" of
                 Left err -> do
