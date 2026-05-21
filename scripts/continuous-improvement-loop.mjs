@@ -1669,6 +1669,7 @@ async function main() {
       await sleep(Number(config.iterationDelaySeconds) * 1000);
     }
     iteration += 1;
+    await emitLoopStatus({ state: 'running', phase: 'iteration-start', currentIteration: iteration });
   }
 
   await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
