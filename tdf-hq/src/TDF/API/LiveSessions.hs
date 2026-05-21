@@ -245,7 +245,10 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               else
                 case traverse validateMusician xs of
                   Left err -> Left ("Invalid musicians payload: " <> err)
-                  Right validated -> Right validated
+                  Right validated ->
+                    case validateDistinctMusicianPartyIds validated of
+                      Left err -> Left ("Invalid musicians payload: " <> err)
+                      Right () -> Right validated
       decodeSetlist txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
@@ -313,6 +316,20 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           else if noReferenceProvided
             then Left "each musician must include a non-blank name, email, or partyId"
           else Right normalizedMusician
+
+      validateDistinctMusicianPartyIds :: [LiveSessionMusicianPayload] -> Either String ()
+      validateDistinctMusicianPartyIds musicians =
+        go Set.empty musicians
+        where
+          go _ [] = Right ()
+          go seen (musician : rest) =
+            case lsmPartyId musician of
+              Nothing -> go seen rest
+              Just partyId
+                | Set.member partyId seen ->
+                    Left "referenced musician partyIds must be distinct"
+                | otherwise ->
+                    go (Set.insert partyId seen) rest
 
       validateMusicianName rawName =
         let name = T.strip rawName

@@ -13255,6 +13255,19 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected partyId with isExisting=false to be rejected, got: " <> show payload)
 
+        it "rejects duplicate existing musician party ids before intake rows can double-book the same party" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"partyId\":42,\"name\":\"Keys\",\"isExisting\":true},"
+                            <> "{\"partyId\":42,\"name\":\"Synth\",\"isExisting\":true}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "referenced musician partyIds must be distinct"
+                Right payload ->
+                    expectationFailure ("Expected duplicate musician partyIds to be rejected, got: " <> show payload)
+
         it "rejects unsafe musician instrument or role text before intake persistence" $ do
             let assertInvalid extraFields expectedMessage =
                     case fromMultipart (mkLiveSessionMultipart
