@@ -2698,6 +2698,13 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getDossierTriggers(container)).toHaveLength(2);
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).not.toContain('Vista actual');
+      expect(container.textContent).toContain(
+        'Beatmaking 101 · Pendiente de pago. Misma fecha de registro: 1/1/2030, 10:04:05 PM. Mostrando 2 de 8 inscripciones cargadas.',
+      );
+      expect(countOccurrences(container, 'Beatmaking 101 · Pendiente de pago')).toBe(1);
       expect(container.textContent).toContain('Mostrando 2 de 8 inscripciones cargadas.');
       expect(container.textContent).toContain('Coinciden con nota interna.');
       expect(container.textContent).not.toContain('Notas internas en todas las inscripciones visibles.');
@@ -14314,7 +14321,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps shared created dates visible in default local search without repeating row date chrome', async () => {
+  it('keeps shared created dates in the default local search helper without repeating row date chrome', async () => {
     const sharedCreatedAt = '2030-03-04T03:04:05.000Z';
     const sharedCreatedAtLabel = formatTimestampForDisplay(sharedCreatedAt, '-');
 
@@ -14360,8 +14367,11 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).toContain('Nina Garcia');
       expect(container.textContent).toContain('Mostrando 2 de 9 inscripciones cargadas.');
-      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')?.textContent?.trim()).toBe(
-        `Misma fecha de registro: ${sharedCreatedAtLabel}.`,
+      expect(container.querySelector('[data-testid="course-registration-filter-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.querySelector('[data-testid="course-registration-shared-created-at-summary"]')).toBeNull();
+      expect(container.textContent).toContain(
+        `Beatmaking 101 · Pendiente de pago. Misma fecha de registro: ${sharedCreatedAtLabel}. Mostrando 2 de 9 inscripciones cargadas.`,
       );
       expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
     });

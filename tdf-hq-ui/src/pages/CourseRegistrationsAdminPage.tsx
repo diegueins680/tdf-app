@@ -5373,20 +5373,41 @@ export default function CourseRegistrationsAdminPage() {
       || showSharedNotesSummaryInList
     ),
   );
+  const localSearchOwnsDefaultCurrentViewSummary = Boolean(
+    hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && searchedRegistrations.length > 1
+    && combinedSingleChoiceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !showEmptyLocalSearchResults,
+  );
+  const canFoldDefaultSearchSharedDateIntoHelper = Boolean(
+    localSearchOwnsDefaultCurrentViewSummary
+    && sharedVisibleCreatedAtSummary
+    && !combinedSharedListContextSummary
+    && !shouldShowSharedStatusSummary
+    && !shouldShowSharedCohortSummary
+    && !shouldShowSharedSourceSummary
+    && !showSharedVisibleMissingContactSummary
+    && !showSharedNotesSummaryInList,
+  );
   const hideBusyListPassiveCurrentViewPanel = (
     showBusyListSearchOnboarding
     || showBusyListNonNarrowingSearch
     || hideSingleResultLocalSearchPassiveCurrentView
+    || localSearchOwnsDefaultCurrentViewSummary
   )
     && Boolean(combinedSingleChoiceSummary)
     && !hasCustomFilters
     && !showAdvancedLimitControl
     && (
       hideSingleResultLocalSearchPassiveCurrentView
+      || localSearchOwnsDefaultCurrentViewSummary
       || canFoldSharedSourceIntoBusySearch
       || !combinedSingleChoiceContextSummary
     )
-    && !hasSharedListContextSummary;
+    && (!hasSharedListContextSummary || canFoldDefaultSearchSharedDateIntoHelper);
   const hideBusyListPassiveSingleCohortSummary = showBusyListSearchOnboarding
     && Boolean(singleAvailableCohortLabel)
     && !combinedSingleChoiceSummary
@@ -5533,9 +5554,20 @@ export default function CourseRegistrationsAdminPage() {
     && activeViewSummaryMessage
     && !showEmptyLocalSearchResults,
   );
-  const localSearchHelperText = localSearchOwnsActiveViewSummary && visibleLocalSearchHelperText
-    ? `${activeViewSummaryMessage} ${visibleLocalSearchHelperText}`
-    : visibleLocalSearchHelperText;
+  const defaultCurrentViewLocalSearchSummary = localSearchOwnsDefaultCurrentViewSummary
+    ? [
+      `${combinedSingleChoiceSummary}.`,
+      canFoldDefaultSearchSharedDateIntoHelper ? sharedVisibleCreatedAtSummary : '',
+    ].filter(Boolean).join(' ')
+    : '';
+  const localSearchHelperTextParts = [
+    localSearchOwnsActiveViewSummary ? activeViewSummaryMessage : '',
+    defaultCurrentViewLocalSearchSummary,
+    visibleLocalSearchHelperText,
+  ].filter(Boolean);
+  const localSearchHelperText = localSearchHelperTextParts.length
+    ? localSearchHelperTextParts.join(' ')
+    : undefined;
   const showInlineSummaryResetAction = Boolean(
     combinedSingleChoiceSummary
     && hasCustomFilters
