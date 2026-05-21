@@ -13379,6 +13379,7 @@ describe('CourseRegistrationsAdminPage', () => {
       'click_funnels_page',
       'kartra_form',
       'systeme.io_form',
+      'lead_connector_form',
     ] as const;
     const hiddenSourceLabels = [
       'Kajabi form',
@@ -13390,6 +13391,7 @@ describe('CourseRegistrationsAdminPage', () => {
       'Click funnels page',
       'Kartra form',
       'Systeme io form',
+      'Lead connector form',
     ];
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(defaultSources.length, (index) => ({
