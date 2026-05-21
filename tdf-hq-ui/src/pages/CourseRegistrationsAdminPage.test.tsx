@@ -23278,6 +23278,44 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips bare English registration nouns from first-run course labels', async () => {
+    const titles = [
+      'Registrations Beatmaking 101',
+      'Enrollment: Beatmaking 101',
+      'Applications - Beatmaking 101',
+      'Admissions for course - Beatmaking 101',
+      'Signups Beatmaking 101',
+      'Beatmaking 101 - registrations',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(
+          /Todavía no hay inscripciones para (Registrations|Enrollment|Applications|Admissions|Signups)/,
+        );
+        expect(emptyState?.textContent).not.toMatch(/\bregistrations\b$/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips early-access registration wrappers from first-run cohort copy', async () => {
     const titles = [
       'Early access registration form - Beatmaking 101',

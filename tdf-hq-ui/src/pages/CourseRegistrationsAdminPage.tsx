@@ -2153,6 +2153,12 @@ const firstRunLooseEnrollmentDescriptorPrefixPattern =
 const firstRunLooseEnrollmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)\s*$/i;
 
+const firstRunEnglishRegistrationNounPrefixPattern =
+  /^(?:(?:[Pp]re[-\s]?)?[Rr]egistration(?:[Ss])?|[Ee]nrollment(?:[Ss])?|[Aa]pplication(?:[Ss])?|[Aa]dmission(?:[Ss])?|[Ss]ign[-\s]?[Uu]p(?:[Ss])?|[Ss]ignup(?:[Ss])?)(?:\s+(?:for|to|in)\s+(?:the\s+)?course)?(?:\s*[-:/|]\s*|\s+(?=[A-Z0-9]))/;
+
+const firstRunEnglishRegistrationNounSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:pre[-\s]?)?registrations?|enrollments?|applications?|admissions?|sign[-\s]?ups?|signups?)\s*$/i;
+
 const firstRunSpanishRegistrationNounPrefixPattern =
   /^(?:(?:[Pp]re[-\s]?)?[Ii]nscripci[oóÓ]n(?:[Ee]s)?|[Rr]egistro(?:[Ss])?|[Mm]atr[iíÍ]cula(?:[Ss])?|[Ss]olicitud(?:[Ee]s)?)(?:\s+(?:del?|para(?:\s+el)?|al)\s+curso)?(?:\s*[-:/|]\s*|\s+(?=[A-ZÁÉÍÓÚÑ0-9]))/;
 
@@ -2275,6 +2281,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
+    .replace(firstRunEnglishRegistrationNounPrefixPattern, '')
     .replace(firstRunSpanishRegistrationNounPrefixPattern, '')
     .replace(firstRunWorkspaceBrandDescriptorPrefixPattern, '')
     .replace(firstRunUntitledDescriptorPrefixPattern, '')
@@ -2408,6 +2415,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunEnglishRegistrationNounSuffixPattern, '')
     .replace(firstRunWorkspaceBrandDescriptorSuffixPattern, '')
     .replace(firstRunUntitledDescriptorSuffixPattern, '')
     .replace(firstRunNumberedGenericFormDescriptorSuffixPattern, '')
