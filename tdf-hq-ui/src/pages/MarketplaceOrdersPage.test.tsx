@@ -271,6 +271,11 @@ const getSelectTriggerByLabel = (root: ParentNode, labelText: string) => {
   return trigger;
 };
 
+const getOpenSelectOptionLabels = () =>
+  Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]'))
+    .map((element) => normalizeText(element.textContent))
+    .filter(Boolean);
+
 const clickFirstOrderRow = async (root: ParentNode) => {
   const explicitOpenAction = queryActionByText(root, 'Abrir orden');
   if (explicitOpenAction instanceof HTMLElement) {
@@ -693,6 +698,52 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain('Estado: Pagado');
         expect(getTableHeaders(container)).not.toContain('Estado');
         expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('limits the status menu to statuses present in the current order list', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      const trigger = getSelectTriggerByLabel(container, 'Estado del listado');
+      await act(async () => {
+        trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getOpenSelectOptionLabels()).toEqual(['Todos', 'Pagado', 'Pendiente']);
+        expect(getOpenSelectOptionLabels()).not.toContain('PayPal pendiente');
+        expect(getOpenSelectOptionLabels()).not.toContain('Contactar');
+        expect(getOpenSelectOptionLabels()).not.toContain('Cancelado');
       });
     } finally {
       await cleanup();

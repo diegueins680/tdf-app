@@ -266,6 +266,26 @@ export default function MarketplaceOrdersPage() {
       ),
     [statusContextOrders],
   );
+  const statusFilterOptions = useMemo(() => {
+    const availableValues = new Set(availableStatusFilters);
+    if (availableStatusFilters.length > 0) {
+      availableValues.add('paid');
+    }
+    if (statusFilter !== 'all') {
+      availableValues.add(statusFilter);
+    }
+
+    const presetOptions = STATUS_PRESETS
+      .filter((preset) => availableValues.has(preset.value))
+      .map(({ value, label }) => ({ value, label }));
+    const presetValues = new Set(presetOptions.map((option) => option.value));
+    const customOptions = Array.from(availableValues)
+      .filter((value) => value && !presetValues.has(value))
+      .sort((left, right) => statusLabel(left).localeCompare(statusLabel(right), 'es'))
+      .map((value) => ({ value, label: statusLabel(value) }));
+
+    return [...presetOptions, ...customOptions];
+  }, [availableStatusFilters, statusFilter]);
 
   const showStatusFilter = statusFilter !== 'all' || availableStatusFilters.length > 1;
   const singleVisibleStatusLabel =
@@ -793,7 +813,7 @@ export default function MarketplaceOrdersPage() {
                         onChange={(e) => setStatusFilter(e.target.value)}
                       >
                         <MenuItem value="all">Todos</MenuItem>
-                        {STATUS_PRESETS.map((st) => (
+                        {statusFilterOptions.map((st) => (
                           <MenuItem key={st.value} value={st.value}>
                             {st.label}
                           </MenuItem>
