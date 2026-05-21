@@ -450,6 +450,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalogResponses
     , validateFutureStubCatalogRouteBoundaries
     , validateFutureStubCatalogTopLevelBoundaries
+    , validateFutureStubEndpoint
     , validateFutureStubMetadata
     , validateFutureStubMetadataIn
     , validateFutureStubPublishedId
@@ -12218,6 +12219,8 @@ spec = describe "TDF.Server helpers" $ do
 
         it "keeps fallback discovery response identifiers as canonical ASCII slug paths" $ do
             validateFutureStubArea "access" `shouldBe` Right "access"
+            validateFutureStubEndpoint "parties/list-columns"
+                `shouldBe` Right "parties/list-columns"
 
             case validateFutureStubMetadata "crm" "parties/list-columns" of
                 Right value ->
@@ -12236,6 +12239,19 @@ spec = describe "TDF.Server helpers" $ do
                             expectationFailure
                                 ("Expected invalid future stub metadata, got: " <> show value)
 
+            let assertInvalidEndpoint endpoint =
+                    case validateFutureStubEndpoint endpoint of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub metadata"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid future stub endpoint, got: " <> show value)
+
+            assertInvalidEndpoint "parties/parties"
+            assertInvalidEndpoint "party/parties"
+            assertInvalidEndpoint "parties/party"
             assertInvalid " crm" "parties/list-columns"
             assertInvalid "CRM" "parties/list-columns"
             assertInvalid "1crm" "parties/list-columns"

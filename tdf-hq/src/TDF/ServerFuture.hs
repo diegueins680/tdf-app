@@ -1120,11 +1120,25 @@ validFutureStubPath endpoint =
     && T.length endpoint <= 128
     && length segments <= maxFutureStubEndpointSegments
     && all validFutureStubSlug segments
+    && not (hasAmbiguousFutureStubPathSegments segments)
   where
     segments = T.splitOn "/" endpoint
 
 maxFutureStubEndpointSegments :: Int
 maxFutureStubEndpointSegments = 2
+
+hasAmbiguousFutureStubPathSegments :: [Text] -> Bool
+hasAmbiguousFutureStubPathSegments segments =
+  any ambiguousSegmentPair (segmentPairs segments)
+  where
+    ambiguousSegmentPair (leftSegment, rightSegment) =
+      leftSegment == rightSegment
+        || leftSegment `T.isPrefixOf` rightSegment
+        || rightSegment `T.isPrefixOf` leftSegment
+
+    segmentPairs [] = []
+    segmentPairs (segment:remaining) =
+      map ((,) segment) remaining <> segmentPairs remaining
 
 validFutureStubSlug :: Text -> Bool
 validFutureStubSlug slug =
