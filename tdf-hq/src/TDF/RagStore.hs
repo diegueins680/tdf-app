@@ -24,6 +24,7 @@ import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
   , generalCategory
   , isAlphaNum
+  , isSpace
   , ord
   , toLower
   )
@@ -935,7 +936,9 @@ validateOpenAIEmbeddingPayload cfg expectedCount embeddings =
 
 sanitizeOpenAIEmbeddingErrorMessage :: Text -> Text
 sanitizeOpenAIEmbeddingErrorMessage raw =
-  let sanitized = T.strip (T.map sanitizeChar raw)
+  let sanitized =
+        redactOpenAIEmbeddingErrorSecrets $
+          T.strip (T.map sanitizeChar raw)
   in if T.length sanitized <= maxOpenAIEmbeddingErrorChars
        then sanitized
        else T.take maxOpenAIEmbeddingErrorChars sanitized <> " [truncated]"
@@ -947,6 +950,133 @@ sanitizeOpenAIEmbeddingErrorMessage raw =
 
 maxOpenAIEmbeddingErrorChars :: Int
 maxOpenAIEmbeddingErrorChars = 500
+
+redactOpenAIEmbeddingErrorSecrets :: Text -> Text
+redactOpenAIEmbeddingErrorSecrets =
+  redactOpenAIEmbeddingSecretFields . redactOpenAIEmbeddingBearerTokens
+
+redactOpenAIEmbeddingBearerTokens :: Text -> Text
+redactOpenAIEmbeddingBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchOpenAIEmbeddingBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchOpenAIEmbeddingBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchOpenAIEmbeddingBearerToken previous textValue
+  | not (isOpenAIEmbeddingSecretBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) =
+            consumeOpenAIEmbeddingValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between
+            || T.null tokenValue
+            || not (T.any isOpenAIEmbeddingSecretAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+redactOpenAIEmbeddingSecretFields :: Text -> Text
+redactOpenAIEmbeddingSecretFields = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchOpenAIEmbeddingSecretField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchOpenAIEmbeddingSecretField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchOpenAIEmbeddingSecretField previous textValue
+  | not (isOpenAIEmbeddingSecretBoundary previous) = Nothing
+  | otherwise = firstMatch openAIEmbeddingSecretFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseOpenAIEmbeddingSecretField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+openAIEmbeddingSecretFields :: [Text]
+openAIEmbeddingSecretFields =
+  [ "access_token"
+  , "api_key"
+  , "api-key"
+  , "apikey"
+  , "authorization"
+  , "client_secret"
+  , "id_token"
+  , "refresh_token"
+  , "x-api-key"
+  ]
+
+parseOpenAIEmbeddingSecretField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseOpenAIEmbeddingSecretField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) =
+            consumeOpenAIEmbeddingOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || separator == ':'
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) =
+                consumeOpenAIEmbeddingValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+isOpenAIEmbeddingSecretBoundary :: Maybe Char -> Bool
+isOpenAIEmbeddingSecretBoundary Nothing = True
+isOpenAIEmbeddingSecretBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+isOpenAIEmbeddingSecretAtom :: Char -> Bool
+isOpenAIEmbeddingSecretAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+consumeOpenAIEmbeddingOptionalQuote :: Text -> (Text, Text)
+consumeOpenAIEmbeddingOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeOpenAIEmbeddingValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeOpenAIEmbeddingValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedOpenAIEmbeddingSecretValueEnd)
+
+isUnquotedOpenAIEmbeddingSecretValueEnd :: Char -> Bool
+isUnquotedOpenAIEmbeddingSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,;}]" :: String)
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)

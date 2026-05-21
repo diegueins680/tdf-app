@@ -11134,7 +11134,7 @@ main = hspec $ do
                 )
                 `shouldBe` False
 
-    describe "callOpenAIEmbeddingsWith" $
+    describe "callOpenAIEmbeddingsWith" $ do
         it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
             withEnvOverrides
                 ( clearRagEnv
@@ -11168,6 +11168,46 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected request exception to return Left, got " <> show value)
+
+        it "redacts upstream embedding secrets before fallback error handling exposes them" $
+            withEnvOverrides
+                ( clearRagEnv
+                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
+                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                       ]
+                )
+                $ do
+                    cfg <- loadConfig
+                    result <-
+                        callOpenAIEmbeddingsWith
+                            ( \_ ->
+                                ioError
+                                    ( userError
+                                        ( "Authorization: Bearer sk-live-secret "
+                                            <> "api_key=sk-query-secret "
+                                            <> "{\"access_token\":\"token-secret\","
+                                            <> "\"client_secret\":\"client-secret\"} "
+                                            <> "X-Api-Key: sk-header-secret"
+                                        )
+                                    )
+                            )
+                            cfg
+                            ["consulta"]
+                    case result of
+                        Left err -> do
+                            err `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+                            err `shouldSatisfy` Data.Text.isInfixOf "api_key=[redacted]"
+                            err `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+                            err `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+                            err `shouldSatisfy` Data.Text.isInfixOf "X-Api-Key: [redacted]"
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-live-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-query-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "token-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "client-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-header-secret")
+                        Right value ->
+                            expectationFailure
+                                ("Expected redacted request exception, got " <> show value)
 
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do
