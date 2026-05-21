@@ -526,6 +526,11 @@ googleIdTokenInputSpec = describe "validateGoogleIdTokenInput" $ do
               expectationFailure
                 ("Expected invalid Google idToken to be rejected, got " <> show value)
     assertRejected "Google idToken is required" "   "
+    assertRejected "Google idToken must not contain whitespace" "\theader.payload.signature"
+    assertRejected "Google idToken must not contain whitespace" "header.payload.signature\n"
+    assertRejected
+      "Google idToken must not contain whitespace"
+      (T.singleton (chr 0x00A0) <> "header.payload.signature")
     assertRejected "Google idToken must not contain whitespace" "header.payload signature"
     assertRejected
       "Google idToken must not contain control characters"

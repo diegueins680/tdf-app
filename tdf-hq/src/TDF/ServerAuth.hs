@@ -830,7 +830,7 @@ validateGoogleIdTokenInput rawToken
   | otherwise =
       Right token
   where
-    token = T.strip rawToken
+    token = stripOuterAsciiSpaces rawToken
 
 maxGoogleIdTokenChars :: Int
 maxGoogleIdTokenChars = 4096
@@ -858,6 +858,10 @@ validGoogleIdTokenSegmentChar ch =
     || isDigit ch
     || ch == '-'
     || ch == '_'
+
+stripOuterAsciiSpaces :: Text -> Text
+stripOuterAsciiSpaces =
+  T.dropAround (== ' ')
 
 validateLoginRequest :: LoginRequest -> Either ServerError LoginRequest
 validateLoginRequest (LoginRequest rawUsername rawPassword)
