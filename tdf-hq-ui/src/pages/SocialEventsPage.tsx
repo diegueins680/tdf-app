@@ -45,6 +45,7 @@ import { ContractsAPI } from '../api/contracts';
 import { useSession } from '../session/SessionContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
 import {
+  getSocialEventCardActionUiState,
   getSocialEventsCreateUiState,
   getSocialEventsFinanceSummaryUiState,
   getSocialEventsOverviewUiState,
@@ -1434,6 +1435,11 @@ export default function SocialEventsPage() {
               String(ev.eventOrganizerPartyId) === sessionPartyId;
             const invitationForMe = invitationQueries[index]?.data?.[0] ?? null;
             const tiers = ticketTierQueries[index]?.data ?? [];
+            const eventCardActionUiState = getSocialEventCardActionUiState({
+              hasSession,
+              isOrganizer,
+              ticketTierCount: tiers.length,
+            });
             const orders = ticketOrderQueries[index]?.data ?? [];
             const budgetLines = budgetLineQueries[index]?.data ?? [];
             const financeEntries = financeEntryQueries[index]?.data ?? [];
@@ -1591,7 +1597,7 @@ export default function SocialEventsPage() {
                       </Stack>
                     )}
 
-                    {invitationForMe?.invitationStatus && (
+                    {eventCardActionUiState.showRsvpActions && invitationForMe?.invitationStatus && (
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                         <Chip label={`Invitación: ${invitationForMe.invitationStatus}`} size="small" color="secondary" sx={{ width: 'fit-content' }} />
                         {invitationForMe.invitationId && eventId && (
@@ -1617,170 +1623,186 @@ export default function SocialEventsPage() {
                       </Stack>
                     )}
 
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<CheckIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Accepted' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        Asistiré
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<HelpOutlineIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Maybe' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        Tal vez
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        startIcon={<ClearIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Declined' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        No puedo
-                      </Button>
-                    </Stack>
-
-                    <Divider />
-
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>Invitar</Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <TextField
-                          label="Party ID"
-                          size="small"
-                          value={inviteDraft.partyId}
-                          onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, partyId: e.target.value } }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <TextField
-                          label="Mensaje (opcional)"
-                          size="small"
-                          value={inviteDraft.message}
-                          onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, message: e.target.value } }))}
-                          sx={{ flex: 2 }}
-                        />
+                    {eventCardActionUiState.showRsvpActions && (
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
                         <Button
                           variant="contained"
                           size="small"
-                          startIcon={<PersonAddAltIcon />}
-                          onClick={() => eventId && inviteMutation.mutate({ eventId })}
-                          disabled={inviteMutation.isPending || !hasSession || !eventId}
+                          startIcon={<CheckIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Accepted' })}
+                          disabled={rsvpMutation.isPending || !eventId}
                         >
-                          Enviar
+                          Asistiré
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<HelpOutlineIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Maybe' })}
+                          disabled={rsvpMutation.isPending || !eventId}
+                        >
+                          Tal vez
+                        </Button>
+                        <Button
+                          variant="text"
+                          size="small"
+                          startIcon={<ClearIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Declined' })}
+                          disabled={rsvpMutation.isPending || !eventId}
+                        >
+                          No puedo
                         </Button>
                       </Stack>
-                    </Stack>
+                    )}
 
-                    <Divider />
+                    {eventCardActionUiState.showInviteForm && (
+                      <>
+                        <Divider />
 
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>Tickets</Typography>
-                      {ticketTierQueries[index]?.error ? (
-                        <Alert severity="warning">No se pudieron cargar los tipos de ticket.</Alert>
-                      ) : tiers.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary">Aún no hay tipos de ticket para este evento.</Typography>
-                      ) : (
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          {tiers.map((tier) => (
-                            <Chip
-                              key={tier.ticketTierId ?? tier.ticketTierCode}
-                              icon={<ConfirmationNumberIcon />}
-                              label={`${tier.ticketTierName} · ${formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)} · Disp: ${tierAvailability(tier)}`}
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>Invitar</Typography>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <TextField
+                              label="Party ID"
                               size="small"
-                              variant={tier.ticketTierActive ? 'filled' : 'outlined'}
+                              value={inviteDraft.partyId}
+                              onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, partyId: e.target.value } }))}
+                              sx={{ flex: 1 }}
                             />
-                          ))}
-                        </Stack>
-                      )}
-
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <TextField
-                          select
-                          label="Tipo"
-                          size="small"
-                          value={purchaseDraft.tierId}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, tierId: e.target.value },
-                          }))}
-                          sx={{ minWidth: 180 }}
-                        >
-                          {tiers.map((tier) => (
-                            <MenuItem
-                              key={tier.ticketTierId ?? tier.ticketTierCode}
-                              value={tier.ticketTierId ?? ''}
-                              disabled={!tier.ticketTierActive || tierAvailability(tier) <= 0}
+                            <TextField
+                              label="Mensaje (opcional)"
+                              size="small"
+                              value={inviteDraft.message}
+                              onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, message: e.target.value } }))}
+                              sx={{ flex: 2 }}
+                            />
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<PersonAddAltIcon />}
+                              onClick={() => eventId && inviteMutation.mutate({ eventId })}
+                              disabled={inviteMutation.isPending || !eventId}
                             >
-                              {tier.ticketTierName} ({formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)})
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                        <TextField
-                          label="Cantidad"
-                          size="small"
-                          type="number"
-                          value={purchaseDraft.quantity}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, quantity: e.target.value },
-                          }))}
-                          sx={{ width: 110 }}
-                        />
-                        <TextField
-                          label="Nombre comprador"
-                          size="small"
-                          value={purchaseDraft.buyerName}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, buyerName: e.target.value },
-                          }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <TextField
-                          label="Email comprador"
-                          size="small"
-                          value={purchaseDraft.buyerEmail}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, buyerEmail: e.target.value },
-                          }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<SellIcon />}
-                          onClick={() => eventId && purchaseTicketsMutation.mutate({ eventId, fallbackTierId: tiers[0]?.ticketTierId ?? undefined })}
-                          disabled={purchaseTicketsMutation.isPending || !hasSession || !eventId || tiers.length === 0}
-                        >
-                          Comprar
-                        </Button>
-                      </Stack>
-                    </Stack>
+                              Enviar
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </>
+                    )}
 
-                    <Divider />
+                    {eventCardActionUiState.showTicketSection && (
+                      <>
+                        <Divider />
 
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {isOrganizer ? 'Órdenes del evento' : 'Mis órdenes'}
-                      </Typography>
-                      {ticketOrderQueries[index]?.isLoading ? (
-                        <Typography variant="body2" color="text.secondary">Cargando órdenes...</Typography>
-                      ) : ticketOrderQueries[index]?.error ? (
-                        <Alert severity="warning">No se pudieron cargar las órdenes de tickets.</Alert>
-                      ) : (
-                        renderOrders(orders, eventId, isOrganizer)
-                      )}
-                    </Stack>
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>Tickets</Typography>
+                          {ticketTierQueries[index]?.error ? (
+                            <Alert severity="warning">No se pudieron cargar los tipos de ticket.</Alert>
+                          ) : tiers.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">Aún no hay tipos de ticket para este evento.</Typography>
+                          ) : (
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {tiers.map((tier) => (
+                                <Chip
+                                  key={tier.ticketTierId ?? tier.ticketTierCode}
+                                  icon={<ConfirmationNumberIcon />}
+                                  label={`${tier.ticketTierName} · ${formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)} · Disp: ${tierAvailability(tier)}`}
+                                  size="small"
+                                  variant={tier.ticketTierActive ? 'filled' : 'outlined'}
+                                />
+                              ))}
+                            </Stack>
+                          )}
 
-                    {isOrganizer && (
+                          {eventCardActionUiState.showTicketPurchaseForm && (
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                select
+                                label="Tipo"
+                                size="small"
+                                value={purchaseDraft.tierId}
+                                onChange={(e) => setTicketPurchases((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...purchaseDraft, tierId: e.target.value },
+                                }))}
+                                sx={{ minWidth: 180 }}
+                              >
+                                {tiers.map((tier) => (
+                                  <MenuItem
+                                    key={tier.ticketTierId ?? tier.ticketTierCode}
+                                    value={tier.ticketTierId ?? ''}
+                                    disabled={!tier.ticketTierActive || tierAvailability(tier) <= 0}
+                                  >
+                                    {tier.ticketTierName} ({formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)})
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                              <TextField
+                                label="Cantidad"
+                                size="small"
+                                type="number"
+                                value={purchaseDraft.quantity}
+                                onChange={(e) => setTicketPurchases((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...purchaseDraft, quantity: e.target.value },
+                                }))}
+                                sx={{ width: 110 }}
+                              />
+                              <TextField
+                                label="Nombre comprador"
+                                size="small"
+                                value={purchaseDraft.buyerName}
+                                onChange={(e) => setTicketPurchases((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...purchaseDraft, buyerName: e.target.value },
+                                }))}
+                                sx={{ flex: 1 }}
+                              />
+                              <TextField
+                                label="Email comprador"
+                                size="small"
+                                value={purchaseDraft.buyerEmail}
+                                onChange={(e) => setTicketPurchases((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...purchaseDraft, buyerEmail: e.target.value },
+                                }))}
+                                sx={{ flex: 1 }}
+                              />
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<SellIcon />}
+                                onClick={() => eventId && purchaseTicketsMutation.mutate({ eventId, fallbackTierId: tiers[0]?.ticketTierId ?? undefined })}
+                                disabled={purchaseTicketsMutation.isPending || !eventId || tiers.length === 0}
+                              >
+                                Comprar
+                              </Button>
+                            </Stack>
+                          )}
+                        </Stack>
+                      </>
+                    )}
+
+                    {eventCardActionUiState.showTicketOrders && (
+                      <>
+                        <Divider />
+
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {isOrganizer ? 'Órdenes del evento' : 'Mis órdenes'}
+                          </Typography>
+                          {ticketOrderQueries[index]?.isLoading ? (
+                            <Typography variant="body2" color="text.secondary">Cargando órdenes...</Typography>
+                          ) : ticketOrderQueries[index]?.error ? (
+                            <Alert severity="warning">No se pudieron cargar las órdenes de tickets.</Alert>
+                          ) : (
+                            renderOrders(orders, eventId, isOrganizer)
+                          )}
+                        </Stack>
+                      </>
+                    )}
+
+                    {eventCardActionUiState.showOrganizerTools && (
                       <>
                         <Divider />
                         <Stack spacing={1}>

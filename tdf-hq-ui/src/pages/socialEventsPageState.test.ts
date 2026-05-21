@@ -1,4 +1,5 @@
 import {
+  getSocialEventCardActionUiState,
   getSocialEventsCreateUiState,
   getSocialEventsFinanceSummaryUiState,
   getSocialEventsOverviewUiState,
@@ -101,6 +102,46 @@ describe('getSocialEventsCreateUiState', () => {
         'Completa solo los campos necesarios para registrar otro evento. La lista actual se mantiene debajo.',
       showCreateForm: false,
       showCreateToolbarAction: false,
+    });
+  });
+});
+
+describe('getSocialEventCardActionUiState', () => {
+  it('keeps signed-out event cards to readable event and ticket summary only', () => {
+    expect(getSocialEventCardActionUiState({
+      hasSession: false,
+      isOrganizer: false,
+      ticketTierCount: 2,
+    })).toEqual({
+      showInviteForm: false,
+      showOrganizerTools: false,
+      showRsvpActions: false,
+      showTicketOrders: false,
+      showTicketPurchaseForm: false,
+      showTicketSection: true,
+    });
+  });
+
+  it('hides empty ticket chrome when signed-out cards have no ticket tiers', () => {
+    expect(getSocialEventCardActionUiState({
+      hasSession: false,
+      isOrganizer: false,
+      ticketTierCount: 0,
+    }).showTicketSection).toBe(false);
+  });
+
+  it('removes attendee RSVP actions from organizer cards while preserving organizer tools', () => {
+    expect(getSocialEventCardActionUiState({
+      hasSession: true,
+      isOrganizer: true,
+      ticketTierCount: 0,
+    })).toEqual({
+      showInviteForm: true,
+      showOrganizerTools: true,
+      showRsvpActions: false,
+      showTicketOrders: true,
+      showTicketPurchaseForm: true,
+      showTicketSection: true,
     });
   });
 });

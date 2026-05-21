@@ -24,6 +24,21 @@ interface SocialEventsCreateUiState {
   showCreateToolbarAction: boolean;
 }
 
+interface SocialEventCardActionUiStateInput {
+  hasSession: boolean;
+  isOrganizer: boolean;
+  ticketTierCount: number;
+}
+
+interface SocialEventCardActionUiState {
+  showInviteForm: boolean;
+  showOrganizerTools: boolean;
+  showRsvpActions: boolean;
+  showTicketOrders: boolean;
+  showTicketPurchaseForm: boolean;
+  showTicketSection: boolean;
+}
+
 interface SocialEventsFinanceSummaryValues {
   efsActualIncomeCents: number;
   efsActualExpenseCents: number;
@@ -111,6 +126,23 @@ export function getSocialEventsCreateUiState({
       : FOLLOW_UP_EVENT_CREATE_DESCRIPTION,
     showCreateForm: canCreateEvent && (isFirstRun || createFormOpen),
     showCreateToolbarAction: canCreateEvent && !isFirstRun && !createFormOpen,
+  };
+}
+
+export function getSocialEventCardActionUiState({
+  hasSession,
+  isOrganizer,
+  ticketTierCount,
+}: SocialEventCardActionUiStateInput): SocialEventCardActionUiState {
+  const showTicketPurchaseForm = hasSession;
+
+  return {
+    showInviteForm: hasSession,
+    showOrganizerTools: hasSession && isOrganizer,
+    showRsvpActions: hasSession && !isOrganizer,
+    showTicketOrders: hasSession,
+    showTicketPurchaseForm,
+    showTicketSection: ticketTierCount > 0 || showTicketPurchaseForm,
   };
 }
 
