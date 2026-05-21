@@ -13675,6 +13675,67 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats short-link and redirect source wrappers as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'bitly_link',
+      'tinyurl_short_link',
+      'short_url',
+      'tracking_url',
+      'redirect_link',
+      'enlace_corto',
+      'url_de_seguimiento',
+      'enlace_de_redireccion',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Bitly link',
+      'Tinyurl short link',
+      'Short URL',
+      'Tracking URL',
+      'Redirect link',
+      'Enlace corto',
+      'URL de seguimiento',
+      'Enlace de redireccion',
+    ];
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'redirect link');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "redirect link" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats manual admin source wrappers as default list plumbing in busy lists', async () => {
     const defaultSources = [
       'manual_registration',
