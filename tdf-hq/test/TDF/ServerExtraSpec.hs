@@ -6084,6 +6084,25 @@ spec = do
         (validateMetaWebhookChannel MetaFacebook (A.object ["object" .= ("instagram" :: Text)]))
 
   describe "validateMetaInboundPayload" $ do
+    it "rejects missing or empty Meta webhook entry arrays instead of accepting no-op payloads" $ do
+      let assertInvalid payload =
+            case validateMetaInboundPayload payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+                BL8.unpack (errBody err) `shouldContain` "entry"
+              Right events ->
+                expectationFailure
+                  ("Expected malformed Meta webhook payload to fail, got " <> show events)
+
+      assertInvalid (A.object ["object" .= ("instagram" :: Text)])
+      assertInvalid
+        ( A.object
+            [ "object" .= ("instagram" :: Text)
+            , "entry" .= ([] :: [A.Value])
+            ]
+        )
+
     it "rejects malformed Meta webhook fields instead of treating them as an empty inbox batch" $ do
       let payload =
             A.object

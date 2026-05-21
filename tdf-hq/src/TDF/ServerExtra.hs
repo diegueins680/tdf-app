@@ -3598,7 +3598,9 @@ data IGChangeActor = IGChangeActor
 
 instance A.FromJSON IGWebhook where
   parseJSON = withObject "IGWebhook" $ \o -> do
-    igEntries <- o .:? "entry" .!= []
+    igEntries <- o .: "entry"
+    when (null igEntries) $
+      fail "entry must contain at least one item"
     pure IGWebhook{..}
 
 instance A.FromJSON IGEntry where
