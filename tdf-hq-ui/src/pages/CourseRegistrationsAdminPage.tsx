@@ -1612,6 +1612,16 @@ const firstRunSafetyInfoDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunSupportRequestDescriptorPattern = String.raw`(?:(?:(?:student|course|class)\s+)?(?:support|help\s*desk|helpdesk|help|assistance)\s+(?:(?:requests?|tickets?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:(?:requests?|tickets?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:(?:student|course|class)\s+)?(?:support|help\s*desk|helpdesk|help|assistance)|(?:(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|tickets?)\s+(?:de|para)\s+(?:soporte|ayuda|mesa\s+de\s+ayuda|asistencia)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)|(?:(?:soporte|ayuda|mesa\s+de\s+ayuda|asistencia)\s+(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|tickets?)))`;
+const firstRunSupportRequestDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSupportRequestDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunSupportRequestDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSupportRequestDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunSignupSheetDescriptorPrefixPattern =
   /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2245,6 +2255,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
+    .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
     .replace(firstRunRosterDescriptorPrefixPattern, '')
     .replace(firstRunAttendanceDescriptorPrefixPattern, '')
@@ -2381,6 +2392,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
+    .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
     .replace(firstRunRosterDescriptorSuffixPattern, '')
     .replace(firstRunAttendanceDescriptorSuffixPattern, '')

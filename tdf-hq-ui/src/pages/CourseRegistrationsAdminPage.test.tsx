@@ -23687,6 +23687,39 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips support-request wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Support request form - Beatmaking 101',
+      'Beatmaking 101 - helpdesk ticket portal',
+      'Formulario de soporte - Beatmaking 101',
+      'Beatmaking 101 - solicitud de ayuda',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/support request|helpdesk|ticket portal|formulario de soporte|solicitud de ayuda/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('strips file-storage folder wrappers from first-run cohort copy', async () => {
     const titles = [
       'Google Drive folder - Beatmaking 101',
