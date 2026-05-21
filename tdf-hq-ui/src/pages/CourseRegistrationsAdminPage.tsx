@@ -2045,6 +2045,10 @@ const firstRunSchedulingProviderStandalonePrefixPattern = new RegExp(
   String.raw`^(?:${firstRunSchedulingProviderPattern})\s*(?:[-:/|]\s*)`,
   'i',
 );
+const firstRunSchedulingProviderStandaloneSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSchedulingProviderPattern})\s*$`,
+  'i',
+);
 const firstRunSchedulingProviderLinkDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunSchedulingProviderLinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
   'i',
@@ -2382,6 +2386,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
     .replace(firstRunScheduleDescriptorSuffixPattern, '')
     .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
+    .replace(firstRunSchedulingProviderStandaloneSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
     .replace(firstRunAdminWorkflowDescriptorSuffixPattern, '')

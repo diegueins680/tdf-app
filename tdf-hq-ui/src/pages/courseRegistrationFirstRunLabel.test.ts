@@ -77,6 +77,25 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips standalone scheduling providers attached to first-run cohort labels', () => {
+    const titles = [
+      'Beatmaking 101 - Calendly',
+      'Beatmaking 101 | Cal.com',
+      'Beatmaking 101 / Google Calendar',
+      'Beatmaking 101: Microsoft Bookings',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate scheduling-provider course titles when they are not wrappers', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'booking-tools-for-musicians', ccTitle: 'Calendly for Musicians' }),
+    ).toBe('Calendly for Musicians');
+  });
+
   it('strips course-change request wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'Course cancellation request - Beatmaking 101',
