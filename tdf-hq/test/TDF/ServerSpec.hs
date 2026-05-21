@@ -6813,6 +6813,14 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     "https://drive.google.com/uc?export=download&id=file-123"
 
+            resolveDrivePublicUrl
+                "file-123"
+                (Just "https://drive.google.com/uc?%69d=evil&id=file-123")
+                (Just "rk-123")
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=file-123&resourcekey=rk-123"
+
     describe "validateDriveTokenExchangeRequest" $ do
         it "normalizes valid Drive OAuth exchange fields before contacting Google" $ do
             let cfg =

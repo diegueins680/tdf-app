@@ -201,7 +201,7 @@ import           TDF.WhatsApp.History ( IncomingWhatsAppRecord(..)
 import           TDF.WhatsApp.Transport (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
 import           TDF.RagStore        (retrieveRagContext)
 import           Network.HTTP.Client (Manager, RequestBody(..), Response, httpLbs, parseRequest, Request(..), responseBody, responseStatus)
-import           Network.HTTP.Types.URI (urlEncode, renderQuery, renderSimpleQuery)
+import           Network.HTTP.Types.URI (urlDecode, urlEncode, renderQuery, renderSimpleQuery)
 import           Network.HTTP.Types.Status (statusCode)
 import           System.Environment (lookupEnv)
 import qualified TDF.CMS.Models as CMS
@@ -14137,7 +14137,13 @@ dropNamedQueryParam paramName url =
 isNamedQueryParam :: Text -> Text -> Bool
 isNamedQueryParam paramName rawParam =
   let rawName = fst (T.breakOn "=" rawParam)
-  in T.toLower rawName == T.toLower paramName
+      expectedName = T.toLower paramName
+  in T.toLower rawName == expectedName
+      || T.toLower (decodeQueryParamName rawName) == expectedName
+
+decodeQueryParamName :: Text -> Text
+decodeQueryParamName =
+  TE.decodeUtf8With TEE.lenientDecode . urlDecode True . TE.encodeUtf8
 
 appendQueryParam :: Text -> Text -> Text -> Text
 appendQueryParam paramName paramValue url =
