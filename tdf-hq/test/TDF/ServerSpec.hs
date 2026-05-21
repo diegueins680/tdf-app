@@ -418,6 +418,7 @@ import TDF.ServerFuture
     , canonicalFutureStubMetadata
     , deriveFutureStubAreas
     , futureStubId
+    , futureStubMethod
     , futureStubResponseFor
     , futureStubRequiredModule
     , futureStubRequiredRoles
@@ -432,6 +433,7 @@ import TDF.ServerFuture
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleCardIds
     , validateFutureAdminConsoleCardWithIds
+    , validateFutureAdminConsoleMethod
     , validateFutureAdminConsolePublishedId
     , validateFutureAdminConsolePublishedPath
     , validateFutureAdminConsoleRequiredModule
@@ -457,8 +459,10 @@ import TDF.ServerFuture
     , validateFutureStubPublishedPath
     , validateFutureStubRequiredModule
     , validateFutureStubAuthMetadata
+    , validateFutureStubMethod
     , validateFutureStubResponse
     , validateAllowedFutureStubMetadata
+    , validateFutureMethodMetadataWith
     , futureStubResponseForWithConsole
     )
 import TDF.ServerFanClub
@@ -12996,6 +13000,37 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Admin" ["Admin", "Customer", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Customer", "Manager"]
+
+    describe "validateFutureStubMethod" $
+        it "pins fallback discovery method metadata to mounted GET routes" $ do
+            futureStubMethod `shouldBe` "GET"
+            validateFutureStubMethod "GET" `shouldBe` Right "GET"
+            validateFutureAdminConsoleMethod "GET" `shouldBe` Right "GET"
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid fallback discovery method metadata, got: "
+                                    <> show value
+                                )
+
+            assertInvalid
+                "Invalid future stub response"
+                (validateFutureStubMethod "POST")
+            assertInvalid
+                "Invalid future admin console metadata"
+                (validateFutureAdminConsoleMethod "POST")
+            assertInvalid
+                "Invalid future stub response"
+                (validateFutureMethodMetadataWith
+                    (Left err500 { errBody = "Invalid future stub response" })
+                    "POST"
+                    "POST")
 
     describe "validateFutureStubRequiredModule" $
         it "keeps fallback discovery module metadata pinned to canonical Admin" $ do

@@ -566,10 +566,11 @@ validateFutureStubResponse response =
   case validateFutureStubMetadata (stubArea response) (stubEndpoint response) of
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
-      | stubMethod response /= futureStubMethod -> invalidFutureStubResponse
       | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
+          method <-
+            validateFutureStubMethod (stubMethod response)
           requiredModule <-
             validateFutureStubRequiredModule (stubRequiredModule response)
           (requiredRole, requiredRoles) <-
@@ -583,7 +584,7 @@ validateFutureStubResponse response =
             , stubEndpoint = endpoint
             , stubId = responseId
             , stubPath = path
-            , stubMethod = futureStubMethod
+            , stubMethod = method
             , stubStatus = "planned"
             , stubRequiredRole = requiredRole
             , stubRequiredRoles = requiredRoles
@@ -761,6 +762,9 @@ futureStubId area endpoint =
 futureStubMethod :: Text
 futureStubMethod = "GET"
 
+canonicalFutureStubMethod :: Text
+canonicalFutureStubMethod = "GET"
+
 futureStubRequiredRole :: Text
 futureStubRequiredRole = roleToText Admin
 
@@ -797,6 +801,24 @@ validateFutureAdminConsoleAuthMetadata
   -> Either ServerError (Text, [Text])
 validateFutureAdminConsoleAuthMetadata =
   validateFutureAuthMetadataWith invalidFutureAdminConsoleMetadata
+
+validateFutureStubMethod :: Text -> Either ServerError Text
+validateFutureStubMethod =
+  validateFutureMethodMetadataWith invalidFutureStubResponse futureStubMethod
+
+validateFutureAdminConsoleMethod :: Text -> Either ServerError Text
+validateFutureAdminConsoleMethod =
+  validateFutureMethodMetadataWith invalidFutureAdminConsoleMetadata futureStubMethod
+
+validateFutureMethodMetadataWith
+  :: Either ServerError Text
+  -> Text
+  -> Text
+  -> Either ServerError Text
+validateFutureMethodMetadataWith invalid configuredMethod publishedMethod
+  | configuredMethod /= canonicalFutureStubMethod = invalid
+  | publishedMethod /= canonicalFutureStubMethod = invalid
+  | otherwise = Right publishedMethod
 
 validateFutureStubRequiredModule :: Text -> Either ServerError Text
 validateFutureStubRequiredModule =
@@ -888,10 +910,11 @@ validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminCo
 validateFutureAdminConsoleView view
   | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
-  | viewMethod view /= futureStubMethod = invalidFutureAdminConsoleMetadata
   | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      method <-
+        validateFutureAdminConsoleMethod (viewMethod view)
       requiredModule <-
         validateFutureAdminConsoleRequiredModule (viewRequiredModule view)
       (requiredRole, requiredRoles) <-
@@ -911,7 +934,7 @@ validateFutureAdminConsoleView view
           , viewEndpoint = "console"
           , viewId = viewIdVal
           , viewPath = path
-          , viewMethod = futureStubMethod
+          , viewMethod = method
           , viewStatus = "preview"
           , viewRequiredRole = requiredRole
           , viewRequiredRoles = requiredRoles
