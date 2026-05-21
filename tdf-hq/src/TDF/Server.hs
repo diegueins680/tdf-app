@@ -5991,28 +5991,65 @@ findExistingRegistration
   -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
 findExistingRegistration slugVal mEmail mPhone = do
   byEmail <- case mEmail of
-    Nothing -> pure Nothing
-    Just e  -> selectFirst
+    Nothing -> pure (Right Nothing)
+    Just e  -> selectUniqueCourseRegistrationByContact "email"
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationEmail ==. Just e
       ]
-      [Desc ME.CourseRegistrationCreatedAt]
   byPhone <- case mPhone of
-    Nothing -> pure Nothing
-    Just p -> selectFirst
+    Nothing -> pure (Right Nothing)
+    Just p -> selectUniqueCourseRegistrationByContact "phone"
       [ ME.CourseRegistrationCourseSlug ==. slugVal
       , ME.CourseRegistrationPhoneE164 ==. Just p
       ]
-      [Desc ME.CourseRegistrationCreatedAt]
-  pure $ case (byEmail, byPhone) of
-    (Just emailHit, Just phoneHit)
-      | entityKey emailHit /= entityKey phoneHit ->
-          Left err409
-            { errBody =
-                "email and phone match different course registrations"
-            }
-    _ ->
-      Right (byEmail <|> byPhone)
+  pure $ do
+    emailHit <- byEmail
+    phoneHit <- byPhone
+    case (emailHit, phoneHit) of
+      (Just emailRow, Just phoneRow)
+        | entityKey emailRow /= entityKey phoneRow ->
+            Left err409
+              { errBody =
+                  "email and phone match different course registrations"
+              }
+      _ ->
+        Right (emailHit <|> phoneHit)
+
+selectUniqueCourseRegistrationByContact
+  :: Text
+  -> [Filter ME.CourseRegistration]
+  -> SqlPersistT IO (Either ServerError (Maybe (Entity ME.CourseRegistration)))
+selectUniqueCourseRegistrationByContact contactLabel filters = do
+  matches <- selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo 2]
+  pure $ do
+    statuses <- traverse validateStoredCourseRegistrationStatus matches
+    case matches of
+      [] -> Right Nothing
+      [registration] -> Right (Just registration)
+      _ ->
+        Left err409
+          { errBody =
+              BL.fromStrict . TE.encodeUtf8 $
+                duplicateCourseRegistrationMessage contactLabel statuses
+          }
+
+validateStoredCourseRegistrationStatus
+  :: Entity ME.CourseRegistration
+  -> Either ServerError Text
+validateStoredCourseRegistrationStatus (Entity _ registration) =
+  case normalizeCourseRegistrationStatus (ME.courseRegistrationStatus registration) of
+    Just statusVal -> Right statusVal
+    Nothing ->
+      Left err500
+        { errBody = "Stored course registration status is invalid"
+        }
+
+duplicateCourseRegistrationMessage :: Text -> [Text] -> Text
+duplicateCourseRegistrationMessage contactLabel statuses
+  | not (null statuses) && all (== "pending_payment") statuses =
+      "Multiple pending course registrations match this " <> contactLabel
+  | otherwise =
+      "Multiple course registrations match this " <> contactLabel
 
 -- Health
 health :: AppM TDF.API.HealthStatus
