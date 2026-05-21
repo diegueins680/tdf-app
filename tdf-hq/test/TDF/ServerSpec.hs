@@ -11739,7 +11739,12 @@ spec = describe "TDF.Server helpers" $ do
 
         it "normalizes canonical media ids and public media links before cron storage" $
             case ( eitherDecode
-                    "{\"id\":\" ig-media-42 \",\"caption\":\"new post\",\"media_url\":\" https://cdn.example.com/post.jpg?sig=1 \",\"permalink\":\" https://www.instagram.com/p/post42/ \"}"
+                    ( BL8.concat
+                        [ "{\"id\":\" ig-media-42 \",\"caption\":\"  new post  \""
+                        , ",\"media_url\":\" https://cdn.example.com/post.jpg?sig=1 \""
+                        , ",\"permalink\":\" https://www.instagram.com/p/post42/ \"}"
+                        ]
+                    )
                     :: Either String InstagramMedia
                  ) of
                 Left err ->
@@ -11747,6 +11752,7 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected Instagram media response to decode, got: " <> err)
                 Right media -> do
                     imId media `shouldBe` "ig-media-42"
+                    imCaption media `shouldBe` Just "new post"
                     imMediaUrl media `shouldBe` Just "https://cdn.example.com/post.jpg?sig=1"
                     imPermalink media `shouldBe` Just "https://www.instagram.com/p/post42/"
 
@@ -11766,6 +11772,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "Instagram media id must not contain hidden formatting characters"
                 "{\"id\":\"ig-media\\u202e42\"}"
+            assertInvalid
+                "Instagram media caption must not contain unsupported control"
+                "{\"id\":\"ig-media-42\",\"caption\":\"new\\u0000post\"}"
+            assertInvalid
+                "Instagram media caption must be 8192 characters or fewer"
+                ( BL8.concat
+                    [ "{\"id\":\"ig-media-42\",\"caption\":\""
+                    , BL8.pack (replicate 8193 'a')
+                    , "\"}"
+                    ]
+                )
             assertInvalid
                 "media_url must be an absolute public https URL"
                 "{\"id\":\"ig-media-42\",\"media_url\":\"javascript:alert(1)\"}"

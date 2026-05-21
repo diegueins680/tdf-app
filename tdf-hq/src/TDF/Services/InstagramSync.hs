@@ -13,7 +13,12 @@ import           Control.Exception (try)
 import           Control.Monad (when)
 import           Data.Aeson (FromJSON(..), eitherDecode, withObject, (.:), (.:?))
 import           Data.Aeson.Types (Parser)
-import           Data.Char (GeneralCategory(Format), generalCategory, isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import qualified Data.Set as Set
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -45,7 +50,7 @@ data InstagramMedia = InstagramMedia
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o -> do
     imId <- validateInstagramMediaId =<< o .: "id"
-    imCaption <- o .:? "caption"
+    imCaption <- (o .:? "caption") >>= maybe (pure Nothing) validateInstagramMediaCaption
     imMediaUrl <- traverse (validateInstagramMediaUrl "media_url") =<< o .:? "media_url"
     imPermalink <- traverse (validateInstagramMediaUrl "permalink") =<< o .:? "permalink"
     tsTxt <- o .:? "timestamp"
@@ -68,6 +73,33 @@ validateInstagramMediaId rawMediaId
       pure mediaId
   where
     mediaId = T.strip rawMediaId
+
+validateInstagramMediaCaption :: Text -> Parser (Maybe Text)
+validateInstagramMediaCaption rawCaption
+  | T.null caption =
+      pure Nothing
+  | T.length caption > maxInstagramMediaCaptionChars =
+      fail
+        ( "Instagram media caption must be "
+            <> show maxInstagramMediaCaptionChars
+            <> " characters or fewer"
+        )
+  | T.any isUnsupportedInstagramMediaCaptionChar caption =
+      fail $
+        "Instagram media caption must not contain unsupported control "
+          <> "or hidden formatting characters"
+  | otherwise =
+      pure (Just caption)
+  where
+    caption = T.strip rawCaption
+
+maxInstagramMediaCaptionChars :: Int
+maxInstagramMediaCaptionChars = 8192
+
+isUnsupportedInstagramMediaCaptionChar :: Char -> Bool
+isUnsupportedInstagramMediaCaptionChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateInstagramMediaUrl :: Text -> Text -> Parser Text
 validateInstagramMediaUrl fieldName rawUrl
