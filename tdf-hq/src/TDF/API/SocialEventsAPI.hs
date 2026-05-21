@@ -244,6 +244,8 @@ validateImageUploadMetadata mName file
         ( "Uploaded image MIME type must not contain control characters "
             <> "or Unicode formatting marks, or non-ASCII spaces"
         )
+  | hasUploadContentTypeNameParameter (fdFileCType file) =
+      Left "Uploaded image MIME type must not include filename parameters"
   | otherwise =
       let uploadMimeType = normalizeUploadMimeType (fdFileCType file)
           requestedExt = maybe "" imageExtension mName
@@ -275,6 +277,16 @@ validateImageUploadMetadata mName file
 normalizeUploadMimeType :: Text -> Text
 normalizeUploadMimeType rawContentType =
   T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
+
+hasUploadContentTypeNameParameter :: Text -> Bool
+hasUploadContentTypeNameParameter contentType =
+  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+  where
+    isNameParameter rawParameter =
+      let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
+      in key `elem` ["name", "name*", "filename", "filename*"]
+           || "name*" `T.isPrefixOf` key
+           || "filename*" `T.isPrefixOf` key
 
 imageExtension :: Text -> Text
 imageExtension rawName =

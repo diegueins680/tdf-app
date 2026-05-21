@@ -8105,6 +8105,13 @@ main = hspec $ do
                         { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
                     ])
             assertInvalid
+                "Uploaded image MIME type must not include filename parameters"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png; filename=poster.html" }
+                    ])
+            assertInvalid
                 "Uploaded image file name must include a supported image extension"
                 (mkEventImageMultipart
                     []
