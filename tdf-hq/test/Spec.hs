@@ -4960,6 +4960,9 @@ main = hspec $ do
             assertInvalid ("tdf" <> "\x202E" <> "studio") "hidden formatting"
             assertInvalid "---" "at least one ASCII letter or digit"
             assertInvalid "tdf/studio" "only ASCII letters"
+            assertInvalid ".tdfstudio" "dots must be internal"
+            assertInvalid "tdfstudio." "dots must be internal"
+            assertInvalid "tdf..studio" "dots must be internal"
             assertInvalid (Data.Text.replicate 65 "a") "64 characters or fewer"
 
         it "rejects malformed Instagram media timestamps before OAuth media DTO fallback rendering" $ do

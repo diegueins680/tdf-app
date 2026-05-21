@@ -247,6 +247,8 @@ validateInstagramUsername rawUsername
       Left "Instagram username must contain at least one ASCII letter or digit"
   | not (T.all isInstagramUsernameChar username) =
       Left "Instagram username must contain only ASCII letters, digits, '.', or '_'"
+  | hasAmbiguousInstagramUsernameDots username =
+      Left "Instagram username dots must be internal and non-repeating"
   | otherwise =
       Right username
   where
@@ -266,6 +268,12 @@ isInstagramUsernameAtom ch =
 isInstagramUsernameChar :: Char -> Bool
 isInstagramUsernameChar ch =
   isInstagramUsernameAtom ch || ch == '.' || ch == '_'
+
+hasAmbiguousInstagramUsernameDots :: Text -> Bool
+hasAmbiguousInstagramUsernameDots username =
+  "." `T.isPrefixOf` username
+    || "." `T.isSuffixOf` username
+    || ".." `T.isInfixOf` username
 
 data InstagramMedia = InstagramMedia
   { imId        :: Text
