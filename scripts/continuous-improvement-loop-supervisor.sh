@@ -285,6 +285,12 @@ start_child() {
   if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
     mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
   fi
+  # Also rotate the .old backup if it exists and is oversized, to prevent unbounded disk growth
+  local old_log
+  old_log="$(ls -t "$LOG_FILE."*.old 2>/dev/null | head -n 1)"
+  if [ -n "$old_log" ] && [ "$(stat -f%z "$old_log" 2>/dev/null || stat -c%s "$old_log" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    rm -f "$old_log"
+  fi
   CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE="$STATUS_FILE" \
   CONTINUOUS_LOOP_LOG_FILE="$LOG_FILE" \
   CONTINUOUS_LOOP_PID_FILE="$PID_FILE" \
