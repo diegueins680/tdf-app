@@ -493,6 +493,11 @@ validateSocialSyncPermalink (Just rawUrl) =
                 BL.fromStrict
                   (TE.encodeUtf8 "permalink must be 2048 characters or fewer")
             }
+      | "#" `T.isInfixOf` url ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 "permalink must not contain URL fragments")
+            }
       | not (isValidSocialSyncHttpsUrl url) ->
           Left err400
             { errBody =
@@ -591,6 +596,12 @@ validateSocialSyncMediaUrls (Just rawUrls)
         { errBody =
             BL.fromStrict
               (TE.encodeUtf8 "mediaUrls entries must be 2048 characters or fewer")
+        }
+  | any ("#" `T.isInfixOf`) mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries must not contain URL fragments")
         }
   | any (not . isValidSocialSyncHttpsUrl) mediaUrls =
       Left err400

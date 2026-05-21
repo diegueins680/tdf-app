@@ -13794,6 +13794,29 @@ spec = describe "TDF.Server helpers" $ do
                     (Just ["http://cdn.example.com/post.jpg"])
                 )
 
+        it "rejects URL fragments before storing ambiguous social sync links" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected fragmented social sync URL to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertInvalid
+                "permalink must not contain URL fragments"
+                ( SocialSync.validateSocialSyncPermalink
+                    (Just "https://www.instagram.com/p/post42/#comments")
+                )
+            assertInvalid
+                "mediaUrls entries must not contain URL fragments"
+                ( SocialSync.validateSocialSyncMediaUrls
+                    (Just ["https://cdn.example.com/post.jpg#preview"])
+                )
+
         it "keeps social sync permalinks tied to the declared platform domain" $ do
             SocialSync.validateSocialSyncPermalinkForPlatform
                 "instagram"
