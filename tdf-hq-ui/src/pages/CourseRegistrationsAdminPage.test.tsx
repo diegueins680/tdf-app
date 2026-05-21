@@ -555,7 +555,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Aplicar filtros');
       expect(container.textContent).not.toContain(
@@ -1695,7 +1695,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Slug: beatmaking-101');
       expect(container.textContent).not.toContain('Fuente visible: landing.');
       expect(container.textContent).not.toContain('Fuente: landing');
@@ -1804,7 +1804,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(activeStatusSummary?.textContent).toContain('Pagado');
       expect(container.textContent).toContain('Formulario público visible: Beatmaking 101.');
       expect(container.textContent).not.toContain('Mostrando una sola cohorte: Beatmaking 101.');
-      expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(false);
+      expect(hasExactText(container, 'Curso: Beatmaking 101')).toBe(false);
       expect(getDossierTriggers(container)).toHaveLength(2);
     });
 
@@ -1845,7 +1845,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Vista filtrada: formulario Beatmaking 101 (beatmaking-101).');
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -2513,7 +2513,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps tiny default row context focused on cohort and source instead of repeated timestamps', async () => {
+  it('keeps tiny default row context focused on course and source instead of repeated timestamps', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -2536,12 +2536,13 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(
         container,
-        'Cohorte: Beatmaking 101',
+        'Curso: Beatmaking 101',
       )).toBe(true);
       expect(hasExactText(
         container,
-        'Cohorte: Mixing Bootcamp · Fuente: referral',
+        'Curso: Mixing Bootcamp · Fuente: referral',
       )).toBe(true);
+      expect(container.textContent).not.toContain('Cohorte:');
       expect(container.textContent).not.toContain('Fuente: landing');
       expect(container.textContent).not.toContain('Creado:');
     });
@@ -2572,11 +2573,11 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasExactText(
         container,
-        'Cohorte: Beatmaking 101 · Notas internas',
+        'Curso: Beatmaking 101 · Notas internas',
       )).toBe(true);
       expect(hasExactText(
         container,
-        'Cohorte: Mixing Bootcamp',
+        'Curso: Mixing Bootcamp',
       )).toBe(true);
       expect(container.textContent).not.toContain('Con notas');
       expect(container.textContent).not.toContain('Creado:');
@@ -2611,15 +2612,15 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
       expect(hasExactText(
         container,
-        'Cohorte: Beatmaking 101',
+        'Curso: Beatmaking 101',
       )).toBe(true);
       expect(hasExactText(
         container,
-        'Cohorte: Mixing Bootcamp',
+        'Curso: Mixing Bootcamp',
       )).toBe(true);
       expect(hasExactText(
         container,
-        'Cohorte: Beatmaking 101 · Notas internas',
+        'Curso: Beatmaking 101 · Notas internas',
       )).toBe(false);
       expect(container.textContent).not.toContain('Creado:');
     });
@@ -2770,7 +2771,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Usa Estado para cambiar la vista.');
       expect(container.textContent).not.toContain('Los filtros se aplican automáticamente al cambiar.');
       expect(container.textContent).not.toContain('Empieza por cohorte y estado.');
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101 (beatmaking-101)');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101 (beatmaking-101)');
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Formulario público visible: Beatmaking 101.');
     });
@@ -2795,7 +2796,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await secondRender.cleanup();
   });
 
-  it('keeps cohort context visible without exposing raw slugs when one configured cohort does not cover every loaded registration', async () => {
+  it('keeps course context visible without exposing raw slugs when one configured cohort does not cover every loaded registration', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration(),
       buildRegistration({
@@ -2815,9 +2816,9 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, cohortFilterLabel)).toBe(true);
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Cohorte única por ahora.');
-      expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(true);
-      expect(hasExactText(container, 'Cohorte: Legacy Workshop')).toBe(true);
-      expect(container.textContent).not.toContain('Cohorte: legacy-workshop');
+      expect(hasExactText(container, 'Curso: Beatmaking 101')).toBe(true);
+      expect(hasExactText(container, 'Curso: Legacy Workshop')).toBe(true);
+      expect(container.textContent).not.toContain('Curso: legacy-workshop');
       expect(container.textContent).not.toContain('Formulario público visible: Beatmaking 101.');
     });
 
@@ -3124,7 +3125,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain(
         'Vista única por ahora: una cohorte y un estado.',
       );
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
       expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace').textContent?.trim()).toBe('Pendiente de pago');
@@ -3150,7 +3151,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).not.toContain('Cohorte disponible');
       expect(container.textContent).not.toContain('Estado disponible');
-      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).toContain('Curso: Beatmaking 101');
       expect(container.querySelector('[data-testid="course-registration-page-intro"]')?.textContent?.trim()).toBe(
         paymentWorkflowDossierScopeHint,
       );
@@ -3563,7 +3564,7 @@ describe('CourseRegistrationsAdminPage', () => {
       )).toBe(1);
       expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram.');
       expect(container.textContent).not.toContain('Fuente: Instagram');
-      expect(container.textContent).not.toContain('Cohorte: Beatmaking 101');
+      expect(container.textContent).not.toContain('Curso: Beatmaking 101');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -3594,8 +3595,8 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Estado disponible');
       expect(container.textContent).toContain('Pendiente de pago · Fuente: Instagram');
-      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
-      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp');
+      expect(container.textContent).toContain('Curso: Beatmaking 101');
+      expect(container.textContent).toContain('Curso: Mixing Bootcamp');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
     });
@@ -3635,8 +3636,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(countOccurrences(container, 'Fuente visible: Instagram story.')).toBe(1);
       expect(container.textContent).not.toContain('Mostrando una sola fuente: Instagram story.');
       expect(container.textContent).not.toContain('Fuente: Instagram story');
-      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
-      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp');
+      expect(container.textContent).toContain('Curso: Beatmaking 101');
+      expect(container.textContent).toContain('Curso: Mixing Bootcamp');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
       expect(container.textContent).toContain('Katherine Johnson');
@@ -3669,8 +3670,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Pendiente de pago · Fuente: Instagram');
       expect(container.textContent).not.toContain('Fuente visible: instagram.');
       expect(container.textContent).not.toContain('Fuente visible: Instagram.');
-      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
-      expect(container.textContent).toContain('Cohorte: Mixing Bootcamp');
+      expect(container.textContent).toContain('Curso: Beatmaking 101');
+      expect(container.textContent).toContain('Curso: Mixing Bootcamp');
     });
 
     await cleanup();
@@ -3743,8 +3744,8 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasExactText(container, 'Cohorte: Beatmaking 101')).toBe(true);
-      expect(hasExactText(container, 'Cohorte: Mixing Bootcamp · Fuente: referral')).toBe(true);
+      expect(hasExactText(container, 'Curso: Beatmaking 101')).toBe(true);
+      expect(hasExactText(container, 'Curso: Mixing Bootcamp · Fuente: referral')).toBe(true);
       expect(container.textContent).not.toContain('Creado: -');
       expect(container.textContent).not.toContain('Fuente: Sin fuente');
     });
@@ -3801,7 +3802,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).toContain('Pendiente de pago · Fuente: referral');
       expect(container.textContent).toContain('Ada Lovelace');
       expect(container.textContent).toContain('Grace Hopper');
-      expect(container.textContent).not.toContain('Cohorte:');
+      expect(container.textContent).not.toContain('Curso:');
       expect(container.textContent).not.toContain('Sin cohorte');
     });
 
@@ -4175,8 +4176,8 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Mostrando una sola fuente: Meta ads.');
       expect(container.querySelector('[data-testid="course-registration-single-cohort-summary"]')).toBeNull();
       expect(countOccurrences(container, 'Fuente: Meta ads')).toBe(1);
-      expect(container.textContent).toContain('Cohorte: Beatmaking 101');
-      expect(container.textContent).toContain('Cohorte: Producción en vivo');
+      expect(container.textContent).toContain('Curso: Beatmaking 101');
+      expect(container.textContent).toContain('Curso: Producción en vivo');
     });
 
     await cleanup();
@@ -14505,7 +14506,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('button[aria-label="Cambiar estado para Nina Garcia"]')).toBeNull();
       expect(countButtonsByText(container, 'Cambiar estado')).toBe(0);
       expect(countButtonsByText(container, 'Pagado')).toBe(0);
-      expect(container.textContent).not.toContain('Cohorte: Mixing Bootcamp');
+      expect(container.textContent).not.toContain('Curso: Mixing Bootcamp');
       expect(container.textContent).not.toContain('Fuente: referral');
     });
 
@@ -14635,8 +14636,8 @@ describe('CourseRegistrationsAdminPage', () => {
       )).toBe(true);
       expect(countOccurrences(container, `Creado: ${sharedCreatedAtLabel}`)).toBe(0);
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
-      expect(hasExactText(container, 'Cohorte: Beatmaking 101 (beatmaking-101) · Notas internas')).toBe(false);
-      expect(hasExactText(container, 'Cohorte: Mixing Bootcamp (mixing-bootcamp) · Notas internas')).toBe(false);
+      expect(hasExactText(container, 'Curso: Beatmaking 101 (beatmaking-101) · Notas internas')).toBe(false);
+      expect(hasExactText(container, 'Curso: Mixing Bootcamp (mixing-bootcamp) · Notas internas')).toBe(false);
       expect(container.textContent).toContain('Nina Simone');
       expect(container.textContent).toContain('Nina Garcia');
       expect(listRegistrationsMock).toHaveBeenCalledTimes(1);

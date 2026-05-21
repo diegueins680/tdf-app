@@ -3992,7 +3992,7 @@ const registrationListContextSummary = ({
   const parts: string[] = [];
   const trimmedCohortLabel = cohortLabel.trim();
   const trimmedSource = source?.trim() ?? '';
-  if (showCohort && trimmedCohortLabel) parts.push(`Cohorte: ${trimmedCohortLabel}`);
+  if (showCohort && trimmedCohortLabel) parts.push(`Curso: ${trimmedCohortLabel}`);
   if (showSource && trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
