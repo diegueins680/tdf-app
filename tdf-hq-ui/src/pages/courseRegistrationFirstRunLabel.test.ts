@@ -131,6 +131,8 @@ describe('cohortFirstRunLabel', () => {
       'WhatsApp opt-in form - Beatmaking 101',
       'Beatmaking 101 - SMS opt-in page',
       'Formulario de opt-in de WhatsApp - Beatmaking 101',
+      'Pagina de autorizacion de WhatsApp - Beatmaking 101',
+      'Formulario de autorizacion via SMS para Beatmaking 101',
       'WhatsApp consent page for Beatmaking 101',
     ];
 

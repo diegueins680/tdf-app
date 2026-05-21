@@ -1705,7 +1705,7 @@ const firstRunInvitationDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunNotificationChannelPattern = String.raw`(?:sms|text\s+messages?|whats\s*app|wa\s*\.?\s*me|e-?mail|correo)`;
-const firstRunNotificationOptInDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?)(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))`;
+const firstRunNotificationOptInDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))`;
 const firstRunNotificationSignupDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)\s+(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)|(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)|(?:formulario|p[aá]gina|enlace|link|url|portal|suscripci[oó]n|registro)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+(?:para\s+)?)?(?:recordatorios?|notificaciones?|alertas?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:recordatorios?|notificaciones?|alertas?)\s+(?:del?\s+curso|de\s+curso)?\s*(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|suscripciones?|registros?)|${firstRunNotificationOptInDescriptorPattern})`;
 const firstRunNotificationSignupDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunNotificationSignupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2253,6 +2253,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
     .replace(firstRunBillingDescriptorPrefixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
     .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
@@ -2267,7 +2268,6 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunBetaPilotDescriptorPrefixPattern, '')
     .replace(firstRunInvitationDescriptorPrefixPattern, '')
-    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
     .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
@@ -2390,6 +2390,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
     .replace(firstRunBillingDescriptorSuffixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
     .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
@@ -2404,7 +2405,6 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunBetaPilotDescriptorSuffixPattern, '')
     .replace(firstRunInvitationDescriptorSuffixPattern, '')
-    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
     .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
