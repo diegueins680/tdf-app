@@ -20938,6 +20938,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - mailing list signup page',
       'Formulario de newsletter - Beatmaking 101',
       'Beatmaking 101 - suscripción al boletín',
+      'Formulario de suscripción al boletín - Beatmaking 101',
+      'Beatmaking 101 - registro para lista de correo',
     ];
 
     for (const title of titles) {
@@ -20953,7 +20955,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/newsletter|mailing list|bolet[ií]n/i);
+        expect(emptyState?.textContent).not.toMatch(/newsletter|mailing list|bolet[ií]n|lista de correo/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
