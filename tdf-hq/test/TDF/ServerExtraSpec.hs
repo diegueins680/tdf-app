@@ -6109,6 +6109,31 @@ spec = do
           expectationFailure
             ("Expected malformed Meta webhook payload to fail, got " <> show events)
 
+    it "rejects negative Meta webhook timestamps before fallback ids are built" $ do
+      let payload =
+            A.object
+              [ "object" .= ("instagram" :: Text)
+              , "entry" .=
+                  [ A.object
+                      [ "messaging" .=
+                          [ A.object
+                              [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                              , "timestamp" .= (-1 :: Int)
+                              , "message" .= A.object ["text" .= ("hola" :: Text)]
+                              ]
+                          ]
+                      ]
+                  ]
+              ]
+      case validateMetaInboundPayload payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+          BL8.unpack (errBody err) `shouldContain` "negative timestamp"
+        Right events ->
+          expectationFailure
+            ("Expected negative Meta webhook timestamp to fail, got " <> show events)
+
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do
       validateSocialReplySenderId "  17841400000000000  "

@@ -3673,13 +3673,17 @@ parseTimestampMaybe (Just raw) =
   case raw of
     A.Number n ->
       case Sci.toBoundedInteger n of
-        Just v -> pure (Just v)
+        Just v -> validateTimestampValue v
         Nothing -> fail "Invalid timestamp number"
     A.String txt ->
       case reads (T.unpack (T.strip txt)) of
-        [(v, "")] -> pure (Just v)
+        [(v, "")] -> validateTimestampValue v
         _ -> fail "Invalid timestamp text"
     _ -> fail "Invalid timestamp type"
+  where
+    validateTimestampValue v
+      | v < 0 = fail "Invalid negative timestamp"
+      | otherwise = pure (Just v)
 
 data IGInbound = IGInbound
   { igInboundExternalId :: Text
