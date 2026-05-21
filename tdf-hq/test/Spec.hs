@@ -4322,6 +4322,34 @@ main = hspec $ do
                                 <> show value
                             )
 
+        it "rejects malformed default SRI discovery candidates before filesystem fallback" $
+            forM_
+                [ ( "   "
+                  , "Default SRI invoice script discovery candidate must not be blank"
+                  )
+                , ( " scripts/generate-sri-invoice.mjs"
+                  , "Default SRI invoice script discovery candidate must not include leading or trailing whitespace"
+                  )
+                , ( "scripts/generate-sri-invoice.mjs\n"
+                  , "Default SRI invoice script discovery candidate must not contain control characters"
+                  )
+                , ( "scripts/generate" <> ['\x202E'] <> "-sri-invoice.mjs"
+                  , "Default SRI invoice script discovery candidate must not contain control characters or hidden formatting characters"
+                  )
+                ]
+                $ \(candidate, expected) -> do
+                    result <- Sri.discoverDefaultScriptPath [candidate]
+                    case result of
+                        Left err -> do
+                            Data.Text.unpack err `shouldContain` expected
+                            Data.Text.unpack err
+                                `shouldNotContain` "Could not find scripts/generate-sri-invoice.mjs"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed default SRI discovery candidate to fail, got: "
+                                    <> show value
+                                )
+
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
                 hClose handle

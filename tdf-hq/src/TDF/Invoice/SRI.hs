@@ -872,13 +872,32 @@ discoverDefaultScriptPath candidates = do
 
 validateDefaultScriptCandidate :: FilePath -> Either Text FilePath
 validateDefaultScriptCandidate scriptPath
+  | T.null trimmedText = Left blankDefaultScriptCandidateMessage
+  | T.any isInvalidVisibleTextChar rawText =
+      Left invalidDefaultScriptCandidateControlMessage
+  | rawText /= trimmedText = Left whitespaceDefaultScriptCandidateMessage
   | isNodeScriptPath scriptPath = Right scriptPath
   | otherwise = Left (invalidDefaultScriptMessage scriptPath)
+  where
+    rawText = T.pack scriptPath
+    trimmedText = T.strip rawText
 
 invalidDefaultScriptMessage :: FilePath -> Text
 invalidDefaultScriptMessage scriptPath =
   "Default SRI invoice script discovery candidate must point to a .mjs, .js, or .cjs Node script: "
     <> T.pack scriptPath
+
+blankDefaultScriptCandidateMessage :: Text
+blankDefaultScriptCandidateMessage =
+  "Default SRI invoice script discovery candidate must not be blank."
+
+invalidDefaultScriptCandidateControlMessage :: Text
+invalidDefaultScriptCandidateControlMessage =
+  "Default SRI invoice script discovery candidate must not contain control characters or hidden formatting characters."
+
+whitespaceDefaultScriptCandidateMessage :: Text
+whitespaceDefaultScriptCandidateMessage =
+  "Default SRI invoice script discovery candidate must not include leading or trailing whitespace."
 
 existingFiles :: [FilePath] -> IO [FilePath]
 existingFiles [] = pure []
