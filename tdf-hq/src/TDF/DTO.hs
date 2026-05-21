@@ -600,15 +600,25 @@ data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceReq where
   parseJSON raw = do
-    withObject "GenerateSessionInvoiceReq" rejectNullIssueSri raw
+    withObject "GenerateSessionInvoiceReq" rejectAmbiguousSessionInvoiceFallbacks raw
     genericParseJSON defaultOptions
       { fieldLabelModifier = dtoCamelDrop 3
       , rejectUnknownFields = True
       } raw
     where
-      rejectNullIssueSri obj =
-        case AesonKeyMap.lookup (AesonKey.fromText "issueSri") obj of
-          Just Null -> fail "issueSri must be omitted or set to true/false"
+      rejectAmbiguousSessionInvoiceFallbacks obj = do
+        rejectNullField
+          "customerId"
+          "customerId must be omitted instead of null to use the session client fallback"
+          obj
+        rejectNullField
+          "issueSri"
+          "issueSri must be omitted or set to true/false"
+          obj
+
+      rejectNullField fieldName message obj =
+        case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+          Just Null -> fail message
           _ -> pure ()
 
 data SriIssueBuyerDTO = SriIssueBuyerDTO

@@ -293,6 +293,41 @@ spec = do
                     expectationFailure
                         ("Expected null tidal-agent model to be rejected, got: " <> show value)
 
+    describe "GenerateSessionInvoiceReq FromJSON" $ do
+        it "keeps omitted customerId as the only session-client fallback signal" $ do
+            let payload =
+                    "{\"currency\":\"USD\",\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}],\"issueSri\":false}"
+            case decodeGenerateSessionInvoice payload of
+                Left err ->
+                    expectationFailure
+                        ("Expected session invoice payload without customerId to decode, got: " <> err)
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _) -> do
+                    customerIdVal `shouldBe` Nothing
+                    currencyVal `shouldBe` Just "USD"
+                    length lineItemsVal `shouldBe` 1
+                    issueSriVal `shouldBe` Just False
+
+            case decodeGenerateSessionInvoice
+                "{\"customerId\":42,\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}]}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected explicit session invoice customerId to decode, got: " <> err)
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _) ->
+                    customerIdVal `shouldBe` Just 42
+
+        it "rejects null customerId instead of silently using the session-client fallback" $
+            case decodeGenerateSessionInvoice
+                "{\"customerId\":null,\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}]}" of
+                Left err ->
+                    err
+                        `shouldContain`
+                            "customerId must be omitted instead of null to use the session client fallback"
+                Right value ->
+                    expectationFailure
+                        ( "Expected null session invoice customerId to be rejected, got: "
+                            <> show value
+                        )
+
     describe "social reply request FromJSON" $ do
         it "accepts canonical and legacy manual reply payloads" $ do
             case decodeInstagramReply
@@ -2752,6 +2787,8 @@ spec = do
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
     decodeTidalAgentRequest = eitherDecode
+    decodeGenerateSessionInvoice :: BL8.ByteString -> Either String DTO.GenerateSessionInvoiceReq
+    decodeGenerateSessionInvoice = eitherDecode
     tidalAgentRequestWithPrompt :: BL8.ByteString -> BL8.ByteString
     tidalAgentRequestWithPrompt rawPrompt =
         "{\"prompt\":\"" <> rawPrompt <> "\"}"
