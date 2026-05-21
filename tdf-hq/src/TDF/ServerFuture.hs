@@ -708,6 +708,18 @@ isReservedFutureStubCatalogResponseRoute :: StubResponse -> Bool
 isReservedFutureStubCatalogResponseRoute response =
   (stubArea response, stubEndpoint response) `elem` reservedFutureStubRoutes
     || stubArea response `elem` reservedFutureStubTopLevelAreas
+    || stubId response `elem` reservedFutureStubCatalogResponseIds
+    || stubPath response `elem` reservedFutureStubCatalogResponsePaths
+
+reservedFutureStubCatalogResponseIds :: [Text]
+reservedFutureStubCatalogResponseIds =
+  map (uncurry futureStubId) reservedFutureStubRoutes
+    <> reservedFutureStubTopLevelAreas
+
+reservedFutureStubCatalogResponsePaths :: [Text]
+reservedFutureStubCatalogResponsePaths =
+  map (uncurry futureStubPath) reservedFutureStubRoutes
+    <> map ("/stubs/" <>) reservedFutureStubTopLevelAreas
 
 futureStubResponseFor :: Text -> Text -> Either ServerError StubResponse
 futureStubResponseFor rawArea rawEndpoint = do

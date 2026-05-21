@@ -12622,6 +12622,14 @@ spec = describe "TDF.Server helpers" $ do
                     assertInvalidCatalog
                         (validResponses <> [firstResponse { stubMethod = "POST" }])
                     assertInvalidCatalog (remainingResponses <> [firstResponse])
+                    assertInvalidCatalog
+                        (firstResponse { stubId = "admin.console" } : remainingResponses)
+                    assertInvalidCatalog
+                        (firstResponse { stubPath = "/stubs/admin/console" } : remainingResponses)
+                    assertInvalidCatalog
+                        (firstResponse { stubId = "catalog" } : remainingResponses)
+                    assertInvalidCatalog
+                        (firstResponse { stubPath = "/stubs/catalog" } : remainingResponses)
                     assertInvalidCatalog (mkResponse "admin" "console" : remainingResponses)
                     assertInvalidCatalog (mkResponse "catalog" "index" : remainingResponses)
                 [] ->
