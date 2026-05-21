@@ -372,6 +372,18 @@ signupDisplayNameSpec = describe "validateSignupDisplayName" $ do
 
 signupGoogleIdTokenSpec :: Spec
 signupGoogleIdTokenSpec = describe "validateSignupGoogleIdToken" $ do
+  it "rejects explicit null signup Google tokens instead of falling back to password signup" $
+    let rawSignup =
+          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
+            <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
+            <> "\"googleIdToken\":null}"
+    in case A.eitherDecode rawSignup :: Either String SignupRequest of
+      Left err ->
+        err `shouldContain` "googleIdToken must be omitted instead of null"
+      Right value ->
+        expectationFailure
+          ("Expected null signup googleIdToken to be rejected, got " <> show value)
+
   it "rejects Google id tokens on password signup instead of silently ignoring them" $ do
     validateSignupGoogleIdToken Nothing `shouldBe` Right ()
     validateSignupGoogleIdToken (Just "   ") `shouldBe` Right ()

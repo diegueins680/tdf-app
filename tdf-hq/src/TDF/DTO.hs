@@ -768,7 +768,7 @@ instance FromJSON SignupRequest where
   parseJSON value = do
     rejectNullOptionalFields
       "SignupRequest"
-      ["roles", "fanArtistIds", "claimArtistId"]
+      ["googleIdToken", "roles", "fanArtistIds", "claimArtistId"]
       value
     genericParseJSON strictDecodeOptions value
 
