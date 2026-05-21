@@ -709,6 +709,12 @@ spec = do
                 Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
                     statusVal `shouldBe` "paid"
 
+            case decodeCourseRegistrationStatusUpdate "{\"status\":\" Pending Payment \"}" of
+                Left err ->
+                    expectationFailure ("Expected normalized course status update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
+                    statusVal `shouldBe` "pending_payment"
+
             case decodeCourseRegistrationNotesUpdate "{\"notes\":\"Follow up after bank transfer\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course notes update payload to decode, got: " <> err)
@@ -785,6 +791,10 @@ spec = do
             decodeCourseUpsert
                 "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"extra\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
+
+        it "rejects invalid course registration status updates before handler fallback validation" $ do
+            decodeCourseRegistrationStatusUpdate "{\"status\":\"   \"}" `shouldSatisfy` isLeft
+            decodeCourseRegistrationStatusUpdate "{\"status\":\"refunded\"}" `shouldSatisfy` isLeft
 
         it "rejects explicit null course upsert fields so fallback metadata stays unambiguous" $ do
             decodeCourseUpsert

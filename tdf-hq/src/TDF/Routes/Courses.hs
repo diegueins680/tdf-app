@@ -26,6 +26,7 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
+import           Data.Char (isAlphaNum)
 import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -129,8 +130,22 @@ data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationStatusUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload@(CourseRegistrationStatusUpdate rawStatus) <-
+      genericParseJSON strictObjectOptions value
+    case normalizeCourseRegistrationStatusInput rawStatus of
+      Just statusVal -> pure payload { status = statusVal }
+      Nothing -> fail "status must be one of: pending_payment, paid, cancelled"
 instance ToJSON CourseRegistrationStatusUpdate
+
+normalizeCourseRegistrationStatusInput :: Text -> Maybe Text
+normalizeCourseRegistrationStatusInput raw =
+  case T.toLower (T.filter isAlphaNum (T.strip raw)) of
+    "pendingpayment" -> Just "pending_payment"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    _ -> Nothing
 
 data CourseRegistrationNotesUpdate = CourseRegistrationNotesUpdate
   { notes :: Maybe Text
