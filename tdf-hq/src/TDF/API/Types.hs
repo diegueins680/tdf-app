@@ -1757,7 +1757,17 @@ data BandCreate = BandCreate
 
 instance ToJSON BandCreate
 instance FromJSON BandCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "BandCreate"
+      [ "bcLabelArtist"
+      , "bcPrimaryGenre"
+      , "bcHomeCity"
+      , "bcPhotoUrl"
+      , "bcContractFlags"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 
 data RadioStreamDTO = RadioStreamDTO
   { rsId            :: Int64

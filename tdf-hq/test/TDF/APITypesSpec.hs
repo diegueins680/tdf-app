@@ -1637,6 +1637,30 @@ spec = do
                     ])
                 "bmRole must be 80 characters or fewer"
 
+        it "rejects null band create defaults so omitted fields stay intentional" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeBandCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null band create default to be rejected, got: " <> show value)
+            assertNullRejected
+                "bcLabelArtist"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcLabelArtist\":null}"
+            assertNullRejected
+                "bcPrimaryGenre"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcPrimaryGenre\":null}"
+            assertNullRejected
+                "bcHomeCity"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcHomeCity\":null}"
+            assertNullRejected
+                "bcPhotoUrl"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcPhotoUrl\":null}"
+            assertNullRejected
+                "bcContractFlags"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcContractFlags\":null}"
+
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $
             case decodeMarketplaceCheckout
