@@ -2755,6 +2755,7 @@ const defaultPublicFormSourceKeys = new Set([
   'web form',
   'website form',
   'course website',
+  'course page',
   'public website',
   'course landing',
   'course landing page',

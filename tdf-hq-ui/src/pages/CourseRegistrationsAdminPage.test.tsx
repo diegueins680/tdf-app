@@ -11736,6 +11736,7 @@ describe('CourseRegistrationsAdminPage', () => {
       'web_form',
       'website-form',
       'course_website',
+      'course_page',
       'public-website',
       'landing_page',
       'course_landing_page',
@@ -11800,6 +11801,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Website');
       expect(container.textContent).not.toContain('Fuente: Web form');
       expect(container.textContent).not.toContain('Fuente: Course website');
+      expect(container.textContent).not.toContain('Fuente: Course page');
       expect(container.textContent).not.toContain('Fuente: Public website');
       expect(container.textContent).not.toContain('Fuente: Landing page');
       expect(container.textContent).not.toContain('Fuente: Course landing page');
@@ -11848,6 +11850,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Website.');
       expect(container.textContent).not.toContain('Fuente visible: Web form.');
       expect(container.textContent).not.toContain('Fuente visible: Course website.');
+      expect(container.textContent).not.toContain('Fuente visible: Course page.');
       expect(container.textContent).not.toContain('Fuente visible: Public website.');
       expect(container.textContent).not.toContain('Fuente visible: Landing page.');
       expect(container.textContent).not.toContain('Fuente visible: Course landing page.');
