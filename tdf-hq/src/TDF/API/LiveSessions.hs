@@ -10,6 +10,7 @@ module TDF.API.LiveSessions
   , LiveSessionIntakePayload(..)
   , LiveSessionMusicianPayload(..)
   , LiveSessionSongPayload(..)
+  , maxLiveSessionMusicians
   , resolveLiveSessionSetlistSortOrders
   ) where
 

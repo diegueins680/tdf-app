@@ -20,7 +20,7 @@ module TDF.ServerLiveSessions
   , validateLiveSessionTermsAcceptance
   ) where
 
-import           Control.Monad              (forM_, void, when)
+import           Control.Monad              ((>=>), forM_, void, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
@@ -36,6 +36,7 @@ import           Data.Char                  ( GeneralCategory
                                             , isControl
                                             )
 import           Data.Maybe                 (mapMaybe)
+import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
@@ -381,8 +382,43 @@ validateLiveSessionMusicianCount
   -> Either ServerError ()
 validateLiveSessionMusicianCount [] =
   Left err400 { errBody = "At least one musician is required for live-session intake" }
-validateLiveSessionMusicianCount _ =
-  Right ()
+validateLiveSessionMusicianCount musicians
+  | length musicians > maxLiveSessionMusicians =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "musicians must contain at most "
+                      <> T.pack (show maxLiveSessionMusicians)
+                      <> " entries"
+                  )
+              )
+        }
+  | any invalidPartyId musicians =
+      Left err400 { errBody = "musician partyId must be a positive integer" }
+  | hasDuplicates referencedPartyIds =
+      Left err400 { errBody = "referenced musician partyIds must be distinct" }
+  | hasDuplicates referencedEmails =
+      Left err400 { errBody = "musician emails must be distinct" }
+  | otherwise =
+      Right ()
+  where
+    invalidPartyId musician =
+      maybe False (<= 0) (lsmPartyId musician)
+
+    referencedPartyIds =
+      mapMaybe lsmPartyId musicians
+
+    referencedEmails =
+      mapMaybe (lsmEmail >=> normalizeAuthEmailAddress) musicians
+
+hasDuplicates :: Ord a => [a] -> Bool
+hasDuplicates = go Set.empty
+  where
+    go _ [] = False
+    go seen (value : rest)
+      | Set.member value seen = True
+      | otherwise = go (Set.insert value seen) rest
 
 validateLiveSessionOptionalEmail
   :: Text

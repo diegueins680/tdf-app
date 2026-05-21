@@ -12578,6 +12578,43 @@ main = hspec $ do
                     expectationFailure
                         ("Expected empty live-session musician list to fail, got " <> show value)
 
+        it "rejects oversized or ambiguous musician references before DB fallback lookup" $ do
+            let mkMusician partyId email =
+                    LiveSessionMusicianPayload
+                        { lsmPartyId = partyId
+                        , lsmName = "Keys"
+                        , lsmEmail = email
+                        , lsmInstrument = Nothing
+                        , lsmRole = Nothing
+                        , lsmNotes = Nothing
+                        , lsmIsExisting = maybe False (const True) partyId
+                        }
+                assertRejected expectedMessage musicians =
+                    case validateLiveSessionMusicianCount musicians of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session musician list, got "
+                                    <> show value
+                                )
+
+            assertRejected
+                "musicians must contain at most 50 entries"
+                (replicate 51 (mkMusician Nothing Nothing))
+            assertRejected
+                "musician partyId must be a positive integer"
+                [mkMusician (Just 0) Nothing]
+            assertRejected
+                "referenced musician partyIds must be distinct"
+                [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
+            assertRejected
+                "musician emails must be distinct"
+                [ mkMusician Nothing (Just " Player@Example.com ")
+                , mkMusician Nothing (Just "player@example.com")
+                ]
+
     describe "validateLiveSessionBandName" $ do
         it "trims live-session band names before intake persistence" $
             validateLiveSessionBandName "  The House Band  "
