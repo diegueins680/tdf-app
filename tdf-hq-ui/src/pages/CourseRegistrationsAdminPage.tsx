@@ -2268,8 +2268,9 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
     .replace(firstRunBillingDescriptorPrefixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
-    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
+    .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
     .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -2350,7 +2351,6 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunAssignmentSubmissionDescriptorPrefixPattern, '')
     .replace(firstRunCertificateArtifactDescriptorPrefixPattern, '')
     .replace(firstRunApplicationDescriptorPrefixPattern, '')
-    .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
     .replace(
       /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s|para\s+el|para)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso|para\s+el|para)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
       '',
@@ -2407,8 +2407,9 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
     .replace(firstRunBillingDescriptorSuffixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
-    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
+    .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
     .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
@@ -2472,7 +2473,6 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
     .replace(firstRunAuditionDescriptorSuffixPattern, '')
-    .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
     .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .replace(firstRunEnglishRegistrationNounSuffixPattern, '')
     .replace(firstRunWorkspaceBrandDescriptorSuffixPattern, '')
@@ -3699,6 +3699,60 @@ const formatHiddenLocalSearchFieldList = (fields: readonly HiddenLocalSearchFiel
   return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
 };
 
+const exactLocalSearchPhraseFragments = [
+  'sin correo ni telefono',
+  'sin telefono ni correo',
+  'sin telefono ni whatsapp',
+  'inscripciones visibles con contacto pendiente',
+  'inscripciones con contacto pendiente',
+  'contactos pendientes',
+  'contacto pendiente',
+  'correos pendientes',
+  'correo pendiente',
+  'emails pendientes',
+  'email pendiente',
+  'telefonos pendientes',
+  'telefono pendiente',
+  'sin contacto',
+  'sin correos',
+  'sin correo',
+  'sin emails',
+  'sin email',
+  'sin telefonos',
+  'sin telefono',
+].map((phrase) => normalizeLocalSearchText(phrase));
+
+const localSearchFragments = (localSearchKey: string) => {
+  const tokens = localSearchKey.split(' ').filter(Boolean);
+  if (tokens.length <= 1) return tokens;
+
+  const fragments: string[] = [];
+  let tokenIndex = 0;
+  while (tokenIndex < tokens.length) {
+    const matchedPhrase = exactLocalSearchPhraseFragments.find((phrase) => {
+      const phraseTokens = phrase.split(' ');
+      if (phraseTokens.length <= 1 || tokenIndex + phraseTokens.length > tokens.length) {
+        return false;
+      }
+
+      return phraseTokens.every((phraseToken, phraseTokenIndex) => (
+        tokens[tokenIndex + phraseTokenIndex] === phraseToken
+      ));
+    });
+
+    if (matchedPhrase) {
+      fragments.push(matchedPhrase);
+      tokenIndex += matchedPhrase.split(' ').length;
+      continue;
+    }
+
+    fragments.push(tokens[tokenIndex]!);
+    tokenIndex += 1;
+  }
+
+  return fragments;
+};
+
 const localSearchTextMatches = (value: string | null | undefined, localSearchKey: string) => {
   if (!localSearchKey) return false;
 
@@ -3709,8 +3763,18 @@ const localSearchTextMatches = (value: string | null | undefined, localSearchKey
   }
 
   const compactSearchKey = normalizeCompactLocalSearchText(localSearchKey);
-  return Boolean(compactSearchKey)
-    && normalizeCompactLocalSearchText(normalizedValue).includes(compactSearchKey);
+  const compactValue = normalizeCompactLocalSearchText(normalizedValue);
+  if (compactSearchKey && compactValue.includes(compactSearchKey)) return true;
+
+  const searchFragments = localSearchFragments(localSearchKey);
+  if (searchFragments.length <= 1) return false;
+
+  return searchFragments.every((fragment) => {
+    if (normalizedValue.includes(fragment)) return true;
+
+    const compactFragment = normalizeCompactLocalSearchText(fragment);
+    return Boolean(compactFragment) && compactValue.includes(compactFragment);
+  });
 };
 
 const registrationVisibleSearchText = (
