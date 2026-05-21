@@ -3153,6 +3153,36 @@ main = hspec $ do
                     "DATABASE_URL must not contain hidden formatting characters"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects percent-encoded whitespace or control bytes in DATABASE_URL fallbacks" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    ]
+                expectInvalid databaseUrl =
+                    withEnvOverrides (withoutKeywordDb databaseUrl)
+                        $ loadConfig `shouldThrow` \err ->
+                            ( "DATABASE_URL must not contain percent-encoded "
+                                <> "whitespace or control bytes"
+                            )
+                                `isInfixOf` show (err :: IOException)
+
+            expectInvalid "postgresql://flyuser:fly%0Apass@db.fly.internal:5432/tdf_hq"
+            expectInvalid (baseUrl <> "?application_name=tdf%20hq")
+            expectInvalid (baseUrl <> "?application_name=tdf%7Fhq")
+
         it "rejects DATABASE_URL fallback values with malformed ports before opening DB connections" $ do
             let expectInvalidPort raw expected =
                     withEnvOverrides

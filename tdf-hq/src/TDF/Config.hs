@@ -7,6 +7,7 @@ import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
   , generalCategory
   , isControl
+  , isHexDigit
   , isSpace
   , toLower
   )
@@ -138,6 +139,8 @@ validateFallbackConnUrl envName raw
           Left (envName <> " must not contain control characters")
       | T.any isHiddenConnectionUrlChar value =
           Left (envName <> " must not contain hidden formatting characters")
+      | hasPercentEncodedUnsafeConnectionUrlChar value =
+          Left (envName <> " must not contain percent-encoded whitespace or control bytes")
       | "#" `T.isInfixOf` value =
           Left (envName <> " must not include a fragment")
       | otherwise =
@@ -342,6 +345,31 @@ invalidConnectionSslModeMessage envName =
 isHiddenConnectionUrlChar :: Char -> Bool
 isHiddenConnectionUrlChar ch =
   generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+hasPercentEncodedUnsafeConnectionUrlChar :: Text -> Bool
+hasPercentEncodedUnsafeConnectionUrlChar value =
+  case T.uncons value of
+    Nothing -> False
+    Just ('%', rest) ->
+      case T.unpack (T.take 2 rest) of
+        [hi, lo] | isHexDigit hi && isHexDigit lo ->
+          isUnsafePercentDecodedConnectionByte (hexValue hi * 16 + hexValue lo)
+            || hasPercentEncodedUnsafeConnectionUrlChar (T.drop 2 rest)
+        _ ->
+          hasPercentEncodedUnsafeConnectionUrlChar rest
+    Just (_, rest) ->
+      hasPercentEncodedUnsafeConnectionUrlChar rest
+
+isUnsafePercentDecodedConnectionByte :: Int -> Bool
+isUnsafePercentDecodedConnectionByte byte =
+  byte <= 32 || byte == 127
+
+hexValue :: Char -> Int
+hexValue ch
+  | ch >= '0' && ch <= '9' = fromEnum ch - fromEnum '0'
+  | ch >= 'a' && ch <= 'f' = 10 + fromEnum ch - fromEnum 'a'
+  | ch >= 'A' && ch <= 'F' = 10 + fromEnum ch - fromEnum 'A'
+  | otherwise = 0
 
 isAsciiDigit :: Char -> Bool
 isAsciiDigit ch =

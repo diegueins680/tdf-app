@@ -10460,6 +10460,7 @@ instance FromJSON OpenAIChatMessage where
 data ChatCompletionReq = ChatCompletionReq
   { model :: Text
   , messages :: [OpenAIChatMessage]
+  , temperature :: Maybe Double
   } deriving (Show, Generic)
 
 instance ToJSON ChatCompletionReq where
@@ -10561,6 +10562,7 @@ requestOpenAIChat manager reqBase key modelName messages = do
   let body = encode ChatCompletionReq
         { model = modelName
         , messages = messages
+        , temperature = Just 1.0
         }
       req =
         reqBase
