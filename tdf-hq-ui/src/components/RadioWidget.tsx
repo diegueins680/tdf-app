@@ -51,6 +51,7 @@ import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Countries } from '../api/countries';
 import { toLocalDateInputValue } from '../utils/dateOnly';
+import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
 
 interface Prompt {
   text: string;
@@ -135,22 +136,6 @@ const RADIO_COUNTRIES = [
   'VE',
 ];
 
-const HIDDEN_RADIO_PATH_PREFIXES = [
-  '/login',
-  '/reservar',
-  '/dj-booth',
-  '/marketplace',
-  '/inscripcion',
-  '/whatsapp/consentimiento',
-  '/whatsapp/ok',
-];
-
-const RADIO_ON_DEMAND_PATH_PREFIXES = [
-  '/inicio',
-  '/fans',
-  '/records',
-];
-
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
     return (
@@ -214,13 +199,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const requestedRadioView = location.hash === '#radio';
-  const hideRadioForRoute =
-    HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
-    || (
-      RADIO_ON_DEMAND_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
-      && !requestedRadioView
-    );
+  const hideRadioForRoute = shouldHideRadioForRoute(location.pathname, location.hash);
   const radioEnabled = !hideRadioForRoute;
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
