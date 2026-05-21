@@ -107,6 +107,19 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips notification opt-in form wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'WhatsApp opt-in form - Beatmaking 101',
+      'Beatmaking 101 - SMS opt-in page',
+      'Formulario de opt-in de WhatsApp - Beatmaking 101',
+      'WhatsApp consent page for Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips admin workflow wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'Application review queue - Beatmaking 101',
@@ -127,6 +140,15 @@ describe('cohortFirstRunLabel', () => {
     expect(
       cohortFirstRunLabel({ ccSlug: 'notification-design', ccTitle: 'Notification Design for Creators' }),
     ).toBe('Notification Design for Creators');
+  });
+
+  it('keeps legitimate opt-in course titles when they are not form artifacts', () => {
+    expect(
+      cohortFirstRunLabel({
+        ccSlug: 'whatsapp-opt-in-strategy',
+        ccTitle: 'WhatsApp Opt-In Strategy for Artists',
+      }),
+    ).toBe('WhatsApp Opt-In Strategy for Artists');
   });
 
   it('keeps legitimate course-change topics when they are not request artifacts', () => {
