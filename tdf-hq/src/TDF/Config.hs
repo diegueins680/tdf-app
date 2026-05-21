@@ -242,6 +242,7 @@ validateFallbackConnUrl envName raw
     isValidBracketedConnectionHost host =
       T.any (== ':') host
         && not (":::" `T.isInfixOf` host)
+        && T.count "::" host <= 1
         && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
 
     validateConnectionPortSuffix :: Text -> Either String ()

@@ -3047,6 +3047,7 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             expectInvalidHost "postgresql://flyuser:flypass@[db.fly.internal]:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@[2001:::1]:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@[2001::db8::1]:5432/tdf_hq"
 
         it "rejects DATABASE_URL fallback values with malformed host labels" $ do
             let expectInvalidHost raw =
