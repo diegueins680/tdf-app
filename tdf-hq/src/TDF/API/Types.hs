@@ -36,7 +36,7 @@ import           Servant
 
 import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac)
-import           Data.ByteArray (convert)
+import           Data.ByteArray (constEq, convert)
 import qualified Data.ByteString.Base16 as B16
 
 import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
@@ -2252,23 +2252,22 @@ verifyMetaWebhookSignature mAppSecret mSigHeader body =
         Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }
         Just sigRaw ->
           let expected =
-                TE.decodeUtf8
-                  ( B16.encode
-                      ( convert
-                          ( hmac (TE.encodeUtf8 appSecret) (BL.toStrict body)
-                              :: HMAC SHA256
-                          )
+                B16.encode
+                  ( convert
+                      ( hmac (TE.encodeUtf8 appSecret) (BL.toStrict body)
+                          :: HMAC SHA256
                       )
                   )
-          in if parseMetaWebhookSignature sigRaw == Just expected
-             then Right ()
-             else Left err401 { errBody = "Invalid webhook signature" }
+              matchesExpected digest =
+                TE.encodeUtf8 digest `constEq` expected
+          in case parseMetaWebhookSignature sigRaw of
+               Just digest | matchesExpected digest -> Right ()
+               _ -> Left err401 { errBody = "Invalid webhook signature" }
 
 parseMetaWebhookSignature :: Text -> Maybe Text
 parseMetaWebhookSignature rawSignature =
   let prefix = "sha256="
-      lowerSig = T.toLower rawSignature
-  in if rawSignature == T.strip rawSignature && prefix `T.isPrefixOf` lowerSig
+  in if rawSignature == T.strip rawSignature && prefix `T.isPrefixOf` rawSignature
        then
          let digest = T.drop (T.length prefix) rawSignature
          in if T.length digest == 64 && T.all isAsciiHexDigit digest

@@ -118,6 +118,13 @@ spec = do
                 `shouldSatisfy` isRightUnit
             verifyMetaWebhookSignature Nothing Nothing body
                 `shouldSatisfy` isRightUnit
+            verifyMetaWebhookSignature (Just "secret") (Just ("SHA256=" <> digest)) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature
+                (Just "secret")
+                (Just ("sha256=" <> "a" <> T.drop 1 digest))
+                body
+                `shouldSatisfy` isLeft
             verifyMetaWebhookSignature (Just "secret") (Just digest) body
                 `shouldSatisfy` isLeft
             verifyMetaWebhookSignature (Just "secret") (Just (" " <> validHeader <> " ")) body
