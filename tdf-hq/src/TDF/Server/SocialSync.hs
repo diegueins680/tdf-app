@@ -54,7 +54,10 @@ import           TDF.Auth                   (AuthedUser, hasSocialSyncAccess)
 import           TDF.DB                     (Env(..))
 import           TDF.DTO.SocialSyncDTO
 import           TDF.Models
-import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
+import qualified TDF.Trials.Server          as TrialsServer
+  ( hasAmbiguousPublicUrlPath
+  , isValidHttpUrl
+  )
 
 maxSocialSyncMediaUrls :: Int
 maxSocialSyncMediaUrls = 20
@@ -503,6 +506,12 @@ validateSocialSyncPermalink (Just rawUrl) =
             { errBody =
                 BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public https URL")
             }
+      | TrialsServer.hasAmbiguousPublicUrlPath url ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "permalink path must not contain empty, dot, or dot-dot segments")
+            }
       | otherwise -> Right (Just url)
 
 validateSocialSyncPermalinkForPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
@@ -608,6 +617,12 @@ validateSocialSyncMediaUrls (Just rawUrls)
         { errBody =
             BL.fromStrict
               (TE.encodeUtf8 "mediaUrls entries must be absolute public https URLs")
+        }
+  | any TrialsServer.hasAmbiguousPublicUrlPath mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries path must not contain empty, dot, or dot-dot segments")
         }
   | length mediaUrls /= length (nub mediaUrls) =
       Left err400

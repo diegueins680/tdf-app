@@ -13849,6 +13849,34 @@ spec = describe "TDF.Server helpers" $ do
                     (Just ["https://cdn.example.com/post.jpg#preview"])
                 )
 
+        it "rejects ambiguous social sync URL path segments before persistence" $ do
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected ambiguous social sync URL path to be rejected, got: "
+                                    <> show value
+                                )
+
+            assertInvalid
+                "permalink path must not contain empty, dot, or dot-dot segments"
+                ( SocialSync.validateSocialSyncPermalink
+                    (Just "https://www.instagram.com/p/%2e%2e/post42")
+                )
+            assertInvalid
+                "mediaUrls entries path must not contain empty, dot, or dot-dot segments"
+                ( SocialSync.validateSocialSyncMediaUrls
+                    (Just ["https://cdn.example.com/posts/../post.jpg"])
+                )
+            assertInvalid
+                "mediaUrls entries path must not contain empty, dot, or dot-dot segments"
+                ( SocialSync.validateSocialSyncMediaUrls
+                    (Just ["https://cdn.example.com/posts//post.jpg"])
+                )
+
         it "keeps social sync permalinks tied to the declared platform domain" $ do
             SocialSync.validateSocialSyncPermalinkForPlatform
                 "instagram"
