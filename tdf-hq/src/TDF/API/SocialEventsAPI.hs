@@ -156,6 +156,11 @@ validateUploadName label rawName
         )
   | T.any isPathSeparator rawName =
       Left (label <> " must not contain path separators")
+  | T.any isUrlDelimiterUploadNameChar rawName =
+      Left
+        ( label
+            <> " must not contain URL delimiters or percent-encoded path markers"
+        )
   | hasDangerousInnerUploadExtension rawName =
       Left (label <> " must not hide executable or document extensions")
   | not (hasNonEmptyUploadBaseName rawName) =
@@ -171,6 +176,10 @@ maxUploadNameLength = 180
 
 isPathSeparator :: Char -> Bool
 isPathSeparator ch = ch == '/' || ch == '\\'
+
+isUrlDelimiterUploadNameChar :: Char -> Bool
+isUrlDelimiterUploadNameChar ch =
+  ch == '?' || ch == '#' || ch == '%'
 
 hasEmptyUploadNameSegment :: Text -> Bool
 hasEmptyUploadNameSegment rawName =
@@ -279,8 +288,8 @@ normalizeUploadMimeType rawContentType =
   T.toLower (T.strip (fst (T.breakOn ";" rawContentType)))
 
 hasUploadContentTypeNameParameter :: Text -> Bool
-hasUploadContentTypeNameParameter contentType =
-  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+hasUploadContentTypeNameParameter rawContentType =
+  any isNameParameter (drop 1 (T.splitOn ";" rawContentType))
   where
     isNameParameter rawParameter =
       let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))

@@ -8135,6 +8135,20 @@ main = hspec $ do
                     []
                     [mkEventImageFile "file" "posters/final.png"])
             assertInvalid
+                ( "Uploaded image name must not contain URL delimiters "
+                    <> "or percent-encoded path markers"
+                )
+                (mkEventImageMultipart
+                    [("name", "posters%2Ffinal.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                ( "Uploaded browser file name must not contain URL delimiters "
+                    <> "or percent-encoded path markers"
+                )
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster#final.png"])
+            assertInvalid
                 "Uploaded browser file name must not contain control characters"
                 (mkEventImageMultipart
                     []
