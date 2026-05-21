@@ -371,6 +371,7 @@ import TDF.Server
     , resolveDriveUploadMimeType
     , validateDriveUploadFileSize
     , formatDriveUploadFailure
+    , formatDriveUploadException
     , formatGoogleOAuthFailure
     , decodeDriveMetaResourceKeyIfSuccessful
     , resolveDrivePublicUrl
@@ -6168,6 +6169,22 @@ spec = describe "TDF.Server helpers" $ do
             formatted `shouldNotContain` "1//refresh-secret"
             formatted `shouldNotContain` "client-secret"
             formatted `shouldNotContain` "df-bearer"
+
+        it "bounds and sanitizes local Drive upload exceptions before returning backend errors" $ do
+            let formatted =
+                    formatDriveUploadException
+                        ( "access_token=ya29.drive-secret Authorization: Bearer df-bearer "
+                            <> "bad\NULdetail\x202Ehidden\n"
+                            <> T.replicate 700 "x"
+                        )
+            formatted `shouldContain` "Google Drive upload falló. access_token=[redacted]"
+            formatted `shouldContain` "[truncated]"
+            formatted `shouldSatisfy` (notElem '\NUL')
+            formatted `shouldSatisfy` (notElem '\x202E')
+            formatted `shouldSatisfy` (notElem '\n')
+            formatted `shouldNotContain` "ya29.drive-secret"
+            formatted `shouldNotContain` "df-bearer"
+            length formatted `shouldSatisfy` (<= 540)
 
     describe "formatGoogleOAuthFailure" $ do
         it "bounds and sanitizes upstream OAuth failures before Drive or Calendar fallback handling" $ do

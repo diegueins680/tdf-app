@@ -2306,9 +2306,7 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
     Right dto -> pure dto
     Left err ->
       throwError err502
-        { errBody =
-            BL8.pack ("Google Drive upload falló: " <> displayException err)
-        }
+        { errBody = BL8.pack (formatDriveUploadException (T.pack (displayException err))) }
   where
     resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
     resolveDriveAccessToken manager mProvided =
@@ -13920,6 +13918,13 @@ formatDriveUploadFailure uploadStatus responseBodyBytes =
       case eitherDecode responseBodyBytes :: Either String Value of
         Right payload -> extractApiErrorMessage payload
         Left _ -> Nothing
+
+formatDriveUploadException :: Text -> String
+formatDriveUploadException rawMessage =
+  "Google Drive upload falló." <> suffix
+  where
+    suffix =
+      maybe "" ((" " <>) . T.unpack) (sanitizeApiErrorMessage rawMessage)
 
 resolveDrivePublicUrl :: Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
 resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey =
