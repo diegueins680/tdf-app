@@ -2620,6 +2620,24 @@ const sourceAliasKeyVariants = (sourceKey: string) => {
     }
   }
 
+  for (const containerPrefix of [
+    'formulario de',
+    'formularios de',
+    'pagina de',
+    'paginas de',
+    'portal de',
+    'portales de',
+    'enlace de',
+    'enlaces de',
+  ]) {
+    if (sourceKey.startsWith(`${containerPrefix} `)) {
+      const baseSourceKey = sourceKey.slice(containerPrefix.length + 1).trim();
+      if (!baseSourceKey) continue;
+      variants.add(baseSourceKey);
+      addPluralVariants(baseSourceKey);
+    }
+  }
+
   return variants;
 };
 

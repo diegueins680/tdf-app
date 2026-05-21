@@ -12490,6 +12490,71 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('strips Spanish source wrappers before treating lead plumbing as default busy-list noise', async () => {
+    const defaultSources = [
+      'formulario_de_leads_de_facebook',
+      'formularios_de_leads_de_meta',
+      'pagina_de_leads_de_instagram',
+      'paginas_de_leads_de_linkedin',
+      'portal_de_leads_de_tiktok',
+      'portales_de_leads_de_whatsapp',
+      'enlace_de_captacion_de_leads',
+      'enlaces_de_captura_de_prospectos',
+      'formulario_de_generacion_de_interesados',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Formulario de leads de Facebook',
+      'Formularios de leads de Meta',
+      'Pagina de leads de Instagram',
+      'Paginas de leads de LinkedIn',
+      'Portal de leads de TikTok',
+      'Portales de leads de WhatsApp',
+      'Enlace de captacion de leads',
+      'Enlaces de captura de prospectos',
+      'Formulario de generacion de interesados',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'formulario de leads');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "formulario de leads" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats placeholder source values as empty source noise in busy lists', async () => {
     const placeholderSources = [
       'unknown',
