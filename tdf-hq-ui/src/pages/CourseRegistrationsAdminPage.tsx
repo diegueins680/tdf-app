@@ -529,7 +529,7 @@ const summarizeActiveFilters = ({
 }) => {
   const parts: string[] = [];
   const trimmedCohortLabel = cohortLabel.trim();
-  if (trimmedCohortLabel) parts.push(`cohorte ${trimmedCohortLabel}`);
+  if (trimmedCohortLabel) parts.push(`formulario ${trimmedCohortLabel}`);
   if (status !== 'all') parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
   if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
   return parts.join(' · ');
@@ -5370,7 +5370,7 @@ export default function CourseRegistrationsAdminPage() {
       || showActiveStatusFilterSummary,
     );
     const limitAlreadyExplained = Boolean(combinedSingleChoiceLimitSummary);
-    if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
+    if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`formulario ${activeCohortLabel}`);
     if (status !== 'all' && !statusAlreadyExplained) parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
     if (limit !== DEFAULT_LIMIT && !limitAlreadyExplained) parts.push(`límite ${limit}`);
     return parts.join(' · ');

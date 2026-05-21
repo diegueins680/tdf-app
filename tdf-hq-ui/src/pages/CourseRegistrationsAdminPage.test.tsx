@@ -1654,8 +1654,9 @@ describe('CourseRegistrationsAdminPage', () => {
       });
       const summary = container.querySelector<HTMLElement>('[data-testid="course-registration-filter-summary"]');
       expect(summary?.textContent?.trim()).toBe(
-        'Vista filtrada: cohorte Beatmaking 101.',
+        'Vista filtrada: formulario Beatmaking 101.',
       );
+      expect(summary?.textContent).not.toContain('cohorte');
       expect(summary?.textContent).not.toContain('(beatmaking-101)');
       expect(container.querySelectorAll('[data-testid="course-registration-filter-summary"]')).toHaveLength(1);
       const createdAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
@@ -1755,7 +1756,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('button[aria-label="Copiar 2 inscripciones visibles como CSV"]')).toBeNull();
       expect(container.querySelector('[data-testid="course-registration-filter-utilities"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
-      expect(container.textContent).not.toContain('Vista filtrada: cohorte Beatmaking 101 (beatmaking-101).');
+      expect(container.textContent).not.toContain('Vista filtrada: formulario Beatmaking 101 (beatmaking-101).');
       expect(countButtonsByText(container, 'Mostrar todas las cohortes')).toBe(0);
       expect(container.textContent).not.toContain('Cohorte: Beatmaking 101');
       expect(container.textContent).toContain('Ada Lovelace');
@@ -15360,7 +15361,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
-      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
+      expect(container.textContent).toContain('Vista filtrada: formulario Beatmaking 101.');
       expect(container.textContent).toContain('Estado filtrado');
     });
 
@@ -15377,7 +15378,7 @@ describe('CourseRegistrationsAdminPage', () => {
       const emptySearch = container.querySelector<HTMLElement>('[data-testid="course-registration-empty-local-search"]');
       expect(emptySearch).not.toBeNull();
       expect(emptySearch?.textContent).toContain(
-        'Vista filtrada: cohorte Beatmaking 101 · estado pagado. No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
+        'Vista filtrada: formulario Beatmaking 101 · estado pagado. No hay coincidencias para "sin coincidencias" en las 9 inscripciones cargadas.',
       );
       expect(container.textContent).not.toContain('Estado filtrado');
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
@@ -15635,7 +15636,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(container, localSearchLabel)).toBe(true);
       expect(getDossierTriggers(container)).toHaveLength(9);
       expect(getButtonByText(container, 'Restablecer vista')).toBeTruthy();
-      expect(container.textContent).toContain('Vista filtrada: cohorte Beatmaking 101.');
+      expect(container.textContent).toContain('Vista filtrada: formulario Beatmaking 101.');
     });
 
     await act(async () => {
@@ -15654,7 +15655,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       expect(getDossierTriggers(container)).toHaveLength(2);
       expect(container.textContent).toContain(
-        'Vista filtrada: cohorte Beatmaking 101. Mostrando 2 de 9 inscripciones cargadas.',
+        'Vista filtrada: formulario Beatmaking 101. Mostrando 2 de 9 inscripciones cargadas.',
       );
       expect(filterUtilities).toBeNull();
       expect(container.textContent).not.toContain('(beatmaking-101)');
@@ -16213,7 +16214,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(emptySearch).not.toBeNull();
       expect(statusSummary).toBeNull();
       expect(emptySearch?.textContent).toContain(
-        'Vista filtrada: cohorte Beatmaking 101. No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
+        'Vista filtrada: formulario Beatmaking 101. No hay coincidencias para "sin coincidencias" en las 200 inscripciones cargadas.',
       );
       const limitRecoveryAction = getButtonByText(emptySearch!, emptySearchLimitRecoveryLabel);
       expect(countButtonsByText(emptySearch!, emptySearchLimitRecoveryLabel)).toBe(1);
