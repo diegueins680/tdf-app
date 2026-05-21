@@ -1131,6 +1131,25 @@ spec = do
         )
         `shouldBe` True
 
+    it "rejects explicit null optional fields so student create defaults require omission" $ do
+      case ( A.eitherDecode
+              "{\"fullName\":\"Ada\",\"email\":\"ada@example.com\",\"phone\":null}"
+                :: Either String StudentCreate
+           ) of
+        Left err ->
+          err `shouldContain` "phone must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null student create phone to be rejected"
+
+      case ( A.eitherDecode
+              "{\"fullName\":\"Ada\",\"email\":\"ada@example.com\",\"notes\":null}"
+                :: Either String StudentCreate
+           ) of
+        Left err ->
+          err `shouldContain` "notes must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null student create notes to be rejected"
+
   describe "StudentUpdate request decoding" $ do
     it "rejects typoed or unexpected JSON keys so student patches cannot degrade into silent no-ops" $ do
       case (A.eitherDecode "{\"displayName\":\"Ada\",\"phone\":\"+593991234567\"}" :: Either String StudentUpdate) of
@@ -1160,6 +1179,27 @@ spec = do
           "{\"displayName\":null,\"email\":null,\"phone\":null,\"notes\":null}"
             :: Either String StudentUpdate)
         `shouldBe` True
+
+    it "rejects explicit null patch fields before student updates can silently ignore them" $ do
+      let assertNullRejected raw expectedMessage =
+            case (A.eitherDecode raw :: Either String StudentUpdate) of
+              Left err ->
+                err `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure
+                  ("Expected null student update field to be rejected in " <> BL8.unpack raw)
+      assertNullRejected
+        "{\"displayName\":null,\"email\":\"ada@example.com\"}"
+        "displayName must be omitted instead of null"
+      assertNullRejected
+        "{\"email\":null,\"phone\":\"+593991234567\"}"
+        "email must be omitted instead of null"
+      assertNullRejected
+        "{\"displayName\":\"Ada\",\"phone\":null}"
+        "phone must be omitted instead of null"
+      assertNullRejected
+        "{\"displayName\":\"Ada\",\"notes\":null}"
+        "notes must be omitted instead of null"
 
   describe "private subject mutation path ids" $ do
     it "rejects non-positive subject ids before update or delete lookups" $ do

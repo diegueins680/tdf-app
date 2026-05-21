@@ -15,6 +15,7 @@ import Data.Aeson
   , withObject
   , (.:?)
   )
+import Data.Aeson.Types (Parser)
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Text (Text)
@@ -23,6 +24,15 @@ import Data.Time (UTCTime)
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+rejectNullOptionalTrialDtoFields :: String -> [Text] -> Value -> Parser ()
+rejectNullOptionalTrialDtoFields objectName fieldNames =
+  withObject objectName $ \object ->
+    let rejectNullOptionalField fieldName =
+          case AesonKeyMap.lookup (AesonKey.fromText fieldName) object of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullOptionalField fieldNames
 
 data PreferredSlot = PreferredSlot
   { startAt :: UTCTime
@@ -231,7 +241,9 @@ data StudentCreate = StudentCreate
   } deriving (Show, Generic)
 instance ToJSON StudentCreate
 instance FromJSON StudentCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalTrialDtoFields "StudentCreate" ["phone", "notes"] value
+    genericParseJSON strictObjectOptions value
 
 data StudentDTO = StudentDTO
   { studentId   :: Int
@@ -251,6 +263,10 @@ data StudentUpdate = StudentUpdate
 instance ToJSON StudentUpdate
 instance FromJSON StudentUpdate where
   parseJSON value = do
+    rejectNullOptionalTrialDtoFields
+      "StudentUpdate"
+      ["displayName", "email", "phone", "notes"]
+      value
     payload@(StudentUpdate displayNameValue emailValue phoneValue notesValue) <-
       genericParseJSON strictObjectOptions value
     case (displayNameValue, emailValue, phoneValue, notesValue) of
