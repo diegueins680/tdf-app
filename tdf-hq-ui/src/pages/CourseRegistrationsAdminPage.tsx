@@ -1185,7 +1185,8 @@ const firstRunDecorativeEdgeMarkerPattern =
   /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
 const firstRunListMarkerPattern = /^(?:[-*•]\s+|\d+[.)]\s+)/;
 const firstRunInvisibleFormatCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
-const firstRunUrlDescriptorPattern = String.raw`(?:(?:https?:\/\/|www\.)[^\s]+)`;
+const firstRunUrlDescriptorPattern =
+  String.raw`(?:(?:https?:\/\/|www\.|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+\/)[^\s]+|forms\.gle(?:\/[^\s]*)?)`;
 const firstRunUrlDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunUrlDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
   'i',

@@ -21091,8 +21091,11 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'https://forms.gle/beatmaking-101',
       'www.example.com/inscripcion/beatmaking-101',
+      'forms.gle/beatmaking-101',
+      'tdfrecords.com/inscripcion/beatmaking-101 - Beatmaking 101',
       'https://tdfrecords.com/inscripcion/beatmaking-101 - Beatmaking 101',
       'Beatmaking 101 - https://forms.gle/apply',
+      'Beatmaking 101 - forms.gle/apply',
     ];
 
     for (const title of titles) {
