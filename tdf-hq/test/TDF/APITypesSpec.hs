@@ -2144,6 +2144,24 @@ spec = do
                 "{\"ipuStatus\":\"paused\",\"status\":\"completed\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null project-create defaults so omission remains intentional" $ do
+            case decodeInternProjectCreate "{\"ipcTitle\":\"Studio onboarding\",\"ipcStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "ipcStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null project status to fail, got: " <> show value)
+
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcStartAt\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDueAt\":null}"
+                `shouldSatisfy` isLeft
+
         it "rejects empty project updates instead of returning a silent no-op patch" $
             decodeInternProjectUpdate "{}" `shouldSatisfy` isLeft
 

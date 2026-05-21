@@ -1966,7 +1966,12 @@ data InternProjectCreate = InternProjectCreate
   } deriving (Show, Generic)
 instance ToJSON InternProjectCreate
 instance FromJSON InternProjectCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "InternProjectCreate"
+      ["ipcDescription", "ipcStatus", "ipcStartAt", "ipcDueAt"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data InternProjectUpdate = InternProjectUpdate
   { ipuTitle       :: Maybe Text
