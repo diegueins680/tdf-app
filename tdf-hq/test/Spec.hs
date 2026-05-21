@@ -215,6 +215,7 @@ import TDF.ServerInstagramOAuth
       FacebookPage (..),
       FacebookPageList (..),
       instagramOAuthServer,
+      parseInstagramMediaTimestamp,
       resolveInstagramRedirectUri,
       sanitizeFacebookGraphErrorMessage,
       shouldFallbackToShortInstagramToken,
@@ -4909,6 +4910,39 @@ main = hspec $ do
             assertInvalid "---" "at least one ASCII letter or digit"
             assertInvalid "tdf/studio" "only ASCII letters"
             assertInvalid (Data.Text.replicate 65 "a") "64 characters or fewer"
+
+        it "rejects malformed Instagram media timestamps before OAuth media DTO fallback rendering" $ do
+            parseInstagramMediaTimestamp Nothing `shouldBe` Right Nothing
+            case parseInstagramMediaTimestamp (Just "2026-05-21T16:30:00Z") of
+                Right (Just timestamp) ->
+                    timestamp `shouldBe` UTCTime (fromGregorian 2026 5 21) (secondsToDiffTime 59400)
+                other ->
+                    expectationFailure
+                        ("Expected valid Instagram media timestamp to parse, got: " <> show other)
+            case parseInstagramMediaTimestamp (Just "2017-03-17T22:25:29+0000") of
+                Right (Just timestamp) ->
+                    timestamp `shouldBe` UTCTime (fromGregorian 2017 3 17) (secondsToDiffTime 80729)
+                other ->
+                    expectationFailure
+                        ( "Expected compact-offset Instagram media timestamp to parse, got: "
+                            <> show other
+                        )
+
+            let assertInvalid rawTimestamp expectedMessage =
+                    case parseInstagramMediaTimestamp (Just rawTimestamp) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right timestamp ->
+                            expectationFailure
+                                ( "Expected invalid Instagram media timestamp to fail, got: "
+                                    <> show timestamp
+                                )
+            assertInvalid "not-a-timestamp" "valid ISO-8601"
+            assertInvalid " 2026-05-21T16:30:00Z " "surrounding whitespace"
+            assertInvalid
+                ("2026-05-21T16:30:00Z" <> "\x202E")
+                "hidden formatting"
 
         it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
             let sanitized =

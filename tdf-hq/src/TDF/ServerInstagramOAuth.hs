@@ -10,6 +10,7 @@ module TDF.ServerInstagramOAuth
   , FacebookPage(..)
   , FacebookPageList(..)
   , resolveInstagramRedirectUri
+  , parseInstagramMediaTimestamp
   , sanitizeFacebookGraphErrorMessage
   , shouldFallbackToShortInstagramToken
   , selectPrimaryInstagramCandidate
@@ -39,7 +40,8 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Text.Encoding.Error   (lenientDecode)
-import           Data.Time                  (getCurrentTime)
+import           Data.Time                  (UTCTime, getCurrentTime)
+import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
 import           Database.Persist.Sql       (runSqlPool)
@@ -383,7 +385,7 @@ instagramOAuthServer user = exchangeHandler
               Nothing -> pure (Nothing, Nothing, [])
               Just igId -> do
                 mediaList <- requestInstagramMedia manager envConfig (pcAccessToken ctx) igId
-                let mediaDto = map toMediaDTO mediaList
+                mediaDto <- either throwError pure (traverse instagramMediaToDTO mediaList)
                 pure (Just igId, pcInstagramHandle ctx, mediaDto)
 
       pure InstagramOAuthExchangeResponse
@@ -405,14 +407,58 @@ instagramOAuthServer user = exchangeHandler
         , iopInstagramUsername = pcInstagramHandle
         }
 
-    toMediaDTO InstagramMedia{..} =
+instagramMediaToDTO :: InstagramMedia -> Either ServerError InstagramMediaDTO
+instagramMediaToDTO InstagramMedia{..} = do
+  timestamp <- parseInstagramMediaTimestamp imTimestamp
+  pure
       InstagramMediaDTO
         { imdId = imId
         , imdCaption = imCaption
         , imdMediaUrl = imMediaUrl
         , imdPermalink = imPermalink
-        , imdTimestamp = imTimestamp >>= (iso8601ParseM . T.unpack)
+        , imdTimestamp = timestamp
         }
+
+parseInstagramMediaTimestamp :: Maybe Text -> Either ServerError (Maybe UTCTime)
+parseInstagramMediaTimestamp Nothing = Right Nothing
+parseInstagramMediaTimestamp (Just rawTimestamp)
+  | T.null timestamp =
+      invalidTimestamp "Instagram media timestamp must not be blank when present"
+  | rawTimestamp /= timestamp =
+      invalidTimestamp "Instagram media timestamp must not include surrounding whitespace"
+  | T.length timestamp > maxInstagramMediaTimestampChars =
+      invalidTimestamp "Instagram media timestamp must be 64 characters or fewer"
+  | T.any isUnsafeInstagramMediaTimestampChar timestamp =
+      invalidTimestamp
+        "Instagram media timestamp must not contain whitespace, control, or hidden formatting characters"
+  | otherwise =
+      case parseInstagramMediaTimestampText timestamp of
+        Just parsed -> Right (Just parsed)
+        Nothing ->
+          invalidTimestamp "Instagram media timestamp is not a valid ISO-8601 timestamp"
+  where
+    timestamp = T.strip rawTimestamp
+    invalidTimestamp message =
+      Left err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+maxInstagramMediaTimestampChars :: Int
+maxInstagramMediaTimestampChars = 64
+
+parseInstagramMediaTimestampText :: Text -> Maybe UTCTime
+parseInstagramMediaTimestampText timestamp =
+  case parseIso timestamp of
+    Just parsed -> Just parsed
+    Nothing -> parseGraphTimestamp timestamp
+  where
+    parseIso value = iso8601ParseM (T.unpack value)
+    parseGraphTimestamp value =
+      parseTimeM True defaultTimeLocale "%Y-%m-%dT%H:%M:%S%Q%z" (T.unpack value)
+
+isUnsafeInstagramMediaTimestampChar :: Char -> Bool
+isUnsafeInstagramMediaTimestampChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 selectPrimaryInstagramPage :: [Text] -> [PageContext] -> Either ServerError (Maybe PageContext)
 selectPrimaryInstagramPage preferredIds contexts =
