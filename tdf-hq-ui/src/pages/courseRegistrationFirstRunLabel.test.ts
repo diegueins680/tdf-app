@@ -154,6 +154,20 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips payment and follow-up workflow wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Follow-up queue - Beatmaking 101',
+      'Payment review board for Beatmaking 101',
+      'Beatmaking 101 - receipts approval tracker',
+      'Bandeja de seguimiento para Beatmaking 101',
+      'Beatmaking 101 - tablero de pagos',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips wrapped response-sheet prefixes before first-run copy uses the cohort label', () => {
     const titles = [
       '(Form responses 1) - Beatmaking 101',

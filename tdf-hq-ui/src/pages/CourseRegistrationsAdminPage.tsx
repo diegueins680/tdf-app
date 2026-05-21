@@ -2136,7 +2136,7 @@ const firstRunConsultationCallDescriptorSuffixPattern =
     'i',
   );
 
-const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:(?:application|admissions?|registration|enrollment|student|course)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
+const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:(?:application|admissions?|registration|enrollment|student|course|follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|seguimiento|pagos?|comprobantes?|evidencias?|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
 
 const firstRunAdminWorkflowDescriptorPrefixPattern =
   new RegExp(
