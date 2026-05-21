@@ -2207,7 +2207,7 @@ const firstRunResponseSheetSuffixPattern = new RegExp(
   'i',
 );
 const firstRunResponseSheetPrefixPattern = new RegExp(
-  String.raw`^(?:${firstRunResponseSheetDescriptorPattern})\s*(?:[-:/|]\s*)`,
+  String.raw`^(?:(?:\(|\[)\s*(?:${firstRunResponseSheetDescriptorPattern})\s*(?:\)|\])|(?:${firstRunResponseSheetDescriptorPattern}))\s*(?:[-:/|]\s*)`,
   'i',
 );
 

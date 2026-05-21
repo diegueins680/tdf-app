@@ -152,6 +152,18 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips wrapped response-sheet prefixes before first-run copy uses the cohort label', () => {
+    const titles = [
+      '(Form responses 1) - Beatmaking 101',
+      '[Google Forms responses] - Beatmaking 101',
+      '(Respuestas del formulario) - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('keeps legitimate alert and notification course titles when they are not signup artifacts', () => {
     expect(
       cohortFirstRunLabel({ ccSlug: 'alerts-engineering-lab', ccTitle: 'Live Alerts for Engineers' }),
