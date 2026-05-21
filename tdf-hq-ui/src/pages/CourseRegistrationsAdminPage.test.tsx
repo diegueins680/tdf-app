@@ -17545,6 +17545,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - information session form',
       'Orientation signup for Beatmaking 101',
       'Beatmaking 101 - página de clase abierta',
+      'Open house RSVP - Beatmaking 101',
+      'Beatmaking 101 - open house booking page',
+      'Registro de casa abierta - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -17564,6 +17567,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toContain('information session');
         expect(emptyState?.textContent).not.toContain('Orientation signup');
         expect(emptyState?.textContent).not.toContain('página de clase abierta');
+        expect(emptyState?.textContent).not.toMatch(/open house|casa abierta/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
