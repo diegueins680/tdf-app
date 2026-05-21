@@ -1912,6 +1912,17 @@ const firstRunDataImportDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunFileStorageProviderPattern = String.raw`(?:(?:google\s+)?drive|dropbox|one\s*drive|onedrive|share\s*point|sharepoint|box|icloud)`;
+const firstRunFileStorageDescriptorPattern = String.raw`(?:(?:${firstRunFileStorageProviderPattern}\s+(?:(?:course|class|student|registration|enrollment|application|intake|asset|resource|files?|uploads?)\s+)?(?:folders?|directories?))|(?:(?:course|class|student|registration|enrollment|application|intake|asset|resource|files?|uploads?)\s+(?:folders?|directories?))|(?:(?:folders?|directories?)\s+(?:for|del?|para(?:\s+el)?)\s+(?:${firstRunFileStorageProviderPattern}|course|class|students?|registration|enrollment|application|intake|uploads?|assets?|resources?|files?))|(?:(?:carpetas?|directorios?)\s+(?:del?|para(?:\s+el)?)\s+(?:${firstRunFileStorageProviderPattern}|curso|clase|estudiantes?|alumnos?|inscripci[oó]n|matr[ií]cula|archivos?|recursos?|subidas?|cargas?))|(?:${firstRunFileStorageProviderPattern}\s+(?:carpetas?|folders?|directorios?)))`;
+const firstRunFileStorageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunFileStorageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunFileStorageDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunFileStorageDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
 const firstRunCommunityScopePattern = String.raw`(?:course|class|students?|members?|alumni|graduates?|curso|clase|estudiantes|alumnos|miembros|egresad[oa]s?|graduad[oa]s?)`;
 const firstRunCommunityScopeQualifierPattern = String.raw`(?:(?:for|para|de)\s+(?:the\s+|el\s+|la\s+)?(?:${firstRunCommunityScopePattern})|del?\s+curso)`;
@@ -2154,7 +2165,7 @@ const firstRunLooseEnrollmentDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)\s*$/i;
 
 const firstRunEnglishRegistrationNounPrefixPattern =
-  /^(?:(?:[Pp]re[-\s]?)?[Rr]egistration(?:[Ss])?|[Ee]nrollment(?:[Ss])?|[Aa]pplication(?:[Ss])?|[Aa]dmission(?:[Ss])?|[Ss]ign[-\s]?[Uu]p(?:[Ss])?|[Ss]ignup(?:[Ss])?)(?:\s+(?:for|to|in)\s+(?:the\s+)?course)?(?:\s*[-:/|]\s*|\s+(?=[A-Z0-9]))/;
+  /^(?:(?:[Pp]re[-\s]?)?[Rr]egistration(?:[Ss])?|[Ee]nrollment(?:[Ss])?|[Aa]pplication(?:[Ss])?|[Aa]dmission(?:[Ss])?|[Ss]ign[-\s]?[Uu]p(?:[Ss])?|[Ss]ignup(?:[Ss])?)(?:\s+(?:[Ff]orms?|[Pp]ages?|[Pp]ortals?))?(?:\s+(?:for|to|in)\s+(?:the\s+)?course)?(?:\s*[-:/|]\s*|\s+(?=[A-Z0-9]))/;
 
 const firstRunEnglishRegistrationNounSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:pre[-\s]?)?registrations?|enrollments?|applications?|admissions?|sign[-\s]?ups?|signups?)\s*$/i;
@@ -2204,6 +2215,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunPromoAssetDescriptorPrefixPattern, '')
     .replace(firstRunDataSourceDescriptorPrefixPattern, '')
     .replace(firstRunDataImportDescriptorPrefixPattern, '')
+    .replace(firstRunFileStorageDescriptorPrefixPattern, '')
     .replace(firstRunAdLeadFormDescriptorPrefixPattern, '')
     .replace(firstRunProviderFormDescriptorPrefixPattern, '')
     .replace(firstRunStaticFormBackendDescriptorPrefixPattern, '')
@@ -2338,6 +2350,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunPromoAssetDescriptorSuffixPattern, '')
     .replace(firstRunDataSourceDescriptorSuffixPattern, '')
     .replace(firstRunDataImportDescriptorSuffixPattern, '')
+    .replace(firstRunFileStorageDescriptorSuffixPattern, '')
     .replace(firstRunAdLeadFormDescriptorSuffixPattern, '')
     .replace(firstRunProviderFormDescriptorSuffixPattern, '')
     .replace(firstRunStaticFormBackendDescriptorSuffixPattern, '')
@@ -2405,8 +2418,8 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
     .replace(firstRunScheduleDescriptorSuffixPattern, '')
     .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
-    .replace(firstRunSchedulingProviderStandaloneSuffixPattern, '')
     .replace(firstRunReservationDescriptorSuffixPattern, '')
+    .replace(firstRunSchedulingProviderStandaloneSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
     .replace(firstRunAdminWorkflowDescriptorSuffixPattern, '')
     .replace(firstRunRegistrationDashboardDescriptorSuffixPattern, '')
@@ -2415,6 +2428,9 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
     .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
     .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunAuditionDescriptorSuffixPattern, '')
+    .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
+    .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .replace(firstRunEnglishRegistrationNounSuffixPattern, '')
     .replace(firstRunWorkspaceBrandDescriptorSuffixPattern, '')
     .replace(firstRunUntitledDescriptorSuffixPattern, '')
@@ -2426,13 +2442,10 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunTemplateDescriptorSuffixPattern, '')
     .replace(firstRunTestDraftDescriptorSuffixPattern, '')
     .replace(firstRunCopyDescriptorSuffixPattern, '')
-    .replace(firstRunAuditionDescriptorSuffixPattern, '')
     .replace(firstRunAssessmentDescriptorSuffixPattern, '')
     .replace(firstRunPortfolioSubmissionDescriptorSuffixPattern, '')
     .replace(firstRunAssignmentSubmissionDescriptorSuffixPattern, '')
     .replace(firstRunCertificateArtifactDescriptorSuffixPattern, '')
-    .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
-    .replace(firstRunApplicationDescriptorSuffixPattern, '')
     .replace(
       /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
       '',
