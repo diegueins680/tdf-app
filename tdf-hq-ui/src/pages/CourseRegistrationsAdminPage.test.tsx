@@ -23456,7 +23456,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Certificate request form - Beatmaking 101',
       'Certification upload page for Beatmaking 101',
       'Beatmaking 101 - certificate claim portal',
+      'Diploma request form - Beatmaking 101',
+      'Beatmaking 101 - diploma claim portal',
       'Formulario de certificado - Beatmaking 101',
+      'Solicitud de diploma - Beatmaking 101',
       'Beatmaking 101 - solicitud de constancia',
     ];
 
@@ -23476,7 +23479,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /certificate|certification|certificado|constancia|upload|claim portal|solicitud de constancia/i,
+          /certificate|certification|certificado|constancia|diploma|upload|claim portal|solicitud de constancia/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
