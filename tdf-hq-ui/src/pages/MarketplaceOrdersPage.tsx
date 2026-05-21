@@ -445,6 +445,9 @@ export default function MarketplaceOrdersPage() {
   const showSingleVisibleContactEmptyState = Boolean(
     singleVisibleOrder && !singleVisibleBuyerEmail && !singleVisibleBuyerPhone,
   );
+  const singleVisibleItemsSummary = singleVisibleOrder && singleVisibleOrder.moItems.length > 0
+    ? summarizeItems(singleVisibleOrder.moItems)
+    : '';
   const singleVisibleOrderSummaryText = showSingleOrderFocusedState
     ? 'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.'
     : showSearchWithExtraFilters
@@ -1121,9 +1124,11 @@ export default function MarketplaceOrdersPage() {
               <Typography variant="body2" color="text.secondary">
                 <Box component="span" sx={{ fontWeight: 600 }}>Creado:</Box> {formatDate(singleVisibleOrder.moCreatedAt)}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Items:</Box> {summarizeItems(singleVisibleOrder.moItems)}
-              </Typography>
+              {singleVisibleItemsSummary && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Items:</Box> {singleVisibleItemsSummary}
+                </Typography>
+              )}
               <Button
                 size="small"
                 variant="outlined"

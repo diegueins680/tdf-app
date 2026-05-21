@@ -2321,7 +2321,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('replaces empty order item detail tables with one clear empty state', async () => {
+  it('keeps empty order items out of the scan summary and explains them once in details', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-empty-items',
@@ -2336,7 +2336,11 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
-        expect(container.textContent).toContain('Items: Sin items');
+        const summary = container.querySelector<HTMLElement>('[data-testid="marketplace-single-order-summary"]');
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).not.toContain('Items:');
+        expect(container.textContent).not.toContain('Items: Sin items');
+        expect(container.textContent).not.toContain('Sin items registrados para esta orden.');
       });
 
       await clickFirstOrderRow(container);
