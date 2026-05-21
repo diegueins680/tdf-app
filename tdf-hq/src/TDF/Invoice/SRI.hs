@@ -9,6 +9,7 @@ module TDF.Invoice.SRI
   , decodeSriScriptOutputForRequest
   , formatSriScriptFailure
   , validateSriScriptRequest
+  , discoverDefaultScriptPath
   , runSriInvoiceScript
   ) where
 
@@ -859,12 +860,25 @@ hasAmbiguousConfiguredScriptPathSegments scriptPath =
 
 discoverDefaultScriptPath :: [FilePath] -> IO (Either Text FilePath)
 discoverDefaultScriptPath candidates = do
-  existing <- existingFiles candidates
-  pure $
-    case existing of
-      [] -> Left missingDefaultScriptMessage
-      [scriptPath] -> Right scriptPath
-      paths -> Left (ambiguousDefaultScriptMessage paths)
+  case traverse validateDefaultScriptCandidate candidates of
+    Left err -> pure (Left err)
+    Right validCandidates -> do
+      existing <- existingFiles validCandidates
+      pure $
+        case existing of
+          [] -> Left missingDefaultScriptMessage
+          [scriptPath] -> Right scriptPath
+          paths -> Left (ambiguousDefaultScriptMessage paths)
+
+validateDefaultScriptCandidate :: FilePath -> Either Text FilePath
+validateDefaultScriptCandidate scriptPath
+  | isNodeScriptPath scriptPath = Right scriptPath
+  | otherwise = Left (invalidDefaultScriptMessage scriptPath)
+
+invalidDefaultScriptMessage :: FilePath -> Text
+invalidDefaultScriptMessage scriptPath =
+  "Default SRI invoice script discovery candidate must point to a .mjs, .js, or .cjs Node script: "
+    <> T.pack scriptPath
 
 existingFiles :: [FilePath] -> IO [FilePath]
 existingFiles [] = pure []

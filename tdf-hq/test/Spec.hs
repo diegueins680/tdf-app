@@ -4301,6 +4301,27 @@ main = hspec $ do
                                         <> show value
                                     )
 
+        it "rejects non-JavaScript default SRI discovery candidates before fallback selection" $
+            withSystemTempDirectory "tdf-sri-defaults" $ \tmpDir -> do
+                let scriptDir = tmpDir </> "scripts"
+                    scriptPath = scriptDir </> "generate-sri-invoice.txt"
+                createDirectoryIfMissing True scriptDir
+                writeFile scriptPath "not a node invoice runner\n"
+                result <- Sri.discoverDefaultScriptPath [scriptPath]
+                case result of
+                    Left err -> do
+                        Data.Text.unpack err
+                            `shouldContain` "Default SRI invoice script discovery candidate"
+                        Data.Text.unpack err
+                            `shouldContain` ".mjs, .js, or .cjs Node script"
+                        Data.Text.unpack err
+                            `shouldNotContain` "Could not find scripts/generate-sri-invoice.mjs"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected invalid default SRI discovery candidate to fail, got: "
+                                <> show value
+                            )
+
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
                 hClose handle
