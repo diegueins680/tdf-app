@@ -244,6 +244,7 @@ import TDF.Server
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateMarketplaceBuyerName,
+      validateLabelTrackPathId,
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
       validateOptionalDatafastMetadataField,
@@ -6251,6 +6252,31 @@ main = hspec $ do
                 Nothing
                 Nothing
                 `shouldBe` Right (Just now)
+
+    describe "validateLabelTrackPathId" $ do
+        it "requires canonical positive decimal track ids before label lookups" $ do
+            fmap fromSqlKey (validateLabelTrackPathId " 42 ") `shouldBe` Right 42
+
+            let assertInvalid rawValue =
+                    case validateLabelTrackPathId rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "Invalid track id"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid label track id, got " <> show (fromSqlKey value))
+
+            mapM_
+                assertInvalid
+                [ ""
+                , "0"
+                , "-1"
+                , "+1"
+                , "01"
+                , "1.0"
+                , "abc"
+                , "9223372036854775808"
+                ]
 
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
