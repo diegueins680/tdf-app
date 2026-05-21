@@ -126,6 +126,20 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips email marketing automation wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'MailerLite email sequence - Beatmaking 101',
+      'Brevo automation - Beatmaking 101',
+      'ActiveCampaign drip campaign for Beatmaking 101',
+      'Beatmaking 101 - Klaviyo follow-up workflow',
+      'RD Station secuencia de correos - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips notification opt-in form wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'WhatsApp opt-in form - Beatmaking 101',

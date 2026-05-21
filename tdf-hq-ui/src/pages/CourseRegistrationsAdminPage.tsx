@@ -1857,6 +1857,19 @@ const firstRunNoCodeLandingDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunEmailMarketingProviderPattern =
+  String.raw`(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack)`;
+const firstRunEmailMarketingAutomationDescriptorPattern =
+  String.raw`(?:(?:${firstRunEmailMarketingProviderPattern})\s+(?:(?:e-?mail|correo|drip|follow[-\s]?up|seguimiento|reminder|recordatorio)\s+)?(?:automations?|workflows?|sequences?|campaigns?|broadcasts?|drips?|emails?|messages?|automatizaciones?|flujos?|secuencias?(?:\s+de\s+correos?)?|campañas?|seguimientos?|recordatorios?)|(?:automatizaciones?|flujos?|secuencias?(?:\s+de\s+correos?)?|campañas?|seguimientos?|recordatorios?)\s+(?:de|para)\s+(?:${firstRunEmailMarketingProviderPattern}))`;
+const firstRunEmailMarketingAutomationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunEmailMarketingAutomationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunEmailMarketingAutomationDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunEmailMarketingAutomationDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunEmailMarketingFormDescriptorPrefixPattern =
   /^(?:(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2302,6 +2315,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
     .replace(firstRunGenericEventDescriptorPrefixPattern, '')
     .replace(firstRunTicketingDescriptorPrefixPattern, '')
+    .replace(firstRunEmailMarketingAutomationDescriptorPrefixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorPrefixPattern, '')
     .replace(firstRunNoCodeLandingDescriptorPrefixPattern, '')
     .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
@@ -2441,6 +2455,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
     .replace(firstRunGenericEventDescriptorSuffixPattern, '')
     .replace(firstRunTicketingDescriptorSuffixPattern, '')
+    .replace(firstRunEmailMarketingAutomationDescriptorSuffixPattern, '')
     .replace(firstRunEmailMarketingFormDescriptorSuffixPattern, '')
     .replace(firstRunNoCodeLandingDescriptorSuffixPattern, '')
     .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')

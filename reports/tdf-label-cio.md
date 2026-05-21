@@ -29,5 +29,55 @@
 - **Release report:** Latest entry 2026-05-20 13:07 GMT-5 (~26.75 h stale) — within 24h cadence.
 - **Systems lane:** `tdf-label-systems` and cron `47ccc4be-1307-4001-9581-809c6d82b9` remain paused per CEO directive. Recommendation: STAY PAUSED — no fresh bounded artifact written.
 
-FINAL_STATUS: done — Packet A proven (20× Detox PASS, baseline valid); Packet B now OPEN (EAS_IOS_CREDENTIALS_MISSING resolved, preview build ready, physical-device Google OAuth review scheduled 2026-05-21); Lane C live (supervisor 1118, child 66880, heartbeat 2026-05-21T15:53:35Z, launchd durable, latest commit 90fcf0ab5 backend invariant + tests, no repair needed).
+---
+
+## 2026-05-21 21:51 UTC — Run 40801163
+
+**Scope:** P1 — Publish fresh CIO checkpoint within 90s. P2 — Cross-check backend + CIL health. P3 — Document Packet A/B, Lane C, systems pause.
+
+### Evidence
+- **Backend:** PID 1431 (`com.tdf.backend`), health `{"db":"ok","status":"ok"}` — stable, no PID transition since last check.
+- **CIL status.json:** state=running, phase=supervising, supervisor PID 1118, child PID 41867, lastHeartbeat 2026-05-21T21:51:25Z (~0 s old), lastIterationResult=ok, lastExitCode=0, restartCount=155, staleRestartCount=0.
+- **Child process:** PID 41867 (node), elapsed 03:19, parent 1118 — alive and healthy.
+- **Stop file:** absent. **`.pause-codex`:** absent.
+- **Log file:** 10,619,091 bytes (~10.1 MB) — well under 150 MB threshold.
+- **CEO report:** 2026-05-21 21:16 UTC (~0.6 h stale — fresh). No company-level blockers. Physical-device Google OAuth DUE 2026-05-21 23:59 UTC (~2.1 h).
+- **CTO report:** 2026-05-21 21:49 UTC (~0.03 h stale — fresh). 22nd Detox PASS next. Physical-device OAuth deadline flagged.
+- **Release report:** 2026-05-21 21:18 UTC (~0.55 h stale — fresh). 21st PASS baseline. `release-readiness.md` current (21st PASS, 2026-05-21 04:52 UTC). `docs/physical-device-test-guide.md` exists.
+- **Platform report:** 2026-05-21 21:10 UTC (~0.7 h stale — fresh). CIL heartbeat gap closed (commit dcf605b05). No oversized backups.
+
+### Packet A — Login-proof release lane
+- **Status:** PROVEN
+- **Evidence:** 21 consecutive Detox PASSes (latest 2026-05-20 20:21 UTC per `release-readiness.md`). Both login paths verified on simulator. No code changes since last PASS — baseline valid within ~25 h window.
+
+### Packet B — Store-publish readiness gate
+- **Status:** OPEN (sequenced after Packet A proof)
+- **Blocker:** `EAS_IOS_CREDENTIALS_MISSING` **RESOLVED** — Distribution cert + provisioning profile active until Nov 2026. Preview build `.ipa` available.
+- **Physical-device Google OAuth:** DUE 2026-05-21 23:59 UTC (~2.1 h remaining). Operator-gated. Guide exists at `docs/physical-device-test-guide.md`. Not a simulator/test blocker.
+- **Next action:** Operator executes physical-device test and reports result.
+
+### Lane C — Evergreen continuous-improvement runner
+- **Status:** LIVE
+- **Supervisor PID:** 1118 (bash, elapsed 01-10:56:44, launchd loaded)
+- **Child PID:** 41867 (node loop.mjs, elapsed 03:19, iteration 1, phase: supervising)
+- **launchd plist:** `ai.openclaw.tdf-app.continuous-improvement-loop` loaded, KeepAlive=true, RunAtLoad=true
+- **Heartbeat:** 2026-05-21T21:51:25Z (~0 s old at check, within 1800s timeout)
+- **Restart count:** 155 (stale restarts: 0) — healthy auto-restart pattern, last exit code 0
+- **Latest iteration result:** `ok`
+- **No stop file present. No `.pause-codex` present.**
+- **No repair needed.**
+
+### Systems lane
+- **Status:** PAUSED per CEO directive.
+- **Cron:** `47ccc4be-1307-4001-9581-80956c0d82b9` disabled.
+- **Recommendation:** STAY PAUSED — no fresh bounded artifact written for `tdf-label-systems`.
+
+### Cross-checks this run
+- Backend health: PASS (PID 1431, /health ok)
+- CIL health: PASS (supervisor 1118, child 41867, heartbeat fresh, log 10.1 MB)
+- Release report freshness: PASS (~0.55 h stale)
+- Packet A baseline: PASS (21st PASS, valid)
+- Packet B gate: OPEN (physical-device OAuth due ~2.1 h)
+
+FINAL_STATUS: done — Packet A proven (21× Detox PASS, baseline valid); Packet B OPEN (EAS credentials resolved, physical-device Google OAuth due 2026-05-21 23:59 UTC, ~2.1 h remaining); Lane C live (supervisor 1118, child 41867, heartbeat 2026-05-21T21:51:25Z, launchd durable, log 10.1 MB, no repair needed); systems lane paused.
 ---
