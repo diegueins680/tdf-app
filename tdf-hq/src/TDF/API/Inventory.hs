@@ -145,6 +145,8 @@ hasUploadContentTypeNameParameter contentType =
     isNameParameter rawParameter =
       let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
       in key `elem` ["name", "name*", "filename", "filename*"]
+           || "name*" `T.isPrefixOf` key
+           || "filename*" `T.isPrefixOf` key
 
 resolveImageExtension :: Maybe Text -> FileData Tmp -> Either Text Text
 resolveImageExtension nameTxt file =

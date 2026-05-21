@@ -824,6 +824,9 @@ spec = do
         "image/jpeg; filename=front-room.html"
       assertInvalid
         "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; filename*0=front-room; filename*1=.html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
         "image/jpeg; name=front-room.html"
 
       case fromMultipart
