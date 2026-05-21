@@ -1948,10 +1948,10 @@ const firstRunPostSubmitDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunLandingPageDescriptorPrefixPattern =
-  /^(?:(?:p[aá]gina\s+landing|landing)(?:\s+(?:del?\s+curso|de\s+curso))?)\s*[-:/|]\s*/i;
+  /^(?:(?:course\s+)?landing(?:\s+pages?)?|landings?(?:\s+(?:del?\s+curso|de\s+curso))?|p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
 
 const firstRunLandingPageDescriptorSuffixPattern =
-  /\s*[-:/|]\s*(?:(?:p[aá]gina\s+landing|landing)(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
+  /(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:course\s+)?landing(?:\s+pages?)?|landings?(?:\s+(?:del?\s+curso|de\s+curso))?|p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
 
 const firstRunStandalonePublicPageDescriptorPrefixPattern =
   /^(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
