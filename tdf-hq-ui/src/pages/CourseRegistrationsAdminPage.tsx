@@ -196,7 +196,7 @@ const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios pú
 const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el selector por formulario volverá cuando se recupere esa información.';
 const busyCohortFilterUnavailableMessage = 'La lista sigue cargada; los formularios públicos no están disponibles.';
 const cohortFilterLoadingMessage = 'La lista ya está disponible; el selector por formulario aparecerá cuando terminen de cargar los formularios.';
-const emptyCohortFilterMessage = 'Sin selector por formulario hasta configurar cursos. La lista sigue disponible.';
+const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para activar el selector por formulario.';
 const genericSingleCohortInitialEmptyStateMessage =
   'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>

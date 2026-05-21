@@ -299,7 +299,7 @@ const busyCohortFilterUnavailableMessage =
 const cohortFilterLoadingMessage =
   'La lista ya está disponible; el selector por formulario aparecerá cuando terminen de cargar los formularios.';
 const emptyCohortFilterMessage =
-  'Sin selector por formulario hasta configurar cursos. La lista sigue disponible.';
+  'La lista sigue disponible; configura cursos para activar el selector por formulario.';
 
 const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones-curso') => {
   const qc = new QueryClient({
@@ -16801,6 +16801,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(cohortSummary).not.toBeNull();
       expect(cohortSummary?.textContent).toContain(emptyCohortFilterMessage);
       expect(cohortSummary?.textContent).not.toContain('Cohortes no configuradas');
+      expect(cohortSummary?.textContent).not.toContain('Sin selector por formulario');
       expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(container.querySelector('[data-testid="course-registration-cohort-filter-loading"]')).toBeNull();
@@ -16846,6 +16847,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(hasLabel(container, cohortFilterLabel)).toBe(false);
       expect(countOccurrences(container, emptyCohortFilterMessage)).toBe(1);
+      expect(container.textContent).not.toContain('Sin selector por formulario');
       expect(container.querySelector('[role="group"][aria-label="Filtros de estado de inscripciones"]')).not.toBeNull();
       expect(container.textContent).not.toContain('Cambia Estado para actualizar la lista.');
       expect(container.textContent).not.toContain('Ajustar límite aparecerá cuando se llene el lote.');
