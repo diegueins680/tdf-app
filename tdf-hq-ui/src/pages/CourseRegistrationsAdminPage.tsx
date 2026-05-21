@@ -1541,6 +1541,16 @@ const firstRunPaymentEvidenceDescriptorPrefixPattern =
 const firstRunPaymentEvidenceDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|invoices?|vouchers?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?|vouchers?\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?|vouchers?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?|confirmaci[oó]n(?:es)?\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
 
+const firstRunBillingDescriptorPattern = String.raw`(?:(?:invoice|billing|tax\s+receipt|fiscal\s+receipt)\s+(?:requests?|details?|forms?|pages?|links?|urls?|portals?)|(?:requests?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:invoice|billing|tax\s+receipt|fiscal\s+receipt)s?|(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|datos)\s+(?:de|para)\s+(?:facturas?|facturaci[oó]n|comprobantes?\s+tributarios?|recibos?\s+fiscales?)|(?:facturas?|facturaci[oó]n|comprobantes?\s+tributarios?|recibos?\s+fiscales?)\s+(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|datos))`;
+const firstRunBillingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBillingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunBillingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunBillingDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCourseChangeRequestDescriptorPattern = String.raw`(?:(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?)\s+(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)|(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?)|(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+(?:de|para)\s+(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula))?|(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula)(?:\s+(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
 const firstRunCourseChangeRequestDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunCourseChangeRequestDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2154,6 +2164,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorPrefixPattern, '')
     .replace(firstRunPaymentDescriptorPrefixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
+    .replace(firstRunBillingDescriptorPrefixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -2284,6 +2295,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSalesDescriptorSuffixPattern, '')
     .replace(firstRunPaymentDescriptorSuffixPattern, '')
     .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
+    .replace(firstRunBillingDescriptorSuffixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')

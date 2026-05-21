@@ -23245,6 +23245,39 @@ describe('CourseRegistrationsAdminPage', () => {
     }
   });
 
+  it('strips billing helper wrappers from first-run cohort copy', async () => {
+    const titles = [
+      'Invoice request - Beatmaking 101',
+      'Billing details - Beatmaking 101',
+      'Solicitud de factura - Beatmaking 101',
+      'Beatmaking 101 - datos de facturación',
+    ];
+
+    for (const title of titles) {
+      listCohortsMock.mockResolvedValue([{ ccSlug: 'beatmaking-101', ccTitle: title }]);
+      listRegistrationsMock.mockResolvedValue([]);
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const { cleanup } = await renderPage(container);
+
+      await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="course-registration-initial-empty-state"]');
+        const publicFormAction = emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]');
+
+        expect(emptyState).not.toBeNull();
+        expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
+        expect(emptyState?.textContent).not.toContain(title);
+        expect(emptyState?.textContent).not.toMatch(/invoice request|billing details|solicitud de factura|datos de facturaci[oó]n/i);
+        expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
+        expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');
+        expect(emptyState?.querySelectorAll('a')).toHaveLength(1);
+      });
+
+      await cleanup();
+    }
+  });
+
   it('keeps the minimal single-result view focused on row actions instead of a standalone list refresh', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
