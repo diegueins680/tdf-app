@@ -332,7 +332,22 @@ hasAmbiguousRadioBasePath rawUrl =
         then []
         else T.splitOn "/" (T.drop 1 trimmedPath)
     isAmbiguousPathSegment segment =
-      segment == "" || segment == "." || segment == ".."
+      segment == "" || decodedSegment == "." || decodedSegment == ".."
+      where
+        decodedSegment = decodeUrlEncodedRadioDots (T.toLower segment)
+
+decodeUrlEncodedRadioDots :: Text -> Text
+decodeUrlEncodedRadioDots txt =
+  case T.uncons txt of
+    Nothing ->
+      ""
+    Just ('%', rest)
+      | "2e" `T.isPrefixOf` rest ->
+          "." <> decodeUrlEncodedRadioDots (T.drop 2 rest)
+      | otherwise ->
+          "%" <> decodeUrlEncodedRadioDots rest
+    Just (ch, rest) ->
+      T.singleton ch <> decodeUrlEncodedRadioDots rest
 
 radioFieldError :: Text -> ServerError -> ServerError
 radioFieldError label err =

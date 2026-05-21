@@ -787,6 +787,15 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected insecure radio public base to be rejected, got: " <> show value)
 
+        it "rejects encoded dot segments in radio stream paths before persisting stream URLs" $
+            case Radio.validateRadioStreamUrl "https://radio.example.com/streams/%2e%2e/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "path must not contain empty, dot, or dot-dot segments"
+                Right value ->
+                    expectationFailure
+                        ("Expected encoded dot segment stream URL to be rejected, got: " <> show value)
+
     describe "Party request FromJSON" $ do
         it "accepts canonical CRM party create and update bodies" $ do
             case decodePartyCreate
