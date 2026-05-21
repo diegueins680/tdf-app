@@ -107,6 +107,19 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips admin workflow wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Application review queue - Beatmaking 101',
+      'Enrollment approval inbox for Beatmaking 101',
+      'Beatmaking 101 - registration triage dashboard',
+      'Course moderation tracker - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('keeps legitimate alert and notification course titles when they are not signup artifacts', () => {
     expect(
       cohortFirstRunLabel({ ccSlug: 'alerts-engineering-lab', ccTitle: 'Live Alerts for Engineers' }),
