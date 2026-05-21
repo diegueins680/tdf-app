@@ -9878,7 +9878,7 @@ main = hspec $ do
             validateProposalTitle "  TDF Live Sessions Proposal  "
                 `shouldBe` Right "TDF Live Sessions Proposal"
 
-        it "rejects blank, oversized, or control-character proposal titles before they reach storage or PDF generation" $ do
+        it "rejects blank, symbol-only, oversized, or control-character proposal titles before they reach storage or PDF generation" $ do
             let assertInvalid raw expected = case validateProposalTitle raw of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
@@ -9888,6 +9888,7 @@ main = hspec $ do
             assertInvalid "   " "title is required"
             assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
             assertInvalid "Launch\nBcc: ops@example.com" "title must not contain control characters"
+            assertInvalid "---" "title must include letters or numbers"
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do

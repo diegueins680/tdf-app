@@ -386,6 +386,8 @@ validateProposalTitle rawTitle
       Left err400 { errBody = "title must be 160 characters or fewer" }
   | T.any isUnsafeProposalInlineTextChar title =
       Left err400 { errBody = proposalInlineTextError "title" }
+  | not (T.any isAlphaNum title) =
+      Left err400 { errBody = "title must include letters or numbers" }
   | otherwise =
       Right title
   where
