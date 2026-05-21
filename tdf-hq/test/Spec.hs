@@ -8614,15 +8614,35 @@ main = hspec $ do
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
             normalizeMomentCaption (Just "  aftermovie  ") `shouldBe` Right (Just "aftermovie")
+            let assertInvalidCaption rawCaption expectedMessage =
+                    case normalizeMomentCaption (Just rawCaption) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid caption to fail, got " <> show value)
             case normalizeMomentCaption (Just (Data.Text.replicate 281 "a")) of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "Moment caption must be 280 characters or less"
                 Right value ->
                     expectationFailure ("Expected oversize caption to fail, got " <> show value)
+            assertInvalidCaption
+                ("after" <> Data.Text.singleton '\x202e' <> "movie")
+                "Moment caption must not contain control characters"
+            assertInvalidCaption
+                "after\nmovie"
+                "Moment caption must not contain control characters"
 
         it "requires non-empty comment bodies and enforces comment length" $ do
             normalizeMomentCommentBody "  impecable set  " `shouldBe` Right "impecable set"
+            let assertInvalidComment rawBody expectedMessage =
+                    case normalizeMomentCommentBody rawBody of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid moment comment to fail, got " <> show value)
             case normalizeMomentCommentBody "   " of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -8635,6 +8655,12 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "Moment comment body must be 500 characters or less"
                 Right value ->
                     expectationFailure ("Expected oversize moment comment to fail, got " <> show value)
+            assertInvalidComment
+                ("set" <> Data.Text.singleton '\x202e' <> "recap")
+                "Moment comment body must not contain control characters"
+            assertInvalidComment
+                "set\nrecap"
+                "Moment comment body must not contain control characters"
 
         it "rejects invalid moment media dimensions instead of silently dropping them" $ do
             validateMomentMediaDimension "Moment media width" Nothing `shouldBe` Right Nothing

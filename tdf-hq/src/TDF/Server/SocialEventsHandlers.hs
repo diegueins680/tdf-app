@@ -2687,6 +2687,11 @@ normalizeMomentCaption mCaption =
     Just captionVal
       | T.length captionVal > 280 ->
           Left err400 { errBody = "Moment caption must be 280 characters or less" }
+      | maybe False (T.any isUnsafeMomentTextChar) mCaption ->
+          Left err400
+            { errBody =
+                "Moment caption must not contain control characters or hidden formatting characters"
+            }
       | otherwise -> Right (Just captionVal)
 
 normalizeMomentCommentBody :: T.Text -> Either ServerError T.Text
@@ -2697,7 +2702,17 @@ normalizeMomentCommentBody rawBody =
     Just bodyVal
       | T.length bodyVal > 500 ->
           Left err400 { errBody = "Moment comment body must be 500 characters or less" }
+      | T.any isUnsafeMomentTextChar rawBody ->
+          Left err400
+            { errBody =
+                "Moment comment body must not contain control characters or hidden formatting characters"
+            }
       | otherwise -> Right bodyVal
+
+isUnsafeMomentTextChar :: Char -> Bool
+isUnsafeMomentTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateMomentMediaDimension :: T.Text -> Maybe Int -> Either ServerError (Maybe Int)
 validateMomentMediaDimension _ Nothing = Right Nothing
