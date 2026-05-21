@@ -379,6 +379,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
        || hasReservedSegmentLabelCollision reservedRoutes validatedCatalog
+       || hasAdminConsoleCardSegmentCollision validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -472,6 +473,12 @@ validateFutureStubCatalogEndpointLeaves catalog = do
             Set.toList $
               Set.fromList (concatMap (T.splitOn "/" . snd) reservedRoutesForAreas)
       in any (routeHasReservedSegmentLabel reservedSegments) catalogForAreas
+
+    hasAdminConsoleCardSegmentCollision catalogForAreas =
+      let adminConsoleCardIds = Set.fromList allowedFutureAdminConsoleCardIds
+      in any
+          (any (`Set.member` adminConsoleCardIds) . T.splitOn "/" . snd)
+          catalogForAreas
 
     routeHasReservedSegmentLabel reservedSegments route@(_area, endpoint)
       | route `elem` allowedFutureStubReservedSiblingRoutes = False
