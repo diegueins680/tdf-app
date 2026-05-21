@@ -46,7 +46,7 @@ import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
-import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import PageShell, { EmptyState } from '../components/PageShell';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -496,14 +496,14 @@ export default function PartiesPage() {
 
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
-        {partiesQuery.isLoading && <SkeletonCards count={4} />}
-
-        {!partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
+        {showInitialLoadingState ? (
+          <Alert severity="info" variant="outlined">
+            Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
+          </Alert>
+        ) : !partiesQuery.error && !hasContacts ? (
           <EmptyState
             title="Sin contactos aún"
-            description="Crea tu primer contacto para empezar a gestionar personas, empresas y roles."
-            actionLabel="Nuevo contacto"
-            actionOnClick={() => setCreateOpen(true)}
+            description="Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto. El tipo se elige dentro del formulario de alta."
           />
         ) : showSearchEmptyState ? (
           <Alert severity="info" variant="outlined">
