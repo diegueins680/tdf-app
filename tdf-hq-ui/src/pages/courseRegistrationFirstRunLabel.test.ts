@@ -137,8 +137,18 @@ describe('cohortFirstRunLabel', () => {
     ];
 
     for (const title of titles) {
-      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+      const label = cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title });
+      expect(`${title} -> ${label}`).toBe(`${title} -> Beatmaking 101`);
     }
+  });
+
+  it('strips parent consent wrappers without treating them as notification opt-ins', () => {
+    expect(
+      cohortFirstRunLabel({
+        ccSlug: 'beatmaking-101',
+        ccTitle: 'Formulario de consentimiento de padres - Beatmaking 101',
+      }),
+    ).toBe('Beatmaking 101');
   });
 
   it('strips admin workflow wrappers before first-run copy uses the cohort label', () => {
@@ -152,6 +162,29 @@ describe('cohortFirstRunLabel', () => {
     for (const title of titles) {
       expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
     }
+  });
+
+  it('strips kanban and pipeline admin workflow wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Payment kanban - Beatmaking 101',
+      'Follow-up pipeline for Beatmaking 101',
+      'Beatmaking 101 - receipts kanban',
+      'Kanban de pagos para Beatmaking 101',
+      'Pipeline de seguimiento - Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate kanban and pipeline course titles when they are not admin workflow wrappers', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'kanban-producers', ccTitle: 'Kanban for Producers' }),
+    ).toBe('Kanban for Producers');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'music-business-pipeline', ccTitle: 'Music Business Pipeline' }),
+    ).toBe('Music Business Pipeline');
   });
 
   it('strips payment and follow-up workflow wrappers before first-run copy uses the cohort label', () => {

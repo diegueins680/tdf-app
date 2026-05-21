@@ -1710,7 +1710,7 @@ const firstRunInvitationDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunNotificationChannelPattern = String.raw`(?:sms|text\s+messages?|whats\s*app|wa\s*\.?\s*me|e-?mail|correo)`;
-const firstRunNotificationOptInDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)\s+(?:forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consents?)|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))`;
+const firstRunNotificationOptInDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?\s+(?:forms?|pages?|links?|urls?|portals?)|(?:(?:${firstRunNotificationChannelPattern})\s+)consents?\b\s+(?:forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:${firstRunNotificationChannelPattern})\s+consents?\b|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+opt[-\s]?ins?(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern})|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern})\s+(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)|(?:${firstRunNotificationChannelPattern})\s+(?:consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))`;
 const firstRunNotificationSignupDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)\s+(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)|(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)|(?:formulario|p[aá]gina|enlace|link|url|portal|suscripci[oó]n|registro)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+(?:para\s+)?)?(?:recordatorios?|notificaciones?|alertas?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:recordatorios?|notificaciones?|alertas?)\s+(?:del?\s+curso|de\s+curso)?\s*(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|suscripciones?|registros?)|${firstRunNotificationOptInDescriptorPattern})`;
 const firstRunNotificationSignupDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunNotificationSignupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2141,7 +2141,7 @@ const firstRunConsultationCallDescriptorSuffixPattern =
     'i',
   );
 
-const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:(?:application|admissions?|registration|enrollment|student|course|follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|inbox(?:es)?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|seguimiento|pagos?|comprobantes?|evidencias?|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
+const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:(?:application|admissions?|registration|enrollment|student|course|follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|kanban(?:es)?|pipelines?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|seguimiento|pagos?|comprobantes?|evidencias?|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
 
 const firstRunAdminWorkflowDescriptorPrefixPattern =
   new RegExp(
@@ -2269,8 +2269,8 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunBillingDescriptorPrefixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
     .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
-    .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
+    .replace(firstRunAgreementDescriptorPrefixPattern, '')
     .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
     .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -2408,8 +2408,8 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunBillingDescriptorSuffixPattern, '')
     .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
     .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
-    .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
+    .replace(firstRunAgreementDescriptorSuffixPattern, '')
     .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
     .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
