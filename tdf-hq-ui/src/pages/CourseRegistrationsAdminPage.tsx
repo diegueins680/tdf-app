@@ -1674,6 +1674,16 @@ const firstRunPriorityWaitlistDescriptorPrefixPattern =
 const firstRunPriorityWaitlistDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))\s*$/i;
 
+const firstRunBetaPilotDescriptorPattern = String.raw`(?:(?:beta|pilot|preview|test[-\s]?run|soft\s+launch|private\s+beta)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|access)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|access|forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:beta|pilot|preview|test[-\s]?run|soft\s+launch|private\s+beta)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|registro|inscripci[oó]n|matr[ií]cula|acceso)\s+(?:de|para(?:\s+el)?)\s+(?:beta|piloto|vista\s+previa|lanzamiento\s+suave))`;
+const firstRunBetaPilotDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBetaPilotDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunBetaPilotDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunBetaPilotDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunInvitationDescriptorPattern = String.raw`(?:(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?|access))?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:registration|enrollment|application|access))?|(?:formulario|p[aá]gina|registro|inscripci[oó]n|matr[ií]cula|acceso)\s+(?:de|para|por|con)\s+invitaci[oó]n|invitaci[oó]n\s+(?:al|a\s+la|del?|de|para)\s+(?:curso|clase|programa|cohorte|inscripci[oó]n|registro|matr[ií]cula))`;
 const firstRunInvitationDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunInvitationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2244,6 +2254,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunProgramDescriptorPrefixPattern, '')
     .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
+    .replace(firstRunBetaPilotDescriptorPrefixPattern, '')
     .replace(firstRunInvitationDescriptorPrefixPattern, '')
     .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunWaitlistDescriptorPrefixPattern, '')
@@ -2379,6 +2390,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunProgramDescriptorSuffixPattern, '')
     .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
     .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
+    .replace(firstRunBetaPilotDescriptorSuffixPattern, '')
     .replace(firstRunInvitationDescriptorSuffixPattern, '')
     .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunWaitlistDescriptorSuffixPattern, '')
