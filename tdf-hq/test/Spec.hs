@@ -12457,6 +12457,8 @@ main = hspec $ do
                         }
                 singleParty =
                     Entity (toSqlKey 7) (mkParty "Single Musician" "player@example.com")
+                invalidParty =
+                    Entity (toSqlKey 0) (mkParty "Invalid Musician" "invalid@example.com")
                 duplicateParties =
                     [ Entity (toSqlKey 11) (mkParty "First Duplicate" "dupe@example.com")
                     , Entity (toSqlKey 12) (mkParty "Second Duplicate" "dupe@example.com")
@@ -12473,6 +12475,14 @@ main = hspec $ do
                 other ->
                     expectationFailure
                         ("Expected a single musician email match, got " <> show other)
+            case selectUniqueLiveSessionMusicianByEmail [invalidParty] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err)
+                        `shouldContain` "Stored live-session musician party id is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid musician party id to fail, got " <> show value)
             case selectUniqueLiveSessionMusicianByEmail duplicateParties of
                 Left err -> do
                     errHTTPCode err `shouldBe` 409

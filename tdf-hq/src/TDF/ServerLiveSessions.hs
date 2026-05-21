@@ -369,7 +369,10 @@ selectUniqueLiveSessionMusicianByEmail
   :: [Entity Party]
   -> Either ServerError (Maybe (Entity Party))
 selectUniqueLiveSessionMusicianByEmail [] = Right Nothing
-selectUniqueLiveSessionMusicianByEmail [partyEnt] = Right (Just partyEnt)
+selectUniqueLiveSessionMusicianByEmail [partyEnt]
+  | fromSqlKey (entityKey partyEnt) <= 0 =
+      Left err500 { errBody = "Stored live-session musician party id is invalid" }
+  | otherwise = Right (Just partyEnt)
 selectUniqueLiveSessionMusicianByEmail _ =
   Left err409 { errBody = "Multiple parties match this musician email" }
 
