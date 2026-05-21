@@ -16,6 +16,7 @@ module TDF.API.WhatsApp
   , leadCompletionConsumedToken
   , extractFirstWebhookMessage
   , extractFirstEnrollmentWebhookMessage
+  , extractUniqueEnrollmentWebhookMessage
   , PreviewReq(..)
   , CompleteReq(..)
   ) where
@@ -89,12 +90,13 @@ hookVerifyH mmode mchall mtoken = do
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value
 hookReceiveH conn payload = do
   svc <- liftIO mkWhatsAppService
-  case extractFirstEnrollmentWebhookMessage payload of
-    Nothing ->
+  case extractUniqueEnrollmentWebhookMessage payload of
+    Left err -> throwError err
+    Right Nothing ->
       case extractFirstWebhookMessage payload of
         Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
         Just _ -> pure $ object ["ignored" .= True]
-    Just msg ->
+    Right (Just msg) ->
       let fromPhone = from msg
       in do
         unless (isValidE164 fromPhone) $
@@ -116,6 +118,19 @@ extractFirstWebhookMessage =
 extractFirstEnrollmentWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
 extractFirstEnrollmentWebhookMessage =
   listToMaybe . filter isEnrollmentWebhookMessage . extractWebhookTextMessages
+
+extractUniqueEnrollmentWebhookMessage :: WAMetaWebhook -> Either ServerError (Maybe WAMessage)
+extractUniqueEnrollmentWebhookMessage payload =
+  case filter isEnrollmentWebhookMessage (extractWebhookTextMessages payload) of
+    [] -> Right Nothing
+    firstMsg : rest
+      | any ((/= from firstMsg) . from) rest ->
+          Left err400
+            { errBody =
+                "Webhook contains enrollment messages from multiple senders"
+            }
+      | otherwise ->
+          Right (Just firstMsg)
 
 extractWebhookTextMessages :: WAMetaWebhook -> [WAMessage]
 extractWebhookTextMessages payload =

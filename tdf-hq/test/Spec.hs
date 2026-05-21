@@ -65,6 +65,7 @@ import TDF.API.WhatsApp
       ensureLeadCompletionUpdated,
       extractFirstEnrollmentWebhookMessage,
       extractFirstWebhookMessage,
+      extractUniqueEnrollmentWebhookMessage,
       validateHookVerifyRequest,
       validateLeadCompletionId,
       validateLeadCompletionLookup,
@@ -11743,6 +11744,47 @@ main = hspec $ do
                 `shouldBe` Just (Just "wamid.command")
             fmap messageId (extractFirstEnrollmentWebhookMessage negativeOnlyPayload)
                 `shouldBe` Nothing
+
+    describe "extractUniqueEnrollmentWebhookMessage" $ do
+        it "rejects batched enrollment commands from different senders instead of choosing a first sender" $ do
+            let enrollmentMessage msgId sender ts =
+                    WA.WAMessage
+                        (Just msgId)
+                        "text"
+                        sender
+                        (Just (WA.WAText "Quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just ts)
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    ( Just
+                                        [ enrollmentMessage
+                                            "wamid.one"
+                                            "+593991234567"
+                                            "1770000001"
+                                        , enrollmentMessage
+                                            "wamid.two"
+                                            "+593992345678"
+                                            "1770000002"
+                                        ]
+                                    )
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            case extractUniqueEnrollmentWebhookMessage payload of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "multiple senders"
+                Right value ->
+                    expectationFailure
+                        ("Expected ambiguous enrollment webhook to fail, got: " <> show value)
 
     describe "PreviewReq" $ do
         it "accepts canonical preview-link bodies and normalizes user-entered phone formatting up front" $ do
