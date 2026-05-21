@@ -491,12 +491,12 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  connUrl <-
+  rawConnUrlEnv <-
     if keywordDbEnvConfigured
       then pure Nothing
       else lookupUniqueConnUrlEnv
         ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
-  let usingKeywordConn = isNothing connUrl
+  let usingKeywordConn = isNothing rawConnUrlEnv
   rawHost    <- getWithFallback usingKeywordConn ["DB_HOST", "PGHOST"] "127.0.0.1"
   rawPort    <- getWithFallback usingKeywordConn ["DB_PORT", "PGPORT"] "5432"
   rawUser    <- getWithFallback usingKeywordConn ["DB_USER", "PGUSER"] "postgres"
@@ -514,7 +514,8 @@ loadConfig = do
       Just (envName, rawMode) ->
         case validateDbSslMode envName rawMode of
           Left msg -> fail msg
-          Right mode -> pure (Just mode)
+          Right mode -> pure (Just (envName, mode))
+  connUrl <- reconcileConnUrlSslMode sslModeEnv rawConnUrlEnv
   appPortVal <- lookupEnv "APP_PORT" >>= validatePortEnv "APP_PORT" 8080
   rdbEnv     <- lookupEnv "RESET_DB"
   sdbEnv     <- lookupEnv "SEED_DB"
@@ -664,7 +665,7 @@ loadConfig = do
     , dbPass = w
     , dbName = d
     , dbConnUrl = connUrl
-    , dbSslMode = sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
+    , dbSslMode = fmap snd sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
     , appPort = appPortVal
     , resetDb = resetDbVal
     , seedDatabase = seedDatabaseVal
@@ -758,7 +759,7 @@ loadConfig = do
         [] -> pure Nothing
         firstValue:rest ->
           case filter ((/= snd firstValue) . snd) rest of
-            [] -> pure (Just (snd firstValue))
+            [] -> pure (Just firstValue)
             conflict:_ ->
               fail
                 ( fst firstValue
@@ -770,6 +771,19 @@ loadConfig = do
       case validateFallbackConnUrl key normalized of
         Right conn -> pure (key, conn)
         Left msg -> fail msg
+    reconcileConnUrlSslMode Nothing Nothing = pure Nothing
+    reconcileConnUrlSslMode Nothing (Just (_, url)) = pure (Just url)
+    reconcileConnUrlSslMode (Just _) Nothing = pure Nothing
+    reconcileConnUrlSslMode (Just (sslEnvName, sslMode)) (Just (urlEnvName, url)) =
+      case extractConnUrlParam "sslmode" url of
+        Nothing -> pure (Just (appendConnUrlParam "sslmode" sslMode url))
+        Just urlMode
+          | T.toLower (T.strip (T.pack urlMode)) == T.toLower (T.strip (T.pack sslMode)) ->
+              pure (Just url)
+          | otherwise ->
+              fail (sslEnvName <> " conflicts with " <> urlEnvName <> " sslmode")
+    appendConnUrlParam key value url =
+      url <> (if '?' `elem` url then "&" else "?") <> key <> "=" <> value
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed
