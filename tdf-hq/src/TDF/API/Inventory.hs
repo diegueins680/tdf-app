@@ -93,6 +93,12 @@ validateBrowserFileName file =
   let fileName = T.strip (fdFileName file)
   in if T.any isUnsafeUploadNameChar fileName
        then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+       else if T.length fileName > maxAssetUploadFileNameChars
+         then Left
+           ( "Uploaded file name must be "
+               <> T.pack (show maxAssetUploadFileNameChars)
+               <> " characters or fewer"
+           )
        else if T.any isUrlDelimiterUploadNameChar fileName
          then Left "Uploaded file name must not contain URL delimiters or percent-encoded path markers"
        else if T.any isPathSeparator fileName

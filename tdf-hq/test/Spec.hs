@@ -8032,6 +8032,11 @@ main = hspec $ do
                     [ (mkEventImageFile "file" "front-panel.png")
                         { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
                     ])
+            assertInvalid
+                "Uploaded file name must be 218 characters or fewer"
+                (mkEventImageMultipart
+                    [("name", "front-panel.png")]
+                    [mkEventImageFile "file" (Data.Text.replicate 215 "a" <> ".png")])
 
         it "rejects hidden executable or vector extensions before storage filename fallbacks" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation
