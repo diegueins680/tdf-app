@@ -436,13 +436,16 @@ validateFutureStubCatalogEndpointLeaves catalog = do
           catalogForAreas
 
     hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreasValue catalogForAreas =
-      let reservedTopLevelAreaSet = Set.fromList reservedTopLevelAreasValue
-      in any
-          (\route@(_area, endpoint) ->
-             route `notElem` allowedFutureStubReservedTopLevelEndpointRoutes
-               && any (`Set.member` reservedTopLevelAreaSet) (T.splitOn "/" endpoint)
-          )
-          catalogForAreas
+      any
+        (\route@(_area, endpoint) ->
+           route `notElem` allowedFutureStubReservedTopLevelEndpointRoutes
+             && any
+                  (\segment ->
+                     any (segmentsOverlap segment) reservedTopLevelAreasValue
+                  )
+                  (T.splitOn "/" endpoint)
+        )
+        catalogForAreas
 
     hasReservedLeafCollision reservedRoutes catalogForAreas area =
       let reservedLeaves =
