@@ -749,6 +749,27 @@ spec = do
       assertInvalid "inventory/front-room.jpg"
       assertInvalid "inventory\\\\front-room.jpg"
 
+    it "rejects URL-shaped upload names before storage sanitization rewrites their path intent" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected URL-shaped asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must not contain URL delimiters or percent-encoded path markers"
+        (mkAssetUploadMultipart
+          [("name", "front-room.jpg?download=.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain URL delimiters or percent-encoded path markers"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front%2Froom.jpg"])
+
     it "rejects explicit upload names that would be silently reshaped into a different stored filename" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
           assertInvalid expectedMessage multipart =

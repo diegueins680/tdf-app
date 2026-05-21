@@ -56,6 +56,8 @@ validateUploadName :: Text -> Either Text (Maybe Text)
 validateUploadName rawName
   | T.any isUnsafeUploadNameChar rawName =
       Left "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+  | T.any isUrlDelimiterUploadNameChar rawName =
+      Left "Asset upload name must not contain URL delimiters or percent-encoded path markers"
   | T.any isPathSeparator rawName =
       Left "Asset upload name must not contain path separators"
   | hasEmptyUploadNameSegment rawName =
@@ -91,6 +93,8 @@ validateBrowserFileName file =
   let fileName = T.strip (fdFileName file)
   in if T.any isUnsafeUploadNameChar fileName
        then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+       else if T.any isUrlDelimiterUploadNameChar fileName
+         then Left "Uploaded file name must not contain URL delimiters or percent-encoded path markers"
        else if T.any isPathSeparator fileName
          then Left "Uploaded file name must not contain path separators"
          else if hasEmptyUploadNameSegment fileName
@@ -104,6 +108,10 @@ isUnsafeUploadNameChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
     || (generalCategory ch == Space && ch /= ' ')
+
+isUrlDelimiterUploadNameChar :: Char -> Bool
+isUrlDelimiterUploadNameChar ch =
+  ch == '?' || ch == '#' || ch == '%'
 
 validateImageUpload :: Maybe Text -> FileData Tmp -> Either Text ()
 validateImageUpload nameTxt file = do
