@@ -746,6 +746,53 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps single-order filter context out of duplicate tray chips', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moPaymentProvider: 'datafast',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        const summary = container.querySelector('[data-testid="marketplace-single-order-summary"]');
+
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).toContain('Estado: Pagado');
+        expect(summary?.textContent).toContain('Pago: Tarjeta (Datafast)');
+        expect(container.querySelectorAll('[data-testid="marketplace-active-filter-chip"]')).toHaveLength(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('collapses preset shortcuts into one quick-view control instead of four duplicate filter actions', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({

@@ -439,6 +439,8 @@ export default function MarketplaceOrdersPage() {
   const showListChrome = !ordersQuery.isLoading && (filtersDirty || (orders.length > 0 && !showSingleOrderFocusedState));
   const showQuickViewControl = !filtersDirty;
   const showActiveFiltersTray = hasNonSearchFiltersActive;
+  const showStatusFilterTrayChip = statusFilter !== 'all' && !showSingleVisibleOrderSummary;
+  const showProviderFilterTrayChip = providerFilter !== 'all' && !showSingleVisibleOrderSummary;
   const showCopyFiltersLinkAction = filtersActiveCount > 0 && !showSingleVisibleOrderSummary;
   const showFilterTrayHelper = showSearchOwnedFilterHelper && !showEmptyOrdersState;
   const showPaidOnlyAdvancedFilter = !statusFilterImpliesPaid;
@@ -930,33 +932,38 @@ export default function MarketplaceOrdersPage() {
                       Copiar enlace de filtros
                     </Button>
                   )}
-                  {statusFilter !== 'all' && (
+                  {showStatusFilterTrayChip && (
                     <Chip
                       size="small"
+                      data-testid="marketplace-active-filter-chip"
                       label={`Estado: ${statusLabel(statusFilter)}`}
                     />
                   )}
-                  {providerFilter !== 'all' && (
+                  {showProviderFilterTrayChip && (
                     <Chip
                       size="small"
+                      data-testid="marketplace-active-filter-chip"
                       label={`Pago: ${getMarketplacePaymentProviderLabel(providerFilter)}`}
                     />
                   )}
                   {fromDate && (
                     <Chip
                       size="small"
+                      data-testid="marketplace-active-filter-chip"
                       label={`Desde: ${fromDate}`}
                     />
                   )}
                   {toDate && (
                     <Chip
                       size="small"
+                      data-testid="marketplace-active-filter-chip"
                       label={`Hasta: ${toDate}`}
                     />
                   )}
                   {activePaidOnlyFilter && (
                     <Chip
                       size="small"
+                      data-testid="marketplace-active-filter-chip"
                       label="Con pago"
                     />
                   )}
