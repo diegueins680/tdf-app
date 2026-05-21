@@ -475,10 +475,12 @@ validateFutureStubCatalogEndpointLeaves catalog = do
       in any (routeHasReservedSegmentLabel reservedSegments) catalogForAreas
 
     hasAdminConsoleCardSegmentCollision catalogForAreas =
-      let adminConsoleCardIds = Set.fromList allowedFutureAdminConsoleCardIds
-      in any
-          (any (`Set.member` adminConsoleCardIds) . T.splitOn "/" . snd)
+      any
+          (any hasAdminConsoleCardLabelOverlap . T.splitOn "/" . snd)
           catalogForAreas
+
+    hasAdminConsoleCardLabelOverlap segment =
+      any (segmentsOverlap segment) allowedFutureAdminConsoleCardIds
 
     routeHasReservedSegmentLabel reservedSegments route@(_area, endpoint)
       | route `elem` allowedFutureStubReservedSiblingRoutes = False
