@@ -13428,7 +13428,14 @@ validateLabelTrackOwnerIdFilter = validateOptionalPositiveIdField "ownerId"
 
 validateLabelTrackPathId :: Text -> Either ServerError (Key ME.LabelTrack)
 validateLabelTrackPathId rawId =
-  toSqlKey <$> validateMarketplacePathId "track" rawId
+  let normalized = T.strip rawId
+      invalid = Left err400 { errBody = "Invalid track id" }
+  in if T.null normalized || normalized /= rawId
+       then invalid
+       else
+         case fromPathPiece normalized of
+           Just key | toPathPiece key == normalized -> Right key
+           _ -> invalid
 
 parseLabelTrackId :: Text -> AppM (Key ME.LabelTrack)
 parseLabelTrackId =
