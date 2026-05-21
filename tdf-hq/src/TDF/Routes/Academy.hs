@@ -34,6 +34,8 @@ import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
 
+import           TDF.API.Types (rejectNullOptionalFields)
+
 data EnrollReq = EnrollReq
   { email        :: Text
   , role         :: Text
@@ -44,6 +46,7 @@ data EnrollReq = EnrollReq
 instance ToJSON EnrollReq
 instance FromJSON EnrollReq where
   parseJSON value = do
+    rejectNullOptionalFields "EnrollReq" ["platform", "referralCode"] value
     EnrollReq rawEmail rawRole rawPlatform rawReferralCode <-
       genericParseJSON strictObjectOptions value
     EnrollReq

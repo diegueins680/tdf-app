@@ -2223,6 +2223,14 @@ spec = do
                 )
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null academy enrollment optionals instead of using omitted-field fallbacks" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":null}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":null}"
+                `shouldSatisfy` isLeft
+
         it "rejects blank, malformed, or non-positive academy fields before ambiguous handler fallback" $ do
             decodeEnroll
                 "{\"email\":\"   \",\"role\":\"artist\"}"
