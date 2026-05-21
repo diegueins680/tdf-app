@@ -391,7 +391,10 @@ instance FromJSON ServiceCatalogCreate where
       "ServiceCatalogCreate"
       [ "sccKind"
       , "sccPricingModel"
+      , "sccRateCents"
       , "sccCurrency"
+      , "sccBillingUnit"
+      , "sccTaxBps"
       , "sccActive"
       ]
       value

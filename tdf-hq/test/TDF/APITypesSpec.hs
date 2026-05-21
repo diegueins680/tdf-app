@@ -1526,8 +1526,17 @@ spec = do
                 "sccPricingModel"
                 "{\"sccName\":\"Podcast\",\"sccPricingModel\":null}"
             assertNullRejected
+                "sccRateCents"
+                "{\"sccName\":\"Podcast\",\"sccRateCents\":null}"
+            assertNullRejected
                 "sccCurrency"
                 "{\"sccName\":\"Podcast\",\"sccCurrency\":null}"
+            assertNullRejected
+                "sccBillingUnit"
+                "{\"sccName\":\"Podcast\",\"sccBillingUnit\":null}"
+            assertNullRejected
+                "sccTaxBps"
+                "{\"sccName\":\"Podcast\",\"sccTaxBps\":null}"
             assertNullRejected
                 "sccActive"
                 "{\"sccName\":\"Podcast\",\"sccActive\":null}"
