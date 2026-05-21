@@ -1447,10 +1447,10 @@ const firstRunWorkspaceBrandDescriptorSuffixPattern =
   /\s*[-:/|]\s*(?:tdf(?:\s+(?:records?|academy|school|label|hq))?|the\s+domo\s+factory)\s*$/i;
 
 const firstRunUntitledDescriptorPrefixPattern =
-  /^(?:(?:untitled|sin\s+t[ií]tulo)(?=\s*(?:[-:/|]|$))|untitled\s+(?:forms?|pages?|portals?|links?|urls?)|new\s+(?:forms?|pages?|portals?|links?|urls?)|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+  /^(?:(?:untitled|sin\s+t[ií]tulo)(?=\s*(?:[-:/|]|$))|untitled\s+(?:forms?|surveys?|questionnaires?|quiz(?:zes)?|pages?|portals?|links?|urls?)|new\s+(?:forms?|pages?|portals?|links?|urls?)|(?:formulario|encuesta|cuestionario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
 const firstRunUntitledDescriptorSuffixPattern =
-  /\s*(?:[-:/|]\s*)?(?:untitled(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|new\s+(?:forms?|pages?|portals?|links?|urls?)|sin\s+t[ií]tulo|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))\s*$/i;
+  /\s*(?:[-:/|]\s*)?(?:untitled(?:\s+(?:forms?|surveys?|questionnaires?|quiz(?:zes)?|pages?|portals?|links?|urls?))?|new\s+(?:forms?|pages?|portals?|links?|urls?)|sin\s+t[ií]tulo|(?:formulario|encuesta|cuestionario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))\s*$/i;
 
 const firstRunNumberedGenericFormDescriptorPrefixPattern =
   /^(?:(?:forms?|formularios?)\s*(?:#?\s*\d+|n(?:o|[úu]mero)\.?\s*\d+))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;

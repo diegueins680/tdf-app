@@ -17009,8 +17009,12 @@ describe('CourseRegistrationsAdminPage', () => {
   it('strips generated untitled-form wrappers from first-run course labels', async () => {
     const titles = [
       'Untitled form - Beatmaking 101',
+      'Untitled quiz - Beatmaking 101',
       'Beatmaking 101 - untitled page',
+      'Beatmaking 101 - untitled survey',
       'Formulario sin título - Beatmaking 101',
+      'Encuesta sin título - Beatmaking 101',
+      'Beatmaking 101 - cuestionario sin título',
       'Nuevo formulario para Beatmaking 101',
       'Untitled form',
     ];
