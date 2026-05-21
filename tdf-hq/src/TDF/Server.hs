@@ -10924,17 +10924,24 @@ extractApiErrorMessage = parseMaybe $ withObject "ApiError" $ \o -> do
     Just (String msg) ->
       pure [msg]
     Just (Object errObj) -> do
-      mType <- errObj .:? "type"
-      mCode <- errObj .:? "code"
-      mMessage <- errObj .:? "message"
-      pure (catMaybes [mType, mCode, mMessage])
+      let mType = lookupText "type" errObj
+          mCode = lookupText "code" errObj
+          mStatus = lookupText "status" errObj
+          mMessage = lookupText "message" errObj
+      pure (catMaybes [mType, mCode, mStatus, mMessage])
     _ -> do
-      mType <- o .:? "type"
-      mCode <- o .:? "code"
-      mMessage <- o .:? "message"
-      pure (catMaybes [mType, mCode, mMessage])
+      let mType = lookupText "type" o
+          mCode = lookupText "code" o
+          mStatus = lookupText "status" o
+          mMessage = lookupText "message" o
+      pure (catMaybes [mType, mCode, mStatus, mMessage])
   requireSanitizedText candidates
   where
+    lookupText fieldName obj =
+      case AKeyMap.lookup (AKey.fromText fieldName) obj of
+        Just (String txt) -> Just txt
+        _ -> Nothing
+
     requireSanitizedText values =
       case nonEmptyText (T.intercalate ": " (map T.strip values)) of
         Just txt ->
@@ -13870,7 +13877,12 @@ formatDriveUploadFailure uploadStatus responseBodyBytes =
     rawSnippet =
       T.take 2000 (TE.decodeUtf8With TEE.lenientDecode (BL.toStrict responseBodyBytes))
     suffix =
-      maybe "" ((" " <>) . T.unpack) (sanitizeApiErrorMessage rawSnippet)
+      maybe "" ((" " <>) . T.unpack) $
+        structuredErrorMessage <|> sanitizeApiErrorMessage rawSnippet
+    structuredErrorMessage =
+      case eitherDecode responseBodyBytes :: Either String Value of
+        Right payload -> extractApiErrorMessage payload
+        Left _ -> Nothing
 
 resolveDrivePublicUrl :: Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
 resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey =

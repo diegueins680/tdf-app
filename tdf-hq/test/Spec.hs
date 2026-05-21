@@ -229,6 +229,7 @@ import TDF.Server
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
       driveUploadServer,
+      formatDriveUploadFailure,
       maxGoogleCalendarPageItems,
       parseMcpRequest,
       parseToolCallParams,
@@ -6658,6 +6659,24 @@ main = hspec $ do
                     Right resp ->
                         expectationFailure
                             ("Expected view-only webContentLink to be rejected, got: " <> show resp)
+
+        it "uses sanitized Google Drive JSON error messages before raw fallback bodies" $ do
+            let formatted =
+                    formatDriveUploadFailure
+                        404
+                        ( A.encode $
+                            A.object
+                                [ "error" .=
+                                    A.object
+                                        [ "code" .= (404 :: Int)
+                                        , "status" .= ("NOT_FOUND" :: Text)
+                                        , "message" .= ("folder\nnot\NULfound" :: Text)
+                                        , "details" .=
+                                            A.object ["reason" .= ("ignored" :: Text)]
+                                        ]
+                                ]
+                        )
+            formatted `shouldBe` "Drive upload failed with status 404. NOT_FOUND: folder not found"
 
         it "rejects conflicting Drive resource keys before public URL fallback handling" $ do
             case eitherDecode
