@@ -2776,8 +2776,35 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Just "Active Engineer"
 
         it "keeps the fallback when no linked engineer party is present" $ do
-            resolveBookingEngineerName (Just "Alex") Nothing `shouldBe` Just "Alex"
+            resolveBookingEngineerName (Just "  Alex  ") Nothing `shouldBe` Just "Alex"
             resolveBookingEngineerName Nothing Nothing `shouldBe` Nothing
+
+        it "ignores unsafe linked engineer party names before fallback rendering" $ do
+            let engineerParty displayName =
+                    Entity
+                        (toSqlKey 42)
+                        Party
+                            { partyLegalName = Nothing
+                            , partyDisplayName = displayName
+                            , partyIsOrg = False
+                            , partyTaxId = Nothing
+                            , partyPrimaryEmail = Just "engineer@example.com"
+                            , partyPrimaryPhone = Nothing
+                            , partyWhatsapp = Nothing
+                            , partyInstagram = Nothing
+                            , partyEmergencyContact = Nothing
+                            , partyNotes = Nothing
+                            , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
+                            }
+
+            resolveBookingEngineerName
+                (Just "Manual Override")
+                (Just (engineerParty ("Active" <> T.singleton '\x202E' <> "Engineer")))
+                `shouldBe` Just "Manual Override"
+            resolveBookingEngineerName
+                Nothing
+                (Just (engineerParty "   ---   "))
+                `shouldBe` Nothing
 
     describe "resolveOptionalProposalClientPartyReference" $ do
         it "preserves omitted refs and resolves existing proposal client parties" $ do

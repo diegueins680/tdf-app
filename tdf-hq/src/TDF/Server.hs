@@ -8844,9 +8844,15 @@ isUnsafeEngineerNameFormattingChar ch =
 
 resolveBookingEngineerName :: Maybe Text -> Maybe (Entity Party) -> Maybe Text
 resolveBookingEngineerName fallbackName mEngineerParty =
-  case normalizeOptionalInput . Just . M.partyDisplayName . entityVal =<< mEngineerParty of
-    Just displayName -> Just displayName
-    Nothing -> fallbackName
+  normalizeEngineerNameCandidate (M.partyDisplayName . entityVal <$> mEngineerParty)
+    <|> normalizeEngineerNameCandidate fallbackName
+
+normalizeEngineerNameCandidate :: Maybe Text -> Maybe Text
+normalizeEngineerNameCandidate rawName = do
+  name <- normalizeOptionalInput rawName
+  case validateEngineer Nothing Nothing (Just name) of
+    Right () -> Just name
+    Left _ -> Nothing
 
 notifyEngineerIfNeeded :: BookingDTO -> AppM ()
 notifyEngineerIfNeeded BookingDTO{engineerPartyId = Nothing, engineerName = Nothing} = pure ()
