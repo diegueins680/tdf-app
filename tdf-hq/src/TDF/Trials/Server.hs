@@ -859,7 +859,10 @@ validateOptionalDriveLink (Just rawDriveLink) =
           then Left err400 { errBody = "driveLink must be an absolute https URL" }
         else if hasAmbiguousPublicUrlPath driveLinkVal
           then Left err400
-            { errBody = "driveLink path must not contain empty, dot, or dot-dot segments" }
+            { errBody =
+                "driveLink path must not contain empty, dot, or dot-dot segments "
+                  <> "or encoded separators"
+            }
         else
           Right (Just driveLinkVal)
 
@@ -893,9 +896,18 @@ hasAmbiguousPublicUrlPath rawUrl =
         then []
         else T.splitOn "/" (T.drop 1 trimmedPath)
     isAmbiguousPathSegment segment =
-      segment == "" || decodedSegment == "." || decodedSegment == ".."
+      segment == ""
+        || decodedSegment == "."
+        || decodedSegment == ".."
+        || hasEncodedPathSeparator segment
       where
         decodedSegment = decodeUrlEncodedDots (T.toLower segment)
+
+    hasEncodedPathSeparator segment =
+      "%2f" `T.isInfixOf` loweredSegment
+        || "%5c" `T.isInfixOf` loweredSegment
+      where
+        loweredSegment = T.toLower segment
 
     decodeUrlEncodedDots txt =
       case T.uncons txt of

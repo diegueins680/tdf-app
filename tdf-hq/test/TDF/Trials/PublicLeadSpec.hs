@@ -1006,6 +1006,8 @@ spec = do
       assertRejected "https://example.com/folder//file"
       assertRejected "https://example.com/folder/%2e%2e/admin"
       assertRejected "https://example.com/folder/%2E/file"
+      assertRejected "https://example.com/folder%2fadmin"
+      assertRejected "https://example.com/folder%5Cadmin"
 
     it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
       case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
