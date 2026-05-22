@@ -4392,6 +4392,9 @@ const preferNonEmptyText = (primary?: string | null, fallback?: string | null) =
   return null;
 };
 
+const preferRegistrationNameText = (primary?: string | null, fallback?: string | null) =>
+  normalizeRegistrationNameValue(primary) ?? normalizeRegistrationNameValue(fallback);
+
 const preferContactText = (primary?: string | null, fallback?: string | null) =>
   normalizeRegistrationContactValue(primary) ?? normalizeRegistrationContactValue(fallback);
 
@@ -4443,7 +4446,7 @@ const mergeCourseRegistrationRecords = (
 ): CourseRegistrationDTO => ({
   ...primary,
   crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
-  crFullName: preferNonEmptyText(primary.crFullName, fallback.crFullName),
+  crFullName: preferRegistrationNameText(primary.crFullName, fallback.crFullName),
   crEmail: preferContactText(primary.crEmail, fallback.crEmail),
   crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
   crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,

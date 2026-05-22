@@ -10017,6 +10017,40 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('prefers real names over placeholder names when merging duplicate registration records', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Sin nombre',
+        crEmail: 'ada@example.com',
+        crPhoneE164: '+593999000111',
+      }),
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Ada Lovelace',
+        crEmail: null,
+        crPhoneE164: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(1);
+      expect(getButtonByAriaLabel(container, 'Abrir expediente de Ada Lovelace').textContent?.trim()).toBe(
+        'Ada Lovelace',
+      );
+      expect(getButtonByAriaLabel(container, 'Cambiar estado para Ada Lovelace')).toBeTruthy();
+      expect(container.querySelector('button[aria-label="Abrir expediente de ada@example.com"]')).toBeNull();
+      expect(container.textContent).toContain('ada@example.com · +593999000111');
+      expect(container.textContent).not.toContain('Sin nombre');
+    });
+
+    await cleanup();
+  });
+
   it('keeps a custom acquisition source when a duplicate registration also carries the default public-form source', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({
