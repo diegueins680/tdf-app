@@ -22611,6 +22611,9 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - comunidad de estudiantes',
       'Alumni community - Beatmaking 101',
       'Beatmaking 101 - grupo de egresados',
+      'Circle community - Beatmaking 101',
+      'Mighty Networks community for Beatmaking 101',
+      'Beatmaking 101 - Skool group',
     ];
 
     for (const title of titles) {
@@ -22628,7 +22631,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(copy).toContain(singleCohortInitialEmptyStateMessage);
         expect(copy).not.toContain(title);
         expect(copy).not.toMatch(
-          /course\s+community|student\s+group\s+chat|discord\s+server|slack\s+workspace|grupo\s+del\s+curso|servidor\s+de\s+discord|comunidad\s+de\s+estudiantes|alumni\s+community|grupo\s+de\s+egresados/i,
+          /course\s+community|student\s+group\s+chat|discord\s+server|slack\s+workspace|grupo\s+del\s+curso|servidor\s+de\s+discord|comunidad\s+de\s+estudiantes|alumni\s+community|grupo\s+de\s+egresados|circle\s+community|mighty\s+networks|skool\s+group/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(

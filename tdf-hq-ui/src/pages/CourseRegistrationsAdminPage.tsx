@@ -2001,7 +2001,7 @@ const firstRunFileStorageDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
-const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb)`;
+const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb|circle(?:\s*\.?\s*so)?|mighty\s*networks?|skool)`;
 const firstRunCommunityScopePattern = String.raw`(?:course|class|students?|members?|alumni|graduates?|curso|clase|estudiantes|alumnos|miembros|egresad[oa]s?|graduad[oa]s?)`;
 const firstRunCommunityScopeQualifierPattern = String.raw`(?:(?:for|para|de)\s+(?:the\s+|el\s+|la\s+)?(?:${firstRunCommunityScopePattern})|del?\s+curso)`;
 const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|servers?|servidor(?:es)?|workspaces?|espacios?\s+de\s+trabajo|broadcast\s+(?:lists?|channels?)|announcement\s+channels?|listas?\s+de\s+difusi[oó]n|canal(?:es)?\s+de\s+(?:difusi[oó]n|anuncios|avisos|novedades)|(?:group|community|chat|channel|servers?)\s+(?:invites?|invite\s+links?|invitation\s+links?)|(?:invites?|invite\s+links?|invitation\s+links?)|(?:invitaci[oó]n|enlace(?:\s+de\s+invitaci[oó]n)?|link|url)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:grupo|comunidad|chat|canal|servidor(?:es)?))`;
