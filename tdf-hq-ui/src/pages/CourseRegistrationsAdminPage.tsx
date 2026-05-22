@@ -1767,6 +1767,16 @@ const firstRunCourseInfoAssetDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunBareCourseInfoDescriptorPattern = String.raw`(?:(?:course\s+)?(?:brochure|prospectus|syllabus|outline|curriculum(?:\s+(?:guide|overview|packet))?|info(?:rmation)?\s+packet|guide|materials?|resources?)|(?:folleto|brochure|prospecto|temario|malla(?:\s+curricular)?|curr[ií]culo|programa\s+informativo|paquete\s+informativo|gu[ií]a|material(?:es)?|recursos?|contenido)(?:\s+(?:del?\s+curso|de\s+curso))?)`;
+const firstRunBareCourseInfoDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBareCourseInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunBareCourseInfoDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunBareCourseInfoDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunVideoAssetDescriptorPattern = String.raw`(?:(?:(?:course|class|student|onboarding|orientation|welcome|intro(?:ductory)?|lesson|module)\s+)?(?:welcome|intro(?:ductory)?|orientation|onboarding|lesson|module)\s+(?:videos?|recordings?|replays?)(?:\s+(?:links?|urls?|pages?|portals?|uploads?|assets?))?|(?:youtube|vimeo)\s+(?:videos?|recordings?|replays?)(?:\s+(?:links?|urls?|pages?|portals?|uploads?|assets?))?|(?:videos?|recordings?|replays?)\s+(?:links?|urls?|pages?|portals?|uploads?|assets?)\s*(?:for\s+)?(?:(?:course|class|student|onboarding|orientation|welcome|intro(?:ductory)?|lesson|module)\s+)?(?:welcome|intro(?:ductory)?|orientation|onboarding|lesson|module)?|(?:videos?|grabaci[oó]n|grabaciones?|replays?|reproducci[oó]n|reproducciones?)\s+(?:de|para(?:\s+el)?|del?)\s+(?:bienvenida|orientaci[oó]n|onboarding|curso|clase|m[oó]dulo|lecci[oó]n)|(?:bienvenida|orientaci[oó]n|onboarding|curso|clase|m[oó]dulo|lecci[oó]n)\s+(?:videos?|grabaci[oó]n|grabaciones?|replays?|reproducci[oó]n|reproducciones?))`;
 const firstRunVideoAssetDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunVideoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2324,6 +2334,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunReferralDescriptorPrefixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
+    .replace(firstRunBareCourseInfoDescriptorPrefixPattern, '')
     .replace(firstRunVideoAssetDescriptorPrefixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorPrefixPattern, '')
     .replace(firstRunFaqPageDescriptorPrefixPattern, '')
@@ -2466,6 +2477,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunReferralDescriptorSuffixPattern, '')
     .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
+    .replace(firstRunBareCourseInfoDescriptorSuffixPattern, '')
     .replace(firstRunVideoAssetDescriptorSuffixPattern, '')
     .replace(firstRunCourseInfoPageDescriptorSuffixPattern, '')
     .replace(firstRunFaqPageDescriptorSuffixPattern, '')
