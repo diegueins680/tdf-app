@@ -231,7 +231,7 @@ hasDangerousInnerUploadExtension rawName =
     innerExtensions =
       case reverse extensions of
         [] -> []
-        (_finalExtension:rest) -> reverse rest
+        (_finalExtension:rest) -> map T.strip (reverse rest)
 
 dangerousInnerUploadExtensionSegments :: [Text]
 dangerousInnerUploadExtensionSegments =

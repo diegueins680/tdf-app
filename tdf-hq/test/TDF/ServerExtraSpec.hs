@@ -826,6 +826,15 @@ spec = do
       assertInvalid
         "Uploaded file name must not hide executable or document extensions"
         (mkAssetUploadMultipart [] [mkAssetUploadFile "checkout-proof.SVG.jpg"])
+      assertInvalid
+        "Asset upload file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart
+          [("name", "front-room.svg .jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "checkout-proof. js.jpg"])
 
     it "rejects non-image asset uploads before inventory storage can persist them" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
