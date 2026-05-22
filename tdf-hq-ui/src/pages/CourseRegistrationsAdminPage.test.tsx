@@ -14087,6 +14087,68 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats generic API and webhook intake sources as default public-form plumbing in busy lists', async () => {
+    const defaultSources = [
+      'api_registration',
+      'api_form_submission',
+      'public_api_form',
+      'backend_api_registration',
+      'rest_api_submission',
+      'webhook_registration',
+      'api_webhook',
+      'api_signup',
+    ] as const;
+    const hiddenSourceLabels = [
+      'API registration',
+      'API form submission',
+      'Public API form',
+      'Backend API registration',
+      'Rest API submission',
+      'Webhook registration',
+      'API webhook',
+      'API signup',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'api registration');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "api registration" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('humanizes technical source slugs in busy-list rows and search', async () => {
     listRegistrationsMock.mockResolvedValue([
       buildRegistration({ crSource: 'instagram_story' }),
