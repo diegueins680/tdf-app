@@ -6968,6 +6968,12 @@ main = hspec $ do
                 ("image/png" <> "\x202E")
                 "attachment content type must not contain control characters"
             assertInvalid
+                "image/png; text/html"
+                "attachment content type parameters must be key=value tokens"
+            assertInvalid
+                "image/png;"
+                "attachment content type parameters must be key=value tokens"
+            assertInvalid
                 "image/png; name=payload.html"
                 "attachment content type must not include filename parameters"
             assertInvalid

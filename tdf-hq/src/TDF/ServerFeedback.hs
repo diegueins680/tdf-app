@@ -270,6 +270,11 @@ validateFeedbackAttachmentContentType rawContentType
         { errBody =
             "attachment content type must not contain control characters or hidden formatting characters"
         }
+  | hasMalformedAttachmentContentTypeParameter cleaned =
+      Left err400
+        { errBody =
+            "attachment content type parameters must be key=value tokens"
+        }
   | hasAttachmentContentTypeNameParameter cleaned =
       Left err400
         { errBody =
@@ -288,6 +293,24 @@ validateFeedbackAttachmentContentType rawContentType
 
 maxFeedbackAttachmentContentTypeChars :: Int
 maxFeedbackAttachmentContentTypeChars = 100
+
+hasMalformedAttachmentContentTypeParameter :: Text -> Bool
+hasMalformedAttachmentContentTypeParameter contentType =
+  any (not . isValidContentTypeParameter) (drop 1 (T.splitOn ";" contentType))
+
+isValidContentTypeParameter :: Text -> Bool
+isValidContentTypeParameter rawParameter =
+  let (rawKey, rawValueWithEquals) = T.breakOn "=" rawParameter
+      key = T.toLower (T.strip rawKey)
+      value = T.strip (T.drop 1 rawValueWithEquals)
+  in not (T.null key)
+       && "=" `T.isPrefixOf` rawValueWithEquals
+       && T.all isContentTypeParameterKeyChar key
+       && not (T.null value)
+
+isContentTypeParameterKeyChar :: Char -> Bool
+isContentTypeParameterKeyChar ch =
+  isAsciiLower ch || isDigit ch || ch == '-' || ch == '*'
 
 hasAttachmentContentTypeNameParameter :: Text -> Bool
 hasAttachmentContentTypeNameParameter contentType =
