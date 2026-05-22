@@ -19497,6 +19497,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Payment receipt - Beatmaking 101',
       'Payment proof page for Beatmaking 101',
       'Proof of payment - Beatmaking 101',
+      'Payment verification form - Beatmaking 101',
+      'Payment validation page for Beatmaking 101',
       'Beatmaking 101 - payment invoice',
       'Payment voucher upload - Beatmaking 101',
       'Beatmaking 101 - payment voucher',
@@ -19510,6 +19512,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Beatmaking 101 - evidencia de pago',
       'Confirmación de pago para Beatmaking 101',
       'Beatmaking 101 - confirmaciones de pago',
+      'Verificación de pago - Beatmaking 101',
+      'Beatmaking 101 - validación de pago',
     ];
 
     for (const title of titles) {
@@ -19525,7 +19529,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|schedule|tuition|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|cronograma|calendario|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|bank\s+transfer|wire\s+transfer|transferencia|receipt|proof|invoice|voucher|comprobante|recibo|factura|evidencia/i);
+        expect(emptyState?.textContent).not.toMatch(/checkout|payment|installment|schedule|tuition|stripe|datafast|kushki|paymentez|deuna|hotmart|kiwify|shopify|woocommerce|lemon\s+squeezy|gumroad|pago|cronograma|calendario|plan(?:es)?\s+de\s+pagos?|cuotas?|deposit|dep[oó]sito|abono|bank\s+transfer|wire\s+transfer|transferencia|receipt|proof|verification|validation|invoice|voucher|comprobante|recibo|factura|evidencia|verificaci[oó]n|validaci[oó]n/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
