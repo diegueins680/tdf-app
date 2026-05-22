@@ -13288,6 +13288,10 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` True
             invalidCardText 120 ("Tokens" <> T.singleton '\xE000' <> "API")
                 `shouldBe` True
+            invalidCardText 120 ("Tokens API " <> T.singleton '\x00A9')
+                `shouldBe` True
+            invalidCardText 120 ("Roles " <> T.singleton '\x00B1' <> " permisos")
+                `shouldBe` True
 
     describe "validateFutureAdminConsoleCardIds" $
         it "rejects drifted admin console card registries before serving fallback discovery metadata" $ do

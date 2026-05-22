@@ -7,11 +7,15 @@ import           Control.Monad.Except (MonadError)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
   ( GeneralCategory
-      ( EnclosingMark
+      ( CurrencySymbol
+      , EnclosingMark
       , Format
       , LineSeparator
+      , MathSymbol
+      , ModifierSymbol
       , NonSpacingMark
       , NotAssigned
+      , OtherSymbol
       , ParagraphSeparator
       , PrivateUse
       , Space
@@ -1002,11 +1006,15 @@ invalidCardText maxLength value =
       isControl ch
         || ord ch > 0xFF
         || generalCategory ch
-             `elem` [ EnclosingMark
+             `elem` [ CurrencySymbol
+                    , EnclosingMark
                     , Format
                     , LineSeparator
+                    , MathSymbol
+                    , ModifierSymbol
                     , NonSpacingMark
                     , NotAssigned
+                    , OtherSymbol
                     , ParagraphSeparator
                     , PrivateUse
                     , SpacingCombiningMark
