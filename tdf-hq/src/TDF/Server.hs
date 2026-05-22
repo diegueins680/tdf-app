@@ -3723,6 +3723,12 @@ validateStoredCalendarConfig (Entity cfgId cfg) = do
   when
     (Cal.googleCalendarConfigUpdatedAt cfg < Cal.googleCalendarConfigCreatedAt cfg)
     invalidStoredCalendarTimestamps
+  when
+    ( maybe False
+        (< Cal.googleCalendarConfigCreatedAt cfg)
+        (Cal.googleCalendarConfigSyncedAt cfg)
+    )
+    invalidStoredCalendarTimestamps
   case Cal.googleCalendarConfigOwnerId cfg of
     Just ownerId | fromSqlKey ownerId <= 0 -> invalidStoredCalendarOwnerId
     _ -> pure ()
