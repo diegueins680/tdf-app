@@ -5541,6 +5541,7 @@ main = hspec $ do
 
             assertRejected ("fan@example.com" :: Text)
             assertRejected [A.String "fan@example.com"]
+            assertRejected [A.object []]
             assertRejected [A.object ["email" .= (7 :: Int)]]
             assertRejected [A.object ["email" .= ("not-an-email" :: Text)]]
             assertRejected
