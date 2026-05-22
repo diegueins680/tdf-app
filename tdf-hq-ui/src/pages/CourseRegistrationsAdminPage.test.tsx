@@ -10331,6 +10331,32 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy filter and results panels outlined instead of elevated card chrome', async () => {
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, (index) => ({
+        crStatus: index % 3 === 0 ? 'pending_payment' : index % 3 === 1 ? 'paid' : 'cancelled',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const filterPanel = container.querySelector<HTMLElement>('[data-testid="course-registration-filter-panel"]');
+      const resultsPanel = container.querySelector<HTMLElement>('[data-testid="course-registration-results-panel"]');
+
+      expect(filterPanel).not.toBeNull();
+      expect(resultsPanel).not.toBeNull();
+      expect(filterPanel?.classList.contains('MuiPaper-outlined')).toBe(true);
+      expect(resultsPanel?.classList.contains('MuiPaper-outlined')).toBe(true);
+      expect(filterPanel?.classList.contains('MuiPaper-elevation')).toBe(false);
+      expect(resultsPanel?.classList.contains('MuiPaper-elevation')).toBe(false);
+    });
+
+    await cleanup();
+  });
+
   it('compacts one-action recovery rows when busy mixed-status lists already show status chips', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({

@@ -7468,7 +7468,7 @@ export default function CourseRegistrationsAdminPage() {
       )}
 
       {showRegistrationFilterPanel && !showInitialFilterGuidance && !hideBusyListPassiveCurrentViewPanel && (
-        <Paper sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-filter-panel">
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-filter-panel">
           <>
             <Grid container spacing={2}>
               {combinedSingleChoiceSummary ? (
@@ -8043,7 +8043,7 @@ export default function CourseRegistrationsAdminPage() {
       )}
 
       {showRegistrationResultsPanel && (
-        <Paper sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-results-panel">
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-results-panel">
           {regsQuery.isError && (
             <Alert
               severity="error"
