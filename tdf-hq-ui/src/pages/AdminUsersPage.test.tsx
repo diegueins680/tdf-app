@@ -222,8 +222,14 @@ describe('AdminUsersPage', () => {
 
     try {
       await waitForExpectation(() => {
+        const listPanel = container.querySelector<HTMLElement>('[data-testid="admin-users-list-panel"]');
+
         expect(listUsersMock).toHaveBeenCalledWith(false);
         expect(hasExactText(container, ADMIN_USERS_PAGE_TITLE)).toBe(true);
+        expect(listPanel).not.toBeNull();
+        expect(listPanel?.classList.contains('MuiPaper-outlined')).toBe(true);
+        expect(listPanel?.classList.contains('MuiCard-root')).toBe(false);
+        expect(listPanel?.querySelector('.MuiCardContent-root')).toBeNull();
         expect(hasExactText(container, 'Usuarios')).toBe(false);
         expect(container.textContent).not.toContain(
           'Abre el perfil desde el nombre y usa WhatsApp cuando haya un número disponible.',

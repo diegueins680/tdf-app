@@ -2,14 +2,13 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Checkbox,
   Chip,
   FormControlLabel,
   IconButton,
   InputAdornment,
   Link,
+  Paper,
   Stack,
   TextField,
   Tooltip,
@@ -1740,8 +1739,11 @@ export default function AdminUsersPage() {
           </Stack>
         </Stack>
 
-        <Card>
-          <CardContent>
+        <Paper
+          variant="outlined"
+          data-testid="admin-users-list-panel"
+          sx={{ p: 2, borderRadius: 1 }}
+        >
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
             {usersQuery.error && (
               <Stack spacing={1} alignItems="flex-start">
@@ -1876,8 +1878,7 @@ export default function AdminUsersPage() {
                 ) : null}
               </Stack>
             ) : null}
-          </CardContent>
-        </Card>
+        </Paper>
       </Stack>
       <AdminUserCommunicationDialog
         open={Boolean(selectedUser)}
