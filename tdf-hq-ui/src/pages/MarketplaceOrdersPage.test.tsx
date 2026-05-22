@@ -343,6 +343,9 @@ describe('MarketplaceOrdersPage', () => {
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
         expect(container.textContent).toContain(firstOrderEmptyStateMessage);
+        expect(container.textContent).not.toContain(
+          'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.',
+        );
         expect(container.textContent).not.toContain('búsqueda, filtros y exportación');
         expect(container.textContent).not.toContain('revisar la bandeja');
         expect(container.textContent).not.toContain('Atajos rápidos');

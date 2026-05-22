@@ -732,6 +732,13 @@ export default function MarketplaceOrdersPage() {
   const showLatestStatusChangeSummary = selectedStatusHistory.length === 1 && Boolean(latestStatusChange);
   const showStatusHistorySection = selectedStatusHistory.length > 1;
   const showSelectedContactEmptyState = Boolean(selectedOrder && !selectedBuyerEmail && !selectedBuyerPhone);
+  const ordersListSubheader = ordersQuery.isLoading
+    ? 'La bandeja aparecerá cuando termine esta primera carga.'
+    : showFirstOrderEmptyState
+    ? undefined
+    : showSingleVisibleOrderSummary
+      ? singleVisibleOrderSummaryText
+      : 'Haz clic en una fila para revisar estado, pago y datos del comprador.';
   const availableStatusUpdatePresets = selectedOrder
     ? STATUS_PRESETS.filter((statusPreset) => statusPreset.value !== selectedOrder.moStatus)
     : STATUS_PRESETS;
@@ -1012,15 +1019,7 @@ export default function MarketplaceOrdersPage() {
       <Card variant="outlined">
         <CardHeader
           title="Pedidos recientes"
-          subheader={
-            ordersQuery.isLoading
-              ? 'La bandeja aparecerá cuando termine esta primera carga.'
-              : showFirstOrderEmptyState
-              ? 'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.'
-              : showSingleVisibleOrderSummary
-                ? singleVisibleOrderSummaryText
-                : 'Haz clic en una fila para revisar estado, pago y datos del comprador.'
-          }
+          subheader={ordersListSubheader}
           action={showOrderListHeaderActions ? (
             <Stack direction="row" spacing={1}>
               {showVisibleOrderBreakdown && (
