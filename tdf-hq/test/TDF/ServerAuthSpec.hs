@@ -330,6 +330,30 @@ signupRoleSpec = describe "validateRequestedSignupRoles" $ do
     assertNullRejected "fanArtistIds"
     assertNullRejected "claimArtistId"
 
+  it "rejects null signup internship fields instead of using empty onboarding fallbacks" $ do
+    let assertNullRejected :: String -> Expectation
+        assertNullRejected fieldName =
+          let rawSignup =
+                BL8.pack $
+                  "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
+                    <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
+                    <> "\"" <> fieldName <> "\":null}"
+          in case A.eitherDecode rawSignup :: Either String SignupRequest of
+            Left err ->
+              err `shouldContain` (fieldName <> " must be omitted instead of null")
+            Right value ->
+              expectationFailure
+                ( "Expected null signup "
+                    <> fieldName
+                    <> " to be rejected, got "
+                    <> show value
+                )
+    assertNullRejected "internshipStartAt"
+    assertNullRejected "internshipEndAt"
+    assertNullRejected "internshipRequiredHours"
+    assertNullRejected "internshipSkills"
+    assertNullRejected "internshipAreas"
+
   it "rejects duplicate requested roles instead of silently collapsing signup intent" $
     case validateRequestedSignupRoles (Just [Artist, Fan, Artist]) of
       Left err -> do
