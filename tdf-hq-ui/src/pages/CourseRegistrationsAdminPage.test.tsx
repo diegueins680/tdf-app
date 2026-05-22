@@ -22012,6 +22012,8 @@ describe('CourseRegistrationsAdminPage', () => {
       'Student onboarding checklist - Beatmaking 101',
       'Checklist for course onboarding - Beatmaking 101',
       'Beatmaking 101 - onboarding checklist',
+      'Welcome packet - Beatmaking 101',
+      'Beatmaking 101 - welcome checklist',
       'Checklist de bienvenida - Beatmaking 101',
     ];
 
@@ -22029,7 +22031,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
         expect(emptyState?.textContent).not.toMatch(
-          /student onboarding checklist|checklist for course onboarding|onboarding checklist|checklist de bienvenida/i,
+          /student onboarding checklist|checklist for course onboarding|onboarding checklist|welcome packet|welcome checklist|checklist de bienvenida/i,
         );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
