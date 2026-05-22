@@ -13876,6 +13876,61 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats test and draft submission sources as default setup plumbing in busy lists', async () => {
+    const defaultSources = [
+      'test_submission',
+      'test_form_submission',
+      'draft_submission',
+      'demo_form_submission',
+      'sample_submission',
+      'sandbox_submission',
+      'staging_form_response',
+      'qa_test_submission',
+      'uat_form_entry',
+      'internal_test_form',
+      'prueba_formulario',
+      'formulario_de_prueba',
+      'envio_de_prueba',
+    ] as const;
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      expect(container.textContent).not.toContain('Fuente:');
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'test submission');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "test submission" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats event-platform source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'eventbrite_registration_page',
