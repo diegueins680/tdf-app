@@ -8524,6 +8524,13 @@ main = hspec $ do
             isImageUpload "image/png" "poster.jpg" `shouldBe` False
             isImageUpload "image/svg+xml" "poster.svg" `shouldBe` False
 
+    describe "ArtistDTO JSON contract" $
+        it "rejects explicit null defaults before artist payload fallbacks" $ do
+            (eitherDecode @ArtistDTO "{\"artistName\":null,\"artistGenres\":[]}")
+                `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenres\":null}")
+                `shouldSatisfy` isLeft
+
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
             validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"

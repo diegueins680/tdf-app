@@ -133,6 +133,11 @@ instance FromJSON ArtistDTO where
       "ArtistDTO"
       artistAllowedKeys
       o
+    rejectNullObjectFields
+      [ "artistName"
+      , "artistGenres"
+      ]
+      o
     artistId <- o .:? "artistId"
     artistPartyId <- o .:? "artistPartyId"
     mName <- o .:? "artistName"

@@ -1,12 +1,12 @@
 # TDF Label — Release Readiness
 
-_Last updated: 2026-05-21 04:52 UTC by tdf-label-release_
+_Last updated: 2026-05-22 12:35 UTC by tdf-label-release_
 
 ## Current Baseline
 
 | Metric | Value |
 |--------|-------|
-| Consecutive Detox PASSes | **21** (since 2026-05-20 20:21 UTC) |
+| Consecutive Detox PASSes | **22** (since 2026-05-20 20:21 UTC) |
 | Primary Simulator | `8DB9DCE0-2F80-49C9-A614-F21DA3876B7B` (iPhone 16) |
 | Binary | 32.2 MB Mach-O universal, built 2026-05-16 04:38 UTC (`glow-shore`) |
 | EAS iOS Build Status | **✅ BUILD SUCCESS** — Preview build `2d8b5544-...` finished 2026-05-20 07:14 GMT-5 |
@@ -20,9 +20,10 @@ _Last updated: 2026-05-21 04:52 UTC by tdf-label-release_
 
 ### Physical-Device Google OAuth
 
-**Status:** Review scheduled for 2026-05-21 (tomorrow).
-**Next action:** Test Google OAuth flow on physical device with new `.ipa`.
+**Status:** ⏸️ WAIVED until operator review (last waiver: 2026-05-21; next review: 2026-05-22 operator check-in).
+**Next action:** Operator to install preview `.ipa` on physical iPhone and complete Google OAuth end-to-end; capture screenshot/video evidence.
 **Install link:** https://expo.dev/accounts/cuco.saa/projects/tdf-mobile/builds/2d8b5544-4304-4a19-a018-42c83930bce9
+**Blocker:** No physical device access in automated environment; requires human operator with enrolled device.
 
 ## Latest Build
 
