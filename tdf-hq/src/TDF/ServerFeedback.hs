@@ -296,6 +296,8 @@ hasAttachmentContentTypeNameParameter contentType =
     isNameParameter rawParameter =
       let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
       in key `elem` ["name", "name*", "filename", "filename*"]
+           || "name*" `T.isPrefixOf` key
+           || "filename*" `T.isPrefixOf` key
 
 allowedFeedbackAttachmentContentTypes :: [Text]
 allowedFeedbackAttachmentContentTypes =

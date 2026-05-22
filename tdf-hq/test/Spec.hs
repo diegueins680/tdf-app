@@ -6954,6 +6954,9 @@ main = hspec $ do
                 "application/pdf; filename*=utf-8''payload.html"
                 "attachment content type must not include filename parameters"
             assertInvalid
+                "application/pdf; filename*0=payload; filename*1=.html"
+                "attachment content type must not include filename parameters"
+            assertInvalid
                 "text/html"
                 "attachment content type must be a PDF, image, plain text, or CSV file"
             assertInvalid
