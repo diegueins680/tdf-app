@@ -1393,7 +1393,8 @@ export default function SocialInboxPage() {
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
-  const showManualRefresh = !reviewMode && !showUnifiedEmptyState && !showInboxLoadingState;
+  const showChannelErrorRetry = !reviewMode && showChannelErrorOnlyState;
+  const showManualRefresh = !reviewMode && !showUnifiedEmptyState && !showInboxLoadingState && !showChannelErrorOnlyState;
   const showHeaderControls = showLimitControl || showManualRefresh;
   const activeFilterLabel = getFilterLabel(displayFilter, reviewMode);
   const showStatusFilterEmptyState =
@@ -1700,6 +1701,24 @@ export default function SocialInboxPage() {
       )}
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
+          {showChannelErrorRetry && (
+            <Alert
+              severity="error"
+              variant="outlined"
+              action={(
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={refetch}
+                  disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
+                >
+                  Reintentar inbox
+                </Button>
+              )}
+            >
+              Reintenta desde aqui; el detalle por canal queda abajo.
+            </Alert>
+          )}
           {instagramQuery.isError && renderChannelLoadError('instagram', instagramQuery.error)}
           {facebookQuery.isError && renderChannelLoadError('facebook', facebookQuery.error)}
           {whatsappQuery.isError && renderChannelLoadError('whatsapp', whatsappQuery.error)}

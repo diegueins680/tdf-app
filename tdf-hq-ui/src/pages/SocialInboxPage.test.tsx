@@ -153,6 +153,16 @@ const countInstagramSetupLinks = (root: ParentNode) =>
 const countButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
 
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const button = Array.from(root.querySelectorAll('button')).find(
+    (candidate) => (candidate.textContent ?? '').trim() === labelText,
+  );
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
 const countButtonsByAriaLabel = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((candidate) => candidate.getAttribute('aria-label') === labelText).length;
 
@@ -530,6 +540,48 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
       expect(countInstagramSetupLinks(container)).toBe(0);
       expect(container.textContent).not.toContain('Change selected asset');
+    });
+
+    await cleanup();
+  });
+
+  it('moves normal first-load channel retry into the error guidance instead of a generic header action', async () => {
+    listInstagramMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+    listFacebookMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+    listWhatsAppMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('No se pudieron cargar los canales del inbox.');
+      expect(container.textContent).toContain('Reintenta desde aqui; el detalle por canal queda abajo.');
+      expect(countTextOccurrences(container, 'No se pudieron cargar los canales del inbox.')).toBe(1);
+      expect(container.textContent).toContain('Instagram: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(container.textContent).toContain('Facebook: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(container.textContent).toContain('WhatsApp: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(countButtonsByText(container, 'Reintentar inbox')).toBe(1);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+      expect(countButtonsByText(container, 'Actualizar inbox')).toBe(0);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Reintentar inbox').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listInstagramMessagesMock).toHaveBeenCalledTimes(2);
+      expect(listFacebookMessagesMock).toHaveBeenCalledTimes(2);
+      expect(listWhatsAppMessagesMock).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
+      expect(countButtonsByText(container, 'Actualizar inbox')).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar inbox')).toBe(0);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
     });
 
     await cleanup();
