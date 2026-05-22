@@ -10431,6 +10431,38 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps long single-cohort busy search context compact', async () => {
+    const longCohortTitle = 'Curso intensivo de producción musical avanzada modalidad nocturna 2026';
+    const compactCohortTitle = 'Curso intensivo de producción musical avanzada…';
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'produccion-avanzada-nocturna-2026', ccTitle: longCohortTitle },
+    ]);
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(9, () => ({
+        crCourseSlug: 'produccion-avanzada-nocturna-2026',
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      expect(getDossierTriggers(container)).toHaveLength(9);
+      expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
+      expect(container.textContent).toContain(
+        `${compactCohortTitle} · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.`,
+      );
+      expect(container.textContent).not.toContain(
+        `${longCohortTitle} · Pendiente de pago. Busca dentro de las 9 inscripciones cargadas.`,
+      );
+      expect(container.textContent).not.toContain('modalidad nocturna 2026');
+    });
+
+    await cleanup();
+  });
+
   it('folds a shared source into busy single-cohort search guidance without restoring source chrome', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({

@@ -83,6 +83,12 @@ const compactInitialCohortPreviewLabel = (label: string) => {
 
   return `${cleanInitialCohortPreviewLabel(preview)}…`;
 };
+const compactCohortContextLabel = (label: string) => {
+  const trimmedLabel = label.trim();
+  return trimmedLabel.length > INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH
+    ? compactInitialCohortPreviewLabel(trimmedLabel)
+    : trimmedLabel;
+};
 const normalizeInitialCohortPreviewKey = (label: string) =>
   cleanInitialCohortPreviewLabel(label)
     .normalize('NFD')
@@ -4774,11 +4780,12 @@ export default function CourseRegistrationsAdminPage() {
   const singleAvailableCohortLabel = useMemo(() => {
     if (!singleAvailableCohort) return '';
     const summaryLabel = cohortSummaryLabelsBySlug.get(singleAvailableCohort.value) ?? singleAvailableCohort.label;
+    const contextLabel = compactCohortContextLabel(summaryLabel);
     if (!hasVisibleRegistrations || selectedSlug === singleAvailableCohort.value) {
-      return summaryLabel;
+      return contextLabel;
     }
     return visibleCohortSlugs.size === 1 && visibleCohortSlugs.has(singleAvailableCohort.value)
-      ? summaryLabel
+      ? contextLabel
       : '';
   }, [cohortSummaryLabelsBySlug, hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
 
@@ -4994,9 +5001,10 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueCohortSlugs.length !== 1) return '';
     const cohortSlug = uniqueCohortSlugs[0];
     if (!cohortSlug) return '';
-    return cohortSummaryLabelsBySlug.get(cohortSlug)
+    const contextLabel = cohortSummaryLabelsBySlug.get(cohortSlug)
       ?? cohortLabelsBySlug.get(cohortSlug)
       ?? readableCohortFallbackLabel(cohortSlug);
+    return compactCohortContextLabel(contextLabel);
   }, [cohortLabelsBySlug, cohortSummaryLabelsBySlug, searchedRegistrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
     if (searchedRegistrations.length === 0) return '';
