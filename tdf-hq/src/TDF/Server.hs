@@ -5415,6 +5415,8 @@ validatePublicBookingFullName rawName =
           Left err400 { errBody = "nombre debe tener 160 caracteres o menos" }
       | not (hasPublicBookingLabelContent nameVal) ->
           Left err400 { errBody = "nombre debe incluir letras o números" }
+      | T.any isAmbiguousPublicBookingSpace nameVal ->
+          Left err400 { errBody = "nombre no debe contener espacios Unicode ambiguos" }
       | T.any isUnsafePublicBookingLabelChar nameVal ->
           Left err400
             { errBody =
@@ -5432,6 +5434,8 @@ validatePublicBookingServiceType rawServiceType =
           Left err400 { errBody = "serviceType debe tener 120 caracteres o menos" }
       | not (hasPublicBookingLabelContent serviceTypeVal) ->
           Left err400 { errBody = "serviceType debe incluir letras o números" }
+      | T.any isAmbiguousPublicBookingSpace serviceTypeVal ->
+          Left err400 { errBody = "serviceType no debe contener espacios Unicode ambiguos" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
@@ -5448,6 +5452,8 @@ validateOptionalBookingServiceType (Just rawServiceType) =
     Just serviceTypeVal
       | T.length serviceTypeVal > 120 ->
           Left err400 { errBody = "serviceType must be 120 characters or fewer" }
+      | T.any isAmbiguousPublicBookingSpace serviceTypeVal ->
+          Left err400 { errBody = "serviceType must not contain Unicode separator spaces" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
           Left err400
             { errBody =
@@ -5460,6 +5466,10 @@ isUnsafePublicBookingLabelChar :: Char -> Bool
 isUnsafePublicBookingLabelChar ch =
   isControl ch
     || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isAmbiguousPublicBookingSpace :: Char -> Bool
+isAmbiguousPublicBookingSpace ch =
+  generalCategory ch == Space && ch /= ' '
 
 hasPublicBookingLabelContent :: Text -> Bool
 hasPublicBookingLabelContent = T.any isAlphaNum
