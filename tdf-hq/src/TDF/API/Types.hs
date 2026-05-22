@@ -2041,7 +2041,12 @@ data InternTaskCreate = InternTaskCreate
   } deriving (Show, Generic)
 instance ToJSON InternTaskCreate
 instance FromJSON InternTaskCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "InternTaskCreate"
+      ["itcDescription", "itcAssignedTo", "itcDueAt"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data InternTaskUpdate = InternTaskUpdate
   { ituTitle       :: Maybe Text

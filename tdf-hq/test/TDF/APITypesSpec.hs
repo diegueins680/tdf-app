@@ -2102,6 +2102,22 @@ spec = do
                 "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null task-create fallbacks so omission remains intentional" $ do
+            case decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":null}" of
+                Left err ->
+                    err `shouldContain` "itcDescription must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null task description to fail, got: " <> show value)
+
+            decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcAssignedTo\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDueAt\":null}"
+                `shouldSatisfy` isLeft
+
     describe "InternTaskUpdate FromJSON" $ do
         it "distinguishes omitted nullable fields from explicit clears for task admin updates" $ do
             case decodeInternTaskUpdate "{\"ituStatus\":\"doing\",\"ituProgress\":55}" of
