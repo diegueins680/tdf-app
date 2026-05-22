@@ -150,6 +150,20 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips waitlist portal and link wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Waitlist portal - Beatmaking 101',
+      'Waiting list link for Beatmaking 101',
+      'Beatmaking 101 - waitlist URL',
+      'Portal de lista de espera - Beatmaking 101',
+      'Beatmaking 101 - enlace de lista de espera',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips email marketing automation wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'MailerLite email sequence - Beatmaking 101',
