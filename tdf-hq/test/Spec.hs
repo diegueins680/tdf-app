@@ -5307,6 +5307,26 @@ main = hspec $ do
                         expectationFailure
                             ("Expected invalid stored ownerId to fail, got: " <> show value)
 
+            let expiredTokenConfig =
+                    let baseConfig = calendarConfig Nothing
+                    in baseConfig
+                        { entityVal =
+                            (entityVal baseConfig)
+                              { Cal.googleCalendarConfigAccessToken = Just "ya29.access-token_123"
+                              , Cal.googleCalendarConfigTokenExpiresAt =
+                                  Just (UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 0))
+                              }
+                        }
+            case selectUniqueCalendarConfigFallback
+                [expiredTokenConfig] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar config timestamps are invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored token expiry to fail, got: " <> show value)
+
         it "validates explicit Google Calendar configs before returning DTOs" $ do
             let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
                 calendarConfig rawCalendarId syncCursor =
