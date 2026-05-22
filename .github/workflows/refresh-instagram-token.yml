@@ -1,0 +1,59 @@
+name: Refresh Instagram Token
+
+on:
+  schedule:
+    # Run every 30 days at 3 AM UTC
+    - cron: '0 3 */30 * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'check'
+        type: choice
+        options:
+          - check
+          - refresh
+          - setup
+
+jobs:
+  refresh-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Check/Refresh Token
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID || '1206294904899273' }}
+          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.action }}" = "setup" ]; then
+            node scripts/refresh-instagram-token.mjs --setup
+          elif [ "${{ github.event.inputs.action }}" = "refresh" ]; then
+            node scripts/refresh-instagram-token.mjs --refresh
+          else
+            node scripts/refresh-instagram-token.mjs --check
+          fi
+
+      - name: Notify on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "⚠️ Instagram token refresh failed! Manual intervention required."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
