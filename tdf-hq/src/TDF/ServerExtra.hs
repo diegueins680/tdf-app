@@ -3617,7 +3617,7 @@ instance A.FromJSON IGActor where
 
 instance A.FromJSON IGMessage where
   parseJSON = withObject "IGMessage" $ \o -> do
-    igMid <- o .:? "mid"
+    igMid <- o .:? "mid" >>= parseOptionalMetaWebhookExternalId "message.mid"
     igText <- o .:? "text"
     igIsEcho <- o .:? "is_echo"
     igIsDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
@@ -3659,7 +3659,7 @@ instance A.FromJSON IGChangeValue where
     igChangeTimestamp <- parseTimestampMaybe rawTs
     igChangeReferral <- o .:? "referral"
     igChangeDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
-    igChangeMid <- o .:? "mid"
+    igChangeMid <- o .:? "mid" >>= parseOptionalMetaWebhookExternalId "change.mid"
     pure IGChangeValue{..}
 
 instance A.FromJSON IGChangeActor where
@@ -3686,6 +3686,16 @@ parseTimestampMaybe (Just raw) =
     validateTimestampValue v
       | v < 0 = fail "Invalid negative timestamp"
       | otherwise = pure (Just v)
+
+parseOptionalMetaWebhookExternalId :: Text -> Maybe Text -> Parser (Maybe Text)
+parseOptionalMetaWebhookExternalId _ Nothing = pure Nothing
+parseOptionalMetaWebhookExternalId fieldName (Just rawExternalId) =
+  case stripNonEmptyText (Just rawExternalId) of
+    Nothing -> pure Nothing
+    Just externalId ->
+      case validateSocialReplyIdentifier fieldName externalId of
+        Left err -> fail (BL8.unpack (errBody err))
+        Right cleanExternalId -> pure (Just cleanExternalId)
 
 data IGInbound = IGInbound
   { igInboundExternalId :: Text

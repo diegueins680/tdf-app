@@ -6445,53 +6445,67 @@ spec = do
                     ]
         extractMetaInbound payload `shouldBe` []
 
-    it "keeps malformed Meta message ids out of persisted webhook events" $ do
-        let payload =
-                A.object
-                    [ "object" .= ("instagram" :: Text)
-                    , "entry"
-                        .=
-                            [ A.object
-                                [ "id" .= ("17841400000000000" :: Text)
-                                , "messaging"
-                                    .=
-                                        [ A.object
-                                            [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
-                                            , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
-                                            , "timestamp" .= (1773630000 :: Int)
-                                            , "message"
-                                                .= A.object
-                                                    [ "mid" .= ("mid with space" :: Text)
-                                                    , "text" .= ("hola" :: Text)
-                                                    ]
-                                            ]
+    it "rejects malformed explicit Meta message ids instead of falling back to timestamp hashes" $ do
+        let assertInvalid expectedMessage payload =
+                case validateMetaInboundPayload payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right events ->
+                        expectationFailure
+                            ("Expected malformed Meta message id to fail, got " <> show events)
+
+        assertInvalid
+            "message.mid must not contain whitespace"
+            ( A.object
+                [ "object" .= ("instagram" :: Text)
+                , "entry"
+                    .=
+                        [ A.object
+                            [ "id" .= ("17841400000000000" :: Text)
+                            , "messaging"
+                                .=
+                                    [ A.object
+                                        [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                                        , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
+                                        , "timestamp" .= (1773630000 :: Int)
+                                        , "message"
+                                            .= A.object
+                                                [ "mid" .= ("mid with space" :: Text)
+                                                , "text" .= ("hola" :: Text)
+                                                ]
                                         ]
-                                , "changes"
-                                    .=
-                                        [ A.object
-                                            [ "field" .= ("messages" :: Text)
-                                            , "value"
-                                                .= A.object
-                                                    [ "from" .= A.object ["id" .= ("user-1" :: Text)]
-                                                    , "timestamp" .= (1773630001 :: Int)
-                                                    , "message"
-                                                        .= A.object
-                                                            [ "mid" .= ("bad mid" :: Text)
-                                                            , "is_deleted" .= True
-                                                            ]
-                                                    ]
-                                            ]
-                                        ]
-                                ]
+                                    ]
                             ]
-                    ]
-            events = extractMetaInbound payload
-        case events of
-            [MetaInboundMessage inbound] -> do
-                igInboundExternalId inbound `shouldSatisfy` T.isPrefixOf "user-1-"
-                igInboundExternalId inbound `shouldNotBe` "mid with space"
-                igInboundText inbound `shouldBe` "hola"
-            _ -> expectationFailure ("Expected one valid inbound event, got " <> show events)
+                        ]
+                ]
+            )
+        assertInvalid
+            "change.mid must not contain whitespace"
+            ( A.object
+                [ "object" .= ("instagram" :: Text)
+                , "entry"
+                    .=
+                        [ A.object
+                            [ "id" .= ("17841400000000000" :: Text)
+                            , "changes"
+                                .=
+                                    [ A.object
+                                        [ "field" .= ("messages" :: Text)
+                                        , "value"
+                                            .= A.object
+                                                [ "from" .= A.object ["id" .= ("user-1" :: Text)]
+                                                , "timestamp" .= (1773630001 :: Int)
+                                                , "mid" .= ("bad mid" :: Text)
+                                                , "is_deleted" .= True
+                                                ]
+                                        ]
+                                    ]
+                            ]
+                        ]
+                ]
+            )
 
     it "normalizes actor ids and drops ambiguous Meta webhook events before persistence" $ do
         let payload =
