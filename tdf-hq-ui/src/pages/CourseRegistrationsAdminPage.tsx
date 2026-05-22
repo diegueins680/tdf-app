@@ -1281,7 +1281,7 @@ const stripFirstRunCohortPresentationMarkers = (value: string) =>
     .replace(/`([^`\n]+)`/g, '$1')
     .replace(/!\[([^\]\n]*)\]\([^)]+\)/g, '$1')
     .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
-    .replace(/<\/?(?:strong|b|em|i|span|a)[^>\n]*>/gi, '')
+    .replace(/<\/?(?:strong|b|em|i|span|a|div|p|h[1-6]|br)[^>\n]*>/gi, '')
     .replace(
       /^\[(?:TODO|FIXME|DRAFT|BORRADOR|PENDING|PENDIENTE|POR\s+PUBLICAR|SIN\s+PUBLICAR|NO\s+PUBLICAR|WIP|TEST|QA|UAT|DEV|DEVELOPMENT|DESARROLLO|INTERNAL|INTERN[OA]|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA|ARCHIVE|ARCHIVED|ARCHIVAD[OA]|BACKUP|RESPALDO)\]\s*/gi,
       '',

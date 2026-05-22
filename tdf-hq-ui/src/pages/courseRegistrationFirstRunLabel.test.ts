@@ -54,6 +54,18 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips block HTML wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      '<div>Registration page - Beatmaking 101</div>',
+      '<p>Formulario público - Beatmaking 101</p>',
+      '<h2>Beatmaking 101 - enrollment portal</h2>',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('keeps legitimate survey and evaluation course titles when they are not form artifacts', () => {
     expect(
       cohortFirstRunLabel({ ccSlug: 'music-history-survey', ccTitle: 'Survey of Music History' }),
