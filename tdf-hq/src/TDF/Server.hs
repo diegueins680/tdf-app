@@ -12073,7 +12073,8 @@ validateDatafastOrderResourcePath mExpectedCheckoutId mRawResourcePath = do
 
 validateStoredDatafastCheckoutId :: Text -> Either ServerError Text
 validateStoredDatafastCheckoutId rawCheckoutId
-  | isValidDatafastCheckoutId checkoutId =
+  | rawCheckoutId == checkoutId
+      && isValidDatafastCheckoutId checkoutId =
       Right checkoutId
   | otherwise =
       Left err500

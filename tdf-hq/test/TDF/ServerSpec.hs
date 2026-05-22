@@ -8918,18 +8918,23 @@ spec = describe "TDF.Server helpers" $ do
                     (Just "/v1/checkouts/OTHER/payment"))
 
         it "rejects malformed stored checkout ids as server state errors" $
-            case validateDatafastOrderResourcePath
-                    (Just "checkout id with spaces")
-                    (Just "/v1/checkouts/ABC/payment") of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 500
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Stored Datafast checkout id is invalid"
-                Right pathVal ->
-                    expectationFailure
-                        ( "Expected malformed stored Datafast checkout id to be rejected, got: "
-                            <> show pathVal
-                        )
+            forM_
+                [ "checkout id with spaces"
+                , " ABC "
+                ]
+                $ \storedCheckoutId ->
+                    case validateDatafastOrderResourcePath
+                            (Just storedCheckoutId)
+                            (Just "/v1/checkouts/ABC/payment") of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Stored Datafast checkout id is invalid"
+                        Right pathVal ->
+                            expectationFailure
+                                ( "Expected malformed stored Datafast checkout id to be rejected, got: "
+                                    <> show pathVal
+                                )
 
     describe "validateDatafastResultCodeField" $ do
         it "normalizes dot-separated Datafast result codes before order status decisions" $
