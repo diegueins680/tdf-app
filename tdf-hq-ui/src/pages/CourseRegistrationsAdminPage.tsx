@@ -5060,6 +5060,7 @@ export default function CourseRegistrationsAdminPage() {
     && !shortPhoneSearchHint;
   const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
     && !showAdvancedFilters;
+  const showEmptyLocalSearchClearAction = showEmptyLocalSearchLimitRecoveryAction;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const statusFiltersSummarizeBusyListRows = showBusyListSearchOnboarding
@@ -5318,7 +5319,7 @@ export default function CourseRegistrationsAdminPage() {
     : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
-  const showLocalSearchInlineClearAction = hasLocalSearch;
+  const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchClearAction;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -8134,6 +8135,13 @@ export default function CourseRegistrationsAdminPage() {
               title={emptyLocalSearchResultsAccessibleLabel}
               action={showEmptyLocalSearchLimitRecoveryAction ? (
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleClearLocalSearch}
+                  >
+                    Limpiar búsqueda
+                  </Button>
                   <Button
                     color="inherit"
                     size="small"
