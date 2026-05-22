@@ -14,6 +14,8 @@ module TDF.ServerInstagramOAuth
   , sanitizeFacebookGraphErrorMessage
   , shouldFallbackToShortInstagramToken
   , selectPrimaryInstagramCandidate
+  , validateInstagramMediaPermalink
+  , validateInstagramMediaUrl
   , validateInstagramRedirectUri
   , validateInstagramUsername
   ) where
@@ -418,14 +420,57 @@ instagramOAuthServer user = exchangeHandler
 instagramMediaToDTO :: InstagramMedia -> Either ServerError InstagramMediaDTO
 instagramMediaToDTO InstagramMedia{..} = do
   timestamp <- parseInstagramMediaTimestamp imTimestamp
+  mediaUrl <- validateInstagramMediaUrl imMediaUrl
+  permalink <- validateInstagramMediaPermalink imPermalink
   pure
       InstagramMediaDTO
         { imdId = imId
         , imdCaption = imCaption
-        , imdMediaUrl = imMediaUrl
-        , imdPermalink = imPermalink
+        , imdMediaUrl = mediaUrl
+        , imdPermalink = permalink
         , imdTimestamp = timestamp
         }
+
+validateInstagramMediaUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaUrl =
+  validateInstagramMediaHttpsUrl "Instagram media_url"
+
+validateInstagramMediaPermalink :: Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaPermalink =
+  validateInstagramMediaHttpsUrl "Instagram permalink"
+
+validateInstagramMediaHttpsUrl :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaHttpsUrl _ Nothing = Right Nothing
+validateInstagramMediaHttpsUrl fieldName (Just rawUrl)
+  | T.null mediaUrl =
+      invalidUrl (fieldName <> " must not be blank when present")
+  | rawUrl /= mediaUrl =
+      invalidUrl (fieldName <> " must not include surrounding whitespace")
+  | T.length mediaUrl > maxInstagramMediaUrlChars =
+      invalidUrl (fieldName <> " must be 2048 characters or fewer")
+  | T.any isUnsafeInstagramMediaUrlChar mediaUrl =
+      invalidUrl (fieldName <> " must contain only visible ASCII URL characters")
+  | not ("https://" `T.isPrefixOf` T.toLower mediaUrl) =
+      invalidUrl (fieldName <> " must be an absolute https URL")
+  | T.null mediaUrlHost || "@" `T.isInfixOf` mediaUrlHost =
+      invalidUrl (fieldName <> " must include a plain host")
+  | otherwise =
+      Right (Just mediaUrl)
+  where
+    mediaUrl = T.strip rawUrl
+    mediaUrlHost =
+      T.takeWhile
+        (\ch -> ch /= '/' && ch /= '?' && ch /= '#')
+        (T.drop (T.length ("https://" :: Text)) mediaUrl)
+    invalidUrl message =
+      Left err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+maxInstagramMediaUrlChars :: Int
+maxInstagramMediaUrlChars = 2048
+
+isUnsafeInstagramMediaUrlChar :: Char -> Bool
+isUnsafeInstagramMediaUrlChar ch =
+  ch <= ' ' || ch > '~' || isControl ch || generalCategory ch == Format
 
 parseInstagramMediaTimestamp :: Maybe Text -> Either ServerError (Maybe UTCTime)
 parseInstagramMediaTimestamp Nothing = Right Nothing

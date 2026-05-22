@@ -220,6 +220,8 @@ import TDF.ServerInstagramOAuth
       sanitizeFacebookGraphErrorMessage,
       shouldFallbackToShortInstagramToken,
       selectPrimaryInstagramCandidate,
+      validateInstagramMediaPermalink,
+      validateInstagramMediaUrl,
       validateInstagramRedirectUri,
       validateInstagramUsername )
 import TDF.Server
@@ -4997,6 +4999,42 @@ main = hspec $ do
             assertInvalid
                 ("2026-05-21T16:30:00Z" <> "\x202E")
                 "hidden formatting"
+
+        it "rejects malformed Instagram media URLs before OAuth media DTO fallback rendering" $ do
+            validateInstagramMediaUrl Nothing `shouldBe` Right Nothing
+            validateInstagramMediaUrl (Just "https://cdn.example.com/media.jpg?size=large")
+                `shouldBe` Right (Just "https://cdn.example.com/media.jpg?size=large")
+            validateInstagramMediaPermalink (Just "https://www.instagram.com/p/abc123/")
+                `shouldBe` Right (Just "https://www.instagram.com/p/abc123/")
+
+            let assertInvalid validate rawUrl expectedMessage =
+                    case validate (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right mediaUrl ->
+                            expectationFailure
+                                ( "Expected invalid Instagram media URL to fail, got: "
+                                    <> show mediaUrl
+                                )
+            assertInvalid validateInstagramMediaUrl "   " "must not be blank"
+            assertInvalid
+                validateInstagramMediaUrl
+                " https://cdn.example.com/media.jpg "
+                "surrounding whitespace"
+            assertInvalid
+                validateInstagramMediaUrl
+                "http://cdn.example.com/media.jpg"
+                "absolute https URL"
+            assertInvalid
+                validateInstagramMediaPermalink
+                "https://www.instagram.com/p/abc123/\x202E"
+                "visible ASCII URL characters"
+            assertInvalid validateInstagramMediaPermalink "https:///p/abc123/" "plain host"
+            assertInvalid
+                validateInstagramMediaPermalink
+                "https://user@example.com/p/abc123/"
+                "plain host"
 
         it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
             let sanitized =
