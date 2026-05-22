@@ -530,14 +530,66 @@ instance FromJSON EventMomentCreateDTO where
       , "emCreateMediaDurationMs"
       ]
       o
+    rejectNullObjectFields
+      [ "emCreateAuthorName"
+      , "emCreateCaption"
+      , "emCreateMediaWidth"
+      , "emCreateMediaHeight"
+      , "emCreateMediaDurationMs"
+      ]
+      o
+    mediaUrl <-
+      o .: "emCreateMediaUrl"
+        >>= normalizeRequiredText "emCreateMediaUrl"
+    mediaType <-
+      o .: "emCreateMediaType"
+        >>= normalizeMomentCreateMediaType
+    mediaWidth <-
+      o .:? "emCreateMediaWidth"
+        >>= validateOptionalPositiveInt "emCreateMediaWidth"
+    mediaHeight <-
+      o .:? "emCreateMediaHeight"
+        >>= validateOptionalPositiveInt "emCreateMediaHeight"
+    mediaDurationMs <-
+      o .:? "emCreateMediaDurationMs"
+        >>= validateOptionalNonNegativeInt "emCreateMediaDurationMs"
     EventMomentCreateDTO
       <$> o .:? "emCreateAuthorName"
       <*> o .:? "emCreateCaption"
-      <*> o .: "emCreateMediaUrl"
-      <*> o .: "emCreateMediaType"
-      <*> o .:? "emCreateMediaWidth"
-      <*> o .:? "emCreateMediaHeight"
-      <*> o .:? "emCreateMediaDurationMs"
+      <*> pure mediaUrl
+      <*> pure mediaType
+      <*> pure mediaWidth
+      <*> pure mediaHeight
+      <*> pure mediaDurationMs
+
+normalizeRequiredText :: String -> Text -> Parser Text
+normalizeRequiredText fieldName rawValue =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed
+       then fail (fieldName <> " must not be blank")
+       else pure trimmed
+
+normalizeMomentCreateMediaType :: Text -> Parser Text
+normalizeMomentCreateMediaType rawValue =
+  case T.toLower (T.strip rawValue) of
+    "image" -> pure "image"
+    "photo" -> pure "image"
+    "picture" -> pure "image"
+    "video" -> pure "video"
+    "clip" -> pure "video"
+    _ -> fail "emCreateMediaType must be one of: image, video"
+
+validateOptionalPositiveInt :: String -> Maybe Int -> Parser (Maybe Int)
+validateOptionalPositiveInt _ Nothing = pure Nothing
+validateOptionalPositiveInt fieldName (Just value)
+  | value > 0 = pure (Just value)
+  | otherwise = fail (fieldName <> " must be greater than 0")
+
+validateOptionalNonNegativeInt :: String -> Maybe Int -> Parser (Maybe Int)
+validateOptionalNonNegativeInt _ Nothing = pure Nothing
+validateOptionalNonNegativeInt fieldName (Just value)
+  | value >= 0 = pure (Just value)
+  | otherwise = fail (fieldName <> " must be greater than or equal to 0")
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
   { emrrReaction :: Text

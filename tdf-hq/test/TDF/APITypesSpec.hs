@@ -2740,6 +2740,55 @@ spec = do
                 ])
                 `shouldSatisfy` isLeft
 
+    describe "social event moment request FromJSON" $ do
+        it "accepts canonical moment creates and normalizes media lookup fields" $
+            case decodeEventMomentCreate (BL8.concat
+                [ "{\"emCreateAuthorName\":\"Ada\""
+                , ",\"emCreateCaption\":\"En vivo\""
+                , ",\"emCreateMediaUrl\":\" https://cdn.example.com/moment.jpg \""
+                , ",\"emCreateMediaType\":\" PHOTO \""
+                , ",\"emCreateMediaWidth\":1080"
+                , ",\"emCreateMediaHeight\":1350"
+                , ",\"emCreateMediaDurationMs\":0}"
+                ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical moment create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.emCreateMediaUrl payload
+                        `shouldBe` "https://cdn.example.com/moment.jpg"
+                    SocialEvents.emCreateMediaType payload `shouldBe` "image"
+                    SocialEvents.emCreateMediaWidth payload `shouldBe` Just 1080
+                    SocialEvents.emCreateMediaHeight payload `shouldBe` Just 1350
+                    SocialEvents.emCreateMediaDurationMs payload `shouldBe` Just 0
+
+        it "rejects ambiguous or malformed moment creates before handler fallback validation" $ do
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"mediaUrl\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateCaption\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"   \",\"emCreateMediaType\":\"image\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"gif\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":0}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaHeight\":-1}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"video\",\"emCreateMediaDurationMs\":-1}"
+                `shouldSatisfy` isLeft
+
     describe "SocialSyncIngestRequest FromJSON" $ do
         it "accepts canonical ingest posts and trims identity fields before handler validation" $
             case decodeSocialSyncIngest
@@ -3019,6 +3068,8 @@ spec = do
     decodeTicketCheckIn = eitherDecode
     decodeEventFinanceEntry :: BL8.ByteString -> Either String SocialEvents.EventFinanceEntryDTO
     decodeEventFinanceEntry = eitherDecode
+    decodeEventMomentCreate :: BL8.ByteString -> Either String SocialEvents.EventMomentCreateDTO
+    decodeEventMomentCreate = eitherDecode
     decodeSocialSyncIngest :: BL8.ByteString -> Either String SocialSync.SocialSyncIngestRequest
     decodeSocialSyncIngest = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
