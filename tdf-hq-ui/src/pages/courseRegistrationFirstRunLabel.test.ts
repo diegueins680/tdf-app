@@ -96,6 +96,30 @@ describe('cohortFirstRunLabel', () => {
     ).toBe('Calendly for Musicians');
   });
 
+  it('strips video asset wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Welcome video - Beatmaking 101',
+      'Orientation recording for Beatmaking 101',
+      'Beatmaking 101 - onboarding video link',
+      'Vimeo replay - Beatmaking 101',
+      'Video de bienvenida - Beatmaking 101',
+      'Beatmaking 101 - grabacion de orientacion',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate video course titles when they are not asset wrappers', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'video-production-for-tdf-artists', ccTitle: 'Video Production for TDF Artists' }),
+    ).toBe('Video Production for TDF Artists');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'youtube-for-musicians', ccTitle: 'YouTube for Musicians' }),
+    ).toBe('YouTube for Musicians');
+  });
+
   it('strips course-change request wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'Course cancellation request - Beatmaking 101',
