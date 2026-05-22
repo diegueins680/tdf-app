@@ -13269,6 +13269,69 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('treats spreadsheet and database connector sources as admin plumbing in busy lists', async () => {
+    const defaultSources = [
+      'airtable_registration_table',
+      'airtable_enrollment_table',
+      'google_sheets_enrollment_rows',
+      'notion_registration_database',
+      'coda_registration_table',
+      'excel_registration_workbook',
+      'microsoft_excel_registration_workbook',
+      'airtable_view',
+    ] as const;
+    const hiddenSourceLabels = [
+      'Airtable registration table',
+      'Airtable enrollment table',
+      'Google sheets enrollment rows',
+      'Notion registration database',
+      'Coda registration table',
+      'Excel registration workbook',
+      'Microsoft excel registration workbook',
+      'Airtable view',
+    ];
+
+    listRegistrationsMock.mockResolvedValue(
+      buildRegistrations(defaultSources.length, (index) => ({
+        crSource: defaultSources[index],
+      })),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe(
+        'Nombre o contacto',
+      );
+      hiddenSourceLabels.forEach((sourceLabel) => {
+        expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
+        expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
+      });
+      expect(container.textContent).not.toContain('Fuente visible:');
+      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+    });
+
+    listRegistrationsMock.mockClear();
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, localSearchLabel), 'google sheets');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getDossierTriggers(container)).toHaveLength(0);
+      expect(container.textContent).toContain(
+        `No hay coincidencias para "google sheets" en las ${defaultSources.length} inscripciones cargadas.`,
+      );
+      expect(listRegistrationsMock).not.toHaveBeenCalled();
+    });
+
+    await cleanup();
+  });
+
   it('treats link-in-bio source wrappers as default public-form plumbing in busy lists', async () => {
     const defaultSources = [
       'linktree_link',
