@@ -3,7 +3,7 @@ module.exports = {
   testRunner: {
     args: {
       $0: 'jest',
-      config: 'tdf-mobile/e2e/jest.config.js',
+      config: 'e2e/jest.config.js',
     },
     jest: {
       setupTimeout: 120000,
