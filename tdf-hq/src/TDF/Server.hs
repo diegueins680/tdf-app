@@ -2496,11 +2496,24 @@ resolveDriveUploadMimeType rawMimeType
         { errBody =
             "file content type must not contain control characters or Unicode formatting marks"
         }
+  | hasDriveUploadContentTypeNameParameter cleaned =
+      Left err400
+        { errBody = "file content type must not include filename parameters" }
   | otherwise =
       validateDriveUploadMimeType mediaType
   where
     cleaned = T.toLower (T.strip rawMimeType)
     mediaType = T.strip (fst (T.breakOn ";" cleaned))
+
+hasDriveUploadContentTypeNameParameter :: Text -> Bool
+hasDriveUploadContentTypeNameParameter contentType =
+  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+  where
+    isNameParameter rawParameter =
+      let key = T.strip (fst (T.breakOn "=" rawParameter))
+      in key `elem` ["name", "name*", "filename", "filename*"]
+           || "name*" `T.isPrefixOf` key
+           || "filename*" `T.isPrefixOf` key
 
 validateDriveUploadMimeType :: Text -> Either ServerError Text
 validateDriveUploadMimeType mimeType

@@ -6251,6 +6251,12 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "file content type must not contain control characters"
                 "application/pdf\x202E"
+            assertInvalid
+                "file content type must not include filename parameters"
+                "text/plain; name=payload.html"
+            assertInvalid
+                "file content type must not include filename parameters"
+                "application/pdf; filename*=UTF-8''proof.pdf"
 
     describe "validateConfiguredDriveAccessToken" $ do
         it "rejects malformed DRIVE_ACCESS_TOKEN fallbacks before upload requests reuse them" $ do
