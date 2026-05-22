@@ -283,10 +283,11 @@ validateSriScriptResultTotal request result =
 
 sriRequestTotalCents :: SriScriptRequest -> Integer
 sriRequestTotalCents request =
-  sum
-    [ fromIntegral (quantity line) * fromIntegral (unitCents line)
-    | line <- lines request
-    ]
+  sum (map sriLineTotalCents (lines request))
+
+sriLineTotalCents :: SriScriptLine -> Integer
+sriLineTotalCents line =
+  fromIntegral (quantity line) * fromIntegral (unitCents line)
 
 sriTotalCentEpsilon :: Double
 sriTotalCentEpsilon = 0.000001
@@ -641,11 +642,21 @@ validateLines values
         "SRI script request supports at most "
           <> T.pack (show maxSriScriptLineItems)
           <> " invoice lines"
-validateLines values =
-  traverse validateLine (zip [(1 :: Int)..] values)
+validateLines values = do
+  lineValues <- traverse validateLine (zip [(1 :: Int)..] values)
+  when (sum (map sriLineTotalCents lineValues) > maxSriScriptJsonInteger) $
+    Left (fieldMessage "totalCents" maxSriScriptJsonIntegerMessage)
+  pure lineValues
 
 maxSriScriptLineItems :: Int
 maxSriScriptLineItems = 100
+
+maxSriScriptJsonInteger :: Integer
+maxSriScriptJsonInteger = 9007199254740991
+
+maxSriScriptJsonIntegerMessage :: Text
+maxSriScriptJsonIntegerMessage =
+  "must be 9007199254740991 or less"
 
 validateLine :: (Int, SriScriptLine) -> Either Text SriScriptLine
 validateLine (index, value) = do
@@ -658,6 +669,12 @@ validateLine (index, value) = do
     Left (fieldMessage (lineField "quantity") "must be greater than zero")
   when (unitCents value < 0) $
     Left (fieldMessage (lineField "unitCents") "must be zero or greater")
+  when (fromIntegral (quantity value) > maxSriScriptJsonInteger) $
+    Left (fieldMessage (lineField "quantity") maxSriScriptJsonIntegerMessage)
+  when (fromIntegral (unitCents value) > maxSriScriptJsonInteger) $
+    Left (fieldMessage (lineField "unitCents") maxSriScriptJsonIntegerMessage)
+  when (sriLineTotalCents value > maxSriScriptJsonInteger) $
+    Left (fieldMessage (lineField "totalCents") maxSriScriptJsonIntegerMessage)
   taxBpsValue <- validateTaxBps (lineField "taxBps") (taxBps value)
   additionalInfoValue <-
     validateOptionalTextField (lineField "sriAdditionalInfo") (sriAdditionalInfo value)

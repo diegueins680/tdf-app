@@ -3959,6 +3959,51 @@ main = hspec $ do
                                 <> show value
                             )
 
+        it "keeps SRI invoice amounts within JavaScript-safe integer bounds" $ do
+            let assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected unsafe SRI invoice amount to fail, got: "
+                                    <> show value
+                                )
+                tooLargeInteger = 9007199254740992
+                nearHalfSafeInteger = 4503599627370496
+            assertInvalid
+                "lines[1].quantity must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.quantity = tooLargeInteger }
+                        ]
+                    }
+            assertInvalid
+                "lines[1].unitCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.unitCents = tooLargeInteger }
+                        ]
+                    }
+            assertInvalid
+                "lines[1].totalCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine
+                            { Sri.quantity = 3
+                            , Sri.unitCents = 3002399751580331
+                            }
+                        ]
+                    }
+            assertInvalid
+                "totalCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.unitCents = nearHalfSafeInteger }
+                        , sampleSriScriptLine { Sri.unitCents = nearHalfSafeInteger }
+                        ]
+                    }
+
         it "rejects hidden formatting markers in SRI request text before invoking the script" $ do
             let hidden = Data.Text.singleton '\x202E'
                 assertInvalid expected request =
