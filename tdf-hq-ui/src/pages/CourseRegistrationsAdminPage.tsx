@@ -1526,6 +1526,16 @@ const firstRunUrgencyOfferDescriptorPrefixPattern =
 const firstRunUrgencyOfferDescriptorSuffixPattern =
   /\s*(?:[-:/|]\s*)?(?:(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:forms?|pages?|links?|urls?|portals?))|(?:(?:registration|enrollment|sign[-\s]?up)\s+(?:deadline|closing)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:[uú]ltimos?\s+cupos?|cierre\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula)|fecha\s+l[ií]mite\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula))(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
 
+const firstRunContestEntryDescriptorPattern = String.raw`(?:(?:giveaways?|contests?|raffles?|prize\s+draws?|sweepstakes)\s+(?:(?:entry|entries|registrations?|sign[-\s]?ups?)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:entries?|entry\s+forms?|registration\s+forms?|sign[-\s]?up\s+forms?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:giveaways?|contests?|raffles?|prize\s+draws?|sweepstakes)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|inscripci[oó]n(?:es)?|registros?|participaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:sorteos?|concursos?|rifas?|premios?)|(?:sorteos?|concursos?|rifas?|premios?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|inscripci[oó]n(?:es)?|registros?|participaci[oó]n(?:es)?))`;
+const firstRunContestEntryDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunContestEntryDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunContestEntryDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunContestEntryDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunCallToActionDescriptorPrefixPattern =
   /^(?:(?:apply|enroll|register|sign\s*up)\s+(?:for|to|in)\s+(?:the\s+)?(?:course|class|program)|(?:apply|enroll|register|sign\s*up)\s+(?:now|here|for|to|in)\b|(?:start|begin|open|complete|continue)\s+(?:(?:your|the)\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admission|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+(?:ahora|aqu[ií]|al\s+curso|a\s+la\s+clase|en\s+el\s+curso|para\s+el\s+curso|al\s+programa)|(?:inicia|empieza|comienza|abre|completa|contin[uú]a)\s+(?:tu\s+|la\s+)?(?:pre)?(?:inscripci[oó]n|matr[ií]cula|postulaci[oó]n|aplicaci[oó]n|registro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
 
@@ -2282,6 +2292,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
     .replace(firstRunOfferDescriptorPrefixPattern, '')
     .replace(firstRunUrgencyOfferDescriptorPrefixPattern, '')
+    .replace(firstRunContestEntryDescriptorPrefixPattern, '')
     .replace(firstRunCallToActionDescriptorPrefixPattern, '')
     .replace(firstRunSeatReservationCallToActionDescriptorPrefixPattern, '')
     .replace(firstRunOpenEnrollmentDescriptorPrefixPattern, '')
@@ -2423,6 +2434,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
     .replace(firstRunOfferDescriptorSuffixPattern, '')
     .replace(firstRunUrgencyOfferDescriptorSuffixPattern, '')
+    .replace(firstRunContestEntryDescriptorSuffixPattern, '')
     .replace(firstRunCallToActionDescriptorSuffixPattern, '')
     .replace(firstRunSeatReservationCallToActionDescriptorSuffixPattern, '')
     .replace(firstRunOpenEnrollmentDescriptorSuffixPattern, '')

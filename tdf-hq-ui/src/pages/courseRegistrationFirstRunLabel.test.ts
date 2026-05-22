@@ -239,6 +239,29 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips contest and giveaway entry wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Giveaway entry form - Beatmaking 101',
+      'Raffle signup page for Beatmaking 101',
+      'Beatmaking 101 - sweepstakes registration page',
+      'Formulario de sorteo - Beatmaking 101',
+      'Registro de concurso para Beatmaking 101',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
+  it('keeps legitimate contest course titles when they are not entry-form artifacts', () => {
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'contest-prep', ccTitle: 'Contest Prep for Producers' }),
+    ).toBe('Contest Prep for Producers');
+    expect(
+      cohortFirstRunLabel({ ccSlug: 'giveaway-strategy', ccTitle: 'Giveaway Strategy for Artists' }),
+    ).toBe('Giveaway Strategy for Artists');
+  });
+
   it('strips wrapped response-sheet prefixes before first-run copy uses the cohort label', () => {
     const titles = [
       '(Form responses 1) - Beatmaking 101',
