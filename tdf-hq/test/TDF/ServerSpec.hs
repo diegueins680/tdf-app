@@ -448,6 +448,7 @@ import TDF.ServerFuture
     , validateFutureStubCatalog
     , validateFutureStubCatalogAreaOrder
     , validateFutureStubCatalogEndpointLeaves
+    , validateFutureStubCatalogEndpointLeavesWithCardIds
     , validateFutureStubCatalogEntry
     , validateFutureStubCatalogResponseWithConsole
     , validateFutureStubCatalogResponses
@@ -12713,6 +12714,31 @@ spec = describe "TDF.Server helpers" $ do
                 [ ("inventory", "asset/metadata")
                 , ("inventory", "assets/workflow")
                 ]
+
+        it "validates admin console card ids before using them as reserved route labels" $ do
+            validateFutureStubCatalogEndpointLeavesWithCardIds
+                allowedFutureAdminConsoleCardIds
+                [("crm", "parties/filters")]
+                `shouldBe` Right [("crm", "parties/filters")]
+
+            let assertInvalidCardIds cardIds =
+                    case validateFutureStubCatalogEndpointLeavesWithCardIds
+                        cardIds
+                        [("crm", "parties/filters")] of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future admin console metadata"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed admin console card ids to fail before "
+                                    <> "fallback route collision checks, got: "
+                                    <> show value
+                                )
+
+            assertInvalidCardIds []
+            assertInvalidCardIds ["user-management"]
+            assertInvalidCardIds ["user-management", "api tokens"]
 
     describe "validateFutureStubCatalogResponses" $ do
         it "distinguishes malformed fallback discovery responses from catalog drift" $ do

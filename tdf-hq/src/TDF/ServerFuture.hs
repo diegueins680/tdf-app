@@ -366,11 +366,19 @@ validateFutureStubCatalogAreaOrder catalog = do
 validateFutureStubCatalogEndpointLeaves
   :: [(Text, Text)]
   -> Either ServerError [(Text, Text)]
-validateFutureStubCatalogEndpointLeaves catalog = do
+validateFutureStubCatalogEndpointLeaves =
+  validateFutureStubCatalogEndpointLeavesWithCardIds allowedFutureAdminConsoleCardIds
+
+validateFutureStubCatalogEndpointLeavesWithCardIds
+  :: [Text]
+  -> [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
   mountedAreas <- validateFutureStubAreaRegistry mountedFutureStubAreas
   reservedTopLevelAreas <-
     validateReservedFutureStubTopLevelAreas reservedFutureStubTopLevelAreas
   reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
+  cardIds <- validateFutureAdminConsoleCardIds rawCardIds
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubLeafRoute catalog
@@ -383,7 +391,7 @@ validateFutureStubCatalogEndpointLeaves catalog = do
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
        || hasReservedSegmentLabelCollision reservedRoutes validatedCatalog
-       || hasAdminConsoleCardSegmentCollision validatedCatalog
+       || hasAdminConsoleCardSegmentCollision cardIds validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
   where
@@ -481,13 +489,13 @@ validateFutureStubCatalogEndpointLeaves catalog = do
               Set.fromList (concatMap (T.splitOn "/" . snd) reservedRoutesForAreas)
       in any (routeHasReservedSegmentLabel reservedSegments) catalogForAreas
 
-    hasAdminConsoleCardSegmentCollision catalogForAreas =
+    hasAdminConsoleCardSegmentCollision cardIds catalogForAreas =
       any
-          (any hasAdminConsoleCardLabelOverlap . T.splitOn "/" . snd)
+          (any (hasAdminConsoleCardLabelOverlap cardIds) . T.splitOn "/" . snd)
           catalogForAreas
 
-    hasAdminConsoleCardLabelOverlap segment =
-      any (segmentsOverlap segment) allowedFutureAdminConsoleCardIds
+    hasAdminConsoleCardLabelOverlap cardIds segment =
+      any (segmentsOverlap segment) cardIds
 
     routeHasReservedSegmentLabel reservedSegments route@(_area, endpoint)
       | route `elem` allowedFutureStubReservedSiblingRoutes = False
