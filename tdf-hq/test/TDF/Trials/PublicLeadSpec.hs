@@ -1720,6 +1720,22 @@ spec = do
         , ",\"unexpected\":true}"
         ]
 
+    it "rejects explicit null booking links instead of treating them as omitted" $ do
+      let payload = BL8.pack $ concat
+            [ "{\"studentId\":1"
+            , ",\"teacherId\":2"
+            , ",\"subjectId\":3"
+            , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+            , ",\"roomId\":4"
+            , ",\"bookingId\":null}"
+            ]
+      case (A.eitherDecode payload :: Either String ClassSessionIn) of
+        Left decodeErr ->
+          decodeErr `shouldContain` "bookingId must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null class-session bookingId to be rejected"
+
   describe "AttendIn FromJSON" $ do
     it "accepts canonical attendance payloads for private class sessions" $
       case A.eitherDecode "{\"attended\":true,\"notes\":\"Completed exercises\"}" of
