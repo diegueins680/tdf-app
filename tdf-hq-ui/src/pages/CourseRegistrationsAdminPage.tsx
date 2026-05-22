@@ -1618,6 +1618,16 @@ const firstRunAgreementDescriptorSuffixPattern = new RegExp(
   'i',
 );
 
+const firstRunStudentInfoDescriptorPattern = String.raw`(?:(?:(?:student|guardian|parent|participant)\s+(?:information|info|details?|profiles?|records?|data|contacts?)\s+(?:forms?|pages?|links?|urls?|portals?|records?|profiles?))|(?:(?:forms?|pages?|links?|urls?|portals?|records?|profiles?)\s+(?:for\s+)?(?:student|guardian|parent|participant)\s+(?:information|info|details?|profiles?|records?|data|contacts?))|(?:(?:datos|informaci[oó]n|perfil(?:es)?|fichas?|contactos?)\s+(?:de|del?|para(?:\s+el|\s+la)?)\s+(?:estudiantes?|alumnos?|representantes?|tutor(?:es)?|padres?|madres?|participantes?)(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?))?)|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?)\s+(?:de|para)\s+(?:datos|informaci[oó]n|perfil(?:es)?|contactos?)\s+(?:de|del?|para(?:\s+el|\s+la)?)\s+(?:estudiantes?|alumnos?|representantes?|tutor(?:es)?|padres?|madres?|participantes?)))`;
+const firstRunStudentInfoDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunStudentInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunStudentInfoDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunStudentInfoDescriptorPattern})\s*$`,
+  'i',
+);
+
 const firstRunSafetyInfoDescriptorPattern = String.raw`(?:(?:(?:emergency\s+contacts?|medical|health|allerg(?:y|ies)|safety)(?:\s+(?:information|info|details?))?\s+(?:forms?|pages?|links?|urls?|portals?|records?|profiles?))|(?:(?:forms?|pages?|links?|urls?|portals?|records?|profiles?)\s+(?:for\s+)?(?:emergency\s+contacts?|medical|health|allerg(?:y|ies)|safety)(?:\s+(?:information|info|details?))?)|(?:(?:contacto(?:s)?\s+de\s+emergencia|informaci[oó]n\s+m[eé]dica|datos\s+m[eé]dicos|alergias?|seguridad)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?|datos))|fichas?\s+m[eé]dicas?|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?)\s+(?:de|para)\s+(?:contacto(?:s)?\s+de\s+emergencia|informaci[oó]n\s+m[eé]dica|datos\s+m[eé]dicos|salud|alergias?|seguridad)))`;
 const firstRunSafetyInfoDescriptorPrefixPattern = new RegExp(
   String.raw`^(?:${firstRunSafetyInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
@@ -2321,6 +2331,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
     .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
     .replace(firstRunAgreementDescriptorPrefixPattern, '')
+    .replace(firstRunStudentInfoDescriptorPrefixPattern, '')
     .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
     .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
     .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
@@ -2464,6 +2475,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
     .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
     .replace(firstRunAgreementDescriptorSuffixPattern, '')
+    .replace(firstRunStudentInfoDescriptorSuffixPattern, '')
     .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
     .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
     .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
