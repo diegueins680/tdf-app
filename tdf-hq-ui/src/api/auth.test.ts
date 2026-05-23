@@ -117,14 +117,14 @@ describe('auth api', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('shows a friendly startup message after login retries are exhausted', async () => {
+  it('uses each configured login retry once before showing a startup message', async () => {
     jest.useFakeTimers();
 
     fetchMock.mockImplementation(() =>
       Promise.resolve({
         ok: false,
         status: 503,
-        headers: createHeaders('application/json', { 'retry-after': '5' }),
+        headers: createHeaders('application/json'),
         text: jest.fn<() => Promise<string>>().mockResolvedValue('{"error":"starting"}'),
       } as unknown as Response),
     );
@@ -135,9 +135,20 @@ describe('auth api', () => {
     });
     const rejection = expect(promise).rejects.toThrow('El servicio está arrancando. Intenta de nuevo en unos segundos.');
 
-    await jest.advanceTimersByTimeAsync(5000);
-    await jest.advanceTimersByTimeAsync(5000);
-    await jest.advanceTimersByTimeAsync(5000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await jest.advanceTimersByTimeAsync(1999);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(1);
 
     await rejection;
     expect(fetchMock).toHaveBeenCalledTimes(4);

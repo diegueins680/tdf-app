@@ -59,8 +59,9 @@ async function postAuthJson<T>(
   options?: { retryDelaysMs?: readonly number[] },
 ): Promise<T> {
   const retryDelaysMs = options?.retryDelaysMs ?? [];
+  const maxAttempts = retryDelaysMs.length + 1;
 
-  for (let attempt = 0; ; attempt += 1) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
       credentials: 'include',
@@ -80,6 +81,8 @@ async function postAuthJson<T>(
 
     throw new Error(await readErrorMessage(res, fallback));
   }
+
+  throw new Error(fallback);
 }
 
 export async function loginRequest(payload: LoginRequestDTO): Promise<LoginResponseDTO> {
