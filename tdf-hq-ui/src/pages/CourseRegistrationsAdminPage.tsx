@@ -983,6 +983,9 @@ const statusMenuButtonTitle = (currentStatus: string, targetLabel?: string) => {
   return `Cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
 };
 
+const paymentReceiptIconButtonTitle = (currentStatus: string, targetLabel: string) =>
+  `Icono de recibo: registrar pago o cambiar estado para ${targetLabel}; actual: ${registrationStatusLabel(currentStatus)}`;
+
 const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => {
   const actionLabel = canOpenPaymentWorkflowFromStatus(currentStatus)
     ? `${openPaymentWorkflowLabel} o cambiar estado`
@@ -8283,7 +8286,9 @@ export default function CourseRegistrationsAdminPage() {
                     );
                   const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
                   const statusIconActionIsPaymentWorkflow = canOpenPaymentWorkflowFromStatus(reg.crStatus);
-                  const statusIconActionTitle = statusMenuButtonTitle(reg.crStatus, rowActionTarget);
+                  const statusIconActionTitle = statusIconActionIsPaymentWorkflow
+                    ? paymentReceiptIconButtonTitle(reg.crStatus, rowActionTarget)
+                    : statusMenuButtonTitle(reg.crStatus, rowActionTarget);
                   const usePaymentStatusMenuLabel =
                     showInlinePaymentWorkflowRowLabel && statusIconActionIsPaymentWorkflow;
                   const rowCohortSlug = reg.crCourseSlug.trim();

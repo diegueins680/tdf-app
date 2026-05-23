@@ -266,6 +266,8 @@ const dossierErrorRetryLabel = 'Reintentar expediente';
 const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}; estado actual: Pendiente de pago`;
+const paymentStatusIconButtonTitle = (targetLabel: string) =>
+  `Icono de recibo: registrar pago o cambiar estado para ${targetLabel}; actual: Pendiente de pago`;
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
 const initialEmptyStateMultiCohortMessage =
@@ -10523,7 +10525,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelectorAll('button[aria-label^="Registrar pago o cambiar estado para "]')).toHaveLength(9);
       expect(container.querySelectorAll('button[aria-label^="Cambiar estado para "]')).toHaveLength(0);
       expect(getButtonByAriaLabel(container, paymentStatusIconButtonAriaLabel('Estudiante 1')).getAttribute('title')).toBe(
-        'Registrar pago o cambiar estado para Estudiante 1; actual: Pendiente de pago',
+        paymentStatusIconButtonTitle('Estudiante 1'),
       );
       expect(countButtonsByText(container, openPaymentWorkflowLabel)).toBe(0);
       expect(countOccurrences(container, 'Pendiente de pago')).toBe(1);
@@ -11093,7 +11095,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(firstStatusAction.textContent?.trim()).toBe('');
       expect(firstStatusAction.getAttribute('aria-haspopup')).toBe('menu');
       expect(firstStatusAction.getAttribute('title')).toBe(
-        'Registrar pago o cambiar estado para Estudiante 1; actual: Pendiente de pago',
+        paymentStatusIconButtonTitle('Estudiante 1'),
       );
     });
 
@@ -24356,7 +24358,7 @@ describe('CourseRegistrationsAdminPage', () => {
         'Registrar pago o cambiar estado para Ada Lovelace; estado actual: Pendiente de pago',
       );
       expect(firstStatusAction.getAttribute('title')).toBe(
-        'Registrar pago o cambiar estado para Ada Lovelace; actual: Pendiente de pago',
+        paymentStatusIconButtonTitle('Ada Lovelace'),
       );
     });
 
