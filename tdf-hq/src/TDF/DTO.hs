@@ -340,6 +340,7 @@ data CourseRegistrationDTO = CourseRegistrationDTO
   , crSource      :: Text
   , crStatus      :: Text
   , crReceiptCount :: Int
+  , crFollowUpCount :: Int
   , crAdminNotes  :: Maybe Text
   , crHowHeard    :: Maybe Text
   , crUtmSource   :: Maybe Text

@@ -15,6 +15,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Map.Strict as Map
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist (Entity(..), Key, count, get, insert, insert_, insertKey, (==.))
@@ -280,6 +281,7 @@ import TDF.Server
     , ensurePartyForInquiry
     , ensurePartyForCourseRegistrationDb
     , findExistingRegistration
+    , courseRegistrationFollowUpCounts
     , validatePublicBookingContactDetails
     , validatePublicBookingFullName
     , validateBookingNotes
@@ -4353,6 +4355,37 @@ spec = describe "TDF.Server helpers" $ do
                         ( "Expected duplicate course registration party match to fail, got: "
                             <> show partyId
                         )
+
+    describe "courseRegistrationFollowUpCounts" $
+        it "counts non-intake follow-up rows for the admin list summary" $ do
+            let now = UTCTime (fromGregorian 2030 1 2) (secondsToDiffTime 0)
+                firstRegistration = toSqlKey 101 :: ME.CourseRegistrationId
+                secondRegistration = toSqlKey 102 :: ME.CourseRegistrationId
+                mkFollowUp followUpId registrationId entryType =
+                    Entity (toSqlKey followUpId) ME.CourseRegistrationFollowUp
+                        { ME.courseRegistrationFollowUpRegistrationId = registrationId
+                        , ME.courseRegistrationFollowUpPartyId = Nothing
+                        , ME.courseRegistrationFollowUpEntryType = entryType
+                        , ME.courseRegistrationFollowUpSubject = Nothing
+                        , ME.courseRegistrationFollowUpNotes = "Seguimiento"
+                        , ME.courseRegistrationFollowUpAttachmentUrl = Nothing
+                        , ME.courseRegistrationFollowUpAttachmentName = Nothing
+                        , ME.courseRegistrationFollowUpNextFollowUpAt = Nothing
+                        , ME.courseRegistrationFollowUpCreatedBy = Nothing
+                        , ME.courseRegistrationFollowUpCreatedAt = now
+                        , ME.courseRegistrationFollowUpUpdatedAt = now
+                        }
+                counts =
+                    courseRegistrationFollowUpCounts
+                        [ mkFollowUp 201 firstRegistration "registration"
+                        , mkFollowUp 202 firstRegistration "note"
+                        , mkFollowUp 203 firstRegistration "status_change"
+                        , mkFollowUp 204 secondRegistration "registration"
+                        , mkFollowUp 205 secondRegistration "call"
+                        ]
+
+            Map.lookup firstRegistration counts `shouldBe` Just 2
+            Map.lookup secondRegistration counts `shouldBe` Just 1
 
     describe "findExistingRegistration" $ do
         it "rejects conflicting email and phone matches instead of choosing one registration" $ do

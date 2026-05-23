@@ -4313,6 +4313,7 @@ const registrationActionTargetLabelWithContext = (
 const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
+  followUpCount,
   hasNotes,
   receiptCount,
   showCreatedAt = true,
@@ -4323,6 +4324,7 @@ const registrationListContextSummary = ({
 }: {
   cohortLabel: string;
   createdAt: string | null | undefined;
+  followUpCount: number | null | undefined;
   hasNotes: boolean;
   receiptCount: number | null | undefined;
   showCreatedAt?: boolean;
@@ -4342,6 +4344,8 @@ const registrationListContextSummary = ({
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
   const receiptSummary = registrationReceiptContextSummary(receiptCount, status);
   if (receiptSummary) parts.push(receiptSummary);
+  const followUpSummary = registrationFollowUpContextSummary(followUpCount);
+  if (followUpSummary) parts.push(followUpSummary);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
 };
@@ -4356,6 +4360,13 @@ const registrationReceiptContextSummary = (
     return count === 1 ? 'Comprobante listo' : `${count} comprobantes listos`;
   }
   return count === 1 ? '1 comprobante' : `${count} comprobantes`;
+};
+
+const registrationFollowUpContextSummary = (
+  followUpCount: number | null | undefined,
+) => {
+  if (!Number.isSafeInteger(followUpCount) || followUpCount == null || followUpCount <= 0) return '';
+  return followUpCount === 1 ? '1 seguimiento' : `${followUpCount} seguimientos`;
 };
 
 const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseRegistrationDTO[]) => {
@@ -8354,6 +8365,7 @@ export default function CourseRegistrationsAdminPage() {
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
+                    followUpCount: reg.crFollowUpCount,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes && !rowMatchedOnlyHiddenNote,
                     receiptCount: reg.crReceiptCount,
                     showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,

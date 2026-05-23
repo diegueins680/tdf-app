@@ -4153,16 +4153,20 @@ listCourseRegistrations mSlug mStatus mLimit = do
         [ (ME.CourseRegistrationCourseSlug ==.) <$> normalizedSlug
         , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
-  rowsWithReceiptCounts <- runDB $ do
+  rowsWithCounts <- runDB $ do
     rows <- selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limit]
     receiptCounts <- loadCourseRegistrationReceiptCounts rows
+    followUpCounts <- loadCourseRegistrationFollowUpCounts rows
     pure
-      [ (row, Map.findWithDefault 0 (entityKey row) receiptCounts)
+      [ ( row
+        , Map.findWithDefault 0 (entityKey row) receiptCounts
+        , Map.findWithDefault 0 (entityKey row) followUpCounts
+        )
       | row <- rows
       ]
   pure
-    [ toCourseRegistrationDTOWithReceiptCount receiptCount row
-    | (row, receiptCount) <- rowsWithReceiptCounts
+    [ toCourseRegistrationDTOWithCounts receiptCount followUpCount row
+    | (row, receiptCount, followUpCount) <- rowsWithCounts
     ]
 
 fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
@@ -4180,8 +4184,8 @@ fetchCourseRegistrationEntity rawSlug regId = do
 fetchCourseRegistration :: Text -> Int64 -> AppM DTO.CourseRegistrationDTO
 fetchCourseRegistration rawSlug regId = do
   ent <- fetchCourseRegistrationEntity rawSlug regId
-  receiptCount <- runDB $ count [ME.CourseRegistrationReceiptRegistrationId ==. entityKey ent]
-  pure (toCourseRegistrationDTOWithReceiptCount receiptCount ent)
+  (receiptCount, followUpCount) <- runDB $ loadCourseRegistrationCounts (entityKey ent)
+  pure (toCourseRegistrationDTOWithCounts receiptCount followUpCount ent)
 
 ensureCourseRegistrationPartyRoles :: PartyId -> SqlPersistT IO ()
 ensureCourseRegistrationPartyRoles pid = do
@@ -4429,8 +4433,10 @@ fetchCourseRegistrationDossier rawSlug regId = do
   followUps <- runDB $ selectList
     [ME.CourseRegistrationFollowUpRegistrationId ==. regKey]
     [Desc ME.CourseRegistrationFollowUpCreatedAt]
+  let followUpCount =
+        Map.findWithDefault 0 regKey (courseRegistrationFollowUpCounts followUps)
   pure DTO.CourseRegistrationDossierDTO
-    { DTO.crdRegistration = toCourseRegistrationDTOWithReceiptCount (length receipts) ent
+    { DTO.crdRegistration = toCourseRegistrationDTOWithCounts (length receipts) followUpCount ent
     , DTO.crdReceipts = map toCourseRegistrationReceiptDTO receipts
     , DTO.crdFollowUps = map toCourseRegistrationFollowUpDTO followUps
     , DTO.crdCanMarkPaid = not (null receipts)
@@ -4477,13 +4483,13 @@ updateCourseRegistrationNotes rawSlug regId CourseRegistrationNotesUpdate{..} = 
         { ME.courseRegistrationAdminNotes = notesVal
         , ME.courseRegistrationUpdatedAt = now
         }
-  receiptCount <- runDB $ do
+  (receiptCount, followUpCount) <- runDB $ do
     update regKey
       [ ME.CourseRegistrationAdminNotes =. notesVal
       , ME.CourseRegistrationUpdatedAt =. now
       ]
-    count [ME.CourseRegistrationReceiptRegistrationId ==. regKey]
-  pure (toCourseRegistrationDTOWithReceiptCount receiptCount (Entity regKey updated))
+    loadCourseRegistrationCounts regKey
+  pure (toCourseRegistrationDTOWithCounts receiptCount followUpCount (Entity regKey updated))
 
 createCourseRegistrationReceipt
   :: AuthedUser
@@ -4748,13 +4754,21 @@ listCourseRegistrationEmailEvents regId mLimit = do
 
 toCourseRegistrationDTO :: Entity ME.CourseRegistration -> DTO.CourseRegistrationDTO
 toCourseRegistrationDTO =
-  toCourseRegistrationDTOWithReceiptCount 0
+  toCourseRegistrationDTOWithCounts 0 0
 
 toCourseRegistrationDTOWithReceiptCount
   :: Int
   -> Entity ME.CourseRegistration
   -> DTO.CourseRegistrationDTO
-toCourseRegistrationDTOWithReceiptCount receiptCount (Entity rid reg) =
+toCourseRegistrationDTOWithReceiptCount receiptCount =
+  toCourseRegistrationDTOWithCounts receiptCount 0
+
+toCourseRegistrationDTOWithCounts
+  :: Int
+  -> Int
+  -> Entity ME.CourseRegistration
+  -> DTO.CourseRegistrationDTO
+toCourseRegistrationDTOWithCounts receiptCount followUpCount (Entity rid reg) =
   DTO.CourseRegistrationDTO
     { DTO.crId = fromSqlKey rid
     , DTO.crCourseSlug = ME.courseRegistrationCourseSlug reg
@@ -4765,6 +4779,7 @@ toCourseRegistrationDTOWithReceiptCount receiptCount (Entity rid reg) =
     , DTO.crSource = ME.courseRegistrationSource reg
     , DTO.crStatus = ME.courseRegistrationStatus reg
     , DTO.crReceiptCount = receiptCount
+    , DTO.crFollowUpCount = followUpCount
     , DTO.crAdminNotes = ME.courseRegistrationAdminNotes reg
     , DTO.crHowHeard = ME.courseRegistrationHowHeard reg
     , DTO.crUtmSource = ME.courseRegistrationUtmSource reg
@@ -4774,6 +4789,17 @@ toCourseRegistrationDTOWithReceiptCount receiptCount (Entity rid reg) =
     , DTO.crCreatedAt = ME.courseRegistrationCreatedAt reg
     , DTO.crUpdatedAt = ME.courseRegistrationUpdatedAt reg
     }
+
+loadCourseRegistrationCounts
+  :: Key ME.CourseRegistration
+  -> SqlPersistT IO (Int, Int)
+loadCourseRegistrationCounts regKey = do
+  receiptCount <- count [ME.CourseRegistrationReceiptRegistrationId ==. regKey]
+  followUpCount <- count
+    [ ME.CourseRegistrationFollowUpRegistrationId ==. regKey
+    , ME.CourseRegistrationFollowUpEntryType !=. "registration"
+    ]
+  pure (receiptCount, followUpCount)
 
 loadCourseRegistrationReceiptCounts
   :: [Entity ME.CourseRegistration]
@@ -4793,6 +4819,35 @@ courseRegistrationReceiptCounts =
   where
     addReceipt countsByRegistration (Entity _ receipt) =
       Map.insertWith (+) (ME.courseRegistrationReceiptRegistrationId receipt) 1 countsByRegistration
+
+loadCourseRegistrationFollowUpCounts
+  :: [Entity ME.CourseRegistration]
+  -> SqlPersistT IO (Map.Map (Key ME.CourseRegistration) Int)
+loadCourseRegistrationFollowUpCounts [] = pure Map.empty
+loadCourseRegistrationFollowUpCounts rows = do
+  followUps <- selectList
+    [ ME.CourseRegistrationFollowUpRegistrationId <-. map entityKey rows
+    , ME.CourseRegistrationFollowUpEntryType !=. "registration"
+    ]
+    []
+  pure (courseRegistrationFollowUpCounts followUps)
+
+courseRegistrationFollowUpCounts
+  :: [Entity ME.CourseRegistrationFollowUp]
+  -> Map.Map (Key ME.CourseRegistration) Int
+courseRegistrationFollowUpCounts =
+  foldl' addFollowUp Map.empty
+    . filter isCourseRegistrationListFollowUpActivity
+  where
+    isCourseRegistrationListFollowUpActivity (Entity _ followUp) =
+      ME.courseRegistrationFollowUpEntryType followUp /= "registration"
+
+    addFollowUp countsByRegistration (Entity _ followUp) =
+      Map.insertWith
+        (+)
+        (ME.courseRegistrationFollowUpRegistrationId followUp)
+        1
+        countsByRegistration
 
 toCourseRegistrationReceiptDTO :: Entity ME.CourseRegistrationReceipt -> DTO.CourseRegistrationReceiptDTO
 toCourseRegistrationReceiptDTO (Entity receiptId receipt) =
