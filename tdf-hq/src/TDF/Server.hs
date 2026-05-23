@@ -5943,8 +5943,16 @@ validateRequiredCourseTextField fieldName maxLength rawValue =
 
 validateCourseTextListField :: Text -> Int -> [Text] -> Either ServerError (Maybe [Text])
 validateCourseTextListField _ _ [] = Right Nothing
-validateCourseTextListField fieldName maxLength rawValues =
-  Just <$> traverse validateIndexed (zip [1 :: Int ..] rawValues)
+validateCourseTextListField fieldName maxLength rawValues = do
+  values <- traverse validateIndexed (zip [1 :: Int ..] rawValues)
+  let normalizedValues = map T.toCaseFold values
+  when (length normalizedValues /= length (nub normalizedValues)) $
+    Left err400
+      { errBody =
+          BL.fromStrict . TE.encodeUtf8 $
+            fieldName <> " entries must be unique after trimming"
+      }
+  pure (Just values)
   where
     validateIndexed (idx, rawValue) =
       validateRequiredCourseTextField
