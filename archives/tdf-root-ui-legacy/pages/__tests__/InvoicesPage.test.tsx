@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import InvoicesPage from '../InvoicesPage';
@@ -31,6 +31,20 @@ function renderPage() {
       </QueryClientProvider>
     </MemoryRouter>,
   );
+}
+
+function createControlledPromise<T>() {
+  let resolve: (value: T) => void = () => {
+    throw new Error('Controlled promise resolved before initialization');
+  };
+
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  }).catch((error: unknown) => {
+    throw error;
+  });
+
+  return { promise, resolve };
 }
 
 function buildInvoice(overrides: Partial<InvoiceDTO> = {}): InvoiceDTO {
@@ -76,7 +90,8 @@ describe('InvoicesPage', () => {
   });
 
   it('keeps the initial invoice loading state compact instead of showing empty table controls', async () => {
-    mockInvoicesList.mockImplementation(() => new Promise(() => undefined));
+    const invoicesRequest = createControlledPromise<InvoiceDTO[]>();
+    mockInvoicesList.mockReturnValue(invoicesRequest.promise);
 
     renderPage();
 
@@ -93,6 +108,15 @@ describe('InvoicesPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Total$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Recibo$/i })).not.toBeInTheDocument();
+
+    await act(async () => {
+      invoicesRequest.resolve([]);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Cargando facturas…')).not.toBeInTheDocument();
+      expect(screen.getByText('Todavía no hay facturas registradas.')).toBeInTheDocument();
+    });
   });
 
   it('replaces the empty invoices table with one first-invoice action and clear guidance', async () => {
