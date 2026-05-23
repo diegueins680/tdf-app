@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import BookingsPage from '../BookingsPage';
+import type { BookingDTO } from '../../api/types';
 
 const mockBookingsList = vi.fn();
 const mockBookingsCreate = vi.fn();
@@ -59,6 +60,20 @@ function renderPage() {
   );
 }
 
+function createControlledPromise<T>() {
+  let resolve: (value: T) => void = () => {
+    throw new Error('Controlled promise resolved before initialization');
+  };
+
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  }).catch((error: unknown) => {
+    throw error;
+  });
+
+  return { promise, resolve };
+}
+
 describe('BookingsPage', () => {
   beforeAll(() => {
     if (!window.matchMedia) {
@@ -86,7 +101,8 @@ describe('BookingsPage', () => {
   });
 
   it('shows one explicit loading state while reservations are still loading', async () => {
-    mockBookingsList.mockImplementation(() => new Promise(() => undefined));
+    const bookingsRequest = createControlledPromise<BookingDTO[]>();
+    mockBookingsList.mockReturnValue(bookingsRequest.promise);
 
     renderPage();
 
@@ -99,6 +115,15 @@ describe('BookingsPage', () => {
 
     expect(calendarConstructorMock).not.toHaveBeenCalled();
     expect(calendarRenderMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      bookingsRequest.resolve([]);
+      await bookingsRequest.promise;
+    });
+
+    expect(await screen.findByText('Todavía no hay reservas registradas.')).toBeInTheDocument();
+    expect(screen.queryByText(/Cargando agenda y reservas…/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Cargando agenda…')).not.toBeInTheDocument();
   });
 
   it('replaces the empty calendar with one first-step action until the first booking exists', async () => {
