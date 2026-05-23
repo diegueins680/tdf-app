@@ -61,7 +61,8 @@ async function postAuthJson<T>(
   const retryDelaysMs = options?.retryDelaysMs ?? [];
   const maxAttempts = retryDelaysMs.length + 1;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
     const res = await fetch(`${API_BASE}${path}`, {
       method: 'POST',
       credentials: 'include',
@@ -75,6 +76,7 @@ async function postAuthJson<T>(
 
     if (res.status === RETRYABLE_UNAVAILABLE_STATUS && attempt < retryDelaysMs.length) {
       const fallbackDelayMs = retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
+      attempt += 1;
       await wait(readRetryDelayMs(res, fallbackDelayMs));
       continue;
     }

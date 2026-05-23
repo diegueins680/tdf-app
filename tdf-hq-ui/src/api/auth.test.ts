@@ -119,6 +119,10 @@ describe('auth api', () => {
 
   it('uses each configured login retry once before showing a startup message', async () => {
     jest.useFakeTimers();
+    const loginPayload = {
+      username: 'admin',
+      password: 'Password123',
+    };
 
     fetchMock.mockImplementation(() =>
       Promise.resolve({
@@ -129,10 +133,7 @@ describe('auth api', () => {
       } as unknown as Response),
     );
 
-    const promise = loginRequest({
-      username: 'admin',
-      password: 'Password123',
-    });
+    const promise = loginRequest(loginPayload);
     const rejection = expect(promise).rejects.toThrow('El servicio está arrancando. Intenta de nuevo en unos segundos.');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -152,6 +153,17 @@ describe('auth api', () => {
 
     await rejection;
     expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock.mock.calls).toEqual(
+      Array.from({ length: 4 }, () => [
+        '/login',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginPayload),
+        },
+      ]),
+    );
   });
 
   it('extracts structured JSON error messages for login failures', async () => {
