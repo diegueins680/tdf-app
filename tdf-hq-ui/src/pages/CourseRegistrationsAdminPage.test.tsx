@@ -22239,6 +22239,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Fallback discovery review for Beatmaking 101',
       'Beatmaking 101 - UI fallback discovery cards',
       'Internal fallback discovery panel - Beatmaking 101',
+      'Revisión de fallbacks de UI - Beatmaking 101',
+      'Beatmaking 101 - tarjetas de fallback de UI',
+      'Panel interno de fallback - Beatmaking 101',
+      'Auditoría de fallback de operación - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -22256,7 +22260,9 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/fallback discovery|fallback\s+(?:review|panel)|ui fallback/i);
+        expect(emptyState?.textContent).not.toMatch(
+          /fallback discovery|fallback\s+(?:review|panel)|ui fallback|revisi[oó]n de fallback|tarjetas? de fallback|panel interno de fallback|auditor[ií]a de fallback/i,
+        );
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(publicFormAction?.getAttribute('aria-label')).toBe('Abrir formulario público de Beatmaking 101');

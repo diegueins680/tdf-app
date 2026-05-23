@@ -2217,7 +2217,7 @@ const firstRunAdminWorkflowDescriptorSuffixPattern =
     'i',
   );
 
-const firstRunFallbackDiscoveryDescriptorPattern = String.raw`(?:(?:(?:ui|ux|admin|ops|internal)\s+)?fallback\s+discovery(?:\s+(?:reviews?|audits?|scans?|cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?|(?:ui|ux|admin|ops|internal)\s+fallback(?:\s+(?:discovery|reviews?|audits?|scans?))(?:\s+(?:cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?)`;
+const firstRunFallbackDiscoveryDescriptorPattern = String.raw`(?:(?:(?:ui|ux|admin|ops|internal)\s+)?fallback\s+discovery(?:\s+(?:reviews?|audits?|scans?|cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?|(?:ui|ux|admin|ops|internal)\s+fallback(?:\s+(?:discovery|reviews?|audits?|scans?))(?:\s+(?:cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?|(?:(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa])\s+)?(?:descubrimiento|revisi[oó]n|auditor[ií]a|chequeo|escaneo)\s+de\s+fallbacks?(?:\s+(?:de\s+)?(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa]))?(?:\s+(?:tarjetas?|vistas?|etiquetas?|notas?|p[aá]ginas?|panel(?:es)?|tableros?))?|(?:panel(?:es)?|tarjetas?|vistas?|etiquetas?|notas?|p[aá]ginas?|tableros?)\s+(?:intern[oa]\s+)?de\s+fallbacks?(?:\s+(?:de\s+)?(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa]))?)`;
 
 const firstRunFallbackDiscoveryDescriptorPrefixPattern =
   new RegExp(
