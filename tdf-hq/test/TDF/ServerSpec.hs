@@ -11709,6 +11709,9 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "includes[1] must be 160 characters or fewer"
                 (validateCourseTextListField "includes" 160 [T.replicate 161 "a"])
+            assertInvalid
+                "daws entries must be unique after trimming"
+                (validateCourseTextListField "daws" 160 [" Logic Pro ", "logic pro"])
 
         it "trims meaningful session labels, syllabus titles, and syllabus topics before persistence" $ do
             let sessionDay = fromGregorian 2026 4 20

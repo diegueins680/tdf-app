@@ -933,6 +933,17 @@ const statusChip = (status: string) => {
   );
 };
 
+const courseRegistrationReceiptCount = (
+  reg: Pick<CourseRegistrationDTO, 'crReceiptCount' | 'crCanMarkPaid'>,
+) => {
+  const rawCount = reg.crReceiptCount;
+  if (rawCount != null && Number.isSafeInteger(rawCount) && rawCount > 0) return rawCount;
+  return reg.crCanMarkPaid ? 1 : 0;
+};
+
+const courseRegistrationReceiptCountLabel = (receiptCount: number) =>
+  `${receiptCount} comprobante${receiptCount === 1 ? '' : 's'}`;
+
 const canTransitionToStatus = (
   currentStatus: string,
   nextStatus: RegistrationStatus,
@@ -4571,21 +4582,30 @@ const toIsoStringFromLocalDateTime = (value: string): string | null => {
 const mergeCourseRegistrationRecords = (
   primary: CourseRegistrationDTO,
   fallback: CourseRegistrationDTO,
-): CourseRegistrationDTO => ({
-  ...primary,
-  crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
-  crFullName: preferRegistrationNameText(primary.crFullName, fallback.crFullName),
-  crEmail: preferContactText(primary.crEmail, fallback.crEmail),
-  crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
-  crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
-  crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
-  crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
-  crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
-  crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),
-  crUtmMedium: preferNonEmptyText(primary.crUtmMedium, fallback.crUtmMedium),
-  crUtmCampaign: preferNonEmptyText(primary.crUtmCampaign, fallback.crUtmCampaign),
-  crUtmContent: preferNonEmptyText(primary.crUtmContent, fallback.crUtmContent),
-});
+): CourseRegistrationDTO => {
+  const receiptCount = Math.max(
+    courseRegistrationReceiptCount(primary),
+    courseRegistrationReceiptCount(fallback),
+  );
+
+  return {
+    ...primary,
+    crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
+    crFullName: preferRegistrationNameText(primary.crFullName, fallback.crFullName),
+    crEmail: preferContactText(primary.crEmail, fallback.crEmail),
+    crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
+    crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
+    crReceiptCount: receiptCount,
+    crCanMarkPaid: Boolean(primary.crCanMarkPaid) || Boolean(fallback.crCanMarkPaid) || receiptCount > 0,
+    crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
+    crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
+    crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
+    crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),
+    crUtmMedium: preferNonEmptyText(primary.crUtmMedium, fallback.crUtmMedium),
+    crUtmCampaign: preferNonEmptyText(primary.crUtmCampaign, fallback.crUtmCampaign),
+    crUtmContent: preferNonEmptyText(primary.crUtmContent, fallback.crUtmContent),
+  };
+};
 
 const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO[]) => {
   const registrationsById = new Map<number, CourseRegistrationDTO>();
@@ -5193,7 +5213,6 @@ export default function CourseRegistrationsAdminPage() {
     && !shortPhoneSearchHint;
   const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
     && !showAdvancedFilters;
-  const showEmptyLocalSearchClearAction = showEmptyLocalSearchLimitRecoveryAction;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const statusFiltersSummarizeBusyListRows = showBusyListSearchOnboarding
@@ -5452,7 +5471,7 @@ export default function CourseRegistrationsAdminPage() {
     : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
-  const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchClearAction;
+  const showLocalSearchInlineClearAction = hasLocalSearch;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -8267,25 +8286,16 @@ export default function CourseRegistrationsAdminPage() {
               aria-label={emptyLocalSearchResultsAccessibleLabel}
               title={emptyLocalSearchResultsAccessibleLabel}
               action={showEmptyLocalSearchLimitRecoveryAction ? (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={handleClearLocalSearch}
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={handleToggleAdvancedFilters}
-                    aria-expanded={showAdvancedFilters}
-                    aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
-                    title={emptyLocalSearchLimitRecoveryTitle}
-                  >
-                    {emptyLocalSearchLimitRecoveryLabel}
-                  </Button>
-                </Stack>
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={handleToggleAdvancedFilters}
+                  aria-expanded={showAdvancedFilters}
+                  aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
+                  title={emptyLocalSearchLimitRecoveryTitle}
+                >
+                  {emptyLocalSearchLimitRecoveryLabel}
+                </Button>
               ) : undefined}
             >
               {emptyLocalSearchResultsMessage}
@@ -8340,6 +8350,9 @@ export default function CourseRegistrationsAdminPage() {
                   const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
                     ?? readableCohortFallbackLabel(rowCohortSlug);
+                  const rowReceiptCount = courseRegistrationReceiptCount(reg);
+                  const showRowReceiptSummary = rowReceiptCount > 0;
+                  const rowReceiptSummaryLabel = courseRegistrationReceiptCountLabel(rowReceiptCount);
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const rowMatchesVisibleSearchFields = hasLocalSearch
                     ? registrationMatchesVisibleSearchFields({
@@ -8432,6 +8445,19 @@ export default function CourseRegistrationsAdminPage() {
                           <Typography variant="body2" color="text.secondary">
                             {rowContextSummary}
                           </Typography>
+                        </Box>
+                      )}
+                      {showRowReceiptSummary && (
+                        <Box sx={{ minWidth: 130 }}>
+                          <Chip
+                            data-testid={`course-registration-row-receipts-${reg.crId}`}
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            icon={<ReceiptLongIcon fontSize="small" />}
+                            label={rowReceiptSummaryLabel}
+                            title={`${rowReceiptSummaryLabel} guardado${rowReceiptCount === 1 ? '' : 's'}; abre expediente para revisar la evidencia.`}
+                          />
                         </Box>
                       )}
                       <Box
