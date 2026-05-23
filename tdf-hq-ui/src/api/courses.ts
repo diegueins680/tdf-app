@@ -58,6 +58,8 @@ export interface CourseRegistrationDTO {
   crPhoneE164?: string | null;
   crSource: string | null;
   crStatus: string;
+  crReceiptCount?: number | null;
+  crCanMarkPaid?: boolean | null;
   crAdminNotes?: string | null;
   crHowHeard?: string | null;
   crUtmSource?: string | null;

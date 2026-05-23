@@ -95,6 +95,8 @@ const buildRegistration = (overrides: Partial<CourseRegistrationDTO> = {}): Cour
   crPhoneE164: '+593999000111',
   crSource: 'landing',
   crStatus: 'pending_payment',
+  crReceiptCount: 0,
+  crCanMarkPaid: false,
   crAdminNotes: null,
   crHowHeard: null,
   crUtmSource: null,
@@ -541,6 +543,27 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockResolvedValue([buildRegistration()]);
     getRegistrationDossierMock.mockResolvedValue(null);
     listRegistrationEmailsMock.mockResolvedValue([]);
+  });
+
+  it('shows saved payment receipts on the list row without opening the dossier', async () => {
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crReceiptCount: 2, crCanMarkPaid: true }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const receiptSummary = container.querySelector('[data-testid="course-registration-row-receipts-101"]');
+      expect(receiptSummary?.textContent).toContain('2 comprobantes');
+      expect(receiptSummary?.getAttribute('title')).toBe(
+        '2 comprobantes guardados; abre expediente para revisar la evidencia.',
+      );
+      expect(getRegistrationDossierMock).not.toHaveBeenCalled();
+    });
+
+    cleanup();
   });
 
   it('keeps the single-result view minimal while still hinting at dossier and status actions', async () => {

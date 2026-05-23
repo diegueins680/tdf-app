@@ -14,6 +14,7 @@ import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
 import Data.List (isInfixOf)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import Data.Text (Text)
 import qualified Data.Text
@@ -227,6 +228,8 @@ import TDF.ServerInstagramOAuth
 import TDF.Server
     ( buildWhatsappCtaFor,
       buildCourseRegistrationUsernameCandidate,
+      loadCourseRegistrationReceiptCounts,
+      toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
@@ -12613,6 +12616,41 @@ main = hspec $ do
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
 
+    describe "loadCourseRegistrationReceiptCounts" $
+        it "keeps admin list payment evidence counts scoped to each registration" $ do
+            let now = UTCTime (fromGregorian 2026 5 23) (secondsToDiffTime 0)
+                firstRegKey = toSqlKey 101 :: Key ME.CourseRegistration
+                secondRegKey = toSqlKey 102 :: Key ME.CourseRegistration
+                emptyRegKey = toSqlKey 103 :: Key ME.CourseRegistration
+                firstReg = mkCourseRegistrationSummaryFixture "beatmaking-101" now
+                secondReg = mkCourseRegistrationSummaryFixture "produccion-101" now
+            receiptCounts <- runNoLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeCourseRegistrationSummarySchema pool
+                liftIO $ runSqlPool
+                    (do
+                        insertKey firstRegKey firstReg
+                        insertKey secondRegKey secondReg
+                        insertKey emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)
+                        insert_ (mkCourseRegistrationReceiptSummaryFixture firstRegKey "receipt-1.pdf" now)
+                        insert_ (mkCourseRegistrationReceiptSummaryFixture firstRegKey "receipt-2.pdf" now)
+                        insert_ (mkCourseRegistrationReceiptSummaryFixture secondRegKey "receipt-3.pdf" now)
+                        loadCourseRegistrationReceiptCounts [firstRegKey, secondRegKey, emptyRegKey]
+                    )
+                    pool
+            Map.findWithDefault 0 firstRegKey receiptCounts `shouldBe` 2
+            Map.findWithDefault 0 secondRegKey receiptCounts `shouldBe` 1
+            Map.findWithDefault 0 emptyRegKey receiptCounts `shouldBe` 0
+            let firstDTO = toCourseRegistrationDTOWithReceiptCount (Entity firstRegKey firstReg) (Map.findWithDefault 0 firstRegKey receiptCounts)
+                emptyDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (Map.findWithDefault 0 emptyRegKey receiptCounts)
+                clampedDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (-1)
+            DTO.crReceiptCount firstDTO `shouldBe` 2
+            DTO.crCanMarkPaid firstDTO `shouldBe` True
+            DTO.crReceiptCount emptyDTO `shouldBe` 0
+            DTO.crCanMarkPaid emptyDTO `shouldBe` False
+            DTO.crReceiptCount clampedDTO `shouldBe` 0
+            DTO.crCanMarkPaid clampedDTO `shouldBe` False
+
     describe "resolveLiveSessionMusicianLookup" $ do
         it "only matches existing live-session musicians by normalized email" $ do
             resolveLiveSessionMusicianLookup (Just " Player@Example.com ")
@@ -13964,6 +14002,82 @@ initializeSocialSyncSchema = do
         \\"error_message\" VARCHAR NULL\
         \)"
         []
+
+initializeCourseRegistrationSummarySchema :: SqlPersistT IO ()
+initializeCourseRegistrationSummarySchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS course_registration (\
+        \id INTEGER PRIMARY KEY,\
+        \course_slug VARCHAR NOT NULL,\
+        \party_id INTEGER NULL,\
+        \full_name VARCHAR NULL,\
+        \email VARCHAR NULL,\
+        \phone_e164 VARCHAR NULL,\
+        \source VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \admin_notes VARCHAR NULL,\
+        \how_heard VARCHAR NULL,\
+        \utm_source VARCHAR NULL,\
+        \utm_medium VARCHAR NULL,\
+        \utm_campaign VARCHAR NULL,\
+        \utm_content VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS course_registration_receipt (\
+        \id INTEGER PRIMARY KEY,\
+        \registration_id INTEGER NOT NULL,\
+        \party_id INTEGER NULL,\
+        \file_url VARCHAR NOT NULL,\
+        \file_name VARCHAR NULL,\
+        \mime_type VARCHAR NULL,\
+        \notes VARCHAR NULL,\
+        \uploaded_by INTEGER NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+
+mkCourseRegistrationSummaryFixture :: Text -> UTCTime -> ME.CourseRegistration
+mkCourseRegistrationSummaryFixture slug now =
+    ME.CourseRegistration
+        { ME.courseRegistrationCourseSlug = slug
+        , ME.courseRegistrationPartyId = Nothing
+        , ME.courseRegistrationFullName = Just "Ada Lovelace"
+        , ME.courseRegistrationEmail = Just "ada@example.com"
+        , ME.courseRegistrationPhoneE164 = Just "+593999000111"
+        , ME.courseRegistrationSource = "landing"
+        , ME.courseRegistrationStatus = "pending_payment"
+        , ME.courseRegistrationAdminNotes = Nothing
+        , ME.courseRegistrationHowHeard = Nothing
+        , ME.courseRegistrationUtmSource = Nothing
+        , ME.courseRegistrationUtmMedium = Nothing
+        , ME.courseRegistrationUtmCampaign = Nothing
+        , ME.courseRegistrationUtmContent = Nothing
+        , ME.courseRegistrationCreatedAt = now
+        , ME.courseRegistrationUpdatedAt = now
+        }
+
+mkCourseRegistrationReceiptSummaryFixture
+    :: Key ME.CourseRegistration
+    -> Text
+    -> UTCTime
+    -> ME.CourseRegistrationReceipt
+mkCourseRegistrationReceiptSummaryFixture regKey fileName now =
+    ME.CourseRegistrationReceipt
+        { ME.courseRegistrationReceiptRegistrationId = regKey
+        , ME.courseRegistrationReceiptPartyId = Nothing
+        , ME.courseRegistrationReceiptFileUrl = "https://example.com/" <> fileName
+        , ME.courseRegistrationReceiptFileName = Just fileName
+        , ME.courseRegistrationReceiptMimeType = Just "application/pdf"
+        , ME.courseRegistrationReceiptNotes = Nothing
+        , ME.courseRegistrationReceiptUploadedBy = Nothing
+        , ME.courseRegistrationReceiptCreatedAt = now
+        , ME.courseRegistrationReceiptUpdatedAt = now
+        }
 
 insertSocialSyncPartyFixture :: Int -> Text -> SqlPersistT IO (Key Party)
 insertSocialSyncPartyFixture keyVal displayName =

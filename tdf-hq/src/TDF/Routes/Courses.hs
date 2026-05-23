@@ -131,10 +131,10 @@ data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
 
 instance FromJSON CourseRegistrationStatusUpdate where
   parseJSON value = do
-    payload@(CourseRegistrationStatusUpdate rawStatus) <-
+    CourseRegistrationStatusUpdate rawStatus <-
       genericParseJSON strictObjectOptions value
     case normalizeCourseRegistrationStatusInput rawStatus of
-      Just statusVal -> pure payload { status = statusVal }
+      Just statusVal -> pure CourseRegistrationStatusUpdate { status = statusVal }
       Nothing -> fail "status must be one of: pending_payment, paid, cancelled"
 instance ToJSON CourseRegistrationStatusUpdate
 

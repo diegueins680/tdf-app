@@ -4154,7 +4154,13 @@ listCourseRegistrations mSlug mStatus mLimit = do
         , (ME.CourseRegistrationStatus ==.) <$> normalizedStatus
         ]
   rows <- runDB $ selectList filters [Desc ME.CourseRegistrationCreatedAt, LimitTo limit]
-  pure (map toCourseRegistrationDTO rows)
+  receiptCounts <- runDB $ loadCourseRegistrationReceiptCounts (map entityKey rows)
+  pure
+    [ toCourseRegistrationDTOWithReceiptCount
+        row
+        (Map.findWithDefault 0 (entityKey row) receiptCounts)
+    | row <- rows
+    ]
 
 fetchCourseRegistrationEntity :: Text -> Int64 -> AppM (Entity ME.CourseRegistration)
 fetchCourseRegistrationEntity rawSlug regId = do
@@ -4169,8 +4175,9 @@ fetchCourseRegistrationEntity rawSlug regId = do
       | otherwise -> pure ent
 
 fetchCourseRegistration :: Text -> Int64 -> AppM DTO.CourseRegistrationDTO
-fetchCourseRegistration rawSlug regId =
-  toCourseRegistrationDTO <$> fetchCourseRegistrationEntity rawSlug regId
+fetchCourseRegistration rawSlug regId = do
+  ent <- fetchCourseRegistrationEntity rawSlug regId
+  toCourseRegistrationDTOWithStoredReceiptCount ent
 
 ensureCourseRegistrationPartyRoles :: PartyId -> SqlPersistT IO ()
 ensureCourseRegistrationPartyRoles pid = do
@@ -4419,7 +4426,7 @@ fetchCourseRegistrationDossier rawSlug regId = do
     [ME.CourseRegistrationFollowUpRegistrationId ==. regKey]
     [Desc ME.CourseRegistrationFollowUpCreatedAt]
   pure DTO.CourseRegistrationDossierDTO
-    { DTO.crdRegistration = toCourseRegistrationDTO ent
+    { DTO.crdRegistration = toCourseRegistrationDTOWithReceiptCount ent (length receipts)
     , DTO.crdReceipts = map toCourseRegistrationReceiptDTO receipts
     , DTO.crdFollowUps = map toCourseRegistrationFollowUpDTO followUps
     , DTO.crdCanMarkPaid = not (null receipts)
@@ -4470,7 +4477,7 @@ updateCourseRegistrationNotes rawSlug regId CourseRegistrationNotesUpdate{..} = 
     [ ME.CourseRegistrationAdminNotes =. notesVal
     , ME.CourseRegistrationUpdatedAt =. now
     ]
-  pure (toCourseRegistrationDTO (Entity regKey updated))
+  toCourseRegistrationDTOWithStoredReceiptCount (Entity regKey updated)
 
 createCourseRegistrationReceipt
   :: AuthedUser
@@ -4733,8 +4740,35 @@ listCourseRegistrationEmailEvents regId mLimit = do
       rows <- runDB rowsQuery
       pure (map toCourseEmailEventDTO rows)
 
-toCourseRegistrationDTO :: Entity ME.CourseRegistration -> DTO.CourseRegistrationDTO
-toCourseRegistrationDTO (Entity rid reg) =
+loadCourseRegistrationReceiptCounts
+  :: [Key ME.CourseRegistration]
+  -> SqlPersistT IO (Map.Map (Key ME.CourseRegistration) Int)
+loadCourseRegistrationReceiptCounts [] = pure Map.empty
+loadCourseRegistrationReceiptCounts regKeys = do
+  receipts <- selectList [ME.CourseRegistrationReceiptRegistrationId <-. regKeys] []
+  pure $
+    foldl'
+      (\counts (Entity _ receipt) ->
+        Map.insertWith (+) (ME.courseRegistrationReceiptRegistrationId receipt) 1 counts
+      )
+      Map.empty
+      receipts
+
+toCourseRegistrationDTOWithStoredReceiptCount
+  :: Entity ME.CourseRegistration
+  -> AppM DTO.CourseRegistrationDTO
+toCourseRegistrationDTOWithStoredReceiptCount ent = do
+  receiptCounts <- runDB $ loadCourseRegistrationReceiptCounts [entityKey ent]
+  pure $
+    toCourseRegistrationDTOWithReceiptCount
+      ent
+      (Map.findWithDefault 0 (entityKey ent) receiptCounts)
+
+toCourseRegistrationDTOWithReceiptCount
+  :: Entity ME.CourseRegistration
+  -> Int
+  -> DTO.CourseRegistrationDTO
+toCourseRegistrationDTOWithReceiptCount (Entity rid reg) rawReceiptCount =
   DTO.CourseRegistrationDTO
     { DTO.crId = fromSqlKey rid
     , DTO.crCourseSlug = ME.courseRegistrationCourseSlug reg
@@ -4744,6 +4778,8 @@ toCourseRegistrationDTO (Entity rid reg) =
     , DTO.crPhoneE164 = ME.courseRegistrationPhoneE164 reg
     , DTO.crSource = ME.courseRegistrationSource reg
     , DTO.crStatus = ME.courseRegistrationStatus reg
+    , DTO.crReceiptCount = receiptCount
+    , DTO.crCanMarkPaid = receiptCount > 0
     , DTO.crAdminNotes = ME.courseRegistrationAdminNotes reg
     , DTO.crHowHeard = ME.courseRegistrationHowHeard reg
     , DTO.crUtmSource = ME.courseRegistrationUtmSource reg
@@ -4753,6 +4789,12 @@ toCourseRegistrationDTO (Entity rid reg) =
     , DTO.crCreatedAt = ME.courseRegistrationCreatedAt reg
     , DTO.crUpdatedAt = ME.courseRegistrationUpdatedAt reg
     }
+  where
+    receiptCount = max 0 rawReceiptCount
+
+toCourseRegistrationDTO :: Entity ME.CourseRegistration -> DTO.CourseRegistrationDTO
+toCourseRegistrationDTO ent =
+  toCourseRegistrationDTOWithReceiptCount ent 0
 
 toCourseRegistrationReceiptDTO :: Entity ME.CourseRegistrationReceipt -> DTO.CourseRegistrationReceiptDTO
 toCourseRegistrationReceiptDTO (Entity receiptId receipt) =
