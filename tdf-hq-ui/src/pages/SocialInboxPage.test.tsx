@@ -904,6 +904,35 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('prioritizes expired Meta reply-window errors over capability fallbacks', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        createdAt: '2020-01-02T03:04:05.000Z',
+        replyText: 'Cuesta $15 la hora.',
+        replyError:
+          'Send failed via connected asset token: HTTP 400 {"error":{"message":"(#3) Application does not have the capability to make this API call.","code":3}} | Send failed via connected asset token (me fallback): HTTP 400 {"error":{"message":"(#10) This message is sent outside of allowed window.","error_subcode":2534022}}',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Envío bloqueado: la ventana de respuesta de Meta está cerrada.');
+      expect(document.body.textContent).toContain(
+        'Pide a la persona que envíe un nuevo DM antes de responder desde la app',
+      );
+      expect(document.body.textContent).toContain(
+        'La ventana de respuesta de Meta de 7 días ya se cerró para esta conversación.',
+      );
+      expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
+      expect(countInteractiveElementsByText(document.body, 'Abrir Instagram')).toBe(1);
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
   it('updates the review dialog title status after sending so proof copy does not conflict with delivered state', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

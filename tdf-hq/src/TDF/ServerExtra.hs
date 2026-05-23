@@ -84,7 +84,7 @@ import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..), sharedTlsManager)
 import           TDF.Config                 (AppConfig, assetsRootDir, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
-import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext, sendInstagramTextWithContextAndTag)
+import           TDF.Services.InstagramMessaging (sendInstagramTextWithContextAndTag)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M

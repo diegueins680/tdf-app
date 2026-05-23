@@ -933,9 +933,11 @@ const statusChip = (status: string) => {
   );
 };
 
-const courseRegistrationReceiptCount = (
-  reg: Pick<CourseRegistrationDTO, 'crReceiptCount' | 'crCanMarkPaid'>,
-) => {
+type RegistrationReceiptCountSource = Pick<CourseRegistrationDTO, 'crReceiptCount'> & {
+  crCanMarkPaid?: boolean | null;
+};
+
+const courseRegistrationReceiptCount = (reg: RegistrationReceiptCountSource) => {
   const rawCount = reg.crReceiptCount;
   if (rawCount != null && Number.isSafeInteger(rawCount) && rawCount > 0) return rawCount;
   return reg.crCanMarkPaid ? 1 : 0;
@@ -4596,7 +4598,6 @@ const mergeCourseRegistrationRecords = (
     crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
     crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
     crReceiptCount: receiptCount,
-    crCanMarkPaid: Boolean(primary.crCanMarkPaid) || Boolean(fallback.crCanMarkPaid) || receiptCount > 0,
     crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
     crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
     crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
@@ -8351,8 +8352,8 @@ export default function CourseRegistrationsAdminPage() {
                     ?? cohortLabelsBySlug.get(rowCohortSlug)
                     ?? readableCohortFallbackLabel(rowCohortSlug);
                   const rowReceiptCount = courseRegistrationReceiptCount(reg);
-                  const showRowReceiptSummary = rowReceiptCount > 0;
-                  const rowReceiptSummaryLabel = courseRegistrationReceiptCountLabel(rowReceiptCount);
+                  const rowReceiptSummaryLabel = registrationReceiptContextSummary(rowReceiptCount, reg.crStatus);
+                  const showRowReceiptSummary = Boolean(rowReceiptSummaryLabel);
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const rowMatchesVisibleSearchFields = hasLocalSearch
                     ? registrationMatchesVisibleSearchFields({
@@ -8380,7 +8381,7 @@ export default function CourseRegistrationsAdminPage() {
                     createdAt: reg.crCreatedAt,
                     followUpCount: reg.crFollowUpCount,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes && !rowMatchedOnlyHiddenNote,
-                    receiptCount: reg.crReceiptCount,
+                    receiptCount: showRowReceiptSummary ? null : reg.crReceiptCount,
                     showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
@@ -8456,7 +8457,7 @@ export default function CourseRegistrationsAdminPage() {
                             color="success"
                             icon={<ReceiptLongIcon fontSize="small" />}
                             label={rowReceiptSummaryLabel}
-                            title={`${rowReceiptSummaryLabel} guardado${rowReceiptCount === 1 ? '' : 's'}; abre expediente para revisar la evidencia.`}
+                            title={`${courseRegistrationReceiptCountLabel(rowReceiptCount)} guardado${rowReceiptCount === 1 ? '' : 's'}; abre expediente para revisar la evidencia.`}
                           />
                         </Box>
                       )}

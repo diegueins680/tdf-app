@@ -2592,7 +2592,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
-  it('surfaces saved receipt counts in row context without opening each dossier', async () => {
+  it('keeps saved receipt counts in one row chip instead of repeating them in context', async () => {
     listCohortsMock.mockResolvedValue([
       { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
       { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
@@ -2614,9 +2614,16 @@ describe('CourseRegistrationsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(hasExactText(container, 'Curso: Beatmaking 101 · Comprobante listo')).toBe(true);
-      expect(hasExactText(container, 'Curso: Mixing Bootcamp · 2 comprobantes')).toBe(true);
-      expect(container.textContent).not.toContain('Comprobante listo · Comprobante listo');
+      expect(hasExactText(container, 'Curso: Beatmaking 101')).toBe(true);
+      expect(hasExactText(container, 'Curso: Mixing Bootcamp')).toBe(true);
+      expect(
+        container.querySelector('[data-testid="course-registration-row-receipts-101"]')?.textContent?.trim(),
+      ).toBe('Comprobante listo');
+      expect(
+        container.querySelector('[data-testid="course-registration-row-receipts-102"]')?.textContent?.trim(),
+      ).toBe('2 comprobantes');
+      expect(countOccurrences(container, 'Comprobante listo')).toBe(1);
+      expect(countOccurrences(container, '2 comprobantes')).toBe(1);
     });
 
     await cleanup();
