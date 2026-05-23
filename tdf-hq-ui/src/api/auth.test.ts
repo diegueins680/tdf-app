@@ -168,5 +168,6 @@ describe('auth api', () => {
         password: 'Password123',
       }),
     ).rejects.toThrow('Usuario o contraseña inválidos');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
