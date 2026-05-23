@@ -45,6 +45,12 @@ function renderPage(queryClient = createQueryClient()) {
   };
 }
 
+function neverSettlingPromise<T = never>(): Promise<T> {
+  return new Promise<never>(() => undefined).catch((error: unknown) => {
+    throw error;
+  });
+}
+
 function buildAdminUser(overrides: Partial<AdminUserDTO> = {}): AdminUserDTO {
   return {
     userId: 101,
@@ -168,9 +174,9 @@ describe('AdminConsolePage', () => {
   });
 
   it('keeps header admin actions hidden while first-run data is still loading', async () => {
-    mockAuditLogs.mockImplementation(() => new Promise(() => undefined));
-    mockConsolePreview.mockImplementation(() => new Promise(() => undefined));
-    mockListUsers.mockImplementation(() => new Promise(() => undefined));
+    mockAuditLogs.mockImplementation(() => neverSettlingPromise());
+    mockConsolePreview.mockImplementation(() => neverSettlingPromise());
+    mockListUsers.mockImplementation(() => neverSettlingPromise());
 
     renderPage();
 
@@ -199,7 +205,7 @@ describe('AdminConsolePage', () => {
   });
 
   it('shows one explicit loading state while the service health check is still pending', async () => {
-    mockHealthFetch.mockImplementation(() => new Promise(() => undefined));
+    mockHealthFetch.mockImplementation(() => neverSettlingPromise());
 
     renderPage();
 
@@ -214,8 +220,8 @@ describe('AdminConsolePage', () => {
   });
 
   it('keeps users and audit loading states compact until comparable data exists', async () => {
-    mockListUsers.mockImplementation(() => new Promise(() => undefined));
-    mockAuditLogs.mockImplementation(() => new Promise(() => undefined));
+    mockListUsers.mockImplementation(() => neverSettlingPromise());
+    mockAuditLogs.mockImplementation(() => neverSettlingPromise());
 
     renderPage();
 
@@ -533,7 +539,7 @@ describe('AdminConsolePage', () => {
   });
 
   it('does not make first-run onboarding wait for optional preview modules', async () => {
-    mockConsolePreview.mockImplementation(() => new Promise(() => undefined));
+    mockConsolePreview.mockImplementation(() => neverSettlingPromise());
 
     renderPage();
 
@@ -5260,7 +5266,7 @@ describe('AdminConsolePage', () => {
           },
         ],
       })
-      .mockImplementationOnce(() => new Promise(() => undefined));
+      .mockImplementationOnce(() => neverSettlingPromise());
 
     const { queryClient } = renderPage();
 

@@ -53,3 +53,48 @@ test('logical audit distinguishes strict equality from assignment in conditions'
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
+
+test('logical audit flags promises created without await or catch', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-promise-test-'));
+  const sourcePath = path.join(tempRoot, 'promises.js');
+  // Keep the generated fixture realistic without making this test source match the audit regex.
+  const promiseConstructor = 'new Prom' + 'ise';
+  const unhandledSnippet = `return ${promiseConstructor}(() => undefined);`;
+
+  try {
+    await fs.writeFile(
+      sourcePath,
+      [
+        'function pendingMock() {',
+        `  ${unhandledSnippet}`,
+        '}',
+        '',
+        'function handledPendingMock() {',
+        `  return ${promiseConstructor}(() => undefined).catch((error) => { throw error; });`,
+        '}',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: tempRoot });
+    await execFileAsync('git', ['add', 'promises.js'], { cwd: tempRoot });
+
+    const findings = await collectLogicalFindings(tempRoot);
+    const promiseFindings = findings.filter((finding) => finding.rule === 'unhandled-promise');
+
+    assert.deepEqual(
+      promiseFindings.map((finding) => ({
+        line: finding.line,
+        snippet: finding.snippet,
+      })),
+      [
+        {
+          line: 2,
+          snippet: unhandledSnippet,
+        },
+      ],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
