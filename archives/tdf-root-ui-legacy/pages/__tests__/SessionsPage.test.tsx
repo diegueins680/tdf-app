@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import SessionsPage from '../SessionsPage';
+import type { Page, SessionDTO } from '../../api/types';
 
 const mockSessionsList = vi.fn();
 const mockSessionsOptions = vi.fn();
@@ -49,6 +50,20 @@ function renderPage() {
   );
 }
 
+function createControlledPromise<T>() {
+  let resolve: (value: T) => void = () => {
+    throw new Error('Controlled promise resolved before initialization');
+  };
+
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  }).catch((error: unknown) => {
+    throw error;
+  });
+
+  return { promise, resolve };
+}
+
 describe('SessionsPage', () => {
   beforeAll(() => {
     if (!window.matchMedia) {
@@ -90,7 +105,8 @@ describe('SessionsPage', () => {
   });
 
   it('keeps the initial sessions loading state compact instead of showing empty table controls', async () => {
-    mockSessionsList.mockImplementation(() => new Promise(() => undefined));
+    const sessionsRequest = createControlledPromise<Page<SessionDTO>>();
+    mockSessionsList.mockReturnValue(sessionsRequest.promise);
 
     renderPage();
 
@@ -110,6 +126,20 @@ describe('SessionsPage', () => {
     expect(screen.queryByRole('columnheader', { name: /^Estado$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /^Acciones$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/Rows per page/i)).not.toBeInTheDocument();
+
+    await act(async () => {
+      sessionsRequest.resolve({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        total: 0,
+      });
+      await sessionsRequest.promise;
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Todavía no hay sesiones registradas.')).toBeInTheDocument();
+    });
   });
 
   it('shows one focused sessions error state instead of an empty table shell', async () => {

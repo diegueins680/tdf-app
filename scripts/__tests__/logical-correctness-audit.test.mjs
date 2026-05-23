@@ -60,6 +60,7 @@ test('logical audit flags promises created without await or catch', async () => 
   // Keep the generated fixture realistic without making this test source match the audit regex.
   const promiseConstructor = 'new Prom' + 'ise';
   const unhandledSnippet = `return ${promiseConstructor}(() => undefined);`;
+  const unhandledMockSnippet = `mockSessionsList.mockImplementation(() => ${promiseConstructor}(() => undefined));`;
 
   try {
     await fs.writeFile(
@@ -67,6 +68,10 @@ test('logical audit flags promises created without await or catch', async () => 
       [
         'function pendingMock() {',
         `  ${unhandledSnippet}`,
+        '}',
+        '',
+        'function pendingMockImplementation() {',
+        `  ${unhandledMockSnippet}`,
         '}',
         '',
         'function handledPendingMock() {',
@@ -91,6 +96,10 @@ test('logical audit flags promises created without await or catch', async () => 
         {
           line: 2,
           snippet: unhandledSnippet,
+        },
+        {
+          line: 6,
+          snippet: unhandledMockSnippet,
         },
       ],
     );
