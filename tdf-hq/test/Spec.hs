@@ -647,6 +647,12 @@ main = hspec $ do
             validateDatabaseStartupSafety True False []
                 `shouldBe` Right ()
 
+    describe "002_party_booking_enhancements migration" $
+        it "backfills only bookings with missing titles" $ do
+            migration <- readFile "sql/002_party_booking_enhancements.sql"
+            migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
+            migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
+
     describe "getVersionInfo" $ do
         let clearEnv keys = map (\key -> (key, Nothing)) keys
             commitEnvKeys =

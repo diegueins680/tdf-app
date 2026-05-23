@@ -54,7 +54,8 @@ END $$;
 
 -- Booking table adjustments
 ALTER TABLE booking ADD COLUMN IF NOT EXISTS title TEXT;
-UPDATE booking SET title = COALESCE(title, 'Booking');
+UPDATE booking SET title = 'Booking'
+WHERE title IS NULL;
 ALTER TABLE booking ALTER COLUMN title SET NOT NULL;
 
 DO $$
