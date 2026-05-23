@@ -298,6 +298,9 @@ export function chooseDiscoveryLane(candidates, options = {}) {
   const uiCandidate = candidates?.[DISCOVERY_LANE_UI] ?? null;
   const backendCandidate = candidates?.[DISCOVERY_LANE_BACKEND] ?? null;
   const lastLane = normalizeLane(options.lastLane);
+  const counts = options.counts ?? {};
+  const uiCount = normalizeCount(counts[DISCOVERY_LANE_UI]);
+  const backendCount = normalizeCount(counts[DISCOVERY_LANE_BACKEND]);
 
   if (!uiCandidate && !backendCandidate) {
     return '';
@@ -317,6 +320,17 @@ export function chooseDiscoveryLane(candidates, options = {}) {
 
   if (backendCandidate.priority < uiCandidate.priority) {
     return DISCOVERY_LANE_BACKEND;
+  }
+
+  const total = uiCount + backendCount;
+  if (total >= 6) {
+    const uiRatio = uiCount / total;
+    if (uiRatio > 0.55) {
+      return DISCOVERY_LANE_BACKEND;
+    }
+    if (uiRatio < 0.45) {
+      return DISCOVERY_LANE_UI;
+    }
   }
 
   if (lastLane === DISCOVERY_LANE_UI) {
@@ -471,7 +485,7 @@ export function verifyDiscoveryPolicyModel() {
 
 export async function buildDefaultIdea(repoRoot, options = {}) {
   const candidates = await collectDiscoveryCandidates(repoRoot);
-  const lane = chooseDiscoveryLane(candidates, { lastLane: options.lastLane });
+  const lane = chooseDiscoveryLane(candidates, { lastLane: options.lastLane, counts: options.counts });
   const selectedCandidate = lane ? candidates[lane] : null;
 
   if (!selectedCandidate) {
@@ -487,7 +501,7 @@ export async function buildDefaultIdea(repoRoot, options = {}) {
 
 export async function discoverImprovementIdea(repoRoot, options = {}) {
   const { statePath, state } = await readDiscoveryState(repoRoot, options);
-  const idea = await buildDefaultIdea(repoRoot, { lastLane: state.lastLane });
+  const idea = await buildDefaultIdea(repoRoot, { lastLane: state.lastLane, counts: state.counts });
 
   if (options.persistState === false) {
     return idea;
