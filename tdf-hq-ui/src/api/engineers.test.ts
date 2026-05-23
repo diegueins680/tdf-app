@@ -1,26 +1,40 @@
 import { jest } from '@jest/globals';
 
 const getMock = jest.fn<(path: string) => Promise<unknown>>();
+const warnMock = jest.fn<(...args: unknown[]) => void>();
 
 jest.unstable_mockModule('./client', () => ({
   get: getMock,
+}));
+
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: warnMock,
+    error: jest.fn(),
+  },
 }));
 
 const { Engineers } = await import('./engineers');
 
 const ENGINEERS_CACHE_KEY = 'tdf-engineers-cache-v1';
 
-describe('Engineers.listPublic', () => {
-  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+const readEngineersCache = (): unknown => {
+  const raw = window.localStorage.getItem(ENGINEERS_CACHE_KEY);
+  if (!raw) return [];
 
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    throw new Error('Engineer cache should contain valid JSON');
+  }
+};
+
+describe('Engineers.listPublic', () => {
   beforeEach(() => {
     getMock.mockReset();
-    warnSpy.mockClear();
+    warnMock.mockClear();
     window.localStorage.clear();
-  });
-
-  afterAll(() => {
-    warnSpy.mockRestore();
   });
 
   it('sanitizes live payloads and persists normalized cache', async () => {
@@ -43,7 +57,7 @@ describe('Engineers.listPublic', () => {
       { peId: 6, peName: 'Ana' },
       { peId: 4, peName: 'Luis' },
     ]);
-    expect(JSON.parse(window.localStorage.getItem(ENGINEERS_CACHE_KEY) ?? '[]')).toEqual(result);
+    expect(readEngineersCache()).toEqual(result);
   });
 
   it('falls back to sanitized cache when the live request fails', async () => {
@@ -69,8 +83,19 @@ describe('Engineers.listPublic', () => {
       { peId: 8, peName: 'Marta' },
       { peId: 18, peName: 'Marta' },
     ]);
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(warnMock).toHaveBeenCalledWith(
       'Engineer catalog unavailable, using cached engineer list',
+      expect.any(Error),
+    );
+  });
+
+  it('ignores malformed cached engineers when the live request fails', async () => {
+    window.localStorage.setItem(ENGINEERS_CACHE_KEY, '{not valid json');
+    getMock.mockRejectedValueOnce(new Error('offline'));
+
+    await expect(Engineers.listPublic()).resolves.toEqual([]);
+    expect(warnMock).toHaveBeenCalledWith(
+      'Engineer catalog unavailable, falling back to manual entry',
       expect.any(Error),
     );
   });
