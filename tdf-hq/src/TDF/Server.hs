@@ -27,10 +27,12 @@ import           Data.Ord (Down(..))
 import           Data.Foldable (for_, toList)
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  , digitToInt
   , generalCategory
   , isAscii
   , isControl
   , isDigit
+  , isHexDigit
   , isAlphaNum
   , isAsciiLower
   , isAsciiUpper
@@ -451,7 +453,7 @@ validateGoogleCalendarPageAttendeesField idx eventObj =
       fail (fieldLabel <> " must be an array")
   where
     fieldLabel = "items[" <> show idx <> "].attendees"
-    validateGoogleCalendarPageAttendee attendeeIdx (Object attendeeObj) =
+    validateGoogleCalendarPageAttendee (attendeeIdx, Object attendeeObj) =
       case AKeyMap.lookup "email" attendeeObj of
         Nothing ->
           fail (attendeeLabel attendeeIdx <> ".email is required")
@@ -462,7 +464,7 @@ validateGoogleCalendarPageAttendeesField idx eventObj =
             (validateGoogleCalendarAttendeeEmail rawEmail)
         Just _ ->
           fail (attendeeLabel attendeeIdx <> ".email must be a string")
-    validateGoogleCalendarPageAttendee attendeeIdx _ =
+    validateGoogleCalendarPageAttendee (attendeeIdx, _) =
       fail (attendeeLabel attendeeIdx <> " must be an attendee object")
     attendeeLabel attendeeIdx =
       fieldLabel <> "[" <> show attendeeIdx <> "]"
@@ -5888,6 +5890,12 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
                 BL.fromStrict . TE.encodeUtf8 $
                   fieldName <> " must not include a URL fragment"
             }
+      | hasPercentEncodedControlByte urlVal ->
+          Left err400
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  fieldName <> " must not include percent-encoded control bytes"
+            }
       | TrialsServer.hasAmbiguousPublicUrlPath urlVal ->
           Left err400
             { errBody =
@@ -5904,6 +5912,21 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
 
 maxCoursePublicUrlChars :: Int
 maxCoursePublicUrlChars = 2048
+
+hasPercentEncodedControlByte :: Text -> Bool
+hasPercentEncodedControlByte rawUrl =
+  case T.breakOn "%" rawUrl of
+    (_, rest)
+      | T.null rest -> False
+      | otherwise ->
+          case T.unpack (T.take 3 rest) of
+            ['%', high, low]
+              | isHexDigit high && isHexDigit low ->
+                  let byteValue = digitToInt high * 16 + digitToInt low
+                  in byteValue < 32
+                       || byteValue == 127
+                       || hasPercentEncodedControlByte (T.drop 3 rest)
+            _ -> hasPercentEncodedControlByte (T.drop 1 rest)
 
 isAllowedWhatsAppCtaUrl :: Text -> Bool
 isAllowedWhatsAppCtaUrl rawUrl =

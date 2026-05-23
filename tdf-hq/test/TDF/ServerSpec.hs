@@ -10802,6 +10802,20 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "locationMapUrl" "https://maps.example.com//studio"
             assertInvalid "instructorAvatarUrl" "https://cdn.example.com/./avatar.jpg"
 
+        it "rejects percent-encoded controls before fallback metadata can publish them" $ do
+            let assertInvalid fieldName rawUrl =
+                    case validateCoursePublicUrlField fieldName (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "must not include percent-encoded control bytes"
+                        Right urlVal ->
+                            expectationFailure
+                                ("Expected encoded-control URL to be rejected, got: " <> show urlVal)
+            assertInvalid "landingUrl" "https://tdf.example.com/curso%0Aadmin"
+            assertInvalid "locationMapUrl" "https://maps.example.com/studio?note=%0dInjected"
+            assertInvalid "instructorAvatarUrl" "https://cdn.example.com/avatar%7F.jpg"
+
         it "rejects oversized public course URLs before fallback metadata can publish them" $ do
             let oversizedUrl =
                     "https://tdf.example.com/"

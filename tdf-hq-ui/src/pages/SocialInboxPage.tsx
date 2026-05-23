@@ -353,7 +353,7 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
         : 'Envío bloqueado: la ventana de respuesta de Meta está cerrada.',
       guidance: reviewMode
         ? 'Ask the person to send a new DM before replying from the app, or copy the draft and reply in the native inbox if Meta still allows it there.'
-        : 'Pide a la persona que envíe un nuevo DM antes de responder desde la app, o copia el borrador y responde desde Instagram si Meta todavía lo permite ahí.',
+        : 'Pide a la persona que envíe un nuevo DM antes de responder desde la app, o copia el borrador y responde desde el inbox nativo si Meta todavía lo permite ahí.',
       technical,
     };
   }
@@ -902,7 +902,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                                 target="_blank"
                                 rel="noreferrer"
                               >
-                                {reviewMode ? 'Open native inbox' : 'Abrir Instagram'}
+                                {reviewMode ? 'Open native inbox' : 'Abrir inbox'}
                               </Button>
                             ) : undefined
                           }

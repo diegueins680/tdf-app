@@ -313,17 +313,21 @@ export function parseGitHubRemote(remoteUrl) {
 
 export function buildImprovementLoopModel() {
   return {
-    initial: 'discover',
+    initial: 'logicalAudit',
     transitions: {
+      logicalAudit: ['logicalFix', 'formalAudit'],
+      logicalFix: ['formalAudit'],
+      formalAudit: ['formalFix', 'discover'],
+      formalFix: ['discover'],
       discover: ['implement'],
-      implement: ['uiAudit'],
-      uiAudit: ['uiFix', 'formalAudit'],
-      uiFix: ['formalAudit'],
-      formalAudit: ['formalFix', 'commit'],
-      formalFix: ['commit'],
+      implement: ['uxAudit'],
+      uxAudit: ['uxFix', 'uiAudit'],
+      uxFix: ['uiAudit'],
+      uiAudit: ['uiFix', 'commit'],
+      uiFix: ['commit'],
       commit: ['push'],
       push: ['pollCi'],
-      pollCi: ['discover', 'ciRepair'],
+      pollCi: ['logicalAudit', 'ciRepair'],
       ciRepair: ['commit'],
     },
   };
@@ -392,11 +396,11 @@ export function verifyImprovementLoopModel() {
     findings.push('Push cannot reach CI polling.');
   }
 
-  if (!isReachable(model, 'pollCi', 'discover')) {
-    findings.push('A green CI result cannot return the loop to discovery.');
+  if (!isReachable(model, 'pollCi', 'logicalAudit')) {
+    findings.push('A green CI result cannot return the loop to logical audit.');
   }
 
-  if (!isReachable(model, 'pollCi', 'pollCi', { blocked: ['discover'] })) {
+  if (!isReachable(model, 'pollCi', 'pollCi', { blocked: ['logicalAudit'] })) {
     findings.push('A red CI result cannot re-enter polling through the repair cycle.');
   }
 
@@ -413,7 +417,19 @@ export function verifyImprovementLoopModel() {
   }
 
   if (isReachable(model, model.initial, 'commit', { blocked: ['formalAudit'] })) {
-    findings.push('Commit is reachable without a formal verification step.');
+    findings.push('Commit is reachable without a formal methods audit step.');
+  }
+
+  if (isReachable(model, model.initial, 'formalAudit', { blocked: ['logicalAudit'] })) {
+    findings.push('Formal audit is reachable without a logical audit first.');
+  }
+
+  if (isReachable(model, model.initial, 'discover', { blocked: ['formalAudit'] })) {
+    findings.push('Discovery is reachable without a formal audit first.');
+  }
+
+  if (isReachable(model, model.initial, 'uxAudit', { blocked: ['implement'] })) {
+    findings.push('UX audit is reachable without implementation first.');
   }
 
   const discoveryPolicy = verifyDiscoveryPolicyModel();

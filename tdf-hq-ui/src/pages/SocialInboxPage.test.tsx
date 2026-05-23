@@ -926,7 +926,7 @@ describe('SocialInboxPage', () => {
         'La ventana de respuesta de Meta de 7 días ya se cerró para esta conversación.',
       );
       expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
-      expect(countInteractiveElementsByText(document.body, 'Abrir Instagram')).toBe(1);
+      expect(countInteractiveElementsByText(document.body, 'Abrir inbox')).toBe(1);
       expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
     });
 

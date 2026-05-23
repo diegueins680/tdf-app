@@ -1,8 +1,10 @@
 {
   "ideaCommand": "node scripts/discover-improvement-idea.mjs",
   "implementationCommand": "./scripts/codex-loop-worker.sh implement {idea_file}",
-  "uiFixCommand": "./scripts/codex-loop-worker.sh ui-fix {ui_report_file}",
+  "logicalFixCommand": "./scripts/codex-loop-worker.sh logical-fix {logical_report_file}",
   "formalFixCommand": "./scripts/codex-loop-worker.sh formal-fix {formal_report_file}",
+  "uxFixCommand": "./scripts/codex-loop-worker.sh ux-fix {ux_report_file}",
+  "uiFixCommand": "./scripts/codex-loop-worker.sh ui-fix {ui_report_file}",
   "ciRepairCommand": "./scripts/codex-loop-worker.sh ci-repair {ci_report_file}",
   "commitMessageTemplate": "{commit_message}",
   "pushRemote": "origin",

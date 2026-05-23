@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODE="${1:?usage: codex-loop-worker.sh <implement|ui-fix|formal-fix|ci-repair> <task-file>}"
-TASK_FILE="${2:?usage: codex-loop-worker.sh <implement|ui-fix|formal-fix|ci-repair> <task-file>}"
+MODE="${1:?usage: codex-loop-worker.sh <implement|logical-fix|formal-fix|ux-fix|ui-fix|ci-repair> <task-file>}"
+TASK_FILE="${2:?usage: codex-loop-worker.sh <implement|logical-fix|formal-fix|ux-fix|ui-fix|ci-repair> <task-file>}"
 REPO_ROOT="${CONTINUOUS_LOOP_REPO_ROOT:-$(pwd)}"
 ITERATION="${CONTINUOUS_LOOP_ITERATION:-unknown}"
 
@@ -20,13 +20,21 @@ case "$MODE" in
     TASK_LABEL="implementation"
     TASK_GOAL="Read the improvement idea and implement it with the smallest high-signal change that adds user value."
     ;;
+  logical-fix)
+    TASK_LABEL="logical correctness remediation"
+    TASK_GOAL="Read the logical correctness audit report and fix every listed issue in the codebase. Prefer explicit, predictable logic. Add or update tests that would have caught the flaw."
+    ;;
+  formal-fix)
+    TASK_LABEL="formal methods remediation"
+    TASK_GOAL="Read the formal methods audit report and fix every listed issue using explicit invariants, preconditions, postconditions, type contracts, and tests where appropriate."
+    ;;
+  ux-fix)
+    TASK_LABEL="UX quality remediation"
+    TASK_GOAL="Read the UX quality audit report and fix every listed issue. Make the UI simpler, more minimal, more intuitive, and more engaging. Reduce clutter and make affordances obvious."
+    ;;
   ui-fix)
     TASK_LABEL="UI remediation"
     TASK_GOAL="Read the UI audit report and fix every listed issue in the report."
-    ;;
-  formal-fix)
-    TASK_LABEL="formal remediation"
-    TASK_GOAL="Read the formal verification report and fix every listed issue using explicit invariants and tests where appropriate."
     ;;
   ci-repair)
     TASK_LABEL="CI remediation"
