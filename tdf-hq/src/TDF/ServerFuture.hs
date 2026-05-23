@@ -1241,7 +1241,10 @@ validFutureStubSlug slug =
 reservedFutureStubSlugLabels :: [Text]
 reservedFutureStubSlugLabels =
   [ "constructor"
+  , "index"
+  , "null"
   , "prototype"
+  , "undefined"
   ]
 
 validFutureStubSlugStart :: Char -> Bool
