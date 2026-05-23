@@ -21643,8 +21643,10 @@ describe('CourseRegistrationsAdminPage', () => {
     const titles = [
       'Course survey form - Beatmaking 101',
       'Beatmaking 101 - registration questionnaire',
+      'Course review form - Beatmaking 101',
       'Cuestionario de inscripción - Beatmaking 101',
       'Beatmaking 101 - encuesta del curso',
+      'Beatmaking 101 - página de reseñas',
     ];
 
     for (const title of titles) {
@@ -21660,7 +21662,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState).not.toBeNull();
         expect(emptyState?.textContent).toContain(singleCohortInitialEmptyStateMessage);
         expect(emptyState?.textContent).not.toContain(title);
-        expect(emptyState?.textContent).not.toMatch(/survey|questionnaire|encuesta|cuestionario/i);
+        expect(emptyState?.textContent).not.toMatch(/survey|questionnaire|review|encuesta|cuestionario|reseñas/i);
         expect(countOccurrences(emptyState!, 'Beatmaking 101')).toBe(1);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(

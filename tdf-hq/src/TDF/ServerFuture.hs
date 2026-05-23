@@ -119,7 +119,7 @@ futureAdminConsoleView =
     , viewId = futureStubId "admin" "console"
     , viewPath = futureStubPath "admin" "console"
     , viewMethod = futureStubMethod
-    , viewStatus = "preview"
+    , viewStatus = futureAdminConsoleStatus
     , viewRequiredRole = futureStubRequiredRole
     , viewRequiredRoles = futureStubRequiredRoles
     , viewRequiredModule = futureStubRequiredModule
@@ -590,9 +590,9 @@ validateFutureStubResponse response =
   case validateFutureStubMetadata (stubArea response) (stubEndpoint response) of
     Left _ -> invalidFutureStubResponse
     Right (area, endpoint)
-      | stubStatus response /= "planned" -> invalidFutureStubResponse
       | stubImplemented response -> invalidFutureStubResponse
       | otherwise -> do
+          status <- validateFutureStubStatus (stubStatus response)
           method <-
             validateFutureStubMethod (stubMethod response)
           requiredModule <-
@@ -609,7 +609,7 @@ validateFutureStubResponse response =
             , stubId = responseId
             , stubPath = path
             , stubMethod = method
-            , stubStatus = "planned"
+            , stubStatus = status
             , stubRequiredRole = requiredRole
             , stubRequiredRoles = requiredRoles
             , stubRequiredModule = requiredModule
@@ -759,7 +759,7 @@ futureStubResponseFor rawArea rawEndpoint = do
       , stubId = futureStubId area endpoint
       , stubPath = futureStubPath area endpoint
       , stubMethod = futureStubMethod
-      , stubStatus = "planned"
+      , stubStatus = futureStubStatus
       , stubRequiredRole = futureStubRequiredRole
       , stubRequiredRoles = futureStubRequiredRoles
       , stubRequiredModule = futureStubRequiredModule
@@ -788,6 +788,18 @@ futureStubMethod = "GET"
 
 canonicalFutureStubMethod :: Text
 canonicalFutureStubMethod = "GET"
+
+futureStubStatus :: Text
+futureStubStatus = "planned"
+
+canonicalFutureStubStatus :: Text
+canonicalFutureStubStatus = "planned"
+
+futureAdminConsoleStatus :: Text
+futureAdminConsoleStatus = "preview"
+
+canonicalFutureAdminConsoleStatus :: Text
+canonicalFutureAdminConsoleStatus = "preview"
 
 futureStubRequiredRole :: Text
 futureStubRequiredRole = roleToText Admin
@@ -826,6 +838,20 @@ validateFutureAdminConsoleAuthMetadata
 validateFutureAdminConsoleAuthMetadata =
   validateFutureAuthMetadataWith invalidFutureAdminConsoleMetadata
 
+validateFutureStubStatus :: Text -> Either ServerError Text
+validateFutureStubStatus =
+  validateFutureStatusMetadataWith
+    invalidFutureStubResponse
+    futureStubStatus
+    canonicalFutureStubStatus
+
+validateFutureAdminConsoleStatus :: Text -> Either ServerError Text
+validateFutureAdminConsoleStatus =
+  validateFutureStatusMetadataWith
+    invalidFutureAdminConsoleMetadata
+    futureAdminConsoleStatus
+    canonicalFutureAdminConsoleStatus
+
 validateFutureStubMethod :: Text -> Either ServerError Text
 validateFutureStubMethod =
   validateFutureMethodMetadataWith invalidFutureStubResponse futureStubMethod
@@ -843,6 +869,17 @@ validateFutureMethodMetadataWith invalid configuredMethod publishedMethod
   | configuredMethod /= canonicalFutureStubMethod = invalid
   | publishedMethod /= canonicalFutureStubMethod = invalid
   | otherwise = Right publishedMethod
+
+validateFutureStatusMetadataWith
+  :: Either ServerError Text
+  -> Text
+  -> Text
+  -> Text
+  -> Either ServerError Text
+validateFutureStatusMetadataWith invalid configuredStatus canonicalStatus publishedStatus
+  | configuredStatus /= canonicalStatus = invalid
+  | publishedStatus /= canonicalStatus = invalid
+  | otherwise = Right publishedStatus
 
 validateFutureStubRequiredModule :: Text -> Either ServerError Text
 validateFutureStubRequiredModule =
@@ -934,9 +971,9 @@ validateFutureAdminConsoleView :: AdminConsoleView -> Either ServerError AdminCo
 validateFutureAdminConsoleView view
   | viewArea view /= "admin" = invalidFutureAdminConsoleMetadata
   | viewEndpoint view /= "console" = invalidFutureAdminConsoleMetadata
-  | viewStatus view /= "preview" = invalidFutureAdminConsoleMetadata
   | viewImplemented view = invalidFutureAdminConsoleMetadata
   | otherwise = do
+      status <- validateFutureAdminConsoleStatus (viewStatus view)
       method <-
         validateFutureAdminConsoleMethod (viewMethod view)
       requiredModule <-
@@ -959,7 +996,7 @@ validateFutureAdminConsoleView view
           , viewId = viewIdVal
           , viewPath = path
           , viewMethod = method
-          , viewStatus = "preview"
+          , viewStatus = status
           , viewRequiredRole = requiredRole
           , viewRequiredRoles = requiredRoles
           , viewRequiredModule = requiredModule

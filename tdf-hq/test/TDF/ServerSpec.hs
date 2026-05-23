@@ -65,7 +65,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant (ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -418,11 +418,13 @@ import TDF.ServerFuture
     , allowedFutureStubAreas
     , canonicalFutureStubMetadata
     , deriveFutureStubAreas
+    , futureAdminConsoleStatus
     , futureStubId
     , futureStubMethod
     , futureStubResponseFor
     , futureStubRequiredModule
     , futureStubRequiredRoles
+    , futureStubStatus
     , futureServer
     , futureAdminConsoleView
     , invalidCardText
@@ -462,9 +464,12 @@ import TDF.ServerFuture
     , validateFutureStubRequiredModule
     , validateFutureStubAuthMetadata
     , validateFutureStubMethod
+    , validateFutureStubStatus
     , validateFutureStubResponse
     , validateAllowedFutureStubMetadata
+    , validateFutureAdminConsoleStatus
     , validateFutureMethodMetadataWith
+    , validateFutureStatusMetadataWith
     , futureStubResponseForWithConsole
     )
 import TDF.ServerFanClub
@@ -13108,6 +13113,42 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "Admin" ["Admin", "Customer", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Fan"]
             assertInvalid "Admin" ["Admin", "Fan", "Customer", "Manager"]
+
+    describe "validateFutureStubStatus" $
+        it "pins fallback discovery statuses to their canonical response envelopes" $ do
+            futureStubStatus `shouldBe` "planned"
+            futureAdminConsoleStatus `shouldBe` "preview"
+            validateFutureStubStatus "planned" `shouldBe` Right "planned"
+            validateFutureAdminConsoleStatus "preview" `shouldBe` Right "preview"
+
+            let assertInvalid expectedMessage result =
+                    case result of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid fallback discovery status metadata, got: "
+                                    <> show value
+                                )
+
+            assertInvalid
+                "Invalid future stub response"
+                (validateFutureStubStatus "preview")
+            assertInvalid
+                "Invalid future stub response"
+                (validateFutureStubStatus "planned ")
+            assertInvalid
+                "Invalid future admin console metadata"
+                (validateFutureAdminConsoleStatus "planned")
+            assertInvalid
+                "Invalid future stub response"
+                (validateFutureStatusMetadataWith
+                    (Left err500 { errBody = "Invalid future stub response" })
+                    "preview"
+                    "planned"
+                    "planned")
 
     describe "validateFutureStubMethod" $
         it "pins fallback discovery method metadata to mounted GET routes" $ do

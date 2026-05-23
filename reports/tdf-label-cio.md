@@ -131,3 +131,52 @@ FINAL_STATUS: done — Packet A proven (21× Detox PASS, baseline valid); Packet
 
 FINAL_STATUS: done — Packet A proven (21× Detox PASS, baseline valid); Packet B OPEN (EAS credentials resolved, physical-device Google OAuth due 2026-05-21 23:59 UTC, ~3.9 h past deadline, operator-gated); Lane C live (supervisor 1118, child 22920, heartbeat 2026-05-22T03:53:42Z, launchd durable, log 31.6 MB, no repair needed); systems lane paused.
 ---
+
+## 2026-05-23 00:37 UTC — Run 40801163
+
+**Scope:** P1 — Publish fresh CIO checkpoint. P2 — Cross-check backend + CIL health.
+
+### Evidence
+- **Backend:** PID unknown (no prior PID in context), health `{"db":"ok","status":"ok"}` on :8080 — stable.
+- **CIL status.json:** state=running, phase=supervising, supervisor PID 45226, child PID 48252, lastHeartbeat 2026-05-23T00:37:59Z (~0 s old), lastIterationResult=ok, lastExitCode=124, restartCount=1, staleRestartCount=1.
+- **Child process:** PID 48252 (node), elapsed 12:32, parent 45226 — alive and healthy.
+- **Stop file:** absent. **`.pause-codex`:** absent.
+- **Log file:** 57,853,333 bytes (~55.2 MB) — above 30 MB threshold; still well under 150 MB ceiling.
+- **launchd plist:** `ai.openclaw.tdf-app.continuous-improvement-loop` loaded, KeepAlive=true, RunAtLoad=true.
+- **Release readiness:** 2026-05-22 12:35 UTC (~12.0 h stale — within 24h window). 22nd consecutive Detox PASS.
+- **CEO/CTO/Platform reports:** Not read this run (per instruction: no broad scans).
+
+### Packet A — Login-proof release lane
+- **Status:** PROVEN
+- **Evidence:** 22 consecutive Detox PASSes (latest 2026-05-20 20:21 UTC per `release-readiness.md`). Both login paths verified on simulator. No code changes since last PASS — baseline valid within ~28 h window.
+
+### Packet B — Store-publish readiness gate
+- **Status:** OPEN (sequenced after Packet A proof)
+- **Blocker:** `EAS_IOS_CREDENTIALS_MISSING` **RESOLVED** — Distribution cert + provisioning profile active until Nov 2026. Preview build `.ipa` available.
+- **Physical-device Google OAuth:** WAIVED until operator review (last waiver: 2026-05-21; next review: operator check-in). Operator-gated. Not a simulator/test blocker.
+- **Next action:** Operator executes physical-device test and reports result.
+
+### Lane C — Evergreen continuous-improvement runner
+- **Status:** LIVE
+- **Supervisor PID:** 45226 (bash, elapsed 02:14:27, launchd loaded)
+- **Child PID:** 48252 (node loop.mjs, elapsed 12:32, iteration 1, phase: supervising)
+- **launchd plist:** `ai.openclaw.tdf-app.continuous-improvement-loop` loaded, KeepAlive=true, RunAtLoad=true
+- **Heartbeat:** 2026-05-23T00:37:59Z (~0 s old at check, within 1800s timeout)
+- **Restart count:** 1 (stale restarts: 1) — supervisor recently restarted (child exit 124), now stable
+- **Latest iteration result:** `ok`
+- **No stop file present. No `.pause-codex` present.**
+- **No repair needed.**
+
+### Systems lane
+- **Status:** PAUSED per CEO directive.
+- **Recommendation:** STAY PAUSED — no fresh bounded artifact written for `tdf-label-systems`.
+
+### Cross-checks this run
+- Backend health: PASS (health endpoint ok on :8080)
+- CIL health: PASS (supervisor 45226, child 48252, heartbeat fresh, log 55.2 MB)
+- Release readiness freshness: PASS (~12.0 h stale, within 24h)
+- Packet A baseline: PASS (22nd PASS, valid)
+- Packet B gate: OPEN (physical-device OAuth operator-gated)
+
+FINAL_STATUS: done — Packet A proven (22× Detox PASS, baseline valid); Packet B OPEN (EAS credentials resolved, physical-device Google OAuth operator-gated, waived until operator check-in); Lane C live (supervisor 45226, child 48252, heartbeat 2026-05-23T00:37:59Z, launchd durable, log 55.2 MB, no repair needed); systems lane paused.
+---
