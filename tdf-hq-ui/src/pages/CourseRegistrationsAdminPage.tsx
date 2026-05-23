@@ -984,7 +984,7 @@ const statusMenuButtonTitle = (currentStatus: string, targetLabel?: string) => {
 };
 
 const paymentReceiptIconButtonTitle = (currentStatus: string, targetLabel: string) =>
-  `Icono de recibo: registrar pago o cambiar estado para ${targetLabel}; actual: ${registrationStatusLabel(currentStatus)}`;
+  `Registrar pago o cambiar estado para ${targetLabel}; actual: ${registrationStatusLabel(currentStatus)}`;
 
 const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => {
   const actionLabel = canOpenPaymentWorkflowFromStatus(currentStatus)

@@ -268,7 +268,7 @@ const paymentStatusMenuButtonLabel = 'Pago y estado';
 const paymentStatusIconButtonAriaLabel = (targetLabel: string) =>
   `${openPaymentWorkflowLabel} o cambiar estado para ${targetLabel}; estado actual: Pendiente de pago`;
 const paymentStatusIconButtonTitle = (targetLabel: string) =>
-  `Icono de recibo: registrar pago o cambiar estado para ${targetLabel}; actual: Pendiente de pago`;
+  `Registrar pago o cambiar estado para ${targetLabel}; actual: Pendiente de pago`;
 const initialEmptyStateConfigMessage =
   'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
 const initialEmptyStateMultiCohortMessage =
