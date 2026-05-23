@@ -228,6 +228,20 @@ describe('cohortFirstRunLabel', () => {
     }
   });
 
+  it('strips fallback triage and inventory wrappers before first-run copy uses the cohort label', () => {
+    const titles = [
+      'Fallback triage board - Beatmaking 101',
+      'UI fallback backlog for Beatmaking 101',
+      'Beatmaking 101 - fallback inventory dashboard',
+      'Triaje de fallbacks - Beatmaking 101',
+      'Beatmaking 101 - inventario de fallbacks',
+    ];
+
+    for (const title of titles) {
+      expect(cohortFirstRunLabel({ ccSlug: 'beatmaking-101', ccTitle: title })).toBe('Beatmaking 101');
+    }
+  });
+
   it('strips kanban and pipeline admin workflow wrappers before first-run copy uses the cohort label', () => {
     const titles = [
       'Payment kanban - Beatmaking 101',
