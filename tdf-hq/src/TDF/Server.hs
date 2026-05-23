@@ -3980,7 +3980,7 @@ resolveWhatsappCtaNumber :: Maybe Text -> Maybe Text
 resolveWhatsappCtaNumber mNumber =
   case mNumber >>= normalizeCourseRegistrationPhoneInput of
     Just phone ->
-      let digitsOnly = T.filter isDigit phone
+      let digitsOnly = T.filter isAsciiPhoneDigit phone
       in if isInternationalWhatsappCtaNumber digitsOnly
            then Just digitsOnly
            else Nothing
@@ -3991,7 +3991,8 @@ isInternationalWhatsappCtaNumber digitsOnly =
   -- wa.me paths require country-code digits, not local trunk-prefix numbers.
   case T.uncons digitsOnly of
     Just (firstDigit, _) ->
-      firstDigit /= '0'
+      T.all isAsciiPhoneDigit digitsOnly
+        && firstDigit /= '0'
         && T.length digitsOnly >= 8
         && T.length digitsOnly <= 15
     Nothing -> False
@@ -5896,7 +5897,7 @@ validateCoursePublicUrlField fieldName (Just rawUrl) =
       | fieldName == "whatsappCtaUrl" && not (isAllowedWhatsAppCtaUrl urlVal) ->
           Left err400
             { errBody =
-                "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
+                "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port with a valid WhatsApp send path"
             }
       | otherwise ->
           Right (Just urlVal)
@@ -5906,10 +5907,11 @@ maxCoursePublicUrlChars = 2048
 
 isAllowedWhatsAppCtaUrl :: Text -> Bool
 isAllowedWhatsAppCtaUrl rawUrl =
-  case extractHttpUrlAuthorityParts rawUrl of
-    Just (host, portSuffix) ->
+  case extractHttpUrlParts rawUrl of
+    Just (host, portSuffix, pathAndQuery) ->
       host `elem` allowedHosts
         && (T.null portSuffix || portSuffix == ":443")
+        && isAllowedWhatsAppCtaPath host pathAndQuery
     Nothing ->
       False
   where
@@ -5919,13 +5921,89 @@ isAllowedWhatsAppCtaUrl rawUrl =
       , "web.whatsapp.com"
       ]
 
-extractHttpUrlAuthorityParts :: Text -> Maybe (Text, Text)
-extractHttpUrlAuthorityParts rawUrl = do
+isAllowedWhatsAppCtaPath :: Text -> Text -> Bool
+isAllowedWhatsAppCtaPath host pathAndQuery
+  | host == "wa.me" =
+      isAllowedWaMePath pathAndQuery
+  | host `elem` ["api.whatsapp.com", "web.whatsapp.com"] =
+      isAllowedWhatsAppSendPath pathAndQuery
+  | otherwise =
+      False
+
+isAllowedWaMePath :: Text -> Bool
+isAllowedWaMePath pathAndQuery =
+  case T.breakOn "?" pathAndQuery of
+    ("/", query) ->
+      isAllowedWhatsAppTextQuery query
+    (path, query) ->
+      case T.stripPrefix "/" path of
+        Just digitsOnly ->
+          isInternationalWhatsappCtaNumber digitsOnly
+            && isAllowedOptionalWhatsAppTextQuery query
+        Nothing ->
+          False
+
+isAllowedWhatsAppSendPath :: Text -> Bool
+isAllowedWhatsAppSendPath pathAndQuery =
+  case T.breakOn "?" pathAndQuery of
+    ("/send", query) ->
+      isAllowedWhatsAppSendQuery query
+    _ ->
+      False
+
+isAllowedOptionalWhatsAppTextQuery :: Text -> Bool
+isAllowedOptionalWhatsAppTextQuery query =
+  T.null query || isAllowedWhatsAppTextQuery query
+
+isAllowedWhatsAppTextQuery :: Text -> Bool
+isAllowedWhatsAppTextQuery query =
+  case parseWhatsAppQuery query of
+    Just [("text", textValue)] -> not (T.null textValue)
+    _ -> False
+
+isAllowedWhatsAppSendQuery :: Text -> Bool
+isAllowedWhatsAppSendQuery query =
+  case parseWhatsAppQuery query of
+    Nothing -> False
+    Just params ->
+      let phoneValues = [value | ("phone", value) <- params]
+          textValues = [value | ("text", value) <- params]
+      in not (null params)
+           && length phoneValues <= 1
+           && length textValues <= 1
+           && all isAllowedWhatsAppSendParam params
+           && (not (null phoneValues) || not (null textValues))
+
+isAllowedWhatsAppSendParam :: (Text, Text) -> Bool
+isAllowedWhatsAppSendParam ("phone", value) =
+  isInternationalWhatsappCtaNumber value
+isAllowedWhatsAppSendParam ("text", value) =
+  not (T.null value)
+isAllowedWhatsAppSendParam _ =
+  False
+
+parseWhatsAppQuery :: Text -> Maybe [(Text, Text)]
+parseWhatsAppQuery query = do
+  rawQuery <- T.stripPrefix "?" query
+  let rawParams = T.splitOn "&" rawQuery
+  if null rawParams || any T.null rawParams
+    then Nothing
+    else traverse parseParam rawParams
+  where
+    parseParam rawParam =
+      let (name, rawValue) = T.breakOn "=" rawParam
+      in if T.null name || not ("=" `T.isPrefixOf` rawValue)
+           then Nothing
+           else Just (name, T.drop 1 rawValue)
+
+extractHttpUrlParts :: Text -> Maybe (Text, Text, Text)
+extractHttpUrlParts rawUrl = do
   withoutScheme <-
     T.stripPrefix "https://" lowerUrl <|> T.stripPrefix "http://" lowerUrl
   let authority = T.takeWhile (`notElem` ("/?#" :: String)) withoutScheme
+      pathAndQuery = T.drop (T.length authority) withoutScheme
       (host, portSuffix) = T.breakOn ":" authority
-  if T.null host then Nothing else Just (host, portSuffix)
+  if T.null host then Nothing else Just (host, portSuffix, pathAndQuery)
   where
     lowerUrl = T.toLower (T.strip rawUrl)
 

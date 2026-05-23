@@ -10761,10 +10761,14 @@ spec = describe "TDF.Server helpers" $ do
         it "keeps custom WhatsApp course CTAs constrained to WhatsApp hosts" $ do
             validateCoursePublicUrlField "whatsappCtaUrl" (Just " https://wa.me/593991234567 ")
                 `shouldBe` Right (Just "https://wa.me/593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me/?text=INSCRIBIRME%20Curso")
+                `shouldBe` Right (Just "https://wa.me/?text=INSCRIBIRME%20Curso")
             validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://api.whatsapp.com/send?phone=593991234567")
                 `shouldBe` Right (Just "https://api.whatsapp.com/send?phone=593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://web.whatsapp.com/send?text=INSCRIBIRME%20Curso")
+                `shouldBe` Right (Just "https://web.whatsapp.com/send?text=INSCRIBIRME%20Curso")
 
-        it "rejects non-WhatsApp CTA hosts instead of publishing misleading course links" $ do
+        it "rejects non-CTA WhatsApp URLs instead of publishing misleading course links" $ do
             let assertInvalid rawUrl =
                     case validateCoursePublicUrlField "whatsappCtaUrl" (Just rawUrl) of
                         Left serverErr -> do
@@ -10776,6 +10780,13 @@ spec = describe "TDF.Server helpers" $ do
                                 ("Expected invalid WhatsApp CTA URL to be rejected, got: " <> show urlVal)
             assertInvalid "https://tdf.example.com/contacto"
             assertInvalid "https://wa.me.evil.example/593991234567"
+            assertInvalid "https://wa.me/not-a-phone"
+            assertInvalid "https://wa.me/0991234567"
+            assertInvalid ("https://wa.me/" <> T.replicate 8 "\x0661")
+            assertInvalid "https://api.whatsapp.com/profile?phone=593991234567"
+            assertInvalid "https://api.whatsapp.com/send?redirect=https://tdf.example.com"
+            assertInvalid "https://api.whatsapp.com/send?phone=593991234567&phone=593991234568"
+            assertInvalid "https://web.whatsapp.com/send?phone=0991234567"
 
         it "rejects ambiguous public course URL paths before metadata is published" $ do
             let assertInvalid fieldName rawUrl =
