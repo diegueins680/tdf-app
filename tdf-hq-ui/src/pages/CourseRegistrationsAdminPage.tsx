@@ -1880,7 +1880,7 @@ const firstRunStaticFormBackendDescriptorSuffixPattern = new RegExp(
 );
 
 const firstRunEmergingFormProviderPattern =
-  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery|qualtrics|question\s*pro|questionpro|survey\s*sparrow|surveysparrow|score\s*app|scoreapp)`;
+  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery|qualtrics|question\s*pro|questionpro|survey\s*sparrow|surveysparrow|score\s*app|scoreapp|formaloo|formbricks|make\s*forms?|makeforms|youform)`;
 const firstRunEmergingFormProviderDescriptorPattern =
   String.raw`(?:(?:${firstRunEmergingFormProviderPattern})\s+(?:(?:lead|quiz|survey|questionnaire|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?|funnels?|flows?|quiz(?:zes)?|surveys?|questionnaires?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|embudos?|flujos?|cuestionarios?|encuestas?)\s+(?:de\s+)?(?:${firstRunEmergingFormProviderPattern}))`;
 const firstRunEmergingFormProviderDescriptorPrefixPattern = new RegExp(

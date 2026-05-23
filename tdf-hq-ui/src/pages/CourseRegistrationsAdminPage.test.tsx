@@ -18358,6 +18358,10 @@ describe('CourseRegistrationsAdminPage', () => {
       'Qualtrics survey - Beatmaking 101',
       'QuestionPro registration form for Beatmaking 101',
       'Beatmaking 101 - SurveySparrow questionnaire',
+      'Formaloo form - Beatmaking 101',
+      'Beatmaking 101 - Formbricks survey',
+      'MakeForms registration form for Beatmaking 101',
+      'Youform application form - Beatmaking 101',
     ];
 
     for (const title of titles) {
@@ -18405,7 +18409,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(emptyState?.textContent).not.toMatch(/ConvertKit|Kit sign-up|Kit lead|Brevo|Flodesk|MailerLite|Klaviyo|ActiveCampaign|Constant Contact|Keap|Infusionsoft|Mautic|RD Station|Substack/i);
         expect(emptyState?.textContent).not.toContain('CRM');
         expect(emptyState?.textContent).not.toMatch(/WATI|Kommo|Pipedrive/i);
-        expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery|Qualtrics|QuestionPro|SurveySparrow/i);
+        expect(emptyState?.textContent).not.toMatch(/Heyflow|Outgrow|Interact quiz|Landbot|Perspective|Feathery|Qualtrics|QuestionPro|SurveySparrow|Formaloo|Formbricks|MakeForms|Youform/i);
         expect(countOccurrences(emptyState!, 'formulario público')).toBe(1);
         expect(
           emptyState?.querySelector<HTMLAnchorElement>('a[href="/inscripcion/beatmaking-101"]')?.getAttribute('aria-label'),
