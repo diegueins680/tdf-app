@@ -10582,8 +10582,19 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "attachmentUrl" "https://files/proof.pdf"
             assertInvalid "fileUrl" "https://files.example.com:0443/proof.pdf"
             assertInvalid "fileUrl" "https://2130706433/proof.pdf"
-            assertInvalid "fileUrl" "https://files.example.com/proof.pdf#preview"
             assertInvalid "attachmentUrl" ("https://files.example.com/proof" <> T.singleton '\x202E' <> "fdp")
+
+        it "rejects course registration asset URL fragments before storing metadata" $
+            case validateCourseRegistrationUrlField
+                    "fileUrl"
+                    (Just "https://files.example.com/proof.pdf#preview") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "fileUrl must not include a URL fragment"
+                Right urlVal ->
+                    expectationFailure
+                        ("Expected fragmented course registration URL to be rejected, got: " <> show urlVal)
 
         it "rejects ambiguous course registration asset URL paths before storing uploaded proof metadata" $ do
             let assertInvalid fieldName rawUrl =
@@ -10600,6 +10611,7 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "fileUrl" "https://files.example.com/course/../admin.pdf"
             assertInvalid "attachmentUrl" "https://files.example.com/course//proof.pdf"
             assertInvalid "fileUrl" "https://files.example.com/course/%2e/receipt.pdf"
+            assertInvalid "attachmentUrl" "https://files.example.com/course%2fproof.pdf"
 
         it "rejects oversized course registration asset URLs before receipt or follow-up storage" $
             case validateCourseRegistrationUrlField
