@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
 import { Navigate, Outlet, Route } from 'react-router-dom';
 
 import { ConfigurationIndexRedirect, Shell } from './AppShell';

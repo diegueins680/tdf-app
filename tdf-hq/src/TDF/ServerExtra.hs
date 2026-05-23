@@ -84,7 +84,7 @@ import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..), sharedTlsManager)
 import           TDF.Config                 (AppConfig, assetsRootDir, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
-import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
+import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext, sendInstagramTextWithContextAndTag)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
@@ -4290,7 +4290,7 @@ instagramServer user =
         liftIO $
           flip runSqlPool envPool $
             resolveInstagramReplyContext mExternalId
-      sendResult <- liftIO $ sendInstagramTextWithContext envConfig mTargetAccessToken mTargetAccountId recipient body
+      sendResult <- liftIO $ sendInstagramTextWithContextAndTag envConfig mTargetAccessToken mTargetAccountId recipient body (Just "HUMAN_AGENT")
       let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
         insert_ (M.InstagramMessage (recipient <> "-out-" <> T.pack (show now))

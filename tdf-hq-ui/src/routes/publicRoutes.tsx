@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
 import { Navigate, Route } from 'react-router-dom';
 
 import PublicBranding from '../components/PublicBranding';

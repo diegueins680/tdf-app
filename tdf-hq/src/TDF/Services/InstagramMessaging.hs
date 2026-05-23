@@ -2,6 +2,7 @@
 module TDF.Services.InstagramMessaging
   ( sendInstagramText
   , sendInstagramTextWithContext
+  , sendInstagramTextWithContextAndTag
   , formatInstagramGraphHttpError
   ) where
 
@@ -46,6 +47,10 @@ data InstagramAttempt = InstagramAttempt
 
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
+  sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body Nothing
+
+sendInstagramTextWithContextAndTag :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> Maybe Text -> IO (Either Text Text)
+sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body mTag =
   case validateInstagramMessagePayload recipientId body of
     Left err -> pure (Left err)
     Right (cleanRecipientId, cleanBody) ->
@@ -54,7 +59,7 @@ sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId b
           pure (Left err)
         Right attempts -> do
           manager <- pure sharedTlsManager
-          runAttempts manager cleanRecipientId cleanBody attempts []
+          runAttempts manager cleanRecipientId cleanBody attempts mTag []
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =
@@ -229,16 +234,16 @@ maxInstagramAccountIdChars = 128
 maxInstagramMessageBodyChars :: Int
 maxInstagramMessageBodyChars = 5000
 
-runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
-runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")
-runAttempts _ _ _ [] errors = pure (Left (T.intercalate " | " (reverse errors)))
-runAttempts manager recipientId body (attempt:rest) errors = do
-  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt)
+runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> Maybe Text -> [Text] -> IO (Either Text Text)
+runAttempts _ _ _ [] _ [] = pure (Left "Instagram messaging failed without details")
+runAttempts _ _ _ [] _ errors = pure (Left (T.intercalate " | " (reverse errors)))
+runAttempts manager recipientId body (attempt:rest) mTag errors = do
+  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt) mTag
   case result of
     Right payload -> pure (Right payload)
     Left err ->
       let labelledError = "Send failed via " <> iaLabel attempt <> " at " <> iaUrl attempt <> ": " <> err
-      in runAttempts manager recipientId body rest (labelledError : errors)
+      in runAttempts manager recipientId body rest mTag (labelledError : errors)
 
 sendToEndpoint
   :: Manager
@@ -246,8 +251,9 @@ sendToEndpoint
   -> Text
   -> Text
   -> Text
+  -> Maybe Text
   -> IO (Either Text Text)
-sendToEndpoint manager token recipientId body urlTxt = do
+sendToEndpoint manager token recipientId body urlTxt mTag = do
   reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
   case reqE of
     Left err -> pure (Left (T.pack (show err)))
@@ -260,11 +266,18 @@ sendToEndpoint manager token recipientId body urlTxt = do
                 ]
             , requestBody = RequestBodyLBS (encode payload)
             }
-          payload = object
-            [ "recipient" .= object [ "id" .= recipientId ]
-            , "message" .= object [ "text" .= body ]
-            , "messaging_type" .= ("RESPONSE" :: Text)
-            ]
+          payload = case mTag of
+            Just tag -> object
+              [ "recipient" .= object [ "id" .= recipientId ]
+              , "message" .= object [ "text" .= body ]
+              , "messaging_type" .= ("MESSAGE_TAG" :: Text)
+              , "tag" .= tag
+              ]
+            Nothing -> object
+              [ "recipient" .= object [ "id" .= recipientId ]
+              , "message" .= object [ "text" .= body ]
+              , "messaging_type" .= ("RESPONSE" :: Text)
+              ]
       respE <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
       pure $ case respE of
         Left err -> Left (T.pack (show err))
