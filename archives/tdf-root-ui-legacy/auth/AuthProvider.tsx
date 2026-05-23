@@ -9,6 +9,7 @@ import type { LoginResponse } from '../api/types';
 import { getAuthToken, setAuthToken, setUnauthorizedHandler } from '../api/client';
 import type { ModuleKey } from '../constants/modules';
 import { ALL_MODULES } from '../constants/modules';
+import { parseStoredAuthUser } from './storage';
 
 const STORAGE_KEY_PERSISTED = 'tdf-hq-auth';
 const STORAGE_KEY_SESSION = 'tdf-hq-auth-session';
@@ -56,22 +57,21 @@ function readFromStorage(): AuthUser | null {
     return null;
   }
 
-  try {
-    const parsed = JSON.parse(raw) as AuthUser;
-    if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
-      window.sessionStorage.removeItem(STORAGE_KEY_SESSION);
-      window.localStorage.removeItem(STORAGE_KEY_PERSISTED);
-      setAuthToken(null);
-      return null;
-    }
-    setAuthToken(parsed.token);
-    return parsed;
-  } catch (_err) {
+  const parsed = parseStoredAuthUser(raw);
+  if (!parsed) {
     window.sessionStorage.removeItem(STORAGE_KEY_SESSION);
     window.localStorage.removeItem(STORAGE_KEY_PERSISTED);
     setAuthToken(null);
     return null;
   }
+  if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
+    window.sessionStorage.removeItem(STORAGE_KEY_SESSION);
+    window.localStorage.removeItem(STORAGE_KEY_PERSISTED);
+    setAuthToken(null);
+    return null;
+  }
+  setAuthToken(parsed.token);
+  return parsed;
 }
 
 function persistUser(user: AuthUser | null) {
