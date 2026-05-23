@@ -38,6 +38,14 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
   default: () => null,
 }));
 
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: null }),
   getStoredSessionToken: () => null,
@@ -49,7 +57,9 @@ const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
-  for (let index = 0; index < attempts; index += 1) {
+  let remainingAttempts = attempts;
+  while (remainingAttempts > 0) {
+    remainingAttempts -= 1;
     try {
       assertion();
       return;
@@ -226,6 +236,16 @@ describe('MarketplacePage', () => {
     checkoutMock.mockResolvedValue(buildOrder());
     window.localStorage.clear();
     window.history.pushState({}, '', '/marketplace');
+  });
+
+  it('stops waiting after the configured number of failed attempts', async () => {
+    const expectedError = new Error('still waiting');
+    const assertion = jest.fn(() => {
+      throw expectedError;
+    });
+
+    await expect(waitForExpectation(assertion, 3)).rejects.toThrow('still waiting');
+    expect(assertion).toHaveBeenCalledTimes(3);
   });
 
   it('prefers URL filters over saved filters on first render', async () => {
