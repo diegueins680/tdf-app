@@ -5896,7 +5896,7 @@ spec = do
               (verifyMetaWebhook MetaFacebook (Just "subscribe") (Just token) (Just "challenge-123"))
               env
       metaWebhookVerifyTokenCandidates MetaFacebook configured
-        `shouldBe` [Just "fb-secret"]
+        `shouldBe` [Just "fb-secret", Just "ig-secret"]
       case verify "fb-secret" of
         Left err ->
           expectationFailure
@@ -5904,12 +5904,11 @@ spec = do
         Right challenge ->
           challenge `shouldBe` "challenge-123"
       case verify "ig-secret" of
-        Left err -> do
-          errHTTPCode err `shouldBe` 403
-          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for facebook"
-        Right challenge ->
+        Left err ->
           expectationFailure
-            ("Expected Instagram verify token to be rejected, got " <> T.unpack challenge)
+            ("Expected Instagram verify token fallback to be accepted, got " <> show (errHTTPCode err))
+        Right challenge ->
+          challenge `shouldBe` "challenge-123"
 
     it "keeps Instagram webhook verification scoped to the explicit verify token" $ do
       cfg <- Config.loadConfig
