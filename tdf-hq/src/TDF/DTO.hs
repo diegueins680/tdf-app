@@ -339,6 +339,7 @@ data CourseRegistrationDTO = CourseRegistrationDTO
   , crPhoneE164   :: Maybe Text
   , crSource      :: Text
   , crStatus      :: Text
+  , crReceiptCount :: Int
   , crAdminNotes  :: Maybe Text
   , crHowHeard    :: Maybe Text
   , crUtmSource   :: Maybe Text

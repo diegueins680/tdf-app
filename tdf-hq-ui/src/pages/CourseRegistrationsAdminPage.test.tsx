@@ -95,6 +95,7 @@ const buildRegistration = (overrides: Partial<CourseRegistrationDTO> = {}): Cour
   crPhoneE164: '+593999000111',
   crSource: 'landing',
   crStatus: 'pending_payment',
+  crReceiptCount: 0,
   crAdminNotes: null,
   crHowHeard: null,
   crUtmSource: null,
@@ -2585,6 +2586,36 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Con notas');
       expect(container.textContent).not.toContain('Creado:');
       expect(countOccurrences(container, 'Notas internas')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('surfaces saved receipt counts in row context without opening each dossier', async () => {
+    listCohortsMock.mockResolvedValue([
+      { ccSlug: 'beatmaking-101', ccTitle: 'Beatmaking 101' },
+      { ccSlug: 'mixing-bootcamp', ccTitle: 'Mixing Bootcamp' },
+    ]);
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({ crReceiptCount: 1 }),
+      buildRegistration({
+        crId: 102,
+        crCourseSlug: 'mixing-bootcamp',
+        crFullName: 'Grace Hopper',
+        crEmail: 'grace@example.com',
+        crStatus: 'paid',
+        crReceiptCount: 2,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasExactText(container, 'Curso: Beatmaking 101 · Comprobante listo')).toBe(true);
+      expect(hasExactText(container, 'Curso: Mixing Bootcamp · 2 comprobantes')).toBe(true);
+      expect(container.textContent).not.toContain('Comprobante listo · Comprobante listo');
     });
 
     await cleanup();

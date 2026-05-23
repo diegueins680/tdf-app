@@ -14,6 +14,7 @@ import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
 import Data.List (isInfixOf)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import Data.Text (Text)
 import qualified Data.Text
@@ -227,6 +228,7 @@ import TDF.ServerInstagramOAuth
 import TDF.Server
     ( buildWhatsappCtaFor,
       buildCourseRegistrationUsernameCandidate,
+      courseRegistrationReceiptCounts,
       DriveApiResp (..),
       GoogleEventsPage (..),
       decodeDriveMetaResourceKeyIfSuccessful,
@@ -12612,6 +12614,34 @@ main = hspec $ do
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
+
+    describe "courseRegistrationReceiptCounts" $ do
+        it "counts payment receipts per registration before serializing admin list rows" $ do
+            let now = UTCTime (fromGregorian 2026 5 23) (secondsToDiffTime 0)
+                regOne = toSqlKey 101
+                regTwo = toSqlKey 102
+                mkReceipt receiptId registrationId =
+                    Entity (toSqlKey receiptId)
+                        (ME.CourseRegistrationReceipt
+                            { ME.courseRegistrationReceiptRegistrationId = registrationId
+                            , ME.courseRegistrationReceiptPartyId = Nothing
+                            , ME.courseRegistrationReceiptFileUrl = "https://files.example.com/receipt.pdf"
+                            , ME.courseRegistrationReceiptFileName = Just "receipt.pdf"
+                            , ME.courseRegistrationReceiptMimeType = Just "application/pdf"
+                            , ME.courseRegistrationReceiptNotes = Nothing
+                            , ME.courseRegistrationReceiptUploadedBy = Nothing
+                            , ME.courseRegistrationReceiptCreatedAt = now
+                            , ME.courseRegistrationReceiptUpdatedAt = now
+                            })
+                counts = courseRegistrationReceiptCounts
+                    [ mkReceipt 201 regOne
+                    , mkReceipt 202 regOne
+                    , mkReceipt 203 regTwo
+                    ]
+
+            Map.lookup regOne counts `shouldBe` Just 2
+            Map.lookup regTwo counts `shouldBe` Just 1
+            Map.lookup (toSqlKey 103) counts `shouldBe` Nothing
 
     describe "resolveLiveSessionMusicianLookup" $ do
         it "only matches existing live-session musicians by normalized email" $ do

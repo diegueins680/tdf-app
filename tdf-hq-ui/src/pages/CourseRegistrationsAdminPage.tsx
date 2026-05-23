@@ -4298,18 +4298,22 @@ const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
   hasNotes,
+  receiptCount,
   showCreatedAt = true,
   showCohort,
   showSource,
   source,
+  status,
 }: {
   cohortLabel: string;
   createdAt: string | null | undefined;
   hasNotes: boolean;
+  receiptCount: number | null | undefined;
   showCreatedAt?: boolean;
   showCohort: boolean;
   showSource: boolean;
   source: string | null | undefined;
+  status: string;
 }) => {
   const parts: string[] = [];
   const trimmedCohortLabel = cohortLabel.trim();
@@ -4320,8 +4324,22 @@ const registrationListContextSummary = ({
   }
   const createdLabel = showCreatedAt ? formatOptionalDate(createdAt) : '';
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
+  const receiptSummary = registrationReceiptContextSummary(receiptCount, status);
+  if (receiptSummary) parts.push(receiptSummary);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
+};
+
+const registrationReceiptContextSummary = (
+  receiptCount: number | null | undefined,
+  status: string,
+) => {
+  if (!Number.isSafeInteger(receiptCount) || receiptCount == null || receiptCount <= 0) return '';
+  const count = receiptCount;
+  if (normalizeKnownRegistrationStatus(status) === 'pending_payment') {
+    return count === 1 ? 'Comprobante listo' : `${count} comprobantes listos`;
+  }
+  return count === 1 ? '1 comprobante' : `${count} comprobantes`;
 };
 
 const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseRegistrationDTO[]) => {
@@ -8321,10 +8339,12 @@ export default function CourseRegistrationsAdminPage() {
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes && !rowMatchedOnlyHiddenNote,
+                    receiptCount: reg.crReceiptCount,
                     showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
+                    status: reg.crStatus,
                   });
                   const showRowContext = Boolean(rowContextSummary);
                   const useDirectPendingRecoveryIconAction =
