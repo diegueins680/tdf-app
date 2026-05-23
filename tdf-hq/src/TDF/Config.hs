@@ -1116,6 +1116,9 @@ validateConfiguredHttpsUrl _ Nothing = pure Nothing
 validateConfiguredHttpsUrl envName (Just rawUrl) =
   case normalizeConfiguredHttpsUrl envName rawUrl of
     Left msg -> fail msg
+    Right (Just urlVal)
+      | "#" `T.isInfixOf` urlVal ->
+          fail (envName <> " must not include a URL fragment")
     Right urlVal -> pure urlVal
 
 validateConfiguredBaseUrl :: String -> Maybe String -> IO (Maybe Text)
@@ -1425,7 +1428,7 @@ normalizeConfiguredCourseSlug (Just rawSlug)
         "COURSE_DEFAULT_SLUG must use only ASCII letters, numbers, and hyphens (96 chars max)"
 
 defaultCourseSlug :: Text
-defaultCourseSlug = "produccion-musical-abr-2026"
+defaultCourseSlug = "produccion-musical-jun-2026"
 
 normalizeConfiguredBaseUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredBaseUrl envName rawUrl
@@ -1728,7 +1731,7 @@ courseMapFallback cfg = fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (c
 courseInstructorAvatarFallback :: AppConfig -> Text
 courseInstructorAvatarFallback cfg =
   let base = resolveConfiguredAppBase cfg
-  in fromMaybe (base <> "/assets/esteban-munoz.jpg") (courseDefaultInstructorAvatar cfg >>= nonEmpty)
+  in fromMaybe (base <> "/assets/tdf-ui/esteban-munoz.jpg") (courseDefaultInstructorAvatar cfg >>= nonEmpty)
 
 nonEmpty :: Text -> Maybe Text
 nonEmpty txt =
