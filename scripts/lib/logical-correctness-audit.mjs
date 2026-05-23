@@ -81,7 +81,7 @@ function auditJsTsLogical(source, filePath, isTest) {
   }
 
   // 2. Assignment in condition
-  const assignInCondPattern = /\b(if|while|for)\s*\([^)]*=[^=][^)]*\)/g;
+  const assignInCondPattern = /\b(if|while|for)\s*\([^)]*(?<![=!<>])=(?!=|>)[^)]*\)/g;
   for (const match of source.matchAll(assignInCondPattern)) {
     const line = lineNumberAt(source, match.index);
     findings.push({
