@@ -224,6 +224,28 @@ function buildBackendFallbackIdea() {
   };
 }
 
+function buildCourseRegistrationsFallbackIdea() {
+  return {
+    source: 'builtin-course-registrations-fallback',
+    lane: DISCOVERY_LANE_BACKEND,
+    title: 'Improve course registrations admin page',
+    markdown: [
+      '# Improvement Idea',
+      '',
+      'Source: course registrations fallback discovery',
+      `Lane: ${DISCOVERY_LANE_BACKEND}`,
+      '',
+      'Review the course registrations admin page in `tdf-hq` and make one concrete improvement that:',
+      '- simplifies a workflow for admin users,',
+      '- improves data visibility or reduces click depth, and',
+      '- can be defended with a targeted test or explicit invariant.',
+      '',
+      'Keep the change scoped to the course registrations feature. Avoid unrelated backend edits for this iteration.',
+      '',
+    ].join('\n'),
+  };
+}
+
 function normalizeLane(value) {
   return value === DISCOVERY_LANE_UI || value === DISCOVERY_LANE_BACKEND ? value : '';
 }
@@ -255,7 +277,7 @@ function setCandidate(candidates, candidate) {
   }
 }
 
-async function collectDiscoveryCandidates(repoRoot) {
+async function collectDiscoveryCandidates(repoRoot, options = {}) {
   const candidates = {
     [DISCOVERY_LANE_UI]: null,
     [DISCOVERY_LANE_BACKEND]: null,
@@ -285,9 +307,16 @@ async function collectDiscoveryCandidates(repoRoot) {
 
   const backendRoot = path.join(repoRoot, 'tdf-hq');
   if (!candidates[DISCOVERY_LANE_BACKEND] && await pathExists(backendRoot)) {
+    // Rotate among backend fallback ideas to increase commit diversity.
+    // Use a simple round-robin based on total iteration count.
+    const counts = options.counts ?? {};
+    const totalCount = (counts[DISCOVERY_LANE_UI] ?? 0) + (counts[DISCOVERY_LANE_BACKEND] ?? 0);
+    const fallbackIdea = (totalCount % 3 === 1)
+      ? buildCourseRegistrationsFallbackIdea()
+      : buildBackendFallbackIdea();
     setCandidate(
       candidates,
-      createCandidate(DISCOVERY_LANE_BACKEND, DISCOVERY_PRIORITY_FALLBACK, buildBackendFallbackIdea()),
+      createCandidate(DISCOVERY_LANE_BACKEND, DISCOVERY_PRIORITY_FALLBACK, fallbackIdea),
     );
   }
 
@@ -484,7 +513,7 @@ export function verifyDiscoveryPolicyModel() {
 }
 
 export async function buildDefaultIdea(repoRoot, options = {}) {
-  const candidates = await collectDiscoveryCandidates(repoRoot);
+  const candidates = await collectDiscoveryCandidates(repoRoot, { counts: options.counts });
   const lane = chooseDiscoveryLane(candidates, { lastLane: options.lastLane, counts: options.counts });
   const selectedCandidate = lane ? candidates[lane] : null;
 
