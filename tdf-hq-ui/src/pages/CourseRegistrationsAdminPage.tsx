@@ -2214,6 +2214,20 @@ const firstRunAdminWorkflowDescriptorSuffixPattern =
     'i',
   );
 
+const firstRunFallbackDiscoveryDescriptorPattern = String.raw`(?:(?:(?:ui|ux|admin|ops|internal)\s+)?fallback\s+discovery(?:\s+(?:reviews?|audits?|scans?|cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?|(?:ui|ux|admin|ops|internal)\s+fallback(?:\s+(?:discovery|reviews?|audits?|scans?))(?:\s+(?:cards?|views?|labels?|notes?|pages?|panels?|dashboards?))?)`;
+
+const firstRunFallbackDiscoveryDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunFallbackDiscoveryDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+    'i',
+  );
+
+const firstRunFallbackDiscoveryDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunFallbackDiscoveryDescriptorPattern})\s*$`,
+    'i',
+  );
+
 const firstRunRegistrationDashboardDescriptorPattern = String.raw`(?:(?:admin\s+)?(?:course\s+|student\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admissions?|intake|waitlist)\s+(?:dashboards?|trackers?|boards?|workspaces?)|(?:admin\s+)?(?:dashboards?|trackers?|boards?|workspaces?)\s+(?:for\s+)?(?:course\s+|student\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admissions?|intake|waitlist|students?)|(?:panel(?:es)?|tableros?|seguimiento)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:panel(?:es)?|tableros?|seguimiento)\s+(?:de|para)\s+(?:matr[ií]cula|admisiones|solicitudes|estudiantes?|alumnos?))`;
 
 const firstRunRegistrationDashboardDescriptorPrefixPattern =
@@ -2391,6 +2405,7 @@ const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
     .replace(firstRunSchedulingProviderStandalonePrefixPattern, '')
     .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
     .replace(firstRunAdminWorkflowDescriptorPrefixPattern, '')
+    .replace(firstRunFallbackDiscoveryDescriptorPrefixPattern, '')
     .replace(firstRunRegistrationDashboardDescriptorPrefixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
     .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
@@ -2535,6 +2550,7 @@ const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
     .replace(firstRunSchedulingProviderStandaloneSuffixPattern, '')
     .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
     .replace(firstRunAdminWorkflowDescriptorSuffixPattern, '')
+    .replace(firstRunFallbackDiscoveryDescriptorSuffixPattern, '')
     .replace(firstRunRegistrationDashboardDescriptorSuffixPattern, '')
     .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
     .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
