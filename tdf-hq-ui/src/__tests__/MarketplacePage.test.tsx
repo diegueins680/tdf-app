@@ -190,6 +190,17 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const readSavedFilters = (): { category?: string; condition?: string } => {
+  const raw = window.localStorage.getItem('tdf-marketplace-filters');
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as { category?: string; condition?: string }) : {};
+  } catch {
+    return {};
+  }
+};
+
 const clickButtonByText = (label: string, pick: 'first' | 'last' = 'first') => {
   const buttons = Array.from(document.querySelectorAll('button')).filter(
     (candidate) => candidate.textContent?.trim() === label,
@@ -282,6 +293,26 @@ describe('MarketplacePage', () => {
     document.body.removeChild(container);
   });
 
+  it('ignores malformed saved filters on first render', async () => {
+    window.localStorage.setItem('tdf-marketplace-filters', '{not valid json');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vintage Mic');
+      expect(getInputByLabel(container, 'Buscar equipo').value).toBe('');
+      expect(window.location.search).toBe('');
+      expect(window.localStorage.getItem('tdf-marketplace-filters')).toBe(
+        JSON.stringify({ search: '', category: 'all', sort: 'relevance', purpose: 'all', condition: 'all' }),
+      );
+    });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('drops stale saved category and condition filters once listings load', async () => {
     listMock.mockResolvedValue([
       buildListing({ miCategory: 'Mics', miCondition: 'used', miPurpose: 'sale' }),
@@ -307,10 +338,7 @@ describe('MarketplacePage', () => {
       expect(container.textContent).toContain('Vintage Mic');
       expect(container.textContent).toContain('Stage Piano');
       expect(window.location.search).toBe('');
-      const savedFilters = JSON.parse(window.localStorage.getItem('tdf-marketplace-filters') ?? '{}') as {
-        category?: string;
-        condition?: string;
-      };
+      const savedFilters = readSavedFilters();
       expect(savedFilters.category).toBe('all');
       expect(savedFilters.condition).toBe('all');
       expect(container.textContent).not.toContain('Categoría: Missing');
