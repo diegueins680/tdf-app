@@ -160,5 +160,6 @@ if (require.main === module) {
 }
 
 module.exports = {
+  generateReport,
   loadExperimentData,
 };
