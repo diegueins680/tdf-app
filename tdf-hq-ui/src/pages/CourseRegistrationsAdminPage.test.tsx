@@ -10401,6 +10401,26 @@ describe('CourseRegistrationsAdminPage', () => {
     await cleanup();
   });
 
+  it('keeps busy-list search explicit without duplicate leading icon chrome', async () => {
+    listRegistrationsMock.mockResolvedValue(buildRegistrations(9));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, localSearchLabel)).toBe(true);
+      const searchControl = container.querySelector<HTMLElement>('[data-testid="course-registration-local-search"]');
+      expect(searchControl).not.toBeNull();
+      expect(getInputByLabel(container, localSearchLabel).getAttribute('placeholder')).toBe('Nombre o contacto');
+      expect(container.textContent).toContain('Busca dentro de las 9 inscripciones cargadas.');
+      expect(searchControl?.querySelector('.MuiInputAdornment-positionStart')).toBeNull();
+      expect(searchControl?.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+    });
+
+    await cleanup();
+  });
+
   it('keeps busy filter and results panels outlined instead of elevated card chrome', async () => {
     listRegistrationsMock.mockResolvedValue(
       buildRegistrations(9, (index) => ({

@@ -32,7 +32,6 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -5472,7 +5471,7 @@ export default function CourseRegistrationsAdminPage() {
     : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
   const showCopyCsvAction = canCopyCsv && !copyMessage;
-  const showLocalSearchInlineClearAction = hasLocalSearch;
+  const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchLimitRecoveryAction;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -8209,11 +8208,6 @@ export default function CourseRegistrationsAdminPage() {
                   }}
                   data-testid="course-registration-local-search"
                   InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
                     endAdornment: showLocalSearchInlineClearAction ? (
                       <InputAdornment position="end">
                         <Tooltip title="Limpiar búsqueda">
@@ -8287,16 +8281,21 @@ export default function CourseRegistrationsAdminPage() {
               aria-label={emptyLocalSearchResultsAccessibleLabel}
               title={emptyLocalSearchResultsAccessibleLabel}
               action={showEmptyLocalSearchLimitRecoveryAction ? (
-                <Button
-                  color="inherit"
-                  size="small"
-                  onClick={handleToggleAdvancedFilters}
-                  aria-expanded={showAdvancedFilters}
-                  aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
-                  title={emptyLocalSearchLimitRecoveryTitle}
-                >
-                  {emptyLocalSearchLimitRecoveryLabel}
-                </Button>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button color="inherit" size="small" onClick={handleClearLocalSearch}>
+                    Limpiar búsqueda
+                  </Button>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleToggleAdvancedFilters}
+                    aria-expanded={showAdvancedFilters}
+                    aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
+                    title={emptyLocalSearchLimitRecoveryTitle}
+                  >
+                    {emptyLocalSearchLimitRecoveryLabel}
+                  </Button>
+                </Stack>
               ) : undefined}
             >
               {emptyLocalSearchResultsMessage}
