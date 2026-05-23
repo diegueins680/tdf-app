@@ -4112,6 +4112,7 @@ metaWebhookVerifyTokenCandidates channel cfg =
       ]
     MetaFacebook ->
       [ facebookMessagingToken cfg
+      , instagramVerifyToken cfg
       ]
 
 validateMetaWebhookVerifyRequest
