@@ -414,6 +414,8 @@ import TDF.ServerProposals
     )
 import TDF.ServerFuture
     ( allowedFutureAdminConsoleCardIds
+    , allowedFutureStubReservedSiblingRoutes
+    , allowedFutureStubReservedTopLevelEndpointRoutes
     , allowedFutureStubMetadata
     , allowedFutureStubAreas
     , canonicalFutureStubMetadata
@@ -433,6 +435,8 @@ import TDF.ServerFuture
     , validateFutureAdminAccess
     , validateFutureAdminAccessWithBaselineRoles
     , validateFutureAdminBaselineRoles
+    , validateAllowedFutureStubReservedSiblingRoutes
+    , validateAllowedFutureStubReservedTopLevelEndpointRoutes
     , validateFutureAdminConsoleCard
     , validateFutureAdminConsoleCardIds
     , validateFutureAdminConsoleCardWithIds
@@ -12480,6 +12484,12 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right [("admin", "console"), ("admin", "seed")]
             validateReservedFutureStubTopLevelAreas ["catalog"]
                 `shouldBe` Right ["catalog"]
+            validateAllowedFutureStubReservedTopLevelEndpointRoutes
+                allowedFutureStubReservedTopLevelEndpointRoutes
+                `shouldBe` Right [("packages", "catalog")]
+            validateAllowedFutureStubReservedSiblingRoutes
+                allowedFutureStubReservedSiblingRoutes
+                `shouldBe` Right [("admin", "seed-policy")]
             validateFutureAdminConsoleRouteIn reservedFutureStubRoutes
                 `shouldBe` Right ("admin", "console")
             validateFutureStubCatalogRouteBoundaries
@@ -12523,6 +12533,47 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalidTopLevelAreas [" catalog"]
             assertInvalidTopLevelAreas ["admin"]
             assertInvalidTopLevelAreas ["catalog", "future"]
+
+            let assertInvalidTopLevelEndpointRoutes routes =
+                    case validateAllowedFutureStubReservedTopLevelEndpointRoutes routes of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid reserved fallback top-level endpoint "
+                                    <> "exception set, got: "
+                                    <> show value
+                                )
+
+            assertInvalidTopLevelEndpointRoutes []
+            assertInvalidTopLevelEndpointRoutes
+                [("packages", "catalog"), ("packages", "catalog")]
+            assertInvalidTopLevelEndpointRoutes [("crm", "catalog")]
+            assertInvalidTopLevelEndpointRoutes [("packages", "catalog-preview")]
+            assertInvalidTopLevelEndpointRoutes
+                [("packages", "catalog"), ("admin", "seed-policy")]
+
+            let assertInvalidSiblingRoutes routes =
+                    case validateAllowedFutureStubReservedSiblingRoutes routes of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 500
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "Invalid future stub catalog"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid reserved fallback sibling exception set, "
+                                    <> "got: "
+                                    <> show value
+                                )
+
+            assertInvalidSiblingRoutes []
+            assertInvalidSiblingRoutes [("admin", "seed")]
+            assertInvalidSiblingRoutes [("admin", "console-policy")]
+            assertInvalidSiblingRoutes [("crm", "seed-policy")]
+            assertInvalidSiblingRoutes
+                [("admin", "seed-policy"), ("admin", "seed-policy")]
 
             let assertInvalidAdminConsoleRoute routes =
                     case validateFutureAdminConsoleRouteIn routes of

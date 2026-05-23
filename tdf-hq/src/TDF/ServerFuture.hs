@@ -276,6 +276,8 @@ validateFutureStubCatalogRouteBoundaries
   -> Either ServerError [(Text, Text)]
 validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
   validatedReservedRoutes <- validateReservedFutureStubRoutes reservedRoutes
+  allowedSiblingRoutes <-
+    validateAllowedFutureStubReservedSiblingRoutes allowedFutureStubReservedSiblingRoutes
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
       traverse validateFutureStubBoundaryRoute catalog
@@ -287,7 +289,7 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
             , catalogRoute <- validatedCatalog
             ]
        || any reservedSiblingSegmentCollision
-            [ (reservedRoute, catalogRoute)
+            [ (allowedSiblingRoutes, reservedRoute, catalogRoute)
             | reservedRoute <- validatedReservedRoutes
             , catalogRoute <- validatedCatalog
             ]
@@ -310,9 +312,9 @@ validateFutureStubCatalogRouteBoundaries reservedRoutes catalog = do
         endpointSegments = T.splitOn "/" endpoint
 
     reservedSiblingSegmentCollision
-      ((reservedArea, reservedEndpoint), catalogRoute@(area, endpoint)) =
+      (allowedSiblingRoutesValue, (reservedArea, reservedEndpoint), catalogRoute@(area, endpoint)) =
       area == reservedArea
-        && catalogRoute `notElem` allowedFutureStubReservedSiblingRoutes
+        && catalogRoute `notElem` allowedSiblingRoutesValue
         && any segmentsOverlap
              [ (reservedSegment, endpointSegment)
              | reservedSegment <- T.splitOn "/" reservedEndpoint
@@ -378,6 +380,11 @@ validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
   reservedTopLevelAreas <-
     validateReservedFutureStubTopLevelAreas reservedFutureStubTopLevelAreas
   reservedRoutes <- validateReservedFutureStubRoutes reservedFutureStubRoutes
+  allowedTopLevelEndpointRoutes <-
+    validateAllowedFutureStubReservedTopLevelEndpointRoutes
+      allowedFutureStubReservedTopLevelEndpointRoutes
+  allowedSiblingRoutes <-
+    validateAllowedFutureStubReservedSiblingRoutes allowedFutureStubReservedSiblingRoutes
   cardIds <- validateFutureAdminConsoleCardIds rawCardIds
   validatedCatalog <-
     either (const invalidFutureStubCatalog) Right $
@@ -387,10 +394,13 @@ validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
        || any (hasLeafPrefixCollision validatedCatalog) mountedAreas
        || any (hasSegmentPrefixCollision validatedCatalog) mountedAreas
        || hasMountedAreaSegmentCollision mountedAreas validatedCatalog
-       || hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreas validatedCatalog
+       || hasReservedTopLevelAreaSegmentCollision
+            allowedTopLevelEndpointRoutes
+            reservedTopLevelAreas
+            validatedCatalog
        || any (hasReservedLeafCollision reservedRoutes validatedCatalog) mountedAreas
        || hasReservedLeafLabelCollision reservedRoutes validatedCatalog
-       || hasReservedSegmentLabelCollision reservedRoutes validatedCatalog
+       || hasReservedSegmentLabelCollision allowedSiblingRoutes reservedRoutes validatedCatalog
        || hasAdminConsoleCardSegmentCollision cardIds validatedCatalog
     then invalidFutureStubCatalog
     else Right validatedCatalog
@@ -451,10 +461,13 @@ validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
         )
         catalogForAreas
 
-    hasReservedTopLevelAreaSegmentCollision reservedTopLevelAreasValue catalogForAreas =
+    hasReservedTopLevelAreaSegmentCollision
+      allowedTopLevelEndpointRoutesValue
+      reservedTopLevelAreasValue
+      catalogForAreas =
       any
-        (\route@(_area, endpoint) ->
-           route `notElem` allowedFutureStubReservedTopLevelEndpointRoutes
+        (\catalogRoute@(_area, endpoint) ->
+           catalogRoute `notElem` allowedTopLevelEndpointRoutesValue
              && any
                   (\segment ->
                      any (segmentsOverlap segment) reservedTopLevelAreasValue
@@ -483,11 +496,16 @@ validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
           ((`Set.member` reservedLeaves) . endpointLeaf . snd)
           catalogForAreas
 
-    hasReservedSegmentLabelCollision reservedRoutesForAreas catalogForAreas =
+    hasReservedSegmentLabelCollision
+      allowedSiblingRoutesValue
+      reservedRoutesForAreas
+      catalogForAreas =
       let reservedSegments =
             Set.toList $
               Set.fromList (concatMap (T.splitOn "/" . snd) reservedRoutesForAreas)
-      in any (routeHasReservedSegmentLabel reservedSegments) catalogForAreas
+      in any
+          (routeHasReservedSegmentLabel allowedSiblingRoutesValue reservedSegments)
+          catalogForAreas
 
     hasAdminConsoleCardSegmentCollision cardIds catalogForAreas =
       any
@@ -497,8 +515,11 @@ validateFutureStubCatalogEndpointLeavesWithCardIds rawCardIds catalog = do
     hasAdminConsoleCardLabelOverlap cardIds segment =
       any (segmentsOverlap segment) cardIds
 
-    routeHasReservedSegmentLabel reservedSegments route@(_area, endpoint)
-      | route `elem` allowedFutureStubReservedSiblingRoutes = False
+    routeHasReservedSegmentLabel
+      allowedSiblingRoutesValue
+      reservedSegments
+      catalogRoute@(_area, endpoint)
+      | catalogRoute `elem` allowedSiblingRoutesValue = False
       | otherwise =
           any
             (\segment -> any (segmentsOverlap segment) reservedSegments)
@@ -566,6 +587,10 @@ allowedFutureStubReservedTopLevelEndpointRoutes :: [(Text, Text)]
 allowedFutureStubReservedTopLevelEndpointRoutes =
   -- /stubs/packages/catalog is a real package-catalog placeholder; only the
   -- top-level /stubs/catalog route is reserved for discovery.
+  requiredAllowedFutureStubReservedTopLevelEndpointRoutes
+
+requiredAllowedFutureStubReservedTopLevelEndpointRoutes :: [(Text, Text)]
+requiredAllowedFutureStubReservedTopLevelEndpointRoutes =
   [ packagesCatalogStub
   ]
 
@@ -573,8 +598,36 @@ allowedFutureStubReservedSiblingRoutes :: [(Text, Text)]
 allowedFutureStubReservedSiblingRoutes =
   -- /stubs/admin/seed is a reserved mutating route. The read-only policy
   -- placeholder intentionally documents that surface without mounting it.
+  requiredAllowedFutureStubReservedSiblingRoutes
+
+requiredAllowedFutureStubReservedSiblingRoutes :: [(Text, Text)]
+requiredAllowedFutureStubReservedSiblingRoutes =
   [ adminSeedPolicyStub
   ]
+
+validateAllowedFutureStubReservedTopLevelEndpointRoutes
+  :: [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateAllowedFutureStubReservedTopLevelEndpointRoutes routes = do
+  normalized <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubCatalogEntry routes
+  if normalized == requiredAllowedFutureStubReservedTopLevelEndpointRoutes
+       && length normalized == length (nub normalized)
+    then Right normalized
+    else invalidFutureStubCatalog
+
+validateAllowedFutureStubReservedSiblingRoutes
+  :: [(Text, Text)]
+  -> Either ServerError [(Text, Text)]
+validateAllowedFutureStubReservedSiblingRoutes routes = do
+  normalized <-
+    either (const invalidFutureStubCatalog) Right $
+      traverse validateFutureStubCatalogEntry routes
+  if normalized == requiredAllowedFutureStubReservedSiblingRoutes
+       && length normalized == length (nub normalized)
+    then Right normalized
+    else invalidFutureStubCatalog
 
 validateReservedFutureStubTopLevelAreas :: [Text] -> Either ServerError [Text]
 validateReservedFutureStubTopLevelAreas areas
