@@ -36,12 +36,17 @@ function parseActiveExperiments(content) {
   return active;
 }
 
-function loadExperimentData(experimentId) {
+function loadExperimentData(experimentId, metricsDir = METRICS_DIR) {
   // In real implementation, fetch from backend or analytics API
   // For now, look for local metrics files
-  const dataPath = path.join(METRICS_DIR, `${experimentId}.json`);
+  const dataPath = path.join(metricsDir, `${experimentId}.json`);
   if (!fs.existsSync(dataPath)) return null;
-  return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  } catch (error) {
+    if (error instanceof SyntaxError) return null;
+    throw error;
+  }
 }
 
 function analyzeExperiment(experiment, data) {
@@ -150,4 +155,10 @@ function main() {
   console.log(`Report saved to ${reportPath}`);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  loadExperimentData,
+};
