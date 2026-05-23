@@ -12918,7 +12918,7 @@ validateDatafastBaseUrl mRawBase
       case datafastOriginParts rawUrl of
         Just (host, portSuffix) ->
           (host == "oppwa.com" || ".oppwa.com" `T.isSuffixOf` host)
-            && (T.null portSuffix || portSuffix == ":443")
+            && T.null portSuffix
         Nothing ->
           False
 
