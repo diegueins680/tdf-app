@@ -116,26 +116,40 @@ buildAttempts cfg mTokenOverride mAccountIdOverride = do
       normalizeConfiguredApiBaseUrl
         "INSTAGRAM_MESSAGING_API_BASE"
         (T.unpack (instagramMessagingApiBase cfg))
-  source <-
-    if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
-      then buildSource
-        "connected asset token"
-        "Instagram connected asset token"
-        "Instagram connected asset account id"
-        mTokenOverride
-        mAccountIdOverride
-      else buildSource
+  let mConfiguredSource = buildSourceQuiet
         "configured fallback token"
         "INSTAGRAM_MESSAGING_TOKEN"
         "INSTAGRAM_MESSAGING_ACCOUNT_ID"
         (instagramMessagingToken cfg)
         (instagramMessagingAccountId cfg)
-  pure (nubAttempts (sourceAttempts base source))
+  if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+    then do
+      connectedSource <- buildSource
+        "connected asset token"
+        "Instagram connected asset token"
+        "Instagram connected asset account id"
+        mTokenOverride
+        mAccountIdOverride
+      pure (nubAttempts (sourceAttempts base connectedSource ++ maybe [] (sourceAttempts base) mConfiguredSource))
+    else do
+      source <- buildSource
+        "configured fallback token"
+        "INSTAGRAM_MESSAGING_TOKEN"
+        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+        (instagramMessagingToken cfg)
+        (instagramMessagingAccountId cfg)
+      pure (nubAttempts (sourceAttempts base source))
   where
     buildSource attemptLabel tokenLabel accountIdLabel mToken mAccountId =
       InstagramAttemptSource attemptLabel
         <$> validateInstagramBearerToken tokenLabel mToken
         <*> validateInstagramAccountId accountIdLabel mAccountId
+
+    buildSourceQuiet attemptLabel tokenLabel accountIdLabel mToken mAccountId =
+      either (const Nothing) Just $
+        InstagramAttemptSource attemptLabel
+          <$> validateInstagramBearerToken tokenLabel mToken
+          <*> validateInstagramAccountId accountIdLabel mAccountId
 
 validateInstagramBearerToken :: Text -> Maybe Text -> Either Text Text
 validateInstagramBearerToken label mRawToken =
