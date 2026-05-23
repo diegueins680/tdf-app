@@ -1966,6 +1966,14 @@ main = hspec $ do
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://maps.example.com/studio#pin")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL must not include a URL fragment"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
                 [ ("COURSE_DEFAULT_MAP_URL", Nothing)
                 , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/avatar\\copy.jpg")
                 ]

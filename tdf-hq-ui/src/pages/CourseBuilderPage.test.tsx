@@ -59,7 +59,7 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 };
 
 const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata => ({
-  slug: 'produccion-musical-abr-2026',
+  slug: 'produccion-musical-jun-2026',
   title: 'Curso de Producción Musical',
   subtitle: 'Presencial',
   format: 'Presencial',
@@ -205,7 +205,7 @@ describe('CourseBuilderPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getMetadataMock).toHaveBeenCalledWith('produccion-musical-abr-2026');
+        expect(getMetadataMock).toHaveBeenCalledWith('produccion-musical-jun-2026');
         expect(window.localStorage.getItem('tdf-course-builder-draft')).toBeNull();
         expect(text(container)).not.toContain('Hay un borrador local guardado.');
       });

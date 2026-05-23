@@ -86,7 +86,7 @@ export const inferDemoToken = (host?: string): string => {
 };
 
 const defaultCourseSlug =
-  envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-abr-2026';
+  envTrimmedOrUndefined(envString('VITE_COURSE_SLUG')) ?? 'produccion-musical-jun-2026';
 const defaultCourseCohorts = parseList(envString('VITE_COURSE_COHORTS'));
 const defaultMapUrl =
   envTrimmedOrUndefined(envString('VITE_COURSE_MAP_URL')) ??
