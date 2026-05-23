@@ -61,6 +61,8 @@ const normalInboxReadySubtitle = 'Mensajes entrantes y respuestas por canal.';
 const normalInboxLoadingSubtitle = 'Preparando inbox social.';
 const normalInboxEmptySubtitle = 'Primer mensaje entrante pendiente.';
 const normalInboxErrorSubtitle = 'No se pudieron cargar los canales del inbox.';
+const META_REPLY_WINDOW_DAYS = 7;
+const META_REPLY_WINDOW_MS = META_REPLY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
@@ -109,6 +111,14 @@ const formatTimestamp = (value?: string | null) => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleString();
+};
+
+const isMetaReplyWindowExpired = (channel?: SocialChannel, createdAt?: string | null) => {
+  if (channel !== 'instagram' && channel !== 'facebook') return false;
+  if (!createdAt) return false;
+  const parsed = new Date(createdAt);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return Date.now() - parsed.getTime() > META_REPLY_WINDOW_MS;
 };
 
 const formatBody = (value?: string | null) => {
@@ -336,6 +346,18 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
+  if (lower.includes('outside of allowed window') || lower.includes('2534022')) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: the Meta reply window is closed.'
+        : 'Envío bloqueado: la ventana de respuesta de Meta está cerrada.',
+      guidance: reviewMode
+        ? 'Ask the person to send a new DM before replying from the app, or copy the draft and reply in the native inbox if Meta still allows it there.'
+        : 'Pide a la persona que envíe un nuevo DM antes de responder desde la app, o copia el borrador y responde desde Instagram si Meta todavía lo permite ahí.',
+      technical,
+    };
+  }
+
   if (lower.includes('application does not have the capability to make this api call') || lower.includes('"code":3')) {
     return {
       headline: reviewMode
@@ -496,8 +518,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
   const hasDeliveredReply = Boolean(repliedAtValue);
   const showAiDraftControls = showBody && !hasDeliveredReply;
-  const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
-  const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
+  const replyWindowExpired = isMetaReplyWindowExpired(channel, msg?.createdAt);
+  const canGenerate = Boolean(channel && msg && showAiDraftControls && !replyWindowExpired && !aiLoading && !sendLoading);
+  const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !replyWindowExpired && !sendLoading);
   const hasReplyDraft = replyDraft.trim().length > 0;
   const showReplyComposer = !hasDeliveredReply || showFollowUpComposer || hasReplyDraft || sendLoading;
   const showFollowUpPrompt = hasDeliveredReply && !showReplyComposer;
@@ -865,6 +888,30 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                           {reviewMode ? 'Provider message ID:' : 'ID de mensaje en proveedor:'} {providerMessageId}
                         </Alert>
                       )}
+                      {replyWindowExpired && !hasDeliveredReply && (
+                        <Alert
+                          severity="warning"
+                          variant="outlined"
+                          action={
+                            nativeClientUrl ? (
+                              <Button
+                                color="inherit"
+                                size="small"
+                                component="a"
+                                href={nativeClientUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {reviewMode ? 'Open native inbox' : 'Abrir Instagram'}
+                              </Button>
+                            ) : undefined
+                          }
+                        >
+                          {reviewMode
+                            ? `Meta's ${META_REPLY_WINDOW_DAYS}-day reply window is closed for this conversation.`
+                            : `La ventana de respuesta de Meta de ${META_REPLY_WINDOW_DAYS} días ya se cerró para esta conversación.`}
+                        </Alert>
+                      )}
                       {messageAsset && (
                         <Alert severity="info" variant="outlined">
                           {reviewMode ? 'Conversation asset metadata:' : 'Metadata del asset de conversación:'}{' '}
@@ -1056,9 +1103,13 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Tooltip
             title={
-              reviewMode
-                ? 'Click to send from app UI. Keep this on screen before switching to native client.'
-                : 'Enviar respuesta'
+              replyWindowExpired
+                ? reviewMode
+                  ? 'Reply window closed. Ask for a new DM or use the native inbox.'
+                  : 'La ventana de respuesta está cerrada. Pide un nuevo DM o usa Instagram.'
+                : reviewMode
+                  ? 'Click to send from app UI. Keep this on screen before switching to native client.'
+                  : 'Enviar respuesta'
             }
           >
             <span>
