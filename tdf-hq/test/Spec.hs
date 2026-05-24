@@ -296,6 +296,7 @@ import TDF.Services.InstagramMessaging
     ( formatInstagramGraphHttpError,
       sendInstagramTextWithContext )
 import TDF.Services.FacebookMessaging (sendFacebookText)
+import qualified TDF.Services.Stripe as Stripe
 import TDF.Server.SocialSync
     ( socialSyncServer,
       validateSocialSyncArtistPartyId,
@@ -808,6 +809,37 @@ main = hspec $ do
                 `shouldSatisfy` isNothing
             parseToolCallParams (callWithName "tdf_health_check?verbose=true")
                 `shouldSatisfy` isNothing
+
+    describe "Stripe response decoding" $ do
+        it "decodes successful JSON response bodies" $
+            Stripe.decodeStripeResponse
+                200
+                "{\"id\":\"pi_123\"}"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Right (A.object ["id" .= ("pi_123" :: Text)])
+
+        it "uses the parse failure message for malformed successful responses" $
+            Stripe.decodeStripeResponse
+                200
+                "not-json"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Left "Failed to parse Stripe PaymentIntent response"
+
+        it "uses status-specific fallbacks for malformed Stripe error bodies" $ do
+            Stripe.decodeStripeResponse
+                402
+                "not-json"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Left "Stripe API error with status: 402"
+            Stripe.decodeStripeResponse
+                500
+                "not-json"
+                "Failed to parse Stripe refund response"
+                "Stripe refund error"
+                `shouldBe` Left "Stripe refund error with status: 500"
 
     describe "PaymentCreate JSON contract" $ do
         let paymentJson paidAt period =

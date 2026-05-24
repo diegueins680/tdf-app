@@ -1,0 +1,58 @@
+name: Check Messaging Token
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'check'
+        type: choice
+        options:
+          - check
+          - refresh
+
+jobs:
+  check-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Check/Refresh Messaging Token
+        env:
+          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID || secrets.META_APP_ID || '1098715965613487' }}
+          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET || secrets.META_APP_SECRET }}
+          INSTAGRAM_MESSAGING_TOKEN: ${{ secrets.INSTAGRAM_MESSAGING_TOKEN }}
+          FACEBOOK_MESSAGING_TOKEN: ${{ secrets.FACEBOOK_MESSAGING_TOKEN }}
+          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.action }}" = "refresh" ]; then
+            # Force refresh by passing a dummy expiring token
+            node scripts/check-messaging-token.mjs
+          else
+            node scripts/check-messaging-token.mjs
+          fi
+
+      - name: Notify on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚨 Messaging token check/refresh failed! Manual intervention required.\nApp: tdf-hq\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

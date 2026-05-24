@@ -4,15 +4,17 @@ module TDF.Services.Stripe
   ( StripeConfig(..)
   , createPaymentIntent
   , createRefund
+  , decodeStripeResponse
   , verifyWebhookSignature
   ) where
 
-import           Data.Aeson (Value, encode, object, (.=))
+import           Data.Aeson (Value)
 import qualified Data.Aeson as Aeson
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Base16 as Base16
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -23,7 +25,6 @@ import           Network.HTTP.Types.Status (statusCode)
 import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac)
 import           Data.ByteArray (convert)
-import           Data.ByteString.Base16 (encode)
 
 -- | Configuration for Stripe API
 data StripeConfig = StripeConfig
@@ -67,13 +68,12 @@ createPaymentIntent cfg amountCents currency description mMetadata = do
   let status = statusCode (responseStatus response)
       bodyLBS = responseBody response
 
-  if status == 200
-    then case Aeson.decode bodyLBS of
-      Just val -> pure (Right val)
-      Nothing -> pure (Left "Failed to parse Stripe PaymentIntent response")
-    else case (Aeson.decode bodyLBS :: Maybe Value) of
-      Just val -> pure (Left $ "Stripe API error: " <> T.pack (show val))
-      Nothing -> pure (Left $ "Stripe API error with status: " <> T.pack (show status))
+  pure $
+    decodeStripeResponse
+      status
+      bodyLBS
+      "Failed to parse Stripe PaymentIntent response"
+      "Stripe API error"
 
 -- | Create a refund for a PaymentIntent
 createRefund
@@ -105,13 +105,33 @@ createRefund cfg paymentIntentId amountCents = do
   let status = statusCode (responseStatus response)
       bodyLBS = responseBody response
 
-  if status == 200
-    then case Aeson.decode bodyLBS of
-      Just val -> pure (Right val)
-      Nothing -> pure (Left "Failed to parse Stripe refund response")
-    else case (Aeson.decode bodyLBS :: Maybe Value) of
-      Just val -> pure (Left $ "Stripe refund error: " <> T.pack (show val))
-      Nothing -> pure (Left $ "Stripe refund error with status: " <> T.pack (show status))
+  pure $
+    decodeStripeResponse
+      status
+      bodyLBS
+      "Failed to parse Stripe refund response"
+      "Stripe refund error"
+
+-- | Decode a Stripe response while preserving deterministic errors for
+-- malformed upstream bodies.
+decodeStripeResponse
+  :: Int
+  -> BL.ByteString
+  -> Text
+  -> Text
+  -> Either Text Value
+decodeStripeResponse status bodyLBS parseFailureMessage errorPrefix
+  | status == 200 =
+      maybe (Left parseFailureMessage) Right decodedBody
+  | otherwise =
+      Left $
+        maybe
+          (errorPrefix <> " with status: " <> statusText)
+          (\val -> errorPrefix <> ": " <> T.pack (show val))
+          decodedBody
+  where
+    decodedBody = Aeson.decode bodyLBS :: Maybe Value
+    statusText = T.pack (show status)
 
 -- | Verify Stripe webhook signature
 -- This prevents replay attacks and ensures the webhook is from Stripe
@@ -127,7 +147,7 @@ verifyWebhookSignature cfg signatureHeader rawBody =
       let signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
           secret = TE.encodeUtf8 (stripeWebhookSecret cfg)
           expectedSig = convert (hmac secret signedPayload :: HMAC SHA256)
-          expectedSigHex = Data.ByteString.Base16.encode expectedSig
+          expectedSigHex = Base16.encode expectedSig
       in expectedSigHex == TE.encodeUtf8 signature
 
 -- | Parse the Stripe-Signature header

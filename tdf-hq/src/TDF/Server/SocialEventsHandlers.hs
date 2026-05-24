@@ -79,7 +79,7 @@ import           Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
-import           Data.Aeson.Types (Object, Parser)
+import           Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char
   ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
@@ -119,6 +119,9 @@ import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser(..))
 import           TDF.Config (AppConfig(..), assetsRootDir, resolveConfiguredAssetsBase)
 import qualified TDF.Services.Stripe as Stripe
+import           Crypto.Hash.Algorithms (SHA256)
+import           Crypto.MAC.HMAC (HMAC, hmac)
+import           Data.ByteArray (convert)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString as BS
 import qualified System.Random as Random
@@ -2192,12 +2195,12 @@ socialEventsServer user = eventsServer
                 ) envPool
               throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> err)) }
             Right paymentIntent -> do
-              case Aeson.parseMaybe (Aeson..: "id") paymentIntent of
+              case parseMaybe (Aeson..: "id") paymentIntent of
                 Nothing -> throwError err500 { errBody = "Could not parse Stripe response" }
-                Just (piId :: T.Text) -> do
-                  case Aeson.parseMaybe (Aeson..: "client_secret") paymentIntent of
+                Just piId -> do
+                  case parseMaybe (Aeson..: "client_secret") paymentIntent of
                     Nothing -> throwError err500 { errBody = "Could not parse Stripe client secret" }
-                    Just (clientSecret :: T.Text) -> do
+                    Just clientSecret -> do
                       liftIO $ runSqlPool (update orderKey
                         [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
                       pure StripePaymentIntentDTO
@@ -2223,16 +2226,16 @@ socialEventsServer user = eventsServer
           let rawBody = BL.toStrict (Aeson.encode payload)
           when (not (Stripe.verifyWebhookSignature stripeCfg signature rawBody)) $
             throwError err400 { errBody = "Invalid webhook signature" }
-          case Aeson.parseMaybe (Aeson..: "id") payload of
+          case parseMaybe (Aeson..: "id") payload of
             Nothing -> throwError err400 { errBody = "Invalid webhook payload" }
-            Just (eventId :: T.Text) -> do
+            Just eventId -> do
               mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
               case mExisting of
                 Just _ -> pure NoContent
                 Nothing -> do
-                  case Aeson.parseMaybe (Aeson..: "type") payload of
+                  case parseMaybe (Aeson..: "type") payload of
                     Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
-                    Just (eventType :: T.Text) -> do
+                    Just eventType -> do
                       liftIO $ runSqlPool (insert_ StripeWebhookEvent
                         { stripeWebhookEventStripeEventId = eventId
                         , stripeWebhookEventEventType = eventType
@@ -2241,8 +2244,8 @@ socialEventsServer user = eventsServer
                         }) envPool
                       case eventType of
                         "payment_intent.succeeded" -> do
-                          case Aeson.parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= Aeson..: "object" >>= Aeson..: "id")) payload of
-                            Just (piId :: T.Text) -> do
+                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
+                            Just piId -> do
                               mOrder <- liftIO $ runSqlPool
                                 (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                                 envPool
@@ -2277,8 +2280,8 @@ socialEventsServer user = eventsServer
                                   pure NoContent
                             Nothing -> pure NoContent
                         "payment_intent.payment_failed" -> do
-                          case Aeson.parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= Aeson..: "object" >>= Aeson..: "id")) payload of
-                            Just (piId :: T.Text) -> do
+                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
+                            Just piId -> do
                               mOrder <- liftIO $ runSqlPool
                                 (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                                 envPool
@@ -2395,9 +2398,9 @@ socialEventsServer user = eventsServer
           case result of
             Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err)) }
             Right refundResponse -> do
-              case Aeson.parseMaybe (Aeson..: "id") refundResponse of
+              case parseMaybe (Aeson..: "id") refundResponse of
                 Nothing -> throwError err500 { errBody = "Could not parse Stripe refund response" }
-                Just (refundId :: T.Text) -> do
+                Just refundId -> do
                   liftIO $ runSqlPool (do
                     update refundKey
                       [ TicketRefundRequestStatus =. "approved"
@@ -2702,7 +2705,7 @@ socialEventsServer user = eventsServer
                 , timestamp
                 ]
               secret = "tdf-qr-secret-key"
-              hmacHash = SHA256.hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload)
+              hmacHash = convert (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256)
               hmacHex = TE.decodeUtf8 (B64.encode hmacHash)
               qrDataValue = payload <> "|" <> hmacHex
           liftIO $ runSqlPool (insert_ TicketQRCode
