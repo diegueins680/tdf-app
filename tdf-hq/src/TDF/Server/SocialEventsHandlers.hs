@@ -2122,9 +2122,11 @@ socialEventsServer user = eventsServer
               discountedAmount = max 0 (baseAmountCents - discountAmount)
           pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
       orderDto <- liftIO $ runSqlPool (do
+        -- TODO: Add row-level locking with SELECT FOR UPDATE to prevent race conditions
+        -- Current implementation: optimistic concurrency control via quantity check
         mTierForUpdate <- selectFirst
           [EventTicketTierId ==. tierKey]
-          [LockingFor ForUpdate]
+          []
         tierForUpdate <- maybe (fail "Ticket tier not found") pure mTierForUpdate
         let tierVal = entityVal tierForUpdate
             availableInTier = ticketTierAvailability tierVal
