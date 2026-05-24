@@ -2558,8 +2558,8 @@ socialEventsServer user = eventsServer
           ]
         update ticketKey
           [ EventTicketCurrentHolderPartyId =. Just currentPartyId
-          , EventTicketCurrentHolderEmail =. fromMaybe (eventTicketCurrentHolderEmail ticket) (ticketTransferToEmail transfer)
-          , EventTicketCurrentHolderName =. fromMaybe (eventTicketCurrentHolderName ticket) (ticketTransferToName transfer)
+          , EventTicketCurrentHolderEmail =. (ticketTransferToEmail transfer <|> eventTicketCurrentHolderEmail ticket)
+          , EventTicketCurrentHolderName =. (ticketTransferToName transfer <|> eventTicketCurrentHolderName ticket)
           , EventTicketUpdatedAt =. now
           ]
         ) envPool
@@ -2714,9 +2714,7 @@ socialEventsServer user = eventsServer
         Nothing -> do
           let timestamp = T.pack (show (floor (realToFrac (utcTimeToPOSIXSeconds now) :: Double) :: Int))
               -- Use current holder email if available, otherwise fall back to original holder email
-              holderEmail = case eventTicketCurrentHolderEmail ticket of
-                Just email -> email
-                Nothing -> eventTicketHolderEmail ticket
+              holderEmail = fromMaybe "" (eventTicketCurrentHolderEmail ticket <|> eventTicketHolderEmail ticket)
               payload = T.intercalate "|"
                 [ renderKeyText ticketKey
                 , renderKeyText eventKey
