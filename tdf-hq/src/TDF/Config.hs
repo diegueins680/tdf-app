@@ -574,6 +574,9 @@ loadConfig = do
   sessionCookieSecureEnv <- lookupEnv "SESSION_COOKIE_SECURE"
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
+  stripeSecretKeyEnv <- lookupEnv "STRIPE_SECRET_KEY"
+  stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
+  stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
   assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
@@ -714,9 +717,9 @@ loadConfig = do
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
     , sessionCookieMaxAgeSeconds = cookieMaxAge
-    , stripeSecretKey = Nothing  -- TODO: Load from env STRIPE_SECRET_KEY
-    , stripePublishableKey = Nothing  -- TODO: Load from env STRIPE_PUBLISHABLE_KEY
-    , stripeWebhookSecret = Nothing  -- TODO: Load from env STRIPE_WEBHOOK_SECRET
+    , stripeSecretKey = fmap T.pack stripeSecretKeyEnv
+    , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
+    , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     }
   where
     getWithFallback requireUnique keys def =
