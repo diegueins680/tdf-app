@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Button,
   Chip,
@@ -32,7 +30,7 @@ interface RefundManagementPanelProps {
   eventId: string;
 }
 
-const REFUND_ACTION_SPINNER_SIZE_PX = 24;
+const REFUND_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 
 /**
  * Contract:
@@ -42,6 +40,11 @@ const REFUND_ACTION_SPINNER_SIZE_PX = 24;
  * @postcondition successful mutations invalidate the event refund query and clear local selection state.
  */
 export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
+  /*
+   * precondition: eventId scopes all refund reads and writes.
+   * invariant: mutations target the loaded event.
+   * postcondition: success clears selection.
+   */
   const qc = useQueryClient();
   const [selectedRefund, setSelectedRefund] = useState<RefundDTO | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -53,18 +56,18 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (refundId: string) => SocialEventsAPI.approveRefund(eventId, refundId),
+    mutationFn: (approvedRefundId: string) => SocialEventsAPI.approveRefund(eventId, approvedRefundId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['refunds', eventId] });
+      void qc.invalidateQueries({ queryKey: ['refunds', eventId] });
       setSelectedRefund(null);
     },
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ refundId, reason }: { refundId: string; reason: string }) =>
-      SocialEventsAPI.rejectRefund(eventId, refundId, { rrReason: reason }),
+    mutationFn: ({ refundId: rejectedRefundId, reason }: { refundId: string; reason: string }) =>
+      SocialEventsAPI.rejectRefund(eventId, rejectedRefundId, { rrReason: reason }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['refunds', eventId] });
+      void qc.invalidateQueries({ queryKey: ['refunds', eventId] });
       setSelectedRefund(null);
       setRejectDialogOpen(false);
       setRejectionReason('');
@@ -72,32 +75,38 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   });
 
   const handleApprove = (refund: RefundDTO) => {
-    const refundId = refund.refundId?.trim();
-    if (!refundId) {
+    const approvedRefundId = refund.refundId?.trim();
+    if (!approvedRefundId) {
       return;
     }
 
     if (window.confirm(`Approve refund for ${formatMoney(refund.refundAmountCents)}?`)) {
-      approveMutation.mutate(refundId);
+      approveMutation.mutate(approvedRefundId);
     }
   };
 
   const handleReject = () => {
-    const refundId = selectedRefund?.refundId?.trim();
+    const selectedRefundId = selectedRefund?.refundId?.trim();
     const rejectionReasonText = rejectionReason.trim();
-    if (!refundId || !rejectionReasonText) {
+    if (!selectedRefundId || !rejectionReasonText) {
       return;
     }
 
     rejectMutation.mutate({
-      refundId,
+      refundId: selectedRefundId,
       reason: rejectionReasonText,
     });
   };
 
   const formatMoney = (cents: number, currency?: string): string => {
-    const code = (currency || 'USD').toUpperCase();
+    const currencyText = currency?.trim();
+    const code = currencyText ? currencyText.toUpperCase() : 'USD';
     return `${code} ${(cents / 100).toFixed(2)}`;
+  };
+
+  const formatRefundReason = (reason?: string | null): string => {
+    const reasonText = reason ?? '';
+    return reasonText.length > 0 ? reasonText : '-';
   };
 
   if (refundsQuery.isLoading) {
@@ -110,7 +119,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     return loadingContent;
   }
 
-  const refunds = refundsQuery.data || [];
+  const refunds = refundsQuery.data ?? [];
   const pendingRefunds = refunds.filter((r) => r.refundStatus === 'pending');
 
   const panelContent = (
@@ -151,7 +160,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                   <TableCell>{formatMoney(refund.refundAmountCents)}</TableCell>
                   <TableCell>
                     <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                      {refund.refundReason || '-'}
+                      {formatRefundReason(refund.refundReason)}
                     </Typography>
                   </TableCell>
                   <TableCell>

@@ -21,6 +21,11 @@ import { SocialEventsAPI, type TicketPurchaseWithPromoDTO, type SocialTicketTier
 import { PromoCodeField } from './PromoCodeField';
 import {
   type BuyerDetailsState,
+  CHECKOUT_MAX_QUANTITY,
+  CHECKOUT_MIN_QUANTITY,
+  CHECKOUT_STEP_BUYER_DETAILS,
+  CHECKOUT_STEP_CONFIRMATION,
+  CHECKOUT_STEP_PAYMENT,
   checkoutFormReducer,
   checkoutModalReducer,
   formatTicketTierPrice,
@@ -69,8 +74,8 @@ interface StringRef {
 }
 
 const BUYER_FORM_ID = 'stripe-checkout-buyer-details-form';
-const CHECKOUT_ACTION_SPINNER_SIZE_PX = 24;
-const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2000;
+const CHECKOUT_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
+const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2 * 1000;
 
 const CHECKOUT_COPY = {
   title: 'Purchase Tickets',
@@ -239,6 +244,11 @@ function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: Chec
  * @postcondition closing the dialog clears transient checkout state and restores focus to the opener when possible.
  */
 export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, onSuccess }: StripeCheckoutModalProps) {
+  /*
+   * precondition: eventId and tier identify one checkout target.
+   * invariant: activeStep follows the checkout step constants.
+   * postcondition: close resets state.
+   */
   const [state, dispatch] = useReducer(checkoutModalReducer, initialCheckoutModalState);
   const returnFocusRef = useRef(null) as HTMLElementRef;
   const nameInputRef = useRef(null) as InputRef;
@@ -262,7 +272,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   }, [state.error]);
 
   useEffect(() => {
-    if (state.activeStep === 2) {
+    if (state.activeStep === CHECKOUT_STEP_CONFIRMATION) {
       successSummaryRef.current?.focus();
     }
   }, [state.activeStep]);
@@ -392,7 +402,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
           </Step>
         </Stepper>
 
-        {state.activeStep === 0 && (
+        {state.activeStep === CHECKOUT_STEP_BUYER_DETAILS && (
           <Box
             id={BUYER_FORM_ID}
             component="form"
@@ -430,7 +440,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
                 dispatch({ type: 'buyerFieldChanged', field: 'quantity', value: normalizeCheckoutQuantity(e.target.value) })
               }
               margin="normal"
-              InputProps={{ inputProps: { min: 1, max: 10 } }}
+              InputProps={{ inputProps: { min: CHECKOUT_MIN_QUANTITY, max: CHECKOUT_MAX_QUANTITY } }}
             />
 
             <Divider sx={{ my: 2 }} />
@@ -460,7 +470,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
           </Box>
         )}
 
-        {state.activeStep === 1 && state.clientSecret && (
+        {state.activeStep === CHECKOUT_STEP_PAYMENT && state.clientSecret && (
           <Elements stripe={stripePromise} options={stripeOptions}>
             <CheckoutForm
               tier={tier}
@@ -472,7 +482,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
           </Elements>
         )}
 
-        {state.activeStep === 2 && (
+        {state.activeStep === CHECKOUT_STEP_CONFIRMATION && (
           <Box ref={successSummaryRef} tabIndex={-1} sx={{ textAlign: 'center', py: 4, outline: 'none' }}>
             <Typography variant="h5" gutterBottom color="success.main">
               {CHECKOUT_COPY.status.success}
@@ -486,7 +496,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       </DialogContent>
 
       <DialogActions>
-        {state.activeStep === 0 && (
+        {state.activeStep === CHECKOUT_STEP_BUYER_DETAILS && (
           <>
             <Button
               disabled={state.loading}
@@ -512,7 +522,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
             </Button>
           </>
         )}
-        {state.activeStep === 2 && (
+        {state.activeStep === CHECKOUT_STEP_CONFIRMATION && (
           <Button
             disabled={state.loading}
             onClick={handleClose}

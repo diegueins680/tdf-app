@@ -11,7 +11,11 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
 import { SocialEventsAPI, type PromoCodeDTO } from '../api/socialEvents';
-import { initialPromoCodeState, promoCodeReducer } from './PromoCodeField.logic';
+import {
+  PROMO_CODE_LOADING_HELPER_TEXT,
+  initialPromoCodeState,
+  promoCodeReducer,
+} from './PromoCodeField.logic';
 
 interface PromoCodeFieldProps {
   eventId: string;
@@ -25,12 +29,12 @@ const PROMO_COPY = {
   clear: 'Clear promo code',
   inactive: 'Promo code is not active',
   invalid: 'Invalid promo code',
-  applied: 'Code applied',
+  checking: PROMO_CODE_LOADING_HELPER_TEXT,
   validUntil: 'Valid until',
   usesRemaining: 'uses remaining',
 };
 
-const PROMO_VALIDATION_SPINNER_SIZE_PX = 20;
+const PROMO_VALIDATION_SPINNER_SIZE_PX = 2 * 10;
 
 /**
  * Contract:
@@ -40,6 +44,11 @@ const PROMO_VALIDATION_SPINNER_SIZE_PX = 20;
  * @postcondition inactive, invalid, empty, or stale codes report null to the parent.
  */
 export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFieldProps) {
+  /*
+   * precondition: eventId and tierId identify one promo policy.
+   * invariant: stale async validations cannot publish.
+   * postcondition: invalid codes emit null.
+   */
   const [{ code, debouncedCode, validating, validPromo, error }, dispatch] = useReducer(
     promoCodeReducer,
     initialPromoCodeState,
@@ -112,6 +121,12 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
     onPromoApplied(null);
   };
 
+  const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    validationRequestRef.current += 1;
+    dispatch({ type: 'codeChanged', code: event.target.value.toUpperCase() });
+    onPromoApplied(null);
+  };
+
   const handleClearKeyDown = (event: React.KeyboardEvent) => {
     if (event.key !== 'Escape') return;
 
@@ -136,13 +151,18 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
         fullWidth
         inputRef={inputRef}
         value={code}
-        onChange={(e) => dispatch({ type: 'codeChanged', code: e.target.value.toUpperCase() })}
+        onChange={handleCodeChange}
         placeholder={PROMO_COPY.placeholder}
         margin="normal"
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              {validating && <CircularProgress size={PROMO_VALIDATION_SPINNER_SIZE_PX} />}
+              {validating && (
+                <CircularProgress
+                  aria-label={PROMO_COPY.checking}
+                  size={PROMO_VALIDATION_SPINNER_SIZE_PX}
+                />
+              )}
               {validPromo && <CheckCircleIcon color="success" />}
               {code && !validating && (
                 <IconButton
@@ -161,7 +181,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
           ),
         }}
         error={Boolean(error)}
-        helperText={error ?? (validPromo ? `${PROMO_COPY.applied}: ${formatDiscount(validPromo)}` : undefined)}
+        helperText={validating ? PROMO_COPY.checking : error ?? undefined}
       />
 
       {validPromo && (

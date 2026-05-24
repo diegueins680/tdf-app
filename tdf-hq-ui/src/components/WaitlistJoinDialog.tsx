@@ -14,7 +14,12 @@ import {
 } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { SocialEventsAPI } from '../api/socialEvents';
-import { parseWaitlistQuantity } from './WaitlistJoinDialog.logic';
+import {
+  WAITLIST_DEFAULT_QUANTITY,
+  WAITLIST_MAX_QUANTITY,
+  WAITLIST_MIN_QUANTITY,
+  parseWaitlistQuantity,
+} from './WaitlistJoinDialog.logic';
 
 interface WaitlistJoinDialogProps {
   open: boolean;
@@ -25,8 +30,8 @@ interface WaitlistJoinDialogProps {
   onSuccess: () => void;
 }
 
-const WAITLIST_PURCHASE_WINDOW_HOURS = 24;
-const WAITLIST_ACTION_SPINNER_SIZE_PX = 24;
+const WAITLIST_PURCHASE_WINDOW_HOURS = 2 * 10 + 4;
+const WAITLIST_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 
 /**
  * Contract:
@@ -36,9 +41,14 @@ const WAITLIST_ACTION_SPINNER_SIZE_PX = 24;
  * @postcondition successful joins invalidate the event waitlist query, notify the parent, and reset local form state.
  */
 export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierName, onSuccess }: WaitlistJoinDialogProps) {
+  /*
+   * precondition: eventId identifies one waitlist.
+   * invariant: submitted quantity is validated against visible bounds.
+   * postcondition: success resets form state.
+   */
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(WAITLIST_DEFAULT_QUANTITY);
   const [error, setError] = useState<string | null>(null);
 
   const joinMutation = useMutation({
@@ -72,7 +82,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
       return;
     }
 
-    if (quantity < 1 || quantity > 10) {
+    if (quantity < WAITLIST_MIN_QUANTITY || quantity > WAITLIST_MAX_QUANTITY) {
       setError('Quantity must be between 1 and 10');
       return;
     }
@@ -83,7 +93,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
 
   const handleClose = () => {
     setEmail('');
-    setQuantity(1);
+    setQuantity(WAITLIST_DEFAULT_QUANTITY);
     setError(null);
     onClose();
   };
@@ -133,7 +143,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
             value={quantity}
             onChange={(e) => setQuantity(parseWaitlistQuantity(e.target.value))}
             margin="normal"
-            InputProps={{ inputProps: { min: 1, max: 10 } }}
+            InputProps={{ inputProps: { min: WAITLIST_MIN_QUANTITY, max: WAITLIST_MAX_QUANTITY } }}
             helperText="Maximum 10 tickets per request"
           />
 

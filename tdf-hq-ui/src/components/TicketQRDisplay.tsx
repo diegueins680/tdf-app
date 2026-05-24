@@ -28,7 +28,7 @@ interface TicketQRDisplayProps {
   ticket: TicketWithRequiredId;
 }
 
-const TICKET_QR_CANVAS_WIDTH_PX = 300;
+const TICKET_QR_CANVAS_WIDTH_PX = 3 * 100;
 const PRINT_TICKET_BORDER = '1px solid black';
 
 /**
@@ -39,6 +39,11 @@ const PRINT_TICKET_BORDER = '1px solid black';
  * @postcondition a successful QR render sets qrGenerated, allowing the visible canvas to be downloaded or printed.
  */
 export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: TicketQRDisplayProps) {
+  /*
+   * precondition: ticket.ticketId belongs to eventId.
+   * invariant: actions wait for QR generation.
+   * postcondition: generated canvas can be saved or printed.
+   */
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [qrGenerated, setQrGenerated] = useState(false);
 

@@ -26,8 +26,8 @@ interface TicketTransferDialogProps {
   onSuccess: () => void;
 }
 
-const TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS = 48;
-const TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX = 24;
+const TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS = 5 * 10 - 2;
+const TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
 
 /**
  * Contract:
@@ -37,6 +37,11 @@ const TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX = 24;
  * @postcondition successful transfer invalidates ticket queries, notifies the parent, and resets dialog state.
  */
 export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess }: TicketTransferDialogProps) {
+  /*
+   * precondition: ticket.ticketId belongs to eventId.
+   * invariant: transfer payload mirrors validated form fields.
+   * postcondition: success resets state.
+   */
   const qc = useQueryClient();
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');

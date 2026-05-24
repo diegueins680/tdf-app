@@ -26,6 +26,7 @@ describe('promoCodeReducer', () => {
     const startedPromoValidationState = promoCodeReducer(codeChangedPromoState, { type: 'validationStarted' });
     expect(startedPromoValidationState).toMatchObject({
       validating: true,
+      validPromo: null,
       error: null,
     });
 
@@ -36,6 +37,37 @@ describe('promoCodeReducer', () => {
     expect(succeededPromoValidationState).toMatchObject({
       validating: false,
       validPromo: activePromoCode,
+      error: null,
+    });
+  });
+
+  it('removes stale promo feedback while a changed code is pending validation', () => {
+    const editedPromoValidationState = promoCodeReducer(
+      {
+        ...initialPromoCodeState,
+        code: 'SAVE10',
+        debouncedCode: 'SAVE10',
+        validating: true,
+        validPromo: activePromoCode,
+        error: 'Old error',
+      },
+      { type: 'codeChanged', code: 'SAVE20' },
+    );
+    expect(editedPromoValidationState).toMatchObject({
+      code: 'SAVE20',
+      debouncedCode: '',
+      validating: false,
+      validPromo: null,
+      error: null,
+    });
+
+    const loadingPromoValidationState = promoCodeReducer(
+      { ...initialPromoCodeState, validPromo: activePromoCode, error: 'Old error' },
+      { type: 'validationStarted' },
+    );
+    expect(loadingPromoValidationState).toMatchObject({
+      validating: true,
+      validPromo: null,
       error: null,
     });
   });

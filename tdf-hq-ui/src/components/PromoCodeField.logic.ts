@@ -1,5 +1,7 @@
 import type { PromoCodeDTO } from '../api/socialEvents';
 
+export const PROMO_CODE_LOADING_HELPER_TEXT = 'Loading promo code...';
+
 export interface PromoCodeState {
   code: string;
   debouncedCode: string;
@@ -26,17 +28,30 @@ export const initialPromoCodeState: PromoCodeState = {
 };
 
 export function promoCodeReducer(state: PromoCodeState, action: PromoCodeAction): PromoCodeState {
+  /*
+   * Contract:
+   * precondition: state is the current promo reducer state and action is a PromoCodeAction variant.
+   * invariant: terminal validation actions clear the in-flight validation flag.
+   * postcondition: the returned state is derived without mutating the input state.
+   */
   let nextPromoCodeState = state;
 
   switch (action.type) {
     case 'codeChanged':
-      nextPromoCodeState = { ...state, code: action.code };
+      nextPromoCodeState = {
+        ...state,
+        code: action.code,
+        debouncedCode: '',
+        validating: false,
+        validPromo: null,
+        error: null,
+      };
       break;
     case 'debouncedCodeChanged':
       nextPromoCodeState = { ...state, debouncedCode: action.code };
       break;
     case 'validationStarted':
-      nextPromoCodeState = { ...state, validating: true, error: null };
+      nextPromoCodeState = { ...state, validating: true, validPromo: null, error: null };
       break;
     case 'validationSucceeded':
       nextPromoCodeState = { ...state, validating: false, validPromo: action.promo, error: null };

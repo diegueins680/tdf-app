@@ -1,5 +1,10 @@
 import type { SocialTicketTierDTO } from '../api/socialEvents';
 import {
+  CHECKOUT_MAX_QUANTITY,
+  CHECKOUT_MIN_QUANTITY,
+  CHECKOUT_STEP_CONFIRMATION,
+  CHECKOUT_STEP_PAYMENT,
+  CURRENCY_MINOR_UNITS_PER_MAJOR,
   checkoutFormReducer,
   checkoutModalReducer,
   formatTicketTierPrice,
@@ -8,26 +13,38 @@ import {
   normalizeCheckoutQuantity,
 } from './StripeCheckoutModal.logic';
 
+const SAMPLE_TICKET_TIER_PRICE_CENTS = 5 * 5 * CURRENCY_MINOR_UNITS_PER_MAJOR;
+const SAMPLE_TICKET_TIER_TOTAL_QUANTITY = CURRENCY_MINOR_UNITS_PER_MAJOR;
+const SAMPLE_TICKET_TIER_SOLD_QUANTITY = 0;
+const SAMPLE_TICKET_PURCHASE_QUANTITY = 3;
+const SAMPLE_NORMALIZED_QUANTITY = 4;
+const CHECKOUT_QUANTITY_ABOVE_MAX = CHECKOUT_MAX_QUANTITY + 1;
+const CHECKOUT_QUANTITY_ABOVE_MAX_TEXT = String(CHECKOUT_QUANTITY_ABOVE_MAX);
+
 const sampleTicketTier: SocialTicketTierDTO = {
   ticketTierCode: 'general',
   ticketTierName: 'General',
-  ticketTierPriceCents: 2500,
+  ticketTierPriceCents: SAMPLE_TICKET_TIER_PRICE_CENTS,
   ticketTierCurrency: 'usd',
-  ticketTierQuantityTotal: 100,
-  ticketTierQuantitySold: 0,
+  ticketTierQuantityTotal: SAMPLE_TICKET_TIER_TOTAL_QUANTITY,
+  ticketTierQuantitySold: SAMPLE_TICKET_TIER_SOLD_QUANTITY,
   ticketTierActive: true,
 };
 
 describe('checkout form logic', () => {
   it('formats ticket totals from tier price and quantity', () => {
-    expect(formatTicketTierPrice(sampleTicketTier, 3)).toBe('USD 75.00');
+    expect(formatTicketTierPrice(sampleTicketTier, SAMPLE_TICKET_PURCHASE_QUANTITY)).toBe('USD 75.00');
+  });
+
+  it('rejects invalid price formatting inputs at the contract boundary', () => {
+    expect(() => formatTicketTierPrice(sampleTicketTier, 0)).toThrow(RangeError);
   });
 
   it('normalizes buyer quantity input into the allowed checkout range', () => {
-    expect(normalizeCheckoutQuantity('')).toBe(1);
-    expect(normalizeCheckoutQuantity('0')).toBe(1);
-    expect(normalizeCheckoutQuantity('4')).toBe(4);
-    expect(normalizeCheckoutQuantity('11')).toBe(10);
+    expect(normalizeCheckoutQuantity('')).toBe(CHECKOUT_MIN_QUANTITY);
+    expect(normalizeCheckoutQuantity('0')).toBe(CHECKOUT_MIN_QUANTITY);
+    expect(normalizeCheckoutQuantity(String(SAMPLE_NORMALIZED_QUANTITY))).toBe(SAMPLE_NORMALIZED_QUANTITY);
+    expect(normalizeCheckoutQuantity(CHECKOUT_QUANTITY_ABOVE_MAX_TEXT)).toBe(CHECKOUT_MAX_QUANTITY);
   });
 
   it('tracks payment submission state explicitly', () => {
@@ -70,7 +87,7 @@ describe('checkout modal logic', () => {
       clientSecret: 'pi_secret',
     });
     expect(readyCheckoutModalState).toMatchObject({
-      activeStep: 1,
+      activeStep: CHECKOUT_STEP_PAYMENT,
       loading: false,
       clientSecret: 'pi_secret',
       error: null,
@@ -78,7 +95,7 @@ describe('checkout modal logic', () => {
 
     const succeededCheckoutModalState = checkoutModalReducer(readyCheckoutModalState, { type: 'paymentSucceeded' });
     expect(succeededCheckoutModalState).toMatchObject({
-      activeStep: 2,
+      activeStep: CHECKOUT_STEP_CONFIRMATION,
       loading: false,
       error: null,
     });
