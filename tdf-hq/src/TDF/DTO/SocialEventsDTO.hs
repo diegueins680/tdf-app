@@ -48,7 +48,7 @@ module TDF.DTO.SocialEventsDTO
   , EventFinanceSummaryDTO(..)
   ) where
 
-import           Data.Aeson (FromJSON, ToJSON, Value(..), defaultOptions, genericParseJSON, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=), object, toJSON, parseJSON)
+import           Data.Aeson (FromJSON, ToJSON, Value(..), defaultOptions, genericParseJSON, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.!=), (.=), object, toJSON, parseJSON)
 import           Data.Aeson.Types (Object, Parser)
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
