@@ -1682,6 +1682,10 @@ socialEventsServer user = eventsServer
               , eventTicketOrderStatus = "paid"
               , eventTicketOrderMetadata = Nothing
               , eventTicketOrderPurchasedAt = now
+              , eventTicketOrderStripePaymentIntentId = Nothing
+              , eventTicketOrderPromoCodeId = Nothing
+              , eventTicketOrderOriginalAmountCents = Nothing
+              , eventTicketOrderPaymentMethod = Nothing
               , eventTicketOrderCreatedAt = now
               , eventTicketOrderUpdatedAt = now
               }
@@ -1697,6 +1701,11 @@ socialEventsServer user = eventsServer
             , eventTicketCode = ticketCodeValue
             , eventTicketStatus = "issued"
             , eventTicketCheckedInAt = Nothing
+            , eventTicketCurrentHolderPartyId = buyerPartyId
+            , eventTicketCurrentHolderEmail = buyerEmail
+            , eventTicketCurrentHolderName = buyerName
+            , eventTicketOriginalHolderPartyId = buyerPartyId
+            , eventTicketTransferHistory = Nothing
             , eventTicketCreatedAt = now
             , eventTicketUpdatedAt = now
             }
