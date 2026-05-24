@@ -8,6 +8,7 @@ module TDF.Services.Stripe
   , verifyWebhookSignature
   ) where
 
+import           Control.Exception (bracket)
 import           Data.Aeson (Value)
 import qualified Data.Aeson as Aeson
 import           Data.ByteString (ByteString)
@@ -18,7 +19,6 @@ import qualified Data.ByteString.Base16 as Base16
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time.Clock.POSIX (getPOSIXTime)
 import           Network.HTTP.Client
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
@@ -33,7 +33,23 @@ data StripeConfig = StripeConfig
   , stripeApiVersion    :: Text
   } deriving (Show, Eq)
 
+-- | Resource invariant: every manager allocated for a single Stripe request is
+-- closed exactly once, even if request construction, I/O, or response decoding
+-- throws. The callback must not retain the manager after it returns.
+withStripeManager :: (Manager -> IO a) -> IO a
+withStripeManager =
+  bracket (newManager tlsManagerSettings) closeManager
+
 -- | Create a Stripe PaymentIntent
+--
+-- Preconditions:
+-- * amount is expressed in the smallest currency unit accepted by Stripe.
+-- * currency is a Stripe currency code; it is normalized to lower case.
+-- * metadata, when present, is already serialized into the expected form field.
+--
+-- Postcondition: the returned Either is produced by 'decodeStripeResponse', so
+-- successful HTTP responses must contain valid JSON and error responses never
+-- parse as success.
 -- Returns the full PaymentIntent JSON response
 createPaymentIntent
   :: StripeConfig
@@ -42,78 +58,89 @@ createPaymentIntent
   -> Text        -- ^ Description
   -> Maybe Text  -- ^ Optional metadata JSON string
   -> IO (Either Text Value)
-createPaymentIntent cfg amountCents currency description mMetadata = do
-  manager <- newManager tlsManagerSettings
+createPaymentIntent cfg amountCents currency description mMetadata =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/payment_intents"
+        body = BS8.intercalate "&"
+          [ "amount=" <> BS8.pack (show amountCents)
+          , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+          , "description=" <> urlEncode (TE.encodeUtf8 description)
+          , "automatic_payment_methods[enabled]=true"
+          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
 
-  let url = "https://api.stripe.com/v1/payment_intents"
-      body = BS8.intercalate "&"
-        [ "amount=" <> BS8.pack (show amountCents)
-        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
-        , "description=" <> urlEncode (TE.encodeUtf8 description)
-        , "automatic_payment_methods[enabled]=true"
-        ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+              ]
+          , requestBody = RequestBodyBS body
+          }
 
-  initialRequest <- parseRequest url
-  let request = initialRequest
-        { method = "POST"
-        , requestHeaders =
-            [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-            , ("Content-Type", "application/x-www-form-urlencoded")
-            , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-            ]
-        , requestBody = RequestBodyBS body
-        }
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
 
-  response <- httpLbs request manager
-  let status = statusCode (responseStatus response)
-      bodyLBS = responseBody response
-
-  pure $
-    decodeStripeResponse
-      status
-      bodyLBS
-      "Failed to parse Stripe PaymentIntent response"
-      "Stripe API error"
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe PaymentIntent response"
+        "Stripe API error"
 
 -- | Create a refund for a PaymentIntent
+--
+-- Preconditions:
+-- * paymentIntentId is an existing Stripe PaymentIntent id.
+-- * amount is expressed in the smallest currency unit accepted by Stripe.
+--
+-- Postcondition: the returned Either follows the same JSON/error contract as
+-- 'createPaymentIntent'.
 createRefund
   :: StripeConfig
   -> Text  -- ^ PaymentIntent ID
   -> Int   -- ^ Amount in cents to refund
   -> IO (Either Text Value)
-createRefund cfg paymentIntentId amountCents = do
-  manager <- newManager tlsManagerSettings
+createRefund cfg paymentIntentId amountCents =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/refunds"
+        body = BS8.intercalate "&"
+          [ "payment_intent=" <> TE.encodeUtf8 paymentIntentId
+          , "amount=" <> BS8.pack (show amountCents)
+          ]
 
-  let url = "https://api.stripe.com/v1/refunds"
-      body = BS8.intercalate "&"
-        [ "payment_intent=" <> TE.encodeUtf8 paymentIntentId
-        , "amount=" <> BS8.pack (show amountCents)
-        ]
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+              ]
+          , requestBody = RequestBodyBS body
+          }
 
-  initialRequest <- parseRequest url
-  let request = initialRequest
-        { method = "POST"
-        , requestHeaders =
-            [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-            , ("Content-Type", "application/x-www-form-urlencoded")
-            , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-            ]
-        , requestBody = RequestBodyBS body
-        }
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
 
-  response <- httpLbs request manager
-  let status = statusCode (responseStatus response)
-      bodyLBS = responseBody response
-
-  pure $
-    decodeStripeResponse
-      status
-      bodyLBS
-      "Failed to parse Stripe refund response"
-      "Stripe refund error"
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe refund response"
+        "Stripe refund error"
 
 -- | Decode a Stripe response while preserving deterministic errors for
 -- malformed upstream bodies.
+--
+-- Contract:
+-- * status 200 succeeds only when the body decodes as JSON.
+-- * status 200 with malformed JSON returns parseFailureMessage.
+-- * non-200 statuses always return Left, preserving decoded Stripe error JSON
+--   when present and otherwise preserving the HTTP status in the error text.
 decodeStripeResponse
   :: Int
   -> BL.ByteString
@@ -133,8 +160,13 @@ decodeStripeResponse status bodyLBS parseFailureMessage errorPrefix
     decodedBody = Aeson.decode bodyLBS :: Maybe Value
     statusText = T.pack (show status)
 
--- | Verify Stripe webhook signature
--- This prevents replay attacks and ensures the webhook is from Stripe
+-- | Verify Stripe webhook signature.
+-- This checks authenticity of the raw body; timestamp freshness is a separate
+-- replay-protection concern.
+--
+-- Contract: returns True exactly when the header contains both "t" and "v1",
+-- and v1 is the lower-case hex HMAC-SHA256 of @t <> "." <> rawBody@ using the
+-- configured webhook secret.
 verifyWebhookSignature
   :: StripeConfig
   -> Text       -- ^ Stripe-Signature header value

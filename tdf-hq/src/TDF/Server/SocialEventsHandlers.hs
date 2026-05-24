@@ -70,6 +70,10 @@ module TDF.Server.SocialEventsHandlers
   , validateEventImageUploadSize
   , validateEventTitleInput
   , validateArtistName
+  , parseStripePaymentIntentResponse
+  , parseStripeWebhookEventEnvelope
+  , parseStripeWebhookPaymentIntentId
+  , parseStripeRefundResponse
   ) where
 
 import           Control.Applicative ((<|>))
@@ -176,6 +180,129 @@ import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
+
+parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
+parseStripePaymentIntentResponse paymentIntent =
+  (,)
+    <$> parseStripeRequiredText
+      "Could not parse Stripe response"
+      (Aeson.withObject "payment_intent" (Aeson..: "id"))
+      paymentIntent
+    <*> parseStripeRequiredText
+      "Could not parse Stripe client secret"
+      (Aeson.withObject "payment_intent" (Aeson..: "client_secret"))
+      paymentIntent
+
+parseStripeWebhookEventEnvelope :: Aeson.Value -> Either T.Text (T.Text, T.Text)
+parseStripeWebhookEventEnvelope payload =
+  (,)
+    <$> parseStripeRequiredText
+      "Invalid webhook payload"
+      (Aeson.withObject "event" (Aeson..: "id"))
+      payload
+    <*> parseStripeRequiredText
+      "Invalid webhook event type"
+      (Aeson.withObject "event" (Aeson..: "type"))
+      payload
+
+parseStripeWebhookPaymentIntentId :: Aeson.Value -> Maybe T.Text
+parseStripeWebhookPaymentIntentId =
+  parseMaybe $
+    Aeson.withObject "event" $ \eventObject -> do
+      dataObject <- eventObject Aeson..: "data" :: Parser Object
+      paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
+      paymentIntentObject Aeson..: "id"
+
+parseStripeRefundResponse :: Aeson.Value -> Either T.Text T.Text
+parseStripeRefundResponse =
+  parseStripeRequiredText
+    "Could not parse Stripe refund response"
+    (Aeson.withObject "refund" (Aeson..: "id"))
+
+parseStripeRequiredText
+  :: T.Text
+  -> (Aeson.Value -> Parser T.Text)
+  -> Aeson.Value
+  -> Either T.Text T.Text
+parseStripeRequiredText errorMessage parser =
+  maybe (Left errorMessage) Right . parseMaybe parser
+
+eitherStripeServerError :: Either T.Text a -> AppM a
+eitherStripeServerError =
+  either
+    (\errText -> throwError err500 { errBody = textErrBody errText })
+    pure
+
+eitherStripeWebhookError :: Either T.Text a -> AppM a
+eitherStripeWebhookError =
+  either
+    (\errText -> throwError err400 { errBody = textErrBody errText })
+    pure
+
+textErrBody :: T.Text -> BL.ByteString
+textErrBody = BL.fromStrict . TE.encodeUtf8
+
+handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripePaymentIntentSucceeded now payload =
+  maybe (pure NoContent) markOrderPaid (parseStripeWebhookPaymentIntentId payload)
+  where
+    markOrderPaid piId = do
+      Env{..} <- ask
+      mOrder <- liftIO $ runSqlPool
+        (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+        envPool
+      case mOrder of
+        Nothing -> pure NoContent
+        Just (Entity orderKey order) -> do
+          when (eventTicketOrderStatus order == "pending") $ do
+            liftIO $ runSqlPool (do
+              update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
+              tickets <- replicateM (eventTicketOrderQuantity order) $ do
+                ticketCodeValue <- generateUniqueTicketCode
+                ticketKey <- insert EventTicket
+                  { eventTicketEventId = eventTicketOrderEventId order
+                  , eventTicketTierRefId = eventTicketOrderTierId order
+                  , eventTicketOrderRefId = orderKey
+                  , eventTicketHolderName = eventTicketOrderBuyerName order
+                  , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
+                  , eventTicketCode = ticketCodeValue
+                  , eventTicketStatus = "issued"
+                  , eventTicketCheckedInAt = Nothing
+                  , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
+                  , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
+                  , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
+                  , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
+                  , eventTicketTransferHistory = Nothing
+                  , eventTicketCreatedAt = now
+                  , eventTicketUpdatedAt = now
+                  }
+                pure ticketKey
+              pure tickets
+              ) envPool
+          pure NoContent
+
+handleStripePaymentIntentFailed :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripePaymentIntentFailed now payload =
+  maybe (pure NoContent) cancelOrder (parseStripeWebhookPaymentIntentId payload)
+  where
+    cancelOrder piId = do
+      Env{..} <- ask
+      mOrder <- liftIO $ runSqlPool
+        (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+        envPool
+      case mOrder of
+        Nothing -> pure NoContent
+        Just (Entity orderKey order) -> do
+          when (eventTicketOrderStatus order == "pending") $ do
+            liftIO $ runSqlPool (do
+              update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
+              update (eventTicketOrderTierId order)
+                [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+              case eventTicketOrderPromoCodeId order of
+                Nothing -> pure ()
+                Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+              ) envPool
+          pure NoContent
 
 data TicketCheckInLookup
   = TicketCheckInLookupById Int64
@@ -2195,20 +2322,16 @@ socialEventsServer user = eventsServer
                 ) envPool
               throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> err)) }
             Right paymentIntent -> do
-              case parseMaybe (Aeson..: "id") paymentIntent of
-                Nothing -> throwError err500 { errBody = "Could not parse Stripe response" }
-                Just piId -> do
-                  case parseMaybe (Aeson..: "client_secret") paymentIntent of
-                    Nothing -> throwError err500 { errBody = "Could not parse Stripe client secret" }
-                    Just clientSecret -> do
-                      liftIO $ runSqlPool (update orderKey
-                        [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
-                      pure StripePaymentIntentDTO
-                        { spiClientSecret = clientSecret
-                        , spiOrderId = renderKeyText orderKey
-                        , spiAmountCents = finalAmountCents
-                        , spiCurrency = eventTicketOrderCurrency orderRecord
-                        }
+              (piId, clientSecret) <- eitherStripeServerError $
+                parseStripePaymentIntentResponse paymentIntent
+              liftIO $ runSqlPool (update orderKey
+                [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
+              pure StripePaymentIntentDTO
+                { spiClientSecret = clientSecret
+                , spiOrderId = renderKeyText orderKey
+                , spiAmountCents = finalAmountCents
+                , spiCurrency = eventTicketOrderCurrency orderRecord
+                }
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     stripeWebhook :: Aeson.Value -> Maybe T.Text -> AppM NoContent
@@ -2226,81 +2349,25 @@ socialEventsServer user = eventsServer
           let rawBody = BL.toStrict (Aeson.encode payload)
           when (not (Stripe.verifyWebhookSignature stripeCfg signature rawBody)) $
             throwError err400 { errBody = "Invalid webhook signature" }
-          case parseMaybe (Aeson..: "id") payload of
-            Nothing -> throwError err400 { errBody = "Invalid webhook payload" }
-            Just eventId -> do
-              mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
-              case mExisting of
-                Just _ -> pure NoContent
-                Nothing -> do
-                  case parseMaybe (Aeson..: "type") payload of
-                    Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
-                    Just eventType -> do
-                      liftIO $ runSqlPool (insert_ StripeWebhookEvent
-                        { stripeWebhookEventStripeEventId = eventId
-                        , stripeWebhookEventEventType = eventType
-                        , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
-                        , stripeWebhookEventProcessedAt = now
-                        }) envPool
-                      case eventType of
-                        "payment_intent.succeeded" -> do
-                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
-                            Just piId -> do
-                              mOrder <- liftIO $ runSqlPool
-                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
-                                envPool
-                              case mOrder of
-                                Nothing -> pure NoContent
-                                Just (Entity orderKey order) -> do
-                                  when (eventTicketOrderStatus order == "pending") $ do
-                                    liftIO $ runSqlPool (do
-                                      update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
-                                      tickets <- replicateM (eventTicketOrderQuantity order) $ do
-                                        ticketCodeValue <- generateUniqueTicketCode
-                                        ticketKey <- insert EventTicket
-                                          { eventTicketEventId = eventTicketOrderEventId order
-                                          , eventTicketTierRefId = eventTicketOrderTierId order
-                                          , eventTicketOrderRefId = orderKey
-                                          , eventTicketHolderName = eventTicketOrderBuyerName order
-                                          , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
-                                          , eventTicketCode = ticketCodeValue
-                                          , eventTicketStatus = "issued"
-                                          , eventTicketCheckedInAt = Nothing
-                                          , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
-                                          , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
-                                          , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
-                                          , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
-                                          , eventTicketTransferHistory = Nothing
-                                          , eventTicketCreatedAt = now
-                                          , eventTicketUpdatedAt = now
-                                          }
-                                        pure ticketKey
-                                      pure tickets
-                                      ) envPool
-                                  pure NoContent
-                            Nothing -> pure NoContent
-                        "payment_intent.payment_failed" -> do
-                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
-                            Just piId -> do
-                              mOrder <- liftIO $ runSqlPool
-                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
-                                envPool
-                              case mOrder of
-                                Nothing -> pure NoContent
-                                Just (Entity orderKey order) -> do
-                                  when (eventTicketOrderStatus order == "pending") $ do
-                                    liftIO $ runSqlPool (do
-                                      update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
-                                      update (eventTicketOrderTierId order)
-                                        [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
-                                      case eventTicketOrderPromoCodeId order of
-                                        Nothing -> pure ()
-                                        Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
-                                      ) envPool
-                                  pure NoContent
-                            Nothing -> pure NoContent
-                        "charge.refunded" -> pure NoContent
-                        _ -> pure NoContent
+          (eventId, eventType) <- eitherStripeWebhookError $
+            parseStripeWebhookEventEnvelope payload
+          mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
+          case mExisting of
+            Just _ -> pure NoContent
+            Nothing -> do
+              liftIO $ runSqlPool (insert_ StripeWebhookEvent
+                { stripeWebhookEventStripeEventId = eventId
+                , stripeWebhookEventEventType = eventType
+                , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
+                , stripeWebhookEventProcessedAt = now
+                }) envPool
+              case eventType of
+                "payment_intent.succeeded" ->
+                  handleStripePaymentIntentSucceeded now payload
+                "payment_intent.payment_failed" ->
+                  handleStripePaymentIntentFailed now payload
+                "charge.refunded" -> pure NoContent
+                _ -> pure NoContent
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     -- Refunds
@@ -2398,28 +2465,27 @@ socialEventsServer user = eventsServer
           case result of
             Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err)) }
             Right refundResponse -> do
-              case parseMaybe (Aeson..: "id") refundResponse of
-                Nothing -> throwError err500 { errBody = "Could not parse Stripe refund response" }
-                Just refundId -> do
-                  liftIO $ runSqlPool (do
-                    update refundKey
-                      [ TicketRefundRequestStatus =. "approved"
-                      , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
-                      , TicketRefundRequestApprovedAt =. Just now
-                      , TicketRefundRequestStripeRefundId =. Just refundId
-                      , TicketRefundRequestProcessedAt =. Just now
-                      , TicketRefundRequestUpdatedAt =. now
-                      ]
-                    update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
-                    updateWhere [EventTicketOrderRefId ==. orderKey]
-                      [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
-                    update (eventTicketOrderTierId order)
-                      [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
-                    ) envPool
-                  mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
-                  maybe (throwError err500 { errBody = "Could not approve refund" })
-                        (pure . refundEntityToDTO)
-                        mUpdated
+              refundId <- eitherStripeServerError $
+                parseStripeRefundResponse refundResponse
+              liftIO $ runSqlPool (do
+                update refundKey
+                  [ TicketRefundRequestStatus =. "approved"
+                  , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                  , TicketRefundRequestApprovedAt =. Just now
+                  , TicketRefundRequestStripeRefundId =. Just refundId
+                  , TicketRefundRequestProcessedAt =. Just now
+                  , TicketRefundRequestUpdatedAt =. now
+                  ]
+                update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
+                updateWhere [EventTicketOrderRefId ==. orderKey]
+                  [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
+                update (eventTicketOrderTierId order)
+                  [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                ) envPool
+              mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
+              maybe (throwError err500 { errBody = "Could not approve refund" })
+                    (pure . refundEntityToDTO)
+                    mUpdated
         _ -> throwError err500 { errBody = "Cannot process refund: Stripe not configured or order has no payment intent" }
 
     rejectRefund :: T.Text -> T.Text -> RejectionReasonDTO -> AppM RefundDTO

@@ -9,7 +9,12 @@ import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Crypto.Hash.Algorithms (SHA256)
+import Crypto.MAC.HMAC (HMAC, hmac)
 import qualified Data.ByteString.Lazy.Char8 as BL
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base16 as Base16
+import Data.ByteArray (convert)
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
@@ -18,7 +23,9 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import Data.Text (Text)
 import qualified Data.Text
+import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
+import Data.Word (Word8)
 import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
@@ -32,6 +39,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
 import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
@@ -339,6 +347,10 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    parseStripePaymentIntentResponse,
+    parseStripeRefundResponse,
+    parseStripeWebhookEventEnvelope,
+    parseStripeWebhookPaymentIntentId,
     isImageUpload,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
@@ -431,6 +443,46 @@ import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 import qualified TDF.WhatsApp.Service as WhatsAppService
 import qualified TDF.WhatsApp.Transport as WhatsAppTransport
 import qualified TDF.WhatsApp.Types as WA
+
+newtype StripeHeaderToken = StripeHeaderToken Text
+    deriving (Show)
+
+instance QC.Arbitrary StripeHeaderToken where
+    arbitrary =
+        StripeHeaderToken . Data.Text.pack <$> QC.listOf1 stripeHeaderChar
+      where
+        stripeHeaderChar =
+            QC.elements (['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'] ++ "_-")
+
+newtype StripeBody = StripeBody BS.ByteString
+    deriving (Show)
+
+instance QC.Arbitrary StripeBody where
+    arbitrary =
+        StripeBody . BS.pack <$> QC.listOf (QC.arbitrary :: QC.Gen Word8)
+
+newtype StripeNonSuccessStatus = StripeNonSuccessStatus Int
+    deriving (Show)
+
+instance QC.Arbitrary StripeNonSuccessStatus where
+    arbitrary =
+        StripeNonSuccessStatus <$> QC.elements ([100 .. 199] ++ [201 .. 599])
+
+stripeTestConfig :: Text -> Stripe.StripeConfig
+stripeTestConfig webhookSecret =
+    Stripe.StripeConfig
+        { Stripe.stripeSecretKey = "sk_test"
+        , Stripe.stripeWebhookSecret = webhookSecret
+        , Stripe.stripeApiVersion = "2023-10-16"
+        }
+
+stripeV1Signature :: Text -> Text -> BS.ByteString -> Text
+stripeV1Signature webhookSecret timestamp rawBody =
+    TE.decodeUtf8 $
+        Base16.encode $
+            convert (hmac (TE.encodeUtf8 webhookSecret) signedPayload :: HMAC SHA256)
+  where
+    signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
 withEnvOverrides overrides action =
@@ -840,6 +892,97 @@ main = hspec $ do
                 "Failed to parse Stripe refund response"
                 "Stripe refund error"
                 `shouldBe` Left "Stripe refund error with status: 500"
+
+        it "preserves malformed non-success status for every generated Stripe HTTP status" $
+            QC.property $ \(StripeNonSuccessStatus status) ->
+                Stripe.decodeStripeResponse
+                    status
+                    "not-json"
+                    "parse failed"
+                    "Stripe API error"
+                    QC.=== Left ("Stripe API error with status: " <> Data.Text.pack (show status))
+
+        it "accepts generated webhook signatures that satisfy the HMAC contract" $
+            QC.property $ \(StripeHeaderToken secret) (StripeHeaderToken timestamp) (StripeBody rawBody) ->
+                let header =
+                        "t=" <> timestamp
+                            <> ",v1="
+                            <> stripeV1Signature secret timestamp rawBody
+                in Stripe.verifyWebhookSignature (stripeTestConfig secret) header rawBody QC.=== True
+
+        it "rejects generated webhook signatures when the signed body changes" $
+            QC.property $ \(StripeHeaderToken secret) (StripeHeaderToken timestamp) (StripeBody rawBody) ->
+                let header =
+                        "t=" <> timestamp
+                            <> ",v1="
+                            <> stripeV1Signature secret timestamp rawBody
+                in Stripe.verifyWebhookSignature
+                    (stripeTestConfig secret)
+                    header
+                    (BS.snoc rawBody 0)
+                    QC.=== False
+
+        it "extracts required PaymentIntent fields from explicit object payloads" $
+            parseStripePaymentIntentResponse
+                ( A.object
+                    [ "id" .= ("pi_123" :: Text)
+                    , "client_secret" .= ("secret_123" :: Text)
+                    ]
+                )
+                `shouldBe` Right ("pi_123", "secret_123")
+
+        it "rejects malformed PaymentIntent payloads without falling through partial matches" $ do
+            parseStripePaymentIntentResponse
+                (A.object ["client_secret" .= ("secret_123" :: Text)])
+                `shouldBe` Left "Could not parse Stripe response"
+            parseStripePaymentIntentResponse
+                (A.object ["id" .= ("pi_123" :: Text)])
+                `shouldBe` Left "Could not parse Stripe client secret"
+            parseStripePaymentIntentResponse A.Null
+                `shouldBe` Left "Could not parse Stripe response"
+
+        it "extracts Stripe webhook envelope and nested PaymentIntent ids predictably" $ do
+            let webhookPayload =
+                    A.object
+                        [ "id" .= ("evt_123" :: Text)
+                        , "type" .= ("payment_intent.succeeded" :: Text)
+                        , "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= ("pi_123" :: Text)
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookEventEnvelope webhookPayload
+                `shouldBe` Right ("evt_123", "payment_intent.succeeded")
+            parseStripeWebhookPaymentIntentId webhookPayload
+                `shouldBe` Just "pi_123"
+
+        it "rejects malformed Stripe webhook payloads with deterministic outcomes" $ do
+            parseStripeWebhookEventEnvelope
+                (A.object ["type" .= ("payment_intent.succeeded" :: Text)])
+                `shouldBe` Left "Invalid webhook payload"
+            parseStripeWebhookEventEnvelope
+                (A.object ["id" .= ("evt_123" :: Text)])
+                `shouldBe` Left "Invalid webhook event type"
+            parseStripeWebhookPaymentIntentId
+                ( A.object
+                    [ "id" .= ("evt_123" :: Text)
+                    , "type" .= ("payment_intent.succeeded" :: Text)
+                    , "data" .= A.object []
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "extracts refund ids from explicit Stripe refund response objects" $ do
+            parseStripeRefundResponse
+                (A.object ["id" .= ("re_123" :: Text)])
+                `shouldBe` Right "re_123"
+            parseStripeRefundResponse (A.object [])
+                `shouldBe` Left "Could not parse Stripe refund response"
+            parseStripeRefundResponse A.Null
+                `shouldBe` Left "Could not parse Stripe refund response"
 
     describe "PaymentCreate JSON contract" $ do
         let paymentJson paidAt period =
