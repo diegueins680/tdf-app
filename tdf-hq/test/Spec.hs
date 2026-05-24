@@ -88,6 +88,7 @@ import TDF.Cors
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -661,6 +662,15 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "resolveRefundTimelineMessage" $ do
+        it "uses the default refund timeline when none is provided" $
+            resolveRefundTimelineMessage Nothing
+                `shouldBe` "El reembolso aparecerá en tu cuenta en 5-10 días hábiles."
+
+        it "uses the provided refund timeline verbatim" $
+            resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
+                `shouldBe` "Tu banco lo verá en 48 horas."
+
     describe "seededCredentialSeedingAllowed" $ do
         it "allows seeded demo credentials in local development by default" $
             seededCredentialSeedingAllowed []

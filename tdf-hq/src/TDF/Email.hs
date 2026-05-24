@@ -14,6 +14,7 @@ module TDF.Email
   , sendTicketTransferNotificationEmail
   , sendWaitlistNotificationEmail
   , sendRefundConfirmationEmail
+  , resolveRefundTimelineMessage
   ) where
 
 import           Control.Exception        (SomeException, throwIO, try)
@@ -261,7 +262,7 @@ sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
       mail = buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl
   sendMailWithLogging cfg toAddr subject mail
 
--- | Send an email with a small audit trail for admins.
+-- | Send an email and record a small audit trail for admins.
 sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()
 sendMailWithLogging cfg toAddr _subject mail = do
   let host = T.unpack (smtpHost cfg)
@@ -428,7 +429,7 @@ sendTicketTransferNotificationEmail
   -> Text   -- ^ event title
   -> Text   -- ^ event date/time
   -> Text   -- ^ ticket code
-  -> Text   -- ^ transfer acceptance URL (with code)
+  -> Text   -- ^ transfer acceptance URL containing the pre-generated code
   -> Maybe Text -- ^ optional app URL
   -> IO ()
 sendTicketTransferNotificationEmail Nothing recipientName recipientEmail senderName eventTitle _eventDate ticketCode acceptUrl _appUrl = do
@@ -526,9 +527,7 @@ sendRefundConfirmationEmail (Just cfg) name email eventTitle refundAmount status
       statusMsg = if status == "processed"
                   then "Tu reembolso ha sido procesado exitosamente."
                   else "Tu solicitud de reembolso ha sido aprobada y está siendo procesada."
-      timelineMsg = case mTimeline of
-        Nothing -> "El reembolso aparecerá en tu cuenta en 5-10 días hábiles."
-        Just t  -> t
+      timelineMsg = resolveRefundTimelineMessage mTimeline
       bodyLines =
         [ statusMsg
         , ""
@@ -543,3 +542,7 @@ sendRefundConfirmationEmail (Just cfg) name email eventTitle refundAmount status
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines Nothing
   sendMailWithLogging cfg toAddr subject mail
+
+resolveRefundTimelineMessage :: Maybe Text -> Text
+resolveRefundTimelineMessage =
+  fromMaybe "El reembolso aparecerá en tu cuenta en 5-10 días hábiles."
