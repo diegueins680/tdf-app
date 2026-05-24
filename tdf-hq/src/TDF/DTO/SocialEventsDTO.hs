@@ -32,6 +32,17 @@ module TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO(..)
   , TicketDTO(..)
   , TicketOrderDTO(..)
+  , PromoCodeDTO(..)
+  , TicketPurchaseWithPromoDTO(..)
+  , RefundRequestDTO(..)
+  , RefundDTO(..)
+  , RejectionReasonDTO(..)
+  , TicketTransferCreateDTO(..)
+  , TicketTransferDTO(..)
+  , WaitlistJoinDTO(..)
+  , WaitlistEntryDTO(..)
+  , StripePaymentIntentDTO(..)
+  , TicketWithQRDTO(..)
   , EventBudgetLineDTO(..)
   , EventFinanceEntryDTO(..)
   , EventFinanceSummaryDTO(..)
@@ -798,6 +809,334 @@ data TicketOrderDTO = TicketOrderDTO
   } deriving (Show, Eq, Generic)
 instance ToJSON TicketOrderDTO
 instance FromJSON TicketOrderDTO
+
+-- =============================================================================
+-- PROMO CODES
+-- =============================================================================
+
+data PromoCodeDTO = PromoCodeDTO
+  { promoCodeId                      :: Maybe Text
+  , promoCodeEventId                 :: Maybe Text
+  , promoCodeCode                    :: Text
+  , promoCodeDescription             :: Maybe Text
+  , promoCodeDiscountType            :: Text
+  , promoCodeDiscountValue           :: Int
+  , promoCodeCurrency                :: Text
+  , promoCodeMaxRedemptions          :: Maybe Int
+  , promoCodeCurrentRedemptions      :: Int
+  , promoCodeValidFrom               :: Maybe UTCTime
+  , promoCodeValidUntil              :: Maybe UTCTime
+  , promoCodeTierIds                 :: Maybe [Text]
+  , promoCodeMinPurchaseAmountCents  :: Maybe Int
+  , promoCodeIsActive                :: Bool
+  , promoCodeCreatedAt               :: Maybe UTCTime
+  , promoCodeUpdatedAt               :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON PromoCodeDTO
+instance FromJSON PromoCodeDTO where
+  parseJSON = withObject "PromoCodeDTO" $ \o -> do
+    rejectUnknownObjectFields "PromoCodeDTO" promoCodeAllowedKeys o
+    code <- o .: "promoCodeCode" >>= validatePromoCode
+    discountType <- o .: "promoCodeDiscountType" >>= validateDiscountType
+    discountValue <- o .: "promoCodeDiscountValue"
+    validatedValue <- validateDiscountValue discountType discountValue
+    PromoCodeDTO
+      <$> o .:? "promoCodeId"
+      <*> o .:? "promoCodeEventId"
+      <*> pure code
+      <*> o .:? "promoCodeDescription"
+      <*> pure discountType
+      <*> pure validatedValue
+      <*> (o .:? "promoCodeCurrency" .!= "USD")
+      <*> o .:? "promoCodeMaxRedemptions"
+      <*> (o .:? "promoCodeCurrentRedemptions" .!= 0)
+      <*> o .:? "promoCodeValidFrom"
+      <*> o .:? "promoCodeValidUntil"
+      <*> o .:? "promoCodeTierIds"
+      <*> o .:? "promoCodeMinPurchaseAmountCents"
+      <*> (o .:? "promoCodeIsActive" .!= True)
+      <*> o .:? "promoCodeCreatedAt"
+      <*> o .:? "promoCodeUpdatedAt"
+
+promoCodeAllowedKeys :: [Text]
+promoCodeAllowedKeys =
+  [ "promoCodeId"
+  , "promoCodeEventId"
+  , "promoCodeCode"
+  , "promoCodeDescription"
+  , "promoCodeDiscountType"
+  , "promoCodeDiscountValue"
+  , "promoCodeCurrency"
+  , "promoCodeMaxRedemptions"
+  , "promoCodeCurrentRedemptions"
+  , "promoCodeValidFrom"
+  , "promoCodeValidUntil"
+  , "promoCodeTierIds"
+  , "promoCodeMinPurchaseAmountCents"
+  , "promoCodeIsActive"
+  , "promoCodeCreatedAt"
+  , "promoCodeUpdatedAt"
+  ]
+
+validatePromoCode :: Text -> Parser Text
+validatePromoCode rawCode =
+  let code = T.toUpper (T.strip rawCode)
+  in if T.null code
+       then fail "Promo code must not be empty"
+       else if T.length code > 50
+         then fail "Promo code must be 50 characters or fewer"
+         else if not (T.all isValidPromoChar code)
+           then fail "Promo code must contain only letters, numbers, and hyphens"
+           else pure code
+  where
+    isValidPromoChar c = (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-'
+
+validateDiscountType :: Text -> Parser Text
+validateDiscountType rawType =
+  case T.toLower (T.strip rawType) of
+    "percentage" -> pure "percentage"
+    "fixed_amount" -> pure "fixed_amount"
+    "fixed" -> pure "fixed_amount"
+    _ -> fail "Discount type must be 'percentage' or 'fixed_amount'"
+
+validateDiscountValue :: Text -> Int -> Parser Int
+validateDiscountValue discountType value
+  | value < 0 = fail "Discount value must be non-negative"
+  | discountType == "percentage" && value > 10000 =
+      fail "Percentage discount cannot exceed 100% (10000 basis points)"
+  | otherwise = pure value
+
+data TicketPurchaseWithPromoDTO = TicketPurchaseWithPromoDTO
+  { tpwpPurchase   :: TicketPurchaseRequestDTO
+  , tpwpPromoCode  :: Maybe Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON TicketPurchaseWithPromoDTO where
+  toJSON TicketPurchaseWithPromoDTO{..} = object
+    [ "ticketPurchaseTierId"       .= ticketPurchaseTierId tpwpPurchase
+    , "ticketPurchaseQuantity"     .= ticketPurchaseQuantity tpwpPurchase
+    , "ticketPurchaseBuyerPartyId" .= ticketPurchaseBuyerPartyId tpwpPurchase
+    , "ticketPurchaseBuyerName"    .= ticketPurchaseBuyerName tpwpPurchase
+    , "ticketPurchaseBuyerEmail"   .= ticketPurchaseBuyerEmail tpwpPurchase
+    , "ticketPurchasePromoCode"    .= tpwpPromoCode
+    ]
+
+instance FromJSON TicketPurchaseWithPromoDTO where
+  parseJSON value@(Object o) = do
+    rejectUnknownObjectFields "TicketPurchaseWithPromoDTO" ticketPurchaseWithPromoKeys o
+    purchase <- parseJSON value
+    promoCode <- o .:? "ticketPurchasePromoCode" >>= traverse validateOptionalPromoCode
+    pure $ TicketPurchaseWithPromoDTO purchase promoCode
+  parseJSON _ = fail "TicketPurchaseWithPromoDTO must be an object"
+
+ticketPurchaseWithPromoKeys :: [Text]
+ticketPurchaseWithPromoKeys =
+  [ "ticketPurchaseTierId"
+  , "ticketPurchaseQuantity"
+  , "ticketPurchaseBuyerPartyId"
+  , "ticketPurchaseBuyerName"
+  , "ticketPurchaseBuyerEmail"
+  , "ticketPurchasePromoCode"
+  ]
+
+validateOptionalPromoCode :: Text -> Parser Text
+validateOptionalPromoCode code =
+  if T.null (T.strip code)
+    then fail "Promo code must not be blank if provided"
+    else validatePromoCode code
+
+-- =============================================================================
+-- REFUNDS
+-- =============================================================================
+
+data RefundRequestDTO = RefundRequestDTO
+  { refundRequestReason      :: Maybe Text
+  , refundRequestAmountCents :: Maybe Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON RefundRequestDTO
+instance FromJSON RefundRequestDTO where
+  parseJSON = withObject "RefundRequestDTO" $ \o -> do
+    rejectUnknownObjectFields "RefundRequestDTO" refundRequestAllowedKeys o
+    RefundRequestDTO
+      <$> o .:? "refundRequestReason"
+      <*> o .:? "refundRequestAmountCents"
+
+refundRequestAllowedKeys :: [Text]
+refundRequestAllowedKeys =
+  [ "refundRequestReason"
+  , "refundRequestAmountCents"
+  ]
+
+data RefundDTO = RefundDTO
+  { refundId                 :: Maybe Text
+  , refundOrderId            :: Text
+  , refundRequestedByPartyId :: Maybe Text
+  , refundReason             :: Maybe Text
+  , refundAmountCents        :: Int
+  , refundStatus             :: Text
+  , refundApprovedByPartyId  :: Maybe Text
+  , refundApprovedAt         :: Maybe UTCTime
+  , refundRejectionReason    :: Maybe Text
+  , refundStripeRefundId     :: Maybe Text
+  , refundProcessedAt        :: Maybe UTCTime
+  , refundCreatedAt          :: Maybe UTCTime
+  , refundUpdatedAt          :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON RefundDTO
+instance FromJSON RefundDTO
+
+data RejectionReasonDTO = RejectionReasonDTO
+  { rrReason :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON RejectionReasonDTO
+instance FromJSON RejectionReasonDTO where
+  parseJSON = withObject "RejectionReasonDTO" $ \o -> do
+    rejectUnknownObjectFields "RejectionReasonDTO" ["rrReason"] o
+    RejectionReasonDTO <$> o .: "rrReason"
+
+-- =============================================================================
+-- TICKET TRANSFERS
+-- =============================================================================
+
+data TicketTransferCreateDTO = TicketTransferCreateDTO
+  { ttcToEmail  :: Text
+  , ttcToName   :: Maybe Text
+  , ttcMessage  :: Maybe Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON TicketTransferCreateDTO
+instance FromJSON TicketTransferCreateDTO where
+  parseJSON = withObject "TicketTransferCreateDTO" $ \o -> do
+    rejectUnknownObjectFields "TicketTransferCreateDTO" transferCreateAllowedKeys o
+    email <- o .: "ttcToEmail" >>= validateTransferEmail
+    TicketTransferCreateDTO email
+      <$> o .:? "ttcToName"
+      <*> o .:? "ttcMessage"
+
+transferCreateAllowedKeys :: [Text]
+transferCreateAllowedKeys =
+  [ "ttcToEmail"
+  , "ttcToName"
+  , "ttcMessage"
+  ]
+
+validateTransferEmail :: Text -> Parser Text
+validateTransferEmail raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then fail "Transfer recipient email is required"
+       else if not ("@" `T.isInfixOf` trimmed)
+         then fail "Invalid email format"
+         else pure trimmed
+
+data TicketTransferDTO = TicketTransferDTO
+  { ttId           :: Maybe Text
+  , ttTicketId     :: Text
+  , ttFromPartyId  :: Maybe Text
+  , ttToEmail      :: Text
+  , ttToName       :: Maybe Text
+  , ttStatus       :: Text
+  , ttTransferCode :: Text
+  , ttMessage      :: Maybe Text
+  , ttExpiresAt    :: Maybe UTCTime
+  , ttAcceptedAt   :: Maybe UTCTime
+  , ttCreatedAt    :: Maybe UTCTime
+  , ttUpdatedAt    :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON TicketTransferDTO
+instance FromJSON TicketTransferDTO
+
+-- =============================================================================
+-- WAITLIST
+-- =============================================================================
+
+data WaitlistJoinDTO = WaitlistJoinDTO
+  { wjEmail    :: Text
+  , wjName     :: Maybe Text
+  , wjTierId   :: Maybe Text
+  , wjQuantity :: Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON WaitlistJoinDTO
+instance FromJSON WaitlistJoinDTO where
+  parseJSON = withObject "WaitlistJoinDTO" $ \o -> do
+    rejectUnknownObjectFields "WaitlistJoinDTO" waitlistJoinAllowedKeys o
+    email <- o .: "wjEmail" >>= validateWaitlistEmail
+    quantity <- o .:? "wjQuantity" .!= 1
+    if quantity < 1 || quantity > 10
+      then fail "Waitlist quantity must be between 1 and 10"
+      else WaitlistJoinDTO email
+        <$> o .:? "wjName"
+        <*> o .:? "wjTierId"
+        <*> pure quantity
+
+waitlistJoinAllowedKeys :: [Text]
+waitlistJoinAllowedKeys =
+  [ "wjEmail"
+  , "wjName"
+  , "wjTierId"
+  , "wjQuantity"
+  ]
+
+validateWaitlistEmail :: Text -> Parser Text
+validateWaitlistEmail raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then fail "Email is required"
+       else if not ("@" `T.isInfixOf` trimmed)
+         then fail "Invalid email format"
+         else pure trimmed
+
+data WaitlistEntryDTO = WaitlistEntryDTO
+  { weId                 :: Maybe Text
+  , weEventId            :: Text
+  , weTierId             :: Maybe Text
+  , weEmail              :: Text
+  , weName               :: Maybe Text
+  , weQuantity           :: Int
+  , weStatus             :: Text
+  , wePriority           :: Int
+  , weNotifiedAt         :: Maybe UTCTime
+  , weExpiresAt          :: Maybe UTCTime
+  , weConvertedOrderId   :: Maybe Text
+  , weCreatedAt          :: Maybe UTCTime
+  , weUpdatedAt          :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON WaitlistEntryDTO
+instance FromJSON WaitlistEntryDTO
+
+-- =============================================================================
+-- STRIPE
+-- =============================================================================
+
+data StripePaymentIntentDTO = StripePaymentIntentDTO
+  { spiClientSecret :: Text
+  , spiOrderId      :: Text
+  , spiAmountCents  :: Int
+  , spiCurrency     :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON StripePaymentIntentDTO
+instance FromJSON StripePaymentIntentDTO
+
+-- =============================================================================
+-- QR CODES
+-- =============================================================================
+
+data TicketWithQRDTO = TicketWithQRDTO
+  { twqTicket      :: TicketDTO
+  , twqQRData      :: Text
+  , twqQRImageUrl  :: Maybe Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON TicketWithQRDTO
+instance FromJSON TicketWithQRDTO
 
 data EventBudgetLineDTO = EventBudgetLineDTO
   { eblId           :: Maybe Text
