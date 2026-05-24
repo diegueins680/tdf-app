@@ -4,8 +4,10 @@ const getMock = jest.fn<(path: string) => Promise<unknown>>();
 const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const postFormMock = jest.fn<(path: string, body: FormData) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
+const delMock = jest.fn<(path: string) => Promise<unknown>>();
 
 jest.unstable_mockModule('./client', () => ({
+  del: delMock,
   get: getMock,
   post: postMock,
   postForm: postFormMock,
@@ -20,10 +22,12 @@ describe('SocialEventsAPI', () => {
     postMock.mockReset();
     postFormMock.mockReset();
     putMock.mockReset();
+    delMock.mockReset();
     getMock.mockResolvedValue([]);
     postMock.mockResolvedValue({});
     postFormMock.mockResolvedValue({});
     putMock.mockResolvedValue({});
+    delMock.mockResolvedValue({});
   });
 
   it('trims list query params and skips blank filters', async () => {
@@ -37,6 +41,12 @@ describe('SocialEventsAPI', () => {
     });
 
     expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type=concert&artistId=42');
+  });
+
+  it('removes waitlist entries through the shared API client', async () => {
+    await SocialEventsAPI.removeFromWaitlist('event 7', 'entry/12');
+
+    expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207/waitlist/entry%2F12');
   });
 
   it('respondInvitation includes invitationToPartyId required by backend schema', async () => {
