@@ -2154,7 +2154,7 @@ backfillInstagramAccount
   -> AppM Value
 backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
   (conversationPath, ownerId) <-
-    either throwError pure (resolveInstagramBackfillTarget igUserId)
+    either throwError pure (resolveInstagramBackfillTarget cfg igUserId)
   conversations <-
     fetchGraphConversations manager cfg conversationPath accessToken (Just "instagram") opts
   (incomingScanned, importedCount) <- foldM
@@ -2180,15 +2180,23 @@ backfillInstagramAccount manager cfg opts (igUserId, accessToken, mHandle) = do
     , "imported" .= importedCount
     ])
 
-resolveInstagramBackfillTarget :: Text -> Either ServerError (Text, Text)
-resolveInstagramBackfillTarget rawIgUserId =
-  case normalizeConfiguredGraphNodeId "Instagram backfill account id" (T.unpack rawIgUserId) of
+resolveInstagramBackfillTarget :: AppConfig -> Text -> Either ServerError (Text, Text)
+resolveInstagramBackfillTarget cfg rawIgUserId = do
+  (igPath, ownerId) <-
+    case normalizeConfiguredGraphNodeId "Instagram backfill account id" (T.unpack rawIgUserId) of
+      Left msg ->
+        Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
+      Right Nothing ->
+        Right ("/me/conversations", "")
+      Right (Just igUserId) ->
+        Right ("/" <> igUserId <> "/conversations", igUserId)
+  case normalizeConfiguredGraphNodeId "Facebook messaging page id" (T.unpack (facebookMessagingPageId cfg)) of
     Left msg ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
     Right Nothing ->
-      Right ("/me/conversations", "")
-    Right (Just igUserId) ->
-      Right ("/" <> igUserId <> "/conversations", igUserId)
+      Right (igPath, ownerId)
+    Right (Just pageId) ->
+      Right ("/" <> pageId <> "/conversations", ownerId)
 
 metaBackfillServer :: AuthedUser -> Value -> AppM Value
 metaBackfillServer user payload = do
