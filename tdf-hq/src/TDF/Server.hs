@@ -2190,7 +2190,7 @@ resolveInstagramBackfillTarget cfg rawIgUserId = do
         Right ("/me/conversations", "")
       Right (Just igUserId) ->
         Right ("/" <> igUserId <> "/conversations", igUserId)
-  case normalizeConfiguredGraphNodeId "Facebook messaging page id" (T.unpack (facebookMessagingPageId cfg)) of
+  case normalizeConfiguredGraphNodeId "Facebook messaging page id" (maybe "" T.unpack (facebookMessagingPageId cfg)) of
     Left msg ->
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack msg)) }
     Right Nothing ->
