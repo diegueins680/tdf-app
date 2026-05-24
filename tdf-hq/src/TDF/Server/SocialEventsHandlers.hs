@@ -1932,30 +1932,31 @@ socialEventsServer user = eventsServer
       Env{..} <- ask
       now <- liftIO getCurrentTime
       (eventKey, _) <- requireManagedEvent eventIdStr
-      let code = T.toUpper (T.strip (promoCodeCode dto))
+      let PromoCodeDTO{..} = dto
+      let code = T.toUpper (T.strip promoCodeCode)
       when (T.null code) $ throwError err400 { errBody = "Promo code is required" }
-      when (promoCodeDiscountValue dto < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
-      when (promoCodeDiscountType dto `notElem` ["percentage", "fixed"]) $
+      when (promoCodeDiscountValue < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
+      when (promoCodeDiscountType `notElem` ["percentage", "fixed"]) $
         throwError err400 { errBody = "Discount type must be 'percentage' or 'fixed'" }
-      when (promoCodeDiscountType dto == "percentage" && promoCodeDiscountValue dto > 100) $
+      when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 100) $
         throwError err400 { errBody = "Percentage discount cannot exceed 100" }
-      let tierIdsJson = case promoCodeTierIds dto of
+      let tierIdsJson = case promoCodeTierIds of
             Nothing -> Nothing
             Just ids -> Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode ids)))
       mInserted <- liftIO $ runSqlPool (insertUnique PromoCode
         { promoCodeEventId = Just eventKey
         , promoCodeCode = code
-        , promoCodeDescription = promoCodeDescription dto
-        , promoCodeDiscountType = promoCodeDiscountType dto
-        , promoCodeDiscountValue = promoCodeDiscountValue dto
-        , promoCodeCurrency = promoCodeCurrency dto
-        , promoCodeMaxRedemptions = promoCodeMaxRedemptions dto
+        , promoCodeDescription = promoCodeDescription
+        , promoCodeDiscountType = promoCodeDiscountType
+        , promoCodeDiscountValue = promoCodeDiscountValue
+        , promoCodeCurrency = promoCodeCurrency
+        , promoCodeMaxRedemptions = promoCodeMaxRedemptions
         , promoCodeCurrentRedemptions = 0
-        , promoCodeValidFrom = promoCodeValidFrom dto
-        , promoCodeValidUntil = promoCodeValidUntil dto
+        , promoCodeValidFrom = promoCodeValidFrom
+        , promoCodeValidUntil = promoCodeValidUntil
         , promoCodeTierIds = tierIdsJson
-        , promoCodeMinPurchaseAmountCents = promoCodeMinPurchaseAmountCents dto
-        , promoCodeIsActive = promoCodeIsActive dto
+        , promoCodeMinPurchaseAmountCents = promoCodeMinPurchaseAmountCents
+        , promoCodeIsActive = promoCodeIsActive
         , promoCodeCreatedByPartyId = Just currentPartyId
         , promoCodeCreatedAt = now
         , promoCodeUpdatedAt = now
@@ -1974,27 +1975,29 @@ socialEventsServer user = eventsServer
       codeKey <- parseKeyOr400 "promo code" codeIdStr
       mCode <- liftIO $ runSqlPool (get codeKey) envPool
       code <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCode
-      when (promoCodeEventId code /= Just eventKey) $
+      let PromoCode{promoCodeEventId = codeEventId} = code
+      when (codeEventId /= Just eventKey) $
         throwError err400 { errBody = "Promo code does not belong to this event" }
-      when (promoCodeDiscountValue dto < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
-      when (promoCodeDiscountType dto `notElem` ["percentage", "fixed"]) $
+      let PromoCodeDTO{..} = dto
+      when (promoCodeDiscountValue < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
+      when (promoCodeDiscountType `notElem` ["percentage", "fixed"]) $
         throwError err400 { errBody = "Discount type must be 'percentage' or 'fixed'" }
-      when (promoCodeDiscountType dto == "percentage" && promoCodeDiscountValue dto > 100) $
+      when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 100) $
         throwError err400 { errBody = "Percentage discount cannot exceed 100" }
-      let tierIdsJson = case promoCodeTierIds dto of
+      let tierIdsJson = case promoCodeTierIds of
             Nothing -> Nothing
             Just ids -> Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode ids)))
       liftIO $ runSqlPool (update codeKey
-        [ PromoCodeDescription =. promoCodeDescription dto
-        , PromoCodeDiscountType =. promoCodeDiscountType dto
-        , PromoCodeDiscountValue =. promoCodeDiscountValue dto
-        , PromoCodeCurrency =. promoCodeCurrency dto
-        , PromoCodeMaxRedemptions =. promoCodeMaxRedemptions dto
-        , PromoCodeValidFrom =. promoCodeValidFrom dto
-        , PromoCodeValidUntil =. promoCodeValidUntil dto
+        [ PromoCodeDescription =. promoCodeDescription
+        , PromoCodeDiscountType =. promoCodeDiscountType
+        , PromoCodeDiscountValue =. promoCodeDiscountValue
+        , PromoCodeCurrency =. promoCodeCurrency
+        , PromoCodeMaxRedemptions =. promoCodeMaxRedemptions
+        , PromoCodeValidFrom =. promoCodeValidFrom
+        , PromoCodeValidUntil =. promoCodeValidUntil
         , PromoCodeTierIds =. tierIdsJson
-        , PromoCodeMinPurchaseAmountCents =. promoCodeMinPurchaseAmountCents dto
-        , PromoCodeIsActive =. promoCodeIsActive dto
+        , PromoCodeMinPurchaseAmountCents =. promoCodeMinPurchaseAmountCents
+        , PromoCodeIsActive =. promoCodeIsActive
         , PromoCodeUpdatedAt =. now
         ]) envPool
       mUpdated <- liftIO $ runSqlPool (getEntity codeKey) envPool
@@ -2012,24 +2015,24 @@ socialEventsServer user = eventsServer
       let cleanCode = T.toUpper (T.strip codeStr)
       mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
       codeEnt <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCodeEnt
-      let code = entityVal codeEnt
-      when (promoCodeEventId code /= Just eventKey) $
+      let PromoCode{..} = entityVal codeEnt
+      when (promoCodeEventId /= Just eventKey) $
         throwError err400 { errBody = "Promo code does not belong to this event" }
-      when (not (promoCodeIsActive code)) $
+      when (not promoCodeIsActive) $
         throwError err400 { errBody = "Promo code is not active" }
-      case promoCodeValidFrom code of
+      case promoCodeValidFrom of
         Just validFrom | now < validFrom ->
           throwError err400 { errBody = "Promo code is not yet valid" }
         _ -> pure ()
-      case promoCodeValidUntil code of
+      case promoCodeValidUntil of
         Just validUntil | now > validUntil ->
           throwError err400 { errBody = "Promo code has expired" }
         _ -> pure ()
-      case promoCodeMaxRedemptions code of
-        Just maxRedemptions | promoCodeCurrentRedemptions code >= maxRedemptions ->
+      case promoCodeMaxRedemptions of
+        Just maxRedemptions | promoCodeCurrentRedemptions >= maxRedemptions ->
           throwError err400 { errBody = "Promo code redemption limit reached" }
         _ -> pure ()
-      case (promoCodeTierIds code, mTierId) of
+      case (promoCodeTierIds, mTierId) of
         (Just tierIdsText, Just requestedTierId) -> do
           case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
             Just (tierIds :: [T.Text]) ->
@@ -2037,7 +2040,7 @@ socialEventsServer user = eventsServer
                 throwError err400 { errBody = "Promo code is not valid for this ticket tier" }
             Nothing -> pure ()
         _ -> pure ()
-      case (promoCodeMinPurchaseAmountCents code, mAmountStr) of
+      case (promoCodeMinPurchaseAmountCents, mAmountStr) of
         (Just minAmount, Just amountStr) -> do
           amount <- case readMaybe (T.unpack amountStr) of
             Just a -> pure (a :: Int)
