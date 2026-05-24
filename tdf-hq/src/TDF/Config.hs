@@ -80,6 +80,9 @@ data AppConfig = AppConfig
   , sessionCookieSecure :: Bool
   , sessionCookieSameSite :: Text
   , sessionCookieMaxAgeSeconds :: Maybe Int
+  , stripeSecretKey :: Maybe Text
+  , stripePublishableKey :: Maybe Text
+  , stripeWebhookSecret :: Maybe Text
   } deriving (Show)
 
 openAiEmbedDimensions :: Text -> Maybe Int
@@ -711,6 +714,9 @@ loadConfig = do
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
     , sessionCookieMaxAgeSeconds = cookieMaxAge
+    , stripeSecretKey = Nothing  -- TODO: Load from env STRIPE_SECRET_KEY
+    , stripePublishableKey = Nothing  -- TODO: Load from env STRIPE_PUBLISHABLE_KEY
+    , stripeWebhookSecret = Nothing  -- TODO: Load from env STRIPE_WEBHOOK_SECRET
     }
   where
     getWithFallback requireUnique keys def =
