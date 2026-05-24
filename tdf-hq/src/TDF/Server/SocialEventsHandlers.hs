@@ -144,6 +144,17 @@ import           TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO(..)
   , TicketDTO(..)
   , TicketOrderDTO(..)
+  , PromoCodeDTO(..)
+  , TicketPurchaseWithPromoDTO(..)
+  , RefundRequestDTO(..)
+  , RefundDTO(..)
+  , RejectionReasonDTO(..)
+  , TicketTransferCreateDTO(..)
+  , TicketTransferDTO(..)
+  , WaitlistJoinDTO(..)
+  , WaitlistEntryDTO(..)
+  , StripePaymentIntentDTO(..)
+  , TicketWithQRDTO(..)
   , EventBudgetLineDTO(..)
   , EventFinanceEntryDTO(..)
   , EventFinanceSummaryDTO(..)
@@ -1490,6 +1501,31 @@ socialEventsServer user = eventsServer
                :<|> updateTicketOrderStatus
                :<|> listTickets
                :<|> checkInTicket
+               -- Promo Codes
+               :<|> listPromoCodes
+               :<|> createPromoCode
+               :<|> updatePromoCode
+               :<|> validatePromoCode
+               -- Stripe Payment
+               :<|> createStripePaymentIntent
+               :<|> stripeWebhook
+               -- Refunds
+               :<|> createRefundRequest
+               :<|> listRefunds
+               :<|> approveRefund
+               :<|> rejectRefund
+               -- Transfers
+               :<|> createTransfer
+               :<|> listTransfers
+               :<|> acceptTransfer
+               :<|> cancelTransfer
+               -- Waitlist
+               :<|> joinWaitlist
+               :<|> listWaitlist
+               :<|> notifyWaitlist
+               :<|> removeFromWaitlist
+               -- QR Codes
+               :<|> getTicketQR
 
     listTicketTiers :: T.Text -> AppM [TicketTierDTO]
     listTicketTiers eventIdStr = do
