@@ -2410,28 +2410,31 @@ socialEventsServer user = eventsServer
           case result of
             Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err)) }
             Right refundResponse -> do
-              case parseMaybe (Aeson..: "id") refundResponse of
-                Nothing -> throwError err500 { errBody = "Could not parse Stripe refund response" }
-                Just refundId -> do
-                  liftIO $ runSqlPool (do
-                    update refundKey
-                      [ TicketRefundRequestStatus =. "approved"
-                      , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
-                      , TicketRefundRequestApprovedAt =. Just now
-                      , TicketRefundRequestStripeRefundId =. Just refundId
-                      , TicketRefundRequestProcessedAt =. Just now
-                      , TicketRefundRequestUpdatedAt =. now
-                      ]
-                    update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
-                    updateWhere [EventTicketOrderRefId ==. orderKey]
-                      [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
-                    update (eventTicketOrderTierId order)
-                      [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
-                    ) envPool
-                  mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
-                  maybe (throwError err500 { errBody = "Could not approve refund" })
-                        (pure . refundEntityToDTO)
-                        mUpdated
+              case refundResponse of
+                Aeson.Object obj -> do
+                  case parseMaybe (Aeson..: "id") obj of
+                    Nothing -> throwError err500 { errBody = "Could not parse Stripe refund response" }
+                    Just refundId -> do
+                      liftIO $ runSqlPool (do
+                        update refundKey
+                          [ TicketRefundRequestStatus =. "approved"
+                          , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                          , TicketRefundRequestApprovedAt =. Just now
+                          , TicketRefundRequestStripeRefundId =. Just refundId
+                          , TicketRefundRequestProcessedAt =. Just now
+                          , TicketRefundRequestUpdatedAt =. now
+                          ]
+                        update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
+                        updateWhere [EventTicketOrderRefId ==. orderKey]
+                          [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
+                        update (eventTicketOrderTierId order)
+                          [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                        ) envPool
+                      mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
+                      maybe (throwError err500 { errBody = "Could not approve refund" })
+                            (pure . refundEntityToDTO)
+                            mUpdated
+                _ -> throwError err500 { errBody = "Invalid Stripe refund response format" }
         _ -> throwError err500 { errBody = "Cannot process refund: Stripe not configured or order has no payment intent" }
 
     rejectRefund :: T.Text -> T.Text -> RejectionReasonDTO -> AppM RefundDTO
