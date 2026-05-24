@@ -2082,24 +2082,24 @@ socialEventsServer user = eventsServer
           let cleanCode = T.toUpper (T.strip promoCodeStr)
           mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
           codeEnt <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCodeEnt
-          let code = entityVal codeEnt
-          when (promoCodeEventId code /= Just eventKey) $
+          let PromoCode{..} = entityVal codeEnt
+          when (promoCodeEventId /= Just eventKey) $
             throwError err400 { errBody = "Promo code does not belong to this event" }
-          when (not (promoCodeIsActive code)) $
+          when (not promoCodeIsActive) $
             throwError err400 { errBody = "Promo code is not active" }
-          case promoCodeValidFrom code of
+          case promoCodeValidFrom of
             Just validFrom | now < validFrom ->
               throwError err400 { errBody = "Promo code is not yet valid" }
             _ -> pure ()
-          case promoCodeValidUntil code of
+          case promoCodeValidUntil of
             Just validUntil | now > validUntil ->
               throwError err400 { errBody = "Promo code has expired" }
             _ -> pure ()
-          case promoCodeMaxRedemptions code of
-            Just maxRedemptions | promoCodeCurrentRedemptions code >= maxRedemptions ->
+          case promoCodeMaxRedemptions of
+            Just maxRedemptions | promoCodeCurrentRedemptions >= maxRedemptions ->
               throwError err400 { errBody = "Promo code redemption limit reached" }
             _ -> pure ()
-          case promoCodeTierIds code of
+          case promoCodeTierIds of
             Just tierIdsText -> do
               case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
                 Just (tierIds :: [T.Text]) ->
@@ -2107,13 +2107,13 @@ socialEventsServer user = eventsServer
                     throwError err400 { errBody = "Promo code is not valid for this ticket tier" }
                 Nothing -> pure ()
             Nothing -> pure ()
-          case promoCodeMinPurchaseAmountCents code of
+          case promoCodeMinPurchaseAmountCents of
             Just minAmount | baseAmountCents < minAmount ->
               throwError err400 { errBody = "Purchase amount does not meet minimum requirement" }
             _ -> pure ()
-          let discountAmount = case promoCodeDiscountType code of
-                "percentage" -> (baseAmountCents * promoCodeDiscountValue code) `div` 100
-                "fixed" -> min (promoCodeDiscountValue code) baseAmountCents
+          let discountAmount = case promoCodeDiscountType of
+                "percentage" -> (baseAmountCents * promoCodeDiscountValue) `div` 100
+                "fixed" -> min promoCodeDiscountValue baseAmountCents
                 _ -> 0
               discountedAmount = max 0 (baseAmountCents - discountAmount)
           pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
