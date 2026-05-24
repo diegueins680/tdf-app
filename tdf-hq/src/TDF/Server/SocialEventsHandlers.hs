@@ -2704,10 +2704,14 @@ socialEventsServer user = eventsServer
         Just (Entity _ qr) -> pure (ticketQRCodeQrData qr)
         Nothing -> do
           let timestamp = T.pack (show (floor (realToFrac (utcTimeToPOSIXSeconds now) :: Double) :: Int))
+              -- Use current holder email if available, otherwise fall back to original holder email
+              holderEmail = case eventTicketCurrentHolderEmail ticket of
+                Just email -> email
+                Nothing -> eventTicketHolderEmail ticket
               payload = T.intercalate "|"
                 [ renderKeyText ticketKey
                 , renderKeyText eventKey
-                , eventTicketHolderEmail ticket
+                , holderEmail
                 , timestamp
                 ]
               secret = "tdf-qr-secret-key"
