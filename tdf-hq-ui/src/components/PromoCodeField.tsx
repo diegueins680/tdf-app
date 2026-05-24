@@ -11,37 +11,13 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
 import { SocialEventsAPI, type PromoCodeDTO } from '../api/socialEvents';
+import { initialPromoCodeState, promoCodeReducer } from './PromoCodeField.logic';
 
 interface PromoCodeFieldProps {
   eventId: string;
   tierId: string;
   onPromoApplied: (code: string | null) => void;
 }
-
-interface PromoCodeState {
-  code: string;
-  debouncedCode: string;
-  validating: boolean;
-  validPromo: PromoCodeDTO | null;
-  error: string | null;
-}
-
-type PromoCodeAction =
-  | { type: 'codeChanged'; code: string }
-  | { type: 'debouncedCodeChanged'; code: string }
-  | { type: 'validationStarted' }
-  | { type: 'validationSucceeded'; promo: PromoCodeDTO }
-  | { type: 'validationFailed'; error: string }
-  | { type: 'validationReset' }
-  | { type: 'cleared' };
-
-const initialPromoCodeState: PromoCodeState = {
-  code: '',
-  debouncedCode: '',
-  validating: false,
-  validPromo: null,
-  error: null,
-};
 
 const PROMO_COPY = {
   label: 'Promo Code (Optional)',
@@ -54,27 +30,15 @@ const PROMO_COPY = {
   usesRemaining: 'uses remaining',
 };
 
-function promoCodeReducer(state: PromoCodeState, action: PromoCodeAction): PromoCodeState {
-  switch (action.type) {
-    case 'codeChanged':
-      return { ...state, code: action.code };
-    case 'debouncedCodeChanged':
-      return { ...state, debouncedCode: action.code };
-    case 'validationStarted':
-      return { ...state, validating: true, error: null };
-    case 'validationSucceeded':
-      return { ...state, validating: false, validPromo: action.promo, error: null };
-    case 'validationFailed':
-      return { ...state, validating: false, validPromo: null, error: action.error };
-    case 'validationReset':
-      return { ...state, validating: false, validPromo: null, error: null };
-    case 'cleared':
-      return initialPromoCodeState;
-    default:
-      return state;
-  }
-}
+const PROMO_VALIDATION_SPINNER_SIZE_PX = 20;
 
+/**
+ * Contract:
+ * @precondition eventId and tierId identify the event/tier whose promo policy is being checked.
+ * @precondition onPromoApplied accepts either the canonical validated promo code or null for no valid promo.
+ * @invariant only the most recent async validation request may publish validation state.
+ * @postcondition inactive, invalid, empty, or stale codes report null to the parent.
+ */
 export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFieldProps) {
   const [{ code, debouncedCode, validating, validPromo, error }, dispatch] = useReducer(
     promoCodeReducer,
@@ -83,13 +47,20 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
   const inputRef = useRef<HTMLInputElement | null>(null);
   const validationRequestRef = useRef(0);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      dispatch({ type: 'debouncedCodeChanged', code: code.trim().toUpperCase() });
-    }, 500);
+  useEffect(
+    () => {
+      const timer = setTimeout(() => {
+        dispatch({ type: 'debouncedCodeChanged', code: code.trim().toUpperCase() });
+      }, 500);
 
-    return () => clearTimeout(timer);
-  }, [code]);
+      const clearDebounceTimer = () => {
+        window.clearTimeout(timer);
+      };
+
+      return clearDebounceTimer;
+    },
+    [code],
+  );
 
   const validatePromo = useCallback(async (promoCode: string) => {
     if (!promoCode) {
@@ -104,7 +75,9 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
 
     try {
       const promo = await SocialEventsAPI.validatePromoCode(eventId, promoCode, promoCode, tierId);
-      if (validationRequestRef.current !== requestId) return;
+      if (validationRequestRef.current !== requestId) {
+        return;
+      }
 
       if (promo.promoCodeIsActive) {
         dispatch({ type: 'validationSucceeded', promo });
@@ -114,7 +87,10 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
         onPromoApplied(null);
       }
     } catch (err) {
-      if (validationRequestRef.current !== requestId) return;
+      if (validationRequestRef.current !== requestId) {
+        return;
+      }
+
       dispatch({ type: 'validationFailed', error: err instanceof Error ? err.message : PROMO_COPY.invalid });
       onPromoApplied(null);
     }
@@ -153,7 +129,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
     return `${currency} ${(promo.promoCodeDiscountValue / 100).toFixed(2)} off`;
   };
 
-  return (
+  const fieldContent = (
     <Box>
       <TextField
         label={PROMO_COPY.label}
@@ -166,7 +142,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              {validating && <CircularProgress size={20} />}
+              {validating && <CircularProgress size={PROMO_VALIDATION_SPINNER_SIZE_PX} />}
               {validPromo && <CheckCircleIcon color="success" />}
               {code && !validating && (
                 <IconButton
@@ -208,4 +184,6 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
       )}
     </Box>
   );
+
+  return fieldContent;
 }

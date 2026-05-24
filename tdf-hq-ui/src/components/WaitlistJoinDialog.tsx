@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { SocialEventsAPI } from '../api/socialEvents';
+import { parseWaitlistQuantity } from './WaitlistJoinDialog.logic';
 
 interface WaitlistJoinDialogProps {
   open: boolean;
@@ -24,6 +25,16 @@ interface WaitlistJoinDialogProps {
   onSuccess: () => void;
 }
 
+const WAITLIST_PURCHASE_WINDOW_HOURS = 24;
+const WAITLIST_ACTION_SPINNER_SIZE_PX = 24;
+
+/**
+ * Contract:
+ * @precondition eventId identifies the event waitlist being joined.
+ * @precondition onSuccess can be called after the join mutation commits successfully.
+ * @invariant submitted quantities are validated inside the visible 1-10 ticket range before mutation.
+ * @postcondition successful joins invalidate the event waitlist query, notify the parent, and reset local form state.
+ */
 export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierName, onSuccess }: WaitlistJoinDialogProps) {
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
@@ -77,7 +88,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
     onClose();
   };
 
-  return (
+  const dialogContent = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -98,7 +109,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
 
         <Alert severity="info" sx={{ my: 2 }}>
           <Typography variant="body2">
-            We'll notify you by email when tickets become available. You'll have 24 hours to purchase your tickets.
+            We'll notify you by email when tickets become available. You'll have {WAITLIST_PURCHASE_WINDOW_HOURS} hours to purchase your tickets.
           </Typography>
         </Alert>
 
@@ -120,7 +131,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
             fullWidth
             required
             value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+            onChange={(e) => setQuantity(parseWaitlistQuantity(e.target.value))}
             margin="normal"
             InputProps={{ inputProps: { min: 1, max: 10 } }}
             helperText="Maximum 10 tickets per request"
@@ -143,9 +154,11 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
           variant="contained"
           disabled={joinMutation.isPending}
         >
-          {joinMutation.isPending ? <CircularProgress size={24} /> : 'Join Waitlist'}
+          {joinMutation.isPending ? <CircularProgress size={WAITLIST_ACTION_SPINNER_SIZE_PX} /> : 'Join Waitlist'}
         </Button>
       </DialogActions>
     </Dialog>
   );
+
+  return dialogContent;
 }

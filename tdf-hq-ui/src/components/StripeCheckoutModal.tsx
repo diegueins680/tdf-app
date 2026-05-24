@@ -19,6 +19,15 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import { SocialEventsAPI, type TicketPurchaseWithPromoDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { PromoCodeField } from './PromoCodeField';
+import {
+  type BuyerDetailsState,
+  checkoutFormReducer,
+  checkoutModalReducer,
+  formatTicketTierPrice,
+  initialCheckoutFormState,
+  initialCheckoutModalState,
+  normalizeCheckoutQuantity,
+} from './StripeCheckoutModal.logic';
 
 const stripePromise = loadStripe(import.meta.env['VITE_STRIPE_PUBLISHABLE_KEY'] ?? '');
 
@@ -38,28 +47,6 @@ interface CheckoutFormProps {
   onSuccess: (orderId: string) => void;
   onBack: () => void;
 }
-
-interface BuyerDetailsState {
-  name: string;
-  email: string;
-  quantity: number;
-}
-
-interface CheckoutFormState {
-  processing: boolean;
-  error: string | null;
-}
-
-interface CheckoutModalState {
-  activeStep: number;
-  buyerDetails: BuyerDetailsState;
-  promoCode: string | null;
-  clientSecret: string | null;
-  loading: boolean;
-  error: string | null;
-}
-
-type BuyerField = 'name' | 'email' | 'quantity';
 
 interface DivRef {
   current: HTMLDivElement | null;
@@ -81,21 +68,9 @@ interface StringRef {
   current: string | null;
 }
 
-type CheckoutFormAction =
-  | { type: 'submitStarted' }
-  | { type: 'submitFailed'; error: string };
-
-type CheckoutModalAction =
-  | { type: 'buyerFieldChanged'; field: BuyerField; value: string | number }
-  | { type: 'promoChanged'; promoCode: string | null }
-  | { type: 'buyerSubmitStarted' }
-  | { type: 'buyerSubmitFailed'; error: string }
-  | { type: 'paymentIntentReady'; clientSecret: string }
-  | { type: 'backToBuyerDetails' }
-  | { type: 'paymentSucceeded' }
-  | { type: 'reset' };
-
 const BUYER_FORM_ID = 'stripe-checkout-buyer-details-form';
+const CHECKOUT_ACTION_SPINNER_SIZE_PX = 24;
+const CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS = 2000;
 
 const CHECKOUT_COPY = {
   title: 'Purchase Tickets',
@@ -137,67 +112,6 @@ const CHECKOUT_COPY = {
     sent: 'Your tickets have been sent to',
   },
 };
-
-const initialBuyerDetails: BuyerDetailsState = {
-  name: '',
-  email: '',
-  quantity: 1,
-};
-
-const initialCheckoutFormState: CheckoutFormState = {
-  processing: false,
-  error: null,
-};
-
-const initialCheckoutModalState: CheckoutModalState = {
-  activeStep: 0,
-  buyerDetails: initialBuyerDetails,
-  promoCode: null,
-  clientSecret: null,
-  loading: false,
-  error: null,
-};
-
-function checkoutFormReducer(state: CheckoutFormState, action: CheckoutFormAction): CheckoutFormState {
-  switch (action.type) {
-    case 'submitStarted':
-      return { processing: true, error: null };
-    case 'submitFailed':
-      return { processing: false, error: action.error };
-    default:
-      return state;
-  }
-}
-
-function checkoutModalReducer(state: CheckoutModalState, action: CheckoutModalAction): CheckoutModalState {
-  switch (action.type) {
-    case 'buyerFieldChanged':
-      return {
-        ...state,
-        buyerDetails: {
-          ...state.buyerDetails,
-          [action.field]: action.value,
-        },
-        error: null,
-      };
-    case 'promoChanged':
-      return { ...state, promoCode: action.promoCode };
-    case 'buyerSubmitStarted':
-      return { ...state, loading: true, error: null };
-    case 'buyerSubmitFailed':
-      return { ...state, loading: false, error: action.error };
-    case 'paymentIntentReady':
-      return { ...state, activeStep: 1, loading: false, clientSecret: action.clientSecret, error: null };
-    case 'backToBuyerDetails':
-      return { ...state, activeStep: 0, error: null };
-    case 'paymentSucceeded':
-      return { ...state, activeStep: 2, loading: false, error: null };
-    case 'reset':
-      return initialCheckoutModalState;
-    default:
-      return state;
-  }
-}
 
 function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: CheckoutFormProps) {
   const stripe = useStripe();
@@ -243,8 +157,8 @@ function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: Chec
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        const orderId = String(paymentIntent.metadata?.orderId ?? paymentIntent.id);
-        onSuccess(orderId);
+        const completedOrderId = String(paymentIntent.metadata?.orderId ?? paymentIntent.id);
+        onSuccess(completedOrderId);
         return;
       }
 
@@ -259,7 +173,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: Chec
     void submitPayment();
   };
 
-  return (
+  const formContent = (
     <form onSubmit={handlePaymentFormSubmit} data-focus-management="payment-errors">
       <Box ref={paymentSummaryRef} tabIndex={-1} sx={{ mb: 3, outline: 'none' }}>
         <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -304,25 +218,26 @@ function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: Chec
           disabled={!stripe || state.processing}
           fullWidth
         >
-          {state.processing ? <CircularProgress size={24} /> : `Pay ${formatPrice(tier, buyerDetails.quantity)}`}
+          {state.processing ? (
+            <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} />
+          ) : (
+            `Pay ${formatTicketTierPrice(tier, buyerDetails.quantity)}`
+          )}
         </Button>
       </Box>
     </form>
   );
+
+  return formContent;
 }
 
-function formatPrice(tier: SocialTicketTierDTO, quantity: number): string {
-  const total = tier.ticketTierPriceCents * quantity;
-  const currency = (tier.ticketTierCurrency ?? 'USD').toUpperCase();
-  return `${currency} ${(total / 100).toFixed(2)}`;
-}
-
-function normalizeQuantity(rawValue: string): number {
-  const parsed = Number.parseInt(rawValue, 10);
-  if (!Number.isFinite(parsed)) return 1;
-  return Math.min(10, Math.max(1, parsed));
-}
-
+/**
+ * Contract:
+ * @precondition eventId identifies the event being purchased and tier describes the selected ticket tier.
+ * @precondition onSuccess accepts the completed order id exactly once per successful payment.
+ * @invariant activeStep stays within buyer, payment, and confirmation states; quantity is normalized before submit.
+ * @postcondition closing the dialog clears transient checkout state and restores focus to the opener when possible.
+ */
 export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, onSuccess }: StripeCheckoutModalProps) {
   const [state, dispatch] = useReducer(checkoutModalReducer, initialCheckoutModalState);
   const returnFocusRef = useRef(null) as HTMLElementRef;
@@ -352,13 +267,18 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     }
   }, [state.activeStep]);
 
-  useEffect(() => {
-    return () => {
-      if (successTimerRef.current !== null) {
-        window.clearTimeout(successTimerRef.current);
-      }
-    };
-  }, []);
+  useEffect(
+    () => {
+      const clearSuccessTimerOnUnmount = () => {
+        if (successTimerRef.current !== null) {
+          window.clearTimeout(successTimerRef.current);
+        }
+      };
+
+      return clearSuccessTimerOnUnmount;
+    },
+    [],
+  );
 
   const submitBuyerDetails = async () => {
     const name = state.buyerDetails.name.trim();
@@ -409,10 +329,10 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
   };
 
   const completePendingSuccess = () => {
-    const orderId = pendingSuccessOrderIdRef.current;
+    const pendingOrderId = pendingSuccessOrderIdRef.current;
     pendingSuccessOrderIdRef.current = null;
-    if (orderId) {
-      onSuccess(orderId);
+    if (pendingOrderId) {
+      onSuccess(pendingOrderId);
     }
   };
 
@@ -433,7 +353,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
     successTimerRef.current = window.setTimeout(() => {
       successTimerRef.current = null;
       handleClose();
-    }, 2000);
+    }, CHECKOUT_SUCCESS_AUTO_CLOSE_DELAY_MS);
   };
 
   const handleBackToBuyerDetails = () => {
@@ -450,7 +370,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       }
     : {};
 
-  return (
+  const modalContent = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth aria-labelledby="stripe-checkout-title">
       <DialogTitle id="stripe-checkout-title">
         {CHECKOUT_COPY.title} - {eventTitle}
@@ -507,7 +427,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               inputRef={quantityInputRef}
               value={state.buyerDetails.quantity}
               onChange={(e) =>
-                dispatch({ type: 'buyerFieldChanged', field: 'quantity', value: normalizeQuantity(e.target.value) })
+                dispatch({ type: 'buyerFieldChanged', field: 'quantity', value: normalizeCheckoutQuantity(e.target.value) })
               }
               margin="normal"
               InputProps={{ inputProps: { min: 1, max: 10 } }}
@@ -523,7 +443,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
 
             <Box sx={{ mt: 3 }}>
               <Typography variant="h6">
-                {CHECKOUT_COPY.status.total}: {formatPrice(tier, state.buyerDetails.quantity)}
+                {CHECKOUT_COPY.status.total}: {formatTicketTierPrice(tier, state.buyerDetails.quantity)}
               </Typography>
               {state.promoCode && (
                 <Typography variant="body2" color="success.main">
@@ -588,7 +508,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               variant="contained"
               disabled={state.loading}
             >
-              {state.loading ? <CircularProgress size={24} /> : CHECKOUT_COPY.actions.continue}
+              {state.loading ? <CircularProgress size={CHECKOUT_ACTION_SPINNER_SIZE_PX} /> : CHECKOUT_COPY.actions.continue}
             </Button>
           </>
         )}
@@ -612,4 +532,6 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       </DialogActions>
     </Dialog>
   );
+
+  return modalContent;
 }

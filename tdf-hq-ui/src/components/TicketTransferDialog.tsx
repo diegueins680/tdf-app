@@ -14,16 +14,28 @@ import {
   Divider,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { SocialEventsAPI, type TicketDTO } from '../api/socialEvents';
+import { SocialEventsAPI, type SocialTicketDTO } from '../api/socialEvents';
+
+type TicketWithRequiredId = SocialTicketDTO & { ticketId: string };
 
 interface TicketTransferDialogProps {
   open: boolean;
   onClose: () => void;
   eventId: string;
-  ticket: TicketDTO;
+  ticket: TicketWithRequiredId;
   onSuccess: () => void;
 }
 
+const TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS = 48;
+const TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX = 24;
+
+/**
+ * Contract:
+ * @precondition eventId identifies the event containing ticket.ticketId.
+ * @precondition ticket contains the current holder identity and transferable ticket code.
+ * @invariant transfer mutation payload uses the validated recipient name/email currently shown in the form.
+ * @postcondition successful transfer invalidates ticket queries, notifies the parent, and resets dialog state.
+ */
 export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess }: TicketTransferDialogProps) {
   const qc = useQueryClient();
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -33,8 +45,8 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
   const transferMutation = useMutation({
     mutationFn: () =>
       SocialEventsAPI.createTransfer(eventId, ticket.ticketId, {
-        ttcRecipientEmail: recipientEmail,
-        ttcRecipientName: recipientName,
+        ttcToEmail: recipientEmail,
+        ttcToName: recipientName,
       }),
     onSuccess: (transfer) => {
       qc.invalidateQueries({ queryKey: ['tickets', eventId] });
@@ -73,7 +85,7 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
     onClose();
   };
 
-  return (
+  const dialogContent = (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Transfer Ticket</DialogTitle>
 
@@ -111,7 +123,7 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              The recipient will have 48 hours to accept the transfer. You can cancel the transfer at any time before it's accepted.
+              The recipient will have {TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS} hours to accept the transfer. You can cancel the transfer at any time before it's accepted.
             </Typography>
           </Alert>
 
@@ -133,9 +145,11 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
           startIcon={<SendIcon />}
           disabled={transferMutation.isPending}
         >
-          {transferMutation.isPending ? <CircularProgress size={24} /> : 'Send Transfer'}
+          {transferMutation.isPending ? <CircularProgress size={TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX} /> : 'Send Transfer'}
         </Button>
       </DialogActions>
     </Dialog>
   );
+
+  return dialogContent;
 }

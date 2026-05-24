@@ -236,7 +236,7 @@ export interface RefundDTO {
 }
 
 export interface RejectionReasonDTO {
-  rejectionReason: string;
+  rrReason: string;
 }
 
 // Transfers

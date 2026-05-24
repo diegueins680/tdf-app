@@ -16,16 +16,28 @@ import {
 import QRCode from 'qrcode';
 import DownloadIcon from '@mui/icons-material/Download';
 import PrintIcon from '@mui/icons-material/Print';
-import { SocialEventsAPI, type TicketDTO } from '../api/socialEvents';
+import { SocialEventsAPI, type SocialTicketDTO } from '../api/socialEvents';
+
+type TicketWithRequiredId = SocialTicketDTO & { ticketId: string };
 
 interface TicketQRDisplayProps {
   open: boolean;
   onClose: () => void;
   eventId: string;
   eventTitle: string;
-  ticket: TicketDTO;
+  ticket: TicketWithRequiredId;
 }
 
+const TICKET_QR_CANVAS_WIDTH_PX = 300;
+const PRINT_TICKET_BORDER = '1px solid black';
+
+/**
+ * Contract:
+ * @precondition eventId identifies the event containing ticket.ticketId.
+ * @precondition ticket contains the holder identity and code that should be rendered with the fetched QR payload.
+ * @invariant QR download and print actions remain disabled until the canvas generation postcondition is reached.
+ * @postcondition a successful QR render sets qrGenerated, allowing the visible canvas to be downloaded or printed.
+ */
 export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: TicketQRDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [qrGenerated, setQrGenerated] = useState(false);
@@ -42,7 +54,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
     const generateQR = async () => {
       try {
         await QRCode.toCanvas(canvasRef.current!, ticketQRQuery.data.twqQRData, {
-          width: 300,
+          width: TICKET_QR_CANVAS_WIDTH_PX,
           margin: 2,
           errorCorrectionLevel: 'H',
         });
@@ -56,7 +68,9 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
   }, [ticketQRQuery.data]);
 
   const handleDownload = () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current) {
+      return;
+    }
 
     const link = document.createElement('a');
     link.download = `ticket-${ticket.ticketCode}.png`;
@@ -68,7 +82,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
     window.print();
   };
 
-  return (
+  const dialogContent = (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         Ticket QR Code
@@ -101,7 +115,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
                 alignItems: 'center',
                 '@media print': {
                   boxShadow: 'none',
-                  border: '1px solid #000',
+                  border: PRINT_TICKET_BORDER,
                 },
               }}
             >
@@ -132,12 +146,9 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
               <Divider sx={{ width: '100%', my: 2 }} />
 
               <Box sx={{ textAlign: 'center', width: '100%' }}>
-                <Typography variant="body2" color="text.secondary">
-                  Tier: {ticketQRQuery.data.twqTierName || 'General'}
-                </Typography>
-                {ticketQRQuery.data.twqPrice && (
+                {ticketQRQuery.data.twqTicket.ticketTierId && (
                   <Typography variant="body2" color="text.secondary">
-                    Price: {ticketQRQuery.data.twqCurrency} {(ticketQRQuery.data.twqPrice / 100).toFixed(2)}
+                    Tier ID: {ticketQRQuery.data.twqTicket.ticketTierId}
                   </Typography>
                 )}
               </Box>
@@ -172,4 +183,6 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
       </DialogActions>
     </Dialog>
   );
+
+  return dialogContent;
 }

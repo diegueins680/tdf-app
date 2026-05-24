@@ -26,11 +26,21 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { SocialEventsAPI, type RefundDTO } from '../api/socialEvents';
+import { getRefundStatusColor } from './RefundManagementPanel.logic';
 
 interface RefundManagementPanelProps {
   eventId: string;
 }
 
+const REFUND_ACTION_SPINNER_SIZE_PX = 24;
+
+/**
+ * Contract:
+ * @precondition eventId identifies the event whose refunds are managed.
+ * @precondition this component is rendered under a QueryClientProvider.
+ * @invariant approve/reject mutations are scoped to the same eventId used to load refunds.
+ * @postcondition successful mutations invalidate the event refund query and clear local selection state.
+ */
 export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   const qc = useQueryClient();
   const [selectedRefund, setSelectedRefund] = useState<RefundDTO | null>(null);
@@ -52,7 +62,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
 
   const rejectMutation = useMutation({
     mutationFn: ({ refundId, reason }: { refundId: string; reason: string }) =>
-      SocialEventsAPI.rejectRefund(eventId, refundId, reason),
+      SocialEventsAPI.rejectRefund(eventId, refundId, { rrReason: reason }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['refunds', eventId] });
       setSelectedRefund(null);
@@ -62,16 +72,26 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   });
 
   const handleApprove = (refund: RefundDTO) => {
-    if (window.confirm(`Approve refund for ${formatMoney(refund.refAmountCents, refund.refCurrency)}?`)) {
-      approveMutation.mutate(refund.refId);
+    const refundId = refund.refundId?.trim();
+    if (!refundId) {
+      return;
+    }
+
+    if (window.confirm(`Approve refund for ${formatMoney(refund.refundAmountCents)}?`)) {
+      approveMutation.mutate(refundId);
     }
   };
 
   const handleReject = () => {
-    if (!selectedRefund || !rejectionReason.trim()) return;
+    const refundId = selectedRefund?.refundId?.trim();
+    const rejectionReasonText = rejectionReason.trim();
+    if (!refundId || !rejectionReasonText) {
+      return;
+    }
+
     rejectMutation.mutate({
-      refundId: selectedRefund.refId,
-      reason: rejectionReason,
+      refundId,
+      reason: rejectionReasonText,
     });
   };
 
@@ -80,32 +100,20 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     return `${code} ${(cents / 100).toFixed(2)}`;
   };
 
-  const getStatusColor = (status: string): 'default' | 'warning' | 'success' | 'error' => {
-    switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'approved':
-      case 'processed':
-        return 'success';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
   if (refundsQuery.isLoading) {
-    return (
+    const loadingContent = (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
         <CircularProgress />
       </Box>
     );
+
+    return loadingContent;
   }
 
   const refunds = refundsQuery.data || [];
-  const pendingRefunds = refunds.filter((r) => r.refStatus === 'pending');
+  const pendingRefunds = refunds.filter((r) => r.refundStatus === 'pending');
 
-  return (
+  const panelContent = (
     <Box>
       {pendingRefunds.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -134,32 +142,32 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
               </TableRow>
             ) : (
               refunds.map((refund) => (
-                <TableRow key={refund.refId}>
+                <TableRow key={refund.refundId ?? refund.refundOrderId ?? refund.refundCreatedAt}>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
-                      {refund.refOrderId.slice(0, 8)}...
+                      {(refund.refundOrderId ?? '').slice(0, 8)}...
                     </Typography>
                   </TableCell>
-                  <TableCell>{formatMoney(refund.refAmountCents, refund.refCurrency)}</TableCell>
+                  <TableCell>{formatMoney(refund.refundAmountCents)}</TableCell>
                   <TableCell>
                     <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                      {refund.refReason || '-'}
+                      {refund.refundReason || '-'}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={refund.refStatus.toUpperCase()}
-                      color={getStatusColor(refund.refStatus)}
+                      label={refund.refundStatus.toUpperCase()}
+                      color={getRefundStatusColor(refund.refundStatus)}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {new Date(refund.refCreatedAt).toLocaleDateString()}
+                      {refund.refundCreatedAt ? new Date(refund.refundCreatedAt).toLocaleDateString() : '-'}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {refund.refStatus === 'pending' && (
+                    {refund.refundStatus === 'pending' && (
                       <Stack direction="row" spacing={1}>
                         <Button
                           size="small"
@@ -167,7 +175,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                           color="success"
                           startIcon={<CheckIcon />}
                           onClick={() => handleApprove(refund)}
-                          disabled={approveMutation.isPending}
+                          disabled={approveMutation.isPending || !refund.refundId}
                         >
                           Approve
                         </Button>
@@ -180,15 +188,15 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                             setSelectedRefund(refund);
                             setRejectDialogOpen(true);
                           }}
-                          disabled={rejectMutation.isPending}
+                          disabled={rejectMutation.isPending || !refund.refundId}
                         >
                           Reject
                         </Button>
                       </Stack>
                     )}
-                    {refund.refStatus === 'rejected' && refund.refRejectionReason && (
+                    {refund.refundStatus === 'rejected' && refund.refundRejectionReason && (
                       <Typography variant="caption" color="error">
-                        Rejected: {refund.refRejectionReason}
+                        Rejected: {refund.refundRejectionReason}
                       </Typography>
                     )}
                   </TableCell>
@@ -222,10 +230,12 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
             color="error"
             disabled={!rejectionReason.trim() || rejectMutation.isPending}
           >
-            {rejectMutation.isPending ? <CircularProgress size={24} /> : 'Reject Refund'}
+            {rejectMutation.isPending ? <CircularProgress size={REFUND_ACTION_SPINNER_SIZE_PX} /> : 'Reject Refund'}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
+
+  return panelContent;
 }
