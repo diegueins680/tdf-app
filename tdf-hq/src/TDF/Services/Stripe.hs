@@ -18,7 +18,6 @@ import qualified Data.ByteString.Base16 as Base16
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time.Clock.POSIX (getPOSIXTime)
 import           Network.HTTP.Client
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
