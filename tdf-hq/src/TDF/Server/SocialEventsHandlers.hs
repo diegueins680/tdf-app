@@ -2201,20 +2201,23 @@ socialEventsServer user = eventsServer
                 ) envPool
               throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> err)) }
             Right paymentIntent -> do
-              case parseMaybe (Aeson..: "id") paymentIntent of
-                Nothing -> throwError err500 { errBody = "Could not parse Stripe response" }
-                Just piId -> do
-                  case parseMaybe (Aeson..: "client_secret") paymentIntent of
-                    Nothing -> throwError err500 { errBody = "Could not parse Stripe client secret" }
-                    Just clientSecret -> do
-                      liftIO $ runSqlPool (update orderKey
-                        [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
-                      pure StripePaymentIntentDTO
-                        { spiClientSecret = clientSecret
-                        , spiOrderId = renderKeyText orderKey
-                        , spiAmountCents = finalAmountCents
-                        , spiCurrency = eventTicketOrderCurrency orderRecord
-                        }
+              case paymentIntent of
+                Aeson.Object obj -> do
+                  case parseMaybe (Aeson..: "id") obj of
+                    Nothing -> throwError err500 { errBody = "Could not parse Stripe response" }
+                    Just piId -> do
+                      case parseMaybe (Aeson..: "client_secret") obj of
+                        Nothing -> throwError err500 { errBody = "Could not parse Stripe client secret" }
+                        Just clientSecret -> do
+                          liftIO $ runSqlPool (update orderKey
+                            [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
+                          pure StripePaymentIntentDTO
+                            { spiClientSecret = clientSecret
+                            , spiOrderId = renderKeyText orderKey
+                            , spiAmountCents = finalAmountCents
+                            , spiCurrency = eventTicketOrderCurrency orderRecord
+                            }
+                _ -> throwError err500 { errBody = "Invalid Stripe response format" }
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     stripeWebhook :: Aeson.Value -> Maybe T.Text -> AppM NoContent
@@ -2232,15 +2235,17 @@ socialEventsServer user = eventsServer
           let rawBody = BL.toStrict (Aeson.encode payload)
           when (not (Stripe.verifyWebhookSignature stripeCfg signature rawBody)) $
             throwError err400 { errBody = "Invalid webhook signature" }
-          case parseMaybe (Aeson..: "id") payload of
-            Nothing -> throwError err400 { errBody = "Invalid webhook payload" }
-            Just eventId -> do
-              mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
-              case mExisting of
-                Just _ -> pure NoContent
-                Nothing -> do
-                  case parseMaybe (Aeson..: "type") payload of
-                    Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
+          case payload of
+            Aeson.Object obj -> do
+              case parseMaybe (Aeson..: "id") obj of
+                Nothing -> throwError err400 { errBody = "Invalid webhook payload" }
+                Just eventId -> do
+                  mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
+                  case mExisting of
+                    Just _ -> pure NoContent
+                    Nothing -> do
+                      case parseMaybe (Aeson..: "type") obj of
+                        Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
                     Just eventType -> do
                       liftIO $ runSqlPool (insert_ StripeWebhookEvent
                         { stripeWebhookEventStripeEventId = eventId
