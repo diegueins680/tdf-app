@@ -142,6 +142,10 @@ EventTicketTier
     salesEnd UTCTime Maybe
     isActive Bool
     position Int Maybe
+    enableWaitlist Bool default=False
+    allowTransfers Bool default=True
+    refundPolicy Text default='full'
+    refundDeadline UTCTime Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     UniqueEventTicketTierCode eventId code
@@ -159,6 +163,10 @@ EventTicketOrder
     status Text
     metadata Text Maybe
     purchasedAt UTCTime
+    stripePaymentIntentId Text Maybe
+    promoCodeId PromoCodeId Maybe
+    originalAmountCents Int Maybe
+    paymentMethod Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     deriving Show Generic
@@ -172,6 +180,11 @@ EventTicket
     code Text
     status Text
     checkedInAt UTCTime Maybe
+    currentHolderPartyId Text Maybe
+    currentHolderEmail Text Maybe
+    currentHolderName Text Maybe
+    originalHolderPartyId Text Maybe
+    transferHistory Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     UniqueEventTicketCode code
