@@ -2246,72 +2246,73 @@ socialEventsServer user = eventsServer
                     Nothing -> do
                       case parseMaybe (Aeson..: "type") obj of
                         Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
-                    Just eventType -> do
-                      liftIO $ runSqlPool (insert_ StripeWebhookEvent
-                        { stripeWebhookEventStripeEventId = eventId
-                        , stripeWebhookEventEventType = eventType
-                        , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
-                        , stripeWebhookEventProcessedAt = now
-                        }) envPool
-                      case eventType of
-                        "payment_intent.succeeded" -> do
-                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
-                            Just piId -> do
-                              mOrder <- liftIO $ runSqlPool
-                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
-                                envPool
-                              case mOrder of
+                        Just eventType -> do
+                          liftIO $ runSqlPool (insert_ StripeWebhookEvent
+                            { stripeWebhookEventStripeEventId = eventId
+                            , stripeWebhookEventEventType = eventType
+                            , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
+                            , stripeWebhookEventProcessedAt = now
+                            }) envPool
+                          case eventType of
+                            "payment_intent.succeeded" -> do
+                              case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
+                                Just piId -> do
+                                  mOrder <- liftIO $ runSqlPool
+                                    (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+                                    envPool
+                                  case mOrder of
+                                    Nothing -> pure NoContent
+                                    Just (Entity orderKey order) -> do
+                                      when (eventTicketOrderStatus order == "pending") $ do
+                                        liftIO $ runSqlPool (do
+                                          update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
+                                          _ <- replicateM (eventTicketOrderQuantity order) $ do
+                                            ticketCodeValue <- generateUniqueTicketCode
+                                            ticketKey <- insert EventTicket
+                                              { eventTicketEventId = eventTicketOrderEventId order
+                                              , eventTicketTierRefId = eventTicketOrderTierId order
+                                              , eventTicketOrderRefId = orderKey
+                                              , eventTicketHolderName = eventTicketOrderBuyerName order
+                                              , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
+                                              , eventTicketCode = ticketCodeValue
+                                              , eventTicketStatus = "issued"
+                                              , eventTicketCheckedInAt = Nothing
+                                              , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
+                                              , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
+                                              , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
+                                              , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
+                                              , eventTicketTransferHistory = Nothing
+                                              , eventTicketCreatedAt = now
+                                              , eventTicketUpdatedAt = now
+                                              }
+                                            pure ticketKey
+                                          pure ()
+                                          ) envPool
+                                      pure NoContent
                                 Nothing -> pure NoContent
-                                Just (Entity orderKey order) -> do
-                                  when (eventTicketOrderStatus order == "pending") $ do
-                                    liftIO $ runSqlPool (do
-                                      update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
-                                      tickets <- replicateM (eventTicketOrderQuantity order) $ do
-                                        ticketCodeValue <- generateUniqueTicketCode
-                                        ticketKey <- insert EventTicket
-                                          { eventTicketEventId = eventTicketOrderEventId order
-                                          , eventTicketTierRefId = eventTicketOrderTierId order
-                                          , eventTicketOrderRefId = orderKey
-                                          , eventTicketHolderName = eventTicketOrderBuyerName order
-                                          , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
-                                          , eventTicketCode = ticketCodeValue
-                                          , eventTicketStatus = "issued"
-                                          , eventTicketCheckedInAt = Nothing
-                                          , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
-                                          , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
-                                          , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
-                                          , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
-                                          , eventTicketTransferHistory = Nothing
-                                          , eventTicketCreatedAt = now
-                                          , eventTicketUpdatedAt = now
-                                          }
-                                        pure ticketKey
-                                      pure tickets
-                                      ) envPool
-                                  pure NoContent
-                            Nothing -> pure NoContent
-                        "payment_intent.payment_failed" -> do
-                          case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
-                            Just piId -> do
-                              mOrder <- liftIO $ runSqlPool
-                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
-                                envPool
-                              case mOrder of
+                            "payment_intent.payment_failed" -> do
+                              case parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= (Aeson..: "object") >>= (Aeson..: "id"))) payload of
+                                Just piId -> do
+                                  mOrder <- liftIO $ runSqlPool
+                                    (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+                                    envPool
+                                  case mOrder of
+                                    Nothing -> pure NoContent
+                                    Just (Entity orderKey order) -> do
+                                      when (eventTicketOrderStatus order == "pending") $ do
+                                        liftIO $ runSqlPool (do
+                                          update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
+                                          update (eventTicketOrderTierId order)
+                                            [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                                          case eventTicketOrderPromoCodeId order of
+                                            Nothing -> pure ()
+                                            Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+                                          ) envPool
+                                      pure NoContent
                                 Nothing -> pure NoContent
-                                Just (Entity orderKey order) -> do
-                                  when (eventTicketOrderStatus order == "pending") $ do
-                                    liftIO $ runSqlPool (do
-                                      update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
-                                      update (eventTicketOrderTierId order)
-                                        [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
-                                      case eventTicketOrderPromoCodeId order of
-                                        Nothing -> pure ()
-                                        Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
-                                      ) envPool
-                                  pure NoContent
-                            Nothing -> pure NoContent
-                        "charge.refunded" -> pure NoContent
-                        _ -> pure NoContent
+                            "charge.refunded" -> pure NoContent
+                            _ -> pure NoContent
+            _ -> throwError err400 { errBody = "Invalid webhook payload format" }
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     -- Refunds
