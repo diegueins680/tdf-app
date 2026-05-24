@@ -65,6 +65,7 @@ module TDF.Server.SocialEventsHandlers
   , validateTicketPurchaseBuyerEmail
   , validateTicketTierCodeInput
   , validateTicketTierCurrencyInput
+  , decodeStoredPromoCodeTierIds
   , isImageUpload
   , validateEventImageUploadSize
   , validateEventTitleInput
@@ -118,7 +119,6 @@ import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser(..))
 import           TDF.Config (AppConfig(..), assetsRootDir, resolveConfiguredAssetsBase)
 import qualified TDF.Services.Stripe as Stripe
-import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString as BS
 import qualified System.Random as Random
@@ -4136,6 +4136,11 @@ validateStoredEventFinanceMetadata eventRec = do
       value -> Right value
   Right (currencyVal, budgetVal)
 
+decodeStoredPromoCodeTierIds :: Maybe T.Text -> Maybe [T.Text]
+decodeStoredPromoCodeTierIds rawTierIds = do
+  tierIdsText <- rawTierIds
+  Aeson.decodeStrict' (TE.encodeUtf8 tierIdsText)
+
 storedEventMetadataServerError :: T.Text -> ServerError
 storedEventMetadataServerError message =
   err500 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
@@ -4446,28 +4451,24 @@ ticketOrderEntityToDTO (Entity orderKey orderRow) tickets = TicketOrderDTO
   , ticketOrderTickets = map ticketEntityToDTO tickets
   }
 
-promoCodeEntityToDTO :: Entity PromoCode -> PromoCodeDTO
+promoCodeEntityToDTO :: Entity SM.PromoCode -> PromoCodeDTO
 promoCodeEntityToDTO (Entity codeKey codeRow) = PromoCodeDTO
   { promoCodeId = Just (renderKeyText codeKey)
-  , promoCodeEventId = fmap renderKeyText (promoCodeEventId codeRow)
-  , promoCodeCode = promoCodeCode codeRow
-  , promoCodeDescription = promoCodeDescription codeRow
-  , promoCodeDiscountType = promoCodeDiscountType codeRow
-  , promoCodeDiscountValue = promoCodeDiscountValue codeRow
-  , promoCodeCurrency = promoCodeCurrency codeRow
-  , promoCodeMaxRedemptions = promoCodeMaxRedemptions codeRow
-  , promoCodeCurrentRedemptions = promoCodeCurrentRedemptions codeRow
-  , promoCodeValidFrom = promoCodeValidFrom codeRow
-  , promoCodeValidUntil = promoCodeValidUntil codeRow
-  , promoCodeTierIds = case promoCodeTierIds codeRow of
-      Nothing -> Nothing
-      Just tierIdsText -> case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
-        Just ids -> Just ids
-        Nothing -> Nothing
-  , promoCodeMinPurchaseAmountCents = promoCodeMinPurchaseAmountCents codeRow
-  , promoCodeIsActive = promoCodeIsActive codeRow
-  , promoCodeCreatedAt = Just (promoCodeCreatedAt codeRow)
-  , promoCodeUpdatedAt = Just (promoCodeUpdatedAt codeRow)
+  , promoCodeEventId = fmap renderKeyText (SM.promoCodeEventId codeRow)
+  , promoCodeCode = SM.promoCodeCode codeRow
+  , promoCodeDescription = SM.promoCodeDescription codeRow
+  , promoCodeDiscountType = SM.promoCodeDiscountType codeRow
+  , promoCodeDiscountValue = SM.promoCodeDiscountValue codeRow
+  , promoCodeCurrency = SM.promoCodeCurrency codeRow
+  , promoCodeMaxRedemptions = SM.promoCodeMaxRedemptions codeRow
+  , promoCodeCurrentRedemptions = SM.promoCodeCurrentRedemptions codeRow
+  , promoCodeValidFrom = SM.promoCodeValidFrom codeRow
+  , promoCodeValidUntil = SM.promoCodeValidUntil codeRow
+  , promoCodeTierIds = decodeStoredPromoCodeTierIds (SM.promoCodeTierIds codeRow)
+  , promoCodeMinPurchaseAmountCents = SM.promoCodeMinPurchaseAmountCents codeRow
+  , promoCodeIsActive = SM.promoCodeIsActive codeRow
+  , promoCodeCreatedAt = Just (SM.promoCodeCreatedAt codeRow)
+  , promoCodeUpdatedAt = Just (SM.promoCodeUpdatedAt codeRow)
   }
 
 refundEntityToDTO :: Entity TicketRefundRequest -> RefundDTO

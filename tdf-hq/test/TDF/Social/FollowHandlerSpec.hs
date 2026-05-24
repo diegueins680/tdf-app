@@ -43,7 +43,8 @@ import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
-    ( followArtistDb
+    ( decodeStoredPromoCodeTierIds
+    , followArtistDb
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
     , socialEventsServer
@@ -231,6 +232,16 @@ spec = describe "social event handler helpers" $ do
             "Stored event metadata contains unknown fields: curency"
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
+
+    it "decodes stored promo-code tier ids only from JSON text arrays" $ do
+        decodeStoredPromoCodeTierIds Nothing `shouldBe` Nothing
+        decodeStoredPromoCodeTierIds (Just "[\"tier-vip\",\"tier-general\"]")
+            `shouldBe` Just ["tier-vip", "tier-general"]
+        decodeStoredPromoCodeTierIds (Just "not-json") `shouldBe` Nothing
+        decodeStoredPromoCodeTierIds (Just "{\"tierIds\":[\"tier-vip\"]}")
+            `shouldBe` Nothing
+        decodeStoredPromoCodeTierIds (Just "[1,2]")
+            `shouldBe` Nothing
 
     it "rejects hidden venue name markers before venue create/update persistence" $ do
         validateVenueCreateUpdateFields " Teatro TDF " Nothing Nothing (Just 250)

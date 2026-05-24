@@ -21,7 +21,7 @@ module TDF.API.SocialEventsAPI
   , validateEventImageUploadForm
   ) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
   , generalCategory

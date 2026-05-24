@@ -20,7 +20,9 @@ import           Data.Time.Clock.POSIX (getPOSIXTime)
 import           Network.HTTP.Client
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
-import qualified Crypto.Hash.SHA256 as SHA256
+import           Crypto.Hash.Algorithms (SHA256)
+import           Crypto.MAC.HMAC (HMAC, hmac)
+import           Data.ByteArray (convert)
 import           Data.ByteString.Base16 (encode)
 
 -- | Configuration for Stripe API
@@ -69,8 +71,8 @@ createPaymentIntent cfg amountCents currency description mMetadata = do
     then case Aeson.decode bodyLBS of
       Just val -> pure (Right val)
       Nothing -> pure (Left "Failed to parse Stripe PaymentIntent response")
-    else case Aeson.decode bodyLBS of
-      Just (val :: Value) -> pure (Left $ "Stripe API error: " <> T.pack (show val))
+    else case (Aeson.decode bodyLBS :: Maybe Value) of
+      Just val -> pure (Left $ "Stripe API error: " <> T.pack (show val))
       Nothing -> pure (Left $ "Stripe API error with status: " <> T.pack (show status))
 
 -- | Create a refund for a PaymentIntent
@@ -107,8 +109,8 @@ createRefund cfg paymentIntentId amountCents = do
     then case Aeson.decode bodyLBS of
       Just val -> pure (Right val)
       Nothing -> pure (Left "Failed to parse Stripe refund response")
-    else case Aeson.decode bodyLBS of
-      Just (val :: Value) -> pure (Left $ "Stripe refund error: " <> T.pack (show val))
+    else case (Aeson.decode bodyLBS :: Maybe Value) of
+      Just val -> pure (Left $ "Stripe refund error: " <> T.pack (show val))
       Nothing -> pure (Left $ "Stripe refund error with status: " <> T.pack (show status))
 
 -- | Verify Stripe webhook signature
@@ -124,7 +126,7 @@ verifyWebhookSignature cfg signatureHeader rawBody =
     Just (timestamp, signature) ->
       let signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
           secret = TE.encodeUtf8 (stripeWebhookSecret cfg)
-          expectedSig = SHA256.hmac secret signedPayload
+          expectedSig = convert (hmac secret signedPayload :: HMAC SHA256)
           expectedSigHex = Data.ByteString.Base16.encode expectedSig
       in expectedSigHex == TE.encodeUtf8 signature
 
@@ -153,5 +155,5 @@ urlEncode = BS.concatMap encode1
     toHex w = [hexDigit (w `div` 16), hexDigit (w `mod` 16)]
 
     hexDigit n
-      | n < 10 = fromIntegral (n + 48)  -- 0-9
-      | otherwise = fromIntegral (n + 87)  -- a-f
+      | n < 10 = toEnum (fromIntegral n + fromEnum '0')
+      | otherwise = toEnum (fromIntegral n - 10 + fromEnum 'a')
