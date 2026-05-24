@@ -69,6 +69,17 @@ import TDF.DTO.SocialEventsDTO
   , TicketCheckInRequestDTO
   , TicketDTO
   , TicketOrderDTO
+  , PromoCodeDTO
+  , TicketPurchaseWithPromoDTO
+  , RefundRequestDTO
+  , RefundDTO
+  , RejectionReasonDTO
+  , TicketTransferCreateDTO
+  , TicketTransferDTO
+  , WaitlistJoinDTO
+  , WaitlistEntryDTO
+  , StripePaymentIntentDTO
+  , TicketWithQRDTO
   , EventBudgetLineDTO
   , EventFinanceEntryDTO
   , EventFinanceSummaryDTO
