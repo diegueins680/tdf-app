@@ -372,6 +372,14 @@ import TDF.Server.SocialEventsHandlers (
     validateTicketPurchaseBuyerEmail,
     validateTicketTierCodeInput,
     validateTicketTierCurrencyInput,
+    decodeStoredPromoCodeTierIds,
+    encodePromoCodeTierIds,
+    promoCodeDiscountAmountEither,
+    validatePromoCodeDateWindow,
+    validatePromoCodeMinimumPurchaseCents,
+    validatePromoCodeMinimumPurchaseParam,
+    validatePromoCodeRedemptionLimit,
+    validatePromoCodeTierEligibility,
     validateEventCurrencyInput,
     validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
@@ -921,6 +929,16 @@ main = hspec $ do
                     header
                     (BS.snoc rawBody 0)
                     QC.=== False
+
+        it "rejects webhook signatures that do not contain both timestamp and v1 fields" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                rawBody = "{\"id\":\"evt_123\"}"
+                signature = stripeV1Signature secret timestamp rawBody
+                cfg = stripeTestConfig secret
+            Stripe.verifyWebhookSignature cfg "" rawBody `shouldBe` False
+            Stripe.verifyWebhookSignature cfg ("t=" <> timestamp) rawBody `shouldBe` False
+            Stripe.verifyWebhookSignature cfg ("v1=" <> signature) rawBody `shouldBe` False
 
         it "extracts required PaymentIntent fields from explicit object payloads" $
             parseStripePaymentIntentResponse
@@ -9097,6 +9115,66 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "promo code helper invariants" $ do
+        let now = UTCTime (fromGregorian 2026 5 24) (secondsToDiffTime 43200)
+            past = addUTCTime (-60) now
+            future = addUTCTime 60 now
+
+        it "keeps date windows and redemption limits explicit for absent and present fields" $ do
+            validatePromoCodeDateWindow now Nothing Nothing `shouldBe` Right ()
+            validatePromoCodeDateWindow now (Just past) (Just future) `shouldBe` Right ()
+            validatePromoCodeDateWindow now (Just future) Nothing
+                `shouldBe` Left "Promo code is not yet valid"
+            validatePromoCodeDateWindow now Nothing (Just past)
+                `shouldBe` Left "Promo code has expired"
+
+            validatePromoCodeRedemptionLimit 2 Nothing `shouldBe` Right ()
+            validatePromoCodeRedemptionLimit 1 (Just 2) `shouldBe` Right ()
+            validatePromoCodeRedemptionLimit 2 (Just 2)
+                `shouldBe` Left "Promo code redemption limit reached"
+
+        it "round-trips stored tier ids and rejects malformed or mismatched restrictions" $ do
+            encodePromoCodeTierIds Nothing `shouldBe` Nothing
+            decodeStoredPromoCodeTierIds (encodePromoCodeTierIds (Just ["vip", "ga"]))
+                `shouldBe` Just ["vip", "ga"]
+
+            validatePromoCodeTierEligibility Nothing (Just "vip") `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) Nothing
+                `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) (Just "vip")
+                `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) (Just "ga")
+                `shouldBe` Left "Promo code is not valid for this ticket tier"
+            validatePromoCodeTierEligibility (Just "not-json") (Just "vip")
+                `shouldBe` Left "Promo code tier restrictions are invalid"
+
+        it "validates minimum purchase amounts without assuming optional inputs exist" $ do
+            validatePromoCodeMinimumPurchaseParam Nothing (Just "not-a-number")
+                `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseParam (Just 1000) Nothing
+                `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "not-a-number")
+                `shouldBe` Left "Invalid amount"
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "999")
+                `shouldBe` Left "Purchase amount does not meet minimum requirement"
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "1000")
+                `shouldBe` Right ()
+
+            validatePromoCodeMinimumPurchaseCents Nothing 999 `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseCents (Just 1000) 999
+                `shouldBe` Left "Purchase amount does not meet minimum requirement"
+            validatePromoCodeMinimumPurchaseCents (Just 1000) 1000 `shouldBe` Right ()
+
+        it "calculates promo discounts only for supported stored discount types" $ do
+            promoCodeDiscountAmountEither 1500 "percentage" 20 `shouldBe` Right 300
+            promoCodeDiscountAmountEither 1500 "fixed" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "bogus" 20
+                `shouldBe` Left "Promo code discount type is invalid"
+            promoCodeDiscountAmountEither 1500 "fixed" (-1)
+                `shouldBe` Left "Promo code discount value is invalid"
+            promoCodeDiscountAmountEither 1500 "percentage" 101
+                `shouldBe` Left "Promo code percentage discount is invalid"
 
     describe "validateTicketPurchaseBuyerName" $ do
         it "normalizes optional buyer names before ticket order storage" $ do

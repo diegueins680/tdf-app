@@ -44,7 +44,7 @@ withStripeManager =
 --
 -- Preconditions:
 -- * amount is expressed in the smallest currency unit accepted by Stripe.
--- * currency is a Stripe currency code; it is normalized to lower case.
+-- * currency is a Stripe currency code; it is normalized to lowercase.
 -- * metadata, when present, is already serialized into the expected form field.
 --
 -- Postcondition: the returned Either is produced by 'decodeStripeResponse', so
@@ -165,7 +165,7 @@ decodeStripeResponse status bodyLBS parseFailureMessage errorPrefix
 -- replay-protection concern.
 --
 -- Contract: returns True exactly when the header contains both "t" and "v1",
--- and v1 is the lower-case hex HMAC-SHA256 of @t <> "." <> rawBody@ using the
+-- and v1 is the lowercase hex HMAC-SHA256 of @t <> "." <> rawBody@ using the
 -- configured webhook secret.
 verifyWebhookSignature
   :: StripeConfig
@@ -173,9 +173,9 @@ verifyWebhookSignature
   -> ByteString -- ^ Raw request body
   -> Bool
 verifyWebhookSignature cfg signatureHeader rawBody =
-  case parseSignatureHeader signatureHeader of
-    Nothing -> False
-    Just (timestamp, signature) ->
+  maybe False matchesSignature (parseSignatureHeader signatureHeader)
+  where
+    matchesSignature (timestamp, signature) =
       let signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
           secret = TE.encodeUtf8 (stripeWebhookSecret cfg)
           expectedSig = convert (hmac secret signedPayload :: HMAC SHA256)
@@ -186,12 +186,12 @@ verifyWebhookSignature cfg signatureHeader rawBody =
 -- Format: "t=1492774577,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd"
 parseSignatureHeader :: Text -> Maybe (Text, Text)
 parseSignatureHeader header =
-  let parts = T.splitOn "," header
-      pairs = map (T.breakOn "=") parts
-      findValue key = lookup key [(T.strip k, T.drop 1 v) | (k, v) <- pairs, not (T.null v)]
-  in case (findValue "t", findValue "v1") of
-    (Just timestamp, Just sig) -> Just (timestamp, sig)
-    _ -> Nothing
+  (,) <$> findValue "t" <*> findValue "v1"
+  where
+    parts = T.splitOn "," header
+    pairs = map (T.breakOn "=") parts
+    findValue key =
+      lookup key [(T.strip k, T.drop 1 v) | (k, v) <- pairs, not (T.null v)]
 
 -- | URL-encode a ByteString (simple implementation for form data)
 urlEncode :: ByteString -> ByteString
