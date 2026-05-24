@@ -98,6 +98,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
@@ -1910,6 +1911,816 @@ socialEventsServer user = eventsServer
           maybe (throwError err500 { errBody = "Could not check in ticket" })
                 (pure . ticketEntityToDTO)
                 mUpdated
+
+    -- Promo Codes
+    listPromoCodes :: T.Text -> AppM [PromoCodeDTO]
+    listPromoCodes eventIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      _ <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      rows <- liftIO $ runSqlPool
+        (selectList [PromoCodeEventId ==. Just eventKey] [Desc PromoCodeCreatedAt])
+        envPool
+      pure (map promoCodeEntityToDTO rows)
+
+    createPromoCode :: T.Text -> PromoCodeDTO -> AppM PromoCodeDTO
+    createPromoCode eventIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      let code = T.toUpper (T.strip (promoCodeCode dto))
+      when (T.null code) $ throwError err400 { errBody = "Promo code is required" }
+      when (promoCodeDiscountValue dto < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
+      when (promoCodeDiscountType dto `notElem` ["percentage", "fixed"]) $
+        throwError err400 { errBody = "Discount type must be 'percentage' or 'fixed'" }
+      when (promoCodeDiscountType dto == "percentage" && promoCodeDiscountValue dto > 100) $
+        throwError err400 { errBody = "Percentage discount cannot exceed 100" }
+      let tierIdsJson = case promoCodeTierIds dto of
+            Nothing -> Nothing
+            Just ids -> Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode ids)))
+      mInserted <- liftIO $ runSqlPool (insertUnique PromoCode
+        { promoCodeEventId = Just eventKey
+        , promoCodeCode = code
+        , promoCodeDescription = promoCodeDescription dto
+        , promoCodeDiscountType = promoCodeDiscountType dto
+        , promoCodeDiscountValue = promoCodeDiscountValue dto
+        , promoCodeCurrency = promoCodeCurrency dto
+        , promoCodeMaxRedemptions = promoCodeMaxRedemptions dto
+        , promoCodeCurrentRedemptions = 0
+        , promoCodeValidFrom = promoCodeValidFrom dto
+        , promoCodeValidUntil = promoCodeValidUntil dto
+        , promoCodeTierIds = tierIdsJson
+        , promoCodeMinPurchaseAmountCents = promoCodeMinPurchaseAmountCents dto
+        , promoCodeIsActive = promoCodeIsActive dto
+        , promoCodeCreatedByPartyId = Just currentPartyId
+        , promoCodeCreatedAt = now
+        , promoCodeUpdatedAt = now
+        }) envPool
+      codeKey <- maybe (throwError err409 { errBody = "Promo code already exists" }) pure mInserted
+      mCode <- liftIO $ runSqlPool (getEntity codeKey) envPool
+      maybe (throwError err500 { errBody = "Could not create promo code" })
+            (pure . promoCodeEntityToDTO)
+            mCode
+
+    updatePromoCode :: T.Text -> T.Text -> PromoCodeDTO -> AppM PromoCodeDTO
+    updatePromoCode eventIdStr codeIdStr dto = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      codeKey <- parseKeyOr400 "promo code" codeIdStr
+      mCode <- liftIO $ runSqlPool (get codeKey) envPool
+      code <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCode
+      when (promoCodeEventId code /= Just eventKey) $
+        throwError err400 { errBody = "Promo code does not belong to this event" }
+      when (promoCodeDiscountValue dto < 0) $ throwError err400 { errBody = "Discount value must be >= 0" }
+      when (promoCodeDiscountType dto `notElem` ["percentage", "fixed"]) $
+        throwError err400 { errBody = "Discount type must be 'percentage' or 'fixed'" }
+      when (promoCodeDiscountType dto == "percentage" && promoCodeDiscountValue dto > 100) $
+        throwError err400 { errBody = "Percentage discount cannot exceed 100" }
+      let tierIdsJson = case promoCodeTierIds dto of
+            Nothing -> Nothing
+            Just ids -> Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode ids)))
+      liftIO $ runSqlPool (update codeKey
+        [ PromoCodeDescription =. promoCodeDescription dto
+        , PromoCodeDiscountType =. promoCodeDiscountType dto
+        , PromoCodeDiscountValue =. promoCodeDiscountValue dto
+        , PromoCodeCurrency =. promoCodeCurrency dto
+        , PromoCodeMaxRedemptions =. promoCodeMaxRedemptions dto
+        , PromoCodeValidFrom =. promoCodeValidFrom dto
+        , PromoCodeValidUntil =. promoCodeValidUntil dto
+        , PromoCodeTierIds =. tierIdsJson
+        , PromoCodeMinPurchaseAmountCents =. promoCodeMinPurchaseAmountCents dto
+        , PromoCodeIsActive =. promoCodeIsActive dto
+        , PromoCodeUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity codeKey) envPool
+      maybe (throwError err500 { errBody = "Could not update promo code" })
+            (pure . promoCodeEntityToDTO)
+            mUpdated
+
+    validatePromoCode :: T.Text -> T.Text -> Maybe T.Text -> Maybe T.Text -> AppM PromoCodeDTO
+    validatePromoCode eventIdStr codeStr mTierId mAmountStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      _ <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      let cleanCode = T.toUpper (T.strip codeStr)
+      mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
+      codeEnt <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCodeEnt
+      let code = entityVal codeEnt
+      when (promoCodeEventId code /= Just eventKey) $
+        throwError err400 { errBody = "Promo code does not belong to this event" }
+      when (not (promoCodeIsActive code)) $
+        throwError err400 { errBody = "Promo code is not active" }
+      case promoCodeValidFrom code of
+        Just validFrom | now < validFrom ->
+          throwError err400 { errBody = "Promo code is not yet valid" }
+        _ -> pure ()
+      case promoCodeValidUntil code of
+        Just validUntil | now > validUntil ->
+          throwError err400 { errBody = "Promo code has expired" }
+        _ -> pure ()
+      case promoCodeMaxRedemptions code of
+        Just maxRedemptions | promoCodeCurrentRedemptions code >= maxRedemptions ->
+          throwError err400 { errBody = "Promo code redemption limit reached" }
+        _ -> pure ()
+      case (promoCodeTierIds code, mTierId) of
+        (Just tierIdsText, Just requestedTierId) -> do
+          case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
+            Just (tierIds :: [T.Text]) ->
+              when (requestedTierId `notElem` tierIds) $
+                throwError err400 { errBody = "Promo code is not valid for this ticket tier" }
+            Nothing -> pure ()
+        _ -> pure ()
+      case (promoCodeMinPurchaseAmountCents code, mAmountStr) of
+        (Just minAmount, Just amountStr) -> do
+          amount <- case readMaybe (T.unpack amountStr) of
+            Just a -> pure (a :: Int)
+            Nothing -> throwError err400 { errBody = "Invalid amount" }
+          when (amount < minAmount) $
+            throwError err400 { errBody = "Purchase amount does not meet minimum requirement" }
+        _ -> pure ()
+      pure (promoCodeEntityToDTO codeEnt)
+
+    -- Stripe Payment
+    createStripePaymentIntent :: TicketPurchaseWithPromoDTO -> AppM StripePaymentIntentDTO
+    createStripePaymentIntent TicketPurchaseWithPromoDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      let TicketPurchaseRequestDTO{..} = tpwpPurchase
+      tierKey <- parseKeyOr400 "ticket tier" ticketPurchaseTierId
+      mTier <- liftIO $ runSqlPool (get tierKey) envPool
+      tier <- maybe (throwError err404 { errBody = "Ticket tier not found" }) pure mTier
+      let eventKey = eventTicketTierEventId tier
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      when (ticketPurchaseQuantity <= 0) $ throwError err400 { errBody = "Quantity must be > 0" }
+      when (not (isTicketTierSaleOpen now tier)) $
+        throwError err400 { errBody = "Ticket sales are closed for this tier" }
+      let manager = isEventManager currentPartyId eventVal
+      requestedBuyer <- either throwError pure
+        (validateOptionalTicketBuyerPartyId "ticketPurchaseBuyerPartyId" ticketPurchaseBuyerPartyId)
+      buyerParty <- case requestedBuyer of
+        Nothing -> pure (Just currentPartyId)
+        Just buyer
+          | buyer == currentPartyId -> pure (Just currentPartyId)
+          | manager -> pure (Just buyer)
+          | otherwise -> throwError err403 { errBody = "Cannot assign tickets to another buyer" }
+      buyerName <- either throwError pure
+        (validateTicketPurchaseBuyerName ticketPurchaseBuyerName)
+      buyerEmail <- either throwError pure
+        (validateTicketPurchaseBuyerEmail ticketPurchaseBuyerEmail)
+      let baseAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
+      (finalAmountCents, mPromoCodeKey, mPromoCodeEnt) <- case tpwpPromoCode of
+        Nothing -> pure (baseAmountCents, Nothing, Nothing)
+        Just promoCodeStr -> do
+          let cleanCode = T.toUpper (T.strip promoCodeStr)
+          mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
+          codeEnt <- maybe (throwError err404 { errBody = "Promo code not found" }) pure mCodeEnt
+          let code = entityVal codeEnt
+          when (promoCodeEventId code /= Just eventKey) $
+            throwError err400 { errBody = "Promo code does not belong to this event" }
+          when (not (promoCodeIsActive code)) $
+            throwError err400 { errBody = "Promo code is not active" }
+          case promoCodeValidFrom code of
+            Just validFrom | now < validFrom ->
+              throwError err400 { errBody = "Promo code is not yet valid" }
+            _ -> pure ()
+          case promoCodeValidUntil code of
+            Just validUntil | now > validUntil ->
+              throwError err400 { errBody = "Promo code has expired" }
+            _ -> pure ()
+          case promoCodeMaxRedemptions code of
+            Just maxRedemptions | promoCodeCurrentRedemptions code >= maxRedemptions ->
+              throwError err400 { errBody = "Promo code redemption limit reached" }
+            _ -> pure ()
+          case promoCodeTierIds code of
+            Just tierIdsText -> do
+              case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
+                Just (tierIds :: [T.Text]) ->
+                  when (ticketPurchaseTierId `notElem` tierIds) $
+                    throwError err400 { errBody = "Promo code is not valid for this ticket tier" }
+                Nothing -> pure ()
+            Nothing -> pure ()
+          case promoCodeMinPurchaseAmountCents code of
+            Just minAmount | baseAmountCents < minAmount ->
+              throwError err400 { errBody = "Purchase amount does not meet minimum requirement" }
+            _ -> pure ()
+          let discountAmount = case promoCodeDiscountType code of
+                "percentage" -> (baseAmountCents * promoCodeDiscountValue code) `div` 100
+                "fixed" -> min (promoCodeDiscountValue code) baseAmountCents
+                _ -> 0
+              discountedAmount = max 0 (baseAmountCents - discountAmount)
+          pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
+      orderDto <- liftIO $ runSqlPool (do
+        mTierForUpdate <- selectFirst
+          [EventTicketTierId ==. tierKey]
+          [LockingFor ForUpdate]
+        tierForUpdate <- maybe (fail "Ticket tier not found") pure mTierForUpdate
+        let tierVal = entityVal tierForUpdate
+            availableInTier = ticketTierAvailability tierVal
+        when (ticketPurchaseQuantity > availableInTier) $
+          fail "Not enough tickets available"
+        soldAcross <- selectList [EventTicketTierEventId ==. eventKey] []
+        let soldCount = sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
+        case socialEventCapacity eventVal of
+          Nothing -> pure ()
+          Just cap ->
+            when (soldCount + ticketPurchaseQuantity > cap) $
+              fail "Event capacity reached"
+        update tierKey
+          [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
+          , EventTicketTierUpdatedAt =. now
+          ]
+        let orderRecord = EventTicketOrder
+              { eventTicketOrderEventId = eventKey
+              , eventTicketOrderTierId = tierKey
+              , eventTicketOrderBuyerPartyId = buyerParty
+              , eventTicketOrderBuyerName = buyerName
+              , eventTicketOrderBuyerEmail = buyerEmail
+              , eventTicketOrderQuantity = ticketPurchaseQuantity
+              , eventTicketOrderAmountCents = finalAmountCents
+              , eventTicketOrderCurrency = eventTicketTierCurrency tier
+              , eventTicketOrderStatus = "pending"
+              , eventTicketOrderMetadata = Nothing
+              , eventTicketOrderPurchasedAt = now
+              , eventTicketOrderStripePaymentIntentId = Nothing
+              , eventTicketOrderPromoCodeId = mPromoCodeKey
+              , eventTicketOrderOriginalAmountCents = if isJust mPromoCodeKey then Just baseAmountCents else Nothing
+              , eventTicketOrderPaymentMethod = Just "stripe"
+              , eventTicketOrderCreatedAt = now
+              , eventTicketOrderUpdatedAt = now
+              }
+        orderKey <- insert orderRecord
+        case mPromoCodeKey of
+          Nothing -> pure ()
+          Just promoKey -> do
+            update promoKey [PromoCodeCurrentRedemptions +=. 1]
+            pure ()
+        pure (orderKey, orderRecord)
+        ) envPool
+      let (orderKey, orderRecord) = orderDto
+      case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+        (Just secretKey, Just webhookSecret) -> do
+          let stripeCfg = Stripe.StripeConfig
+                { Stripe.stripeSecretKey = secretKey
+                , Stripe.stripeWebhookSecret = webhookSecret
+                , Stripe.stripeApiVersion = "2023-10-16"
+                }
+              description = "Tickets for event " <> renderKeyText eventKey
+              metadata = Aeson.object
+                [ "order_id" Aeson..= renderKeyText orderKey
+                , "event_id" Aeson..= renderKeyText eventKey
+                ]
+              metadataJson = Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode metadata)))
+          result <- liftIO $ Stripe.createPaymentIntent
+            stripeCfg
+            finalAmountCents
+            (eventTicketOrderCurrency orderRecord)
+            description
+            metadataJson
+          case result of
+            Left err -> do
+              liftIO $ runSqlPool (do
+                update orderKey [EventTicketOrderStatus =. "cancelled"]
+                update tierKey [EventTicketTierQuantitySold +=. (negate ticketPurchaseQuantity)]
+                case mPromoCodeKey of
+                  Nothing -> pure ()
+                  Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+                ) envPool
+              throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> err)) }
+            Right paymentIntent -> do
+              case Aeson.parseMaybe (Aeson..: "id") paymentIntent of
+                Nothing -> throwError err500 { errBody = "Could not parse Stripe response" }
+                Just (piId :: T.Text) -> do
+                  case Aeson.parseMaybe (Aeson..: "client_secret") paymentIntent of
+                    Nothing -> throwError err500 { errBody = "Could not parse Stripe client secret" }
+                    Just (clientSecret :: T.Text) -> do
+                      liftIO $ runSqlPool (update orderKey
+                        [EventTicketOrderStripePaymentIntentId =. Just piId]) envPool
+                      pure StripePaymentIntentDTO
+                        { spiClientSecret = clientSecret
+                        , spiOrderId = renderKeyText orderKey
+                        , spiAmountCents = finalAmountCents
+                        , spiCurrency = eventTicketOrderCurrency orderRecord
+                        }
+        _ -> throwError err500 { errBody = "Stripe is not configured" }
+
+    stripeWebhook :: Aeson.Value -> Maybe T.Text -> AppM NoContent
+    stripeWebhook payload mSignature = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+        (Just secretKey, Just webhookSecret) -> do
+          let stripeCfg = Stripe.StripeConfig
+                { Stripe.stripeSecretKey = secretKey
+                , Stripe.stripeWebhookSecret = webhookSecret
+                , Stripe.stripeApiVersion = "2023-10-16"
+                }
+          signature <- maybe (throwError err400 { errBody = "Missing Stripe-Signature header" }) pure mSignature
+          let rawBody = BL.toStrict (Aeson.encode payload)
+          when (not (Stripe.verifyWebhookSignature stripeCfg signature rawBody)) $
+            throwError err400 { errBody = "Invalid webhook signature" }
+          case Aeson.parseMaybe (Aeson..: "id") payload of
+            Nothing -> throwError err400 { errBody = "Invalid webhook payload" }
+            Just (eventId :: T.Text) -> do
+              mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
+              case mExisting of
+                Just _ -> pure NoContent
+                Nothing -> do
+                  case Aeson.parseMaybe (Aeson..: "type") payload of
+                    Nothing -> throwError err400 { errBody = "Invalid webhook event type" }
+                    Just (eventType :: T.Text) -> do
+                      liftIO $ runSqlPool (insert_ StripeWebhookEvent
+                        { stripeWebhookEventStripeEventId = eventId
+                        , stripeWebhookEventEventType = eventType
+                        , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
+                        , stripeWebhookEventProcessedAt = now
+                        }) envPool
+                      case eventType of
+                        "payment_intent.succeeded" -> do
+                          case Aeson.parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= Aeson..: "object" >>= Aeson..: "id")) payload of
+                            Just (piId :: T.Text) -> do
+                              mOrder <- liftIO $ runSqlPool
+                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+                                envPool
+                              case mOrder of
+                                Nothing -> pure NoContent
+                                Just (Entity orderKey order) -> do
+                                  when (eventTicketOrderStatus order == "pending") $ do
+                                    liftIO $ runSqlPool (do
+                                      update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
+                                      tickets <- replicateM (eventTicketOrderQuantity order) $ do
+                                        ticketCodeValue <- generateUniqueTicketCode
+                                        ticketKey <- insert EventTicket
+                                          { eventTicketEventId = eventTicketOrderEventId order
+                                          , eventTicketTierRefId = eventTicketOrderTierId order
+                                          , eventTicketOrderRefId = orderKey
+                                          , eventTicketHolderName = eventTicketOrderBuyerName order
+                                          , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
+                                          , eventTicketCode = ticketCodeValue
+                                          , eventTicketStatus = "issued"
+                                          , eventTicketCheckedInAt = Nothing
+                                          , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
+                                          , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
+                                          , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
+                                          , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
+                                          , eventTicketTransferHistory = Nothing
+                                          , eventTicketCreatedAt = now
+                                          , eventTicketUpdatedAt = now
+                                          }
+                                        pure ticketKey
+                                      pure tickets
+                                      ) envPool
+                                  pure NoContent
+                            Nothing -> pure NoContent
+                        "payment_intent.payment_failed" -> do
+                          case Aeson.parseMaybe (Aeson.withObject "data" (\o -> o Aeson..: "data" >>= Aeson..: "object" >>= Aeson..: "id")) payload of
+                            Just (piId :: T.Text) -> do
+                              mOrder <- liftIO $ runSqlPool
+                                (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
+                                envPool
+                              case mOrder of
+                                Nothing -> pure NoContent
+                                Just (Entity orderKey order) -> do
+                                  when (eventTicketOrderStatus order == "pending") $ do
+                                    liftIO $ runSqlPool (do
+                                      update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
+                                      update (eventTicketOrderTierId order)
+                                        [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                                      case eventTicketOrderPromoCodeId order of
+                                        Nothing -> pure ()
+                                        Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+                                      ) envPool
+                                  pure NoContent
+                            Nothing -> pure NoContent
+                        "charge.refunded" -> pure NoContent
+                        _ -> pure NoContent
+        _ -> throwError err500 { errBody = "Stripe is not configured" }
+
+    -- Refunds
+    createRefundRequest :: T.Text -> T.Text -> RefundRequestDTO -> AppM RefundDTO
+    createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      orderKey <- parseKeyOr400 "ticket order" orderIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+      order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
+      when (eventTicketOrderEventId order /= eventKey) $
+        throwError err400 { errBody = "Ticket order does not belong to this event" }
+      when (eventTicketOrderStatus order /= "paid") $
+        throwError err400 { errBody = "Only paid orders can be refunded" }
+      let manager = isEventManager currentPartyId eventVal
+      when (not manager && eventTicketOrderBuyerPartyId order /= Just currentPartyId) $
+        throwError err403 { errBody = "You can only request refunds for your own orders" }
+      mExisting <- liftIO $ runSqlPool
+        (selectFirst [TicketRefundRequestOrderId ==. orderKey] [])
+        envPool
+      when (isJust mExisting) $
+        throwError err409 { errBody = "Refund request already exists for this order" }
+      let amountCents = fromMaybe (eventTicketOrderAmountCents order) refundRequestAmountCents
+      when (amountCents > eventTicketOrderAmountCents order) $
+        throwError err400 { errBody = "Refund amount cannot exceed order amount" }
+      when (amountCents <= 0) $ throwError err400 { errBody = "Refund amount must be > 0" }
+      refundKey <- liftIO $ runSqlPool (insert TicketRefundRequest
+        { ticketRefundRequestOrderId = orderKey
+        , ticketRefundRequestRequestedByPartyId = Just currentPartyId
+        , ticketRefundRequestReason = refundRequestReason
+        , ticketRefundRequestAmountCents = amountCents
+        , ticketRefundRequestStatus = "pending"
+        , ticketRefundRequestApprovedByPartyId = Nothing
+        , ticketRefundRequestApprovedAt = Nothing
+        , ticketRefundRequestRejectionReason = Nothing
+        , ticketRefundRequestStripeRefundId = Nothing
+        , ticketRefundRequestProcessedAt = Nothing
+        , ticketRefundRequestCreatedAt = now
+        , ticketRefundRequestUpdatedAt = now
+        }) envPool
+      mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
+      maybe (throwError err500 { errBody = "Could not create refund request" })
+            (pure . refundEntityToDTO)
+            mRefund
+
+    listRefunds :: T.Text -> AppM [RefundDTO]
+    listRefunds eventIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      let manager = isEventManager currentPartyId eventVal
+      orderIds <- if manager
+        then do
+          orders <- liftIO $ runSqlPool
+            (selectList [EventTicketOrderEventId ==. eventKey] [])
+            envPool
+          pure (map entityKey orders)
+        else do
+          orders <- liftIO $ runSqlPool
+            (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
+            envPool
+          pure (map entityKey orders)
+      refunds <- liftIO $ runSqlPool
+        (selectList [TicketRefundRequestOrderId <-. orderIds] [Desc TicketRefundRequestCreatedAt])
+        envPool
+      pure (map refundEntityToDTO refunds)
+
+    approveRefund :: T.Text -> T.Text -> AppM RefundDTO
+    approveRefund eventIdStr refundIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      refundKey <- parseKeyOr400 "refund" refundIdStr
+      mRefund <- liftIO $ runSqlPool (get refundKey) envPool
+      refund <- maybe (throwError err404 { errBody = "Refund request not found" }) pure mRefund
+      let orderKey = ticketRefundRequestOrderId refund
+      mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+      order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
+      when (eventTicketOrderEventId order /= eventKey) $
+        throwError err400 { errBody = "Refund does not belong to this event" }
+      when (ticketRefundRequestStatus refund /= "pending") $
+        throwError err400 { errBody = "Refund request is not pending" }
+      case (eventTicketOrderStripePaymentIntentId order, stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+        (Just piId, Just secretKey, Just webhookSecret) -> do
+          let stripeCfg = Stripe.StripeConfig
+                { Stripe.stripeSecretKey = secretKey
+                , Stripe.stripeWebhookSecret = webhookSecret
+                , Stripe.stripeApiVersion = "2023-10-16"
+                }
+          result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
+          case result of
+            Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err)) }
+            Right refundResponse -> do
+              case Aeson.parseMaybe (Aeson..: "id") refundResponse of
+                Nothing -> throwError err500 { errBody = "Could not parse Stripe refund response" }
+                Just (refundId :: T.Text) -> do
+                  liftIO $ runSqlPool (do
+                    update refundKey
+                      [ TicketRefundRequestStatus =. "approved"
+                      , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                      , TicketRefundRequestApprovedAt =. Just now
+                      , TicketRefundRequestStripeRefundId =. Just refundId
+                      , TicketRefundRequestProcessedAt =. Just now
+                      , TicketRefundRequestUpdatedAt =. now
+                      ]
+                    update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
+                    updateWhere [EventTicketOrderRefId ==. orderKey]
+                      [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
+                    update (eventTicketOrderTierId order)
+                      [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                    ) envPool
+                  mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
+                  maybe (throwError err500 { errBody = "Could not approve refund" })
+                        (pure . refundEntityToDTO)
+                        mUpdated
+        _ -> throwError err500 { errBody = "Cannot process refund: Stripe not configured or order has no payment intent" }
+
+    rejectRefund :: T.Text -> T.Text -> RejectionReasonDTO -> AppM RefundDTO
+    rejectRefund eventIdStr refundIdStr RejectionReasonDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      refundKey <- parseKeyOr400 "refund" refundIdStr
+      mRefund <- liftIO $ runSqlPool (get refundKey) envPool
+      refund <- maybe (throwError err404 { errBody = "Refund request not found" }) pure mRefund
+      let orderKey = ticketRefundRequestOrderId refund
+      mOrder <- liftIO $ runSqlPool (get orderKey) envPool
+      order <- maybe (throwError err404 { errBody = "Ticket order not found" }) pure mOrder
+      when (eventTicketOrderEventId order /= eventKey) $
+        throwError err400 { errBody = "Refund does not belong to this event" }
+      when (ticketRefundRequestStatus refund /= "pending") $
+        throwError err400 { errBody = "Refund request is not pending" }
+      when (T.null (T.strip rrReason)) $
+        throwError err400 { errBody = "Rejection reason is required" }
+      liftIO $ runSqlPool (update refundKey
+        [ TicketRefundRequestStatus =. "rejected"
+        , TicketRefundRequestRejectionReason =. Just rrReason
+        , TicketRefundRequestUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
+      maybe (throwError err500 { errBody = "Could not reject refund" })
+            (pure . refundEntityToDTO)
+            mUpdated
+
+    -- Transfers
+    createTransfer :: T.Text -> T.Text -> TicketTransferCreateDTO -> AppM TicketTransferDTO
+    createTransfer eventIdStr ticketIdStr TicketTransferCreateDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      ticketKey <- parseKeyOr400 "ticket" ticketIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
+      ticket <- maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+      when (eventTicketEventId ticket /= eventKey) $
+        throwError err400 { errBody = "Ticket does not belong to this event" }
+      let manager = isEventManager currentPartyId eventVal
+      when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
+        throwError err403 { errBody = "You can only transfer your own tickets" }
+      when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
+        throwError err400 { errBody = "Cannot transfer this ticket" }
+      mExistingTransfer <- liftIO $ runSqlPool
+        (selectFirst [TicketTransferTicketId ==. ticketKey, TicketTransferStatus ==. "pending"] [])
+        envPool
+      when (isJust mExistingTransfer) $
+        throwError err409 { errBody = "A pending transfer already exists for this ticket" }
+      transferCode <- liftIO $ do
+        code1 <- Random.randomRIO (100000 :: Int, 999999 :: Int)
+        code2 <- Random.randomRIO (100000 :: Int, 999999 :: Int)
+        pure (T.pack (show code1 ++ "-" ++ show code2))
+      let expiresAt = addUTCTime (48 * 3600) now
+      transferKey <- liftIO $ runSqlPool (insert TicketTransfer
+        { ticketTransferTicketId = ticketKey
+        , ticketTransferFromPartyId = Just currentPartyId
+        , ticketTransferToPartyId = Nothing
+        , ticketTransferToEmail = Just ttcToEmail
+        , ticketTransferToName = ttcToName
+        , ticketTransferStatus = "pending"
+        , ticketTransferTransferCode = transferCode
+        , ticketTransferMessage = ttcMessage
+        , ticketTransferExpiresAt = Just expiresAt
+        , ticketTransferAcceptedAt = Nothing
+        , ticketTransferCreatedAt = now
+        , ticketTransferUpdatedAt = now
+        }) envPool
+      mTransfer <- liftIO $ runSqlPool (getEntity transferKey) envPool
+      maybe (throwError err500 { errBody = "Could not create transfer" })
+            (pure . transferEntityToDTO)
+            mTransfer
+
+    listTransfers :: T.Text -> T.Text -> AppM [TicketTransferDTO]
+    listTransfers eventIdStr ticketIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      ticketKey <- parseKeyOr400 "ticket" ticketIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
+      ticket <- maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+      when (eventTicketEventId ticket /= eventKey) $
+        throwError err400 { errBody = "Ticket does not belong to this event" }
+      let manager = isEventManager currentPartyId eventVal
+      when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
+        throwError err403 { errBody = "You can only view transfers for your own tickets" }
+      transfers <- liftIO $ runSqlPool
+        (selectList [TicketTransferTicketId ==. ticketKey] [Desc TicketTransferCreatedAt])
+        envPool
+      pure (map transferEntityToDTO transfers)
+
+    acceptTransfer :: T.Text -> AppM TicketDTO
+    acceptTransfer transferCode = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      mTransferEnt <- liftIO $ runSqlPool (getBy (UniqueTicketTransferCode transferCode)) envPool
+      transferEnt <- maybe (throwError err404 { errBody = "Transfer not found" }) pure mTransferEnt
+      let transferKey = entityKey transferEnt
+          transfer = entityVal transferEnt
+      when (ticketTransferStatus transfer /= "pending") $
+        throwError err400 { errBody = "Transfer is not pending" }
+      case ticketTransferExpiresAt transfer of
+        Just expiresAt | now > expiresAt ->
+          throwError err400 { errBody = "Transfer has expired" }
+        _ -> pure ()
+      let ticketKey = ticketTransferTicketId transfer
+      mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
+      ticket <- maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+      when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
+        throwError err400 { errBody = "Cannot accept transfer for this ticket" }
+      liftIO $ runSqlPool (do
+        update transferKey
+          [ TicketTransferStatus =. "completed"
+          , TicketTransferToPartyId =. Just currentPartyId
+          , TicketTransferAcceptedAt =. Just now
+          , TicketTransferUpdatedAt =. now
+          ]
+        update ticketKey
+          [ EventTicketCurrentHolderPartyId =. Just currentPartyId
+          , EventTicketCurrentHolderEmail =. fromMaybe (eventTicketCurrentHolderEmail ticket) (ticketTransferToEmail transfer)
+          , EventTicketCurrentHolderName =. fromMaybe (eventTicketCurrentHolderName ticket) (ticketTransferToName transfer)
+          , EventTicketUpdatedAt =. now
+          ]
+        ) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity ticketKey) envPool
+      maybe (throwError err500 { errBody = "Could not accept transfer" })
+            (pure . ticketEntityToDTO)
+            mUpdated
+
+    cancelTransfer :: T.Text -> AppM TicketTransferDTO
+    cancelTransfer transferIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      transferKey <- parseKeyOr400 "transfer" transferIdStr
+      mTransfer <- liftIO $ runSqlPool (get transferKey) envPool
+      transfer <- maybe (throwError err404 { errBody = "Transfer not found" }) pure mTransfer
+      when (ticketTransferFromPartyId transfer /= Just currentPartyId) $
+        throwError err403 { errBody = "You can only cancel your own transfers" }
+      when (ticketTransferStatus transfer /= "pending") $
+        throwError err400 { errBody = "Transfer is not pending" }
+      liftIO $ runSqlPool (update transferKey
+        [ TicketTransferStatus =. "cancelled"
+        , TicketTransferUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity transferKey) envPool
+      maybe (throwError err500 { errBody = "Could not cancel transfer" })
+            (pure . transferEntityToDTO)
+            mUpdated
+
+    -- Waitlist
+    joinWaitlist :: T.Text -> WaitlistJoinDTO -> AppM WaitlistEntryDTO
+    joinWaitlist eventIdStr WaitlistJoinDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      _ <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mTierKey <- case cleanMaybeText wjTierId of
+        Nothing -> pure Nothing
+        Just tierIdStr -> do
+          tierKey <- parseKeyOr400 "ticket tier" tierIdStr
+          mTier <- liftIO $ runSqlPool (get tierKey) envPool
+          tier <- maybe (throwError err404 { errBody = "Ticket tier not found" }) pure mTier
+          when (eventTicketTierEventId tier /= eventKey) $
+            throwError err400 { errBody = "Ticket tier does not belong to this event" }
+          pure (Just tierKey)
+      when (wjQuantity < 1 || wjQuantity > 10) $
+        throwError err400 { errBody = "Quantity must be between 1 and 10" }
+      mExisting <- liftIO $ runSqlPool
+        (selectFirst
+          [EventWaitlistEventId ==. eventKey, EventWaitlistEmail ==. wjEmail, EventWaitlistStatus ==. "active"]
+          [])
+        envPool
+      when (isJust mExisting) $
+        throwError err409 { errBody = "Already on waitlist for this event" }
+      waitlistKey <- liftIO $ runSqlPool (insert EventWaitlist
+        { eventWaitlistEventId = eventKey
+        , eventWaitlistTierId = mTierKey
+        , eventWaitlistPartyId = Nothing
+        , eventWaitlistEmail = wjEmail
+        , eventWaitlistName = wjName
+        , eventWaitlistQuantity = wjQuantity
+        , eventWaitlistStatus = "active"
+        , eventWaitlistPriority = 0
+        , eventWaitlistNotifiedAt = Nothing
+        , eventWaitlistExpiresAt = Nothing
+        , eventWaitlistConvertedOrderId = Nothing
+        , eventWaitlistCreatedAt = now
+        , eventWaitlistUpdatedAt = now
+        }) envPool
+      mWaitlist <- liftIO $ runSqlPool (getEntity waitlistKey) envPool
+      maybe (throwError err500 { errBody = "Could not join waitlist" })
+            (pure . waitlistEntityToDTO)
+            mWaitlist
+
+    listWaitlist :: T.Text -> Maybe T.Text -> AppM [WaitlistEntryDTO]
+    listWaitlist eventIdStr mStatus = do
+      Env{..} <- ask
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      let statusFilters = case cleanMaybeText mStatus of
+            Nothing -> []
+            Just status -> [EventWaitlistStatus ==. status]
+          filters = [EventWaitlistEventId ==. eventKey] ++ statusFilters
+      entries <- liftIO $ runSqlPool
+        (selectList filters [Asc EventWaitlistPriority, Asc EventWaitlistCreatedAt])
+        envPool
+      pure (map waitlistEntityToDTO entries)
+
+    notifyWaitlist :: T.Text -> T.Text -> AppM WaitlistEntryDTO
+    notifyWaitlist eventIdStr waitlistIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      (eventKey, _) <- requireManagedEvent eventIdStr
+      waitlistKey <- parseKeyOr400 "waitlist entry" waitlistIdStr
+      mWaitlist <- liftIO $ runSqlPool (get waitlistKey) envPool
+      waitlist <- maybe (throwError err404 { errBody = "Waitlist entry not found" }) pure mWaitlist
+      when (eventWaitlistEventId waitlist /= eventKey) $
+        throwError err400 { errBody = "Waitlist entry does not belong to this event" }
+      when (eventWaitlistStatus waitlist /= "active") $
+        throwError err400 { errBody = "Waitlist entry is not active" }
+      let expiresAt = addUTCTime (24 * 3600) now
+      liftIO $ runSqlPool (update waitlistKey
+        [ EventWaitlistStatus =. "notified"
+        , EventWaitlistNotifiedAt =. Just now
+        , EventWaitlistExpiresAt =. Just expiresAt
+        , EventWaitlistUpdatedAt =. now
+        ]) envPool
+      mUpdated <- liftIO $ runSqlPool (getEntity waitlistKey) envPool
+      maybe (throwError err500 { errBody = "Could not notify waitlist entry" })
+            (pure . waitlistEntityToDTO)
+            mUpdated
+
+    removeFromWaitlist :: T.Text -> T.Text -> AppM NoContent
+    removeFromWaitlist eventIdStr waitlistIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      waitlistKey <- parseKeyOr400 "waitlist entry" waitlistIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mWaitlist <- liftIO $ runSqlPool (get waitlistKey) envPool
+      waitlist <- maybe (throwError err404 { errBody = "Waitlist entry not found" }) pure mWaitlist
+      when (eventWaitlistEventId waitlist /= eventKey) $
+        throwError err400 { errBody = "Waitlist entry does not belong to this event" }
+      let manager = isEventManager currentPartyId eventVal
+      when (not manager) $
+        throwError err403 { errBody = "Only event managers can remove waitlist entries" }
+      liftIO $ runSqlPool (update waitlistKey
+        [ EventWaitlistStatus =. "removed"
+        , EventWaitlistUpdatedAt =. now
+        ]) envPool
+      pure NoContent
+
+    -- QR Code
+    getTicketQR :: T.Text -> T.Text -> AppM TicketWithQRDTO
+    getTicketQR eventIdStr ticketIdStr = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      ticketKey <- parseKeyOr400 "ticket" ticketIdStr
+      mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+      eventVal <- maybe (throwError err404 { errBody = "Event not found" }) pure mEvent
+      mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
+      ticket <- maybe (throwError err404 { errBody = "Ticket not found" }) pure mTicket
+      when (eventTicketEventId ticket /= eventKey) $
+        throwError err400 { errBody = "Ticket does not belong to this event" }
+      let manager = isEventManager currentPartyId eventVal
+      when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
+        throwError err403 { errBody = "You can only view QR codes for your own tickets" }
+      mExistingQR <- liftIO $ runSqlPool (getBy (UniqueTicketQRCode ticketKey)) envPool
+      qrData <- case mExistingQR of
+        Just (Entity _ qr) -> pure (ticketQRCodeQrData qr)
+        Nothing -> do
+          let timestamp = T.pack (show (floor (realToFrac (utcTimeToPOSIXSeconds now) :: Double) :: Int))
+              payload = T.intercalate "|"
+                [ renderKeyText ticketKey
+                , renderKeyText eventKey
+                , eventTicketHolderEmail ticket
+                , timestamp
+                ]
+              secret = "tdf-qr-secret-key"
+              hmacHash = SHA256.hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload)
+              hmacHex = TE.decodeUtf8 (B64.encode hmacHash)
+              qrDataValue = payload <> "|" <> hmacHex
+          liftIO $ runSqlPool (insert_ TicketQRCode
+            { ticketQRCodeTicketId = ticketKey
+            , ticketQRCodeQrData = qrDataValue
+            , ticketQRCodeQrImageUrl = Nothing
+            , ticketQRCodeGeneratedAt = now
+            }) envPool
+          pure qrDataValue
+      mTicketEnt <- liftIO $ runSqlPool (getEntity ticketKey) envPool
+      ticketDto <- maybe (throwError err500 { errBody = "Could not load ticket" })
+                         (pure . ticketEntityToDTO)
+                         mTicketEnt
+      pure TicketWithQRDTO
+        { twqTicket = ticketDto
+        , twqQRData = qrData
+        , twqQRImageUrl = Nothing
+        }
 
     -- Budget
     budgetServer :: ServerT BudgetRoutes AppM
