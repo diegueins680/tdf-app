@@ -376,6 +376,7 @@ type MomentsRoutes =
   :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "comments" :> ReqBody '[JSON] EventMomentCommentCreateDTO :> Post '[JSON] EventMomentCommentDTO
 
 type TicketsRoutes =
+       -- Existing routes
        "events" :> Capture "eventId" Text :> "ticket-tiers" :> Get '[JSON] [TicketTierDTO]
   :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> ReqBody '[JSON] TicketTierDTO :> Post '[JSON] TicketTierDTO
   :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> Capture "tierId" Text :> ReqBody '[JSON] TicketTierDTO :> Put '[JSON] TicketTierDTO
@@ -390,6 +391,45 @@ type TicketsRoutes =
          :> QueryParam "status" Text
          :> Get '[JSON] [TicketDTO]
   :<|> "events" :> Capture "eventId" Text :> "tickets" :> "check-in" :> ReqBody '[JSON] TicketCheckInRequestDTO :> Post '[JSON] TicketDTO
+
+  -- Promo Codes
+  :<|> "events" :> Capture "eventId" Text :> "promo-codes" :> Get '[JSON] [PromoCodeDTO]
+  :<|> "events" :> Capture "eventId" Text :> "promo-codes" :> ReqBody '[JSON] PromoCodeDTO :> Post '[JSON] PromoCodeDTO
+  :<|> "events" :> Capture "eventId" Text :> "promo-codes" :> Capture "codeId" Text :> ReqBody '[JSON] PromoCodeDTO :> Put '[JSON] PromoCodeDTO
+  :<|> "events" :> Capture "eventId" Text :> "promo-codes" :> Capture "codeId" Text :> "validate"
+         :> QueryParam "code" Text
+         :> QueryParam "tierId" Text
+         :> Get '[JSON] PromoCodeDTO
+
+  -- Stripe Payment
+  :<|> "stripe" :> "create-payment-intent" :> ReqBody '[JSON] TicketPurchaseWithPromoDTO :> Post '[JSON] StripePaymentIntentDTO
+  :<|> "stripe" :> "webhook" :> ReqBody '[JSON] Value :> Header "Stripe-Signature" Text :> Post '[JSON] NoContent
+
+  -- Refunds
+  :<|> "events" :> Capture "eventId" Text :> "ticket-orders" :> Capture "orderId" Text :> "refund"
+         :> ReqBody '[JSON] RefundRequestDTO :> Post '[JSON] RefundDTO
+  :<|> "events" :> Capture "eventId" Text :> "refunds" :> Get '[JSON] [RefundDTO]
+  :<|> "events" :> Capture "eventId" Text :> "refunds" :> Capture "refundId" Text :> "approve" :> Post '[JSON] RefundDTO
+  :<|> "events" :> Capture "eventId" Text :> "refunds" :> Capture "refundId" Text :> "reject"
+         :> ReqBody '[JSON] RejectionReasonDTO :> Post '[JSON] RefundDTO
+
+  -- Transfers
+  :<|> "events" :> Capture "eventId" Text :> "tickets" :> Capture "ticketId" Text :> "transfer"
+         :> ReqBody '[JSON] TicketTransferCreateDTO :> Post '[JSON] TicketTransferDTO
+  :<|> "events" :> Capture "eventId" Text :> "tickets" :> Capture "ticketId" Text :> "transfers" :> Get '[JSON] [TicketTransferDTO]
+  :<|> "ticket-transfers" :> Capture "transferCode" Text :> "accept" :> Post '[JSON] TicketDTO
+  :<|> "ticket-transfers" :> Capture "transferCode" Text :> "cancel" :> Post '[JSON] TicketTransferDTO
+
+  -- Waitlist
+  :<|> "events" :> Capture "eventId" Text :> "waitlist" :> ReqBody '[JSON] WaitlistJoinDTO :> Post '[JSON] WaitlistEntryDTO
+  :<|> "events" :> Capture "eventId" Text :> "waitlist"
+         :> QueryParam "tierId" Text
+         :> Get '[JSON] [WaitlistEntryDTO]
+  :<|> "events" :> Capture "eventId" Text :> "waitlist" :> Capture "entryId" Text :> "notify" :> Post '[JSON] WaitlistEntryDTO
+  :<|> "events" :> Capture "eventId" Text :> "waitlist" :> Capture "entryId" Text :> DeleteNoContent
+
+  -- QR Codes
+  :<|> "events" :> Capture "eventId" Text :> "tickets" :> Capture "ticketId" Text :> "qr" :> Get '[JSON] TicketWithQRDTO
 
 type BudgetRoutes =
        "events" :> Capture "eventId" Text :> "budget-lines" :> Get '[JSON] [EventBudgetLineDTO]
