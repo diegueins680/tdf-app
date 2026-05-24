@@ -115,7 +115,13 @@ import           Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, 
 
 import           TDF.API.SocialEventsAPI
 import           TDF.Auth (AuthedUser(..))
-import           TDF.Config (assetsRootDir, resolveConfiguredAssetsBase)
+import           TDF.Config (AppConfig(..), assetsRootDir, resolveConfiguredAssetsBase)
+import qualified TDF.Services.Stripe as Stripe
+import qualified Crypto.Hash.SHA256 as SHA256
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString as BS
+import qualified System.Random as Random
+import           Data.Time.Clock (addUTCTime)
 import           TDF.DTO.SocialEventsDTO
   ( EventDTO(..)
   , EventUpdateDTO(..)
@@ -3627,6 +3633,80 @@ ticketOrderEntityToDTO (Entity orderKey orderRow) tickets = TicketOrderDTO
   , ticketOrderCreatedAt = Just (eventTicketOrderCreatedAt orderRow)
   , ticketOrderUpdatedAt = Just (eventTicketOrderUpdatedAt orderRow)
   , ticketOrderTickets = map ticketEntityToDTO tickets
+  }
+
+promoCodeEntityToDTO :: Entity PromoCode -> PromoCodeDTO
+promoCodeEntityToDTO (Entity codeKey codeRow) = PromoCodeDTO
+  { promoCodeId = Just (renderKeyText codeKey)
+  , promoCodeEventId = fmap renderKeyText (promoCodeEventId codeRow)
+  , promoCodeCode = promoCodeCode codeRow
+  , promoCodeDescription = promoCodeDescription codeRow
+  , promoCodeDiscountType = promoCodeDiscountType codeRow
+  , promoCodeDiscountValue = promoCodeDiscountValue codeRow
+  , promoCodeCurrency = promoCodeCurrency codeRow
+  , promoCodeMaxRedemptions = promoCodeMaxRedemptions codeRow
+  , promoCodeCurrentRedemptions = promoCodeCurrentRedemptions codeRow
+  , promoCodeValidFrom = promoCodeValidFrom codeRow
+  , promoCodeValidUntil = promoCodeValidUntil codeRow
+  , promoCodeTierIds = case promoCodeTierIds codeRow of
+      Nothing -> Nothing
+      Just tierIdsText -> case Aeson.decode (BL.fromStrict (TE.encodeUtf8 tierIdsText)) of
+        Just ids -> Just ids
+        Nothing -> Nothing
+  , promoCodeMinPurchaseAmountCents = promoCodeMinPurchaseAmountCents codeRow
+  , promoCodeIsActive = promoCodeIsActive codeRow
+  , promoCodeCreatedAt = Just (promoCodeCreatedAt codeRow)
+  , promoCodeUpdatedAt = Just (promoCodeUpdatedAt codeRow)
+  }
+
+refundEntityToDTO :: Entity TicketRefundRequest -> RefundDTO
+refundEntityToDTO (Entity refundKey refundRow) = RefundDTO
+  { refundId = Just (renderKeyText refundKey)
+  , refundOrderId = renderKeyText (ticketRefundRequestOrderId refundRow)
+  , refundRequestedByPartyId = ticketRefundRequestRequestedByPartyId refundRow
+  , refundReason = ticketRefundRequestReason refundRow
+  , refundAmountCents = ticketRefundRequestAmountCents refundRow
+  , refundStatus = ticketRefundRequestStatus refundRow
+  , refundApprovedByPartyId = ticketRefundRequestApprovedByPartyId refundRow
+  , refundApprovedAt = ticketRefundRequestApprovedAt refundRow
+  , refundRejectionReason = ticketRefundRequestRejectionReason refundRow
+  , refundStripeRefundId = ticketRefundRequestStripeRefundId refundRow
+  , refundProcessedAt = ticketRefundRequestProcessedAt refundRow
+  , refundCreatedAt = Just (ticketRefundRequestCreatedAt refundRow)
+  , refundUpdatedAt = Just (ticketRefundRequestUpdatedAt refundRow)
+  }
+
+transferEntityToDTO :: Entity TicketTransfer -> TicketTransferDTO
+transferEntityToDTO (Entity transferKey transferRow) = TicketTransferDTO
+  { ttId = Just (renderKeyText transferKey)
+  , ttTicketId = renderKeyText (ticketTransferTicketId transferRow)
+  , ttFromPartyId = ticketTransferFromPartyId transferRow
+  , ttToEmail = fromMaybe "" (ticketTransferToEmail transferRow)
+  , ttToName = ticketTransferToName transferRow
+  , ttStatus = ticketTransferStatus transferRow
+  , ttTransferCode = ticketTransferTransferCode transferRow
+  , ttMessage = ticketTransferMessage transferRow
+  , ttExpiresAt = ticketTransferExpiresAt transferRow
+  , ttAcceptedAt = ticketTransferAcceptedAt transferRow
+  , ttCreatedAt = Just (ticketTransferCreatedAt transferRow)
+  , ttUpdatedAt = Just (ticketTransferUpdatedAt transferRow)
+  }
+
+waitlistEntityToDTO :: Entity EventWaitlist -> WaitlistEntryDTO
+waitlistEntityToDTO (Entity waitlistKey waitlistRow) = WaitlistEntryDTO
+  { weId = Just (renderKeyText waitlistKey)
+  , weEventId = renderKeyText (eventWaitlistEventId waitlistRow)
+  , weTierId = fmap renderKeyText (eventWaitlistTierId waitlistRow)
+  , weEmail = eventWaitlistEmail waitlistRow
+  , weName = eventWaitlistName waitlistRow
+  , weQuantity = eventWaitlistQuantity waitlistRow
+  , weStatus = eventWaitlistStatus waitlistRow
+  , wePriority = eventWaitlistPriority waitlistRow
+  , weNotifiedAt = eventWaitlistNotifiedAt waitlistRow
+  , weExpiresAt = eventWaitlistExpiresAt waitlistRow
+  , weConvertedOrderId = fmap renderKeyText (eventWaitlistConvertedOrderId waitlistRow)
+  , weCreatedAt = Just (eventWaitlistCreatedAt waitlistRow)
+  , weUpdatedAt = Just (eventWaitlistUpdatedAt waitlistRow)
   }
 
 budgetLineEntityToDTO :: SocialEventId -> Maybe Int -> Entity EventBudgetLine -> EventBudgetLineDTO
