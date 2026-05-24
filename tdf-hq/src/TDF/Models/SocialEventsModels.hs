@@ -208,4 +208,107 @@ EventFinanceEntry
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
     deriving Show Generic
+
+PromoCode sql=promo_code
+    eventId SocialEventId Maybe
+    code Text
+    description Text Maybe
+    discountType Text
+    discountValue Int
+    currency Text default='USD'
+    maxRedemptions Int Maybe
+    currentRedemptions Int default=0
+    validFrom UTCTime Maybe
+    validUntil UTCTime Maybe
+    tierIds Text Maybe
+    minPurchaseAmountCents Int Maybe
+    isActive Bool default=True
+    createdByPartyId Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniquePromoCode code
+    deriving Show Generic
+
+PromoCodeRedemption sql=promo_code_redemption
+    promoCodeId PromoCodeId
+    orderId EventTicketOrderId
+    discountAmountCents Int
+    redeemedAt UTCTime default=now()
+    deriving Show Generic
+
+TicketRefundRequest sql=ticket_refund_request
+    orderId EventTicketOrderId
+    requestedByPartyId Text Maybe
+    reason Text Maybe
+    amountCents Int
+    status Text default='pending'
+    approvedByPartyId Text Maybe
+    approvedAt UTCTime Maybe
+    rejectionReason Text Maybe
+    stripeRefundId Text Maybe
+    processedAt UTCTime Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+TicketTransfer sql=ticket_transfer
+    ticketId EventTicketId
+    fromPartyId Text Maybe
+    toPartyId Text Maybe
+    toEmail Text Maybe
+    toName Text Maybe
+    status Text default='pending'
+    transferCode Text
+    message Text Maybe
+    expiresAt UTCTime Maybe
+    acceptedAt UTCTime Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueTicketTransferCode transferCode
+    deriving Show Generic
+
+EventWaitlist sql=event_waitlist
+    eventId SocialEventId
+    tierId EventTicketTierId Maybe
+    partyId Text Maybe
+    email Text
+    name Text Maybe
+    quantity Int default=1
+    status Text default='active'
+    priority Int default=0
+    notifiedAt UTCTime Maybe
+    expiresAt UTCTime Maybe
+    convertedOrderId EventTicketOrderId Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+StripePaymentIntent sql=stripe_payment_intent
+    orderId EventTicketOrderId
+    stripePaymentIntentId Text
+    stripeClientSecret Text
+    amountCents Int
+    currency Text default='USD'
+    status Text
+    metadata Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueStripePaymentIntent stripePaymentIntentId
+    deriving Show Generic
+
+StripeWebhookEvent sql=stripe_webhook_event
+    stripeEventId Text
+    eventType Text
+    payload Text
+    processedAt UTCTime default=now()
+    UniqueStripeWebhookEvent stripeEventId
+    deriving Show Generic
+
+TicketQRCode sql=ticket_qr_code
+    ticketId EventTicketId
+    qrData Text
+    qrImageUrl Text Maybe
+    generatedAt UTCTime default=now()
+    UniqueTicketQRCode ticketId
+    deriving Show Generic
 |]
