@@ -57,6 +57,219 @@ function scoreImportance(severity, reach = 1, criticality = 1) {
   return base * Math.max(1, reach) * Math.max(1, criticality);
 }
 
+function findMatchingParen(source, openIndex) {
+  let depth = 0;
+  let quote = null;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let index = openIndex; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (inLineComment) {
+      if (char === '\n') inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (quote) {
+      if (char === '\\') {
+        index += 1;
+        continue;
+      }
+      if (char === quote) quote = null;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (char === '(') depth += 1;
+    if (char === ')') {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+
+  return -1;
+}
+
+function splitTopLevelSemicolons(source) {
+  const parts = [];
+  let partStart = 0;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+  let quote = null;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (inLineComment) {
+      if (char === '\n') inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (quote) {
+      if (char === '\\') {
+        index += 1;
+        continue;
+      }
+      if (char === quote) quote = null;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (char === '(') parenDepth += 1;
+    if (char === ')') parenDepth -= 1;
+    if (char === '[') bracketDepth += 1;
+    if (char === ']') bracketDepth -= 1;
+    if (char === '{') braceDepth += 1;
+    if (char === '}') braceDepth -= 1;
+
+    if (char === ';' && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+      parts.push(source.slice(partStart, index));
+      partStart = index + 1;
+    }
+  }
+
+  parts.push(source.slice(partStart));
+  return parts;
+}
+
+function hasAssignmentOperator(source) {
+  const compoundOperators = ['&&=', '||=', '??=', '**=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^='];
+  let quote = null;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    const next = source[index + 1];
+
+    if (inLineComment) {
+      if (char === '\n') inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (quote) {
+      if (char === '\\') {
+        index += 1;
+        continue;
+      }
+      if (char === quote) quote = null;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (compoundOperators.some((operator) => source.startsWith(operator, index))) {
+      return true;
+    }
+
+    if (char === '=') {
+      const previous = source[index - 1] ?? '';
+      if (!['=', '!', '<', '>'].includes(previous) && next !== '=' && next !== '>') {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function controlConditionExpression(keyword, header) {
+  if (keyword !== 'for') return header;
+
+  const forParts = splitTopLevelSemicolons(header);
+  if (forParts.length !== 3) return '';
+  return forParts[1];
+}
+
+function isPotentiallyReachableLine(trimmed) {
+  return (
+    trimmed &&
+    !/^[}\]\);,]*$/.test(trimmed) &&
+    !/^}\s*(else|catch|finally)\b/.test(trimmed) &&
+    !/^(\/\/|\/\*|\*|#)/.test(trimmed) &&
+    !/^else\b/.test(trimmed) &&
+    !/^catch\b/.test(trimmed) &&
+    !/^finally\b/.test(trimmed)
+  );
+}
+
 // ─── JS/TS Logical Audits ───
 
 function auditJsTsLogical(source, filePath, isTest) {
@@ -81,8 +294,16 @@ function auditJsTsLogical(source, filePath, isTest) {
   }
 
   // 2. Assignment in condition
-  const assignInCondPattern = /\b(if|while|for)\s*\([^)]*(?<![=!<>])=(?!=|>)[^)]*\)/g;
-  for (const match of source.matchAll(assignInCondPattern)) {
+  const controlConditionPattern = /\b(if|while|for)\s*\(/g;
+  for (const match of source.matchAll(controlConditionPattern)) {
+    const openIndex = source.indexOf('(', match.index);
+    const closeIndex = findMatchingParen(source, openIndex);
+    if (closeIndex < 0) continue;
+
+    const header = source.slice(openIndex + 1, closeIndex);
+    const condition = controlConditionExpression(match[1], header);
+    if (!condition.trim() || !hasAssignmentOperator(condition)) continue;
+
     const line = lineNumberAt(source, match.index);
     findings.push({
       rule: 'assignment-in-condition',
@@ -281,19 +502,13 @@ function auditJsTsLogical(source, filePath, isTest) {
   }
 
   // 12. Potentially unreachable code after return/throw
-  const returnPattern = /\breturn\b[^;]*;[ \t]*\n[ \t]*/g;
-  for (const match of source.matchAll(returnPattern)) {
-    const line = lineNumberAt(source, match.index);
+  const standaloneReturnPattern = /^\s*return\b.*;\s*(?:(?:\/\/|#).*)?$/;
+  for (let line = 1; line <= lines.length; line += 1) {
+    if (!standaloneReturnPattern.test(lines[line - 1] ?? '')) continue;
+
     const nextLine = lines[line] ?? '';
     const trimmed = nextLine.trim();
-    if (
-      trimmed &&
-      !/^[\}\]\);,]*$/.test(trimmed) &&
-      !/^(\/\/|\/\*|\*|#)/.test(trimmed) &&
-      !/^else\b/.test(trimmed) &&
-      !/^catch\b/.test(trimmed) &&
-      !/^finally\b/.test(trimmed)
-    ) {
+    if (isPotentiallyReachableLine(trimmed)) {
       findings.push({
         rule: 'potentially-unreachable-code',
         severity: 'warning',

@@ -27,6 +27,18 @@ test('logical audit distinguishes strict equality from assignment in conditions'
         '  if (experiments.length = 0) return "empty";',
         '  return "active";',
         '}',
+        '',
+        'function validLoop(experiments, attempts) {',
+        '  for (let index = 0; index < attempts; index += 1) {',
+        '    experiments.push(index);',
+        '  }',
+        '}',
+        '',
+        'function invalidLoop(experiments, attempts) {',
+        '  for (let index = 0; index = attempts; index += 1) {',
+        '    experiments.push(index);',
+        '  }',
+        '}',
       ].join('\n'),
       'utf8',
     );
@@ -46,6 +58,68 @@ test('logical audit distinguishes strict equality from assignment in conditions'
         {
           line: 7,
           snippet: 'if (experiments.length = 0) return "empty";',
+        },
+        {
+          line: 18,
+          snippet: 'for (let index = 0; index = attempts; index += 1) {',
+        },
+      ],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('logical audit ignores reachable catch blocks and returned object methods', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-unreachable-test-'));
+  const sourcePath = path.join(tempRoot, 'returns.js');
+
+  try {
+    await fs.writeFile(
+      sourcePath,
+      [
+        'function validCatch() {',
+        '  try {',
+        '    return;',
+        '  } catch (error) {',
+        '    throw error;',
+        '  }',
+        '}',
+        '',
+        'function validFactory() {',
+        '  return {',
+        '    cleanup: () => {',
+        '      if (!mounted) return;',
+        '      mounted = false;',
+        '    },',
+        '  };',
+        '}',
+        '',
+        'function invalid() {',
+        '  return;',
+        '  doCleanup();',
+        '}',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: tempRoot });
+    await execFileAsync('git', ['add', 'returns.js'], { cwd: tempRoot });
+
+    const findings = await collectLogicalFindings(tempRoot);
+    const unreachableFindings = findings.filter(
+      (finding) => finding.rule === 'potentially-unreachable-code',
+    );
+
+    assert.deepEqual(
+      unreachableFindings.map((finding) => ({
+        line: finding.line,
+        snippet: finding.snippet,
+      })),
+      [
+        {
+          line: 20,
+          snippet: 'doCleanup();',
         },
       ],
     );
