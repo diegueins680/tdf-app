@@ -6,6 +6,35 @@ const postFormMock = jest.fn<(path: string, body: FormData) => Promise<unknown>>
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
 
+type RawPathSegment = string & { readonly __rawPathSegment: 'RawPathSegment' };
+type EncodedPathSegment = string & { readonly __encodedPathSegment: 'EncodedPathSegment' };
+
+const rawPathSegment = (value: string): RawPathSegment => {
+  if (value.trim().length === 0) {
+    throw new Error('Test path segment fixtures must be non-blank.');
+  }
+  if (value.includes('%')) {
+    throw new Error('Test path segment fixtures must be raw, not pre-encoded.');
+  }
+  return value as RawPathSegment;
+};
+
+const encodeExpectedPathSegment = (value: RawPathSegment): EncodedPathSegment => {
+  const encoded = encodeURIComponent(value);
+  if (encoded.includes('/')) {
+    throw new Error('Encoded path segment fixtures must not contain raw slashes.');
+  }
+  return encoded as EncodedPathSegment;
+};
+
+const WAITLIST_EVENT_ID_WITH_SPACE = rawPathSegment('event 7');
+const WAITLIST_ENTRY_ID_WITH_SLASH = rawPathSegment('entry/a');
+const WAITLIST_TIER_ID_WITH_SLASH = rawPathSegment('tier/3');
+const PADDED_WAITLIST_TIER_ID_WITH_SLASH = ` ${WAITLIST_TIER_ID_WITH_SLASH} `;
+const WAITLIST_EVENT_PATH = `/social-events/events/${encodeExpectedPathSegment(WAITLIST_EVENT_ID_WITH_SPACE)}/waitlist`;
+const WAITLIST_ENTRY_PATH = `${WAITLIST_EVENT_PATH}/${encodeExpectedPathSegment(WAITLIST_ENTRY_ID_WITH_SLASH)}`;
+const WAITLIST_TIER_QUERY_PATH = `${WAITLIST_EVENT_PATH}?tierId=${encodeExpectedPathSegment(WAITLIST_TIER_ID_WITH_SLASH)}`;
+
 jest.unstable_mockModule('./client', () => ({
   del: delMock,
   get: getMock,
@@ -44,9 +73,15 @@ describe('SocialEventsAPI', () => {
   });
 
   it('removes waitlist entries through the shared API client', async () => {
-    await SocialEventsAPI.removeFromWaitlist('event 7', 'entry/12');
+    await SocialEventsAPI.removeFromWaitlist(WAITLIST_EVENT_ID_WITH_SPACE, WAITLIST_ENTRY_ID_WITH_SLASH);
 
-    expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207/waitlist/entry%2F12');
+    expect(delMock).toHaveBeenCalledWith(WAITLIST_ENTRY_PATH);
+  });
+
+  it('lists waitlist entries with a trimmed tier filter', async () => {
+    await SocialEventsAPI.listWaitlist(WAITLIST_EVENT_ID_WITH_SPACE, PADDED_WAITLIST_TIER_ID_WITH_SLASH);
+
+    expect(getMock).toHaveBeenCalledWith(WAITLIST_TIER_QUERY_PATH);
   });
 
   it('respondInvitation includes invitationToPartyId required by backend schema', async () => {

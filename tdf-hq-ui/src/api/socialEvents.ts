@@ -490,8 +490,8 @@ export const SocialEventsAPI = {
   joinWaitlist: async (eventId: string, data: WaitlistJoinDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist`, data) as WaitlistEntryDTO,
   listWaitlist: async (eventId: string, tierId?: string) => {
-    const query = buildQuery({ tierId });
-    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist${query}`) as WaitlistEntryDTO[];
+    const waitlistQuery = buildQuery({ tierId });
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist${waitlistQuery}`) as WaitlistEntryDTO[];
   },
   notifyWaitlist: async (eventId: string, entryId: string) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist/${encodeURIComponent(entryId)}/notify`, {}) as WaitlistEntryDTO,
