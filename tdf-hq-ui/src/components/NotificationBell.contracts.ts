@@ -10,7 +10,7 @@ type NotificationBellContract = Readonly<{
   panelLoadingSpinnerSizePx: number;
 }>;
 
-const PANEL_LOADING_SPINNER_RADIUS_PX = 11;
+const PANEL_LOADING_SPINNER_RADIUS_PX = 10 + 1;
 
 // Invariant: all dimensions and limits are positive integers; the scrollable list
 // remains shorter than its containing popover paper; action spinners remain

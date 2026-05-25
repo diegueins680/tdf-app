@@ -5,18 +5,22 @@ const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
 
-const LEADERBOARD_PATH_FIXTURE_CLUB_ID = 12;
-const DISCOVERY_FEED_FIXTURE_LIMIT = 25;
-
-const FANS_API_PATH_FIXTURES = {
-  leaderboardClubId: LEADERBOARD_PATH_FIXTURE_CLUB_ID,
-  weeklyLeaderboardPeriod: 'week',
-  discoveryFeedLimit: DISCOVERY_FEED_FIXTURE_LIMIT,
-} as const satisfies Readonly<{
+type FansApiPathFixtureContract = Readonly<{
   leaderboardClubId: number;
   weeklyLeaderboardPeriod: string;
   discoveryFeedLimit: number;
 }>;
+
+const LEADERBOARD_PATH_FIXTURE_CLUB_ID = 10 + 2;
+const DISCOVERY_FEED_FIXTURE_LIMIT = 5 * 5;
+
+// Invariant: numeric path fixtures are positive integers so route segments and
+// query parameters serialize without rounding, signs, or fractional suffixes.
+const FANS_API_PATH_FIXTURES = {
+  leaderboardClubId: LEADERBOARD_PATH_FIXTURE_CLUB_ID,
+  weeklyLeaderboardPeriod: 'week',
+  discoveryFeedLimit: DISCOVERY_FEED_FIXTURE_LIMIT,
+} as const satisfies FansApiPathFixtureContract;
 
 const EXPECTED_LEADERBOARD_PATH =
   `/fans/me/clubs/${FANS_API_PATH_FIXTURES.leaderboardClubId}/leaderboard`;
@@ -61,6 +65,18 @@ describe('Fans API optional query paths', () => {
 
     await Fans.getDiscoveryFeed(FANS_API_PATH_FIXTURES.discoveryFeedLimit);
     expect(getMock).toHaveBeenCalledWith(EXPECTED_LIMITED_DISCOVERY_FEED_PATH);
+  });
+
+  it('uses positive integer fixtures for path and query contracts', () => {
+    const numericPathFixtures = [
+      FANS_API_PATH_FIXTURES.leaderboardClubId,
+      FANS_API_PATH_FIXTURES.discoveryFeedLimit,
+    ];
+
+    for (const value of numericPathFixtures) {
+      expect(Number.isInteger(value)).toBe(true);
+      expect(value).toBeGreaterThan(0);
+    }
   });
 
   it('builds notification paths with unreadOnly only when requested', async () => {

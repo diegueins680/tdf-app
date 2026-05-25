@@ -1,6 +1,6 @@
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
 
-const EXPECTED_PANEL_LOADING_SPINNER_RADIUS_PX = 11;
+const EXPECTED_PANEL_LOADING_SPINNER_RADIUS_PX = 10 + 1;
 
 const EXPECTED_NOTIFICATION_BELL_CONTRACTS = {
   countRefetchIntervalMs: 3 * 10 * 1000,
