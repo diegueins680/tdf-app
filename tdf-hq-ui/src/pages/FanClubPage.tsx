@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
   Divider, Grid, IconButton, Stack, Tab, Tabs, TextField, Typography,
-  Avatar, Tooltip, ImageList, ImageListItem,
+  Avatar, Tooltip, ImageList, ImageListItem, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import {
   PushPin as PushPinIcon,
@@ -21,8 +21,12 @@ import {
   Person as PersonIcon,
   LockOutlined as LockOutlinedIcon,
   MailOutline as MailIcon,
+  Whatshot as WhatshotIcon,
+  TrendingUp as TrendingUpIcon,
+  FiberNew as FiberNewIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import ReactionBar from '../components/ReactionBar';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -228,6 +232,15 @@ function LoginPrompt({ loginPath }: { loginPath: string }) {
 
 function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; feed: FanClubFeedItemDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
+  const [sortMode, setSortMode] = useState<string>('new');
+
+  const sortedFeedQuery = useQuery({
+    queryKey: ['fan-club-feed', artistId, sortMode],
+    queryFn: () => Fans.listClubFeed(artistId, sortMode),
+    enabled: artistId > 0 && sortMode !== 'new',
+  });
+
+  const displayFeed = sortMode === 'new' ? feed : (sortedFeedQuery.data ?? feed);
 
   const hideMut = useMutation({
     mutationFn: ({ itemId, kind, hide }: { itemId: number; kind: string; hide: boolean }) => {
@@ -244,12 +257,36 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
     },
   });
 
+  const reactMut = useMutation({
+    mutationFn: ({ itemId, kind, reaction }: { itemId: number; kind: string; reaction: string }) => {
+      if (kind === 'post') {
+        return Fans.reactToPost(artistId, itemId, { crrReaction: reaction });
+      } else {
+        return Fans.reactToMemory(artistId, itemId, { crrReaction: reaction });
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+    },
+  });
+
   if (loading) return <SkeletonCards count={3} />;
 
-  const visibleItems = feed.filter(item => !item.fcfIsHidden);
+  const visibleItems = displayFeed.filter(item => !item.fcfIsHidden);
 
   return (
     <Stack spacing={2}>
+      <ToggleButtonGroup
+        value={sortMode}
+        exclusive
+        onChange={(_, v) => { if (v) setSortMode(v); }}
+        size="small"
+      >
+        <ToggleButton value="new"><FiberNewIcon sx={{ mr: 0.5 }} fontSize="small" />Nuevo</ToggleButton>
+        <ToggleButton value="hot"><WhatshotIcon sx={{ mr: 0.5 }} fontSize="small" />Popular</ToggleButton>
+        <ToggleButton value="top"><TrendingUpIcon sx={{ mr: 0.5 }} fontSize="small" />Top</ToggleButton>
+      </ToggleButtonGroup>
+
       {visibleItems.length === 0 && (
         <EmptyState icon={<ForumIcon fontSize="large" />} title="Feed vacío" description="Sé el primero en publicar o compartir un recuerdo." />
       )}
@@ -288,6 +325,11 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                   ))}
                 </ImageList>
               )}
+              <ReactionBar
+                reactions={item.fcfReactions}
+                onReact={(reaction) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reaction })}
+                disabled={reactMut.isPending}
+              />
               <Typography variant="caption" color="text.secondary">
                 {new Date(item.fcfCreatedAt).toLocaleString()}
               </Typography>

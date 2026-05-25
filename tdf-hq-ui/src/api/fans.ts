@@ -28,6 +28,11 @@ import type {
   FanClubInboxSendReq,
   FanClubInboxReplyReq,
   FanClubInboxStatusReq,
+  ContentReactionReq,
+  ReactionSummaryDTO,
+  NotificationDTO,
+  NotificationCountDTO,
+  LeaderboardEntryDTO,
 } from './types';
 
 const read: (path: string) => unknown = get;
@@ -86,7 +91,13 @@ export const Fans = {
   },
 
   // Fan Club Feed
-  listClubFeed: async (artistId: number) => (await read(`/fans/me/clubs/${artistId}/feed`)) as FanClubFeedItemDTO[],
+  listClubFeed: async (artistId: number, sort?: string, period?: string) => {
+    const params = new URLSearchParams();
+    if (sort) params.set('sort', sort);
+    if (period) params.set('period', period);
+    const qs = params.toString();
+    return (await read(`/fans/me/clubs/${artistId}/feed${qs ? `?${qs}` : ''}`)) as FanClubFeedItemDTO[];
+  },
 
   // Fan Club Memories
   listClubMemories: async (artistId: number) =>
@@ -124,4 +135,38 @@ export const Fans = {
     (await send(`/fans/me/clubs/${artistId}/inbox/${messageId}/reply`, payload)) as FanClubInboxMessageDTO,
   updateClubInboxStatus: async (artistId: number, messageId: number, payload: FanClubInboxStatusReq) =>
     (await send(`/fans/me/clubs/${artistId}/inbox/${messageId}/status`, payload)) as FanClubInboxMessageDTO,
+
+  // Reactions
+  reactToPost: async (artistId: number, postId: number, payload: ContentReactionReq) =>
+    (await send(`/fans/me/clubs/${artistId}/posts/${postId}/react`, payload)) as ReactionSummaryDTO,
+  reactToMemory: async (artistId: number, memoryId: number, payload: ContentReactionReq) =>
+    (await send(`/fans/me/clubs/${artistId}/memories/${memoryId}/react`, payload)) as ReactionSummaryDTO,
+
+  // Leaderboard & Spotlight
+  getLeaderboard: async (artistId: number, period?: string) => {
+    const qs = period ? `?period=${period}` : '';
+    return (await read(`/fans/me/clubs/${artistId}/leaderboard${qs}`)) as LeaderboardEntryDTO[];
+  },
+  getSpotlight: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/spotlight`)) as FanClubFeedItemDTO | null,
+
+  // Discovery
+  getDiscoveryFeed: async (limit?: number) => {
+    const qs = limit ? `?limit=${limit}` : '';
+    return (await read(`/fans/discovery${qs}`)) as FanClubFeedItemDTO[];
+  },
+
+  // Notifications
+  listNotifications: async (unreadOnly?: boolean) => {
+    const qs = unreadOnly ? '?unreadOnly=true' : '';
+    return (await read(`/fans/me/notifications${qs}`)) as NotificationDTO[];
+  },
+  getNotificationCount: async () =>
+    (await read('/fans/me/notifications/count')) as NotificationCountDTO,
+  markNotificationRead: async (notifId: number) => {
+    await send(`/fans/me/notifications/${notifId}/read`, {});
+  },
+  markAllNotificationsRead: async () => {
+    await send('/fans/me/notifications/read-all', {});
+  },
 };
