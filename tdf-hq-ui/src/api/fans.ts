@@ -27,6 +27,11 @@ import type {
   FanClubInboxSendReq,
   FanClubInboxReplyReq,
   FanClubInboxStatusReq,
+  ContentReactionReq,
+  ReactionSummaryDTO,
+  NotificationDTO,
+  NotificationCountDTO,
+  LeaderboardEntryDTO,
 } from './types';
 
 export const Fans = {
@@ -70,7 +75,13 @@ export const Fans = {
     post<void>(`/fans/me/clubs/${artistId}/elections/${electionId}/vote`, payload),
 
   // Fan Club Feed
-  listClubFeed: (artistId: number) => get<FanClubFeedItemDTO[]>(`/fans/me/clubs/${artistId}/feed`),
+  listClubFeed: (artistId: number, sort?: string, period?: string) => {
+    const params = new URLSearchParams();
+    if (sort) params.set('sort', sort);
+    if (period) params.set('period', period);
+    const qs = params.toString();
+    return get<FanClubFeedItemDTO[]>(`/fans/me/clubs/${artistId}/feed${qs ? `?${qs}` : ''}`);
+  },
 
   // Fan Club Memories
   listClubMemories: (artistId: number) => get<FanClubMemoryDTO[]>(`/fans/me/clubs/${artistId}/memories`),
@@ -101,4 +112,35 @@ export const Fans = {
     post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/reply`, payload),
   updateClubInboxStatus: (artistId: number, messageId: number, payload: FanClubInboxStatusReq) =>
     post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/status`, payload),
+
+  // Reactions
+  reactToPost: (artistId: number, postId: number, payload: ContentReactionReq) =>
+    post<ReactionSummaryDTO>(`/fans/me/clubs/${artistId}/posts/${postId}/react`, payload),
+  reactToMemory: (artistId: number, memoryId: number, payload: ContentReactionReq) =>
+    post<ReactionSummaryDTO>(`/fans/me/clubs/${artistId}/memories/${memoryId}/react`, payload),
+
+  // Leaderboard & Spotlight
+  getLeaderboard: (artistId: number, period?: string) => {
+    const qs = period ? `?period=${period}` : '';
+    return get<LeaderboardEntryDTO[]>(`/fans/me/clubs/${artistId}/leaderboard${qs}`);
+  },
+  getSpotlight: (artistId: number) =>
+    get<FanClubFeedItemDTO | null>(`/fans/me/clubs/${artistId}/spotlight`),
+
+  // Discovery
+  getDiscoveryFeed: (limit?: number) => {
+    const qs = limit ? `?limit=${limit}` : '';
+    return get<FanClubFeedItemDTO[]>(`/fans/discovery${qs}`);
+  },
+
+  // Notifications
+  listNotifications: (unreadOnly?: boolean) => {
+    const qs = unreadOnly ? '?unreadOnly=true' : '';
+    return get<NotificationDTO[]>(`/fans/me/notifications${qs}`);
+  },
+  getNotificationCount: () => get<NotificationCountDTO>('/fans/me/notifications/count'),
+  markNotificationRead: (notifId: number) =>
+    post<void>(`/fans/me/notifications/${notifId}/read`, {}),
+  markAllNotificationsRead: () =>
+    post<void>('/fans/me/notifications/read-all', {}),
 };
