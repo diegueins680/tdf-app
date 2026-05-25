@@ -24,6 +24,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
+import NotificationBell from './NotificationBell';
 import { NAV_GROUPS } from './SidebarNav';
 import { canAccessPath } from '../utils/accessControl';
 import { formatFriendlyPath } from '../utils/navigationLabels';
@@ -197,7 +198,10 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
 
         <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto' }}>
           {session ? (
-            <SessionMenu />
+            <>
+              <NotificationBell />
+              <SessionMenu />
+            </>
           ) : (
             <Button color="inherit" component={RouterLink} to="/login" sx={{ fontWeight: 600 }}>
               Ingresar
