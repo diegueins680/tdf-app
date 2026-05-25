@@ -778,6 +778,7 @@ export interface FanClubPostDTO {
   fcpIsPinned: boolean;
   fcpIsHidden: boolean;
   fcpReplies: number;
+  fcpReactions: ReactionSummaryDTO;
   fcpCreatedAt: string;
   fcpUpdatedAt?: string | null;
 }
@@ -873,6 +874,7 @@ export interface FanClubMemoryDTO {
   fcmMediaUrls: string[];
   fcmIsHidden: boolean;
   fcmIsDeleted: boolean;
+  fcmReactions: ReactionSummaryDTO;
   fcmCreatedAt: string;
 }
 
@@ -882,6 +884,16 @@ export interface FanClubMemoryReportDTO {
   fcmrMemoryId: number;
   fcmrReason: string;
   fcmrCreatedAt: string;
+}
+
+export interface ReactionSummaryDTO {
+  rsFire: number;
+  rsHeart: number;
+  rsClap: number;
+  rsMicDrop: number;
+  rsSkull: number;
+  rsTotal: number;
+  rsMyReaction: string | null;
 }
 
 export interface FanClubFeedItemDTO {
@@ -896,6 +908,7 @@ export interface FanClubFeedItemDTO {
   fcfIsPinned: boolean;
   fcfIsOfficer: boolean;
   fcfIsHidden: boolean;
+  fcfReactions: ReactionSummaryDTO;
   fcfCreatedAt: string;
 }
 
@@ -941,4 +954,32 @@ export interface FanClubInboxReplyReq {
 
 export interface FanClubInboxStatusReq {
   fcistReqStatus: string;
+}
+
+export interface ContentReactionReq {
+  crrReaction: string;
+}
+
+export interface NotificationDTO {
+  nId: number;
+  nType: string;
+  nTitle: string;
+  nBody: string;
+  nTargetType?: string | null;
+  nTargetId?: number | null;
+  nIsRead: boolean;
+  nCreatedAt: string;
+}
+
+export interface NotificationCountDTO {
+  ncUnread: number;
+}
+
+export interface LeaderboardEntryDTO {
+  lbPartyId: number;
+  lbDisplayName: string;
+  lbAvatarUrl?: string | null;
+  lbTotalReactions: number;
+  lbBadges: string[];
+  lbRank: number;
 }

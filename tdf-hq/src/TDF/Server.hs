@@ -2291,6 +2291,8 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
+  :<|> (notifList user :<|> notifCount user :<|> notifMarkRead user :<|> notifMarkAllRead user)
+  :<|> discoveryFeed user
   :<|> fanClubSecureListMyClubs user
   :<|> fanClubSecureArtistHandlers user
 
@@ -6920,6 +6922,121 @@ artistUpdateOwnProfile user payload = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey validated now
+
+-- ============================================================================
+-- Notifications
+-- ============================================================================
+
+notifList :: AuthedUser -> Maybe Bool -> AppM [NotificationDTO]
+notifList user mUnreadOnly = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    let filters = [NotificationRecipientPartyId ==. auPartyId user]
+                  ++ [NotificationIsRead ==. False | mUnreadOnly == Just True]
+    notifs <- selectList filters [Desc NotificationCreatedAt, LimitTo 50]
+    pure $ map (\(Entity nid n) -> NotificationDTO
+      { nId = fromSqlKey nid
+      , nType = notificationNotifType n
+      , nTitle = notificationTitle n
+      , nBody = notificationBody n
+      , nTargetType = notificationTargetType n
+      , nTargetId = notificationTargetId n
+      , nIsRead = notificationIsRead n
+      , nCreatedAt = notificationCreatedAt n
+      }) notifs
+
+notifCount :: AuthedUser -> AppM NotificationCountDTO
+notifCount user = do
+  Env pool _ <- ask
+  cnt <- liftIO $ flip runSqlPool pool $
+    count [NotificationRecipientPartyId ==. auPartyId user, NotificationIsRead ==. False]
+  pure NotificationCountDTO { ncUnread = cnt }
+
+notifMarkRead :: AuthedUser -> Int64 -> AppM NoContent
+notifMarkRead user notifId = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $
+    updateWhere
+      [ NotificationId ==. toSqlKey notifId
+      , NotificationRecipientPartyId ==. auPartyId user
+      ]
+      [NotificationIsRead =. True]
+  pure NoContent
+
+notifMarkAllRead :: AuthedUser -> AppM NoContent
+notifMarkAllRead user = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $
+    updateWhere
+      [ NotificationRecipientPartyId ==. auPartyId user
+      , NotificationIsRead ==. False
+      ]
+      [NotificationIsRead =. True]
+  pure NoContent
+
+-- ============================================================================
+-- Discovery Feed
+-- ============================================================================
+
+discoveryFeed :: AuthedUser -> Maybe Int -> AppM [FanClubFeedItemDTO]
+discoveryFeed user mLimit = do
+  Env pool _ <- ask
+  liftIO $ flip runSqlPool pool $ do
+    let lim = min 50 (fromMaybe 20 mLimit)
+    boosted <- selectList [] [Desc BoostedContentBoostedAt, LimitTo lim]
+    items <- forM boosted $ \(Entity _ bc) -> do
+      case boostedContentTargetType bc of
+        "post" -> do
+          let postKey = toSqlKey (fromIntegral (boostedContentTargetId bc)) :: FanClubPostId
+          mPost <- get postKey
+          case mPost of
+            Nothing -> pure Nothing
+            Just p -> do
+              reactions <- buildReactionSummaryServer "post" (boostedContentTargetId bc) (auPartyId user)
+              mParty <- get (fanClubPostFanPartyId p)
+              let authorName = maybe "Desconocido" partyDisplayName mParty
+              pure $ Just FanClubFeedItemDTO
+                { fcfId = fromIntegral (boostedContentTargetId bc)
+                , fcfKind = "post"
+                , fcfTitle = fanClubPostTitle p
+                , fcfContent = fanClubPostContent p
+                , fcfAuthorId = fromSqlKey (fanClubPostFanPartyId p)
+                , fcfAuthorName = authorName
+                , fcfAvatarUrl = Nothing
+                , fcfMediaUrls = maybe [] (T.splitOn ",") (fanClubPostMediaUrls p)
+                , fcfIsPinned = False
+                , fcfIsOfficer = False
+                , fcfIsHidden = False
+                , fcfReactions = reactions
+                , fcfCreatedAt = fanClubPostCreatedAt p
+                }
+        _ -> pure Nothing
+    pure (catMaybes items)
+
+buildReactionSummaryServer :: Text -> Int64 -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildReactionSummaryServer targetType targetId viewerPartyId = do
+  reactions <- selectList
+    [ ContentReactionTargetType ==. targetType
+    , ContentReactionTargetId ==. targetId
+    ] []
+  let countReaction t = length $ filter (\(Entity _ r) -> contentReactionReaction r == t) reactions
+      myReaction = case filter (\(Entity _ r) -> contentReactionReactorPartyId r == viewerPartyId) reactions of
+        (Entity _ r : _) -> Just (contentReactionReaction r)
+        [] -> Nothing
+      fire = countReaction "fire"
+      heart = countReaction "heart"
+      clap = countReaction "clap"
+      micDrop = countReaction "mic_drop"
+      skull = countReaction "skull"
+  pure ReactionSummaryDTO
+    { rsFire = fire
+    , rsHeart = heart
+    , rsClap = clap
+    , rsMicDrop = micDrop
+    , rsSkull = skull
+    , rsTotal = fire + heart + clap + micDrop + skull
+    , rsMyReaction = myReaction
+    }
 
 loadFanProfileDTO :: PartyId -> SqlPersistT IO FanProfileDTO
 loadFanProfileDTO fanId = do

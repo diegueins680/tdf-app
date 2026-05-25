@@ -371,16 +371,27 @@ type FanSecureAPI =
          ( Get '[JSON] ArtistProfileDTO
        :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
          )
+  :<|> "me" :> "notifications" :>
+         ( QueryParam "unreadOnly" Bool :> Get '[JSON] [NotificationDTO]
+      :<|> "count" :> Get '[JSON] NotificationCountDTO
+      :<|> Capture "notifId" Int64 :> "read" :> Post '[JSON] NoContent
+      :<|> "read-all" :> Post '[JSON] NoContent
+         )
+  :<|> "discovery" :> QueryParam "limit" Int :> Get '[JSON] [FanClubFeedItemDTO]
   :<|> "me" :> "clubs" :> Get '[JSON] [FanClubDTO]
   :<|> "me" :> "clubs" :> Capture "artistId" Int64 :>
          ( Get '[JSON] FanClubDTO
-      :<|> "feed" :> Get '[JSON] [FanClubFeedItemDTO]
+      :<|> "feed" :> QueryParam "sort" Text :> QueryParam "period" Text :> Get '[JSON] [FanClubFeedItemDTO]
       :<|> "posts" :> Get '[JSON] [FanClubPostDTO]
       :<|> "posts" :> ReqBody '[JSON] FanClubCreatePostReq :> Post '[JSON] FanClubPostDTO
       :<|> "posts" :> Capture "postId" Int64 :> "pin" :> Post '[JSON] NoContent
       :<|> "posts" :> Capture "postId" Int64 :> "unpin" :> Post '[JSON] NoContent
       :<|> "posts" :> Capture "postId" Int64 :> "hide" :> Post '[JSON] NoContent
       :<|> "posts" :> Capture "postId" Int64 :> "unhide" :> Post '[JSON] NoContent
+      :<|> "posts" :> Capture "postId" Int64 :> "react" :> ReqBody '[JSON] ContentReactionReq :> Post '[JSON] ReactionSummaryDTO
+      :<|> "memories" :> Capture "memoryId" Int64 :> "react" :> ReqBody '[JSON] ContentReactionReq :> Post '[JSON] ReactionSummaryDTO
+      :<|> "leaderboard" :> QueryParam "period" Text :> Get '[JSON] [LeaderboardEntryDTO]
+      :<|> "spotlight" :> Get '[JSON] (Maybe FanClubFeedItemDTO)
       :<|> "events" :> Get '[JSON] [FanClubEventDTO]
       :<|> "events" :> ReqBody '[JSON] FanClubCreateEventReq :> Post '[JSON] FanClubEventDTO
       :<|> "elections" :> Get '[JSON] [FanClubElectionDTO]

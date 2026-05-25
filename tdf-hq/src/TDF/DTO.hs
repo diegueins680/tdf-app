@@ -862,6 +862,7 @@ data FanClubPostDTO = FanClubPostDTO
   , fcpIsPinned    :: Bool
   , fcpIsHidden    :: Bool
   , fcpReplies     :: Int
+  , fcpReactions   :: ReactionSummaryDTO
   , fcpCreatedAt   :: UTCTime
   , fcpUpdatedAt   :: Maybe UTCTime
   } deriving (Show, Generic)
@@ -931,6 +932,7 @@ data FanClubMemoryDTO = FanClubMemoryDTO
   , fcmMediaUrls   :: [Text]
   , fcmIsHidden    :: Bool
   , fcmIsDeleted   :: Bool
+  , fcmReactions   :: ReactionSummaryDTO
   , fcmCreatedAt   :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON FanClubMemoryDTO
@@ -956,6 +958,7 @@ data FanClubFeedItemDTO = FanClubFeedItemDTO
   , fcfIsPinned    :: Bool
   , fcfIsOfficer   :: Bool
   , fcfIsHidden    :: Bool
+  , fcfReactions   :: ReactionSummaryDTO
   , fcfCreatedAt   :: UTCTime
   } deriving (Show, Generic)
 instance ToJSON FanClubFeedItemDTO
@@ -1058,3 +1061,51 @@ data FanClubInboxStatusReq = FanClubInboxStatusReq
   } deriving (Show, Generic)
 instance FromJSON FanClubInboxStatusReq where
   parseJSON = genericParseJSON strictDecodeOptions
+
+-- ============================================================================
+-- Content Engagement DTOs
+-- ============================================================================
+
+data ReactionSummaryDTO = ReactionSummaryDTO
+  { rsFire       :: Int
+  , rsHeart      :: Int
+  , rsClap       :: Int
+  , rsMicDrop    :: Int
+  , rsSkull      :: Int
+  , rsTotal      :: Int
+  , rsMyReaction :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON ReactionSummaryDTO
+
+data ContentReactionReq = ContentReactionReq
+  { crrReaction :: Text
+  } deriving (Show, Generic)
+instance FromJSON ContentReactionReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data NotificationDTO = NotificationDTO
+  { nId          :: Int64
+  , nType        :: Text
+  , nTitle       :: Text
+  , nBody        :: Text
+  , nTargetType  :: Maybe Text
+  , nTargetId    :: Maybe Int64
+  , nIsRead      :: Bool
+  , nCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON NotificationDTO
+
+data NotificationCountDTO = NotificationCountDTO
+  { ncUnread :: Int
+  } deriving (Show, Generic)
+instance ToJSON NotificationCountDTO
+
+data LeaderboardEntryDTO = LeaderboardEntryDTO
+  { lbPartyId        :: Int64
+  , lbDisplayName    :: Text
+  , lbAvatarUrl      :: Maybe Text
+  , lbTotalReactions :: Int
+  , lbBadges         :: [Text]
+  , lbRank           :: Int
+  } deriving (Show, Generic)
+instance ToJSON LeaderboardEntryDTO
