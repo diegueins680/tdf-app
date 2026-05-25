@@ -5,10 +5,13 @@ const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
 
+const LEADERBOARD_PATH_FIXTURE_CLUB_ID = 12;
+const DISCOVERY_FEED_FIXTURE_LIMIT = 25;
+
 const FANS_API_PATH_FIXTURES = {
-  leaderboardClubId: 12,
+  leaderboardClubId: LEADERBOARD_PATH_FIXTURE_CLUB_ID,
   weeklyLeaderboardPeriod: 'week',
-  discoveryFeedLimit: 25,
+  discoveryFeedLimit: DISCOVERY_FEED_FIXTURE_LIMIT,
 } as const satisfies Readonly<{
   leaderboardClubId: number;
   weeklyLeaderboardPeriod: string;

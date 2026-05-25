@@ -1,5 +1,7 @@
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
 
+const EXPECTED_PANEL_LOADING_SPINNER_RADIUS_PX = 11;
+
 const EXPECTED_NOTIFICATION_BELL_CONTRACTS = {
   countRefetchIntervalMs: 3 * 10 * 1000,
   badgeMaxDisplayCount: 100 - 1,
@@ -9,7 +11,7 @@ const EXPECTED_NOTIFICATION_BELL_CONTRACTS = {
   notificationListMaxHeightPx: 4 * 100 - 2 * 10,
   triggerLoadingSpinnerSizePx: 2 * 10,
   markAllActionSpinnerSizePx: 4 * 4,
-  panelLoadingSpinnerSizePx: 2 * 11,
+  panelLoadingSpinnerSizePx: 2 * EXPECTED_PANEL_LOADING_SPINNER_RADIUS_PX,
 } as const;
 
 describe('NotificationBell contracts', () => {
