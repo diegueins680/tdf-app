@@ -5,10 +5,14 @@ type NotificationBellContract = Readonly<{
   popoverPaperMaxHeightPx: number;
   headingFontWeight: number;
   notificationListMaxHeightPx: number;
+  triggerLoadingSpinnerSizePx: number;
+  markAllActionSpinnerSizePx: number;
+  panelLoadingSpinnerSizePx: number;
 }>;
 
 // Invariant: all dimensions and limits are positive integers; the scrollable list
-// remains shorter than its containing popover paper.
+// remains shorter than its containing popover paper; action spinners remain
+// smaller than the larger loading indicators.
 export const NOTIFICATION_BELL_CONTRACTS = {
   countRefetchIntervalMs: 3 * 10 * 1000,
   badgeMaxDisplayCount: 100 - 1,
@@ -16,4 +20,7 @@ export const NOTIFICATION_BELL_CONTRACTS = {
   popoverPaperMaxHeightPx: 5 * 100 - 2 * 10,
   headingFontWeight: 7 * 100,
   notificationListMaxHeightPx: 4 * 100 - 2 * 10,
+  triggerLoadingSpinnerSizePx: 2 * 10,
+  markAllActionSpinnerSizePx: 4 * 4,
+  panelLoadingSpinnerSizePx: 2 * 11,
 } as const satisfies NotificationBellContract;

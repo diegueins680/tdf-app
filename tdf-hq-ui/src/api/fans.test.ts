@@ -5,6 +5,24 @@ const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
 
+const FANS_API_PATH_FIXTURES = {
+  leaderboardClubId: 12,
+  weeklyLeaderboardPeriod: 'week',
+  discoveryFeedLimit: 25,
+} as const satisfies Readonly<{
+  leaderboardClubId: number;
+  weeklyLeaderboardPeriod: string;
+  discoveryFeedLimit: number;
+}>;
+
+const EXPECTED_LEADERBOARD_PATH =
+  `/fans/me/clubs/${FANS_API_PATH_FIXTURES.leaderboardClubId}/leaderboard`;
+const EXPECTED_WEEKLY_LEADERBOARD_PATH =
+  `${EXPECTED_LEADERBOARD_PATH}?period=${FANS_API_PATH_FIXTURES.weeklyLeaderboardPeriod}`;
+const EXPECTED_DISCOVERY_FEED_PATH = '/fans/discovery';
+const EXPECTED_LIMITED_DISCOVERY_FEED_PATH =
+  `${EXPECTED_DISCOVERY_FEED_PATH}?limit=${FANS_API_PATH_FIXTURES.discoveryFeedLimit}`;
+
 jest.unstable_mockModule('./client', () => ({
   get: getMock,
   post: postMock,
@@ -24,19 +42,22 @@ describe('Fans API optional query paths', () => {
   });
 
   it('builds leaderboard paths with a period suffix only when provided', async () => {
-    await Fans.getLeaderboard(12);
-    expect(getMock).toHaveBeenCalledWith('/fans/me/clubs/12/leaderboard');
+    await Fans.getLeaderboard(FANS_API_PATH_FIXTURES.leaderboardClubId);
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_LEADERBOARD_PATH);
 
-    await Fans.getLeaderboard(12, 'week');
-    expect(getMock).toHaveBeenCalledWith('/fans/me/clubs/12/leaderboard?period=week');
+    await Fans.getLeaderboard(
+      FANS_API_PATH_FIXTURES.leaderboardClubId,
+      FANS_API_PATH_FIXTURES.weeklyLeaderboardPeriod,
+    );
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_WEEKLY_LEADERBOARD_PATH);
   });
 
   it('builds discovery feed paths with a limit suffix only when provided', async () => {
     await Fans.getDiscoveryFeed();
-    expect(getMock).toHaveBeenCalledWith('/fans/discovery');
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_DISCOVERY_FEED_PATH);
 
-    await Fans.getDiscoveryFeed(25);
-    expect(getMock).toHaveBeenCalledWith('/fans/discovery?limit=25');
+    await Fans.getDiscoveryFeed(FANS_API_PATH_FIXTURES.discoveryFeedLimit);
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_LIMITED_DISCOVERY_FEED_PATH);
   });
 
   it('builds notification paths with unreadOnly only when requested', async () => {

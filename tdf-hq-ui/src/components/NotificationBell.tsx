@@ -10,14 +10,14 @@ import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
 
-type TargetEvent = {
+interface TargetEvent {
   currentTarget: HTMLElement;
-};
+}
 
-type KeyboardTargetEvent = TargetEvent & {
+interface KeyboardTargetEvent extends TargetEvent {
   key: string;
   preventDefault: () => void;
-};
+}
 
 function isActivationKey(key: string): boolean {
   return key === 'Enter' || key === ' ';
@@ -49,16 +49,16 @@ export default function NotificationBell() {
   const markReadMut = useMutation({
     mutationFn: (notifId: number) => Fans.markNotificationRead(notifId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['notifications'] });
-      qc.invalidateQueries({ queryKey: ['notification-count'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void qc.invalidateQueries({ queryKey: ['notification-count'] });
     },
   });
 
   const markAllMut = useMutation({
     mutationFn: () => Fans.markAllNotificationsRead(),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['notifications'] });
-      qc.invalidateQueries({ queryKey: ['notification-count'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void qc.invalidateQueries({ queryKey: ['notification-count'] });
     },
   });
 
@@ -142,7 +142,11 @@ export default function NotificationBell() {
       >
         <Badge badgeContent={unreadCount} color="error" max={NOTIFICATION_BELL_CONTRACTS.badgeMaxDisplayCount}>
           {countQuery.isLoading ? (
-            <CircularProgress size={20} color="inherit" aria-label={copy.loading} />
+            <CircularProgress
+              size={NOTIFICATION_BELL_CONTRACTS.triggerLoadingSpinnerSizePx}
+              color="inherit"
+              aria-label={copy.loading}
+            />
           ) : (
             <NotificationsIcon />
           )}
@@ -181,7 +185,16 @@ export default function NotificationBell() {
               onClick={focus.afterMarkAll}
               onKeyDown={focus.afterMarkAllKeyDown}
               aria-busy={markAllMut.isPending ? true : undefined}
-              startIcon={markAllMut.isPending ? <CircularProgress size={16} color="inherit" /> : <DoneAllIcon />}
+              startIcon={
+                markAllMut.isPending
+                  ? (
+                    <CircularProgress
+                      size={NOTIFICATION_BELL_CONTRACTS.markAllActionSpinnerSizePx}
+                      color="inherit"
+                    />
+                  )
+                  : <DoneAllIcon />
+              }
             >
               {markAllMut.isPending ? copy.markAllLoading : copy.markAll}
             </Button>
@@ -195,7 +208,7 @@ export default function NotificationBell() {
             aria-live="polite"
           >
             <Stack spacing={1} alignItems="center">
-              <CircularProgress size={22} />
+              <CircularProgress size={NOTIFICATION_BELL_CONTRACTS.panelLoadingSpinnerSizePx} />
               <Typography variant="body2" color="text.secondary">
                 {copy.loading}
               </Typography>

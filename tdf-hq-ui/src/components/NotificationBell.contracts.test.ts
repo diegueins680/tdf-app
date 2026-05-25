@@ -7,6 +7,9 @@ const EXPECTED_NOTIFICATION_BELL_CONTRACTS = {
   popoverPaperMaxHeightPx: 5 * 100 - 2 * 10,
   headingFontWeight: 7 * 100,
   notificationListMaxHeightPx: 4 * 100 - 2 * 10,
+  triggerLoadingSpinnerSizePx: 2 * 10,
+  markAllActionSpinnerSizePx: 4 * 4,
+  panelLoadingSpinnerSizePx: 2 * 11,
 } as const;
 
 describe('NotificationBell contracts', () => {
@@ -22,6 +25,13 @@ describe('NotificationBell contracts', () => {
 
     expect(NOTIFICATION_BELL_CONTRACTS.notificationListMaxHeightPx).toBeLessThan(
       NOTIFICATION_BELL_CONTRACTS.popoverPaperMaxHeightPx,
+    );
+
+    expect(NOTIFICATION_BELL_CONTRACTS.markAllActionSpinnerSizePx).toBeLessThan(
+      NOTIFICATION_BELL_CONTRACTS.triggerLoadingSpinnerSizePx,
+    );
+    expect(NOTIFICATION_BELL_CONTRACTS.triggerLoadingSpinnerSizePx).toBeLessThanOrEqual(
+      NOTIFICATION_BELL_CONTRACTS.panelLoadingSpinnerSizePx,
     );
   });
 });
