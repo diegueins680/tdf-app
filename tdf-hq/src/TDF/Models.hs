@@ -814,7 +814,7 @@ FanClubInboxMessage
 
 ContentReaction
     targetType       Text
-    targetId         Int64
+    targetId         Int
     reactorPartyId   PartyId
     reaction         Text
     createdAt        UTCTime default=now()
@@ -827,7 +827,7 @@ Notification
     title             Text
     body              Text
     targetType        Text Maybe
-    targetId          Int64 Maybe
+    targetId          Int Maybe
     isRead            Bool default=False
     createdAt         UTCTime default=now()
     deriving Show Generic
@@ -843,7 +843,7 @@ CreatorBadge
 
 BoostedContent
     targetType       Text
-    targetId         Int64
+    targetId         Int
     clubId           FanClubId
     totalReactions   Int
     boostedAt        UTCTime default=now()

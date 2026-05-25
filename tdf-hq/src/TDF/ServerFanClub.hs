@@ -251,7 +251,7 @@ fanClubSecureArtistHandlers user artistId =
             , fcArtistImageUrl = artistImage
             }
 
-    listClubFeed aId mSort mPeriod = do
+    listClubFeed aId mSort _mPeriod = do
       artistKey <- requireArtistKey aId
       now <- liftIO getCurrentTime
       runDB $ do
@@ -279,7 +279,7 @@ fanClubSecureArtistHandlers user artistId =
             postItems <- forM posts $ \(Entity pid p) -> do
               author <- getAuthorDTO (fanClubPostFanPartyId p)
               let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
-              reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
+              reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
               pure FanClubFeedItemDTO
                 { fcfId = fromSqlKey pid
                 , fcfKind = "post"
@@ -302,7 +302,7 @@ fanClubSecureArtistHandlers user artistId =
                 Just mp -> do
                   author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
                   let isOfficer = fromSqlKey (fanClubMemberProfilePartyId mp) `elem` officerIds
-                  reactions <- buildReactionSummary "memory" (fromSqlKey mid) (auPartyId user)
+                  reactions <- buildReactionSummary "memory" (fromIntegral (fromSqlKey mid)) (auPartyId user)
                   pure $ Just FanClubFeedItemDTO
                     { fcfId = fromSqlKey mid
                     , fcfKind = "memory"
@@ -336,7 +336,7 @@ fanClubSecureArtistHandlers user artistId =
             forM posts $ \(Entity pid p) -> do
               replies <- count [M.FanClubPostParentId ==. Just pid]
               author <- getAuthorDTO (fanClubPostFanPartyId p)
-              reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
+              reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
               pure $ postToDTO pid p (fromIntegral replies) author reactions
 
     createClubPost aId req = do
@@ -610,7 +610,7 @@ fanClubSecureArtistHandlers user artistId =
             forM validMemories $ \(Entity mid m) -> do
               let Just mp = Map.lookup (fanClubMemoryMemberProfileId m) profileMap
               author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
-              reactions <- buildReactionSummary "memory" (fromSqlKey mid) (auPartyId user)
+              reactions <- buildReactionSummary "memory" (fromIntegral (fromSqlKey mid)) (auPartyId user)
               pure FanClubMemoryDTO
                 { fcmId = fromSqlKey mid
                 , fcmMemberProfileId = fromSqlKey (fanClubMemoryMemberProfileId m)
@@ -1065,7 +1065,7 @@ fanClubSecureArtistHandlers user artistId =
         toggleReaction "memory" (fromIntegral memoryId) (auPartyId user) reaction now
         buildReactionSummary "memory" (fromIntegral memoryId) (auPartyId user)
 
-    getLeaderboard aId mPeriod = do
+    getLeaderboard aId _mPeriod = do
       artistKey <- requireArtistKey aId
       runDB $ do
         mClub <- getBy (UniqueFanClubArtist artistKey)
@@ -1132,7 +1132,7 @@ fanClubSecureArtistHandlers user artistId =
                     let officerIds = map (fromSqlKey . fanClubOfficerFanPartyId . entityVal) officers
                     author <- getAuthorDTO (fanClubPostFanPartyId p)
                     let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
-                    reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
+                    reactions <- buildReactionSummary "post" (fromIntegral (fromSqlKey pid)) (auPartyId user)
                     pure $ Just FanClubFeedItemDTO
                       { fcfId = fromSqlKey pid
                       , fcfKind = "post"
@@ -1168,7 +1168,7 @@ validateReaction r
   | r `elem` validReactions = pure r
   | otherwise = throwBadRequest "Reacción inválida. Opciones: fire, heart, clap, mic_drop, skull"
 
-toggleReaction :: Text -> Int64 -> PartyId -> Text -> UTCTime -> SqlPersistT IO ()
+toggleReaction :: Text -> Int -> PartyId -> Text -> UTCTime -> SqlPersistT IO ()
 toggleReaction targetType targetId reactorId reaction now = do
   existing <- selectFirst
     [ M.ContentReactionTargetType ==. targetType
@@ -1204,7 +1204,7 @@ toggleReaction targetType targetId reactorId reaction now = do
         , contentReactionCreatedAt = now
         }
 
-buildReactionSummary :: Text -> Int64 -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildReactionSummary :: Text -> Int -> PartyId -> SqlPersistT IO ReactionSummaryDTO
 buildReactionSummary targetType targetId viewerPartyId = do
   reactions <- selectList
     [ M.ContentReactionTargetType ==. targetType

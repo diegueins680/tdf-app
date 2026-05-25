@@ -6940,7 +6940,7 @@ notifList user mUnreadOnly = do
       , nTitle = notificationTitle n
       , nBody = notificationBody n
       , nTargetType = notificationTargetType n
-      , nTargetId = notificationTargetId n
+      , nTargetId = fmap fromIntegral (notificationTargetId n)
       , nIsRead = notificationIsRead n
       , nCreatedAt = notificationCreatedAt n
       }) notifs
@@ -7013,7 +7013,7 @@ discoveryFeed user mLimit = do
         _ -> pure Nothing
     pure (catMaybes items)
 
-buildReactionSummaryServer :: Text -> Int64 -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildReactionSummaryServer :: Text -> Int -> PartyId -> SqlPersistT IO ReactionSummaryDTO
 buildReactionSummaryServer targetType targetId viewerPartyId = do
   reactions <- selectList
     [ ContentReactionTargetType ==. targetType
