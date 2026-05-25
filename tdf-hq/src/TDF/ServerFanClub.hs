@@ -57,9 +57,10 @@ import qualified Data.Text.Encoding     as TE
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (UTCTime, getCurrentTime)
 
-import           Database.Persist       (Entity(..), Key, (=.), (==.), (<-.), SelectOpt(Asc, Desc)
-                                         , get, getBy, insert, insertUnique, selectFirst, selectList, update, count)
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist       (Entity(..), Key, (=.), (==.), (<-.), SelectOpt(Asc, Desc, LimitTo)
+                                         , get, getBy, insert, insertUnique, selectFirst, selectList, update, count
+                                         , delete, deleteWhere, upsert, insert_)
+import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey, rawSql, Single(..))
 import           Servant                (NoContent(..), ServerError, (:<|>)(..), err400, err403, err404, errBody)
 
 import           Control.Monad.Reader   (ReaderT, ask)
@@ -77,9 +78,12 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , Party(..), PartyId, FanFollow(..), FanProfile(..)
                                          , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryReport(..)
                                          , FanClubInboxMessage(..), FanClubInboxMessageId
+                                         , ContentReaction(..), ContentReactionId
+                                         , Notification(..), BoostedContent(..), CreatorBadge(..)
                                          , RoleEnum(..)
                                          , Unique(..), FanClubElectionId, FanClubCandidacyId, artistProfileHeroImageUrl)
 import qualified TDF.Models             as M
+import           Data.Time.Clock        (diffUTCTime)
 
 type AppM = ReaderT Env Handler
 
@@ -326,7 +330,8 @@ fanClubSecureArtistHandlers user artistId =
             forM posts $ \(Entity pid p) -> do
               replies <- count [M.FanClubPostParentId ==. Just pid]
               author <- getAuthorDTO (fanClubPostFanPartyId p)
-              pure $ postToDTO pid p (fromIntegral replies) author
+              reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
+              pure $ postToDTO pid p (fromIntegral replies) author reactions
 
     createClubPost aId req = do
       artistKey <- requireArtistKey aId
@@ -376,7 +381,7 @@ fanClubSecureArtistHandlers user artistId =
                     False
                     now
                     Nothing
-            pure $ postToDTO pid post 0 author
+            pure $ postToDTO pid post 0 author emptyReactionSummary
 
     resolveParentKey :: FanClubId -> Maybe Int64 -> AppM (Maybe FanClubPostId)
     resolveParentKey _ Nothing = pure Nothing
@@ -1076,8 +1081,8 @@ eventToDTO (Entity eid e) = FanClubEventDTO
   , fceCreatedBy = fmap fromSqlKey (fanClubEventCreatedByPartyId e)
   }
 
-postToDTO :: FanClubPostId -> FanClubPost -> Int -> SocialPartyProfileDTO -> FanClubPostDTO
-postToDTO pid p replies author = FanClubPostDTO
+postToDTO :: FanClubPostId -> FanClubPost -> Int -> SocialPartyProfileDTO -> ReactionSummaryDTO -> FanClubPostDTO
+postToDTO pid p replies author reactions = FanClubPostDTO
   { fcpId = fromSqlKey pid
   , fcpParentId = fmap fromSqlKey (fanClubPostParentId p)
   , fcpTitle = fanClubPostTitle p
@@ -1089,6 +1094,7 @@ postToDTO pid p replies author = FanClubPostDTO
   , fcpIsPinned = fanClubPostIsPinned p
   , fcpIsHidden = fanClubPostIsHidden p
   , fcpReplies = replies
+  , fcpReactions = reactions
   , fcpCreatedAt = fanClubPostCreatedAt p
   , fcpUpdatedAt = fanClubPostUpdatedAt p
   }
