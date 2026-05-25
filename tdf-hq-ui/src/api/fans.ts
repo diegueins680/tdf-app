@@ -144,22 +144,22 @@ export const Fans = {
 
   // Leaderboard & Spotlight
   getLeaderboard: async (artistId: number, period?: string) => {
-    const qs = period ? `?period=${period}` : '';
-    return (await read(`/fans/me/clubs/${artistId}/leaderboard${qs}`)) as LeaderboardEntryDTO[];
+    const leaderboardQuery = period ? `?period=${period}` : '';
+    return (await read(`/fans/me/clubs/${artistId}/leaderboard${leaderboardQuery}`)) as LeaderboardEntryDTO[];
   },
   getSpotlight: async (artistId: number) =>
     (await read(`/fans/me/clubs/${artistId}/spotlight`)) as FanClubFeedItemDTO | null,
 
   // Discovery
   getDiscoveryFeed: async (limit?: number) => {
-    const qs = limit ? `?limit=${limit}` : '';
-    return (await read(`/fans/discovery${qs}`)) as FanClubFeedItemDTO[];
+    const discoveryQuery = limit ? `?limit=${limit}` : '';
+    return (await read(`/fans/discovery${discoveryQuery}`)) as FanClubFeedItemDTO[];
   },
 
   // Notifications
   listNotifications: async (unreadOnly?: boolean) => {
-    const qs = unreadOnly ? '?unreadOnly=true' : '';
-    return (await read(`/fans/me/notifications${qs}`)) as NotificationDTO[];
+    const notificationsQuery = unreadOnly ? '?unreadOnly=true' : '';
+    return (await read(`/fans/me/notifications${notificationsQuery}`)) as NotificationDTO[];
   },
   getNotificationCount: async () =>
     (await read('/fans/me/notifications/count')) as NotificationCountDTO,

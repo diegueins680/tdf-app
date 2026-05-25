@@ -6,8 +6,34 @@ void i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
   resources: {
-    es: { translation: { Parties: 'Personas', Bookings: 'Agenda', Kanban: 'Pipelines' } },
-    en: { translation: { Parties: 'Parties', Bookings: 'Bookings', Kanban: 'Pipelines' } },
+    es: {
+      translation: {
+        Parties: 'Personas',
+        Bookings: 'Agenda',
+        Kanban: 'Pipelines',
+        notifications: {
+          title: 'Notificaciones',
+          markAll: 'Leer todo',
+          markAllLoading: 'Marcando...',
+          loading: 'Cargando notificaciones',
+          empty: 'Sin notificaciones',
+        },
+      },
+    },
+    en: {
+      translation: {
+        Parties: 'Parties',
+        Bookings: 'Bookings',
+        Kanban: 'Pipelines',
+        notifications: {
+          title: 'Notifications',
+          markAll: 'Mark all read',
+          markAllLoading: 'Marking...',
+          loading: 'Loading notifications',
+          empty: 'No notifications',
+        },
+      },
+    },
   },
 });
 

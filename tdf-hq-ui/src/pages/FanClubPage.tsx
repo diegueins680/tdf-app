@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -31,15 +31,16 @@ import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import { useLocalValue } from '../hooks/useLocalValue';
 import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
 
 export default function FanClubPage() {
-  const { artistId } = useParams<{ artistId: string }>();
+  const { artistId } = useParams();
   const artistIdNum = parseInt(artistId || '0', 10);
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const qc = useQueryClient();
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useLocalValue(0);
   const location = useLocation();
 
   const loginPath = useMemo(() => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`), [location]);
@@ -232,7 +233,7 @@ function LoginPrompt({ loginPath }: { loginPath: string }) {
 
 function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; feed: FanClubFeedItemDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [sortMode, setSortMode] = useState<string>('new');
+  const [sortMode, setSortMode] = useLocalValue('new');
 
   const sortedFeedQuery = useQuery({
     queryKey: ['fan-club-feed', artistId, sortMode],
@@ -329,6 +330,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                 reactions={item.fcfReactions}
                 onReact={(reaction) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reaction })}
                 disabled={reactMut.isPending}
+                loading={reactMut.isPending}
               />
               <Typography variant="caption" color="text.secondary">
                 {new Date(item.fcfCreatedAt).toLocaleString()}
@@ -343,10 +345,10 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
 
 function ClubInbox({ artistId, messages, loading }: { artistId: number; messages: FanClubInboxMessageDTO[]; loading: boolean }) {
   const qc = useQueryClient();
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [replyOpen, setReplyOpen] = useState<number | null>(null);
-  const [replyBody, setReplyBody] = useState('');
-  const [detailOpen, setDetailOpen] = useState<number | null>(null);
+  const [filterStatus, setFilterStatus] = useLocalValue('all');
+  const [replyOpen, setReplyOpen] = useLocalValue(null as number | null);
+  const [replyBody, setReplyBody] = useLocalValue('');
+  const [detailOpen, setDetailOpen] = useLocalValue(null as number | null);
 
   const replyMut = useMutation({
     mutationFn: ({ messageId, body }: { messageId: number; body: string }) =>
@@ -478,10 +480,10 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
 
 function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; posts: FanClubPostDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [postMediaUrls, setPostMediaUrls] = useState<string[]>([]);
+  const [open, setOpen] = useLocalValue(false);
+  const [title, setTitle] = useLocalValue('');
+  const [content, setContent] = useLocalValue('');
+  const [postMediaUrls, setPostMediaUrls] = useLocalValue([] as string[]);
 
   const createPost = useMutation({
     mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null, fcpReqMediaUrls: postMediaUrls }),
@@ -616,12 +618,12 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
 
 function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: number; memories: FanClubMemoryDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [mediaUrls, setMediaUrls] = useState('');
-  const [reportOpen, setReportOpen] = useState<number | null>(null);
-  const [reportReason, setReportReason] = useState('');
+  const [open, setOpen] = useLocalValue(false);
+  const [title, setTitle] = useLocalValue('');
+  const [description, setDescription] = useLocalValue('');
+  const [mediaUrls, setMediaUrls] = useLocalValue('');
+  const [reportOpen, setReportOpen] = useLocalValue(null as number | null);
+  const [reportReason, setReportReason] = useLocalValue('');
 
   const createMemory = useMutation({
     mutationFn: () => Fans.createClubMemory(artistId, {
@@ -797,8 +799,8 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
 
 function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: number; events: FanClubEventDTO[]; isOfficer: boolean; loading: boolean }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', startsAt: '', endsAt: '', location: '' });
+  const [open, setOpen] = useLocalValue(false);
+  const [form, setForm] = useLocalValue({ title: '', description: '', startsAt: '', endsAt: '', location: '' });
 
   const createEvent = useMutation({
     mutationFn: () => Fans.createClubEvent(artistId, {
@@ -880,10 +882,10 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
 
 function ClubElections({ artistId, elections }: { artistId: number; elections: FanClubElectionDTO[] }) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ year: new Date().getFullYear(), candidacyStartsAt: '', candidacyEndsAt: '', votingStartsAt: '', votingEndsAt: '' });
-  const [voteOpen, setVoteOpen] = useState<number | null>(null);
-  const [selectedCands, setSelectedCands] = useState<number[]>([]);
+  const [open, setOpen] = useLocalValue(false);
+  const [form, setForm] = useLocalValue({ year: new Date().getFullYear(), candidacyStartsAt: '', candidacyEndsAt: '', votingStartsAt: '', votingEndsAt: '' });
+  const [voteOpen, setVoteOpen] = useLocalValue(null as number | null);
+  const [selectedCands, setSelectedCands] = useLocalValue([] as number[]);
 
   const createElection = useMutation({
     mutationFn: () => Fans.createClubElection(artistId, {

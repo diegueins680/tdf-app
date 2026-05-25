@@ -349,6 +349,10 @@ type FanPublicAPI =
        "artists" :> Get '[JSON] [ArtistProfileDTO]
   :<|> "artists" :> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
   :<|> "artists" :> Capture "artistId" Int64 :> "releases" :> Get '[JSON] [ArtistReleaseDTO]
+  :<|> "artists" :> Capture "artistId" Int64 :> "fans"
+         :> QueryParam "page" Int
+         :> QueryParam "pageSize" Int
+         :> Get '[JSON] ArtistFansResponse
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
   :<|> "clubs" :> Capture "artistId" Int64 :> "events" :> Get '[JSON] [FanClubEventDTO]
 

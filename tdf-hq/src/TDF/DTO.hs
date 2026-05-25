@@ -173,6 +173,23 @@ data FanFollowDTO = FanFollowDTO
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
 
+data ArtistFanDTO = ArtistFanDTO
+  { afFanId       :: Int64
+  , afDisplayName :: Text
+  , afAvatarUrl   :: Maybe Text
+  , afFollowedAt  :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ArtistFanDTO
+
+data ArtistFansResponse = ArtistFansResponse
+  { afrItems    :: [ArtistFanDTO]
+  , afrPage     :: Int
+  , afrPageSize :: Int
+  , afrTotal    :: Int
+  } deriving (Show, Generic)
+instance ToJSON ArtistFansResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
 -- Social follows between any parties (used for vCard/NFC exchanges)
 data PartyFollowDTO = PartyFollowDTO
   { pfFollowerId   :: Int64

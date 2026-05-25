@@ -1,21 +1,43 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Badge, IconButton, Popover, List, ListItemButton, ListItemText, Typography,
-  Stack, Button, Divider, Box,
+  Stack, Button, Divider, Box, CircularProgress,
 } from '@mui/material';
 import { Notifications as NotificationsIcon, DoneAll as DoneAllIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
+import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
+
+type TargetEvent = {
+  currentTarget: HTMLElement;
+};
+
+type KeyboardTargetEvent = TargetEvent & {
+  key: string;
+  preventDefault: () => void;
+};
+
+function isActivationKey(key: string): boolean {
+  return key === 'Enter' || key === ' ';
+}
+
+function focusSoon(getTarget: () => HTMLElement | null): void {
+  globalThis.setTimeout(() => getTarget()?.focus(), 0);
+}
 
 export default function NotificationBell() {
   const qc = useQueryClient();
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { t } = useTranslation();
+  const [anchorEl, setAnchorEl] = useState(null as HTMLElement | null);
+  const triggerRef = useRef(null as HTMLButtonElement | null);
+  const headingRef = useRef(null as HTMLHeadingElement | null);
 
   const countQuery = useQuery({
     queryKey: ['notification-count'],
     queryFn: () => Fans.getNotificationCount(),
-    refetchInterval: 30000,
+    refetchInterval: NOTIFICATION_BELL_CONTRACTS.countRefetchIntervalMs,
   });
 
   const listQuery = useQuery({
@@ -42,51 +64,160 @@ export default function NotificationBell() {
 
   const unreadCount = countQuery.data?.ncUnread ?? 0;
   const notifications: NotificationDTO[] = listQuery.data ?? [];
+  const isListLoading = listQuery.isLoading || (listQuery.isFetching && notifications.length === 0);
+  const isEmpty = !isListLoading && notifications.length === 0;
+  const pendingReadId = markReadMut.isPending ? markReadMut.variables : undefined;
+  const copy = {
+    title: t('notifications.title'),
+    markAll: t('notifications.markAll'),
+    markAllLoading: t('notifications.markAllLoading'),
+    loading: t('notifications.loading'),
+    empty: t('notifications.empty'),
+  };
+
+  const focusPanelHeading = () => focusSoon(() => headingRef.current);
+  const focusTrigger = () => focusSoon(() => triggerRef.current);
+
+  const focusAfterOpenClick = (event: TargetEvent) => {
+    setAnchorEl(event.currentTarget);
+    focusPanelHeading();
+  };
+
+  const focusAfterOpenKeyDown = (event: KeyboardTargetEvent) => {
+    if (!isActivationKey(event.key)) return;
+    event.preventDefault();
+    setAnchorEl(event.currentTarget);
+    focusPanelHeading();
+  };
+
+  const focusAfterClose = () => {
+    setAnchorEl(null);
+    focusTrigger();
+  };
+
+  const focusAfterMarkAll = () => {
+    if (markAllMut.isPending) return;
+    markAllMut.mutate(undefined, { onSettled: focusPanelHeading });
+  };
+
+  const focusAfterMarkAllKeyDown = (event: KeyboardTargetEvent) => {
+    if (!isActivationKey(event.key)) return;
+    event.preventDefault();
+    focusAfterMarkAll();
+  };
+
+  const focusAfterMarkRead = (notification: NotificationDTO, target: HTMLElement) => {
+    if (notification.nIsRead || markReadMut.isPending) {
+      focusSoon(() => target);
+      return;
+    }
+    markReadMut.mutate(notification.nId, { onSettled: () => focusSoon(() => target) });
+  };
+
+  const focusAfterMarkReadKeyDown = (event: KeyboardTargetEvent, notification: NotificationDTO) => {
+    if (!isActivationKey(event.key)) return;
+    event.preventDefault();
+    focusAfterMarkRead(notification, event.currentTarget);
+  };
+
+  const focus = {
+    afterOpenClick: focusAfterOpenClick,
+    afterOpenKeyDown: focusAfterOpenKeyDown,
+    afterClose: focusAfterClose,
+    afterMarkAll: focusAfterMarkAll,
+    afterMarkAllKeyDown: focusAfterMarkAllKeyDown,
+    afterMarkRead: focusAfterMarkRead,
+    afterMarkReadKeyDown: focusAfterMarkReadKeyDown,
+  };
 
   return (
     <>
       <IconButton
+        ref={triggerRef}
         color="inherit"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        aria-label="Notificaciones"
+        onClick={focus.afterOpenClick}
+        onKeyDown={focus.afterOpenKeyDown}
+        aria-label={copy.title}
+        aria-busy={countQuery.isLoading ? true : undefined}
       >
-        <Badge badgeContent={unreadCount} color="error" max={99}>
-          <NotificationsIcon />
+        <Badge badgeContent={unreadCount} color="error" max={NOTIFICATION_BELL_CONTRACTS.badgeMaxDisplayCount}>
+          {countQuery.isLoading ? (
+            <CircularProgress size={20} color="inherit" aria-label={copy.loading} />
+          ) : (
+            <NotificationsIcon />
+          )}
         </Badge>
       </IconButton>
 
       <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
+        onClose={focus.afterClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { width: 360, maxHeight: 480 } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: NOTIFICATION_BELL_CONTRACTS.popoverPaperWidthPx,
+              maxHeight: NOTIFICATION_BELL_CONTRACTS.popoverPaperMaxHeightPx,
+            },
+          },
+        }}
       >
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1 }}>
-          <Typography variant="subtitle1" fontWeight={700}>Notificaciones</Typography>
+          <Typography
+            ref={headingRef}
+            tabIndex={-1}
+            variant="subtitle1"
+            component="h2"
+            fontWeight={NOTIFICATION_BELL_CONTRACTS.headingFontWeight}
+          >
+            {copy.title}
+          </Typography>
           {unreadCount > 0 && (
             <Button
               size="small"
-              startIcon={<DoneAllIcon />}
-              onClick={() => markAllMut.mutate()}
               disabled={markAllMut.isPending}
+              onClick={focus.afterMarkAll}
+              onKeyDown={focus.afterMarkAllKeyDown}
+              aria-busy={markAllMut.isPending ? true : undefined}
+              startIcon={markAllMut.isPending ? <CircularProgress size={16} color="inherit" /> : <DoneAllIcon />}
             >
-              Leer todo
+              {markAllMut.isPending ? copy.markAllLoading : copy.markAll}
             </Button>
           )}
         </Stack>
         <Divider />
-        {notifications.length === 0 ? (
+        {isListLoading ? (
+          <Box
+            sx={{ p: 3, textAlign: 'center' }}
+            role="status"
+            aria-live="polite"
+          >
+            <Stack spacing={1} alignItems="center">
+              <CircularProgress size={22} />
+              <Typography variant="body2" color="text.secondary">
+                {copy.loading}
+              </Typography>
+            </Stack>
+          </Box>
+        ) : isEmpty ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">Sin notificaciones</Typography>
+            <Typography variant="body2" color="text.secondary">{copy.empty}</Typography>
           </Box>
         ) : (
-          <List dense disablePadding sx={{ overflow: 'auto', maxHeight: 380 }}>
+          <List
+            dense
+            disablePadding
+            sx={{ overflow: 'auto', maxHeight: NOTIFICATION_BELL_CONTRACTS.notificationListMaxHeightPx }}
+          >
             {notifications.map((n) => (
               <ListItemButton
                 key={n.nId}
-                onClick={() => { if (!n.nIsRead) markReadMut.mutate(n.nId); }}
+                onClick={(event) => focus.afterMarkRead(n, event.currentTarget)}
+                onKeyDown={(event) => focus.afterMarkReadKeyDown(event, n)}
+                disabled={pendingReadId === n.nId}
+                aria-busy={pendingReadId === n.nId ? true : undefined}
                 sx={{ bgcolor: n.nIsRead ? 'transparent' : 'action.hover' }}
               >
                 <ListItemText

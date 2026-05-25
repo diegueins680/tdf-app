@@ -1035,6 +1035,7 @@ fanPublicServer =
        listFanArtists
   :<|> fanArtistProfile
   :<|> fanArtistReleases
+  :<|> fanArtistFans
   :<|> getPublicClub
   :<|> getPublicClubEvents
   where
@@ -1057,6 +1058,40 @@ fanPublicServer =
       liftIO $ flip runSqlPool pool $ do
         releases <- selectList [ArtistReleaseArtistPartyId ==. toSqlKey artistIdValid] [Desc ArtistReleaseCreatedAt]
         pure (map toArtistReleaseDTO releases)
+
+    fanArtistFans :: Int64 -> Maybe Int -> Maybe Int -> AppM ArtistFansResponse
+    fanArtistFans artistId mPage mPageSize = do
+      artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      let page = max 1 (fromMaybe 1 mPage)
+          pageSize = min 100 (max 1 (fromMaybe 5 mPageSize))
+          offset = (page - 1) * pageSize
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool $ do
+        let artistKey = toSqlKey artistIdValid
+        total <- count [FanFollowArtistPartyId ==. artistKey]
+        follows <- selectList
+          [FanFollowArtistPartyId ==. artistKey]
+          [Desc FanFollowCreatedAt, OffsetBy offset, LimitTo pageSize]
+        fans <- forM follows $ \(Entity _ follow) -> do
+          let fanPartyId = fanFollowFanPartyId follow
+          mParty <- selectFirst [PartyId ==. fanPartyId] []
+          mProfile <- selectFirst [FanProfileFanPartyId ==. fanPartyId] []
+          let displayName = case mParty of
+                Just (Entity _ p) -> partyDisplayName p
+                Nothing -> "Fan"
+              avatarUrl = mProfile >>= fanProfileAvatarUrl . entityVal
+          pure ArtistFanDTO
+            { afFanId = fromSqlKey fanPartyId
+            , afDisplayName = displayName
+            , afAvatarUrl = avatarUrl
+            , afFollowedAt = fanFollowCreatedAt follow
+            }
+        pure ArtistFansResponse
+          { afrItems = fans
+          , afrPage = page
+          , afrPageSize = pageSize
+          , afrTotal = fromIntegral total
+          }
 
     getPublicClub = fanClubPublicGetClub
     getPublicClubEvents = fanClubPublicGetEvents
