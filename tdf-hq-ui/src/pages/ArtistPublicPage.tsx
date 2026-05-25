@@ -26,6 +26,7 @@ import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistFansList from '../components/ArtistFansList';
 
 export default function ArtistPublicPage() {
   const { slugOrId } = useParams();
@@ -319,6 +320,18 @@ export default function ArtistPublicPage() {
                 </Stack>
               </Box>
             </Stack>
+
+            {artist.apFollowerCount > 0 && (
+              <>
+                <Divider />
+                <Box>
+                  <Typography variant="h6" fontWeight={800} gutterBottom>
+                    Fans ({artist.apFollowerCount})
+                  </Typography>
+                  <ArtistFansList artistId={artist.apArtistId} />
+                </Box>
+              </>
+            )}
 
             {artist.apSpotifyArtistId && (
               <>

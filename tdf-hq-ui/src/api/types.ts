@@ -495,6 +495,20 @@ export interface FanFollowDTO {
   ffStartedAt: string;
 }
 
+export interface ArtistFanDTO {
+  afFanId: number;
+  afDisplayName: string;
+  afAvatarUrl?: string | null;
+  afFollowedAt: string;
+}
+
+export interface ArtistFansResponse {
+  items: ArtistFanDTO[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
 export interface PartyFollowDTO {
   pfFollowerId: number;
   pfFollowingId: number;

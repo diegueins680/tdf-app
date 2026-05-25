@@ -6,6 +6,7 @@ import type {
   FanProfileDTO,
   FanProfileUpdate,
   FanFollowDTO,
+  ArtistFansResponse,
   FanClubDTO,
   FanClubPostDTO,
   FanClubEventDTO,
@@ -29,76 +30,98 @@ import type {
   FanClubInboxStatusReq,
 } from './types';
 
+const read: (path: string) => unknown = get;
+const send: (path: string, body: unknown) => unknown = post;
+const update: (path: string, body: unknown) => unknown = put;
+const remove: (path: string) => unknown = del;
+
 export const Fans = {
-  listArtists: () => get<ArtistProfileDTO[]>('/fans/artists'),
-  getArtist: (artistId: number) => get<ArtistProfileDTO>(`/fans/artists/${artistId}`),
-  getReleases: (artistId: number) => get<ArtistReleaseDTO[]>(`/fans/artists/${artistId}/releases`),
-  getProfile: () => get<FanProfileDTO>('/fans/me/profile'),
-  updateProfile: (payload: FanProfileUpdate) => put<FanProfileDTO>('/fans/me/profile', payload),
-  listFollows: () => get<FanFollowDTO[]>('/fans/me/follows'),
-  follow: (artistId: number) => post<FanFollowDTO>(`/fans/me/follows/${artistId}`, {}),
-  unfollow: (artistId: number) => del<void>(`/fans/me/follows/${artistId}`),
-  getMyArtistProfile: () => get<ArtistProfileDTO>('/fans/me/artist-profile'),
-  updateMyArtistProfile: (payload: ArtistProfileUpsert) =>
-    put<ArtistProfileDTO>('/fans/me/artist-profile', payload),
+  listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
+  getArtist: async (artistId: number) => (await read(`/fans/artists/${artistId}`)) as ArtistProfileDTO,
+  getReleases: async (artistId: number) => (await read(`/fans/artists/${artistId}/releases`)) as ArtistReleaseDTO[],
+  getArtistFans: async (artistId: number, page = 1, pageSize = 5) =>
+    (await read(`/fans/artists/${artistId}/fans?page=${page}&pageSize=${pageSize}`)) as ArtistFansResponse,
+  getProfile: async () => (await read('/fans/me/profile')) as FanProfileDTO,
+  updateProfile: async (payload: FanProfileUpdate) => (await update('/fans/me/profile', payload)) as FanProfileDTO,
+  listFollows: async () => (await read('/fans/me/follows')) as FanFollowDTO[],
+  follow: async (artistId: number) => (await send(`/fans/me/follows/${artistId}`, {})) as FanFollowDTO,
+  unfollow: async (artistId: number) => {
+    await remove(`/fans/me/follows/${artistId}`);
+  },
+  getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
+  updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
+    (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
 
   // Fan Club
-  getClub: (artistId: number) => get<FanClubDTO>(`/fans/clubs/${artistId}`),
-  getClubEvents: (artistId: number) => get<FanClubEventDTO[]>(`/fans/clubs/${artistId}/events`),
-  listMyClubs: () => get<FanClubDTO[]>('/fans/me/clubs'),
-  getMyClub: (artistId: number) => get<FanClubDTO>(`/fans/me/clubs/${artistId}`),
-  listClubPosts: (artistId: number) => get<FanClubPostDTO[]>(`/fans/me/clubs/${artistId}/posts`),
-  createClubPost: (artistId: number, payload: FanClubCreatePostReq) =>
-    post<FanClubPostDTO>(`/fans/me/clubs/${artistId}/posts`, payload),
-  pinClubPost: (artistId: number, postId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/posts/${postId}/pin`, {}),
-  unpinClubPost: (artistId: number, postId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/posts/${postId}/unpin`, {}),
-  hideClubPost: (artistId: number, postId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/posts/${postId}/hide`, {}),
-  unhideClubPost: (artistId: number, postId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/posts/${postId}/unhide`, {}),
-  listClubEvents: (artistId: number) => get<FanClubEventDTO[]>(`/fans/me/clubs/${artistId}/events`),
-  createClubEvent: (artistId: number, payload: FanClubCreateEventReq) =>
-    post<FanClubEventDTO>(`/fans/me/clubs/${artistId}/events`, payload),
-  listClubElections: (artistId: number) => get<FanClubElectionDTO[]>(`/fans/me/clubs/${artistId}/elections`),
-  createClubElection: (artistId: number, payload: FanClubCreateElectionReq) =>
-    post<FanClubElectionDTO>(`/fans/me/clubs/${artistId}/elections`, payload),
-  createCandidacy: (artistId: number, electionId: number, payload: FanClubCreateCandidacyReq) =>
-    post<FanClubCandidacyDTO>(`/fans/me/clubs/${artistId}/elections/${electionId}/candidacy`, payload),
-  castVote: (artistId: number, electionId: number, payload: FanClubVoteReq) =>
-    post<void>(`/fans/me/clubs/${artistId}/elections/${electionId}/vote`, payload),
+  getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,
+  getClubEvents: async (artistId: number) => (await read(`/fans/clubs/${artistId}/events`)) as FanClubEventDTO[],
+  listMyClubs: async () => (await read('/fans/me/clubs')) as FanClubDTO[],
+  getMyClub: async (artistId: number) => (await read(`/fans/me/clubs/${artistId}`)) as FanClubDTO,
+  listClubPosts: async (artistId: number) => (await read(`/fans/me/clubs/${artistId}/posts`)) as FanClubPostDTO[],
+  createClubPost: async (artistId: number, payload: FanClubCreatePostReq) =>
+    (await send(`/fans/me/clubs/${artistId}/posts`, payload)) as FanClubPostDTO,
+  pinClubPost: async (artistId: number, postId: number) => {
+    await send(`/fans/me/clubs/${artistId}/posts/${postId}/pin`, {});
+  },
+  unpinClubPost: async (artistId: number, postId: number) => {
+    await send(`/fans/me/clubs/${artistId}/posts/${postId}/unpin`, {});
+  },
+  hideClubPost: async (artistId: number, postId: number) => {
+    await send(`/fans/me/clubs/${artistId}/posts/${postId}/hide`, {});
+  },
+  unhideClubPost: async (artistId: number, postId: number) => {
+    await send(`/fans/me/clubs/${artistId}/posts/${postId}/unhide`, {});
+  },
+  listClubEvents: async (artistId: number) => (await read(`/fans/me/clubs/${artistId}/events`)) as FanClubEventDTO[],
+  createClubEvent: async (artistId: number, payload: FanClubCreateEventReq) =>
+    (await send(`/fans/me/clubs/${artistId}/events`, payload)) as FanClubEventDTO,
+  listClubElections: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/elections`)) as FanClubElectionDTO[],
+  createClubElection: async (artistId: number, payload: FanClubCreateElectionReq) =>
+    (await send(`/fans/me/clubs/${artistId}/elections`, payload)) as FanClubElectionDTO,
+  createCandidacy: async (artistId: number, electionId: number, payload: FanClubCreateCandidacyReq) =>
+    (await send(`/fans/me/clubs/${artistId}/elections/${electionId}/candidacy`, payload)) as FanClubCandidacyDTO,
+  castVote: async (artistId: number, electionId: number, payload: FanClubVoteReq) => {
+    await send(`/fans/me/clubs/${artistId}/elections/${electionId}/vote`, payload);
+  },
 
   // Fan Club Feed
-  listClubFeed: (artistId: number) => get<FanClubFeedItemDTO[]>(`/fans/me/clubs/${artistId}/feed`),
+  listClubFeed: async (artistId: number) => (await read(`/fans/me/clubs/${artistId}/feed`)) as FanClubFeedItemDTO[],
 
   // Fan Club Memories
-  listClubMemories: (artistId: number) => get<FanClubMemoryDTO[]>(`/fans/me/clubs/${artistId}/memories`),
-  createClubMemory: (artistId: number, payload: FanClubCreateMemoryReq) =>
-    post<FanClubMemoryDTO>(`/fans/me/clubs/${artistId}/memories`, payload),
-  hideClubMemory: (artistId: number, memoryId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/hide`, {}),
-  unhideClubMemory: (artistId: number, memoryId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/unhide`, {}),
-  deleteClubMemory: (artistId: number, memoryId: number) =>
-    post<void>(`/fans/me/clubs/${artistId}/memories/${memoryId}/delete`, {}),
-  reportClubMemory: (artistId: number, memoryId: number, payload: FanClubMemoryReportReq) =>
-    post<FanClubMemoryReportDTO>(`/fans/me/clubs/${artistId}/memories/${memoryId}/report`, payload),
+  listClubMemories: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/memories`)) as FanClubMemoryDTO[],
+  createClubMemory: async (artistId: number, payload: FanClubCreateMemoryReq) =>
+    (await send(`/fans/me/clubs/${artistId}/memories`, payload)) as FanClubMemoryDTO,
+  hideClubMemory: async (artistId: number, memoryId: number) => {
+    await send(`/fans/me/clubs/${artistId}/memories/${memoryId}/hide`, {});
+  },
+  unhideClubMemory: async (artistId: number, memoryId: number) => {
+    await send(`/fans/me/clubs/${artistId}/memories/${memoryId}/unhide`, {});
+  },
+  deleteClubMemory: async (artistId: number, memoryId: number) => {
+    await send(`/fans/me/clubs/${artistId}/memories/${memoryId}/delete`, {});
+  },
+  reportClubMemory: async (artistId: number, memoryId: number, payload: FanClubMemoryReportReq) =>
+    (await send(`/fans/me/clubs/${artistId}/memories/${memoryId}/report`, payload)) as FanClubMemoryReportDTO,
 
   // Fan Club Member Profiles
-  listClubMemberProfiles: (artistId: number) => get<FanClubMemberProfileDTO[]>(`/fans/me/clubs/${artistId}/member-profiles`),
-  getMyClubMemberProfile: (artistId: number) => get<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`),
-  updateMyClubMemberProfile: (artistId: number, payload: FanClubMemberProfileUpdate) =>
-    put<FanClubMemberProfileDTO>(`/fans/me/clubs/${artistId}/member-profiles/me`, payload),
+  listClubMemberProfiles: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/member-profiles`)) as FanClubMemberProfileDTO[],
+  getMyClubMemberProfile: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/member-profiles/me`)) as FanClubMemberProfileDTO,
+  updateMyClubMemberProfile: async (artistId: number, payload: FanClubMemberProfileUpdate) =>
+    (await update(`/fans/me/clubs/${artistId}/member-profiles/me`, payload)) as FanClubMemberProfileDTO,
 
   // Fan Club Inbox
-  listClubInbox: (artistId: number) => get<FanClubInboxMessageDTO[]>(`/fans/me/clubs/${artistId}/inbox`),
-  sendClubInboxMessage: (artistId: number, payload: FanClubInboxSendReq) =>
-    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox`, payload),
-  getClubInboxMessage: (artistId: number, messageId: number) =>
-    get<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}`),
-  replyClubInboxMessage: (artistId: number, messageId: number, payload: FanClubInboxReplyReq) =>
-    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/reply`, payload),
-  updateClubInboxStatus: (artistId: number, messageId: number, payload: FanClubInboxStatusReq) =>
-    post<FanClubInboxMessageDTO>(`/fans/me/clubs/${artistId}/inbox/${messageId}/status`, payload),
+  listClubInbox: async (artistId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/inbox`)) as FanClubInboxMessageDTO[],
+  sendClubInboxMessage: async (artistId: number, payload: FanClubInboxSendReq) =>
+    (await send(`/fans/me/clubs/${artistId}/inbox`, payload)) as FanClubInboxMessageDTO,
+  getClubInboxMessage: async (artistId: number, messageId: number) =>
+    (await read(`/fans/me/clubs/${artistId}/inbox/${messageId}`)) as FanClubInboxMessageDTO,
+  replyClubInboxMessage: async (artistId: number, messageId: number, payload: FanClubInboxReplyReq) =>
+    (await send(`/fans/me/clubs/${artistId}/inbox/${messageId}/reply`, payload)) as FanClubInboxMessageDTO,
+  updateClubInboxStatus: async (artistId: number, messageId: number, payload: FanClubInboxStatusReq) =>
+    (await send(`/fans/me/clubs/${artistId}/inbox/${messageId}/status`, payload)) as FanClubInboxMessageDTO,
 };
