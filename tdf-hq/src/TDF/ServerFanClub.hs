@@ -46,10 +46,10 @@ import           Control.Monad.Reader   (ask)
 import           Data.Char              (GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                          , generalCategory, isControl, isSpace)
 import           Data.Int               (Int64)
-import           Data.List              (nub, sortOn)
+import           Data.List              (nub, sortOn, partition)
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
-import           Data.Maybe             (isJust, mapMaybe, catMaybes, fromMaybe)
+import           Data.Maybe             (isJust, mapMaybe, catMaybes, fromMaybe, listToMaybe)
 import           Data.Ord               (Down(..))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
@@ -78,7 +78,7 @@ import           TDF.Models             (FanClub(..), FanClubId, FanClubOfficer(
                                          , Party(..), PartyId, FanFollow(..), FanProfile(..)
                                          , FanClubMemberProfile(..), FanClubMemory(..), FanClubMemoryReport(..)
                                          , FanClubInboxMessage(..), FanClubInboxMessageId
-                                         , ContentReaction(..), ContentReactionId
+                                         , ContentReaction(..)
                                          , Notification(..), BoostedContent(..), CreatorBadge(..)
                                          , RoleEnum(..)
                                          , Unique(..), FanClubElectionId, FanClubCandidacyId, artistProfileHeroImageUrl)
@@ -251,8 +251,9 @@ fanClubSecureArtistHandlers user artistId =
             , fcArtistImageUrl = artistImage
             }
 
-    listClubFeed aId = do
+    listClubFeed aId mSort mPeriod = do
       artistKey <- requireArtistKey aId
+      now <- liftIO getCurrentTime
       runDB $ do
         mClub <- getBy (UniqueFanClubArtist artistKey)
         case mClub of
@@ -278,6 +279,7 @@ fanClubSecureArtistHandlers user artistId =
             postItems <- forM posts $ \(Entity pid p) -> do
               author <- getAuthorDTO (fanClubPostFanPartyId p)
               let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
+              reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
               pure FanClubFeedItemDTO
                 { fcfId = fromSqlKey pid
                 , fcfKind = "post"
@@ -290,6 +292,7 @@ fanClubSecureArtistHandlers user artistId =
                 , fcfIsPinned = fanClubPostIsPinned p
                 , fcfIsOfficer = isOfficer
                 , fcfIsHidden = fanClubPostIsHidden p
+                , fcfReactions = reactions
                 , fcfCreatedAt = fanClubPostCreatedAt p
                 }
             memoryItems <- forM validMemories $ \(Entity mid m) -> do
@@ -299,6 +302,7 @@ fanClubSecureArtistHandlers user artistId =
                 Just mp -> do
                   author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
                   let isOfficer = fromSqlKey (fanClubMemberProfilePartyId mp) `elem` officerIds
+                  reactions <- buildReactionSummary "memory" (fromSqlKey mid) (auPartyId user)
                   pure $ Just FanClubFeedItemDTO
                     { fcfId = fromSqlKey mid
                     , fcfKind = "memory"
@@ -311,10 +315,12 @@ fanClubSecureArtistHandlers user artistId =
                     , fcfIsPinned = False
                     , fcfIsOfficer = isOfficer
                     , fcfIsHidden = fanClubMemoryIsHidden m
+                    , fcfReactions = reactions
                     , fcfCreatedAt = fanClubMemoryCreatedAt m
                     }
             let allItems = postItems ++ catMaybes memoryItems
-            pure $ sortOn (Down . fcfIsOfficer &&& Down . fcfCreatedAt) allItems
+            let sortMode = fromMaybe "new" mSort
+            pure $ sortFeedItems sortMode now allItems
 
     listClubPosts aId = do
       artistKey <- requireArtistKey aId
@@ -604,6 +610,7 @@ fanClubSecureArtistHandlers user artistId =
             forM validMemories $ \(Entity mid m) -> do
               let Just mp = Map.lookup (fanClubMemoryMemberProfileId m) profileMap
               author <- getAuthorDTO (fanClubMemberProfilePartyId mp)
+              reactions <- buildReactionSummary "memory" (fromSqlKey mid) (auPartyId user)
               pure FanClubMemoryDTO
                 { fcmId = fromSqlKey mid
                 , fcmMemberProfileId = fromSqlKey (fanClubMemoryMemberProfileId m)
@@ -614,6 +621,7 @@ fanClubSecureArtistHandlers user artistId =
                 , fcmMediaUrls = maybe [] (T.splitOn ",") (fanClubMemoryMediaUrls m)
                 , fcmIsHidden = fanClubMemoryIsHidden m
                 , fcmIsDeleted = fanClubMemoryIsDeleted m
+                , fcmReactions = reactions
                 , fcmCreatedAt = fanClubMemoryCreatedAt m
                 }
 
@@ -672,6 +680,7 @@ fanClubSecureArtistHandlers user artistId =
             , fcmMediaUrls = fcmReqMediaUrls req
             , fcmIsHidden = False
             , fcmIsDeleted = False
+            , fcmReactions = emptyReactionSummary
             , fcmCreatedAt = now
             }
 
@@ -1040,9 +1049,200 @@ fanClubSecureArtistHandlers user artistId =
                       }
           maybe (throwError err404 { errBody = "Mensaje no encontrado" }) pure mDto
 
+    reactToPost aId postId ContentReactionReq{..} = do
+      _ <- requireArtistKey aId
+      reaction <- validateReaction crrReaction
+      now <- liftIO getCurrentTime
+      runDB $ do
+        toggleReaction "post" (fromIntegral postId) (auPartyId user) reaction now
+        buildReactionSummary "post" (fromIntegral postId) (auPartyId user)
+
+    reactToMemory aId memoryId ContentReactionReq{..} = do
+      _ <- requireArtistKey aId
+      reaction <- validateReaction crrReaction
+      now <- liftIO getCurrentTime
+      runDB $ do
+        toggleReaction "memory" (fromIntegral memoryId) (auPartyId user) reaction now
+        buildReactionSummary "memory" (fromIntegral memoryId) (auPartyId user)
+
+    getLeaderboard aId mPeriod = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure []
+          Just (Entity cid _) -> do
+            posts <- selectList [M.FanClubPostClubId ==. cid, M.FanClubPostParentId ==. Nothing] []
+            let postIds = map (fromSqlKey . entityKey) posts
+            let postAuthorMap = Map.fromList $ map (\(Entity pid p) -> (fromSqlKey pid, fanClubPostFanPartyId p)) posts
+            allReactions <- selectList
+              [ M.ContentReactionTargetType ==. "post"
+              , M.ContentReactionTargetId <-. map fromIntegral postIds
+              ] []
+            let reactionsByAuthor = foldl (\acc (Entity _ r) ->
+                  let targetId = contentReactionTargetId r
+                      mAuthor = Map.lookup (fromIntegral targetId) postAuthorMap
+                  in case mAuthor of
+                       Just authorId -> Map.insertWith (+) authorId (1 :: Int) acc
+                       Nothing -> acc
+                  ) Map.empty allReactions
+            let ranked = zip [1..] $ sortOn (Down . snd) (Map.toList reactionsByAuthor)
+            forM (take 10 ranked) $ \(rank, (partyId, totalReactions)) -> do
+              author <- getAuthorDTO partyId
+              badges <- selectList [M.CreatorBadgePartyId ==. partyId, M.CreatorBadgeClubId ==. cid] []
+              let badgeTypes = map (creatorBadgeBadgeType . entityVal) badges
+              pure LeaderboardEntryDTO
+                { lbPartyId = fromSqlKey partyId
+                , lbDisplayName = sppDisplayName author
+                , lbAvatarUrl = sppAvatarUrl author
+                , lbTotalReactions = totalReactions
+                , lbBadges = badgeTypes
+                , lbRank = rank
+                }
+
+    getSpotlight aId = do
+      artistKey <- requireArtistKey aId
+      runDB $ do
+        mClub <- getBy (UniqueFanClubArtist artistKey)
+        case mClub of
+          Nothing -> pure Nothing
+          Just (Entity cid _) -> do
+            posts <- selectList
+              [ M.FanClubPostClubId ==. cid
+              , M.FanClubPostParentId ==. Nothing
+              , M.FanClubPostIsHidden ==. False
+              ] [Desc M.FanClubPostCreatedAt]
+            let postIds = map (fromSqlKey . entityKey) posts
+            allReactions <- selectList
+              [ M.ContentReactionTargetType ==. "post"
+              , M.ContentReactionTargetId <-. map fromIntegral postIds
+              ] []
+            let reactionCounts = foldl (\acc (Entity _ r) ->
+                  Map.insertWith (+) (contentReactionTargetId r) (1 :: Int) acc
+                  ) Map.empty allReactions
+            let topPostId = fst <$> listToMaybe (sortOn (Down . snd) (Map.toList reactionCounts))
+            case topPostId of
+              Nothing -> pure Nothing
+              Just tid -> do
+                let mPost = filter (\(Entity pid _) -> fromSqlKey pid == fromIntegral tid) posts
+                case mPost of
+                  [] -> pure Nothing
+                  (Entity pid p : _) -> do
+                    officers <- selectList [M.FanClubOfficerClubId ==. cid] []
+                    let officerIds = map (fromSqlKey . fanClubOfficerFanPartyId . entityVal) officers
+                    author <- getAuthorDTO (fanClubPostFanPartyId p)
+                    let isOfficer = fromSqlKey (fanClubPostFanPartyId p) `elem` officerIds
+                    reactions <- buildReactionSummary "post" (fromSqlKey pid) (auPartyId user)
+                    pure $ Just FanClubFeedItemDTO
+                      { fcfId = fromSqlKey pid
+                      , fcfKind = "post"
+                      , fcfTitle = fanClubPostTitle p
+                      , fcfContent = fanClubPostContent p
+                      , fcfAuthorId = fromSqlKey (fanClubPostFanPartyId p)
+                      , fcfAuthorName = sppDisplayName author
+                      , fcfAvatarUrl = sppAvatarUrl author
+                      , fcfMediaUrls = maybe [] (T.splitOn ",") (fanClubPostMediaUrls p)
+                      , fcfIsPinned = fanClubPostIsPinned p
+                      , fcfIsOfficer = isOfficer
+                      , fcfIsHidden = False
+                      , fcfReactions = reactions
+                      , fcfCreatedAt = fanClubPostCreatedAt p
+                      }
+
     requireArtistKey :: Int64 -> AppM PartyId
     requireArtistKey =
       either throwError pure . validateFanClubArtistPathId
+
+-- ============================================================================
+-- Content Engagement Helpers
+-- ============================================================================
+
+emptyReactionSummary :: ReactionSummaryDTO
+emptyReactionSummary = ReactionSummaryDTO 0 0 0 0 0 0 Nothing
+
+validReactions :: [Text]
+validReactions = ["fire", "heart", "clap", "mic_drop", "skull"]
+
+validateReaction :: Text -> AppM Text
+validateReaction r
+  | r `elem` validReactions = pure r
+  | otherwise = throwBadRequest "Reacción inválida. Opciones: fire, heart, clap, mic_drop, skull"
+
+toggleReaction :: Text -> Int64 -> PartyId -> Text -> UTCTime -> SqlPersistT IO ()
+toggleReaction targetType targetId reactorId reaction now = do
+  existing <- selectFirst
+    [ M.ContentReactionTargetType ==. targetType
+    , M.ContentReactionTargetId ==. targetId
+    , M.ContentReactionReactorPartyId ==. reactorId
+    ] []
+  case existing of
+    Just (Entity _ r) | contentReactionReaction r == reaction ->
+      deleteWhere
+        [ M.ContentReactionTargetType ==. targetType
+        , M.ContentReactionTargetId ==. targetId
+        , M.ContentReactionReactorPartyId ==. reactorId
+        ]
+    Just _ -> do
+      deleteWhere
+        [ M.ContentReactionTargetType ==. targetType
+        , M.ContentReactionTargetId ==. targetId
+        , M.ContentReactionReactorPartyId ==. reactorId
+        ]
+      insert_ ContentReaction
+        { contentReactionTargetType = targetType
+        , contentReactionTargetId = targetId
+        , contentReactionReactorPartyId = reactorId
+        , contentReactionReaction = reaction
+        , contentReactionCreatedAt = now
+        }
+    Nothing ->
+      insert_ ContentReaction
+        { contentReactionTargetType = targetType
+        , contentReactionTargetId = targetId
+        , contentReactionReactorPartyId = reactorId
+        , contentReactionReaction = reaction
+        , contentReactionCreatedAt = now
+        }
+
+buildReactionSummary :: Text -> Int64 -> PartyId -> SqlPersistT IO ReactionSummaryDTO
+buildReactionSummary targetType targetId viewerPartyId = do
+  reactions <- selectList
+    [ M.ContentReactionTargetType ==. targetType
+    , M.ContentReactionTargetId ==. targetId
+    ] []
+  let countReaction t = length $ filter (\(Entity _ r) -> contentReactionReaction r == t) reactions
+      myReaction = case filter (\(Entity _ r) -> contentReactionReactorPartyId r == viewerPartyId) reactions of
+        (Entity _ r : _) -> Just (contentReactionReaction r)
+        [] -> Nothing
+      fire = countReaction "fire"
+      heart = countReaction "heart"
+      clap = countReaction "clap"
+      micDrop = countReaction "mic_drop"
+      skull = countReaction "skull"
+  pure ReactionSummaryDTO
+    { rsFire = fire
+    , rsHeart = heart
+    , rsClap = clap
+    , rsMicDrop = micDrop
+    , rsSkull = skull
+    , rsTotal = fire + heart + clap + micDrop + skull
+    , rsMyReaction = myReaction
+    }
+
+sortFeedItems :: Text -> UTCTime -> [FanClubFeedItemDTO] -> [FanClubFeedItemDTO]
+sortFeedItems sortMode now items =
+  let (pinned, unpinned) = partition fcfIsPinned items
+      sorted = case sortMode of
+        "hot" -> sortOn (Down . hotScore now) unpinned
+        "top" -> sortOn (Down . rsTotal . fcfReactions) unpinned
+        _     -> sortOn (Down . fcfCreatedAt) unpinned
+  in pinned ++ sorted
+  where
+    hotScore :: UTCTime -> FanClubFeedItemDTO -> Double
+    hotScore n item =
+      let hoursSincePublish = max 1.0 (realToFrac (diffUTCTime n (fcfCreatedAt item)) / 3600.0)
+          total = fromIntegral (rsTotal (fcfReactions item))
+      in total / (hoursSincePublish ** 0.8)
 
 -- ============================================================================
 -- DTO Builders

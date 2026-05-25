@@ -2291,6 +2291,8 @@ fanSecureServer user =
        (fanGetProfile user :<|> fanUpdateProfile user)
   :<|> (fanListFollows user :<|> fanFollowArtist user :<|> fanUnfollowArtist user)
   :<|> (artistGetOwnProfile user :<|> artistUpdateOwnProfile user)
+  :<|> (notifList user :<|> notifCount user :<|> notifMarkRead user :<|> notifMarkAllRead user)
+  :<|> discoveryFeed user
   :<|> fanClubSecureListMyClubs user
   :<|> fanClubSecureArtistHandlers user
 
