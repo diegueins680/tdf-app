@@ -161,13 +161,17 @@ fanClubSecureListMyClubs user = runDB $ do
 
 fanClubSecureArtistHandlers :: AuthedUser -> Int64 ->
   ( AppM FanClubDTO
-  :<|> AppM [FanClubFeedItemDTO]
+  :<|> (Maybe Text -> Maybe Text -> AppM [FanClubFeedItemDTO])
   :<|> AppM [FanClubPostDTO]
   :<|> (FanClubCreatePostReq -> AppM FanClubPostDTO)
   :<|> (Int64 -> AppM NoContent)
   :<|> (Int64 -> AppM NoContent)
   :<|> (Int64 -> AppM NoContent)
   :<|> (Int64 -> AppM NoContent)
+  :<|> (Int64 -> ContentReactionReq -> AppM ReactionSummaryDTO)
+  :<|> (Int64 -> ContentReactionReq -> AppM ReactionSummaryDTO)
+  :<|> (Maybe Text -> AppM [LeaderboardEntryDTO])
+  :<|> AppM (Maybe FanClubFeedItemDTO)
   :<|> AppM [FanClubEventDTO]
   :<|> (FanClubCreateEventReq -> AppM FanClubEventDTO)
   :<|> AppM [FanClubElectionDTO]
@@ -198,6 +202,10 @@ fanClubSecureArtistHandlers user artistId =
   :<|> unpinPost artistId
   :<|> hidePost artistId
   :<|> unhidePost artistId
+  :<|> reactToPost artistId
+  :<|> reactToMemory artistId
+  :<|> getLeaderboard artistId
+  :<|> getSpotlight artistId
   :<|> listClubEvents artistId
   :<|> createClubEvent artistId
   :<|> listClubElections artistId

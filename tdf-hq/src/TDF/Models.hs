@@ -811,4 +811,43 @@ FanClubInboxMessage
     createdAt        UTCTime default=now()
     updatedAt        UTCTime Maybe
     deriving Show Generic
+
+ContentReaction
+    targetType       Text
+    targetId         Int64
+    reactorPartyId   PartyId
+    reaction         Text
+    createdAt        UTCTime default=now()
+    Primary targetType targetId reactorPartyId
+    deriving Show Generic
+
+Notification
+    recipientPartyId  PartyId
+    notifType         Text
+    title             Text
+    body              Text
+    targetType        Text Maybe
+    targetId          Int64 Maybe
+    isRead            Bool default=False
+    createdAt         UTCTime default=now()
+    deriving Show Generic
+
+CreatorBadge
+    partyId      PartyId
+    clubId       FanClubId
+    badgeType    Text
+    awardedAt    UTCTime default=now()
+    expiresAt    UTCTime Maybe
+    UniqueCreatorBadge partyId clubId badgeType
+    deriving Show Generic
+
+BoostedContent
+    targetType       Text
+    targetId         Int64
+    clubId           FanClubId
+    totalReactions   Int
+    boostedAt        UTCTime default=now()
+    surfacedToArtist Bool default=False
+    UniqueBoostedContent targetType targetId
+    deriving Show Generic
 |]
