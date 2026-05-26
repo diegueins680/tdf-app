@@ -49,6 +49,7 @@ interface CheckoutFormProps {
   tier: SocialTicketTierDTO;
   buyerDetails: BuyerDetailsState;
   promoCode: string | null;
+  orderId: string | null;
   onSuccess: (orderId: string) => void;
   onBack: () => void;
 }
@@ -118,7 +119,7 @@ const CHECKOUT_COPY = {
   },
 };
 
-function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: CheckoutFormProps) {
+function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBack }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [state, dispatch] = useReducer(checkoutFormReducer, initialCheckoutFormState);
@@ -162,7 +163,7 @@ function CheckoutForm({ tier, buyerDetails, promoCode, onSuccess, onBack }: Chec
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        const completedOrderId = String(paymentIntent.metadata?.orderId ?? paymentIntent.id);
+        const completedOrderId = orderId?.trim() || paymentIntent.id;
         onSuccess(completedOrderId);
         return;
       }
@@ -320,7 +321,11 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
       };
 
       const response = await SocialEventsAPI.createPaymentIntent(payload);
-      dispatch({ type: 'paymentIntentReady', clientSecret: response.spiClientSecret });
+      dispatch({
+        type: 'paymentIntentReady',
+        clientSecret: response.spiClientSecret,
+        orderId: response.spiOrderId,
+      });
     } catch (err) {
       dispatch({
         type: 'buyerSubmitFailed',
@@ -476,6 +481,7 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
               tier={tier}
               buyerDetails={state.buyerDetails}
               promoCode={state.promoCode}
+              orderId={state.orderId}
               onSuccess={handlePaymentSuccess}
               onBack={handleBackToBuyerDetails}
             />

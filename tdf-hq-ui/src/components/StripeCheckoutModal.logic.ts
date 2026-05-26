@@ -16,6 +16,7 @@ export interface CheckoutModalState {
   buyerDetails: BuyerDetailsState;
   promoCode: string | null;
   clientSecret: string | null;
+  orderId: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -31,7 +32,7 @@ export type CheckoutModalAction =
   | { type: 'promoChanged'; promoCode: string | null }
   | { type: 'buyerSubmitStarted' }
   | { type: 'buyerSubmitFailed'; error: string }
-  | { type: 'paymentIntentReady'; clientSecret: string }
+  | { type: 'paymentIntentReady'; clientSecret: string; orderId: string }
   | { type: 'backToBuyerDetails' }
   | { type: 'paymentSucceeded' }
   | { type: 'reset' };
@@ -59,6 +60,7 @@ export const initialCheckoutModalState: CheckoutModalState = {
   buyerDetails: initialBuyerDetails,
   promoCode: null,
   clientSecret: null,
+  orderId: null,
   loading: false,
   error: null,
 };
@@ -121,6 +123,7 @@ export function checkoutModalReducer(state: CheckoutModalState, action: Checkout
         activeStep: CHECKOUT_STEP_PAYMENT,
         loading: false,
         clientSecret: action.clientSecret,
+        orderId: action.orderId,
         error: null,
       };
       break;

@@ -26,6 +26,10 @@ jest.unstable_mockModule('../components/TopBar', () => ({
   default: () => <header data-testid="top-bar" />,
 }));
 
+jest.unstable_mockModule('../components/ApiActivityIndicator', () => ({
+  default: () => <div data-testid="api-activity-indicator" />,
+}));
+
 jest.unstable_mockModule('../components/ApiStatusChip', () => ({
   default: () => <div data-testid="api-status-chip">API helper</div>,
 }));

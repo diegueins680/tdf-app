@@ -8,10 +8,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "preview": "vite preview --port 5173",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "generate:api": "openapi-typescript ../tdf-hq/docs/openapi/api.yaml --output src/api/generated/types.ts"
   },

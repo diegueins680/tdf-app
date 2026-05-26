@@ -8,6 +8,40 @@ const API_BASE = env.read('VITE_API_BASE') ?? '';
 export const API_BASE_URL = API_BASE;
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 
+type ApiActivityListener = () => void;
+
+const apiActivityListeners = new Set<ApiActivityListener>();
+let pendingApiRequests = 0;
+
+const notifyApiActivityListeners = () => {
+  apiActivityListeners.forEach((listener) => listener());
+};
+
+const setPendingApiRequests = (nextCount: number) => {
+  const normalizedCount = Math.max(0, nextCount);
+  if (pendingApiRequests === normalizedCount) return;
+  pendingApiRequests = normalizedCount;
+  notifyApiActivityListeners();
+};
+
+const beginApiRequest = () => {
+  let finished = false;
+  setPendingApiRequests(pendingApiRequests + 1);
+
+  return () => {
+    if (finished) return;
+    finished = true;
+    setPendingApiRequests(pendingApiRequests - 1);
+  };
+};
+
+export const getPendingApiRequestCount = () => pendingApiRequests;
+
+export const subscribeToApiActivity = (listener: ApiActivityListener): (() => void) => {
+  apiActivityListeners.add(listener);
+  return () => apiActivityListeners.delete(listener);
+};
+
 const joinRequestUrl = (base: string, path: string): string => {
   const normalizedBase = base.trim();
   const normalizedPath = path.trim();
@@ -84,48 +118,54 @@ export class ApiError extends Error {
 }
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const authHeader = buildAuthorizationHeader();
-  const headers = buildRequestHeaders(init.headers, authHeader);
-  if (shouldSetJsonContentType(headers, init.body)) {
-    headers.set('Content-Type', 'application/json');
-  }
+  const endApiRequest = beginApiRequest();
 
-  let res: Response;
   try {
-    res = await fetch(joinRequestUrl(API_BASE, path), {
-      ...init,
-      credentials: 'include',
-      headers,
-    });
-  } catch (err) {
-    throw normalizeNetworkError(err);
-  }
-
-  if (!res.ok) {
-    const contentType = res.headers.get('content-type') ?? '';
-    const bodyText = await res.text().catch(() => '');
-    const trimmed = extractErrorDetails(bodyText, contentType);
-    const statusText = res.statusText.trim();
-    const statusLabel = statusText !== '' ? statusText : `HTTP ${res.status}`;
-    const details = trimmed !== '' ? trimmed : statusLabel;
-    if ((res.status === 401 || res.status === 403) && isSessionAuthFailureMessage(details)) {
-      notifyAuthSessionExpired();
+    const authHeader = buildAuthorizationHeader();
+    const headers = buildRequestHeaders(init.headers, authHeader);
+    if (shouldSetJsonContentType(headers, init.body)) {
+      headers.set('Content-Type', 'application/json');
     }
-    throw new ApiError(details, res.status);
-  }
 
-  if (res.status === 204 || res.status === 205) return undefined as T;
-  const raw = await res.text().catch(() => '');
-  const trimmedRaw = raw.trim();
-  if (trimmedRaw === '') return undefined as T;
-  const contentType = res.headers.get('content-type') ?? '';
-  if (!isJsonContentType(contentType) && !looksLikeJsonPayload(trimmedRaw)) {
-    return raw as unknown as T;
-  }
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return raw as unknown as T;
+    let res: Response;
+    try {
+      res = await fetch(joinRequestUrl(API_BASE, path), {
+        ...init,
+        credentials: 'include',
+        headers,
+      });
+    } catch (err) {
+      throw normalizeNetworkError(err);
+    }
+
+    if (!res.ok) {
+      const contentType = res.headers.get('content-type') ?? '';
+      const bodyText = await res.text().catch(() => '');
+      const trimmed = extractErrorDetails(bodyText, contentType);
+      const statusText = res.statusText.trim();
+      const statusLabel = statusText !== '' ? statusText : `HTTP ${res.status}`;
+      const details = trimmed !== '' ? trimmed : statusLabel;
+      if ((res.status === 401 || res.status === 403) && isSessionAuthFailureMessage(details)) {
+        notifyAuthSessionExpired();
+      }
+      throw new ApiError(details, res.status);
+    }
+
+    if (res.status === 204 || res.status === 205) return undefined as T;
+    const raw = await res.text().catch(() => '');
+    const trimmedRaw = raw.trim();
+    if (trimmedRaw === '') return undefined as T;
+    const contentType = res.headers.get('content-type') ?? '';
+    if (!isJsonContentType(contentType) && !looksLikeJsonPayload(trimmedRaw)) {
+      return raw as unknown as T;
+    }
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return raw as unknown as T;
+    }
+  } finally {
+    endApiRequest();
   }
 }
 

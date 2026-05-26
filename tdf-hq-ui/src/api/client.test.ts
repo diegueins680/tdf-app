@@ -15,7 +15,21 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { get, post, postForm } = await import('./client');
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+  },
+}));
+
+const {
+  get,
+  getPendingApiRequestCount,
+  post,
+  postForm,
+  subscribeToApiActivity,
+} = await import('./client');
 const { AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
 
 interface MockResponseOptions {
@@ -54,6 +68,7 @@ describe('api client', () => {
     buildAuthorizationHeaderMock.mockReset();
     buildAuthorizationHeaderMock.mockReturnValue('Bearer test-token');
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
+    expect(getPendingApiRequestCount()).toBe(0);
   });
 
   it('returns undefined for successful responses with empty body', async () => {
@@ -62,6 +77,37 @@ describe('api client', () => {
     const result = await get<undefined>('/health');
 
     expect(result).toBeUndefined();
+  });
+
+  it('tracks pending requests for global loading indicators', async () => {
+    let resolveFetch: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    const activityCounts: number[] = [];
+    const unsubscribe = subscribeToApiActivity(() => {
+      activityCounts.push(getPendingApiRequestCount());
+    });
+
+    try {
+      const request = get<{ ok: boolean }>('/slow-report');
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(getPendingApiRequestCount()).toBe(1);
+      expect(activityCounts).toEqual([1]);
+
+      expect(resolveFetch).toBeDefined();
+      resolveFetch?.(buildResponse({ body: '{"ok":true}' }));
+
+      await expect(request).resolves.toEqual({ ok: true });
+      expect(getPendingApiRequestCount()).toBe(0);
+      expect(activityCounts).toEqual([1, 0]);
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('parses JSON when successful responses include a payload', async () => {

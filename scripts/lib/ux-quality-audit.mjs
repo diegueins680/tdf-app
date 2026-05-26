@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const SOURCE_FILE_PATTERN = /\.[jt]sx?$/;
+const JSX_FILE_PATTERN = /\.[jt]sx$/;
 const TEST_FILE_PATTERN = /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[jt]sx?$/;
 
 function lineNumberAt(source, index) {
@@ -139,6 +140,7 @@ function countNestingDepth(source) {
 export function auditUxSource(source, filePath) {
   const findings = [];
   const lines = source.split(/\r?\n/);
+  const isJsxFile = JSX_FILE_PATTERN.test(filePath);
 
   // 1. Component with too many props (>8) — complexity / not minimal
   const componentPattern = /(?:function|const)\s+(\w+)[^\{]*\{/g;
@@ -166,7 +168,7 @@ export function auditUxSource(source, filePath) {
   }
 
   // 2. Deep JSX nesting (>10 levels) — clutter / not minimal
-  const jsxDepth = countNestingDepth(source);
+  const jsxDepth = isJsxFile ? countNestingDepth(source) : 0;
   if (jsxDepth > 10) {
     findings.push({
       rule: 'deep-jsx-nesting',
@@ -182,7 +184,7 @@ export function auditUxSource(source, filePath) {
   // 3. Missing loading state
   const hasLoading = /\b(loading|skeleton|spinner|placeholder|Suspense|fallback)\b/i.test(source);
   const hasDataFetch = /\b(useQuery|useEffect|fetch|axios|api|getData)\b/.test(source);
-  if (hasDataFetch && !hasLoading) {
+  if (isJsxFile && hasDataFetch && !hasLoading) {
     findings.push({
       rule: 'missing-loading-state',
       severity: 'error',

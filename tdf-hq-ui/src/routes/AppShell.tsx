@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
+import ApiActivityIndicator from '../components/ApiActivityIndicator';
 import ApiStatusChip from '../components/ApiStatusChip';
 import ChatKitLauncher from '../components/ChatKitLauncher';
 import SidebarNav from '../components/SidebarNav';
@@ -12,15 +13,6 @@ import { buildLoginRedirectPath, pickLandingPath } from '../utils/loginRouting';
 import RouteLoadingFallback from './RouteLoadingFallback';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
-const TABLET_NAV_MIN_WIDTH = 768;
-
-const readStoredSidebarCollapsed = () => {
-  if (typeof window === 'undefined') return false;
-  if (window.innerWidth < DESKTOP_NAV_MIN_WIDTH) return true;
-  const saved = window.localStorage.getItem('sidebar-collapsed');
-  if (saved !== null) return saved === '1';
-  return false;
-};
 
 export function Shell() {
   const theme = useTheme();
@@ -136,6 +128,7 @@ export function Shell() {
           />
         )}
         <TopBar onToggleSidebar={handleToggleSidebar} sidebarOpen={!sidebarCollapsed} />
+        <ApiActivityIndicator />
         <Box
           component="main"
           sx={{

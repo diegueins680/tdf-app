@@ -1077,7 +1077,7 @@ fanPublicServer =
           mParty <- selectFirst [PartyId ==. fanPartyId] []
           mProfile <- selectFirst [FanProfileFanPartyId ==. fanPartyId] []
           let displayName = case mParty of
-                Just (Entity _ p) -> partyDisplayName p
+                Just (Entity _ p) -> M.partyDisplayName p
                 Nothing -> "Fan"
               avatarUrl = mProfile >>= fanProfileAvatarUrl . entityVal
           pure ArtistFanDTO
@@ -7269,7 +7269,7 @@ discoveryFeed user mLimit = do
             Just p -> do
               reactions <- buildReactionSummaryServer "post" (boostedContentTargetId bc) (auPartyId user)
               mParty <- get (fanClubPostFanPartyId p)
-              let authorName = maybe "Desconocido" partyDisplayName mParty
+              let authorName = maybe "Desconocido" M.partyDisplayName mParty
               pure $ Just FanClubFeedItemDTO
                 { fcfId = fromIntegral (boostedContentTargetId bc)
                 , fcfKind = "post"

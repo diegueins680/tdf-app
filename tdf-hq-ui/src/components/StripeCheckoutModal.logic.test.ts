@@ -85,11 +85,13 @@ describe('checkout modal logic', () => {
     const readyCheckoutModalState = checkoutModalReducer(loadingCheckoutModalState, {
       type: 'paymentIntentReady',
       clientSecret: 'pi_secret',
+      orderId: 'order-123',
     });
     expect(readyCheckoutModalState).toMatchObject({
       activeStep: CHECKOUT_STEP_PAYMENT,
       loading: false,
       clientSecret: 'pi_secret',
+      orderId: 'order-123',
       error: null,
     });
 
