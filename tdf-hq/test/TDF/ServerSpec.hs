@@ -299,6 +299,12 @@ import TDF.Server
     , validateWhatsAppReplyBody
     , validateWhatsAppReplyExternalId
     , validateWhatsAppReplyTarget
+    , validateOperatorQuestionChannel
+    , validateOperatorQuestionRequiredIdentifier
+    , validateOperatorQuestionIdentifier
+    , validateOperatorQuestionTextField
+    , normalizeOperatorWhatsAppPhone
+    , buildOperatorQuestionMessage
     , validateWhatsAppConsentDisplayName
     , validateWhatsAppConsentSource
     , validateWhatsAppOptOutReason
@@ -10336,6 +10342,52 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "does not match recipient"
                 (validateWhatsAppReplyTarget "+593991234567" (Just "inbound-2") (Just otherRecipientTarget))
+
+    describe "operator WhatsApp question helpers" $ do
+        it "normalizes the handoff payload without allowing ambiguous channel or identifier text" $ do
+            validateOperatorQuestionChannel " Instagram "
+                `shouldBe` Right "instagram"
+            validateOperatorQuestionRequiredIdentifier "senderId" " 17841445628242005 "
+                `shouldBe` Right "17841445628242005"
+            validateOperatorQuestionIdentifier "externalId" Nothing
+                `shouldBe` Right Nothing
+            validateOperatorQuestionTextField "neededInfo" 50 "  Tema del anuncio  "
+                `shouldBe` Right "Tema del anuncio"
+
+            let assertInvalid result = case result of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid operator handoff field, got: " <> show value)
+            assertInvalid (validateOperatorQuestionChannel "sms")
+            assertInvalid (validateOperatorQuestionRequiredIdentifier "senderId" "sender 1")
+            assertInvalid (validateOperatorQuestionTextField "neededInfo" 10 "hola\NUL")
+
+        it "accepts Ecuador local operator phones and builds a bounded WhatsApp handoff message" $ do
+            normalizeOperatorWhatsAppPhone "0984755301"
+                `shouldBe` Just "+593984755301"
+            normalizeOperatorWhatsAppPhone "+593984755301"
+                `shouldBe` Just "+593984755301"
+            normalizeOperatorWhatsAppPhone "0123456789"
+                `shouldBe` Nothing
+
+            let cfg = (marketplaceTestConfig False)
+                    { appBaseUrl = Just "https://tdf-app.pages.dev/" }
+                body =
+                    buildOperatorQuestionMessage
+                        cfg
+                        "instagram"
+                        "17841445628242005"
+                        (Just "ig-mid-1")
+                        "¿Puedes contarme algo más sobre tu anuncio?"
+                        "No sé a qué anuncio específico se refiere."
+                        "Tema del anuncio que vio."
+            body `shouldContain` "TDF HQ necesita tu criterio"
+            body `shouldContain` "Canal: instagram"
+            body `shouldContain` "Mensaje ID: ig-mid-1"
+            body `shouldContain` "Tema del anuncio que vio."
+            body `shouldContain` "https://tdf-app.pages.dev/social/inbox"
+            T.length body `shouldSatisfy` (<= 4096)
 
     describe "WhatsApp consent text validation" $ do
         it "normalizes consent names, sources, and opt-out reasons before persistence" $ do
