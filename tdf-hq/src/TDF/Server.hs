@@ -1340,7 +1340,11 @@ whatsappMessagesServer user mLimit mDirection mRepliedOnly = do
   pure (toJSON (map toObj rows))
 
 whatsappReplyServer :: AuthedUser -> ServerT Api.WhatsAppReplyAPI AppM
-whatsappReplyServer user WhatsAppReplyReq{..} = do
+whatsappReplyServer user =
+  whatsappManualReplyHandler user :<|> whatsappOperatorQuestionHandler user
+
+whatsappManualReplyHandler :: AuthedUser -> WhatsAppReplyReq -> AppM Value
+whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
   unless (hasSocialInboxAccess user) $
     throwError err403 { errBody = "Missing required module access" }
   let recipientRaw = T.strip wrSenderId
@@ -1385,6 +1389,83 @@ whatsappReplyServer user WhatsAppReplyReq{..} = do
         , "message" .= ("sent" :: Text)
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
+        ])
+
+whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
+whatsappOperatorQuestionHandler user WhatsAppOperatorQuestionReq{..} = do
+  unless (hasSocialInboxAccess user) $
+    throwError err403 { errBody = "Missing required module access" }
+  Env{envConfig} <- ask
+  channel <- either throwError pure (validateOperatorQuestionChannel woqChannel)
+  senderId <- either throwError pure (validateOperatorQuestionRequiredIdentifier "senderId" woqSenderId)
+  externalId <- either throwError pure (validateOperatorQuestionIdentifier "externalId" woqExternalId)
+  inboundMessage <-
+    either throwError pure
+      (validateOperatorQuestionTextField "inboundMessage" operatorQuestionInboundMaxChars woqInboundMessage)
+  holdReason <-
+    either throwError pure
+      (validateOperatorQuestionTextField "holdReason" operatorQuestionDetailMaxChars woqHoldReason)
+  neededInfo <-
+    either throwError pure
+      (validateOperatorQuestionTextField "neededInfo" operatorQuestionDetailMaxChars woqNeededInfo)
+  operatorPhone <-
+    liftIO resolveOperatorWhatsAppPhone
+      >>= either
+        (\msg -> throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 msg) })
+        pure
+  let body =
+        buildOperatorQuestionMessage
+          envConfig
+          channel
+          senderId
+          externalId
+          inboundMessage
+          holdReason
+          neededInfo
+      metadata =
+        Just $
+          TE.decodeUtf8 $
+            BL.toStrict $
+              encode $
+                object
+                  [ "source" .= ("ai_operator_question" :: Text)
+                  , "channel" .= channel
+                  , "senderId" .= senderId
+                  , "externalId" .= externalId
+                  ]
+  now <- liftIO getCurrentTime
+  waEnv <- liftIO loadWhatsAppEnv
+  sendResult <- sendWhatsAppText waEnv operatorPhone body
+  sentEntity <- runDB $
+    recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+      { owrRecipientPhone = operatorPhone
+      , owrRecipientPartyId = Nothing
+      , owrRecipientName = Just "Operador TDF"
+      , owrRecipientEmail = Nothing
+      , owrActorPartyId = Just (auPartyId user)
+      , owrBody = body
+      , owrSource = Just "ai_operator_question"
+      , owrReplyToMessageId = Nothing
+      , owrReplyToExternalId = externalId
+      , owrResendOfMessageId = Nothing
+      , owrMetadata = metadata
+      }
+      sendResult
+  case sendResult of
+    Left err ->
+      pure (object
+        [ "status" .= ("error" :: Text)
+        , "message" .= err
+        , "messageId" .= fromSqlKey (entityKey sentEntity)
+        , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
+        ])
+    Right result ->
+      pure (object
+        [ "status" .= ("ok" :: Text)
+        , "message" .= ("Pregunta enviada por WhatsApp al operador." :: Text)
+        , "messageId" .= fromSqlKey (entityKey sentEntity)
+        , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
+        , "response" .= toJSON result
         ])
 
 whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM
@@ -1648,6 +1729,165 @@ validateWhatsAppMessagesLimit (Just rawLimit)
   | rawLimit < 1 || rawLimit > 200 =
       Left err400 { errBody = "limit must be between 1 and 200" }
   | otherwise = Right rawLimit
+
+operatorQuestionInboundMaxChars :: Int
+operatorQuestionInboundMaxChars = 2000
+
+operatorQuestionDetailMaxChars :: Int
+operatorQuestionDetailMaxChars = 1000
+
+operatorQuestionIdentifierMaxChars :: Int
+operatorQuestionIdentifierMaxChars = 256
+
+operatorQuestionEnvNames :: [String]
+operatorQuestionEnvNames =
+  [ "AI_HANDOFF_WHATSAPP_NUMBER"
+  , "TDF_OPERATOR_WHATSAPP_NUMBER"
+  , "OPERATOR_WHATSAPP_NUMBER"
+  , "COURSE_WHATSAPP_NUMBER"
+  , "WHATSAPP_CONTACT_NUMBER"
+  , "WA_CONTACT_NUMBER"
+  ]
+
+validateOperatorQuestionChannel :: Text -> Either ServerError Text
+validateOperatorQuestionChannel rawChannel
+  | T.any isUnsupportedWhatsAppInboxFilterChar rawChannel =
+      Left err400 { errBody = "channel must not contain control or formatting characters" }
+  | otherwise =
+      case T.toCaseFold (T.strip rawChannel) of
+        "instagram" -> Right "instagram"
+        "facebook" -> Right "facebook"
+        "whatsapp" -> Right "whatsapp"
+        _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+
+validateOperatorQuestionRequiredIdentifier :: Text -> Text -> Either ServerError Text
+validateOperatorQuestionRequiredIdentifier fieldName rawIdentifier =
+  case validateOperatorQuestionIdentifier fieldName (Just rawIdentifier) of
+    Right (Just identifier) -> Right identifier
+    Right Nothing ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " requerido")) }
+    Left serverErr -> Left serverErr
+
+validateOperatorQuestionIdentifier :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOperatorQuestionIdentifier _ Nothing = Right Nothing
+validateOperatorQuestionIdentifier fieldName (Just rawIdentifier)
+  | T.null identifier =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " requerido")) }
+  | T.length identifier > operatorQuestionIdentifierMaxChars =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " demasiado largo")) }
+  | T.any isSpace identifier =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " no debe contener espacios")) }
+  | T.any isUnsupportedWhatsAppInboxFilterChar identifier =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " contiene caracteres no soportados"))
+        }
+  | otherwise =
+      Right (Just identifier)
+  where
+    identifier = T.strip rawIdentifier
+
+validateOperatorQuestionTextField :: Text -> Int -> Text -> Either ServerError Text
+validateOperatorQuestionTextField fieldName maxChars rawValue
+  | T.null value =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " requerido")) }
+  | T.length value > maxChars =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName <> " debe tener " <> T.pack (show maxChars) <> " caracteres o menos"
+        }
+  | T.any isUnsupportedWhatsAppMessageChar value =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " contiene caracteres no soportados"))
+        }
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
+
+resolveOperatorWhatsAppPhone :: IO (Either Text Text)
+resolveOperatorWhatsAppPhone = do
+  mConfigured <- lookupFirstNonEmptyOperatorEnv operatorQuestionEnvNames
+  pure $
+    case mConfigured of
+      Nothing ->
+        Left $
+          "AI handoff WhatsApp number not configured. Set one of: "
+            <> T.intercalate ", " (map T.pack operatorQuestionEnvNames)
+      Just (envName, rawPhone) ->
+        case normalizeOperatorWhatsAppPhone rawPhone of
+          Just phone -> Right phone
+          Nothing ->
+            Left $
+              T.pack envName
+                <> " must be an international WhatsApp number, e.g. +593984755301"
+
+lookupFirstNonEmptyOperatorEnv :: [String] -> IO (Maybe (String, Text))
+lookupFirstNonEmptyOperatorEnv [] = pure Nothing
+lookupFirstNonEmptyOperatorEnv (envName:rest) = do
+  raw <- lookupEnv envName
+  case T.strip . T.pack <$> raw of
+    Just value | not (T.null value) -> pure (Just (envName, value))
+    _ -> lookupFirstNonEmptyOperatorEnv rest
+
+normalizeOperatorWhatsAppPhone :: Text -> Maybe Text
+normalizeOperatorWhatsAppPhone rawPhone =
+  case normalizeCourseRegistrationPhoneInput rawPhone of
+    Just phone
+      | "+0" `T.isPrefixOf` phone
+          && T.length onlyDigits == 10
+          && "09" `T.isPrefixOf` onlyDigits ->
+          Just ("+593" <> T.drop 1 onlyDigits)
+      | "+0" `T.isPrefixOf` phone ->
+          Nothing
+      | otherwise ->
+          Just phone
+    Nothing -> Nothing
+  where
+    onlyDigits = T.filter isAsciiPhoneDigit rawPhone
+
+buildOperatorQuestionMessage
+  :: AppConfig
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+buildOperatorQuestionMessage cfg channel senderId externalId inboundMessage holdReason neededInfo =
+  truncateOperatorQuestionMessage maxWhatsAppReplyBodyChars $
+    T.intercalate "\n" $
+      filter (not . T.null)
+        [ "TDF HQ necesita tu criterio antes de responder un mensaje."
+        , ""
+        , "Canal: " <> channel
+        , "Remitente: " <> senderId
+        , maybe "" ("Mensaje ID: " <>) externalId
+        , ""
+        , "Mensaje recibido:"
+        , inboundMessage
+        , ""
+        , "La IA no puede responder todavía:"
+        , holdReason
+        , ""
+        , "Necesita preguntarte:"
+        , neededInfo
+        , ""
+        , maybe "" (\baseUrl -> "Inbox: " <> T.dropWhileEnd (== '/') baseUrl <> "/social/inbox") (appBaseUrl cfg)
+        ]
+
+truncateOperatorQuestionMessage :: Int -> Text -> Text
+truncateOperatorQuestionMessage limit value
+  | T.length value <= limit = value
+  | limit <= suffixLength = T.take limit suffix
+  | otherwise = T.take (limit - suffixLength) value <> suffix
+  where
+    suffix = "\n[recortado]"
+    suffixLength = T.length suffix
 
 validateWhatsAppReplyBody :: Text -> Either ServerError Text
 validateWhatsAppReplyBody rawBody
