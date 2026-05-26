@@ -63,6 +63,14 @@ describe('SocialInboxAPI.sendReply', () => {
     ).rejects.toThrow('No autorizado.');
   });
 
+  it('builds message list query strings without dropping false or zero filter values', async () => {
+    getMock.mockResolvedValueOnce([]);
+
+    await SocialInboxAPI.listInstagramMessages({ limit: 0, direction: 'all', repliedOnly: false });
+
+    expect(getMock).toHaveBeenCalledWith('/instagram/messages?limit=0&direction=all&repliedOnly=false');
+  });
+
   it('parses SEND/HOLD model replies before the inbox uses them', () => {
     expect(parseReplySuggestion('SEND: Hola Diego')).toEqual({
       kind: 'send',
@@ -77,6 +85,15 @@ describe('SocialInboxAPI.sendReply', () => {
     expect(parseReplySuggestion('Gracias por escribirnos.')).toEqual({
       kind: 'send',
       text: 'Gracias por escribirnos.',
+    });
+  });
+
+  it('falls back to the HOLD reason when the model omits a NEED section', () => {
+    expect(parseReplySuggestion('  HOLD:   Falta contexto del anuncio.  ')).toEqual({
+      kind: 'hold',
+      reason: 'Falta contexto del anuncio.',
+      neededInfo: 'Falta contexto del anuncio.',
+      raw: 'HOLD:   Falta contexto del anuncio.',
     });
   });
 
@@ -111,5 +128,21 @@ describe('SocialInboxAPI.sendReply', () => {
         neededInfo: 'Tema del anuncio',
       }),
     ).rejects.toThrow('WhatsApp no configurado.');
+  });
+
+  it('normalizes suggest-reply messages and hints before posting to Ads Assist', async () => {
+    postMock.mockResolvedValueOnce({ aasReply: 'SEND: Listo.' });
+
+    await expect(
+      SocialInboxAPI.suggestReply('instagram', '  Hola  ', '  Usa tono breve  '),
+    ).resolves.toEqual({
+      kind: 'send',
+      text: 'Listo.',
+    });
+
+    expect(postMock).toHaveBeenCalledWith('/ads/assist', {
+      aarMessage: 'Hola\n\nInstrucciones adicionales:\nUsa tono breve',
+      aarChannel: 'instagram',
+    });
   });
 });

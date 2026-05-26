@@ -124,14 +124,14 @@ const isMetaReplyWindowExpired = (channel?: SocialChannel, createdAt?: string | 
 };
 
 const formatBody = (value?: string | null) => {
-  const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : '—';
+  const bodyText = value?.trim();
+  return bodyText && bodyText.length > 0 ? bodyText : '—';
 };
 
 const normalizeInitialReplyDraft = (value?: string | null) => {
-  const trimmed = value?.trim() ?? '';
-  if (/^HOLD:/i.test(trimmed)) return '';
-  return trimmed.replace(/^SEND:\s*/i, '').trim();
+  const initialDraftText = value?.trim() ?? '';
+  if (/^HOLD:/i.test(initialDraftText)) return '';
+  return initialDraftText.replace(/^SEND:\s*/i, '').trim();
 };
 
 const parseJson = (value?: string | null) => {
@@ -177,17 +177,17 @@ const extractSenderNameFromMetadata = (metadata?: string | null) => {
 const looksLikeOpaqueSenderValue = (value: string) => /^[A-Za-z0-9+/=_-]{48,}$/.test(value);
 
 const normalizeSenderLabel = (value?: string | null) => {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  if (looksLikeOpaqueSenderValue(trimmed)) return null;
-  if (trimmed.length > 70 && !trimmed.includes(' ')) return null;
-  return trimmed;
+  const senderLabelText = value?.trim();
+  if (!senderLabelText) return null;
+  if (looksLikeOpaqueSenderValue(senderLabelText)) return null;
+  if (senderLabelText.length > 70 && !senderLabelText.includes(' ')) return null;
+  return senderLabelText;
 };
 
 const compactIdentifier = (value: string) => {
-  const trimmed = value.trim();
-  if (trimmed.length <= 22) return trimmed;
-  return `${trimmed.slice(0, 10)}…${trimmed.slice(-6)}`;
+  const compactSource = value.trim();
+  if (compactSource.length <= 22) return compactSource;
+  return `${compactSource.slice(0, 10)}…${compactSource.slice(-6)}`;
 };
 
 const resolveSenderName = (msg: SocialMessage) => {
@@ -197,8 +197,8 @@ const resolveSenderName = (msg: SocialMessage) => {
   const metaName = normalizeSenderLabel(extractSenderNameFromMetadata(msg.metadata));
   if (metaName) return metaName;
 
-  const senderId = msg.senderId?.trim();
-  if (senderId) return `ID ${compactIdentifier(senderId)}`;
+  const senderIdentifier = msg.senderId?.trim();
+  if (senderIdentifier) return `ID ${compactIdentifier(senderIdentifier)}`;
 
   return 'Sin nombre';
 };
@@ -239,8 +239,8 @@ const resolveNativeClientUrl = (channel: SocialChannel, senderId: string) => {
     case 'facebook':
       return 'https://www.facebook.com/messages';
     case 'whatsapp': {
-      const normalized = normalizePhoneForWa(senderId);
-      return normalized ? `https://wa.me/${normalized}` : 'https://web.whatsapp.com/';
+      const whatsappPhoneNumber = normalizePhoneForWa(senderId);
+      return whatsappPhoneNumber ? `https://wa.me/${whatsappPhoneNumber}` : 'https://web.whatsapp.com/';
     }
   }
 
@@ -332,9 +332,9 @@ interface InboxErrorSummary {
 const summarizeReplyError = (value: string | null | undefined, reviewMode: boolean): ReplyErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
-  const lower = technical.toLowerCase();
+  const replyErrorLowercase = technical.toLowerCase();
 
-  if (lower.includes('instagram_manage_messages') && lower.includes('advanced access')) {
+  if (replyErrorLowercase.includes('instagram_manage_messages') && replyErrorLowercase.includes('advanced access')) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: Meta app lacks Advanced Access for Instagram messaging.'
@@ -346,7 +346,7 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
-  if (lower.includes('recipient user does not have role on app') || lower.includes('2534048')) {
+  if (replyErrorLowercase.includes('recipient user does not have role on app') || replyErrorLowercase.includes('2534048')) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: recipient account has no role/tester access on this Meta app.'
@@ -358,7 +358,7 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
-  if (lower.includes('outside of allowed window') || lower.includes('2534022')) {
+  if (replyErrorLowercase.includes('outside of allowed window') || replyErrorLowercase.includes('2534022')) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: the Meta reply window is closed.'
@@ -371,8 +371,8 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
   }
 
   if (
-    lower.includes("doesn't have human agent tag") ||
-    lower.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+    replyErrorLowercase.includes("doesn't have human agent tag") ||
+    replyErrorLowercase.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
   ) {
     return {
       headline: reviewMode
@@ -385,7 +385,10 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
-  if (lower.includes('application does not have the capability to make this api call') || lower.includes('"code":3')) {
+  if (
+    replyErrorLowercase.includes('application does not have the capability to make this api call') ||
+    replyErrorLowercase.includes('"code":3')
+  ) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: app permissions/capabilities are missing for this channel.'
@@ -407,27 +410,27 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
 };
 
 const replyErrorBlocksAppSend = (value: string | null | undefined) => {
-  const lower = value?.replace(/\s+/g, ' ').trim().toLowerCase();
-  if (!lower) return false;
+  const normalizedReplyError = value?.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalizedReplyError) return false;
   return (
-    (lower.includes('instagram_manage_messages') && lower.includes('advanced access'))
-    || lower.includes('recipient user does not have role on app')
-    || lower.includes('2534048')
-    || lower.includes('outside of allowed window')
-    || lower.includes('2534022')
-    || lower.includes("doesn't have human agent tag")
-    || lower.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
-    || lower.includes('application does not have the capability to make this api call')
-    || lower.includes('"code":3')
+    (normalizedReplyError.includes('instagram_manage_messages') && normalizedReplyError.includes('advanced access'))
+    || normalizedReplyError.includes('recipient user does not have role on app')
+    || normalizedReplyError.includes('2534048')
+    || normalizedReplyError.includes('outside of allowed window')
+    || normalizedReplyError.includes('2534022')
+    || normalizedReplyError.includes("doesn't have human agent tag")
+    || normalizedReplyError.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+    || normalizedReplyError.includes('application does not have the capability to make this api call')
+    || normalizedReplyError.includes('"code":3')
   );
 };
 
 const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: boolean): InboxErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
-  const lower = technical.toLowerCase();
+  const fetchErrorLowercase = technical.toLowerCase();
 
-  if (lower.includes('no se pudo contactar la api')) {
+  if (fetchErrorLowercase.includes('no se pudo contactar la api')) {
     return {
       headline: reviewMode
         ? 'Cannot load channel messages: backend is unreachable.'
@@ -439,7 +442,7 @@ const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: 
     };
   }
 
-  if (lower.includes('403') || lower.includes('forbidden')) {
+  if (fetchErrorLowercase.includes('403') || fetchErrorLowercase.includes('forbidden')) {
     return {
       headline: reviewMode
         ? 'Cannot load messages: insufficient permissions (403).'
@@ -451,7 +454,7 @@ const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: 
     };
   }
 
-  if (lower.includes('401') || lower.includes('unauthorized')) {
+  if (fetchErrorLowercase.includes('401') || fetchErrorLowercase.includes('unauthorized')) {
     return {
       headline: reviewMode
         ? 'Cannot load messages: session/token is invalid (401).'
@@ -497,9 +500,9 @@ const copyText = async (value: string) => {
 };
 
 const compactNoticeText = (value: string, maxChars = 160) => {
-  const normalized = value.replace(/\s+/g, ' ').trim();
-  if (normalized.length <= maxChars) return normalized;
-  return `${normalized.slice(0, maxChars - 1)}…`;
+  const normalizedNoticeText = value.replace(/\s+/g, ' ').trim();
+  if (normalizedNoticeText.length <= maxChars) return normalizedNoticeText;
+  return `${normalizedNoticeText.slice(0, maxChars - 1)}…`;
 };
 
 interface SelectedMessage {

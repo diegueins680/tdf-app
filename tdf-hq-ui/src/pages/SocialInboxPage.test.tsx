@@ -938,8 +938,8 @@ describe('SocialInboxPage', () => {
     suggestReplyMock.mockResolvedValueOnce({
       kind: 'hold',
       reason: 'No sé a qué anuncio específico se refiere.',
-      neededInfo: 'Tema del anuncio que vio.',
-      raw: 'HOLD: No sé a qué anuncio específico se refiere.\nNEED: Tema del anuncio que vio.',
+      neededInfo: 'Tema del anuncio\n\nque vio.',
+      raw: 'HOLD: No sé a qué anuncio específico se refiere.\nNEED: Tema del anuncio\n\nque vio.',
     });
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -971,7 +971,7 @@ describe('SocialInboxPage', () => {
           externalId: 'msg-1',
           inboundMessage: '¿Puedes contarme algo más sobre tu anuncio?',
           holdReason: 'No sé a qué anuncio específico se refiere.',
-          neededInfo: 'Tema del anuncio que vio.',
+          neededInfo: 'Tema del anuncio\n\nque vio.',
         });
         expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('');
         expect(sendReplyMock).not.toHaveBeenCalled();
@@ -1004,6 +1004,26 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('preloads stored SEND text without exposing the model format prefix', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: '  SEND: Ya te respondemos por aquí.  ',
+        replyError: 'Previous send failed.',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('Ya te respondemos por aquí.');
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(false);
+      expect(document.body.textContent).not.toContain('SEND:');
+    });
+
+    await cleanup();
+  });
+
   it('prioritizes expired Meta reply-window errors over capability fallbacks', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -1027,6 +1047,32 @@ describe('SocialInboxPage', () => {
       );
       expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
       expect(countInteractiveElementsByText(document.body, 'Abrir inbox')).toBe(1);
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps provider-blocked reply errors from enabling app send with a draft', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyError: 'Recipient user does not have role on app.',
+      }),
+    }, false);
+
+    await act(async () => {
+      setTextControlValue(getTextControlByLabel(document.body, 'Respuesta'), 'Hola de nuevo.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Envío bloqueado: la cuenta destinataria no tiene rol/tester en esta app de Meta.',
+      );
       expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
     });
 
