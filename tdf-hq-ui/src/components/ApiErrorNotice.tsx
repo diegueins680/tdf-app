@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { API_BASE_URL } from '../api/client';
 
@@ -10,6 +10,12 @@ interface Props {
   onRetry?: () => void;
   helper?: ReactNode;
   showCorsHint?: boolean;
+}
+
+interface LoadingProps {
+  title?: string;
+  message?: ReactNode;
+  helper?: ReactNode;
 }
 
 const describeError = (error: unknown) => {
@@ -34,6 +40,29 @@ const buildCorsHint = (showCorsHint?: boolean) => {
   }
   return null;
 };
+
+export function ApiLoadingNotice({
+  title = 'Cargando datos',
+  message = 'Estamos preparando la informacion. La vista se actualizara automaticamente.',
+  helper,
+}: LoadingProps) {
+  return (
+    <Alert
+      severity="info"
+      variant="outlined"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      icon={<CircularProgress size={18} aria-label={title} />}
+    >
+      <Stack spacing={0.5}>
+        {title && <AlertTitle sx={{ mb: 0 }}>{title}</AlertTitle>}
+        {message && <Typography variant="body2">{message}</Typography>}
+        {helper}
+      </Stack>
+    </Alert>
+  );
+}
 
 export default function ApiErrorNotice({ error, title, onRetry, helper, showCorsHint }: Props) {
   const corsHint = buildCorsHint(showCorsHint);

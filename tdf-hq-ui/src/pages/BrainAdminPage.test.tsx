@@ -35,6 +35,14 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   }),
 }));
 
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
 const { default: BrainAdminPage } = await import('./BrainAdminPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -100,6 +108,16 @@ const buildEntry = (overrides: Partial<BrainEntryDTO> = {}): BrainEntryDTO => ({
   bedUpdatedAt: '2030-01-03T12:00:00.000Z',
   ...overrides,
 });
+
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, resolve, reject };
+};
 
 const getActionByText = (root: ParentNode, labelText: string) => {
   const action = Array.from(root.querySelectorAll<HTMLElement>('button, a')).find(
@@ -173,6 +191,40 @@ describe('BrainAdminPage', () => {
       rrrStatus: 'ok',
       rrrChunks: 0,
     });
+  });
+
+  it('shows visible first-load notices while Brain data is loading', async () => {
+    const entriesDeferred = createDeferred<BrainEntryDTO[]>();
+    const ragStatusDeferred = createDeferred<RagIndexStatus>();
+    listEntriesMock.mockReturnValue(entriesDeferred.promise);
+    ragStatusMock.mockReturnValue(ragStatusDeferred.promise);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      expect(container.textContent).toContain('Cargando estado RAG');
+      expect(container.textContent).toContain('Consultando el indice antes de mostrar acciones.');
+      expect(container.textContent).toContain('Cargando entradas');
+      expect(container.textContent).toContain('Estamos preparando las entradas del Brain.');
+      expect(container.querySelectorAll('[role="status"][aria-busy="true"]')).toHaveLength(2);
+      expect(container.querySelectorAll('[role="progressbar"]')).toHaveLength(2);
+      expect(container.textContent).not.toContain(
+        'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.',
+      );
+    } finally {
+      await act(async () => {
+        entriesDeferred.resolve([]);
+        ragStatusDeferred.resolve({
+          risCount: 0,
+          risUpdatedAt: null,
+          risStale: false,
+        });
+        await flushPromises();
+      });
+      await cleanup();
+    }
   });
 
   it('keeps the empty Brain entry view focused until an admin asks to review inactive entries', async () => {

@@ -23,7 +23,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { Brain, RagAdmin, type BrainEntryDTO } from '../api/brain';
-import ApiErrorNotice from '../components/ApiErrorNotice';
+import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
 
@@ -258,6 +258,12 @@ export default function BrainAdminPage() {
             {ragStatusQuery.isError && (
               <ApiErrorNotice error={ragStatusQuery.error} title="Error cargando RAG" />
             )}
+            {ragStatusQuery.isLoading && (
+              <ApiLoadingNotice
+                title="Cargando estado RAG"
+                message="Consultando el indice antes de mostrar acciones."
+              />
+            )}
             {refreshMutation.isError && (
               <Alert severity="error">
                 {refreshMutation.error instanceof Error ? refreshMutation.error.message : 'Error al refrescar RAG.'}
@@ -314,6 +320,12 @@ export default function BrainAdminPage() {
 
             {entriesQuery.isError && (
               <ApiErrorNotice error={entriesQuery.error} title="Error cargando entradas" />
+            )}
+            {entriesQuery.isLoading && (
+              <ApiLoadingNotice
+                title="Cargando entradas"
+                message="Estamos preparando las entradas del Brain."
+              />
             )}
 
             {showEmptyEntriesState && (
