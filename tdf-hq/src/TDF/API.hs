@@ -176,8 +176,30 @@ instance FromJSON WhatsAppReplyReq where
     genericParseJSON defaultOptions { rejectUnknownFields = True } raw
 instance ToJSON WhatsAppReplyReq
 
+data WhatsAppOperatorQuestionReq = WhatsAppOperatorQuestionReq
+  { woqChannel        :: Text
+  , woqSenderId       :: Text
+  , woqExternalId     :: Maybe Text
+  , woqInboundMessage :: Text
+  , woqHoldReason     :: Text
+  , woqNeededInfo     :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON WhatsAppOperatorQuestionReq where
+  parseJSON raw = do
+    withObject "WhatsAppOperatorQuestionReq"
+      (rejectNullOptionalRequestFields
+        [ ("externalId", "externalId must be omitted instead of null")
+        ])
+      raw
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = camelDrop 3
+      , rejectUnknownFields = True
+      } raw
+
 type WhatsAppReplyAPI =
        "whatsapp" :> "reply" :> ReqBody '[JSON] WhatsAppReplyReq :> Post '[JSON] Value
+  :<|> "whatsapp" :> "operator-question" :> ReqBody '[JSON] WhatsAppOperatorQuestionReq :> Post '[JSON] Value
 
 type WhatsAppConsentRoutes =
        "consent"
