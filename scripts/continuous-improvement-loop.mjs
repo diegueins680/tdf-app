@@ -1607,7 +1607,7 @@ async function runIteration(repoRoot, config, iteration) {
   if (reportNeedsAttention(formalReport)) {
     if (!config.formalFixCommand) {
       throw new Error(
-        `Formal methods audit did not pass. Configure formalFixCommand or inspect ${context.formal_report_file}.`,
+        `Formal verification did not pass. Configure formalFixCommand or inspect ${context.formal_report_file}.`,
       );
     }
 
@@ -1619,7 +1619,7 @@ async function runIteration(repoRoot, config, iteration) {
 
     formalReport = await generateFormalReport(repoRoot, context, config);
     if (reportNeedsAttention(formalReport)) {
-      throw new Error(`Formal methods audit still does not pass after formalFixCommand. See ${context.formal_report_file}.`);
+      throw new Error(`Formal verification still does not pass after formalFixCommand. See ${context.formal_report_file}.`);
     }
   }
 

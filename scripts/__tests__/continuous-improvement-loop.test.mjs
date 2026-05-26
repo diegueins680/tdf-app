@@ -464,7 +464,11 @@ test('discoverImprovementIdea persists backend and ui lane rotation between fall
   try {
     await git(['init']);
     await fs.writeFile(path.join(repoDir, 'tdf-hq-ui', 'src', 'Clean.tsx'), 'export const ok = true;\n', 'utf8');
-    await fs.writeFile(path.join(repoDir, 'tdf-hq', 'app', 'Main.hs'), 'main = putStrLn "ok"\n', 'utf8');
+    await fs.writeFile(
+      path.join(repoDir, 'tdf-hq', 'app', 'Main.hs'),
+      'module Main (main) where\n\nmain :: IO ()\nmain = putStrLn "ok"\n',
+      'utf8',
+    );
     await git(['add', 'tdf-hq-ui/src/Clean.tsx', 'tdf-hq/app/Main.hs']);
 
     const firstIdea = await discoverImprovementIdea(repoDir, { statePath });

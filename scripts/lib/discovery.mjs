@@ -316,6 +316,13 @@ function createCandidate(lane, priority, idea, importance = 0) {
   return { lane, priority, idea, importance };
 }
 
+function uiFindingImportance(finding) {
+  if (finding.severity === 'critical') return 100;
+  if (finding.severity === 'error') return 50;
+  if (finding.severity === 'warning') return 20;
+  return 5;
+}
+
 function setCandidate(candidates, candidate) {
   const current = candidates[candidate.lane];
   if (!current || candidate.priority < current.priority) {
@@ -385,7 +392,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
     if (uiFindings.length > 0) {
       setCandidate(
         candidates,
-        createCandidate(DISCOVERY_LANE_UI, DISCOVERY_PRIORITY_REAL, buildUiIdea(repoRoot, uiFindings[0]), uiFindings[0].importance ?? 0),
+        createCandidate(DISCOVERY_LANE_UI, DISCOVERY_PRIORITY_REAL, buildUiIdea(repoRoot, uiFindings[0]), uiFindingImportance(uiFindings[0])),
       );
     }
   }
@@ -429,8 +436,8 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
 
 export function chooseDiscoveryLane(candidates, options = {}) {
   const lanes = [DISCOVERY_LANE_LOGICAL, DISCOVERY_LANE_FORMAL, DISCOVERY_LANE_UX, DISCOVERY_LANE_UI, DISCOVERY_LANE_BACKEND];
+  const tieBreakOrder = [DISCOVERY_LANE_LOGICAL, DISCOVERY_LANE_FORMAL, DISCOVERY_LANE_UX, DISCOVERY_LANE_BACKEND, DISCOVERY_LANE_UI];
   const lastLane = normalizeLane(options.lastLane);
-  const counts = options.counts ?? {};
 
   // Find the highest-priority candidate across all lanes
   let bestLane = '';
@@ -447,13 +454,21 @@ export function chooseDiscoveryLane(candidates, options = {}) {
     }
   }
 
-  // If the best lane has a fallback and we have a lastLane, alternate to avoid starvation
-  if (bestLane && bestPriority === DISCOVERY_PRIORITY_FALLBACK) {
-    const fallbackLanes = lanes.filter((l) => candidates?.[l]?.priority === DISCOVERY_PRIORITY_FALLBACK);
-    if (fallbackLanes.length > 1 && lastLane && fallbackLanes.includes(lastLane)) {
-      const nextIndex = (fallbackLanes.indexOf(lastLane) + 1) % fallbackLanes.length;
-      return fallbackLanes[nextIndex];
+  const tiedLanes = tieBreakOrder.filter((lane) => {
+    const candidate = candidates?.[lane] ?? null;
+    return (
+      candidate &&
+      candidate.priority === bestPriority &&
+      (candidate.importance ?? 0) === bestImportance
+    );
+  });
+
+  if (tiedLanes.length > 1) {
+    if (lastLane && tiedLanes.includes(lastLane)) {
+      const nextIndex = (tiedLanes.indexOf(lastLane) + 1) % tiedLanes.length;
+      return tiedLanes[nextIndex];
     }
+    return tiedLanes[0];
   }
 
   return bestLane;
