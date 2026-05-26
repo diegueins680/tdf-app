@@ -10,13 +10,27 @@ const HASKELL_FILE_PATTERN = /\.hs$/;
 const TEST_FILE_PATTERN = /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[jt]sx?$/;
 
 const SKIPPED_SEGMENTS = [
+  `${path.sep}archives${path.sep}`,
+  `${path.sep}artifacts${path.sep}`,
   `${path.sep}node_modules${path.sep}`,
   `${path.sep}dist${path.sep}`,
+  `${path.sep}dist-newstyle${path.sep}`,
   `${path.sep}build${path.sep}`,
   `${path.sep}coverage${path.sep}`,
+  `${path.sep}generated${path.sep}`,
+  `${path.sep}__generated__${path.sep}`,
+  `${path.sep}android${path.sep}`,
+  `${path.sep}ios${path.sep}`,
   `${path.sep}.stack-work${path.sep}`,
   `${path.sep}.cabal${path.sep}`,
 ];
+
+const SEVERITY_RANK = {
+  info: 0,
+  warning: 1,
+  error: 2,
+  critical: 3,
+};
 
 async function listTrackedFiles(repoRoot) {
   const { stdout } = await execFileAsync('git', ['ls-files'], {
@@ -50,6 +64,29 @@ function scoreImportance(severity, reach = 1, criticality = 1) {
   const severityRank = { critical: 100, error: 50, warning: 20, info: 5 };
   const base = severityRank[severity] ?? 5;
   return base * Math.max(1, reach) * Math.max(1, criticality);
+}
+
+function hasExplicitHaskellExportList(lines, moduleLineIndex) {
+  const header = lines.slice(moduleLineIndex, moduleLineIndex + 8).join('\n');
+  const whereIndex = header.search(/\bwhere\b/);
+  const declaration = whereIndex >= 0 ? header.slice(0, whereIndex) : header;
+  return /^\s*module\s+[A-Z][A-Za-z0-9_.']*\s*\(/m.test(declaration);
+}
+
+export function findingMeetsSeverityThreshold(finding, threshold = 'error') {
+  if (threshold === 'none') return false;
+  const findingRank = SEVERITY_RANK[finding?.severity] ?? -1;
+  const thresholdRank = SEVERITY_RANK[threshold] ?? SEVERITY_RANK.error;
+  return findingRank >= thresholdRank;
+}
+
+export function collectFailingFormalFindings(findings, threshold = 'error') {
+  return findings.filter((finding) => findingMeetsSeverityThreshold(finding, threshold));
+}
+
+export function formatFormalFinding(finding, repoRoot = '') {
+  const displayFile = repoRoot ? path.relative(repoRoot, finding.file) : finding.file;
+  return `[${finding.severity}] ${displayFile}:${finding.line} ${finding.rule} - ${finding.message}`;
 }
 
 // ─── JS/TS Formal Methods Audits ───
@@ -285,11 +322,12 @@ function auditHaskellFormal(source, filePath) {
   const lines = source.split(/\r?\n/);
 
   // 1. Missing explicit module exports (hiding internal details)
-  const modulePattern = /\bmodule\s+(\w+)/g;
+  const modulePattern = /^\s*module\s+[A-Z][A-Za-z0-9_.']*/gm;
   for (const match of source.matchAll(modulePattern)) {
     const line = lineNumberAt(source, match.index);
+    const lineIndex = line - 1;
     const snippet = lines[line - 1] ?? '';
-    if (!/\(/.test(snippet) || /\bwhere\b/.test(snippet)) {
+    if (!hasExplicitHaskellExportList(lines, lineIndex)) {
       findings.push({
         rule: 'implicit-module-exports',
         severity: 'warning',
