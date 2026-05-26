@@ -1459,13 +1459,12 @@ whatsappOperatorQuestionHandler user WhatsAppOperatorQuestionReq{..} = do
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
         ])
-    Right result ->
+    Right _ ->
       pure (object
         [ "status" .= ("ok" :: Text)
         , "message" .= ("Pregunta enviada por WhatsApp al operador." :: Text)
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
-        , "response" .= toJSON result
         ])
 
 whatsappConsentServer :: AuthedUser -> ServerT Api.WhatsAppConsentAPI AppM

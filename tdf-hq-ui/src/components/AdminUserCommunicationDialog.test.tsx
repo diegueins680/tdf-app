@@ -9,6 +9,7 @@ import type {
   AdminWhatsAppSendPayload,
   AdminWhatsAppSendResponse,
   UserCommunicationHistory,
+  WhatsAppMessageAdmin,
 } from '../api/admin';
 
 const getUserCommunicationHistoryMock = jest.fn<(userId: number, limit?: number) => Promise<UserCommunicationHistory>>();
@@ -85,6 +86,24 @@ const buildHistory = (overrides: Partial<UserCommunicationHistory> = {}): UserCo
   ...overrides,
 });
 
+const buildMessage = (overrides: Partial<WhatsAppMessageAdmin> = {}): WhatsAppMessageAdmin => ({
+  id: 501,
+  externalId: 'wa-501',
+  partyId: 9,
+  actorPartyId: null,
+  senderId: '+593999000111',
+  senderName: 'Ada Lovelace',
+  phoneE164: '+593999000111',
+  contactEmail: 'ada@example.com',
+  text: 'Hola, necesito ayuda con mi reserva.',
+  direction: 'incoming',
+  replyStatus: 'pending',
+  deliveryStatus: 'received',
+  source: 'whatsapp',
+  createdAt: '2030-01-02T12:00:00.000Z',
+  ...overrides,
+});
+
 const renderDialog = async (container: HTMLElement, user = buildUser()) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -150,6 +169,55 @@ describe('AdminUserCommunicationDialog', () => {
         expect(document.body.textContent).toContain('No hay mensajes registrados para este usuario.');
         expect(getButtonsByText(document.body, 'Notificar')).toHaveLength(1);
         expect(getButtonsByText(document.body, 'Responder')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('lets keyboard users cancel a selected reply target from the composer', async () => {
+    getUserCommunicationHistoryMock.mockResolvedValue(buildHistory({
+      messages: [buildMessage()],
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(document.body, 'Responder')).toHaveLength(1);
+      });
+
+      await act(async () => {
+        getButtonsByText(document.body, 'Responder')[0]?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Responderás al mensaje del');
+        expect(getButtonsByText(document.body, 'Cancelar respuesta')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Responder')).toHaveLength(2);
+      });
+
+      const composer = document.body.querySelector<HTMLTextAreaElement>('textarea');
+      if (!composer) throw new Error('Composer textarea not found');
+
+      await waitForExpectation(() => {
+        expect(document.activeElement).toBe(composer);
+      });
+
+      await act(async () => {
+        composer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const activeComposer = document.body.querySelector<HTMLTextAreaElement>('textarea');
+        expect(document.body.textContent).not.toContain('Responderás al mensaje del');
+        expect(getButtonsByText(document.body, 'Cancelar respuesta')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Responder')).toHaveLength(1);
+        expect(document.activeElement).toBe(activeComposer);
       });
     } finally {
       await cleanup();
