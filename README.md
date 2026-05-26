@@ -194,9 +194,10 @@ cd tdf-hq && stack test
 
 ```bash
 npm run quality
+npm run verify:formal
 ```
 
-> Runs ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. Configure Stack/DB access first if you run it on a fresh machine.
+> `npm run quality` runs the formal verification gate, ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. `npm run verify:formal` runs the lightweight formal gate directly: model checks plus the formal-methods audit. Configure Stack/DB access first if you run full quality on a fresh machine.
 
 ### Continuous Improvement Loop
 
@@ -221,6 +222,8 @@ npm run loop:enable-ci-polling
 npm run loop:disable-ci-polling
 npm run loop:idea
 npm run audit:ui:static
+npm run audit:formal
+npm run verify:formal
 npm run verify:auto-loop
 npm run loop:improve -- --config scripts/continuous-improvement-loop.example.json
 npm run loop:start
