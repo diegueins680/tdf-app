@@ -299,7 +299,7 @@ start_child() {
   CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS="$HEARTBEAT_TIMEOUT_SECONDS" \
   CONTINUOUS_LOOP_RESTART_DELAY_SECONDS="$RESTART_DELAY_SECONDS" \
   CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS="$POLL_INTERVAL_SECONDS" \
-  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --max-iterations 1 >> "$LOG_FILE" 2>&1 &
+  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" >> "$LOG_FILE" 2>&1 &
   child_pid=$!
   child_started_epoch="$(date +%s)"
   echo "$child_pid" > "$CHILD_PID_FILE"
