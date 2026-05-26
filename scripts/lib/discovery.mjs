@@ -17,6 +17,36 @@ const DISCOVERY_LANE_BACKEND = 'backend';
 const DISCOVERY_PRIORITY_CRITICAL = 0;
 const DISCOVERY_PRIORITY_REAL = 1;
 const DISCOVERY_PRIORITY_FALLBACK = 2;
+const DISCOVERY_LANES = Object.freeze([
+  DISCOVERY_LANE_LOGICAL,
+  DISCOVERY_LANE_FORMAL,
+  DISCOVERY_LANE_UX,
+  DISCOVERY_LANE_UI,
+  DISCOVERY_LANE_BACKEND,
+]);
+const DISCOVERY_TIE_BREAKS = Object.freeze({
+  [DISCOVERY_PRIORITY_CRITICAL]: Object.freeze([
+    DISCOVERY_LANE_LOGICAL,
+    DISCOVERY_LANE_FORMAL,
+    DISCOVERY_LANE_UX,
+    DISCOVERY_LANE_UI,
+    DISCOVERY_LANE_BACKEND,
+  ]),
+  [DISCOVERY_PRIORITY_REAL]: Object.freeze([
+    DISCOVERY_LANE_LOGICAL,
+    DISCOVERY_LANE_FORMAL,
+    DISCOVERY_LANE_BACKEND,
+    DISCOVERY_LANE_UI,
+    DISCOVERY_LANE_UX,
+  ]),
+  [DISCOVERY_PRIORITY_FALLBACK]: Object.freeze([
+    DISCOVERY_LANE_BACKEND,
+    DISCOVERY_LANE_UI,
+    DISCOVERY_LANE_UX,
+    DISCOVERY_LANE_LOGICAL,
+    DISCOVERY_LANE_FORMAL,
+  ]),
+});
 
 const DISCOVERY_STATE_FILE = path.join('tmp', 'continuous-improvement-loop-discovery.json');
 const SCANNED_EXTENSIONS = new Set([
@@ -295,6 +325,28 @@ function buildUxFallbackIdea() {
   };
 }
 
+function buildUiFallbackIdea() {
+  return {
+    source: 'builtin-ui-fallback',
+    lane: DISCOVERY_LANE_UI,
+    title: 'Tighten one UI accessibility affordance',
+    markdown: [
+      '# Improvement Idea',
+      '',
+      'Source: ui fallback discovery',
+      `Lane: ${DISCOVERY_LANE_UI}`,
+      '',
+      'Review one user-facing UI surface and make one concrete improvement that:',
+      '- improves accessible names, labels, focus behavior, or alternative text,',
+      '- keeps the existing visual design intact, and',
+      '- can be defended with a targeted test or static UI audit.',
+      '',
+      'Keep the change scoped to one component or screen. Avoid backend-only edits.',
+      '',
+    ].join('\n'),
+  };
+}
+
 // ─── Candidate Logic ───
 
 function normalizeLane(value) {
@@ -318,9 +370,19 @@ function createCandidate(lane, priority, idea, importance = 0) {
 
 function uiFindingImportance(finding) {
   if (finding.severity === 'critical') return 100;
-  if (finding.severity === 'error') return 50;
+  if (finding.severity === 'error') return 150;
   if (finding.severity === 'warning') return 20;
   return 5;
+}
+
+function uiFindingPriority(finding) {
+  return finding.severity === 'critical' || finding.severity === 'error'
+    ? DISCOVERY_PRIORITY_CRITICAL
+    : DISCOVERY_PRIORITY_REAL;
+}
+
+function tieBreakOrderForPriority(priority) {
+  return DISCOVERY_TIE_BREAKS[priority] ?? DISCOVERY_TIE_BREAKS[DISCOVERY_PRIORITY_REAL];
 }
 
 function setCandidate(candidates, candidate) {
@@ -392,7 +454,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
     if (uiFindings.length > 0) {
       setCandidate(
         candidates,
-        createCandidate(DISCOVERY_LANE_UI, DISCOVERY_PRIORITY_REAL, buildUiIdea(repoRoot, uiFindings[0]), uiFindingImportance(uiFindings[0])),
+        createCandidate(DISCOVERY_LANE_UI, uiFindingPriority(uiFindings[0]), buildUiIdea(repoRoot, uiFindings[0]), uiFindingImportance(uiFindings[0])),
       );
     }
   }
@@ -421,7 +483,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
     setCandidate(candidates, createCandidate(DISCOVERY_LANE_UX, DISCOVERY_PRIORITY_FALLBACK, buildUxFallbackIdea()));
   }
   if (!candidates[DISCOVERY_LANE_UI]) {
-    setCandidate(candidates, createCandidate(DISCOVERY_LANE_UI, DISCOVERY_PRIORITY_FALLBACK, buildUxFallbackIdea()));
+    setCandidate(candidates, createCandidate(DISCOVERY_LANE_UI, DISCOVERY_PRIORITY_FALLBACK, buildUiFallbackIdea()));
   }
 
   const backendRoot = path.join(repoRoot, 'tdf-hq');
@@ -435,33 +497,41 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
 // ─── Lane Selection ───
 
 export function chooseDiscoveryLane(candidates, options = {}) {
-  const lanes = [DISCOVERY_LANE_LOGICAL, DISCOVERY_LANE_FORMAL, DISCOVERY_LANE_UX, DISCOVERY_LANE_UI, DISCOVERY_LANE_BACKEND];
-  const tieBreakOrder = [DISCOVERY_LANE_LOGICAL, DISCOVERY_LANE_FORMAL, DISCOVERY_LANE_UX, DISCOVERY_LANE_BACKEND, DISCOVERY_LANE_UI];
+  const lanes = DISCOVERY_LANES;
   const lastLane = normalizeLane(options.lastLane);
 
-  // Find the highest-priority candidate across all lanes
-  let bestLane = '';
+  // Contract: priority is primary, critical lane precedence is next, and
+  // importance only ranks non-critical candidates inside the same priority.
   let bestPriority = Infinity;
-  let bestImportance = -1;
 
   for (const lane of lanes) {
     const candidate = candidates?.[lane] ?? null;
     if (!candidate) continue;
-    if (candidate.priority < bestPriority || (candidate.priority === bestPriority && candidate.importance > bestImportance)) {
+    if (candidate.priority < bestPriority) {
       bestPriority = candidate.priority;
-      bestImportance = candidate.importance ?? 0;
-      bestLane = lane;
     }
   }
 
-  const tiedLanes = tieBreakOrder.filter((lane) => {
+  if (bestPriority === Infinity) {
+    return '';
+  }
+
+  const priorityLanes = tieBreakOrderForPriority(bestPriority).filter((lane) => {
     const candidate = candidates?.[lane] ?? null;
-    return (
-      candidate &&
-      candidate.priority === bestPriority &&
-      (candidate.importance ?? 0) === bestImportance
-    );
+    return candidate && candidate.priority === bestPriority;
   });
+
+  // Critical audit findings are safety gates. Rotation and importance cannot
+  // displace logical > formal > UX > UI > backend precedence for this tier.
+  if (bestPriority === DISCOVERY_PRIORITY_CRITICAL) {
+    return priorityLanes[0] ?? '';
+  }
+
+  const bestImportance = priorityLanes.reduce((best, lane) => {
+    const candidate = candidates?.[lane] ?? null;
+    return Math.max(best, candidate?.importance ?? 0);
+  }, -1);
+  const tiedLanes = priorityLanes.filter((lane) => (candidates?.[lane]?.importance ?? 0) === bestImportance);
 
   if (tiedLanes.length > 1) {
     if (lastLane && tiedLanes.includes(lastLane)) {
@@ -471,7 +541,7 @@ export function chooseDiscoveryLane(candidates, options = {}) {
     return tiedLanes[0];
   }
 
-  return bestLane;
+  return tiedLanes[0] ?? '';
 }
 
 // ─── State Management ───
@@ -590,6 +660,48 @@ export function verifyDiscoveryPolicyModel() {
             }
           }
         }
+      }
+    }
+  }
+
+  const criticalPrecedenceCases = [
+    {
+      expected: DISCOVERY_LANE_LOGICAL,
+      candidates: {
+        [DISCOVERY_LANE_LOGICAL]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 1 },
+        [DISCOVERY_LANE_FORMAL]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+        [DISCOVERY_LANE_UX]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+        [DISCOVERY_LANE_UI]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+      },
+    },
+    {
+      expected: DISCOVERY_LANE_FORMAL,
+      candidates: {
+        [DISCOVERY_LANE_FORMAL]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 1 },
+        [DISCOVERY_LANE_UX]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+        [DISCOVERY_LANE_UI]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+      },
+    },
+    {
+      expected: DISCOVERY_LANE_UX,
+      candidates: {
+        [DISCOVERY_LANE_UX]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 1 },
+        [DISCOVERY_LANE_UI]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+        [DISCOVERY_LANE_BACKEND]: { priority: DISCOVERY_PRIORITY_CRITICAL, importance: 999 },
+      },
+    },
+  ];
+
+  for (const lastLane of lastLanes) {
+    for (const { expected, candidates: caseCandidates } of criticalPrecedenceCases) {
+      casesChecked += 1;
+      const cands = {};
+      for (const [lane, candidate] of Object.entries(caseCandidates)) {
+        cands[lane] = { lane, idea: { source: `test-${lane}` }, ...candidate };
+      }
+      const lane = chooseDiscoveryLane(cands, { lastLane });
+      if (lane !== expected) {
+        findings.push(`Discovery policy allowed importance or rotation to displace critical ${expected} issue.`);
       }
     }
   }

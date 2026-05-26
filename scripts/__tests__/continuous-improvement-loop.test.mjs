@@ -417,6 +417,45 @@ test('chooseDiscoveryLane alternates equal-priority lanes and prefers the first 
   assert.equal(chooseDiscoveryLane(candidates, { lastLane: 'ui' }), 'backend');
 });
 
+test('chooseDiscoveryLane keeps critical audit precedence ahead of importance and rotation', () => {
+  assert.equal(
+    chooseDiscoveryLane(
+      {
+        logical: { lane: 'logical', priority: 0, importance: 1, idea: { source: 'logical-critical' } },
+        formal: { lane: 'formal', priority: 0, importance: 999, idea: { source: 'formal-critical' } },
+        ux: { lane: 'ux', priority: 0, importance: 999, idea: { source: 'ux-critical' } },
+        ui: { lane: 'ui', priority: 0, importance: 999, idea: { source: 'ui-critical' } },
+      },
+      { lastLane: 'logical' },
+    ),
+    'logical',
+  );
+
+  assert.equal(
+    chooseDiscoveryLane(
+      {
+        formal: { lane: 'formal', priority: 0, importance: 1, idea: { source: 'formal-critical' } },
+        ux: { lane: 'ux', priority: 0, importance: 999, idea: { source: 'ux-critical' } },
+        ui: { lane: 'ui', priority: 0, importance: 999, idea: { source: 'ui-critical' } },
+      },
+      { lastLane: 'formal' },
+    ),
+    'formal',
+  );
+
+  assert.equal(
+    chooseDiscoveryLane(
+      {
+        ux: { lane: 'ux', priority: 0, importance: 1, idea: { source: 'ux-critical' } },
+        ui: { lane: 'ui', priority: 0, importance: 999, idea: { source: 'ui-critical' } },
+        backend: { lane: 'backend', priority: 0, importance: 999, idea: { source: 'backend-critical' } },
+      },
+      { lastLane: 'ux' },
+    ),
+    'ux',
+  );
+});
+
 test('buildDefaultIdea prefers a real UI finding over a backend fallback', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'discovery-priority-test-'));
   const repoDir = path.join(tempRoot, 'repo');

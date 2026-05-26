@@ -9,7 +9,7 @@ import { promisify, parseArgs } from 'node:util';
 import { discoverImprovementIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
 import { collectLogicalFindings, summarizeLogicalFindings } from './lib/logical-correctness-audit.mjs';
-import { collectFormalFindings, summarizeFormalFindings } from './lib/formal-methods-audit.mjs';
+import { collectFailingFormalFindings, collectFormalFindings, summarizeFormalFindings } from './lib/formal-methods-audit.mjs';
 import { collectUxFindings, summarizeUxFindings } from './lib/ux-quality-audit.mjs';
 import {
   buildCommitContext,
@@ -912,10 +912,12 @@ async function generateFormalReport(repoRoot, context, config) {
   const allFindings = await collectFormalFindings(repoRoot);
   const baseline = config.formalBaselineFindingKeys ?? new Set();
   const findings = allFindings.filter((finding) => !baseline.has(findingKey(finding)));
+  const blockingFindings = collectFailingFormalFindings(findings, 'error');
   const loopModelCheck = verifyImprovementLoopModel();
   const report = {
-    ok: findings.length === 0 && loopModelCheck.ok,
+    ok: blockingFindings.length === 0 && loopModelCheck.ok,
     findings,
+    blockingFindings,
     loopModelCheck,
     summary: summarizeFormalFindings(findings),
     baselineSuppressedCount: allFindings.length - findings.length,
