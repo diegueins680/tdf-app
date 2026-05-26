@@ -6,6 +6,8 @@ export interface PublicEngineer {
   peName: string;
 }
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 const ENGINEERS_CACHE_KEY = 'tdf-engineers-cache-v1';
 
 const hasBrowserStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
@@ -23,8 +25,8 @@ const normalizePositiveEngineerId = (value: unknown): number | null => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!/^\d+$/.test(trimmed)) return null;
-    const parsed = Number.parseInt(trimmed, 10);
-    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+    const engineerId = Number.parseInt(trimmed, 10);
+    return Number.isSafeInteger(engineerId) && engineerId > 0 ? engineerId : null;
   }
   return null;
 };
@@ -54,11 +56,11 @@ const readCachedEngineers = (): PublicEngineer[] => {
   try {
     const raw = window.localStorage.getItem(ENGINEERS_CACHE_KEY);
     if (!raw) return [];
-  const parsed = parseEngineersJson(raw);
-  if (parsed === null) {
-    return [];
-  }
-    return normalizeEngineers(parsed);
+    const cachedPayload = parseEngineersJson(raw);
+    if (cachedPayload === null) {
+      return [];
+    }
+    return normalizeEngineers(cachedPayload);
   } catch {
     return [];
   }
@@ -90,9 +92,19 @@ export const Engineers = {
     }
   },
 };
-export function parseEngineersJson(raw: string): unknown | null {
+/**
+ * Contract:
+ * - Precondition: raw is a JSON string from browser storage or another text source.
+ * - Postcondition: returns the parsed JSON value for valid JSON, or null for malformed JSON.
+ * - Invariant: parsing is side-effect free and never mutates engineer cache state.
+ */
+export function parseEngineersJson(raw: string): JsonValue {
+  if (typeof raw !== 'string') {
+    throw new TypeError('parseEngineersJson precondition failed: raw must be a string');
+  }
+
   try {
-    return JSON.parse(raw) as unknown;
+    return JSON.parse(raw) as JsonValue;
   } catch {
     return null;
   }
