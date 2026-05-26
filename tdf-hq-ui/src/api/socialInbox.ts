@@ -159,11 +159,11 @@ export const SocialInboxAPI = {
   askOperatorQuestion: async (payload: OperatorQuestionRequest) => {
     const operatorSenderId = payload.senderId.trim();
     const inboundMessage = payload.inboundMessage.trim();
-    const holdReason = payload.holdReason.trim();
+    const operatorHoldReason = payload.holdReason.trim();
     const operatorNeededInfo = payload.neededInfo.trim();
     if (!operatorSenderId) throw new Error('Remitente inválido.');
     if (!inboundMessage) throw new Error('Mensaje entrante vacío.');
-    if (!holdReason) throw new Error('Motivo de consulta vacío.');
+    if (!operatorHoldReason) throw new Error('Motivo de consulta vacío.');
     if (!operatorNeededInfo) throw new Error('Pregunta para Diego vacía.');
 
     const operatorQuestionResult = await post<ReplyStatusResponse>('/whatsapp/operator-question', {
@@ -171,7 +171,7 @@ export const SocialInboxAPI = {
       senderId: operatorSenderId,
       ...(payload.externalId?.trim() ? { externalId: payload.externalId.trim() } : {}),
       inboundMessage,
-      holdReason,
+      holdReason: operatorHoldReason,
       neededInfo: operatorNeededInfo,
     });
 
