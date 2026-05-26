@@ -56,11 +56,13 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 
 ### Testing Guides
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures (26 test cases)
+- **[FORMAL_VERIFICATION.md](FORMAL_VERIFICATION.md)** - Invariants, model checks, property tests, and formal audit gate
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md#suggested-workflow)** - Quality gates workflow
 - **[DEVELOPMENT.md](DEVELOPMENT.md#testing)** - Running tests
 
 ### Quality Assurance
 - Run `npm run quality` - Consolidated quality gate (lint + typecheck + backend tests)
+- Run `npm run verify:formal` - Formal verification gate (model checks + formal audit)
 - Run `npm run lint:ui` - ESLint checks for frontend
 - Run `npm run typecheck:ui` - TypeScript type checking
 - Run `stack test` (from tdf-hq/) - Backend test suite

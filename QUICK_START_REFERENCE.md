@@ -108,6 +108,8 @@ npm run generate:api:mobile   # Mobile
 
 # Quality checks
 npm run quality               # Lint + typecheck + test
+npm run verify:formal         # Model checks + formal audit
+npm run audit:formal          # Formal audit only
 npm run lint                  # Lint web UI (alias for lint:ui)
 npm run lint:ui              # Lint web UI
 npm run typecheck             # TypeScript check web UI (alias for typecheck:ui)

@@ -366,6 +366,8 @@ function auditHaskellFormal(source, filePath) {
   const ioPattern = /\b(openFile|connect|acquire|lock|with)\b/gi;
   for (const match of source.matchAll(ioPattern)) {
     const line = lineNumberAt(source, match.index);
+    const currentLine = lines[line - 1] ?? '';
+    if (/^\s*import\s+/.test(currentLine)) continue;
     const surrounding = lines.slice(Math.max(0, line - 1), line + 3).join('\n');
     if (!/\bbracket\b|\bwith\w+\b|\bfinally\b/.test(surrounding)) {
       findings.push({
