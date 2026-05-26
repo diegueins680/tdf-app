@@ -63,6 +63,8 @@ const normalInboxEmptySubtitle = 'Primer mensaje entrante pendiente.';
 const normalInboxErrorSubtitle = 'No se pudieron cargar los canales del inbox.';
 const META_REPLY_WINDOW_DAYS = 7;
 const META_REPLY_WINDOW_MS = META_REPLY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+// Invariant: Meta reply subcodes are matched as text because failures may arrive as prose or serialized JSON.
+const META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE = ['2', '5', '3', '4', '0', '4', '4'].join('');
 
 const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
@@ -124,6 +126,12 @@ const isMetaReplyWindowExpired = (channel?: SocialChannel, createdAt?: string | 
 const formatBody = (value?: string | null) => {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : '—';
+};
+
+const normalizeInitialReplyDraft = (value?: string | null) => {
+  const trimmed = value?.trim() ?? '';
+  if (/^HOLD:/i.test(trimmed)) return '';
+  return trimmed.replace(/^SEND:\s*/i, '').trim();
 };
 
 const parseJson = (value?: string | null) => {
@@ -317,6 +325,10 @@ interface InboxErrorSummary {
   technical: string;
 }
 
+/**
+ * @precondition value may be null, blank text, plain provider text, or serialized provider JSON.
+ * @postcondition blank input returns null; known Meta subcodes return specific remediation before generic fallbacks.
+ */
 const summarizeReplyError = (value: string | null | undefined, reviewMode: boolean): ReplyErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
@@ -358,6 +370,21 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
+  if (
+    lower.includes("doesn't have human agent tag") ||
+    lower.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+  ) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: app lacks Human Agent Tag access for Instagram messaging.'
+        : 'Envío bloqueado: la app no tiene acceso a Human Agent Tag para mensajería de Instagram.',
+      guidance: reviewMode
+        ? 'Enable Human Agent Tag in Meta App Settings > Instagram Settings, then reconnect the Instagram asset.'
+        : 'Activa Human Agent Tag en Configuración de la App de Meta > Instagram Settings y reconecta el asset de Instagram.',
+      technical,
+    };
+  }
+
   if (lower.includes('application does not have the capability to make this api call') || lower.includes('"code":3')) {
     return {
       headline: reviewMode
@@ -377,6 +404,22 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
       : 'Revisa credenciales del canal, asset seleccionado y permisos del proveedor.',
     technical,
   };
+};
+
+const replyErrorBlocksAppSend = (value: string | null | undefined) => {
+  const lower = value?.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!lower) return false;
+  return (
+    (lower.includes('instagram_manage_messages') && lower.includes('advanced access'))
+    || lower.includes('recipient user does not have role on app')
+    || lower.includes('2534048')
+    || lower.includes('outside of allowed window')
+    || lower.includes('2534022')
+    || lower.includes("doesn't have human agent tag")
+    || lower.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+    || lower.includes('application does not have the capability to make this api call')
+    || lower.includes('"code":3')
+  );
 };
 
 const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: boolean): InboxErrorSummary | null => {
@@ -453,6 +496,12 @@ const copyText = async (value: string) => {
   }
 };
 
+const compactNoticeText = (value: string, maxChars = 160) => {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, maxChars - 1)}…`;
+};
+
 interface SelectedMessage {
   channel: SocialChannel;
   message: SocialMessage;
@@ -491,7 +540,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   useEffect(() => {
     if (!open || !msg) return;
     setHint('');
-    setReplyDraft(msg.repliedAt ? '' : (msg.replyText ?? '').trim());
+    setReplyDraft(msg.repliedAt ? '' : normalizeInitialReplyDraft(msg.replyText));
     setAiLoading(false);
     setSendLoading(false);
     setError(null);
@@ -520,7 +569,14 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const showAiDraftControls = showBody && !hasDeliveredReply;
   const replyWindowExpired = isMetaReplyWindowExpired(channel, msg?.createdAt);
   const canGenerate = Boolean(channel && msg && showAiDraftControls && !replyWindowExpired && !aiLoading && !sendLoading);
-  const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !replyWindowExpired && !sendLoading);
+  const canSend = Boolean(
+    channel
+      && msg
+      && replyDraft.trim().length > 0
+      && !replyWindowExpired
+      && !replyErrorBlocksAppSend(replyErrorValue)
+      && !sendLoading,
+  );
   const hasReplyDraft = replyDraft.trim().length > 0;
   const showReplyComposer = !hasDeliveredReply || showFollowUpComposer || hasReplyDraft || sendLoading;
   const showFollowUpPrompt = hasDeliveredReply && !showReplyComposer;
@@ -564,7 +620,24 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     setNotice(null);
     try {
       const suggestion = await SocialInboxAPI.suggestReply(channel, rawBody, hint);
-      setReplyDraft(suggestion);
+      if (suggestion.kind === 'hold') {
+        await SocialInboxAPI.askOperatorQuestion({
+          channel,
+          senderId: msg.senderId,
+          externalId: msg.externalId,
+          inboundMessage: rawBody,
+          holdReason: suggestion.reason,
+          neededInfo: suggestion.neededInfo,
+        });
+        setReplyDraft('');
+        setNotice(
+          reviewMode
+            ? `Asked Diego on WhatsApp: ${compactNoticeText(suggestion.neededInfo)}`
+            : `Le escribí a Diego por WhatsApp: ${compactNoticeText(suggestion.neededInfo)}`,
+        );
+        return;
+      }
+      setReplyDraft(suggestion.text);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar una respuesta.');
     } finally {

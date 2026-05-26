@@ -22,10 +22,27 @@ const sendReplyMock = jest.fn<
     payload: { senderId: string; message: string; externalId?: string },
   ) => Promise<{ status?: string; message?: string; response?: unknown }>
 >();
+const suggestReplyMock = jest.fn<
+  (channel: SocialChannel, message: string, hint?: string) => Promise<
+    | { kind: 'send'; text: string }
+    | { kind: 'hold'; reason: string; neededInfo: string; raw: string }
+  >
+>();
+const askOperatorQuestionMock = jest.fn<
+  (payload: {
+    channel: SocialChannel;
+    senderId: string;
+    externalId?: string;
+    inboundMessage: string;
+    holdReason: string;
+    neededInfo: string;
+  }) => Promise<{ status?: string; message?: string; response?: unknown }>
+>();
 const getInstagramOAuthProviderMock = jest.fn<() => 'facebook' | 'instagram'>();
 const getInstagramRequestedScopesMock = jest.fn<() => string[]>();
 const getMetaReviewAssetSelectionMock = jest.fn<() => MetaReviewAssetSelection | null>();
 const getStoredInstagramResultMock = jest.fn<() => InstagramOAuthExchangeResponse | null>();
+const META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE = ['2', '5', '3', '4', '0', '4', '4'].join('');
 
 jest.unstable_mockModule('../api/socialInbox', () => ({
   SocialInboxAPI: {
@@ -39,7 +56,16 @@ jest.unstable_mockModule('../api/socialInbox', () => ({
       channel: SocialChannel,
       payload: { senderId: string; message: string; externalId?: string },
     ) => sendReplyMock(channel, payload),
-    suggestReply: jest.fn(() => Promise.resolve('Reply drafted by AI.')),
+    suggestReply: (channel: SocialChannel, message: string, hint?: string) =>
+      suggestReplyMock(channel, message, hint),
+    askOperatorQuestion: (payload: {
+      channel: SocialChannel;
+      senderId: string;
+      externalId?: string;
+      inboundMessage: string;
+      holdReason: string;
+      neededInfo: string;
+    }) => askOperatorQuestionMock(payload),
   },
 }));
 
@@ -253,6 +279,8 @@ describe('SocialInboxPage', () => {
     listFacebookMessagesMock.mockReset();
     listWhatsAppMessagesMock.mockReset();
     sendReplyMock.mockReset();
+    suggestReplyMock.mockReset();
+    askOperatorQuestionMock.mockReset();
     getInstagramOAuthProviderMock.mockReset();
     getInstagramRequestedScopesMock.mockReset();
     getMetaReviewAssetSelectionMock.mockReset();
@@ -262,6 +290,8 @@ describe('SocialInboxPage', () => {
     listFacebookMessagesMock.mockResolvedValue([]);
     listWhatsAppMessagesMock.mockResolvedValue([]);
     sendReplyMock.mockResolvedValue({ status: 'ok' });
+    suggestReplyMock.mockResolvedValue({ kind: 'send', text: 'Reply drafted by AI.' });
+    askOperatorQuestionMock.mockResolvedValue({ status: 'ok' });
     getInstagramOAuthProviderMock.mockReturnValue('facebook');
     getInstagramRequestedScopesMock.mockReturnValue([
       'instagram_basic',
@@ -904,6 +934,76 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('asks Diego on WhatsApp instead of placing HOLD/NEED text into the customer reply draft', async () => {
+    suggestReplyMock.mockResolvedValueOnce({
+      kind: 'hold',
+      reason: 'No sé a qué anuncio específico se refiere.',
+      neededInfo: 'Tema del anuncio que vio.',
+      raw: 'HOLD: No sé a qué anuncio específico se refiere.\nNEED: Tema del anuncio que vio.',
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({ text: '¿Puedes contarme algo más sobre tu anuncio?' }),
+    }, false);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countButtonsByText(document.body, 'Generar con IA')).toBe(1);
+      });
+
+      await act(async () => {
+        getButtonByText(document.body, 'Generar con IA').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(suggestReplyMock).toHaveBeenCalledWith(
+          'instagram',
+          '¿Puedes contarme algo más sobre tu anuncio?',
+          '',
+        );
+        expect(askOperatorQuestionMock).toHaveBeenCalledWith({
+          channel: 'instagram',
+          senderId: 'sender-1',
+          externalId: 'msg-1',
+          inboundMessage: '¿Puedes contarme algo más sobre tu anuncio?',
+          holdReason: 'No sé a qué anuncio específico se refiere.',
+          neededInfo: 'Tema del anuncio que vio.',
+        });
+        expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('');
+        expect(sendReplyMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain('Le escribí a Diego por WhatsApp: Tema del anuncio que vio.');
+        expect(document.body.textContent).not.toContain('HOLD:');
+        expect(document.body.textContent).not.toContain('NEED:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not preload stored HOLD/NEED text as a resendable customer reply', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: 'HOLD: Falta contexto\nNEED: Tema del anuncio',
+        replyError: 'Previous AI hold.',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('');
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+      expect(document.body.textContent).not.toContain('HOLD: Falta contexto');
+    });
+
+    await cleanup();
+  });
+
   it('prioritizes expired Meta reply-window errors over capability fallbacks', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -928,6 +1028,31 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
       expect(countInteractiveElementsByText(document.body, 'Abrir inbox')).toBe(1);
       expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('prioritizes missing Meta Human Agent Tag subcode over capability fallbacks', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: 'Cuesta $15 la hora.',
+        replyError:
+          `Send failed via connected asset token: HTTP 400 {"error":{"message":"(#3) Application does not have the capability to make this API call.","code":3,"error_subcode":${META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE}}}`,
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Envío bloqueado: la app no tiene acceso a Human Agent Tag para mensajería de Instagram.',
+      );
+      expect(document.body.textContent).toContain(
+        'Activa Human Agent Tag en Configuración de la App de Meta > Instagram Settings y reconecta el asset de Instagram.',
+      );
+      expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
     });
 
     await cleanup();

@@ -8,7 +8,7 @@ jest.unstable_mockModule('./client', () => ({
   post: postMock,
 }));
 
-const { SocialInboxAPI } = await import('./socialInbox');
+const { SocialInboxAPI, parseReplySuggestion } = await import('./socialInbox');
 
 describe('SocialInboxAPI.sendReply', () => {
   beforeEach(() => {
@@ -61,5 +61,55 @@ describe('SocialInboxAPI.sendReply', () => {
     await expect(
       SocialInboxAPI.sendReply('facebook', { senderId: 'sender-1', message: 'Hola' }),
     ).rejects.toThrow('No autorizado.');
+  });
+
+  it('parses SEND/HOLD model replies before the inbox uses them', () => {
+    expect(parseReplySuggestion('SEND: Hola Diego')).toEqual({
+      kind: 'send',
+      text: 'Hola Diego',
+    });
+    expect(parseReplySuggestion('HOLD: Falta contexto\nNEED: Tema del anuncio')).toEqual({
+      kind: 'hold',
+      reason: 'Falta contexto',
+      neededInfo: 'Tema del anuncio',
+      raw: 'HOLD: Falta contexto\nNEED: Tema del anuncio',
+    });
+    expect(parseReplySuggestion('Gracias por escribirnos.')).toEqual({
+      kind: 'send',
+      text: 'Gracias por escribirnos.',
+    });
+  });
+
+  it('serializes operator WhatsApp questions and surfaces provider failures', async () => {
+    postMock.mockResolvedValueOnce({ status: 'ok' });
+
+    await SocialInboxAPI.askOperatorQuestion({
+      channel: 'instagram',
+      senderId: ' sender-1 ',
+      externalId: ' msg-1 ',
+      inboundMessage: ' ¿Puedes contarme algo más? ',
+      holdReason: ' Falta contexto ',
+      neededInfo: ' Tema del anuncio ',
+    });
+
+    expect(postMock).toHaveBeenCalledWith('/whatsapp/operator-question', {
+      channel: 'instagram',
+      senderId: 'sender-1',
+      externalId: 'msg-1',
+      inboundMessage: '¿Puedes contarme algo más?',
+      holdReason: 'Falta contexto',
+      neededInfo: 'Tema del anuncio',
+    });
+
+    postMock.mockResolvedValueOnce({ status: 'error', message: 'WhatsApp no configurado.' });
+    await expect(
+      SocialInboxAPI.askOperatorQuestion({
+        channel: 'instagram',
+        senderId: 'sender-1',
+        inboundMessage: 'Hola',
+        holdReason: 'Falta contexto',
+        neededInfo: 'Tema del anuncio',
+      }),
+    ).rejects.toThrow('WhatsApp no configurado.');
   });
 });

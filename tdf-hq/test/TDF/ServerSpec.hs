@@ -10382,11 +10382,11 @@ spec = describe "TDF.Server helpers" $ do
                         "¿Puedes contarme algo más sobre tu anuncio?"
                         "No sé a qué anuncio específico se refiere."
                         "Tema del anuncio que vio."
-            body `shouldContain` "TDF HQ necesita tu criterio"
-            body `shouldContain` "Canal: instagram"
-            body `shouldContain` "Mensaje ID: ig-mid-1"
-            body `shouldContain` "Tema del anuncio que vio."
-            body `shouldContain` "https://tdf-app.pages.dev/social/inbox"
+            body `shouldSatisfy` ("TDF HQ necesita tu criterio" `T.isInfixOf`)
+            body `shouldSatisfy` ("Canal: instagram" `T.isInfixOf`)
+            body `shouldSatisfy` ("Mensaje ID: ig-mid-1" `T.isInfixOf`)
+            body `shouldSatisfy` ("Tema del anuncio que vio." `T.isInfixOf`)
+            body `shouldSatisfy` ("https://tdf-app.pages.dev/social/inbox" `T.isInfixOf`)
             T.length body `shouldSatisfy` (<= 4096)
 
     describe "WhatsApp consent text validation" $ do
