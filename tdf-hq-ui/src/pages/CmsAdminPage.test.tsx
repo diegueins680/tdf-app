@@ -28,6 +28,21 @@ jest.unstable_mockModule('../components/ApiErrorNotice', () => ({
       {helper}
     </div>
   ),
+  ApiLoadingNotice: ({
+    title,
+    message,
+    helper,
+  }: {
+    title?: string;
+    message?: React.ReactNode;
+    helper?: React.ReactNode;
+  }) => (
+    <div role="status" aria-busy="true">
+      {title}
+      {message}
+      {helper}
+    </div>
+  ),
 }));
 
 jest.unstable_mockModule('../components/SessionGate', () => ({

@@ -10,7 +10,6 @@ import {
   Chip,
   Divider,
   Grid,
-  LinearProgress,
   MenuItem,
   Paper,
   Dialog,
@@ -23,7 +22,7 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'react-router-dom';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
-import ApiErrorNotice from '../components/ApiErrorNotice';
+import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
 import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
@@ -1011,7 +1010,12 @@ export default function CmsAdminPage() {
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Typography variant="subtitle1" fontWeight={700}>Contenido en vivo</Typography>
                     </Stack>
-                    {liveQuery.isLoading && <LinearProgress />}
+                    {liveQuery.isLoading && (
+                      <ApiLoadingNotice
+                        title="Cargando contenido publicado"
+                        message="Consultando la versión en vivo antes de mostrar la vista previa."
+                      />
+                    )}
                     {liveQuery.isError && (
                       <ApiErrorNotice
                         error={liveQuery.error}
@@ -1290,17 +1294,22 @@ export default function CmsAdminPage() {
               </Stack>
             )}
           </Stack>
-          {listQuery.isLoading && <LinearProgress />}
-                  {listQuery.error && (
-                    <ApiErrorNotice
-                      error={listQuery.error}
-                      title="No pudimos cargar la lista de versiones"
-                      onRetry={() => {
-                        void listQuery.refetch();
-                      }}
-                      showCorsHint
-                    />
-                  )}
+          {listQuery.isLoading && (
+            <ApiLoadingNotice
+              title="Cargando versiones guardadas"
+              message="Buscando el historial de este slug e idioma."
+            />
+          )}
+          {listQuery.error && (
+            <ApiErrorNotice
+              error={listQuery.error}
+              title="No pudimos cargar la lista de versiones"
+              onRetry={() => {
+                void listQuery.refetch();
+              }}
+              showCorsHint
+            />
+          )}
           {listDataInvalid && (
             <Alert severity="warning">
               Respuesta inesperada del servidor. Revisa las credenciales o intenta de nuevo.
