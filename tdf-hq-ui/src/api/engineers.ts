@@ -54,7 +54,10 @@ const readCachedEngineers = (): PublicEngineer[] => {
   try {
     const raw = window.localStorage.getItem(ENGINEERS_CACHE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
+  const parsed = parseEngineersJson(raw);
+  if (parsed === null) {
+    return [];
+  }
     return normalizeEngineers(parsed);
   } catch {
     return [];
@@ -87,3 +90,10 @@ export const Engineers = {
     }
   },
 };
+export function parseEngineersJson(raw: string): unknown | null {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
