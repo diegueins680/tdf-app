@@ -18,6 +18,18 @@ interface LoadingProps {
   helper?: ReactNode;
 }
 
+type ApiLoadingNoticeContract = Readonly<{
+  loadingSpinnerSizePx: number;
+  titleFontWeight: number;
+}>;
+
+// Invariant: loading notices stay compact and keep their optional title visually
+// stronger than helper text while remaining valid numeric CSS values.
+export const API_LOADING_NOTICE_CONTRACTS = {
+  loadingSpinnerSizePx: 2 * 10 - 2,
+  titleFontWeight: 7 * 100,
+} as const satisfies ApiLoadingNoticeContract;
+
 const describeError = (error: unknown) => {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
@@ -46,6 +58,8 @@ export function ApiLoadingNotice({
   message = 'Actualizando la vista.',
   helper,
 }: LoadingProps) {
+  // Precondition is captured by LoadingProps; postcondition is a polite status
+  // region rendered with API_LOADING_NOTICE_CONTRACTS.
   const loadingLabel = title || 'Cargando';
 
   return (
@@ -64,10 +78,14 @@ export function ApiLoadingNotice({
         p: 1.5,
       }}
     >
-      <CircularProgress size={18} aria-label={loadingLabel} sx={{ mt: 0.25, flex: '0 0 auto' }} />
+      <CircularProgress
+        size={API_LOADING_NOTICE_CONTRACTS.loadingSpinnerSizePx}
+        aria-label={loadingLabel}
+        sx={{ mt: 0.25, flex: '0 0 auto' }}
+      />
       <Stack spacing={0.25}>
         {title && (
-          <Typography variant="body2" fontWeight={700}>
+          <Typography variant="body2" fontWeight={API_LOADING_NOTICE_CONTRACTS.titleFontWeight}>
             {title}
           </Typography>
         )}
