@@ -196,6 +196,9 @@ restart_count=0
 stale_restart_count=0
 child_pid=""
 child_started_epoch=0
+last_error_signature=""
+last_error_time=0
+error_repeat_count=0
 
 json_update "starting" "startup" "Supervisor booting" "" "" "$restart_count" "$stale_restart_count"
 log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG"
@@ -336,6 +339,40 @@ while true; do
     child_pid=""
     child_started_epoch=0
     restart_count=$((restart_count + 1))
+
+    # Crash-loop detection: if same error signature repeats >3 times in 10 min, block
+    now_epoch="$(date +%s)"
+    error_sig="exit:${exit_code}"
+    if [ "$error_sig" = "$last_error_signature" ] && [ $((now_epoch - last_error_time)) -le 600 ]; then
+      error_repeat_count=$((error_repeat_count + 1))
+    else
+      error_repeat_count=1
+      last_error_signature="$error_sig"
+    fi
+    last_error_time="$now_epoch"
+
+    if [ "$error_repeat_count" -gt 3 ]; then
+      repair_file="$STATE_DIR/repair-needed.md"
+      cat > "$repair_file" <<REPAIR
+# CIL Supervisor Repair Needed
+
+**Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Reason:** Child exited with the same error signature ${error_repeat_count} times within 10 minutes.
+**Last exit code:** ${exit_code}
+**Restart count:** ${restart_count}
+**Suggested action:** Inspect the child log at ${LOG_FILE} and resolve the root cause before resuming.
+REPAIR
+      json_update "blocked" "crash-loop-detected" "Child crashed ${error_repeat_count} times with same error; repair artifact written to ${repair_file}" "" "$exit_code" "$restart_count" "$stale_restart_count"
+      log "CRASH-LOOP BLOCKED: child exited ${error_repeat_count} times with ${error_sig}; repair artifact at ${repair_file}"
+      # Stay in blocked state until operator removes repair file or restarts supervisor
+      while [ -f "$repair_file" ]; do
+        sleep "$POLL_INTERVAL_SECONDS"
+      done
+      log "crash-loop repair artifact removed; resuming"
+      error_repeat_count=0
+      last_error_signature=""
+    fi
+
     json_update "restarting" "child-exited" "Loop child exited; restarting after delay" "" "$exit_code" "$restart_count" "$stale_restart_count"
     log "child exited code=$exit_code; restarting in ${RESTART_DELAY_SECONDS}s"
     sleep "$RESTART_DELAY_SECONDS"
