@@ -36,6 +36,7 @@ import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { setTransientApiToken, useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
@@ -821,8 +822,12 @@ const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
   [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((item) => (
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((item) => (
       <Grid item key={`${item.sortOrder}-${item.title}`} xs={12} md={4}>
         <Card
           sx={{
@@ -907,13 +912,19 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
           </CardContent>
         </Card>
       </Grid>
-    ))}
-  </Grid>
+        ))}
+      </Grid>
+    )}
+  />
 );
 
 const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((release) => {
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((release) => {
       const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
       const releaseMeta = release.duration ?? release.releasedOn;
       return (
@@ -999,13 +1010,19 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
           </Card>
         </Grid>
       );
-    })}
-  </Grid>
+        })}
+      </Grid>
+    )}
+  />
 );
 
 const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((video) => {
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((video) => {
       const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
       return (
         <Grid item xs={12} md={4} key={video.youtubeId}>
@@ -1064,8 +1081,10 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
           </Card>
         </Grid>
       );
-    })}
-  </Grid>
+        })}
+      </Grid>
+    )}
+  />
 );
 
 export default function RecordsPublicPage() {

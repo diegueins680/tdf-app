@@ -15,6 +15,7 @@ import type { DriveFileInfo } from '../services/googleDrive';
 import { uploadToDrive } from '../api/drive';
 import { uploadAssetPhoto } from '../api/inventory';
 import { useGoogleDriveAuth } from '../hooks/useGoogleDriveAuth';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface UploadItem {
   id: string;
@@ -204,85 +205,93 @@ export default function GoogleDriveUploadWidget({
       {error && <Alert severity="error">{error}</Alert>}
       {usesUserAuth && driveError && <Alert severity="warning">{driveError}</Alert>}
 
-      <Stack spacing={1}>
-        {items.map((item) => (
-          <Box
-            key={item.id}
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1.5,
-              p: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ width: 48, height: 48, borderRadius: 1, overflow: 'hidden', bgcolor: 'grey.100' }}>
-              {item.file.type.startsWith('image/') ? (
-                <img
-                  src={URL.createObjectURL(item.file)}
-                  alt={item.file.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
+      {items.length > 0 && (
+        <LazyPaginatedList
+          items={items}
+          pagination={{ itemLabel: 'archivos', initialRowsPerPage: 5 }}
+          renderItems={(visibleItems) => (
+            <Stack spacing={1}>
+              {visibleItems.map((item) => (
                 <Box
+                  key={item.id}
                   sx={{
-                    width: '100%',
-                    height: '100%',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1.5,
+                    p: 1,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: 'grey.200',
-                    color: 'text.secondary',
-                    fontSize: 12,
+                    gap: 1,
                   }}
                 >
-                  File
+                  <Box sx={{ width: 48, height: 48, borderRadius: 1, overflow: 'hidden', bgcolor: 'grey.100' }}>
+                    {item.file.type.startsWith('image/') ? (
+                      <img
+                        src={URL.createObjectURL(item.file)}
+                        alt={item.file.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: 'grey.200',
+                          color: 'text.secondary',
+                          fontSize: 12,
+                        }}
+                      >
+                        File
+                      </Box>
+                    )}
+                  </Box>
+                  <Stack spacing={0.25} flex={1} minWidth={0}>
+                    <Typography variant="body2" noWrap>
+                      {item.file.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {(item.file.size / 1024 / 1024).toFixed(2)} MB
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={item.status === 'error' ? 0 : item.progress}
+                      color={item.status === 'error' ? 'error' : 'primary'}
+                    />
+                    {item.status === 'done' &&
+                      (item.driveFile?.publicUrl ??
+                        item.driveFile?.webContentLink ??
+                        item.driveFile?.webViewLink) && (
+                        <Typography variant="caption" color="text.secondary">
+                          {item.driveFile?.publicUrl ??
+                            item.driveFile?.webContentLink ??
+                            item.driveFile?.webViewLink}
+                        </Typography>
+                      )}
+                    {item.status === 'error' && (
+                      <Typography variant="caption" color="error">
+                        {item.error ?? 'Error al subir'}
+                      </Typography>
+                    )}
+                  </Stack>
+                  {item.status === 'done' && <CheckCircleIcon color="success" fontSize="small" />}
+                  {item.status === 'error' && (
+                    <IconButton
+                      size="small"
+                      onClick={() => setItems((prev) => prev.filter((it) => it.id !== item.id))}
+                      aria-label={`Quitar ${item.file.name} de la lista de cargas`}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </Box>
-              )}
-            </Box>
-            <Stack spacing={0.25} flex={1} minWidth={0}>
-              <Typography variant="body2" noWrap>
-                {item.file.name}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {(item.file.size / 1024 / 1024).toFixed(2)} MB
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={item.status === 'error' ? 0 : item.progress}
-                color={item.status === 'error' ? 'error' : 'primary'}
-              />
-              {item.status === 'done' &&
-                (item.driveFile?.publicUrl ??
-                  item.driveFile?.webContentLink ??
-                  item.driveFile?.webViewLink) && (
-                  <Typography variant="caption" color="text.secondary">
-                    {item.driveFile?.publicUrl ??
-                      item.driveFile?.webContentLink ??
-                      item.driveFile?.webViewLink}
-                  </Typography>
-                )}
-              {item.status === 'error' && (
-                <Typography variant="caption" color="error">
-                  {item.error ?? 'Error al subir'}
-                </Typography>
-              )}
+              ))}
             </Stack>
-            {item.status === 'done' && <CheckCircleIcon color="success" fontSize="small" />}
-            {item.status === 'error' && (
-              <IconButton
-                size="small"
-                onClick={() => setItems((prev) => prev.filter((it) => it.id !== item.id))}
-                aria-label={`Quitar ${item.file.name} de la lista de cargas`}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
-          </Box>
-        ))}
-      </Stack>
+          )}
+        />
+      )}
     </Stack>
   );
 }
