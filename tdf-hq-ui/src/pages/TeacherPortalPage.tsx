@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -149,6 +149,27 @@ const formatDateTime = (iso: string) => {
   });
 };
 
+const focusFirstDialogControl = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  window.setTimeout(() => {
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    const target = dialog?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+
+    target?.focus();
+  }, 0);
+};
+
+const focusActionContext = (target: HTMLElement | null) => {
+  if (typeof window === 'undefined' || !target) return;
+
+  window.setTimeout(() => {
+    target.focus();
+  }, 0);
+};
+
 const TabPill = ({ active, label }: { active: boolean; label: string }) => (
   <Chip
     label={label}
@@ -171,9 +192,20 @@ interface AgendaClassCardProps {
 
 function AgendaClassCard(props: AgendaClassCardProps) {
   const { classSession, markingAttendance, onEdit, onAttend } = props;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const focus = {
+    edit: () => {
+      onEdit(classSession);
+      focusFirstDialogControl();
+    },
+    attend: () => {
+      onAttend(classSession.classSessionId);
+      focusActionContext(cardRef.current);
+    },
+  };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Paper ref={cardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
         <Box>
           <Typography fontWeight={800}>
@@ -188,13 +220,14 @@ function AgendaClassCard(props: AgendaClassCardProps) {
           </Stack>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" onClick={() => onEdit(classSession)}>
+          <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
             Editar
           </Button>
           <Button
+            onClick={focus.attend}
+            tabIndex={0}
             size="small"
             variant="contained"
-            onClick={() => onAttend(classSession.classSessionId)}
             disabled={classSession.status === 'realizada' || markingAttendance}
           >
             Marcar realizada
@@ -246,6 +279,12 @@ interface StudentCardProps {
 
 function StudentCard(props: StudentCardProps) {
   const { student, onEdit } = props;
+  const focus = {
+    edit: () => {
+      onEdit(student);
+      focusFirstDialogControl();
+    },
+  };
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -256,7 +295,7 @@ function StudentCard(props: StudentCardProps) {
             {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
           </Typography>
         </Box>
-        <Button size="small" variant="outlined" onClick={() => onEdit(student)}>
+        <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
           Editar
         </Button>
       </Stack>
@@ -298,9 +337,20 @@ interface AvailabilitySlotCardProps {
 
 function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
   const { slot, deleting, onEdit, onDelete } = props;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const focus = {
+    edit: () => {
+      onEdit(slot);
+      focusFirstDialogControl();
+    },
+    delete: () => {
+      onDelete(slot.availabilityId);
+      focusActionContext(cardRef.current);
+    },
+  };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Paper ref={cardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
         <Box>
           <Typography fontWeight={800}>
@@ -316,14 +366,15 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
           )}
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" onClick={() => onEdit(slot)}>
+          <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
             Editar
           </Button>
           <Button
+            onClick={focus.delete}
+            tabIndex={0}
             size="small"
             variant="outlined"
             color="error"
-            onClick={() => onDelete(slot.availabilityId)}
             disabled={deleting}
           >
             Eliminar

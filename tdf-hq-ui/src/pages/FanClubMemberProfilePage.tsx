@@ -24,12 +24,14 @@ const FAN_CLUB_MEMBER_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 
 type FanClubMemberProfileDisplayContract = Readonly<{
   memberCardAvatarSizePx: number;
+  profileHeaderAvatarSizePx: number;
 }>;
 
-// Invariant: the member avatar remains square and large enough to anchor a
-// compact row without changing the card height independently per axis.
+// Invariant: each avatar context exposes one square size, so width and height
+// cannot drift independently while list and profile layouts remain distinct.
 const FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS = {
   memberCardAvatarSizePx: 7 * 8,
+  profileHeaderAvatarSizePx: 10 * 8,
 } as const satisfies FanClubMemberProfileDisplayContract;
 
 interface MemberEditForm {
@@ -300,7 +302,13 @@ function MemberProfileCard(props: MemberProfileCardProps) {
       <CardContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar src={profile.fcmpAvatarUrl ?? undefined} sx={{ width: 80, height: 80 }} />
+            <Avatar
+              src={profile.fcmpAvatarUrl ?? undefined}
+              sx={{
+                width: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.profileHeaderAvatarSizePx,
+                height: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.profileHeaderAvatarSizePx,
+              }}
+            />
             <Box flexGrow={1}>
               <Typography variant="h5" fontWeight={600}>{profile.fcmpDisplayName}</Typography>
               {profile.fcmpHandle && (
