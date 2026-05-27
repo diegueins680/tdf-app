@@ -66,11 +66,11 @@ export default function LazyPaginatedList<T>({
     }
   }, [maxPage, page]);
 
-  const visibleItems = useMemo(() => {
-    const start = page * rowsPerPage;
-    return deferredItems.slice(start, start + rowsPerPage);
-  }, [deferredItems, page, rowsPerPage]);
   const startIndex = page * rowsPerPage;
+  const visibleItems = useMemo(
+    () => deferredItems.slice(startIndex, startIndex + rowsPerPage),
+    [deferredItems, rowsPerPage, startIndex],
+  );
 
   const showPagination = Boolean(paginationConfig) && totalItems > rowsPerPage;
 
