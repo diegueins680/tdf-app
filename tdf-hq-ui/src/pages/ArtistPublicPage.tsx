@@ -34,6 +34,16 @@ interface ReleaseCardProps {
   release: ArtistReleaseDTO;
 }
 
+type ArtistPublicPageDisplayContract = Readonly<{
+  releaseDescriptionPreviewChars: number;
+}>;
+
+// Invariant: public release cards show a bounded description preview so the
+// card grid remains comparable while preserving the original release content.
+const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
+  releaseDescriptionPreviewChars: 100 + 4 * 10,
+} as const satisfies ArtistPublicPageDisplayContract;
+
 function ReleaseCard({ release }: ReleaseCardProps) {
   const releaseDate = release.arReleaseDate
     ? new Date(release.arReleaseDate).toLocaleDateString('es-EC', {
@@ -42,8 +52,9 @@ function ReleaseCard({ release }: ReleaseCardProps) {
         day: 'numeric',
       })
     : null;
-  const description = release.arDescription && release.arDescription.length > 140
-    ? `${release.arDescription.slice(0, 140)}…`
+  const descriptionMaxLength = ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS.releaseDescriptionPreviewChars;
+  const description = release.arDescription && release.arDescription.length > descriptionMaxLength
+    ? `${release.arDescription.slice(0, descriptionMaxLength)}…`
     : release.arDescription;
 
   return (

@@ -62,6 +62,16 @@ interface DraftByThread {
 
 const SELECTED_THREAD_STORAGE_KEY = 'tdf-chat-selected-thread-v1';
 
+type ChatPageDisplayContract = Readonly<{
+  threadLastMessagePreviewChars: number;
+}>;
+
+// Invariant: thread previews fit one list row and remain shorter than the full
+// message bubble rendered in the active conversation pane.
+const CHAT_PAGE_DISPLAY_CONTRACTS = {
+  threadLastMessagePreviewChars: 8 * 8,
+} as const satisfies ChatPageDisplayContract;
+
 const parsePositiveInt = (raw: string | null | undefined): number | null => {
   const trimmed = raw?.trim() ?? '';
   if (!/^\d+$/.test(trimmed)) return null;
@@ -123,7 +133,9 @@ function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemPr
             </Typography>
           </Stack>
         }
-        secondary={thread.ctLastMessage ? truncate(thread.ctLastMessage, 64) : 'Sin mensajes aún'}
+        secondary={thread.ctLastMessage
+          ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
+          : 'Sin mensajes aún'}
         secondaryTypographyProps={{ noWrap: true }}
       />
     </ListItemButton>

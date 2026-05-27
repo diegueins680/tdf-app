@@ -44,6 +44,18 @@ import { useSession } from '../session/SessionContext';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
 
+type TeacherPortalAgendaContract = Readonly<{
+  upcomingClassNoticeWindowMinutes: number;
+  upcomingClassWarningWindowMinutes: number;
+}>;
+
+// Invariant: the warning window is positive and no wider than the notice
+// window, so every warning also qualifies as an upcoming-class notice.
+const TEACHER_PORTAL_AGENDA_CONTRACTS = {
+  upcomingClassNoticeWindowMinutes: 6 * 10 * 2,
+  upcomingClassWarningWindowMinutes: 3 * 10,
+} as const satisfies TeacherPortalAgendaContract;
+
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
   const d = new Date(iso);
@@ -800,9 +812,12 @@ export default function TeacherPortalPage() {
               )}
             </Stack>
 
-            {agendaStats.nextClass && agendaStats.nextMinutesAway !== null && agendaStats.nextMinutesAway >= 0 && 120 >= agendaStats.nextMinutesAway && (
+            {agendaStats.nextClass
+              && agendaStats.nextMinutesAway !== null
+              && agendaStats.nextMinutesAway >= 0
+              && agendaStats.nextMinutesAway <= TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassNoticeWindowMinutes && (
               <Alert
-                severity={30 >= agendaStats.nextMinutesAway ? 'warning' : 'info'}
+                severity={agendaStats.nextMinutesAway <= TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassWarningWindowMinutes ? 'warning' : 'info'}
                 sx={{ mt: 2 }}
                 action={(
                   <Stack direction="row" spacing={1}>

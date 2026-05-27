@@ -22,6 +22,16 @@ import type { FanClubMemberProfileDTO, FanClubMemoryDTO } from '../api/types';
 
 const FAN_CLUB_MEMBER_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 
+type FanClubMemberProfileDisplayContract = Readonly<{
+  memberCardAvatarSizePx: number;
+}>;
+
+// Invariant: the member avatar remains square and large enough to anchor a
+// compact row without changing the card height independently per axis.
+const FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS = {
+  memberCardAvatarSizePx: 7 * 8,
+} as const satisfies FanClubMemberProfileDisplayContract;
+
 interface MemberCardProps {
   member: FanClubMemberProfileDTO;
   artistId: number;
@@ -43,7 +53,13 @@ function MemberCard({ member, artistId }: MemberCardProps) {
     >
       <CardContent>
         <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar src={member.fcmpAvatarUrl || undefined} sx={{ width: 56, height: 56 }}>
+          <Avatar
+            src={member.fcmpAvatarUrl || undefined}
+            sx={{
+              width: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.memberCardAvatarSizePx,
+              height: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.memberCardAvatarSizePx,
+            }}
+          >
             {member.fcmpDisplayName.charAt(0).toUpperCase()}
           </Avatar>
           <Box flexGrow={1} minWidth={0}>

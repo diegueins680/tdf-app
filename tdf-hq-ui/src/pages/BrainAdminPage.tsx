@@ -44,6 +44,18 @@ const emptyForm: BrainFormState = {
   active: true,
 };
 
+type BrainAdminPageDisplayContract = Readonly<{
+  singleEntryBodyPreviewChars: number;
+  entryListBodyPreviewChars: number;
+}>;
+
+// Invariant: Brain entry previews are bounded by view density; the single-entry
+// view can be more verbose than cards in a multi-entry list.
+const BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS = {
+  singleEntryBodyPreviewChars: 2 * 100 + 2 * 10,
+  entryListBodyPreviewChars: 2 * 100 - 2 * 10,
+} as const satisfies BrainAdminPageDisplayContract;
+
 const formatTimestamp = (value?: string | null) => {
   if (!value) return '-';
   const parsed = new Date(value);
@@ -57,7 +69,10 @@ const parseTags = (raw: string) =>
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-const summarizeEntryBody = (value: string, maxLength = 220) => {
+const summarizeEntryBody = (
+  value: string,
+  maxLength = BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS.singleEntryBodyPreviewChars,
+) => {
   const trimmed = value.trim();
   if (maxLength >= trimmed.length) return trimmed;
   return `${trimmed.slice(0, maxLength)}...`;
@@ -140,7 +155,10 @@ interface BrainEntryCardProps {
 
 function BrainEntryCard(props: BrainEntryCardProps) {
   const { entry, includeInactive, onEdit } = props;
-  const bodyPreview = entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody;
+  const bodyPreviewMaxLength = BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS.entryListBodyPreviewChars;
+  const bodyPreview = entry.bedBody.length > bodyPreviewMaxLength
+    ? `${entry.bedBody.slice(0, bodyPreviewMaxLength)}...`
+    : entry.bedBody;
 
   return (
     <Card variant="outlined">

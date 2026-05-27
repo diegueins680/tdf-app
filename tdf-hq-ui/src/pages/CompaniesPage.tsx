@@ -113,7 +113,7 @@ interface CreateCompanyDialogProps {
 }
 
 function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
-  const qc = useQueryClient();
+  const createCompanyQueryClient = useQueryClient();
   const [displayName, setDisplayName] = useState('');
   const [legalName, setLegalName] = useState('');
   const [email, setEmail] = useState('');
@@ -130,10 +130,10 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
     }
   }, [open]);
 
-  const mutation = useMutation({
+  const createCompanyMutation = useMutation({
     mutationFn: (body: PartyCreate) => Parties.create(body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['parties'] });
+      void createCompanyQueryClient.invalidateQueries({ queryKey: ['parties'] });
       onClose();
     },
     onError: (err) => setError(err.message),
@@ -145,7 +145,7 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
       return;
     }
     setError(null);
-    mutation.mutate({
+    createCompanyMutation.mutate({
       cDisplayName: displayName.trim(),
       cLegalName: legalName.trim() || null,
       cPrimaryEmail: email.trim() || null,
@@ -201,7 +201,7 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
             submitCompany();
           }}
           variant="contained"
-          disabled={mutation.isPending}
+          disabled={createCompanyMutation.isPending}
         >
           Crear
         </Button>
@@ -217,7 +217,7 @@ interface EditCompanyDialogProps {
 }
 
 function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
-  const qc = useQueryClient();
+  const editCompanyQueryClient = useQueryClient();
   const [displayName, setDisplayName] = useState(company?.displayName ?? '');
   const [legalName, setLegalName] = useState(company?.legalName ?? '');
   const [email, setEmail] = useState(company?.primaryEmail ?? '');
@@ -236,13 +236,13 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
     setError(null);
   }, [company, open]);
 
-  const mutation = useMutation({
+  const updateCompanyMutation = useMutation({
     mutationFn: (body: PartyUpdate) => {
       if (!company) return Promise.reject(new Error('Empresa no disponible'));
       return Parties.update(company.partyId, body);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['parties'] });
+      void editCompanyQueryClient.invalidateQueries({ queryKey: ['parties'] });
       onClose();
     },
     onError: (err) => setError(err.message),
@@ -250,7 +250,7 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
 
   const saveCompany = () => {
     if (!company) return;
-    mutation.mutate({
+    updateCompanyMutation.mutate({
       uDisplayName: displayName.trim() || company.displayName,
       uLegalName: legalName.trim() || null,
       uPrimaryEmail: email.trim() || null,
@@ -297,7 +297,7 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
             saveCompany();
           }}
           variant="contained"
-          disabled={mutation.isPending}
+          disabled={updateCompanyMutation.isPending}
         >
           Guardar
         </Button>
