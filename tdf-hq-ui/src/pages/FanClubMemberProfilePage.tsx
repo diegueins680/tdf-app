@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Box, Button, Card, CardContent, Chip, Divider, IconButton, Stack, TextField, Typography,
+  Box, Button, Card, CardContent, Chip, Stack, TextField, Typography,
   Avatar, Grid, ImageList, ImageListItem, Dialog, DialogActions, DialogContent, DialogTitle,
 } from '@mui/material';
 import {
@@ -32,6 +32,12 @@ const FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS = {
   memberCardAvatarSizePx: 7 * 8,
 } as const satisfies FanClubMemberProfileDisplayContract;
 
+interface MemberEditForm {
+  handle: string;
+  bio: string;
+  avatarUrl: string;
+}
+
 interface MemberCardProps {
   member: FanClubMemberProfileDTO;
   artistId: number;
@@ -54,7 +60,7 @@ function MemberCard({ member, artistId }: MemberCardProps) {
       <CardContent>
         <Stack direction="row" spacing={2} alignItems="center">
           <Avatar
-            src={member.fcmpAvatarUrl || undefined}
+            src={member.fcmpAvatarUrl ?? undefined}
             sx={{
               width: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.memberCardAvatarSizePx,
               height: FAN_CLUB_MEMBER_PROFILE_DISPLAY_CONTRACTS.memberCardAvatarSizePx,
@@ -76,6 +82,33 @@ function MemberCard({ member, artistId }: MemberCardProps) {
         </Stack>
       </CardContent>
     </Card>
+  );
+}
+
+interface MemberCardsGridProps {
+  members: FanClubMemberProfileDTO[];
+  artistId: number;
+  loading: boolean;
+}
+
+function MemberCardsGrid(props: MemberCardsGridProps) {
+  const { members, artistId, loading } = props;
+
+  return (
+    <LazyPaginatedList
+      items={members}
+      loading={loading}
+      pagination={{ itemLabel: 'miembros', initialRowsPerPage: FAN_CLUB_MEMBER_INITIAL_ROWS_PER_PAGE }}
+      renderItems={(visibleMembers) => (
+        <Grid container spacing={2}>
+          {visibleMembers.map((member) => (
+            <Grid item xs={12} sm={6} md={4} key={member.fcmpPartyId}>
+              <MemberCard member={member} artistId={artistId} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    />
   );
 }
 
@@ -108,22 +141,267 @@ function MemoryCard({ memory }: { memory: FanClubMemoryDTO }) {
   );
 }
 
+function MemberMemoriesGrid({ memories }: { memories: FanClubMemoryDTO[] }) {
+  return (
+    <LazyPaginatedList
+      items={memories}
+      pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 6 }}
+      renderItems={(visibleMemories) => (
+        <Grid container spacing={2}>
+          {visibleMemories.map(memory => (
+            <Grid item xs={12} md={6} key={memory.fcmId}>
+              <MemoryCard memory={memory} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    />
+  );
+}
+
+interface MemberProfileActionsProps {
+  isOwnProfile: boolean;
+  canMessage: boolean;
+  editing: boolean;
+  onToggleEdit: () => void;
+  onMessage: () => void;
+  onOpenInbox: () => void;
+}
+
+function MemberProfileActions(props: MemberProfileActionsProps) {
+  const { isOwnProfile, canMessage, editing, onToggleEdit, onMessage, onOpenInbox } = props;
+
+  if (isOwnProfile) {
+    return (
+      <Button
+        variant="outlined"
+        startIcon={editing ? <CancelIcon /> : <EditIcon />}
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onToggleEdit();
+        }}
+      >
+        {editing ? 'Cancelar' : 'Editar perfil'}
+      </Button>
+    );
+  }
+
+  if (!canMessage) return null;
+
+  return (
+    <Stack direction="row" spacing={1}>
+      <Button
+        variant="contained"
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onMessage();
+        }}
+      >
+        Enviar mensaje
+      </Button>
+      <Button
+        variant="outlined"
+        startIcon={<MailIcon />}
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onOpenInbox();
+        }}
+      >
+        Escribir al club
+      </Button>
+    </Stack>
+  );
+}
+
+interface MemberProfileEditFormProps {
+  form: MemberEditForm;
+  saving: boolean;
+  onChange: (patch: Partial<MemberEditForm>) => void;
+  onSave: () => void;
+}
+
+function MemberProfileEditForm(props: MemberProfileEditFormProps) {
+  const { form, saving, onChange, onSave } = props;
+
+  return (
+    <Stack spacing={2}>
+      <TextField
+        label="Handle"
+        value={form.handle}
+        onChange={(event) => onChange({ handle: event.target.value })}
+        fullWidth
+        placeholder="@tuhandle"
+      />
+      <TextField
+        label="Bio"
+        value={form.bio}
+        onChange={(event) => onChange({ bio: event.target.value })}
+        multiline
+        rows={3}
+        fullWidth
+      />
+      <TextField
+        label="Avatar URL"
+        value={form.avatarUrl}
+        onChange={(event) => onChange({ avatarUrl: event.target.value })}
+        fullWidth
+        placeholder="https://..."
+      />
+      <Button
+        variant="contained"
+        startIcon={<SaveIcon />}
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onSave();
+        }}
+        disabled={saving}
+      >
+        Guardar
+      </Button>
+    </Stack>
+  );
+}
+
+interface MemberProfileCardProps {
+  profile: FanClubMemberProfileDTO;
+  isOwnProfile: boolean;
+  canMessage: boolean;
+  editing: boolean;
+  editForm: MemberEditForm;
+  saving: boolean;
+  onEditFormChange: (patch: Partial<MemberEditForm>) => void;
+  onToggleEdit: () => void;
+  onSave: () => void;
+  onMessage: () => void;
+  onOpenInbox: () => void;
+}
+
+function MemberProfileCard(props: MemberProfileCardProps) {
+  const {
+    profile,
+    isOwnProfile,
+    canMessage,
+    editing,
+    editForm,
+    saving,
+    onEditFormChange,
+    onToggleEdit,
+    onSave,
+    onMessage,
+    onOpenInbox,
+  } = props;
+
+  return (
+    <Card>
+      <CardContent>
+        <Stack spacing={2}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar src={profile.fcmpAvatarUrl ?? undefined} sx={{ width: 80, height: 80 }} />
+            <Box flexGrow={1}>
+              <Typography variant="h5" fontWeight={600}>{profile.fcmpDisplayName}</Typography>
+              {profile.fcmpHandle && (
+                <Typography variant="subtitle1" color="text.secondary">@{profile.fcmpHandle}</Typography>
+              )}
+              <Chip size="small" label={`Miembro desde ${new Date(profile.fcmpJoinedAt).toLocaleDateString()}`} />
+            </Box>
+            <MemberProfileActions
+              isOwnProfile={isOwnProfile}
+              canMessage={canMessage}
+              editing={editing}
+              onToggleEdit={onToggleEdit}
+              onMessage={onMessage}
+              onOpenInbox={onOpenInbox}
+            />
+          </Stack>
+
+          {editing ? (
+            <MemberProfileEditForm
+              form={editForm}
+              saving={saving}
+              onChange={onEditFormChange}
+              onSave={onSave}
+            />
+          ) : (
+            profile.fcmpBio && <Typography variant="body1">{profile.fcmpBio}</Typography>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface InboxMessageDialogProps {
+  open: boolean;
+  subject: string;
+  body: string;
+  sending: boolean;
+  onClose: () => void;
+  onSubjectChange: (value: string) => void;
+  onBodyChange: (value: string) => void;
+  onSend: () => void;
+}
+
+function InboxMessageDialog(props: InboxMessageDialogProps) {
+  const { open, subject, body, sending, onClose, onSubjectChange, onBodyChange, onSend } = props;
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Escribir al club</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField label="Asunto (opcional)" value={subject} onChange={(event) => onSubjectChange(event.target.value)} fullWidth />
+          <TextField label="Mensaje" value={body} onChange={(event) => onBodyChange(event.target.value)} multiline rows={4} fullWidth required />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onClose();
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button
+          variant="contained"
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onSend();
+          }}
+          disabled={!body.trim() || sending}
+        >
+          Enviar
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export default function FanClubMemberProfilePage() {
   const { artistId, partyId } = useParams<{ artistId: string; partyId: string }>();
-  const artistIdNum = parseInt(artistId || '0', 10);
-  const partyIdNum = parseInt(partyId || '0', 10);
+  const artistIdNum = parseInt(artistId ?? '0', 10);
+  const partyIdNum = parseInt(partyId ?? '0', 10);
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ handle: '', bio: '', avatarUrl: '' });
+  const [editForm, setEditForm] = useState<MemberEditForm>({ handle: '', bio: '', avatarUrl: '' });
   const [inboxOpen, setInboxOpen] = useState(false);
   const [inboxSubject, setInboxSubject] = useState('');
   const [inboxBody, setInboxBody] = useState('');
 
   const sendInboxMessage = useMutation({
-    mutationFn: () => Fans.sendClubInboxMessage(artistIdNum, { fcisReqSubject: inboxSubject || null, fcisReqBody: inboxBody }),
+    mutationFn: () => Fans.sendClubInboxMessage(artistIdNum, {
+      fcisReqSubject: inboxSubject.trim() ? inboxSubject : null,
+      fcisReqBody: inboxBody,
+    }),
     onSuccess: () => {
       setInboxOpen(false);
       setInboxSubject('');
@@ -161,18 +439,44 @@ export default function FanClubMemberProfilePage() {
 
   const updateProfile = useMutation({
     mutationFn: () => Fans.updateMyClubMemberProfile(artistIdNum, {
-      fcmpuHandle: editForm.handle || null,
-      fcmpuBio: editForm.bio || null,
-      fcmpuAvatarUrl: editForm.avatarUrl || null,
+      fcmpuHandle: editForm.handle.trim() ? editForm.handle : null,
+      fcmpuBio: editForm.bio.trim() ? editForm.bio : null,
+      fcmpuAvatarUrl: editForm.avatarUrl.trim() ? editForm.avatarUrl : null,
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-member-profiles', artistIdNum] });
-      qc.invalidateQueries({ queryKey: ['fan-club-my-member-profile', artistIdNum] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-member-profiles', artistIdNum] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-my-member-profile', artistIdNum] });
       setEditing(false);
     },
   });
 
   const memberMemories = memoriesQuery.data?.filter(m => m.fcmMemberProfileId === profile?.fcmpId && !m.fcmIsHidden && !m.fcmIsDeleted) ?? [];
+
+  const toggleEditing = () => {
+    if (editing) {
+      setEditing(false);
+      return;
+    }
+
+    setEditForm({
+      handle: myProfile?.fcmpHandle ?? '',
+      bio: myProfile?.fcmpBio ?? '',
+      avatarUrl: myProfile?.fcmpAvatarUrl ?? '',
+    });
+    setEditing(true);
+  };
+
+  const openDirectMessage = () => {
+    if (!profile) return;
+
+    ChatAPI.getOrCreateDmThread(profile.fcmpPartyId)
+      .then(() => {
+        navigate('/chat');
+      })
+      .catch(() => {
+        // ignore errors
+      });
+  };
 
   if (clubQuery.isLoading || profilesQuery.isLoading) {
     return <SkeletonCards count={3} />;
@@ -213,20 +517,7 @@ export default function FanClubMemberProfilePage() {
               description="Aún no hay miembros en este club de fans."
             />
           ) : (
-            <LazyPaginatedList
-              items={profilesQuery.data}
-              loading={profilesQuery.isFetching}
-              pagination={{ itemLabel: 'miembros', initialRowsPerPage: FAN_CLUB_MEMBER_INITIAL_ROWS_PER_PAGE }}
-              renderItems={(visibleMembers) => (
-                <Grid container spacing={2}>
-                  {visibleMembers.map((member) => (
-                    <Grid item xs={12} sm={6} md={4} key={member.fcmpPartyId}>
-                      <MemberCard member={member} artistId={artistIdNum} />
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            />
+            <MemberCardsGrid members={profilesQuery.data} artistId={artistIdNum} loading={profilesQuery.isFetching} />
           )}
         </Stack>
       </PageShell>
@@ -246,7 +537,7 @@ export default function FanClubMemberProfilePage() {
   return (
     <PageShell
       title={profile.fcmpDisplayName}
-      subtitle={profile.fcmpHandle || `@miembro-${profile.fcmpPartyId}`}
+      subtitle={profile.fcmpHandle ?? `@miembro-${profile.fcmpPartyId}`}
       loading={false}
     >
       <Stack spacing={3}>
@@ -259,120 +550,19 @@ export default function FanClubMemberProfilePage() {
           Volver al club
         </Button>
 
-        <Card>
-          <CardContent>
-            <Stack spacing={2}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar src={profile.fcmpAvatarUrl || undefined} sx={{ width: 80, height: 80 }} />
-                <Box flexGrow={1}>
-                  <Typography variant="h5" fontWeight={600}>{profile.fcmpDisplayName}</Typography>
-                  {profile.fcmpHandle && (
-                    <Typography variant="subtitle1" color="text.secondary">@{profile.fcmpHandle}</Typography>
-                  )}
-                  <Chip size="small" label={`Miembro desde ${new Date(profile.fcmpJoinedAt).toLocaleDateString()}`} />
-                </Box>
-                {isMe && (
-                  <Button
-                    variant="outlined"
-                    startIcon={editing ? <CancelIcon /> : <EditIcon />}
-                    tabIndex={0}
-                    onClick={(event) => {
-                      event.currentTarget.focus();
-                      if (editing) {
-                        setEditing(false);
-                      } else {
-                        setEditForm({
-                          handle: myProfile?.fcmpHandle || '',
-                          bio: myProfile?.fcmpBio || '',
-                          avatarUrl: myProfile?.fcmpAvatarUrl || '',
-                        });
-                        setEditing(true);
-                      }
-                    }}
-                  >
-                    {editing ? 'Cancelar' : 'Editar perfil'}
-                  </Button>
-                )}
-                {!isMe && session && (
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="contained"
-                      tabIndex={0}
-                      onClick={(event) => {
-                        event.currentTarget.focus();
-                        ChatAPI.getOrCreateDmThread(profile.fcmpPartyId)
-                          .then(() => {
-                            navigate('/chat');
-                          })
-                          .catch(() => {
-                            // ignore errors
-                          });
-                      }}
-                    >
-                      Enviar mensaje
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<MailIcon />}
-                      tabIndex={0}
-                      onClick={(event) => {
-                        event.currentTarget.focus();
-                        setInboxOpen(true);
-                      }}
-                    >
-                      Escribir al club
-                    </Button>
-                  </Stack>
-                )}
-              </Stack>
-
-              {editing ? (
-                <Stack spacing={2}>
-                  <TextField
-                    label="Handle"
-                    value={editForm.handle}
-                    onChange={e => setEditForm(f => ({ ...f, handle: e.target.value }))}
-                    fullWidth
-                    placeholder="@tuhandle"
-                  />
-                  <TextField
-                    label="Bio"
-                    value={editForm.bio}
-                    onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))}
-                    multiline
-                    rows={3}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Avatar URL"
-                    value={editForm.avatarUrl}
-                    onChange={e => setEditForm(f => ({ ...f, avatarUrl: e.target.value }))}
-                    fullWidth
-                    placeholder="https://..."
-                  />
-                  <Button
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    tabIndex={0}
-                    onClick={(event) => {
-                      event.currentTarget.focus();
-                      updateProfile.mutate();
-                    }}
-                    disabled={updateProfile.isPending}
-                  >
-                    Guardar
-                  </Button>
-                </Stack>
-              ) : (
-                <>
-                  {profile.fcmpBio && (
-                    <Typography variant="body1">{profile.fcmpBio}</Typography>
-                  )}
-                </>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
+        <MemberProfileCard
+          profile={profile}
+          isOwnProfile={isMe}
+          canMessage={Boolean(!isMe && session)}
+          editing={editing}
+          editForm={editForm}
+          saving={updateProfile.isPending}
+          onEditFormChange={(patch) => setEditForm((form) => ({ ...form, ...patch }))}
+          onToggleEdit={toggleEditing}
+          onSave={() => updateProfile.mutate()}
+          onMessage={openDirectMessage}
+          onOpenInbox={() => setInboxOpen(true)}
+        />
 
         <Typography variant="h6" fontWeight={600}>Recuerdos</Typography>
         {memberMemories.length === 0 ? (
@@ -382,52 +572,19 @@ export default function FanClubMemberProfilePage() {
             description="Este miembro aún no ha compartido recuerdos."
           />
         ) : (
-          <LazyPaginatedList
-            items={memberMemories}
-            pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 6 }}
-            renderItems={(visibleMemories) => (
-              <Grid container spacing={2}>
-                {visibleMemories.map(memory => (
-                  <Grid item xs={12} md={6} key={memory.fcmId}>
-                    <MemoryCard memory={memory} />
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          />
+          <MemberMemoriesGrid memories={memberMemories} />
         )}
 
-        <Dialog open={inboxOpen} onClose={() => setInboxOpen(false)} fullWidth maxWidth="sm">
-          <DialogTitle>Escribir al club</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField label="Asunto (opcional)" value={inboxSubject} onChange={e => setInboxSubject(e.target.value)} fullWidth />
-              <TextField label="Mensaje" value={inboxBody} onChange={e => setInboxBody(e.target.value)} multiline rows={4} fullWidth required />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              tabIndex={0}
-              onClick={(event) => {
-                event.currentTarget.focus();
-                setInboxOpen(false);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="contained"
-              tabIndex={0}
-              onClick={(event) => {
-                event.currentTarget.focus();
-                sendInboxMessage.mutate();
-              }}
-              disabled={!inboxBody.trim() || sendInboxMessage.isPending}
-            >
-              Enviar
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <InboxMessageDialog
+          open={inboxOpen}
+          subject={inboxSubject}
+          body={inboxBody}
+          sending={sendInboxMessage.isPending}
+          onClose={() => setInboxOpen(false)}
+          onSubjectChange={setInboxSubject}
+          onBodyChange={setInboxBody}
+          onSend={() => sendInboxMessage.mutate()}
+        />
       </Stack>
     </PageShell>
   );

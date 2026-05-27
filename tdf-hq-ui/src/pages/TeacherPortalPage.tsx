@@ -1,4 +1,4 @@
-import { createElement, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -43,18 +43,41 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
+type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
 
-type TeacherPortalAgendaContract = Readonly<{
+interface TeacherPortalAgendaContract {
   upcomingClassNoticeWindowMinutes: number;
   upcomingClassWarningWindowMinutes: number;
-}>;
+}
 
-// Invariant: the warning window is positive and no wider than the notice
-// window, so every warning also qualifies as an upcoming-class notice.
-const TEACHER_PORTAL_AGENDA_CONTRACTS = {
+/**
+ * Type contract for agenda alert windows.
+ *
+ * @precondition values are finite positive minute durations.
+ * @invariant the warning window is no wider than the notice window, so warning alerts are a subset of upcoming-session alerts.
+ * @postcondition rendered agenda alerts use warning severity inside the warning window and info severity for the remaining notice window.
+ */
+function ensureTeacherPortalAgendaContract(contract: TeacherPortalAgendaContract): TeacherPortalAgendaContract {
+  const noticeMinutes = contract.upcomingClassNoticeWindowMinutes;
+  const warningMinutes = contract.upcomingClassWarningWindowMinutes;
+
+  if (!Number.isFinite(noticeMinutes) || !Number.isFinite(warningMinutes)) {
+    throw new Error('Teacher portal agenda contract precondition failed: windows must be finite minutes.');
+  }
+  if (0 >= noticeMinutes || 0 >= warningMinutes) {
+    throw new Error('Teacher portal agenda contract precondition failed: windows must be positive.');
+  }
+  if (warningMinutes > noticeMinutes) {
+    throw new Error('Teacher portal agenda contract invariant failed: warning window must not exceed notice window.');
+  }
+
+  return contract;
+}
+
+const TEACHER_PORTAL_AGENDA_CONTRACTS = ensureTeacherPortalAgendaContract({
   upcomingClassNoticeWindowMinutes: 6 * 10 * 2,
   upcomingClassWarningWindowMinutes: 3 * 10,
-} as const satisfies TeacherPortalAgendaContract;
+} as const satisfies TeacherPortalAgendaContract);
 
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
@@ -139,6 +162,206 @@ const TabPill = ({ active, label }: { active: boolean; label: string }) => (
   />
 );
 
+interface AgendaClassCardProps {
+  classSession: ClassSessionDTO;
+  markingAttendance: boolean;
+  onEdit: (classSession: ClassSessionDTO) => void;
+  onAttend: (classSessionId: number) => void;
+}
+
+function AgendaClassCard(props: AgendaClassCardProps) {
+  const { classSession, markingAttendance, onEdit, onAttend } = props;
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>
+            {classSession.subjectName ?? `Materia #${classSession.subjectId}`} · {classSession.studentName ?? `Alumno #${classSession.studentId}`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatDateTime(classSession.startAt)} → {formatDateTime(classSession.endAt)} · {classSession.roomName ?? classSession.roomId ?? 'Sala'}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+            <Chip size="small" label={classSession.status} variant="outlined" />
+            {classSession.notes && <Chip size="small" label="Notas" variant="outlined" />}
+          </Stack>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button size="small" variant="outlined" onClick={() => onEdit(classSession)}>
+            Editar
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => onAttend(classSession.classSessionId)}
+            disabled={classSession.status === 'realizada' || markingAttendance}
+          >
+            Marcar realizada
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface AgendaClassesListProps {
+  classSessions: ClassSessionDTO[];
+  loading: boolean;
+  resetKey: ScheduleView;
+  markingAttendance: boolean;
+  onEdit: (classSession: ClassSessionDTO) => void;
+  onAttend: (classSessionId: number) => void;
+}
+
+function AgendaClassesList(props: AgendaClassesListProps) {
+  const { classSessions, loading, resetKey, markingAttendance, onEdit, onAttend } = props;
+
+  return (
+    <LazyPaginatedList
+      items={classSessions}
+      loading={loading}
+      pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey }}
+      renderItems={(visibleClasses) => (
+        <Stack spacing={1.5}>
+          {visibleClasses.map((classSession) => (
+            <AgendaClassCard
+              key={classSession.classSessionId}
+              classSession={classSession}
+              markingAttendance={markingAttendance}
+              onEdit={onEdit}
+              onAttend={onAttend}
+            />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface StudentCardProps {
+  student: StudentDTO;
+  onEdit: (student: StudentDTO) => void;
+}
+
+function StudentCard(props: StudentCardProps) {
+  const { student, onEdit } = props;
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>{student.displayName}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
+          </Typography>
+        </Box>
+        <Button size="small" variant="outlined" onClick={() => onEdit(student)}>
+          Editar
+        </Button>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface StudentsListProps {
+  students: StudentDTO[];
+  loading: boolean;
+  onEdit: (student: StudentDTO) => void;
+}
+
+function StudentsList(props: StudentsListProps) {
+  const { students, loading, onEdit } = props;
+
+  return (
+    <LazyPaginatedList
+      items={students}
+      loading={loading}
+      pagination={{ itemLabel: 'alumnos', initialRowsPerPage: 10 }}
+      renderItems={(visibleStudents) => (
+        <Stack spacing={1.5}>
+          {visibleStudents.map((student) => (
+            <StudentCard key={student.studentId} student={student} onEdit={onEdit} />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface AvailabilitySlotCardProps {
+  slot: TrialAvailabilitySlotDTO;
+  deleting: boolean;
+  onEdit: (slot: TrialAvailabilitySlotDTO) => void;
+  onDelete: (availabilityId: number) => void;
+}
+
+function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
+  const { slot, deleting, onEdit, onDelete } = props;
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>
+            {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
+          </Typography>
+          {slot.notes && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {slot.notes}
+            </Typography>
+          )}
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button size="small" variant="outlined" onClick={() => onEdit(slot)}>
+            Editar
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            onClick={() => onDelete(slot.availabilityId)}
+            disabled={deleting}
+          >
+            Eliminar
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface SubjectRoomsSummaryProps {
+  allowedRoomIds: string[];
+  roomNameById: { get(roomId: string): string | undefined };
+}
+
+function SubjectRoomsSummary(props: SubjectRoomsSummaryProps) {
+  const { allowedRoomIds, roomNameById } = props;
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Typography fontWeight={800} sx={{ mb: 1 }}>
+        Salas configuradas
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        Si una materia tiene salas configuradas, solo podrás elegir esas salas al crear disponibilidad o clases.
+      </Typography>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {allowedRoomIds.length === 0 && (
+          <Chip size="small" label="Sin restricciones" variant="outlined" />
+        )}
+        {allowedRoomIds.map((roomId) => (
+          <Chip key={roomId} size="small" label={roomNameById.get(roomId) ?? roomId} variant="outlined" />
+        ))}
+      </Stack>
+    </Paper>
+  );
+}
+
 export default function TeacherPortalPage() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -160,7 +383,6 @@ export default function TeacherPortalPage() {
   };
 
   const [tab, setTab] = useState('agenda' as PortalTab);
-  type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
   const [agendaView, setAgendaView] = useState('week' as ScheduleView);
   const [availabilityView, setAvailabilityView] = useState('week' as ScheduleView);
 
@@ -815,9 +1037,9 @@ export default function TeacherPortalPage() {
             {agendaStats.nextClass
               && agendaStats.nextMinutesAway !== null
               && agendaStats.nextMinutesAway >= 0
-              && agendaStats.nextMinutesAway <= TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassNoticeWindowMinutes && (
+              && TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassNoticeWindowMinutes >= agendaStats.nextMinutesAway && (
               <Alert
-                severity={agendaStats.nextMinutesAway <= TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassWarningWindowMinutes ? 'warning' : 'info'}
+                severity={TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassWarningWindowMinutes >= agendaStats.nextMinutesAway ? 'warning' : 'info'}
                 sx={{ mt: 2 }}
                 action={(
                   <Stack direction="row" spacing={1}>
@@ -881,45 +1103,13 @@ export default function TeacherPortalPage() {
                 </Typography>
               )}
               {agendaClasses.length > 0 && (
-                <LazyPaginatedList
-                  items={agendaClasses}
+                <AgendaClassesList
+                  classSessions={agendaClasses}
                   loading={classesQuery.isFetching}
-                  pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey: agendaView }}
-                  renderItems={(visibleClasses) => (
-                    <Stack spacing={1.5}>
-                      {visibleClasses.map((cls) => (
-                        <Paper key={cls.classSessionId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                            <Box>
-                              <Typography fontWeight={800}>
-                                {cls.subjectName ?? `Materia #${cls.subjectId}`} · {cls.studentName ?? `Alumno #${cls.studentId}`}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {formatDateTime(cls.startAt)} → {formatDateTime(cls.endAt)} · {cls.roomName ?? cls.roomId ?? 'Sala'}
-                              </Typography>
-                              <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                                {createElement(Chip, { size: 'small', label: cls.status, variant: 'outlined' })}
-                                {cls.notes && createElement(Chip, { size: 'small', label: 'Notas', variant: 'outlined' })}
-                              </Stack>
-                            </Box>
-                            <Stack direction="row" spacing={1}>
-                              <Button size="small" variant="outlined" onClick={() => openEditClass(cls)}>
-                                Editar
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="contained"
-                                onClick={() => attendClassMutation.mutate(cls.classSessionId)}
-                                disabled={cls.status === 'realizada' || attendClassMutation.isPending}
-                              >
-                                Marcar realizada
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  )}
+                  resetKey={agendaView}
+                  markingAttendance={attendClassMutation.isPending}
+                  onEdit={openEditClass}
+                  onAttend={(classSessionId) => attendClassMutation.mutate(classSessionId)}
                 />
               )}
             </Stack>
@@ -953,30 +1143,7 @@ export default function TeacherPortalPage() {
                 </Alert>
               )}
               {myStudents.length > 0 && (
-                <LazyPaginatedList
-                  items={myStudents}
-                  loading={studentsQuery.isFetching}
-                  pagination={{ itemLabel: 'alumnos', initialRowsPerPage: 10 }}
-                  renderItems={(visibleStudents) => (
-                    <Stack spacing={1.5}>
-                      {visibleStudents.map((student) => (
-                        <Paper key={student.studentId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                            <Box>
-                              <Typography fontWeight={800}>{student.displayName}</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
-                              </Typography>
-                            </Box>
-                            <Button size="small" variant="outlined" onClick={() => openEditStudent(student)}>
-                              Editar
-                            </Button>
-                          </Stack>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  )}
-                />
+                <StudentsList students={myStudents} loading={studentsQuery.isFetching} onEdit={openEditStudent} />
               )}
             </Stack>
           </Box>
@@ -1031,24 +1198,12 @@ export default function TeacherPortalPage() {
               </Grid>
 
               <Grid item xs={12} md={5}>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Typography fontWeight={800} sx={{ mb: 1 }}>
-                    Salas configuradas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    Si una materia tiene salas configuradas, solo podrás elegir esas salas al crear disponibilidad o clases.
-                  </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {(Array.from(allowedRoomsForSubject) || []).length === 0 && (
-                        <Chip size="small" label="Sin restricciones" variant="outlined" />
-                      )}
-                      {Array.from(allowedRoomsForSubject).map((rid) => (
-                        <Chip key={rid} size="small" label={roomNameById.get(rid) ?? rid} variant="outlined" />
-                      ))}
-                    </Stack>
-                  </Paper>
-                </Grid>
+                <SubjectRoomsSummary
+                  allowedRoomIds={Array.from(allowedRoomsForSubject)}
+                  roomNameById={roomNameById}
+                />
               </Grid>
+            </Grid>
           </Box>
         )}
 
@@ -1128,37 +1283,13 @@ export default function TeacherPortalPage() {
                   renderItems={(visibleAvailabilitySlots) => (
                     <Stack spacing={1.5}>
                       {visibleAvailabilitySlots.map((slot) => (
-                        <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                            <Box>
-                              <Typography fontWeight={800}>
-                                {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
-                              </Typography>
-                              {slot.notes && (
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                  {slot.notes}
-                                </Typography>
-                              )}
-                            </Box>
-                            <Stack direction="row" spacing={1}>
-                              <Button size="small" variant="outlined" onClick={() => openEditAvailability(slot)}>
-                                Editar
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                onClick={() => deleteAvailabilityMutation.mutate(slot.availabilityId)}
-                                disabled={deleteAvailabilityMutation.isPending}
-                              >
-                                Eliminar
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </Paper>
+                        <AvailabilitySlotCard
+                          key={slot.availabilityId}
+                          slot={slot}
+                          deleting={deleteAvailabilityMutation.isPending}
+                          onEdit={openEditAvailability}
+                          onDelete={(availabilityId) => deleteAvailabilityMutation.mutate(availabilityId)}
+                        />
                       ))}
                     </Stack>
                   )}
