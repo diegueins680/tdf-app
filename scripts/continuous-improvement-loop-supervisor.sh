@@ -268,6 +268,35 @@ PY
     return 0
   fi
 
+  # Preflight divergence guard: detect local commits that would cause rebase conflicts
+  local git_remote git_branch merge_base merge_tree_output conflict_files
+  git_remote="$(git -C "$ROOT" config --get branch.main.remote 2>/dev/null || echo "origin")"
+  git_branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")"
+  if [ -n "$git_remote" ] && [ -n "$git_branch" ]; then
+    git -C "$ROOT" fetch "$git_remote" "$git_branch" >/dev/null 2>&1 || true
+    merge_base="$(git -C "$ROOT" merge-base HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
+    if [ -n "$merge_base" ]; then
+      merge_tree_output="$(git -C "$ROOT" merge-tree "$merge_base" HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
+      if [ -n "$merge_tree_output" ]; then
+        conflict_files="$(printf '%s' "$merge_tree_output" | grep -E '^[^<>]*$' | grep -v '^$' | head -n 20 || true)"
+        if [ -n "$conflict_files" ]; then
+          local repair_file="$STATE_DIR/repair-needed.md"
+          cat > "$repair_file" <<REPAIR
+# CIL Supervisor Repair Needed
+
+**Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Reason:** Preflight divergence guard detected that local commits would cause rebase conflicts with ${git_remote}/${git_branch}.
+**Conflict files:**
+${conflict_files}
+**Suggested action:** Reset local branch to ${git_remote}/${git_branch} or resolve conflicts manually before resuming.
+REPAIR
+          echo "blocked: Preflight divergence guard detected rebase conflicts with ${git_remote}/${git_branch}; repair artifact written to ${repair_file}"
+          return 0
+        fi
+      fi
+    fi
+  fi
+
   return 1
 }
 
