@@ -1021,7 +1021,7 @@ export default function CmsAdminPage() {
                         error={liveQuery.error}
                         title="No pudimos cargar el contenido publicado"
                         onRetry={() => {
-                          void liveQuery.refetch();
+                          return liveQuery.refetch();
                         }}
                         showCorsHint
                         helper={
@@ -1305,7 +1305,7 @@ export default function CmsAdminPage() {
               error={listQuery.error}
               title="No pudimos cargar la lista de versiones"
               onRetry={() => {
-                void listQuery.refetch();
+                return listQuery.refetch();
               }}
               showCorsHint
             />

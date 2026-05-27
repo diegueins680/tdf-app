@@ -1,13 +1,13 @@
 import { logger } from '../utils/logger';
-import ReplayIcon from '@mui/icons-material/Replay';
 import { Alert, AlertTitle, Button, CircularProgress, Stack, Typography } from '@mui/material';
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../api/client';
 
 interface Props {
   error: unknown;
   title?: string;
-  onRetry?: () => void;
+  onRetry?: () => void | Promise<unknown>;
   helper?: ReactNode;
   showCorsHint?: boolean;
 }
@@ -102,13 +102,71 @@ export function ApiLoadingNotice({
 
 export default function ApiErrorNotice({ error, title, onRetry, helper, showCorsHint }: Props) {
   const corsHint = buildCorsHint(showCorsHint);
+  const retryAriaLabel = title ? `Reintentar: ${title}` : 'Reintentar solicitud fallida';
+  const noticeRef = useRef<HTMLDivElement | null>(null);
+  const retryInFlightRef = useRef(false);
+  const isMountedRef = useRef(true);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  useEffect(() => () => {
+    isMountedRef.current = false;
+  }, []);
+
+  const focusNotice = () => {
+    if (noticeRef.current?.isConnected) {
+      noticeRef.current.focus();
+    }
+  };
+
+  const runRetry = async () => {
+    if (!onRetry || retryInFlightRef.current) return;
+
+    retryInFlightRef.current = true;
+    setIsRetrying(true);
+    focusNotice();
+
+    try {
+      await onRetry();
+    } catch (retryError) {
+      logger.warn('Retry action failed', { error: describeError(retryError) });
+    } finally {
+      retryInFlightRef.current = false;
+      if (isMountedRef.current) {
+        setIsRetrying(false);
+        queueMicrotask(focusNotice);
+      }
+    }
+  };
+
+  const focus = {
+    afterRetryClick: (_event: MouseEvent<HTMLButtonElement>) => {
+      void runRetry();
+    },
+    afterRetryKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      void runRetry();
+    },
+  };
+
   return (
     <Alert
+      ref={noticeRef}
+      tabIndex={-1}
       severity="error"
       action={
         onRetry ? (
-          <Button size="small" startIcon={<ReplayIcon />} onClick={onRetry}>
-            Reintentar
+          <Button
+            size="small"
+            type="button"
+            aria-label={retryAriaLabel}
+            aria-busy={isRetrying ? true : undefined}
+            disabled={isRetrying}
+            onClick={focus.afterRetryClick}
+            onKeyDown={focus.afterRetryKeyDown}
+            startIcon={isRetrying ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            {isRetrying ? 'Reintentando...' : 'Reintentar'}
           </Button>
         ) : undefined
       }
