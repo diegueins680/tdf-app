@@ -181,3 +181,53 @@ test('logical audit flags promises created without await or catch', async () => 
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
+
+test('logical audit flags repeated component-local variable names as shadowing candidates', async () => {
+  const variableShadowAuditTempRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'logical-audit-variable-shadowing-test-'),
+  );
+  const variableShadowAuditSourcePath = path.join(variableShadowAuditTempRoot, 'cards.jsx');
+  const variableShadowAuditDeclarationKeyword = 'con' + 'st';
+  const variableShadowAuditRepeatedName = 'focusActionsForCard';
+
+  try {
+    await fs.writeFile(
+      variableShadowAuditSourcePath,
+      [
+        'function AgendaCard() {',
+        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
+        `  return <button onClick={${variableShadowAuditRepeatedName}.edit}>Edit</button>;`,
+        '}',
+        '',
+        'function AvailabilityCard() {',
+        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
+        `  return <button onClick={${variableShadowAuditRepeatedName}.delete}>Delete</button>;`,
+        '}',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: variableShadowAuditTempRoot });
+    await execFileAsync('git', ['add', 'cards.jsx'], { cwd: variableShadowAuditTempRoot });
+
+    const variableShadowAuditFindings = await collectLogicalFindings(variableShadowAuditTempRoot);
+    const variableShadowAuditShadowingFindings = variableShadowAuditFindings.filter(
+      (finding) => finding.rule === 'variable-shadowing',
+    );
+
+    assert.deepEqual(
+      variableShadowAuditShadowingFindings.map((finding) => ({
+        line: finding.line,
+        snippet: finding.snippet,
+      })),
+      [
+        {
+          line: 7,
+          snippet: `${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
+        },
+      ],
+    );
+  } finally {
+    await fs.rm(variableShadowAuditTempRoot, { recursive: true, force: true });
+  }
+});

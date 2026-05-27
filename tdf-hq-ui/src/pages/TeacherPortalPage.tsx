@@ -153,12 +153,14 @@ const focusFirstDialogControl = () => {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
   window.setTimeout(() => {
-    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
-    const target = dialog?.querySelector<HTMLElement>(
+    const dialog = document.querySelector('[role="dialog"]');
+    const target = dialog?.querySelector(
       'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
     );
 
-    target?.focus();
+    if (target instanceof HTMLElement) {
+      target.focus();
+    }
   }, 0);
 };
 
@@ -186,26 +188,30 @@ const TabPill = ({ active, label }: { active: boolean; label: string }) => (
 interface AgendaClassCardProps {
   classSession: ClassSessionDTO;
   markingAttendance: boolean;
+  attendingClassId: number | null;
+  savingClass: boolean;
   onEdit: (classSession: ClassSessionDTO) => void;
   onAttend: (classSessionId: number) => void;
 }
 
 function AgendaClassCard(props: AgendaClassCardProps) {
-  const { classSession, markingAttendance, onEdit, onAttend } = props;
-  const cardRef = useRef<HTMLDivElement>(null);
-  const focus = {
+  const { classSession, markingAttendance, attendingClassId, savingClass, onEdit, onAttend } = props;
+  const agendaCardRef = useRef<HTMLDivElement>(null);
+  const isMarkingAttendance = markingAttendance && attendingClassId === classSession.classSessionId;
+  const actionDisabled = savingClass || markingAttendance;
+  const agendaFocusActions = {
     edit: () => {
       onEdit(classSession);
       focusFirstDialogControl();
     },
     attend: () => {
       onAttend(classSession.classSessionId);
-      focusActionContext(cardRef.current);
+      focusActionContext(agendaCardRef.current);
     },
   };
 
   return (
-    <Paper ref={cardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Paper ref={agendaCardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
         <Box>
           <Typography fontWeight={800}>
@@ -220,17 +226,25 @@ function AgendaClassCard(props: AgendaClassCardProps) {
           </Stack>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
-            Editar
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={actionDisabled}
+            onClick={agendaFocusActions.edit}
+            tabIndex={0}
+            data-focus-target="class-dialog"
+          >
+            {savingClass ? 'Guardando...' : 'Editar'}
           </Button>
           <Button
-            onClick={focus.attend}
+            onClick={agendaFocusActions.attend}
+            data-focus-return="agenda-card"
             tabIndex={0}
             size="small"
             variant="contained"
             disabled={classSession.status === 'realizada' || markingAttendance}
           >
-            Marcar realizada
+            {isMarkingAttendance ? 'Marcando...' : 'Marcar realizada'}
           </Button>
         </Stack>
       </Stack>
@@ -243,12 +257,14 @@ interface AgendaClassesListProps {
   loading: boolean;
   resetKey: ScheduleView;
   markingAttendance: boolean;
+  attendingClassId: number | null;
+  savingClass: boolean;
   onEdit: (classSession: ClassSessionDTO) => void;
   onAttend: (classSessionId: number) => void;
 }
 
 function AgendaClassesList(props: AgendaClassesListProps) {
-  const { classSessions, loading, resetKey, markingAttendance, onEdit, onAttend } = props;
+  const { classSessions, loading, resetKey, markingAttendance, attendingClassId, savingClass, onEdit, onAttend } = props;
 
   return (
     <LazyPaginatedList
@@ -262,6 +278,8 @@ function AgendaClassesList(props: AgendaClassesListProps) {
               key={classSession.classSessionId}
               classSession={classSession}
               markingAttendance={markingAttendance}
+              attendingClassId={attendingClassId}
+              savingClass={savingClass}
               onEdit={onEdit}
               onAttend={onAttend}
             />
@@ -274,12 +292,13 @@ function AgendaClassesList(props: AgendaClassesListProps) {
 
 interface StudentCardProps {
   student: StudentDTO;
+  savingStudent: boolean;
   onEdit: (student: StudentDTO) => void;
 }
 
 function StudentCard(props: StudentCardProps) {
-  const { student, onEdit } = props;
-  const focus = {
+  const { student, savingStudent, onEdit } = props;
+  const studentFocusActions = {
     edit: () => {
       onEdit(student);
       focusFirstDialogControl();
@@ -295,8 +314,15 @@ function StudentCard(props: StudentCardProps) {
             {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
           </Typography>
         </Box>
-        <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
-          Editar
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={savingStudent}
+          onClick={studentFocusActions.edit}
+          tabIndex={0}
+          data-focus-target="student-dialog"
+        >
+          {savingStudent ? 'Guardando...' : 'Editar'}
         </Button>
       </Stack>
     </Paper>
@@ -306,11 +332,12 @@ function StudentCard(props: StudentCardProps) {
 interface StudentsListProps {
   students: StudentDTO[];
   loading: boolean;
+  savingStudent: boolean;
   onEdit: (student: StudentDTO) => void;
 }
 
 function StudentsList(props: StudentsListProps) {
-  const { students, loading, onEdit } = props;
+  const { students, loading, savingStudent, onEdit } = props;
 
   return (
     <LazyPaginatedList
@@ -320,7 +347,7 @@ function StudentsList(props: StudentsListProps) {
       renderItems={(visibleStudents) => (
         <Stack spacing={1.5}>
           {visibleStudents.map((student) => (
-            <StudentCard key={student.studentId} student={student} onEdit={onEdit} />
+            <StudentCard key={student.studentId} student={student} savingStudent={savingStudent} onEdit={onEdit} />
           ))}
         </Stack>
       )}
@@ -331,26 +358,30 @@ function StudentsList(props: StudentsListProps) {
 interface AvailabilitySlotCardProps {
   slot: TrialAvailabilitySlotDTO;
   deleting: boolean;
+  deletingAvailabilityId: number | null;
+  savingAvailability: boolean;
   onEdit: (slot: TrialAvailabilitySlotDTO) => void;
   onDelete: (availabilityId: number) => void;
 }
 
 function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
-  const { slot, deleting, onEdit, onDelete } = props;
-  const cardRef = useRef<HTMLDivElement>(null);
-  const focus = {
+  const { slot, deleting, deletingAvailabilityId, savingAvailability, onEdit, onDelete } = props;
+  const availabilityCardRef = useRef<HTMLDivElement>(null);
+  const isDeletingAvailability = deleting && deletingAvailabilityId === slot.availabilityId;
+  const actionDisabled = deleting || savingAvailability;
+  const availabilityFocusActions = {
     edit: () => {
       onEdit(slot);
       focusFirstDialogControl();
     },
     delete: () => {
       onDelete(slot.availabilityId);
-      focusActionContext(cardRef.current);
+      focusActionContext(availabilityCardRef.current);
     },
   };
 
   return (
-    <Paper ref={cardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Paper ref={availabilityCardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
         <Box>
           <Typography fontWeight={800}>
@@ -366,22 +397,77 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
           )}
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" tabIndex={0} onClick={focus.edit}>
-            Editar
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={actionDisabled}
+            onClick={availabilityFocusActions.edit}
+            tabIndex={0}
+            data-focus-target="availability-dialog"
+          >
+            {savingAvailability ? 'Guardando...' : 'Editar'}
           </Button>
           <Button
-            onClick={focus.delete}
+            onClick={availabilityFocusActions.delete}
+            data-focus-return="availability-card"
             tabIndex={0}
             size="small"
             variant="outlined"
             color="error"
             disabled={deleting}
           >
-            Eliminar
+            {isDeletingAvailability ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </Stack>
       </Stack>
     </Paper>
+  );
+}
+
+interface AvailabilitySlotsListProps {
+  slots: TrialAvailabilitySlotDTO[];
+  loading: boolean;
+  resetKey: ScheduleView;
+  deleting: boolean;
+  deletingAvailabilityId: number | null;
+  savingAvailability: boolean;
+  onEdit: (slot: TrialAvailabilitySlotDTO) => void;
+  onDelete: (availabilityId: number) => void;
+}
+
+function AvailabilitySlotsList(props: AvailabilitySlotsListProps) {
+  const {
+    slots,
+    loading,
+    resetKey,
+    deleting,
+    deletingAvailabilityId,
+    savingAvailability,
+    onEdit,
+    onDelete,
+  } = props;
+
+  return (
+    <LazyPaginatedList
+      items={slots}
+      loading={loading}
+      pagination={{ itemLabel: 'horarios', initialRowsPerPage: 10, resetKey }}
+      renderItems={(visibleAvailabilitySlots) => (
+        <Stack spacing={1.5}>
+          {visibleAvailabilitySlots.map((slot) => (
+            <AvailabilitySlotCard
+              key={slot.availabilityId}
+              slot={slot}
+              deleting={deleting}
+              deletingAvailabilityId={deletingAvailabilityId}
+              savingAvailability={savingAvailability}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </Stack>
+      )}
+    />
   );
 }
 
@@ -1159,6 +1245,8 @@ export default function TeacherPortalPage() {
                   loading={classesQuery.isFetching}
                   resetKey={agendaView}
                   markingAttendance={attendClassMutation.isPending}
+                  attendingClassId={attendClassMutation.variables ?? null}
+                  savingClass={createClassMutation.isPending || updateClassMutation.isPending}
                   onEdit={openEditClass}
                   onAttend={(classSessionId) => attendClassMutation.mutate(classSessionId)}
                 />
@@ -1194,7 +1282,12 @@ export default function TeacherPortalPage() {
                 </Alert>
               )}
               {myStudents.length > 0 && (
-                <StudentsList students={myStudents} loading={studentsQuery.isFetching} onEdit={openEditStudent} />
+                <StudentsList
+                  students={myStudents}
+                  loading={studentsQuery.isFetching}
+                  savingStudent={updateStudentMutation.isPending}
+                  onEdit={openEditStudent}
+                />
               )}
             </Stack>
           </Box>
@@ -1327,23 +1420,15 @@ export default function TeacherPortalPage() {
                 </Alert>
               )}
               {availabilitySlots.length > 0 && (
-                <LazyPaginatedList
-                  items={availabilitySlots}
+                <AvailabilitySlotsList
+                  slots={availabilitySlots}
                   loading={availabilityQuery.isFetching}
-                  pagination={{ itemLabel: 'horarios', initialRowsPerPage: 10, resetKey: availabilityView }}
-                  renderItems={(visibleAvailabilitySlots) => (
-                    <Stack spacing={1.5}>
-                      {visibleAvailabilitySlots.map((slot) => (
-                        <AvailabilitySlotCard
-                          key={slot.availabilityId}
-                          slot={slot}
-                          deleting={deleteAvailabilityMutation.isPending}
-                          onEdit={openEditAvailability}
-                          onDelete={(availabilityId) => deleteAvailabilityMutation.mutate(availabilityId)}
-                        />
-                      ))}
-                    </Stack>
-                  )}
+                  resetKey={availabilityView}
+                  deleting={deleteAvailabilityMutation.isPending}
+                  deletingAvailabilityId={deleteAvailabilityMutation.variables ?? null}
+                  savingAvailability={upsertAvailabilityMutation.isPending}
+                  onEdit={openEditAvailability}
+                  onDelete={(availabilityId) => deleteAvailabilityMutation.mutate(availabilityId)}
                 />
               )}
             </Stack>
