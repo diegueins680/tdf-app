@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -86,7 +86,7 @@ const validateLocalRange = (startValue: string, endValue: string): string | null
   if (!start) return 'Inicio inválido.';
   const end = parseLocalDateTime(endValue);
   if (!end) return 'Fin inválido.';
-  if (end <= start) return 'El fin debe ser posterior al inicio.';
+  if (start >= end) return 'El fin debe ser posterior al inicio.';
   return null;
 };
 
@@ -135,10 +135,10 @@ export default function TeacherPortalPage() {
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
 
-  const [toast, setToast] = useState<{
+  const [toast, setToast] = useState(null as {
     message: string;
     severity: 'success' | 'info' | 'warning' | 'error';
-  } | null>(null);
+  } | null);
   const closeToast = (_?: unknown, reason?: string) => {
     if (reason === 'clickaway') return;
     setToast(null);
@@ -147,10 +147,10 @@ export default function TeacherPortalPage() {
     setToast({ message, severity });
   };
 
-  const [tab, setTab] = useState<PortalTab>('agenda');
+  const [tab, setTab] = useState('agenda' as PortalTab);
   type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
-  const [agendaView, setAgendaView] = useState<ScheduleView>('week');
-  const [availabilityView, setAvailabilityView] = useState<ScheduleView>('week');
+  const [agendaView, setAgendaView] = useState('week' as ScheduleView);
+  const [availabilityView, setAvailabilityView] = useState('week' as ScheduleView);
 
   const subjectsQuery = useQuery({
     queryKey: ['teacher-portal', 'subjects'],
@@ -167,7 +167,7 @@ export default function TeacherPortalPage() {
     enabled: Boolean(teacherId),
   });
 
-  const activeSubjects = useMemo<TrialSubject[]>(
+  const activeSubjects: TrialSubject[] = useMemo(
     () => (subjectsQuery.data ?? []).filter((s) => s.active),
     [subjectsQuery.data],
   );
@@ -180,7 +180,7 @@ export default function TeacherPortalPage() {
     [teacherId, teachersQuery.data],
   );
 
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState([] as number[]);
   useEffect(() => {
     if (!me) return;
     setSelectedSubjectIds(me.subjects.map((s) => s.subjectId));
@@ -200,7 +200,7 @@ export default function TeacherPortalPage() {
   });
 
   const allowedRoomsForSubject = useMemo(() => {
-    const allowed = new Set<string>();
+    const allowed = new Set([] as string[]);
     selectedSubjectIds.forEach((sid) => {
       const subject = subjectById.get(sid);
       subject?.roomIds.forEach((rid) => allowed.add(rid));
@@ -210,11 +210,11 @@ export default function TeacherPortalPage() {
 
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [studentEditDialogOpen, setStudentEditDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<StudentDTO | null>(null);
+  const [editingStudent, setEditingStudent] = useState(null as StudentDTO | null);
   const [studentForm, setStudentForm] = useState({ fullName: '', email: '', phone: '' });
   const [studentEditForm, setStudentEditForm] = useState({ displayName: '', email: '', phone: '' });
-  const [studentDialogError, setStudentDialogError] = useState<string | null>(null);
-  const [studentEditDialogError, setStudentEditDialogError] = useState<string | null>(null);
+  const [studentDialogError, setStudentDialogError] = useState(null as string | null);
+  const [studentEditDialogError, setStudentEditDialogError] = useState(null as string | null);
 
   const studentsQuery = useQuery({
     queryKey: ['teacher-students', teacherId],
@@ -237,15 +237,15 @@ export default function TeacherPortalPage() {
   });
 
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
-  const [editingAvailability, setEditingAvailability] = useState<TrialAvailabilitySlotDTO | null>(null);
-  const [availabilityDialogError, setAvailabilityDialogError] = useState<string | null>(null);
-  const [availabilityForm, setAvailabilityForm] = useState<{
-    subjectId: number | '';
-    roomId: string;
-    startAt: string;
-    endAt: string;
-    notes: string;
-  }>({ subjectId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const [editingAvailability, setEditingAvailability] = useState(null as TrialAvailabilitySlotDTO | null);
+  const [availabilityDialogError, setAvailabilityDialogError] = useState(null as string | null);
+  const [availabilityForm, setAvailabilityForm] = useState({
+    subjectId: '' as number | '',
+    roomId: '',
+    startAt: '',
+    endAt: '',
+    notes: '',
+  });
   const availabilityTimeError = useMemo(
     () => (availabilityDialogOpen ? validateLocalRange(availabilityForm.startAt, availabilityForm.endAt) : null),
     [availabilityDialogOpen, availabilityForm.endAt, availabilityForm.startAt],
@@ -288,16 +288,16 @@ export default function TeacherPortalPage() {
   });
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
-  const [editingClass, setEditingClass] = useState<ClassSessionDTO | null>(null);
-  const [classDialogError, setClassDialogError] = useState<string | null>(null);
-  const [classForm, setClassForm] = useState<{
-    subjectId: number | '';
-    studentId: number | '';
-    roomId: string;
-    startAt: string;
-    endAt: string;
-    notes: string;
-  }>({ subjectId: '', studentId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const [editingClass, setEditingClass] = useState(null as ClassSessionDTO | null);
+  const [classDialogError, setClassDialogError] = useState(null as string | null);
+  const [classForm, setClassForm] = useState({
+    subjectId: '' as number | '',
+    studentId: '' as number | '',
+    roomId: '',
+    startAt: '',
+    endAt: '',
+    notes: '',
+  });
   const classTimeError = useMemo(
     () => (classDialogOpen ? validateLocalRange(classForm.startAt, classForm.endAt) : null),
     [classDialogOpen, classForm.endAt, classForm.startAt],
@@ -395,9 +395,9 @@ export default function TeacherPortalPage() {
       const startMs = new Date(cls.startAt).getTime();
       if (Number.isNaN(startMs)) return false;
       if (agendaView === 'all') return true;
-      if (agendaView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
-      if (agendaView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
-      return startMs >= nowMs && startMs <= weekEndMs;
+      if (agendaView === 'today') return startMs >= startOfTodayMs && endOfTodayMs > startMs;
+      if (agendaView === 'next24h') return startMs >= nowMs && next24hEndMs > startMs;
+      return startMs >= nowMs && weekEndMs >= startMs;
     });
   }, [agendaView, myClasses]);
 
@@ -417,9 +417,9 @@ export default function TeacherPortalPage() {
       const startMs = new Date(slot.startAt).getTime();
       if (Number.isNaN(startMs)) return false;
       if (availabilityView === 'all') return true;
-      if (availabilityView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
-      if (availabilityView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
-      return startMs >= nowMs && startMs <= weekEndMs;
+      if (availabilityView === 'today') return startMs >= startOfTodayMs && endOfTodayMs > startMs;
+      if (availabilityView === 'next24h') return startMs >= nowMs && next24hEndMs > startMs;
+      return startMs >= nowMs && weekEndMs >= startMs;
     });
   }, [availabilityView, myAvailability]);
 
@@ -444,12 +444,12 @@ export default function TeacherPortalPage() {
       const startMs = new Date(cls.startAt).getTime();
       const endMs = new Date(cls.endAt).getTime();
       if (Number.isNaN(startMs) || Number.isNaN(endMs)) continue;
-      if (startMs >= startOfTodayMs && startMs < endOfTodayMs) todayCount += 1;
-      if (startMs >= nowMs && startMs <= weekEndMs) {
+      if (startMs >= startOfTodayMs && endOfTodayMs > startMs) todayCount += 1;
+      if (startMs >= nowMs && weekEndMs >= startMs) {
         weekCount += 1;
         weekMinutes += Math.max(0, Math.round((endMs - startMs) / 60000));
       }
-      if (endMs < nowMs && cls.status !== 'realizada') overdueCount += 1;
+      if (nowMs > endMs && cls.status !== 'realizada') overdueCount += 1;
       if (!nextClass && startMs >= nowMs && cls.status !== 'realizada') nextClass = cls;
     }
 
@@ -800,9 +800,9 @@ export default function TeacherPortalPage() {
               )}
             </Stack>
 
-            {agendaStats.nextClass && agendaStats.nextMinutesAway !== null && agendaStats.nextMinutesAway >= 0 && agendaStats.nextMinutesAway <= 120 && (
+            {agendaStats.nextClass && agendaStats.nextMinutesAway !== null && agendaStats.nextMinutesAway >= 0 && 120 >= agendaStats.nextMinutesAway && (
               <Alert
-                severity={agendaStats.nextMinutesAway <= 30 ? 'warning' : 'info'}
+                severity={30 >= agendaStats.nextMinutesAway ? 'warning' : 'info'}
                 sx={{ mt: 2 }}
                 action={(
                   <Stack direction="row" spacing={1}>
@@ -883,8 +883,8 @@ export default function TeacherPortalPage() {
                                 {formatDateTime(cls.startAt)} → {formatDateTime(cls.endAt)} · {cls.roomName ?? cls.roomId ?? 'Sala'}
                               </Typography>
                               <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                                <Chip size="small" label={cls.status} variant="outlined" />
-                                {cls.notes && <Chip size="small" label="Notas" variant="outlined" />}
+                                {createElement(Chip, { size: 'small', label: cls.status, variant: 'outlined' })}
+                                {cls.notes && createElement(Chip, { size: 'small', label: 'Notas', variant: 'outlined' })}
                               </Stack>
                             </Box>
                             <Stack direction="row" spacing={1}>

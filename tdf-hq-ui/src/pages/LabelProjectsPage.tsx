@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
@@ -30,6 +31,21 @@ interface ProjectNote {
 
 const slug = 'label-projects';
 const locale = 'es';
+const COMPLETED_PROJECT_NOTE_BACKGROUND_ALPHA: number = 8 / 100;
+
+function focusNextProjectNoteDeleteAction(currentTarget: HTMLElement) {
+  const notesList = currentTarget.closest('[data-project-notes-list]');
+  window.requestAnimationFrame(() => {
+    const nextAction = notesList?.querySelector('[data-project-note-delete-action]');
+    if (nextAction instanceof HTMLElement) {
+      nextAction.focus();
+      return;
+    }
+    if (notesList instanceof HTMLElement) {
+      notesList.focus();
+    }
+  });
+}
 
 function parsePayload(content?: CmsContentDTO): ProjectNote[] {
   if (!content) return [];
@@ -59,6 +75,7 @@ function LiveReloadAction({ loading, onReload }: LiveReloadActionProps) {
   return (
     <Button
       disabled={loading}
+      tabIndex={0}
       onClick={(event) => {
         onReload();
         event.currentTarget.focus();
@@ -152,7 +169,7 @@ interface ProjectNoteRowProps {
 function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         borderRadius: 1,
         border: '1px solid',
         borderColor: note.done ? 'success.light' : 'divider',
@@ -160,8 +177,8 @@ function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
         display: 'flex',
         alignItems: 'center',
         gap: 1,
-        bgcolor: note.done ? 'rgba(16,185,129,0.08)' : 'background.paper',
-      }}
+        bgcolor: note.done ? alpha(theme.palette.success.main, COMPLETED_PROJECT_NOTE_BACKGROUND_ALPHA) : 'background.paper',
+      })}
     >
       <Checkbox
         checked={note.done}
@@ -181,7 +198,13 @@ function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
         {note.text}
       </Typography>
       <IconButton
-        onClick={() => onDelete(note.id)}
+        data-project-note-delete-action
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onDelete(note.id);
+          focusNextProjectNoteDeleteAction(event.currentTarget);
+        }}
         size="small"
         aria-label={`Eliminar nota: ${note.text}`}
       >
@@ -207,7 +230,7 @@ function ProjectNotesList({ notes, onToggle, onDelete }: ProjectNotesListProps) 
       items={notes}
       pagination={{ itemLabel: 'notas', initialRowsPerPage: 10 }}
       renderItems={(visibleNotes) => (
-        <Stack spacing={1}>
+        <Stack spacing={1} data-project-notes-list tabIndex={-1}>
           {visibleNotes.map((note) => (
             <ProjectNoteRow key={note.id} note={note} onToggle={onToggle} onDelete={onDelete} />
           ))}
@@ -227,6 +250,7 @@ function SaveActions({ saving, onSave }: SaveActionsProps) {
     <Stack direction="row" justifyContent="flex-end">
       <Button
         disabled={saving}
+        tabIndex={0}
         onClick={(event) => {
           onSave();
           event.currentTarget.focus();
@@ -309,7 +333,7 @@ export default function LabelProjectsPage() {
     setNotes((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const handleSave = () => {
+  const saveNotes = () => {
     saveMutation.mutate(notes);
   };
 
@@ -338,7 +362,7 @@ export default function LabelProjectsPage() {
               <NoteStats total={notes.length} pendingCount={pending.length} completedCount={completed.length} />
               <SaveStatus isError={saveMutation.isError} isSuccess={saveMutation.isSuccess} />
               <ProjectNotesList notes={notes} onToggle={handleToggle} onDelete={handleDelete} />
-              <SaveActions saving={saveMutation.isPending} onSave={handleSave} />
+              <SaveActions saving={saveMutation.isPending} onSave={saveNotes} />
             </Stack>
           </CardContent>
         </Card>

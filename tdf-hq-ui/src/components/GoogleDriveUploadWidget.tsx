@@ -36,6 +36,101 @@ export interface GoogleDriveUploadWidgetProps {
   authMode?: 'user' | 'server' | 'assets';
 }
 
+interface UploadPreviewProps {
+  item: UploadItem;
+}
+
+function UploadPreview({ item }: UploadPreviewProps) {
+  return (
+    <Box sx={{ width: 48, height: 48, borderRadius: 1, overflow: 'hidden', bgcolor: 'grey.100' }}>
+      {item.file.type.startsWith('image/') ? (
+        <img
+          src={URL.createObjectURL(item.file)}
+          alt={item.file.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'grey.200',
+            color: 'text.secondary',
+            fontSize: 12,
+          }}
+        >
+          File
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+interface UploadItemRowProps {
+  item: UploadItem;
+  onRemove: (id: string) => void;
+}
+
+function UploadItemRow({ item, onRemove }: UploadItemRowProps) {
+  const driveUrl = item.driveFile?.publicUrl ?? item.driveFile?.webContentLink ?? item.driveFile?.webViewLink;
+
+  return (
+    <Box
+      sx={{
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        p: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+      }}
+    >
+      <UploadPreview item={item} />
+      <Stack spacing={0.25} flex={1} minWidth={0}>
+        <Typography variant="body2" noWrap>
+          {item.file.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {(item.file.size / 1024 / 1024).toFixed(2)} MB
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={item.status === 'error' ? 0 : item.progress}
+          color={item.status === 'error' ? 'error' : 'primary'}
+        />
+        {item.status === 'done' && driveUrl && (
+          <Typography variant="caption" color="text.secondary">
+            {driveUrl}
+          </Typography>
+        )}
+        {item.status === 'error' && (
+          <Typography variant="caption" color="error">
+            {item.error ?? 'Error al subir'}
+          </Typography>
+        )}
+      </Stack>
+      {item.status === 'done' && <CheckCircleIcon color="success" fontSize="small" />}
+      {item.status === 'error' && (
+        <IconButton
+          size="small"
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onRemove(item.id);
+          }}
+          aria-label={`Quitar ${item.file.name} de la lista de cargas`}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
+  );
+}
+
 export default function GoogleDriveUploadWidget({
   label = 'Subir fotos',
   helperText = 'Arrastra imágenes o haz clic para seleccionar. Se guardan en Google Drive.',
@@ -74,7 +169,7 @@ export default function GoogleDriveUploadWidget({
     (files: FileList | File[]) => {
       const fileArr = Array.from(files);
       setError(null);
-      const uploads = fileArr.map<UploadItem>((file) => ({
+      const uploads: UploadItem[] = fileArr.map((file) => ({
         id: crypto.randomUUID(),
         file,
         progress: 0,
@@ -124,7 +219,7 @@ export default function GoogleDriveUploadWidget({
     [onComplete, resolveAccessToken, usesAssets],
   );
 
-  const handleDrop = (evt: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (evt: React.DragEvent) => {
     evt.preventDefault();
     setIsDragging(false);
     if (evt.dataTransfer.files && evt.dataTransfer.files.length > 0) {
@@ -134,6 +229,7 @@ export default function GoogleDriveUploadWidget({
   };
 
   const handleBrowse = () => inputRef.current?.click();
+  const removeItem = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id));
 
   return (
     <Stack spacing={1}>
@@ -141,7 +237,11 @@ export default function GoogleDriveUploadWidget({
         <Button
           variant="outlined"
           startIcon={<UploadFileIcon />}
-          onClick={handleBrowse}
+          tabIndex={0}
+          onClick={(event) => {
+            handleBrowse();
+            event.currentTarget.focus();
+          }}
           size={dense ? 'small' : 'medium'}
         >
           {label}
@@ -149,7 +249,11 @@ export default function GoogleDriveUploadWidget({
         {usesUserAuth && (
           <Button
             variant="text"
-            onClick={handleDriveAuth}
+            tabIndex={0}
+            onClick={(event) => {
+              handleDriveAuth();
+              event.currentTarget.focus();
+            }}
             size={dense ? 'small' : 'medium'}
             disabled={driveStatus === 'authenticating'}
           >
@@ -173,7 +277,18 @@ export default function GoogleDriveUploadWidget({
           setIsDragging(false);
         }}
         onDrop={handleDrop}
-        onClick={handleBrowse}
+        role="button"
+        tabIndex={0}
+        onClick={(event) => {
+          handleBrowse();
+          event.currentTarget.focus();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleBrowse();
+          }
+        }}
         sx={{
           border: '1px dashed',
           borderColor: isDragging ? 'primary.main' : 'divider',
@@ -212,81 +327,7 @@ export default function GoogleDriveUploadWidget({
           renderItems={(visibleItems) => (
             <Stack spacing={1}>
               {visibleItems.map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1.5,
-                    p: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ width: 48, height: 48, borderRadius: 1, overflow: 'hidden', bgcolor: 'grey.100' }}>
-                    {item.file.type.startsWith('image/') ? (
-                      <img
-                        src={URL.createObjectURL(item.file)}
-                        alt={item.file.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: 'grey.200',
-                          color: 'text.secondary',
-                          fontSize: 12,
-                        }}
-                      >
-                        File
-                      </Box>
-                    )}
-                  </Box>
-                  <Stack spacing={0.25} flex={1} minWidth={0}>
-                    <Typography variant="body2" noWrap>
-                      {item.file.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {(item.file.size / 1024 / 1024).toFixed(2)} MB
-                    </Typography>
-                    <LinearProgress
-                      variant="determinate"
-                      value={item.status === 'error' ? 0 : item.progress}
-                      color={item.status === 'error' ? 'error' : 'primary'}
-                    />
-                    {item.status === 'done' &&
-                      (item.driveFile?.publicUrl ??
-                        item.driveFile?.webContentLink ??
-                        item.driveFile?.webViewLink) && (
-                        <Typography variant="caption" color="text.secondary">
-                          {item.driveFile?.publicUrl ??
-                            item.driveFile?.webContentLink ??
-                            item.driveFile?.webViewLink}
-                        </Typography>
-                      )}
-                    {item.status === 'error' && (
-                      <Typography variant="caption" color="error">
-                        {item.error ?? 'Error al subir'}
-                      </Typography>
-                    )}
-                  </Stack>
-                  {item.status === 'done' && <CheckCircleIcon color="success" fontSize="small" />}
-                  {item.status === 'error' && (
-                    <IconButton
-                      size="small"
-                      onClick={() => setItems((prev) => prev.filter((it) => it.id !== item.id))}
-                      aria-label={`Quitar ${item.file.name} de la lista de cargas`}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </Box>
+                <UploadItemRow key={item.id} item={item} onRemove={removeItem} />
               ))}
             </Stack>
           )}

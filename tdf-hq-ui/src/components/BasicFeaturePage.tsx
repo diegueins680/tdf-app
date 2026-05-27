@@ -31,10 +31,27 @@ interface PageIntroProps {
   description?: string;
 }
 
+const PAGE_INTRO_TITLE_FONT_WEIGHT: number = 100 * 7;
+const NOTE_COMPOSER_ACTION_MIN_WIDTH_SM: number = 100 + 4 * 10;
+
+function focusNextNoteDeleteAction(currentTarget: HTMLElement) {
+  const notesList = currentTarget.closest('[data-notes-list]');
+  window.requestAnimationFrame(() => {
+    const nextAction = notesList?.querySelector('[data-note-delete-action]');
+    if (nextAction instanceof HTMLElement) {
+      nextAction.focus();
+      return;
+    }
+    if (notesList instanceof HTMLElement) {
+      notesList.focus();
+    }
+  });
+}
+
 function PageIntro({ title, description }: PageIntroProps) {
   return (
     <Stack spacing={0.5}>
-      <Typography variant="h4" fontWeight={700}>
+      <Typography variant="h4" fontWeight={PAGE_INTRO_TITLE_FONT_WEIGHT}>
         {title}
       </Typography>
       <Typography variant="body1" color="text.secondary">
@@ -73,7 +90,7 @@ function NoteComposer({ value, onChange, onAdd }: NoteComposerProps) {
           variant="contained"
           disabled={!value.trim()}
           startIcon={<AddIcon />}
-          sx={{ alignSelf: { xs: 'stretch', sm: 'auto' }, minWidth: { sm: 140 } }}
+          sx={{ alignSelf: { xs: 'stretch', sm: 'auto' }, minWidth: { sm: NOTE_COMPOSER_ACTION_MIN_WIDTH_SM } }}
         >
           Agregar
         </Button>
@@ -117,7 +134,13 @@ function NoteRow({ item, onToggle, onDelete }: NoteRowProps) {
         {item.text}
       </Typography>
       <IconButton
-        onClick={() => onDelete(item.id)}
+        data-note-delete-action
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onDelete(item.id);
+          focusNextNoteDeleteAction(event.currentTarget);
+        }}
         size="small"
         aria-label={`Eliminar nota: ${item.text}`}
       >
@@ -144,7 +167,7 @@ function NotesList({ items, resetKey, onToggle, onDelete }: NotesListProps) {
       items={items}
       pagination={{ itemLabel: 'notas', initialRowsPerPage: 10, resetKey }}
       renderItems={(visibleItems) => (
-        <Stack spacing={1}>
+        <Stack spacing={1} data-notes-list tabIndex={-1}>
           {visibleItems.map((item) => (
             <NoteRow key={item.id} item={item} onToggle={onToggle} onDelete={onDelete} />
           ))}

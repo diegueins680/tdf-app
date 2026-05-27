@@ -80,6 +80,13 @@ interface Station {
   source?: 'curated' | 'custom' | 'db' | 'shared';
 }
 
+const RADIO_STATION_INITIAL_ROWS_PER_PAGE: number = 3 * 8;
+const RADIO_STATION_ROWS_PER_PAGE_OPTIONS = [
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE * 2,
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE * 4,
+] as const satisfies readonly number[];
+
 const CURATED_STATIONS: Station[] = [
   {
     id: 'cosmic-cycles',
@@ -2678,8 +2685,8 @@ export default function RadioWidget() {
                       loading={streamsFetching}
                       pagination={{
                         itemLabel: 'estaciones',
-                        initialRowsPerPage: 24,
-                        rowsPerPageOptions: [24, 48, 96],
+                        initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+                        rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
                         resetKey: [countryQuery, genreQuery, showHidden, showFavoritesOnly].join('|'),
                       }}
                       renderItems={(visibleStationsPage) => (
@@ -2727,8 +2734,8 @@ export default function RadioWidget() {
                           items={hiddenStations}
                           pagination={{
                             itemLabel: 'ocultas',
-                            initialRowsPerPage: 24,
-                            rowsPerPageOptions: [24, 48, 96],
+                            initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+                            rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
                             resetKey: hiddenStations.length,
                           }}
                           renderItems={(visibleHiddenStations) => (

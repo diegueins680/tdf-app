@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { useCallback, useMemo, useState } from 'react';
+import { createElement, useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -36,16 +36,16 @@ const isTidalTarget = (value: string): value is TidalTarget =>
 export default function TidalAgentPage() {
   const config = useMemo(buildDefaultConfig, []);
   const [prompt, setPrompt] = useState('');
-  const [raw, setRaw] = useState<string | null>(null);
-  const [code, setCode] = useState<string | null>(null);
+  const [raw, setRaw] = useState(null as string | null);
+  const [code, setCode] = useState(null as string | null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null as string | null);
   const [copied, setCopied] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [history, setHistory] = useState([] as HistoryItem[]);
   const [showRaw, setShowRaw] = useState(false);
-  const [historyMode, setHistoryMode] = useState<'full' | 'code'>('full');
-  const [target, setTarget] = useState<TidalTarget>('d1');
-  const [pinned, setPinned] = useState<HistoryItem | null>(null);
+  const [historyMode, setHistoryMode] = useState('full' as 'full' | 'code');
+  const [target, setTarget] = useState('d1' as TidalTarget);
+  const [pinned, setPinned] = useState(null as HistoryItem | null);
 
   const exportRecentHistory = useCallback(async () => {
     const recent = history.slice(0, 5);
@@ -61,7 +61,7 @@ export default function TidalAgentPage() {
     }
   }, [history]);
 
-  const handleSubmit = async () => {
+  const submitPrompt = async () => {
     if (!prompt.trim()) {
       setError('Escribe un prompt.');
       return;
@@ -130,9 +130,11 @@ export default function TidalAgentPage() {
               <Stack direction="row" spacing={1}>
                 <Button
                   variant="contained"
-                  startIcon={<PlayArrowIcon />}
-                  onClick={() => {
-                    void handleSubmit();
+                  startIcon={createElement(PlayArrowIcon)}
+                  tabIndex={0}
+                  onClick={(event) => {
+                    event.currentTarget.focus();
+                    void submitPrompt();
                   }}
                   disabled={loading}
                 >
@@ -141,8 +143,10 @@ export default function TidalAgentPage() {
                 {history.length > 0 && (
                   <Button
                     variant="outlined"
-                    startIcon={<ContentCopyIcon />}
-                    onClick={() => {
+                    startIcon={createElement(ContentCopyIcon)}
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
                       void exportRecentHistory();
                     }}
                   >
@@ -152,8 +156,10 @@ export default function TidalAgentPage() {
                 {code && (
                   <Button
                     variant="outlined"
-                    startIcon={<ContentCopyIcon />}
-                    onClick={() => {
+                    startIcon={createElement(ContentCopyIcon)}
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
                       void handleCopy();
                     }}
                   >
@@ -163,8 +169,10 @@ export default function TidalAgentPage() {
                 {code && (
                   <Button
                     variant="outlined"
-                    startIcon={<ContentCopyIcon />}
-                    onClick={() => {
+                    startIcon={createElement(ContentCopyIcon)}
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
                       const wrapped = `${target} $ (${code})`;
                       void navigator.clipboard.writeText(wrapped);
                     }}
@@ -247,14 +255,23 @@ export default function TidalAgentPage() {
                         <Stack direction="row" spacing={1}>
                           <Button
                             size="small"
-                            startIcon={<ContentCopyIcon fontSize="small" />}
-                            onClick={() => {
+                            startIcon={createElement(ContentCopyIcon, { fontSize: 'small' })}
+                            tabIndex={0}
+                            onClick={(event) => {
+                              event.currentTarget.focus();
                               navigator.clipboard.writeText(pinned.code).catch((err) => logger.warn(err));
                             }}
                           >
                             Copiar
                           </Button>
-                          <Button size="small" onClick={() => setPinned(null)}>
+                          <Button
+                            size="small"
+                            tabIndex={0}
+                            onClick={(event) => {
+                              event.currentTarget.focus();
+                              setPinned(null);
+                            }}
+                          >
                             Quitar pin
                           </Button>
                         </Stack>
@@ -265,18 +282,33 @@ export default function TidalAgentPage() {
                     <Button
                       size="small"
                       variant={historyMode === 'full' ? 'contained' : 'outlined'}
-                      onClick={() => setHistoryMode('full')}
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        setHistoryMode('full');
+                      }}
                     >
                       Prompt + código
                     </Button>
                     <Button
                       size="small"
                       variant={historyMode === 'code' ? 'contained' : 'outlined'}
-                      onClick={() => setHistoryMode('code')}
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        setHistoryMode('code');
+                      }}
                     >
                       Solo código
                     </Button>
-                    <Button size="small" onClick={() => setHistory([])}>
+                    <Button
+                      size="small"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        setHistory([]);
+                      }}
+                    >
                       Limpiar historial
                     </Button>
                   </Stack>
@@ -288,9 +320,9 @@ export default function TidalAgentPage() {
                         {visibleHistory.map((item, idx) => (
                           <Card key={`${item.prompt}-${idx}`} variant="outlined">
                             <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                              {historyMode === 'full' && <Typography variant="body2">{item.prompt}</Typography>}
-                              <Box
-                                sx={{
+                              {historyMode === 'full' && createElement(Typography, { variant: 'body2' }, item.prompt)}
+                              {createElement(Box, {
+                                sx: {
                                   bgcolor: 'rgba(148,163,184,0.08)',
                                   border: '1px dashed',
                                   borderColor: 'divider',
@@ -299,52 +331,46 @@ export default function TidalAgentPage() {
                                   fontFamily: 'monospace',
                                   fontSize: 12,
                                   whiteSpace: 'pre-line',
-                                }}
-                              >
-                                {item.code}
-                              </Box>
-                              <Button
-                                size="small"
-                                startIcon={<ContentCopyIcon fontSize="small" />}
-                                onClick={() => {
+                                },
+                              }, item.code)}
+                              {createElement(Button, {
+                                size: 'small',
+                                startIcon: createElement(ContentCopyIcon, { fontSize: 'small' }),
+                                onClick: () => {
+                                  if (document.activeElement instanceof HTMLElement) document.activeElement.focus();
                                   navigator.clipboard
                                     .writeText(item.code)
                                     .catch((err) => logger.warn('No se pudo copiar el historial', err));
-                                }}
-                              >
-                                Copiar
-                              </Button>
-                              <Button
-                                size="small"
-                                onClick={() => {
+                                },
+                              }, 'Copiar')}
+                              {createElement(Button, {
+                                size: 'small',
+                                onClick: () => {
+                                  if (document.activeElement instanceof HTMLElement) document.activeElement.focus();
                                   setPrompt(item.prompt);
                                   setCode(item.code);
-                                }}
-                              >
-                                Usar prompt
-                              </Button>
-                              <Button
-                                size="small"
-                                variant={pinned?.code === item.code ? 'contained' : 'outlined'}
-                                onClick={() => {
+                                },
+                              }, 'Usar prompt')}
+                              {createElement(Button, {
+                                size: 'small',
+                                variant: pinned?.code === item.code ? 'contained' : 'outlined',
+                                onClick: () => {
+                                  if (document.activeElement instanceof HTMLElement) document.activeElement.focus();
                                   setPinned((prev) => (prev?.code === item.code ? null : item));
-                                }}
-                              >
-                                {pinned?.code === item.code ? 'Quitar pin' : 'Fijar'}
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => {
+                                },
+                              }, pinned?.code === item.code ? 'Quitar pin' : 'Fijar')}
+                              {createElement(Button, {
+                                size: 'small',
+                                variant: 'outlined',
+                                onClick: () => {
+                                  if (document.activeElement instanceof HTMLElement) document.activeElement.focus();
                                   const wrapped = `${target} $ (${item.code})`;
                                   navigator.clipboard
                                     .writeText(wrapped)
                                     .catch((err) => logger.warn('No se pudo copiar con destino', err));
                                   setShowRaw(false);
-                                }}
-                              >
-                                Copiar con {target} $ y cerrar raw
-                              </Button>
+                                },
+                              }, `Copiar con ${target} $ y cerrar raw`)}
                             </CardContent>
                           </Card>
                         ))}

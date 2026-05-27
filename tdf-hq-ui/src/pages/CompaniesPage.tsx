@@ -29,6 +29,84 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import PageShell, { EmptyState } from '../components/PageShell';
 
+const COMPANIES_INITIAL_ROWS_PER_PAGE: number = 5 * 5;
+
+interface CompaniesTableProps {
+  companies: readonly PartyDTO[];
+  onOpenRelated: (anchor: HTMLElement, company: PartyDTO) => void;
+  onEdit: (company: PartyDTO) => void;
+}
+
+function CompanyRow({ company, onOpenRelated, onEdit }: { company: PartyDTO; onOpenRelated: CompaniesTableProps['onOpenRelated']; onEdit: CompaniesTableProps['onEdit'] }) {
+  return (
+    <TableRow hover>
+      <TableCell>
+        <Stack spacing={0.5}>
+          <Button
+            variant="text"
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              onOpenRelated(event.currentTarget, company);
+            }}
+            sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+          >
+            <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              {company.displayName}
+            </Typography>
+          </Button>
+          {company.legalName && <Typography variant="body2" color="text.secondary">{company.legalName}</Typography>}
+          {company.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
+        </Stack>
+      </TableCell>
+      <TableCell>{company.primaryEmail ?? '—'}</TableCell>
+      <TableCell>{company.primaryPhone ?? '—'}</TableCell>
+      <TableCell>{company.taxId ?? '—'}</TableCell>
+      <TableCell>{company.notes ?? '—'}</TableCell>
+      <TableCell align="right">
+        <Button
+          size="small"
+          startIcon={<EditIcon />}
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onEdit(company);
+          }}
+        >
+          Editar
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function CompaniesTable({ companies, onOpenRelated, onEdit }: CompaniesTableProps) {
+  return (
+    <Table size="small">
+      <TableHead>
+        <TableRow>
+          <TableCell>Empresa</TableCell>
+          <TableCell>Correo</TableCell>
+          <TableCell>Teléfono</TableCell>
+          <TableCell>RUC / Tax ID</TableCell>
+          <TableCell>Notas</TableCell>
+          <TableCell align="right">Acciones</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {companies.map((company) => (
+          <CompanyRow
+            key={company.partyId}
+            company={company}
+            onOpenRelated={onOpenRelated}
+            onEdit={onEdit}
+          />
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 interface CreateCompanyDialogProps {
   open: boolean;
   onClose: () => void;
@@ -40,7 +118,7 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
   const [legalName, setLegalName] = useState('');
   const [email, setEmail] = useState('');
   const [taxId, setTaxId] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null as string | null);
 
   useEffect(() => {
     if (!open) {
@@ -52,8 +130,8 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
     }
   }, [open]);
 
-  const mutation = useMutation<PartyDTO, Error, PartyCreate>({
-    mutationFn: (body) => Parties.create(body),
+  const mutation = useMutation({
+    mutationFn: (body: PartyCreate) => Parties.create(body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['parties'] });
       onClose();
@@ -61,7 +139,7 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
     onError: (err) => setError(err.message),
   });
 
-  const handleSubmit = () => {
+  const submitCompany = () => {
     if (!displayName.trim()) {
       setError('Nombre de empresa requerido');
       return;
@@ -107,8 +185,24 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={mutation.isPending}>
+        <Button
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onClose();
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            submitCompany();
+          }}
+          variant="contained"
+          disabled={mutation.isPending}
+        >
           Crear
         </Button>
       </DialogActions>
@@ -130,7 +224,7 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
   const [phone, setPhone] = useState(company?.primaryPhone ?? '');
   const [taxId, setTaxId] = useState(company?.taxId ?? '');
   const [notes, setNotes] = useState(company?.notes ?? '');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null as string | null);
 
   useEffect(() => {
     setDisplayName(company?.displayName ?? '');
@@ -142,8 +236,8 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
     setError(null);
   }, [company, open]);
 
-  const mutation = useMutation<PartyDTO, Error, PartyUpdate>({
-    mutationFn: (body) => {
+  const mutation = useMutation({
+    mutationFn: (body: PartyUpdate) => {
       if (!company) return Promise.reject(new Error('Empresa no disponible'));
       return Parties.update(company.partyId, body);
     },
@@ -154,7 +248,7 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
     onError: (err) => setError(err.message),
   });
 
-  const handleSave = () => {
+  const saveCompany = () => {
     if (!company) return;
     mutation.mutate({
       uDisplayName: displayName.trim() || company.displayName,
@@ -187,8 +281,24 @@ function EditCompanyDialog({ company, open, onClose }: EditCompanyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSave} variant="contained" disabled={mutation.isPending}>
+        <Button
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onClose();
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            saveCompany();
+          }}
+          variant="contained"
+          disabled={mutation.isPending}
+        >
           Guardar
         </Button>
       </DialogActions>
@@ -200,11 +310,11 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [selected, setSelected] = useState<PartyDTO | null>(null);
-  const [relatedParty, setRelatedParty] = useState<PartyDTO | null>(null);
-  const [relatedAnchor, setRelatedAnchor] = useState<HTMLElement | null>(null);
+  const [selected, setSelected] = useState(null as PartyDTO | null);
+  const [relatedParty, setRelatedParty] = useState(null as PartyDTO | null);
+  const [relatedAnchor, setRelatedAnchor] = useState(null as HTMLElement | null);
 
-  const { data, isLoading, isError, error } = useQuery<PartyDTO[], Error>({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
   });
@@ -230,7 +340,15 @@ export default function CompaniesPage() {
       title="Empresas"
       subtitle="Gestiona empresas, datos fiscales y contactos principales."
       actions={(
-        <Button variant="contained" startIcon={<AddBusinessIcon />} onClick={() => setCreateOpen(true)}>
+        <Button
+          variant="contained"
+          startIcon={<AddBusinessIcon />}
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            setCreateOpen(true);
+          }}
+        >
           Nueva empresa
         </Button>
       )}
@@ -250,7 +368,16 @@ export default function CompaniesPage() {
           ),
           endAdornment: search ? (
             <InputAdornment position="end">
-              <Button size="small" onClick={() => setSearch('')}>Limpiar</Button>
+              <Button
+                size="small"
+                tabIndex={0}
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  setSearch('');
+                }}
+              >
+                Limpiar
+              </Button>
             </InputAdornment>
           ) : null,
         }}
@@ -271,60 +398,19 @@ export default function CompaniesPage() {
         ) : (
           <LazyPaginatedList
             items={companies}
-            pagination={{ itemLabel: 'empresas', initialRowsPerPage: 25, resetKey: search.trim() }}
+            pagination={{ itemLabel: 'empresas', initialRowsPerPage: COMPANIES_INITIAL_ROWS_PER_PAGE, resetKey: search.trim() }}
             renderItems={(visibleCompanies) => (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Empresa</TableCell>
-                    <TableCell>Correo</TableCell>
-                    <TableCell>Teléfono</TableCell>
-                    <TableCell>RUC / Tax ID</TableCell>
-                    <TableCell>Notas</TableCell>
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {visibleCompanies.map((c) => (
-                    <TableRow key={c.partyId} hover>
-                      <TableCell>
-                        <Stack spacing={0.5}>
-                          <Button
-                            variant="text"
-                            onClick={(event) => {
-                              setRelatedParty(c);
-                              setRelatedAnchor(event.currentTarget);
-                            }}
-                            sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
-                          >
-                            <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                              {c.displayName}
-                            </Typography>
-                          </Button>
-                          {c.legalName && <Typography variant="body2" color="text.secondary">{c.legalName}</Typography>}
-                          {c.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
-                        </Stack>
-                      </TableCell>
-                      <TableCell>{c.primaryEmail ?? '—'}</TableCell>
-                      <TableCell>{c.primaryPhone ?? '—'}</TableCell>
-                      <TableCell>{c.taxId ?? '—'}</TableCell>
-                      <TableCell>{c.notes ?? '—'}</TableCell>
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => {
-                            setSelected(c);
-                            setEditOpen(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <CompaniesTable
+                companies={visibleCompanies}
+                onOpenRelated={(anchor, company) => {
+                  setRelatedParty(company);
+                  setRelatedAnchor(anchor);
+                }}
+                onEdit={(company) => {
+                  setSelected(company);
+                  setEditOpen(true);
+                }}
+              />
             )}
           />
         )}

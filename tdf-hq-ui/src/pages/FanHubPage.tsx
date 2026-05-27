@@ -58,6 +58,7 @@ import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
+const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -2248,7 +2249,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           <LazyPaginatedList
             items={filteredArtists}
             loading={artistsQuery.isFetching}
-            pagination={{ itemLabel: 'artistas', initialRowsPerPage: 12, resetKey: genreFilter }}
+            pagination={{ itemLabel: 'artistas', initialRowsPerPage: ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE, resetKey: genreFilter }}
             renderItems={(visibleArtists) => (
               <Grid container spacing={3} id="artist-list">
                 {visibleArtists.map((artist) => {

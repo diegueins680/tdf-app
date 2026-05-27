@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { createElement, useEffect, useMemo } from 'react';
 import { useParams, useLocation, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -101,7 +101,7 @@ export default function FanClubPage() {
 
   useEffect(() => {
     if (!isAuthenticated && club) {
-      setTab((prev) => (prev < 3 ? 3 : prev));
+      setTab((prev) => (3 > prev ? 3 : prev));
     }
   }, [isAuthenticated, club]);
 
@@ -307,7 +307,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                         <Avatar src={item.fcfAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
                         {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
-                        {item.fcfIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
+                        {item.fcfIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
                         <Box flexGrow={1} />
                         {isOfficer && (
@@ -317,7 +317,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                               aria-label={item.fcfIsHidden ? 'Mostrar elemento del feed' : 'Ocultar elemento del feed'}
                               onClick={() => hideMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, hide: !item.fcfIsHidden })}
                             >
-                              {item.fcfIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                              <VisibilityOffIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
@@ -562,7 +562,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Avatar src={post.fcpAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
-                        {post.fcpIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
+                        {post.fcpIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Box flexGrow={1} />
                         {isOfficer && (
                           <>
@@ -572,7 +572,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                                 aria-label={post.fcpIsPinned ? 'Desfijar post' : 'Fijar post'}
                                 onClick={() => pinMut.mutate({ postId: post.fcpId, pin: !post.fcpIsPinned })}
                               >
-                                {post.fcpIsPinned ? <PushPinOutlinedIcon fontSize="small" /> : <PushPinIcon fontSize="small" />}
+                                {createElement(PushPinOutlinedIcon, { fontSize: 'small' })}
                               </IconButton>
                             </Tooltip>
                             <Tooltip title={post.fcpIsHidden ? 'Mostrar' : 'Ocultar'}>
@@ -581,7 +581,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                                 aria-label={post.fcpIsHidden ? 'Mostrar post' : 'Ocultar post'}
                                 onClick={() => hideMut.mutate({ postId: post.fcpId, hide: !post.fcpIsHidden })}
                               >
-                                {post.fcpIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                                {createElement(VisibilityOffIcon, { fontSize: 'small' })}
                               </IconButton>
                             </Tooltip>
                           </>
@@ -736,7 +736,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                                 aria-label={memory.fcmIsHidden ? 'Mostrar recuerdo' : 'Ocultar recuerdo'}
                                 onClick={() => hideMut.mutate({ memoryId: memory.fcmId, hide: !memory.fcmIsHidden })}
                               >
-                                {memory.fcmIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                                {createElement(VisibilityOffIcon, { fontSize: 'small' })}
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Eliminar">
@@ -745,7 +745,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                                 aria-label="Eliminar recuerdo"
                                 onClick={() => deleteMut.mutate(memory.fcmId)}
                               >
-                                <VisibilityOffIcon fontSize="small" />
+                                {createElement(VisibilityOffIcon, { fontSize: 'small' })}
                               </IconButton>
                             </Tooltip>
                           </>
