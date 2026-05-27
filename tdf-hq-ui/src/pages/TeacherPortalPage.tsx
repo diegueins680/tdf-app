@@ -368,7 +368,7 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
   const { slot, deleting, deletingAvailabilityId, savingAvailability, onEdit, onDelete } = props;
   const availabilityCardRef = useRef<HTMLDivElement>(null);
   const isDeletingAvailability = deleting && deletingAvailabilityId === slot.availabilityId;
-  const actionDisabled = deleting || savingAvailability;
+  const availabilityActionsDisabled = deleting || savingAvailability;
   const availabilityFocusActions = {
     edit: () => {
       onEdit(slot);
@@ -400,7 +400,7 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
           <Button
             size="small"
             variant="outlined"
-            disabled={actionDisabled}
+            disabled={availabilityActionsDisabled}
             onClick={availabilityFocusActions.edit}
             tabIndex={0}
             data-focus-target="availability-dialog"
