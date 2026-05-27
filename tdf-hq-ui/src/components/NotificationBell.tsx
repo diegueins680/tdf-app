@@ -222,7 +222,7 @@ export default function NotificationBell() {
         ) : (
           <LazyPaginatedList
             items={notifications}
-            loading={notificationsQuery.isFetching}
+            loading={listQuery.isFetching}
             pagination={{ itemLabel: copy.title.toLocaleLowerCase(), initialRowsPerPage: 10 }}
             renderItems={(visibleNotifications) => (
               <List dense disablePadding sx={{ maxHeight: NOTIFICATION_BELL_CONTRACTS.notificationListMaxHeightPx }}>
