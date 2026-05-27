@@ -42,25 +42,43 @@ const buildCorsHint = (showCorsHint?: boolean) => {
 };
 
 export function ApiLoadingNotice({
-  title = 'Cargando datos',
-  message = 'Estamos preparando la informacion. La vista se actualizara automaticamente.',
+  title = 'Cargando',
+  message = 'Actualizando la vista.',
   helper,
 }: LoadingProps) {
+  const loadingLabel = title || 'Cargando';
+
   return (
-    <Alert
-      severity="info"
-      variant="outlined"
+    <Stack
+      direction="row"
+      spacing={1.25}
+      alignItems="flex-start"
       role="status"
       aria-live="polite"
       aria-busy="true"
-      icon={<CircularProgress size={18} aria-label={title} />}
+      sx={{
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        bgcolor: 'action.hover',
+        p: 1.5,
+      }}
     >
-      <Stack spacing={0.5}>
-        {title && <AlertTitle sx={{ mb: 0 }}>{title}</AlertTitle>}
-        {message && <Typography variant="body2">{message}</Typography>}
+      <CircularProgress size={18} aria-label={loadingLabel} sx={{ mt: 0.25, flex: '0 0 auto' }} />
+      <Stack spacing={0.25}>
+        {title && (
+          <Typography variant="body2" fontWeight={700}>
+            {title}
+          </Typography>
+        )}
+        {message && (
+          <Typography variant="body2" color="text.secondary">
+            {message}
+          </Typography>
+        )}
         {helper}
       </Stack>
-    </Alert>
+    </Stack>
   );
 }
 

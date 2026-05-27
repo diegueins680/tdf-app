@@ -48,7 +48,7 @@ describe('ApiLoadingNotice', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  it('renders a visible polite loading state for data-fetching panels', async () => {
+  it('renders a compact polite loading state for data-fetching panels', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderNotice(container);
@@ -58,6 +58,7 @@ describe('ApiLoadingNotice', () => {
       expect(status).not.toBeNull();
       expect(status?.getAttribute('aria-live')).toBe('polite');
       expect(status?.getAttribute('aria-busy')).toBe('true');
+      expect(container.querySelector('[role="alert"]')).toBeNull();
       expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe(
         'Cargando contenido publicado',
       );
