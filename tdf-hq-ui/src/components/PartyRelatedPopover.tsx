@@ -17,6 +17,7 @@ import {
 import type { PartyDTO, PartyRelatedDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { useNavigate } from 'react-router-dom';
+import LazyPaginatedList from './LazyPaginatedList';
 
 const fmtDateTime = (iso: string) => {
   const d = new Date(iso);
@@ -203,19 +204,25 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
                         <Typography variant="body2" fontWeight={700}>
                           Cliente ({bookingsCustomerCount})
                         </Typography>
-                        <List dense disablePadding>
-                          {bookingsCustomer.map((b) => (
-                            <ListItemButton
-                              key={`customer-${b.prbBookingId}`}
-                              onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
-                            >
-                              <ListItemText
-                                primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
-                                secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
-                              />
-                            </ListItemButton>
-                          ))}
-                        </List>
+                        <LazyPaginatedList
+                          items={bookingsCustomer}
+                          pagination={{ itemLabel: 'reservas', initialRowsPerPage: 5 }}
+                          renderItems={(visibleBookings) => (
+                            <List dense disablePadding>
+                              {visibleBookings.map((b) => (
+                                <ListItemButton
+                                  key={`customer-${b.prbBookingId}`}
+                                  onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
+                                >
+                                  <ListItemText
+                                    primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
+                                    secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
+                                  />
+                                </ListItemButton>
+                              ))}
+                            </List>
+                          )}
+                        />
                       </Box>
                     )}
                     {bookingsEngineerCount > 0 && (
@@ -223,19 +230,25 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
                         <Typography variant="body2" fontWeight={700}>
                           Ingeniero ({bookingsEngineerCount})
                         </Typography>
-                        <List dense disablePadding>
-                          {bookingsEngineer.map((b) => (
-                            <ListItemButton
-                              key={`engineer-${b.prbBookingId}`}
-                              onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
-                            >
-                              <ListItemText
-                                primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
-                                secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
-                              />
-                            </ListItemButton>
-                          ))}
-                        </List>
+                        <LazyPaginatedList
+                          items={bookingsEngineer}
+                          pagination={{ itemLabel: 'reservas', initialRowsPerPage: 5 }}
+                          renderItems={(visibleBookings) => (
+                            <List dense disablePadding>
+                              {visibleBookings.map((b) => (
+                                <ListItemButton
+                                  key={`engineer-${b.prbBookingId}`}
+                                  onClick={() => go(`/estudio/calendario?bookingId=${b.prbBookingId}`)}
+                                >
+                                  <ListItemText
+                                    primary={b.prbServiceType ?? b.prbTitle ?? `Booking #${b.prbBookingId}`}
+                                    secondary={`${fmtDateTime(b.prbStartsAt)} · ${b.prbStatus}`}
+                                  />
+                                </ListItemButton>
+                              ))}
+                            </List>
+                          )}
+                        />
                       </Box>
                     )}
                   </Stack>
@@ -253,25 +266,31 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
                         <Typography variant="body2" fontWeight={700}>
                           Estudiante ({classesStudentCount})
                         </Typography>
-                        <List dense disablePadding>
-                          {classesStudent.map((c) => (
-                            <ListItemButton
-                              key={`student-${c.prcClassSessionId}`}
-                              onClick={() =>
-                                go(
-                                  `/escuela/clases?studentId=${c.prcStudentId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
-                                    c.prcStartAt,
-                                  )}`,
-                                )
-                              }
-                            >
-                              <ListItemText
-                                primary={c.prcSubjectName ?? `Materia #${c.prcSubjectId}`}
-                                secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
-                              />
-                            </ListItemButton>
-                          ))}
-                        </List>
+                        <LazyPaginatedList
+                          items={classesStudent}
+                          pagination={{ itemLabel: 'clases', initialRowsPerPage: 5 }}
+                          renderItems={(visibleClasses) => (
+                            <List dense disablePadding>
+                              {visibleClasses.map((c) => (
+                                <ListItemButton
+                                  key={`student-${c.prcClassSessionId}`}
+                                  onClick={() =>
+                                    go(
+                                      `/escuela/clases?studentId=${c.prcStudentId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
+                                        c.prcStartAt,
+                                      )}`,
+                                    )
+                                  }
+                                >
+                                  <ListItemText
+                                    primary={c.prcSubjectName ?? `Materia #${c.prcSubjectId}`}
+                                    secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
+                                  />
+                                </ListItemButton>
+                              ))}
+                            </List>
+                          )}
+                        />
                       </Box>
                     )}
                     {classesTeacherCount > 0 && (
@@ -279,25 +298,31 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
                         <Typography variant="body2" fontWeight={700}>
                           Profesor ({classesTeacherCount})
                         </Typography>
-                        <List dense disablePadding>
-                          {classesTeacher.map((c) => (
-                            <ListItemButton
-                              key={`teacher-${c.prcClassSessionId}`}
-                              onClick={() =>
-                                go(
-                                  `/escuela/clases?teacherId=${c.prcTeacherId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
-                                    c.prcStartAt,
-                                  )}`,
-                                )
-                              }
-                            >
-                              <ListItemText
-                                primary={`${c.prcSubjectName ?? `Materia #${c.prcSubjectId}`} · ${c.prcStudentName ?? `Alumno #${c.prcStudentId}`}`}
-                                secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
-                              />
-                            </ListItemButton>
-                          ))}
-                        </List>
+                        <LazyPaginatedList
+                          items={classesTeacher}
+                          pagination={{ itemLabel: 'clases', initialRowsPerPage: 5 }}
+                          renderItems={(visibleClasses) => (
+                            <List dense disablePadding>
+                              {visibleClasses.map((c) => (
+                                <ListItemButton
+                                  key={`teacher-${c.prcClassSessionId}`}
+                                  onClick={() =>
+                                    go(
+                                      `/escuela/clases?teacherId=${c.prcTeacherId}&classSessionId=${c.prcClassSessionId}&at=${encodeURIComponent(
+                                        c.prcStartAt,
+                                      )}`,
+                                    )
+                                  }
+                                >
+                                  <ListItemText
+                                    primary={`${c.prcSubjectName ?? `Materia #${c.prcSubjectId}`} · ${c.prcStudentName ?? `Alumno #${c.prcStudentId}`}`}
+                                    secondary={`${fmtDateTime(c.prcStartAt)} · ${c.prcStatus}`}
+                                  />
+                                </ListItemButton>
+                              ))}
+                            </List>
+                          )}
+                        />
                       </Box>
                     )}
                   </Stack>
@@ -309,21 +334,27 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
                   <Typography variant="overline" color="text.secondary">
                     Tracks
                   </Typography>
-                  <List dense disablePadding>
-                    {tracksSorted.map((t) => (
-                      <ListItemButton
-                        key={t.prtId}
-                        onClick={() =>
-                          go(`/label/tracks?ownerId=${relatedQuery.data?.prPartyId ?? ''}&trackId=${encodeURIComponent(t.prtId)}`)
-                        }
-                      >
-                        <ListItemText
-                          primary={t.prtTitle}
-                          secondary={`${t.prtStatus} · actualizado: ${fmtDateTime(t.prtUpdatedAt)}`}
-                        />
-                      </ListItemButton>
-                    ))}
-                  </List>
+                  <LazyPaginatedList
+                    items={tracksSorted}
+                    pagination={{ itemLabel: 'tracks', initialRowsPerPage: 10 }}
+                    renderItems={(visibleTracks) => (
+                      <List dense disablePadding>
+                        {visibleTracks.map((t) => (
+                          <ListItemButton
+                            key={t.prtId}
+                            onClick={() =>
+                              go(`/label/tracks?ownerId=${relatedQuery.data?.prPartyId ?? ''}&trackId=${encodeURIComponent(t.prtId)}`)
+                            }
+                          >
+                            <ListItemText
+                              primary={t.prtTitle}
+                              secondary={`${t.prtStatus} · actualizado: ${fmtDateTime(t.prtUpdatedAt)}`}
+                            />
+                          </ListItemButton>
+                        ))}
+                      </List>
+                    )}
+                  />
                 </Box>
               )}
             </Stack>

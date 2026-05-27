@@ -15,6 +15,7 @@ import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import TagIcon from '@mui/icons-material/Tag';
 import { Ads } from '../api/ads';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 export default function AdsInboxPage() {
   const inquiriesQuery = useQuery({
@@ -47,31 +48,42 @@ export default function AdsInboxPage() {
         {inquiries.length === 0 && !inquiriesQuery.isLoading && (
           <Typography color="text.secondary">No hay leads aún.</Typography>
         )}
-        {inquiries.map((inq) => (
-          <Paper key={inq.inquiryId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-              <Avatar sx={{ bgcolor: '#1d4ed8', color: '#fff' }}>{(inq.name ?? 'L')[0]}</Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography fontWeight={700}>{inq.name ?? 'Lead sin nombre'}</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                  {inq.course && <Chip icon={<TagIcon fontSize="small" />} label={inq.course} size="small" />}
-                  {inq.channel && <Chip icon={<CampaignIcon fontSize="small" />} label={inq.channel} size="small" variant="outlined" />}
-                  {inq.email && <Chip icon={<EmailIcon fontSize="small" />} label={inq.email} size="small" variant="outlined" />}
-                  {inq.phone && <Chip icon={<PhoneIphoneIcon fontSize="small" />} label={inq.phone} size="small" variant="outlined" />}
-                  <Chip label={inq.status} size="small" color="primary" variant="outlined" />
-                </Stack>
-                {inq.message && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {inq.message}
-                  </Typography>
-                )}
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {new Date(inq.createdAt).toLocaleString('es-EC', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </Typography>
-            </Stack>
-          </Paper>
-        ))}
+        {inquiries.length > 0 && (
+          <LazyPaginatedList
+            items={inquiries}
+            loading={inquiriesQuery.isFetching}
+            pagination={{ itemLabel: 'leads', initialRowsPerPage: 10 }}
+            renderItems={(visibleInquiries) => (
+              <Stack spacing={1.5}>
+                {visibleInquiries.map((inq) => (
+                  <Paper key={inq.inquiryId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                      <Avatar sx={{ bgcolor: '#1d4ed8', color: '#fff' }}>{(inq.name ?? 'L')[0]}</Avatar>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography fontWeight={700}>{inq.name ?? 'Lead sin nombre'}</Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                          {inq.course && <Chip icon={<TagIcon fontSize="small" />} label={inq.course} size="small" />}
+                          {inq.channel && <Chip icon={<CampaignIcon fontSize="small" />} label={inq.channel} size="small" variant="outlined" />}
+                          {inq.email && <Chip icon={<EmailIcon fontSize="small" />} label={inq.email} size="small" variant="outlined" />}
+                          {inq.phone && <Chip icon={<PhoneIphoneIcon fontSize="small" />} label={inq.phone} size="small" variant="outlined" />}
+                          <Chip label={inq.status} size="small" color="primary" variant="outlined" />
+                        </Stack>
+                        {inq.message && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {inq.message}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(inq.createdAt).toLocaleString('es-EC', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
+          />
+        )}
       </Stack>
     </Stack>
   );

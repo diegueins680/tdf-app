@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildDefaultConfig, extractTidalCode, tidalAgentRequest } from '../utils/tidalAgent';
 
 interface HistoryItem {
@@ -279,71 +280,77 @@ export default function TidalAgentPage() {
                       Limpiar historial
                     </Button>
                   </Stack>
-                  <Stack spacing={1}>
-                    {history.map((item, idx) => (
-                      <Card key={`${item.prompt}-${idx}`} variant="outlined">
-                        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                          {historyMode === 'full' && <Typography variant="body2">{item.prompt}</Typography>}
-                          <Box
-                            sx={{
-                              bgcolor: 'rgba(148,163,184,0.08)',
-                              border: '1px dashed',
-                              borderColor: 'divider',
-                              borderRadius: 1,
-                              p: 1,
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                              whiteSpace: 'pre-line',
-                            }}
-                          >
-                            {item.code}
-                          </Box>
-                          <Button
-                            size="small"
-                            startIcon={<ContentCopyIcon fontSize="small" />}
-                            onClick={() => {
-                              navigator.clipboard
-                                .writeText(item.code)
-                                .catch((err) => logger.warn('No se pudo copiar el historial', err));
-                            }}
-                          >
-                            Copiar
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => {
-                              setPrompt(item.prompt);
-                              setCode(item.code);
-                            }}
-                          >
-                            Usar prompt
-                          </Button>
-                          <Button
-                            size="small"
-                            variant={pinned?.code === item.code ? 'contained' : 'outlined'}
-                            onClick={() => {
-                              setPinned((prev) => (prev?.code === item.code ? null : item));
-                            }}
-                          >
-                            {pinned?.code === item.code ? 'Quitar pin' : 'Fijar'}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              const wrapped = `${target} $ (${item.code})`;
-                              navigator.clipboard
-                                .writeText(wrapped)
-                                .catch((err) => logger.warn('No se pudo copiar con destino', err));
-                              setShowRaw(false);
-                            }}
-                          >
-                            Copiar con {target} $ y cerrar raw
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Stack>
+                  <LazyPaginatedList
+                    items={history}
+                    pagination={{ itemLabel: 'historiales', initialRowsPerPage: 10, resetKey: historyMode }}
+                    renderItems={(visibleHistory) => (
+                      <Stack spacing={1}>
+                        {visibleHistory.map((item, idx) => (
+                          <Card key={`${item.prompt}-${idx}`} variant="outlined">
+                            <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                              {historyMode === 'full' && <Typography variant="body2">{item.prompt}</Typography>}
+                              <Box
+                                sx={{
+                                  bgcolor: 'rgba(148,163,184,0.08)',
+                                  border: '1px dashed',
+                                  borderColor: 'divider',
+                                  borderRadius: 1,
+                                  p: 1,
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  whiteSpace: 'pre-line',
+                                }}
+                              >
+                                {item.code}
+                              </Box>
+                              <Button
+                                size="small"
+                                startIcon={<ContentCopyIcon fontSize="small" />}
+                                onClick={() => {
+                                  navigator.clipboard
+                                    .writeText(item.code)
+                                    .catch((err) => logger.warn('No se pudo copiar el historial', err));
+                                }}
+                              >
+                                Copiar
+                              </Button>
+                              <Button
+                                size="small"
+                                onClick={() => {
+                                  setPrompt(item.prompt);
+                                  setCode(item.code);
+                                }}
+                              >
+                                Usar prompt
+                              </Button>
+                              <Button
+                                size="small"
+                                variant={pinned?.code === item.code ? 'contained' : 'outlined'}
+                                onClick={() => {
+                                  setPinned((prev) => (prev?.code === item.code ? null : item));
+                                }}
+                              >
+                                {pinned?.code === item.code ? 'Quitar pin' : 'Fijar'}
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => {
+                                  const wrapped = `${target} $ (${item.code})`;
+                                  navigator.clipboard
+                                    .writeText(wrapped)
+                                    .catch((err) => logger.warn('No se pudo copiar con destino', err));
+                                  setShowRaw(false);
+                                }}
+                              >
+                                Copiar con {target} $ y cerrar raw
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Stack>
+                    )}
+                  />
                 </Stack>
               )}
 

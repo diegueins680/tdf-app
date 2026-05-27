@@ -24,6 +24,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { Brain, RagAdmin, type BrainEntryDTO } from '../api/brain';
 import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
 
@@ -396,54 +397,61 @@ export default function BrainAdminPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Stack spacing={2}>
-                {entries.map((entry) => (
-                  <Card key={entry.bedId} variant="outlined">
-                    <CardContent>
-                      <Stack spacing={1}>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                          <Typography variant="h6" fontWeight={700}>
-                            {entry.bedTitle}
-                          </Typography>
-                          {(includeInactive || !entry.bedActive) && (
-                            <Chip
-                              label={entry.bedActive ? 'Activa' : 'Inactiva'}
-                              color={entry.bedActive ? 'success' : 'default'}
-                              size="small"
-                            />
-                          )}
-                          {entry.bedCategory && (
-                            <Chip label={entry.bedCategory} variant="outlined" size="small" />
-                          )}
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                          {entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody}
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          {(entry.bedTags ?? []).map((tag) => (
-                            <Chip key={tag} label={tag} size="small" variant="outlined" />
-                          ))}
-                          <Chip
-                            label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
+              <LazyPaginatedList
+                items={entries}
+                loading={entriesQuery.isFetching}
+                pagination={{ itemLabel: 'entradas', initialRowsPerPage: 10, resetKey: includeInactive }}
+                renderItems={(visibleEntries) => (
+                  <Stack spacing={2}>
+                    {visibleEntries.map((entry) => (
+                      <Card key={entry.bedId} variant="outlined">
+                        <CardContent>
+                          <Stack spacing={1}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                              <Typography variant="h6" fontWeight={700}>
+                                {entry.bedTitle}
+                              </Typography>
+                              {(includeInactive || !entry.bedActive) && (
+                                <Chip
+                                  label={entry.bedActive ? 'Activa' : 'Inactiva'}
+                                  color={entry.bedActive ? 'success' : 'default'}
+                                  size="small"
+                                />
+                              )}
+                              {entry.bedCategory && (
+                                <Chip label={entry.bedCategory} variant="outlined" size="small" />
+                              )}
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary">
+                              {entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody}
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {(entry.bedTags ?? []).map((tag) => (
+                                <Chip key={tag} label={tag} size="small" variant="outlined" />
+                              ))}
+                              <Chip
+                                label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
+                                size="small"
+                              />
+                            </Stack>
+                          </Stack>
+                        </CardContent>
+                        <CardActions>
+                          <Button
+                            startIcon={<EditIcon />}
                             size="small"
-                          />
-                        </Stack>
-                      </Stack>
-                    </CardContent>
-                    <CardActions>
-                      <Button
-                        startIcon={<EditIcon />}
-                        size="small"
-                        onClick={() => {
-                          openEdit(entry);
-                        }}
-                      >
-                        Editar
-                      </Button>
-                    </CardActions>
-                  </Card>
-                ))}
-              </Stack>
+                            onClick={() => {
+                              openEdit(entry);
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        </CardActions>
+                      </Card>
+                    ))}
+                  </Stack>
+                )}
+              />
             )}
           </Stack>
         </Paper>

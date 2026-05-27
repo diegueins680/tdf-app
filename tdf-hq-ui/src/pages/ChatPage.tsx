@@ -32,6 +32,7 @@ import { ChatAPI } from '../api/chat';
 import { Meta } from '../api/meta';
 import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ChatMessageDTO, ChatThreadDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { countUnreadThreads, isThreadUnread, loadChatReadMap, markThreadSeen, subscribeToChatReadState } from '../utils/chatReadState';
@@ -373,46 +374,53 @@ export default function ChatPage() {
                 <Alert severity="info">No tienes conversaciones todavía. Crea una con “Nuevo chat”.</Alert>
               </Box>
             ) : (
-              <List dense disablePadding sx={{ maxHeight: { xs: 360, md: 560 }, overflowY: 'auto' }}>
-                {threads.map((t) => {
-                  const unread = isThreadUnread(t, readMap);
-                  return (
-                  <ListItemButton
-                    key={t.ctThreadId}
-                    selected={t.ctThreadId === selectedThreadId}
-                    onClick={() => {
-                      setSelectedThreadId(t.ctThreadId);
-                      setSendError(null);
-                    }}
-                    sx={{ px: 2, py: 1.25 }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
-                          <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
-                            {t.ctOtherDisplayName.trim() ? t.ctOtherDisplayName : `Party #${t.ctOtherPartyId}`}
-                            {unread && (
-                              <FiberManualRecordIcon
-                                sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }}
-                              />
-                            )}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap>
-                            {formatTimestamp(t.ctLastMessageAt ?? t.ctUpdatedAt)}
-                          </Typography>
-                        </Stack>
-                      }
-                      secondary={
-                        t.ctLastMessage
-                          ? truncate(t.ctLastMessage, 64)
-                          : 'Sin mensajes aún'
-                      }
-                      secondaryTypographyProps={{ noWrap: true }}
-                    />
-                  </ListItemButton>
-                  );
-                })}
-              </List>
+              <LazyPaginatedList
+                items={threads}
+                loading={threadsQuery.isFetching}
+                pagination={{ itemLabel: 'conversaciones', initialRowsPerPage: 10 }}
+                renderItems={(visibleThreads) => (
+                  <List dense disablePadding>
+                    {visibleThreads.map((t) => {
+                      const unread = isThreadUnread(t, readMap);
+                      return (
+                      <ListItemButton
+                        key={t.ctThreadId}
+                        selected={t.ctThreadId === selectedThreadId}
+                        onClick={() => {
+                          setSelectedThreadId(t.ctThreadId);
+                          setSendError(null);
+                        }}
+                        sx={{ px: 2, py: 1.25 }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
+                              <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
+                                {t.ctOtherDisplayName.trim() ? t.ctOtherDisplayName : `Party #${t.ctOtherPartyId}`}
+                                {unread && (
+                                  <FiberManualRecordIcon
+                                    sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }}
+                                  />
+                                )}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" noWrap>
+                                {formatTimestamp(t.ctLastMessageAt ?? t.ctUpdatedAt)}
+                              </Typography>
+                            </Stack>
+                          }
+                          secondary={
+                            t.ctLastMessage
+                              ? truncate(t.ctLastMessage, 64)
+                              : 'Sin mensajes aún'
+                          }
+                          secondaryTypographyProps={{ noWrap: true }}
+                        />
+                      </ListItemButton>
+                      );
+                    })}
+                  </List>
+                )}
+              />
             )}
           </CardContent>
         </Card>

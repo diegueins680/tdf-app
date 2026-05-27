@@ -14,6 +14,7 @@ import {
   MailOutline as MailIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { Fans } from '../api/fans';
 import { ChatAPI } from '../api/chat';
 import { useSession } from '../session/SessionContext';
@@ -124,50 +125,57 @@ export default function FanClubMemberProfilePage() {
               description="Aún no hay miembros en este club de fans."
             />
           ) : (
-            <Grid container spacing={2}>
-              {profilesQuery.data.map((member) => (
-                <Grid item xs={12} sm={6} md={4} key={member.fcmpPartyId}>
-                  <Card
-                    component={RouterLink}
-                    to={`/fans/clubs/${artistIdNum}/members/${member.fcmpPartyId}`}
-                    sx={{
-                      textDecoration: 'none',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: (theme) => theme.shadows[4],
-                      },
-                    }}
-                  >
-                    <CardContent>
-                      <Stack direction="row" spacing={2} alignItems="center">
-                        <Avatar
-                          src={member.fcmpAvatarUrl || undefined}
-                          sx={{ width: 56, height: 56 }}
-                        >
-                          {member.fcmpDisplayName.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Box flexGrow={1} minWidth={0}>
-                          <Typography variant="subtitle1" fontWeight={600} noWrap>
-                            {member.fcmpDisplayName}
-                          </Typography>
-                          {member.fcmpHandle && (
-                            <Typography variant="body2" color="text.secondary" noWrap>
-                              @{member.fcmpHandle}
-                            </Typography>
-                          )}
-                          <Chip
-                            size="small"
-                            label={`Desde ${new Date(member.fcmpJoinedAt).toLocaleDateString()}`}
-                            sx={{ mt: 0.5 }}
-                          />
-                        </Box>
-                      </Stack>
-                    </CardContent>
-                  </Card>
+            <LazyPaginatedList
+              items={profilesQuery.data}
+              loading={profilesQuery.isFetching}
+              pagination={{ itemLabel: 'miembros', initialRowsPerPage: 12 }}
+              renderItems={(visibleMembers) => (
+                <Grid container spacing={2}>
+                  {visibleMembers.map((member) => (
+                    <Grid item xs={12} sm={6} md={4} key={member.fcmpPartyId}>
+                      <Card
+                        component={RouterLink}
+                        to={`/fans/clubs/${artistIdNum}/members/${member.fcmpPartyId}`}
+                        sx={{
+                          textDecoration: 'none',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: (theme) => theme.shadows[4],
+                          },
+                        }}
+                      >
+                        <CardContent>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Avatar
+                              src={member.fcmpAvatarUrl || undefined}
+                              sx={{ width: 56, height: 56 }}
+                            >
+                              {member.fcmpDisplayName.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box flexGrow={1} minWidth={0}>
+                              <Typography variant="subtitle1" fontWeight={600} noWrap>
+                                {member.fcmpDisplayName}
+                              </Typography>
+                              {member.fcmpHandle && (
+                                <Typography variant="body2" color="text.secondary" noWrap>
+                                  @{member.fcmpHandle}
+                                </Typography>
+                              )}
+                              <Chip
+                                size="small"
+                                label={`Desde ${new Date(member.fcmpJoinedAt).toLocaleDateString()}`}
+                                sx={{ mt: 0.5 }}
+                              />
+                            </Box>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              )}
+            />
           )}
         </Stack>
       </PageShell>
@@ -311,34 +319,40 @@ export default function FanClubMemberProfilePage() {
             description="Este miembro aún no ha compartido recuerdos."
           />
         ) : (
-          <Grid container spacing={2}>
-            {memberMemories.map(memory => (
-              <Grid item xs={12} md={6} key={memory.fcmId}>
-                <Card>
-                  <CardContent>
-                    <Stack spacing={1}>
-                      <Typography variant="h6">{memory.fcmTitle}</Typography>
-                      {memory.fcmDescription && (
-                        <Typography variant="body2" color="text.secondary">{memory.fcmDescription}</Typography>
-                      )}
-                      {memory.fcmMediaUrls.length > 0 && (
-                        <ImageList cols={2} gap={8}>
-                          {memory.fcmMediaUrls.map((url, idx) => (
-                            <ImageListItem key={idx}>
-                              <img src={url} alt={`Memory ${idx}`} loading="lazy" style={{ maxHeight: 200, objectFit: 'cover' }} />
-                            </ImageListItem>
-                          ))}
-                        </ImageList>
-                      )}
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(memory.fcmCreatedAt).toLocaleString()}
-                      </Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
+          <LazyPaginatedList
+            items={memberMemories}
+            pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 6 }}
+            renderItems={(visibleMemories) => (
+              <Grid container spacing={2}>
+                {visibleMemories.map(memory => (
+                  <Grid item xs={12} md={6} key={memory.fcmId}>
+                    <Card>
+                      <CardContent>
+                        <Stack spacing={1}>
+                          <Typography variant="h6">{memory.fcmTitle}</Typography>
+                          {memory.fcmDescription && (
+                            <Typography variant="body2" color="text.secondary">{memory.fcmDescription}</Typography>
+                          )}
+                          {memory.fcmMediaUrls.length > 0 && (
+                            <ImageList cols={2} gap={8}>
+                              {memory.fcmMediaUrls.map((url, idx) => (
+                                <ImageListItem key={idx}>
+                                  <img src={url} alt={`Memory ${idx}`} loading="lazy" style={{ maxHeight: 200, objectFit: 'cover' }} />
+                                </ImageListItem>
+                              ))}
+                            </ImageList>
+                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(memory.fcmCreatedAt).toLocaleString()}
+                          </Typography>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            )}
+          />
         )}
 
         <Dialog open={inboxOpen} onClose={() => setInboxOpen(false)} fullWidth maxWidth="sm">

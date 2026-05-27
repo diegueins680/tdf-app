@@ -52,6 +52,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Countries } from '../api/countries';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface Prompt {
   text: string;
@@ -2672,59 +2673,82 @@ export default function RadioWidget() {
                         </Tooltip>
                       )}
                     </Stack>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {sortedVisibleStations.map((station) => (
-                        <Chip
-                          key={station.id}
-                          label={
-                            station.country || station.region || station.genre
-                              ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
-                              : station.name
-                          }
-                          color={station.id === activeId ? 'primary' : 'default'}
-                          onClick={() => {
-                            setPlaybackWarning(null);
-                            setActiveId(station.id);
-                          }}
-                          variant={station.id === activeId ? 'filled' : 'outlined'}
-                          onDelete={
-                            station.id.startsWith('custom-')
-                              ? () => removeCustomStation(station.id)
-                              : () => hideStation(station)
-                          }
-                          deleteIcon={
-                            station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
-                          }
-                          icon={
-                            station.id === activeId ? (
-                              <FiberManualRecordIcon fontSize="small" color="success" />
-                            ) : favoriteSet.has(keyFor(station)) ? (
-                              <StarIcon fontSize="small" />
-                            ) : undefined
-                          }
-                        />
-                      ))}
-                    </Stack>
-                    {showHidden && hiddenStations.length > 0 && (
-                      <Stack spacing={0.5}>
-                        <Typography variant="caption" color="text.secondary">
-                          Ocultas ({hiddenStations.length})
-                        </Typography>
+                    <LazyPaginatedList
+                      items={sortedVisibleStations}
+                      loading={streamsFetching}
+                      pagination={{
+                        itemLabel: 'estaciones',
+                        initialRowsPerPage: 24,
+                        rowsPerPageOptions: [24, 48, 96],
+                        resetKey: [countryQuery, genreQuery, showHidden, showFavoritesOnly].join('|'),
+                      }}
+                      renderItems={(visibleStationsPage) => (
                         <Stack direction="row" spacing={1} flexWrap="wrap">
-                          {hiddenStations.map((station) => (
+                          {visibleStationsPage.map((station) => (
                             <Chip
-                              key={`hidden-${station.id}`}
+                              key={station.id}
                               label={
                                 station.country || station.region || station.genre
                                   ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
                                   : station.name
                               }
-                              variant="outlined"
-                              onDelete={() => unhideStation(station)}
-                              deleteIcon={<RestartAltIcon fontSize="small" />}
+                              color={station.id === activeId ? 'primary' : 'default'}
+                              onClick={() => {
+                                setPlaybackWarning(null);
+                                setActiveId(station.id);
+                              }}
+                              variant={station.id === activeId ? 'filled' : 'outlined'}
+                              onDelete={
+                                station.id.startsWith('custom-')
+                                  ? () => removeCustomStation(station.id)
+                                  : () => hideStation(station)
+                              }
+                              deleteIcon={
+                                station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
+                              }
+                              icon={
+                                station.id === activeId ? (
+                                  <FiberManualRecordIcon fontSize="small" color="success" />
+                                ) : favoriteSet.has(keyFor(station)) ? (
+                                  <StarIcon fontSize="small" />
+                                ) : undefined
+                              }
                             />
                           ))}
                         </Stack>
+                      )}
+                    />
+                    {showHidden && hiddenStations.length > 0 && (
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Ocultas ({hiddenStations.length})
+                        </Typography>
+                        <LazyPaginatedList
+                          items={hiddenStations}
+                          pagination={{
+                            itemLabel: 'ocultas',
+                            initialRowsPerPage: 24,
+                            rowsPerPageOptions: [24, 48, 96],
+                            resetKey: hiddenStations.length,
+                          }}
+                          renderItems={(visibleHiddenStations) => (
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {visibleHiddenStations.map((station) => (
+                                <Chip
+                                  key={`hidden-${station.id}`}
+                                  label={
+                                    station.country || station.region || station.genre
+                                      ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
+                                      : station.name
+                                  }
+                                  variant="outlined"
+                                  onDelete={() => unhideStation(station)}
+                                  deleteIcon={<RestartAltIcon fontSize="small" />}
+                                />
+                              ))}
+                            </Stack>
+                          )}
+                        />
                       </Stack>
                     )}
                   </Stack>

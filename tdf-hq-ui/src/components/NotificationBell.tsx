@@ -8,6 +8,7 @@ import { Notifications as NotificationsIcon, DoneAll as DoneAllIcon } from '@mui
 import { useTranslation } from 'react-i18next';
 import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
+import LazyPaginatedList from './LazyPaginatedList';
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
 
 interface TargetEvent {
@@ -219,34 +220,37 @@ export default function NotificationBell() {
             <Typography variant="body2" color="text.secondary">{copy.empty}</Typography>
           </Box>
         ) : (
-          <List
-            dense
-            disablePadding
-            sx={{ overflow: 'auto', maxHeight: NOTIFICATION_BELL_CONTRACTS.notificationListMaxHeightPx }}
-          >
-            {notifications.map((n) => (
-              <ListItemButton
-                key={n.nId}
-                onClick={(event) => focus.afterMarkRead(n, event.currentTarget)}
-                onKeyDown={(event) => focus.afterMarkReadKeyDown(event, n)}
-                disabled={pendingReadId === n.nId}
-                aria-busy={pendingReadId === n.nId ? true : undefined}
-                sx={{ bgcolor: n.nIsRead ? 'transparent' : 'action.hover' }}
-              >
-                <ListItemText
-                  primary={n.nTitle}
-                  secondary={
-                    <Stack component="span" spacing={0.5}>
-                      <Typography variant="caption" component="span">{n.nBody}</Typography>
-                      <Typography variant="caption" component="span" color="text.disabled">
-                        {new Date(n.nCreatedAt).toLocaleString()}
-                      </Typography>
-                    </Stack>
-                  }
-                />
-              </ListItemButton>
-            ))}
-          </List>
+          <LazyPaginatedList
+            items={notifications}
+            loading={notificationsQuery.isFetching}
+            pagination={{ itemLabel: copy.title.toLocaleLowerCase(), initialRowsPerPage: 10 }}
+            renderItems={(visibleNotifications) => (
+              <List dense disablePadding sx={{ maxHeight: NOTIFICATION_BELL_CONTRACTS.notificationListMaxHeightPx }}>
+                {visibleNotifications.map((n) => (
+                  <ListItemButton
+                    key={n.nId}
+                    onClick={(event) => focus.afterMarkRead(n, event.currentTarget)}
+                    onKeyDown={(event) => focus.afterMarkReadKeyDown(event, n)}
+                    disabled={pendingReadId === n.nId}
+                    aria-busy={pendingReadId === n.nId ? true : undefined}
+                    sx={{ bgcolor: n.nIsRead ? 'transparent' : 'action.hover' }}
+                  >
+                    <ListItemText
+                      primary={n.nTitle}
+                      secondary={
+                        <Stack component="span" spacing={0.5}>
+                          <Typography variant="caption" component="span">{n.nBody}</Typography>
+                          <Typography variant="caption" component="span" color="text.disabled">
+                            {new Date(n.nCreatedAt).toLocaleString()}
+                          </Typography>
+                        </Stack>
+                      }
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            )}
+          />
         )}
       </Popover>
     </>

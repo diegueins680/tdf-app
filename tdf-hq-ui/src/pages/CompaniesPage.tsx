@@ -25,6 +25,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import PageShell, { EmptyState } from '../components/PageShell';
 
@@ -268,58 +269,64 @@ export default function CompaniesPage() {
             actionOnClick={() => setCreateOpen(true)}
           />
         ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Empresa</TableCell>
-                <TableCell>Correo</TableCell>
-                <TableCell>Teléfono</TableCell>
-                <TableCell>RUC / Tax ID</TableCell>
-                <TableCell>Notas</TableCell>
-                <TableCell align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {companies.map((c) => (
-                <TableRow key={c.partyId} hover>
-                  <TableCell>
-                    <Stack spacing={0.5}>
-                      <Button
-                        variant="text"
-                        onClick={(event) => {
-                          setRelatedParty(c);
-                          setRelatedAnchor(event.currentTarget);
-                        }}
-                        sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
-                      >
-                        <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                          {c.displayName}
-                        </Typography>
-                      </Button>
-                      {c.legalName && <Typography variant="body2" color="text.secondary">{c.legalName}</Typography>}
-                      {c.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{c.primaryEmail ?? '—'}</TableCell>
-                  <TableCell>{c.primaryPhone ?? '—'}</TableCell>
-                  <TableCell>{c.taxId ?? '—'}</TableCell>
-                  <TableCell>{c.notes ?? '—'}</TableCell>
-                  <TableCell align="right">
-                    <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      onClick={() => {
-                        setSelected(c);
-                        setEditOpen(true);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <LazyPaginatedList
+            items={companies}
+            pagination={{ itemLabel: 'empresas', initialRowsPerPage: 25, resetKey: search.trim() }}
+            renderItems={(visibleCompanies) => (
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Empresa</TableCell>
+                    <TableCell>Correo</TableCell>
+                    <TableCell>Teléfono</TableCell>
+                    <TableCell>RUC / Tax ID</TableCell>
+                    <TableCell>Notas</TableCell>
+                    <TableCell align="right">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {visibleCompanies.map((c) => (
+                    <TableRow key={c.partyId} hover>
+                      <TableCell>
+                        <Stack spacing={0.5}>
+                          <Button
+                            variant="text"
+                            onClick={(event) => {
+                              setRelatedParty(c);
+                              setRelatedAnchor(event.currentTarget);
+                            }}
+                            sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                          >
+                            <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                              {c.displayName}
+                            </Typography>
+                          </Button>
+                          {c.legalName && <Typography variant="body2" color="text.secondary">{c.legalName}</Typography>}
+                          {c.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{c.primaryEmail ?? '—'}</TableCell>
+                      <TableCell>{c.primaryPhone ?? '—'}</TableCell>
+                      <TableCell>{c.taxId ?? '—'}</TableCell>
+                      <TableCell>{c.notes ?? '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => {
+                            setSelected(c);
+                            setEditOpen(true);
+                          }}
+                        >
+                          Editar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          />
         )}
       </Paper>
     </Stack>

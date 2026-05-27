@@ -39,6 +39,7 @@ import {
   type TrialAvailabilityUpsert,
   type TrialSubject,
 } from '../api/trials';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
@@ -864,37 +865,48 @@ export default function TeacherPortalPage() {
                   No tienes clases en este filtro.
                 </Typography>
               )}
-              {agendaClasses.map((cls) => (
-                <Paper key={cls.classSessionId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>
-                        {cls.subjectName ?? `Materia #${cls.subjectId}`} · {cls.studentName ?? `Alumno #${cls.studentId}`}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(cls.startAt)} → {formatDateTime(cls.endAt)} · {cls.roomName ?? cls.roomId ?? 'Sala'}
-                      </Typography>
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                        <Chip size="small" label={cls.status} variant="outlined" />
-                        {cls.notes && <Chip size="small" label="Notas" variant="outlined" />}
-                      </Stack>
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => openEditClass(cls)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => attendClassMutation.mutate(cls.classSessionId)}
-                        disabled={cls.status === 'realizada' || attendClassMutation.isPending}
-                      >
-                        Marcar realizada
-                      </Button>
+              {agendaClasses.length > 0 && (
+                <LazyPaginatedList
+                  items={agendaClasses}
+                  loading={classesQuery.isFetching}
+                  pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey: agendaView }}
+                  renderItems={(visibleClasses) => (
+                    <Stack spacing={1.5}>
+                      {visibleClasses.map((cls) => (
+                        <Paper key={cls.classSessionId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+                            <Box>
+                              <Typography fontWeight={800}>
+                                {cls.subjectName ?? `Materia #${cls.subjectId}`} · {cls.studentName ?? `Alumno #${cls.studentId}`}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatDateTime(cls.startAt)} → {formatDateTime(cls.endAt)} · {cls.roomName ?? cls.roomId ?? 'Sala'}
+                              </Typography>
+                              <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
+                                <Chip size="small" label={cls.status} variant="outlined" />
+                                {cls.notes && <Chip size="small" label="Notas" variant="outlined" />}
+                              </Stack>
+                            </Box>
+                            <Stack direction="row" spacing={1}>
+                              <Button size="small" variant="outlined" onClick={() => openEditClass(cls)}>
+                                Editar
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => attendClassMutation.mutate(cls.classSessionId)}
+                                disabled={cls.status === 'realizada' || attendClassMutation.isPending}
+                              >
+                                Marcar realizada
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        </Paper>
+                      ))}
                     </Stack>
-                  </Stack>
-                </Paper>
-              ))}
+                  )}
+                />
+              )}
             </Stack>
           </Box>
         )}
@@ -925,21 +937,32 @@ export default function TeacherPortalPage() {
                   Todavía no tienes alumnos.
                 </Alert>
               )}
-              {myStudents.map((student) => (
-                <Paper key={student.studentId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>{student.displayName}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
-                      </Typography>
-                    </Box>
-                    <Button size="small" variant="outlined" onClick={() => openEditStudent(student)}>
-                      Editar
-                    </Button>
-                  </Stack>
-                </Paper>
-              ))}
+              {myStudents.length > 0 && (
+                <LazyPaginatedList
+                  items={myStudents}
+                  loading={studentsQuery.isFetching}
+                  pagination={{ itemLabel: 'alumnos', initialRowsPerPage: 10 }}
+                  renderItems={(visibleStudents) => (
+                    <Stack spacing={1.5}>
+                      {visibleStudents.map((student) => (
+                        <Paper key={student.studentId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+                            <Box>
+                              <Typography fontWeight={800}>{student.displayName}</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
+                              </Typography>
+                            </Box>
+                            <Button size="small" variant="outlined" onClick={() => openEditStudent(student)}>
+                              Editar
+                            </Button>
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                />
+              )}
             </Stack>
           </Box>
         )}
@@ -1082,39 +1105,50 @@ export default function TeacherPortalPage() {
                   No hay disponibilidad en este filtro.
                 </Alert>
               )}
-              {availabilitySlots.map((slot) => (
-                <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>
-                        {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
-                      </Typography>
-                      {slot.notes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {slot.notes}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => openEditAvailability(slot)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        onClick={() => deleteAvailabilityMutation.mutate(slot.availabilityId)}
-                        disabled={deleteAvailabilityMutation.isPending}
-                      >
-                        Eliminar
-                      </Button>
+              {availabilitySlots.length > 0 && (
+                <LazyPaginatedList
+                  items={availabilitySlots}
+                  loading={availabilityQuery.isFetching}
+                  pagination={{ itemLabel: 'horarios', initialRowsPerPage: 10, resetKey: availabilityView }}
+                  renderItems={(visibleAvailabilitySlots) => (
+                    <Stack spacing={1.5}>
+                      {visibleAvailabilitySlots.map((slot) => (
+                        <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+                            <Box>
+                              <Typography fontWeight={800}>
+                                {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
+                              </Typography>
+                              {slot.notes && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                  {slot.notes}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Stack direction="row" spacing={1}>
+                              <Button size="small" variant="outlined" onClick={() => openEditAvailability(slot)}>
+                                Editar
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                onClick={() => deleteAvailabilityMutation.mutate(slot.availabilityId)}
+                                disabled={deleteAvailabilityMutation.isPending}
+                              >
+                                Eliminar
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        </Paper>
+                      ))}
                     </Stack>
-                  </Stack>
-                </Paper>
-              ))}
+                  )}
+                />
+              )}
             </Stack>
           </Box>
         )}

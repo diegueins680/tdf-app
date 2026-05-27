@@ -27,6 +27,7 @@ import { useSession } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import ArtistFansList from '../components/ArtistFansList';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 export default function ArtistPublicPage() {
   const { slugOrId } = useParams();
@@ -391,44 +392,53 @@ export default function ArtistPublicPage() {
                 </Typography>
               )}
 
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                {releases.map((release) => (
-                  <Grid key={release.arReleaseId} item xs={12} sm={6} md={4}>
-                    <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
-                      {release.arCoverImageUrl && (
-                        <CardMedia component="img" height="180" image={release.arCoverImageUrl} alt={release.arTitle} loading="lazy" />
-                      )}
-                      <CardContent>
-                        <Stack spacing={1}>
-                          <Typography fontWeight={800}>{release.arTitle}</Typography>
-                          {release.arReleaseDate && (
-                            <Typography variant="caption" color="text.secondary">
-                              {new Date(release.arReleaseDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            </Typography>
-                          )}
-                          {release.arDescription && (
-                            <Typography variant="body2" color="text.secondary">
-                              {release.arDescription.length > 140 ? `${release.arDescription.slice(0, 140)}…` : release.arDescription}
-                            </Typography>
-                          )}
-                          <Stack direction="row" spacing={1} flexWrap="wrap">
-                            {release.arSpotifyUrl && (
-                              <Button size="small" component="a" href={release.arSpotifyUrl} target="_blank" rel="noopener noreferrer">
-                                Spotify
-                              </Button>
+              {releases.length > 0 && (
+                <LazyPaginatedList
+                  items={releases}
+                  loading={releasesQuery.isFetching}
+                  pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+                  renderItems={(visibleReleases) => (
+                    <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                      {visibleReleases.map((release) => (
+                        <Grid key={release.arReleaseId} item xs={12} sm={6} md={4}>
+                          <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
+                            {release.arCoverImageUrl && (
+                              <CardMedia component="img" height="180" image={release.arCoverImageUrl} alt={release.arTitle} loading="lazy" />
                             )}
-                            {release.arYoutubeUrl && (
-                              <Button size="small" component="a" href={release.arYoutubeUrl} target="_blank" rel="noopener noreferrer">
-                                YouTube
-                              </Button>
-                            )}
-                          </Stack>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+                            <CardContent>
+                              <Stack spacing={1}>
+                                <Typography fontWeight={800}>{release.arTitle}</Typography>
+                                {release.arReleaseDate && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {new Date(release.arReleaseDate).toLocaleDateString('es-EC', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                  </Typography>
+                                )}
+                                {release.arDescription && (
+                                  <Typography variant="body2" color="text.secondary">
+                                    {release.arDescription.length > 140 ? `${release.arDescription.slice(0, 140)}…` : release.arDescription}
+                                  </Typography>
+                                )}
+                                <Stack direction="row" spacing={1} flexWrap="wrap">
+                                  {release.arSpotifyUrl && (
+                                    <Button size="small" component="a" href={release.arSpotifyUrl} target="_blank" rel="noopener noreferrer">
+                                      Spotify
+                                    </Button>
+                                  )}
+                                  {release.arYoutubeUrl && (
+                                    <Button size="small" component="a" href={release.arYoutubeUrl} target="_blank" rel="noopener noreferrer">
+                                      YouTube
+                                    </Button>
+                                  )}
+                                </Stack>
+                              </Stack>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  )}
+                />
+              )}
             </Box>
           </Stack>
         </CardContent>

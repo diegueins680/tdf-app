@@ -26,6 +26,7 @@ import {
   FiberNew as FiberNewIcon,
 } from '@mui/icons-material';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import ReactionBar from '../components/ReactionBar';
 import { Fans } from '../api/fans';
 import { useSession } from '../session/SessionContext';
@@ -292,53 +293,63 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
         <EmptyState icon={<ForumIcon fontSize="large" />} title="Feed vacío" description="Sé el primero en publicar o compartir un recuerdo." />
       )}
 
-      {visibleItems.map(item => (
-        <Card key={`${item.fcfKind}-${item.fcfId}`}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar src={item.fcfAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
-                <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
-                {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
-                {item.fcfIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
-                <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
-                <Box flexGrow={1} />
-                {isOfficer && (
-                  <Tooltip title={item.fcfIsHidden ? 'Mostrar' : 'Ocultar'}>
-                    <IconButton
-                      size="small"
-                      aria-label={item.fcfIsHidden ? 'Mostrar elemento del feed' : 'Ocultar elemento del feed'}
-                      onClick={() => hideMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, hide: !item.fcfIsHidden })}
-                    >
-                      {item.fcfIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </Stack>
-              {item.fcfTitle && <Typography variant="h6">{item.fcfTitle}</Typography>}
-              <Typography variant="body1">{item.fcfContent}</Typography>
-              {item.fcfMediaUrls.length > 0 && (
-                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
-                  {item.fcfMediaUrls.map((url, idx) => (
-                    <ImageListItem key={idx}>
-                      <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              )}
-              <ReactionBar
-                reactions={item.fcfReactions}
-                onReact={(reaction) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reaction })}
-                disabled={reactMut.isPending}
-                loading={reactMut.isPending}
-              />
-              <Typography variant="caption" color="text.secondary">
-                {new Date(item.fcfCreatedAt).toLocaleString()}
-              </Typography>
+      {visibleItems.length > 0 && (
+        <LazyPaginatedList
+          items={visibleItems}
+          pagination={{ itemLabel: 'publicaciones', initialRowsPerPage: 10, resetKey: sortMode }}
+          renderItems={(visibleFeedItems) => (
+            <Stack spacing={2}>
+              {visibleFeedItems.map(item => (
+                <Card key={`${item.fcfKind}-${item.fcfId}`}>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar src={item.fcfAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
+                        {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
+                        {item.fcfIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
+                        <Chip size="small" label={item.fcfKind === 'memory' ? 'Recuerdo' : 'Post'} variant="outlined" />
+                        <Box flexGrow={1} />
+                        {isOfficer && (
+                          <Tooltip title={item.fcfIsHidden ? 'Mostrar' : 'Ocultar'}>
+                            <IconButton
+                              size="small"
+                              aria-label={item.fcfIsHidden ? 'Mostrar elemento del feed' : 'Ocultar elemento del feed'}
+                              onClick={() => hideMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, hide: !item.fcfIsHidden })}
+                            >
+                              {item.fcfIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                      {item.fcfTitle && <Typography variant="h6">{item.fcfTitle}</Typography>}
+                      <Typography variant="body1">{item.fcfContent}</Typography>
+                      {item.fcfMediaUrls.length > 0 && (
+                        <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                          {item.fcfMediaUrls.map((url, idx) => (
+                            <ImageListItem key={idx}>
+                              <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                            </ImageListItem>
+                          ))}
+                        </ImageList>
+                      )}
+                      <ReactionBar
+                        reactions={item.fcfReactions}
+                        onReact={(reaction) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reaction })}
+                        disabled={reactMut.isPending}
+                        loading={reactMut.isPending}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(item.fcfCreatedAt).toLocaleString()}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        />
+      )}
     </Stack>
   );
 }
@@ -399,34 +410,44 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
         <EmptyState icon={<MailIcon fontSize="large" />} title="Sin mensajes" description="No hay mensajes en esta categoría." />
       )}
 
-      {filtered.map(msg => (
-        <Card key={msg.fcimId}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar src={msg.fcimFanAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
-                <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
-                <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
-                <Box flexGrow={1} />
-                <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
-                {msg.fcimStatus !== 'replied' && (
-                  <Button size="small" variant="contained" onClick={() => { setReplyOpen(msg.fcimId); setReplyBody(''); }}>Responder</Button>
-                )}
-                {msg.fcimStatus !== 'archived' && (
-                  <Button size="small" variant="text" onClick={() => statusMut.mutate({ messageId: msg.fcimId, status: 'archived' })}>Archivar</Button>
-                )}
-              </Stack>
-              {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
-              <Typography variant="body2" color="text.secondary">
-                {msg.fcimBody.length > 200 ? `${msg.fcimBody.slice(0, 200)}…` : msg.fcimBody}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {new Date(msg.fcimCreatedAt).toLocaleString()}
-              </Typography>
+      {filtered.length > 0 && (
+        <LazyPaginatedList
+          items={filtered}
+          pagination={{ itemLabel: 'mensajes', initialRowsPerPage: 10, resetKey: filterStatus }}
+          renderItems={(visibleMessages) => (
+            <Stack spacing={2}>
+              {visibleMessages.map(msg => (
+                <Card key={msg.fcimId}>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar src={msg.fcimFanAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
+                        <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
+                        <Box flexGrow={1} />
+                        <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
+                        {msg.fcimStatus !== 'replied' && (
+                          <Button size="small" variant="contained" onClick={() => { setReplyOpen(msg.fcimId); setReplyBody(''); }}>Responder</Button>
+                        )}
+                        {msg.fcimStatus !== 'archived' && (
+                          <Button size="small" variant="text" onClick={() => statusMut.mutate({ messageId: msg.fcimId, status: 'archived' })}>Archivar</Button>
+                        )}
+                      </Stack>
+                      {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
+                      <Typography variant="body2" color="text.secondary">
+                        {msg.fcimBody.length > 200 ? `${msg.fcimBody.slice(0, 200)}…` : msg.fcimBody}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(msg.fcimCreatedAt).toLocaleString()}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        />
+      )}
 
       <Dialog open={detailOpen !== null} onClose={() => setDetailOpen(null)} fullWidth maxWidth="sm">
         <DialogTitle>Mensaje</DialogTitle>
@@ -528,56 +549,66 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
         <EmptyState icon={<ForumIcon fontSize="large" />} title="Foro vacío" description="Sé el primero en publicar." />
       )}
 
-      {visiblePosts.map(post => (
-        <Card key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar src={post.fcpAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
-                <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
-                {post.fcpIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
-                <Box flexGrow={1} />
-                {isOfficer && (
-                  <>
-                    <Tooltip title={post.fcpIsPinned ? 'Desfijar' : 'Fijar'}>
-                      <IconButton
-                        size="small"
-                        aria-label={post.fcpIsPinned ? 'Desfijar post' : 'Fijar post'}
-                        onClick={() => pinMut.mutate({ postId: post.fcpId, pin: !post.fcpIsPinned })}
-                      >
-                        {post.fcpIsPinned ? <PushPinOutlinedIcon fontSize="small" /> : <PushPinIcon fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={post.fcpIsHidden ? 'Mostrar' : 'Ocultar'}>
-                      <IconButton
-                        size="small"
-                        aria-label={post.fcpIsHidden ? 'Mostrar post' : 'Ocultar post'}
-                        onClick={() => hideMut.mutate({ postId: post.fcpId, hide: !post.fcpIsHidden })}
-                      >
-                        {post.fcpIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                  </>
-                )}
-              </Stack>
-              {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
-              <Typography variant="body1">{post.fcpContent}</Typography>
-              {post.fcpMediaUrls.length > 0 && (
-                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
-                  {post.fcpMediaUrls.map((url, idx) => (
-                    <ImageListItem key={idx}>
-                      <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              )}
-              <Typography variant="caption" color="text.secondary">
-                {new Date(post.fcpCreatedAt).toLocaleString()}
-              </Typography>
+      {visiblePosts.length > 0 && (
+        <LazyPaginatedList
+          items={visiblePosts}
+          pagination={{ itemLabel: 'posts', initialRowsPerPage: 10 }}
+          renderItems={(visibleForumPosts) => (
+            <Stack spacing={2}>
+              {visibleForumPosts.map(post => (
+                <Card key={post.fcpId} sx={{ opacity: post.fcpIsHidden ? 0.5 : 1 }}>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar src={post.fcpAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
+                        {post.fcpIsPinned && <Chip size="small" icon={<PushPinIcon />} label="Fijado" color="primary" />}
+                        <Box flexGrow={1} />
+                        {isOfficer && (
+                          <>
+                            <Tooltip title={post.fcpIsPinned ? 'Desfijar' : 'Fijar'}>
+                              <IconButton
+                                size="small"
+                                aria-label={post.fcpIsPinned ? 'Desfijar post' : 'Fijar post'}
+                                onClick={() => pinMut.mutate({ postId: post.fcpId, pin: !post.fcpIsPinned })}
+                              >
+                                {post.fcpIsPinned ? <PushPinOutlinedIcon fontSize="small" /> : <PushPinIcon fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={post.fcpIsHidden ? 'Mostrar' : 'Ocultar'}>
+                              <IconButton
+                                size="small"
+                                aria-label={post.fcpIsHidden ? 'Mostrar post' : 'Ocultar post'}
+                                onClick={() => hideMut.mutate({ postId: post.fcpId, hide: !post.fcpIsHidden })}
+                              >
+                                {post.fcpIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                      </Stack>
+                      {post.fcpTitle && <Typography variant="h6">{post.fcpTitle}</Typography>}
+                      <Typography variant="body1">{post.fcpContent}</Typography>
+                      {post.fcpMediaUrls.length > 0 && (
+                        <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                          {post.fcpMediaUrls.map((url, idx) => (
+                            <ImageListItem key={idx}>
+                              <img src={url} alt={`Media ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                            </ImageListItem>
+                          ))}
+                        </ImageList>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(post.fcpCreatedAt).toLocaleString()}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        />
+      )}
 
       <Dialog open={open} onClose={() => { setOpen(false); setPostMediaUrls([]); }} fullWidth maxWidth="sm">
         <DialogTitle>Nuevo post</DialogTitle>
@@ -683,64 +714,74 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
         <EmptyState icon={<PhotoLibraryIcon fontSize="large" />} title="Sin recuerdos" description="Comparte fotos o videos de conciertos y momentos con el artista." />
       )}
 
-      {visibleMemories.map(memory => (
-        <Card key={memory.fcmId}>
-          <CardContent>
-            <Stack spacing={1}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar src={memory.fcmMemberAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
-                <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
-                <Box flexGrow={1} />
-                {isOfficer && (
-                  <>
-                    <Tooltip title={memory.fcmIsHidden ? 'Mostrar' : 'Ocultar'}>
-                      <IconButton
-                        size="small"
-                        aria-label={memory.fcmIsHidden ? 'Mostrar recuerdo' : 'Ocultar recuerdo'}
-                        onClick={() => hideMut.mutate({ memoryId: memory.fcmId, hide: !memory.fcmIsHidden })}
-                      >
-                        {memory.fcmIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton
-                        size="small"
-                        aria-label="Eliminar recuerdo"
-                        onClick={() => deleteMut.mutate(memory.fcmId)}
-                      >
-                        <VisibilityOffIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </>
-                )}
-                <Tooltip title="Reportar">
-                  <IconButton
-                    size="small"
-                    aria-label="Reportar recuerdo"
-                    onClick={() => setReportOpen(memory.fcmId)}
-                  >
-                    <ReportIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-              <Typography variant="h6">{memory.fcmTitle}</Typography>
-              {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
-              {memory.fcmMediaUrls.length > 0 && (
-                <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
-                  {memory.fcmMediaUrls.map((url, idx) => (
-                    <ImageListItem key={idx}>
-                      <img src={url} alt={`Memory ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
-                    </ImageListItem>
-                  ))}
-                </ImageList>
-              )}
-              <Typography variant="caption" color="text.secondary">
-                {new Date(memory.fcmCreatedAt).toLocaleString()}
-              </Typography>
+      {visibleMemories.length > 0 && (
+        <LazyPaginatedList
+          items={visibleMemories}
+          pagination={{ itemLabel: 'recuerdos', initialRowsPerPage: 10 }}
+          renderItems={(visibleClubMemories) => (
+            <Stack spacing={2}>
+              {visibleClubMemories.map(memory => (
+                <Card key={memory.fcmId}>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar src={memory.fcmMemberAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
+                        <Box flexGrow={1} />
+                        {isOfficer && (
+                          <>
+                            <Tooltip title={memory.fcmIsHidden ? 'Mostrar' : 'Ocultar'}>
+                              <IconButton
+                                size="small"
+                                aria-label={memory.fcmIsHidden ? 'Mostrar recuerdo' : 'Ocultar recuerdo'}
+                                onClick={() => hideMut.mutate({ memoryId: memory.fcmId, hide: !memory.fcmIsHidden })}
+                              >
+                                {memory.fcmIsHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Eliminar">
+                              <IconButton
+                                size="small"
+                                aria-label="Eliminar recuerdo"
+                                onClick={() => deleteMut.mutate(memory.fcmId)}
+                              >
+                                <VisibilityOffIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        <Tooltip title="Reportar">
+                          <IconButton
+                            size="small"
+                            aria-label="Reportar recuerdo"
+                            onClick={() => setReportOpen(memory.fcmId)}
+                          >
+                            <ReportIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                      <Typography variant="h6">{memory.fcmTitle}</Typography>
+                      {memory.fcmDescription && <Typography variant="body1">{memory.fcmDescription}</Typography>}
+                      {memory.fcmMediaUrls.length > 0 && (
+                        <ImageList cols={3} gap={8} sx={{ maxHeight: 300 }}>
+                          {memory.fcmMediaUrls.map((url, idx) => (
+                            <ImageListItem key={idx}>
+                              <img src={url} alt={`Memory ${idx}`} loading="lazy" style={{ maxHeight: 150, objectFit: 'cover' }} />
+                            </ImageListItem>
+                          ))}
+                        </ImageList>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(memory.fcmCreatedAt).toLocaleString()}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        />
+      )}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Nuevo recuerdo</DialogTitle>
@@ -833,30 +874,38 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
         <EmptyState icon={<CalendarMonthIcon fontSize="large" />} title="Sin eventos" description="No hay eventos programados aún." />
       )}
 
-      <Grid container spacing={2}>
-        {events.map(ev => (
-          <Grid item xs={12} md={6} key={ev.fceId}>
-            <Card>
-              <CardContent>
-                <Stack spacing={1}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="h6">{ev.fceTitle}</Typography>
-                    {ev.fceIsArtistConcert && <Chip size="small" label="Concierto" color="secondary" />}
-                  </Stack>
-                  {ev.fceDescription && <Typography variant="body2" color="text.secondary">{ev.fceDescription}</Typography>}
-                  {ev.fceStartsAt && (
-                    <Typography variant="body2">
-                      📅 {new Date(ev.fceStartsAt).toLocaleString()}
-                      {ev.fceEndsAt && ` — ${new Date(ev.fceEndsAt).toLocaleString()}`}
-                    </Typography>
-                  )}
-                  {ev.fceLocation && <Typography variant="body2">📍 {ev.fceLocation}</Typography>}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      {events.length > 0 && (
+        <LazyPaginatedList
+          items={events}
+          pagination={{ itemLabel: 'eventos', initialRowsPerPage: 6 }}
+          renderItems={(visibleEvents) => (
+            <Grid container spacing={2}>
+              {visibleEvents.map(ev => (
+                <Grid item xs={12} md={6} key={ev.fceId}>
+                  <Card>
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="h6">{ev.fceTitle}</Typography>
+                          {ev.fceIsArtistConcert && <Chip size="small" label="Concierto" color="secondary" />}
+                        </Stack>
+                        {ev.fceDescription && <Typography variant="body2" color="text.secondary">{ev.fceDescription}</Typography>}
+                        {ev.fceStartsAt && (
+                          <Typography variant="body2">
+                            📅 {new Date(ev.fceStartsAt).toLocaleString()}
+                            {ev.fceEndsAt && ` — ${new Date(ev.fceEndsAt).toLocaleString()}`}
+                          </Typography>
+                        )}
+                        {ev.fceLocation && <Typography variant="body2">📍 {ev.fceLocation}</Typography>}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        />
+      )}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Crear evento</DialogTitle>
@@ -922,41 +971,51 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
         <EmptyState icon={<HowToVoteIcon fontSize="large" />} title="Sin elecciones" description="Aún no hay elecciones programadas." />
       )}
 
-      {elections.map(el => (
-        <Card key={el.fceElectionId}>
-          <CardContent>
+      {elections.length > 0 && (
+        <LazyPaginatedList
+          items={elections}
+          pagination={{ itemLabel: 'elecciones', initialRowsPerPage: 10 }}
+          renderItems={(visibleElections) => (
             <Stack spacing={2}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">Elección {el.fceYear}</Typography>
-                <Chip label={el.fceStatus} color="primary" variant="outlined" />
-              </Stack>
-              <Divider />
-              <Typography variant="subtitle2">Mis candidaturas</Typography>
-              {el.fceMyCandidacies.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">No te has postulado.</Typography>
-              ) : (
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {el.fceMyCandidacies.map(c => (
-                    <Chip key={c.fccCandidacyId} label={`${c.fccRole} — ${c.fccFanName}`} />
-                  ))}
-                </Stack>
-              )}
-              <Typography variant="subtitle2">Mis votos</Typography>
-              {el.fceMyVotes.length === 0 ? (
-                <Button size="small" variant="outlined" onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
-                  Votar
-                </Button>
-              ) : (
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  {el.fceMyVotes.map(v => (
-                    <Chip key={v.fcvCandidacyId} label={v.fcvRole} color="success" variant="outlined" />
-                  ))}
-                </Stack>
-              )}
+              {visibleElections.map(el => (
+                <Card key={el.fceElectionId}>
+                  <CardContent>
+                    <Stack spacing={2}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Elección {el.fceYear}</Typography>
+                        <Chip label={el.fceStatus} color="primary" variant="outlined" />
+                      </Stack>
+                      <Divider />
+                      <Typography variant="subtitle2">Mis candidaturas</Typography>
+                      {el.fceMyCandidacies.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">No te has postulado.</Typography>
+                      ) : (
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {el.fceMyCandidacies.map(c => (
+                            <Chip key={c.fccCandidacyId} label={`${c.fccRole} — ${c.fccFanName}`} />
+                          ))}
+                        </Stack>
+                      )}
+                      <Typography variant="subtitle2">Mis votos</Typography>
+                      {el.fceMyVotes.length === 0 ? (
+                        <Button size="small" variant="outlined" onClick={() => { setVoteOpen(el.fceElectionId); setSelectedCands([]); }}>
+                          Votar
+                        </Button>
+                      ) : (
+                        <Stack direction="row" spacing={1} flexWrap="wrap">
+                          {el.fceMyVotes.map(v => (
+                            <Chip key={v.fcvCandidacyId} label={v.fcvRole} color="success" variant="outlined" />
+                          ))}
+                        </Stack>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
             </Stack>
-          </CardContent>
-        </Card>
-      ))}
+          )}
+        />
+      )}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Nueva elección</DialogTitle>

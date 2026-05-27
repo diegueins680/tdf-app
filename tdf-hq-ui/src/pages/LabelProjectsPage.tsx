@@ -6,17 +6,19 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
+  Checkbox,
   IconButton,
   LinearProgress,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SaveIcon from '@mui/icons-material/Save';
 import SyncIcon from '@mui/icons-material/Sync';
 import { Cms, type CmsContentDTO } from '../api/cms';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import PageShell from '../components/PageShell';
 
 interface ProjectNote {
@@ -44,6 +46,199 @@ function parsePayload(content?: CmsContentDTO): ProjectNote[] {
 }
 
 const fingerprintNotes = (items: readonly ProjectNote[]) => JSON.stringify(items);
+
+const formatCount = (count: number, singular: string, plural: string) =>
+  `${count} ${count === 1 ? singular : plural}`;
+
+interface LiveReloadActionProps {
+  loading: boolean;
+  onReload: () => void;
+}
+
+function LiveReloadAction({ loading, onReload }: LiveReloadActionProps) {
+  return (
+    <Button
+      disabled={loading}
+      onClick={(event) => {
+        onReload();
+        event.currentTarget.focus();
+      }}
+      variant="outlined"
+      size="small"
+      startIcon={<SyncIcon />}
+    >
+      Cargar desde vivo
+    </Button>
+  );
+}
+
+interface NoteComposerProps {
+  value: string;
+  onChange: (value: string) => void;
+  onAdd: () => void;
+}
+
+function NoteComposer({ value, onChange, onAdd }: NoteComposerProps) {
+  return (
+    <Box
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onAdd();
+        event.currentTarget.querySelector('input')?.focus();
+      }}
+    >
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Nota o pendiente"
+          placeholder="Idea, estado o pendiente"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!value.trim()}
+          startIcon={<AddIcon />}
+          sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+        >
+          Agregar
+        </Button>
+      </Stack>
+    </Box>
+  );
+}
+
+interface NoteStatsProps {
+  total: number;
+  pendingCount: number;
+  completedCount: number;
+}
+
+function NoteStats({ total, pendingCount, completedCount }: NoteStatsProps) {
+  return (
+    <Typography variant="body2" color="text.secondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+      {formatCount(total, 'nota', 'notas')} · {formatCount(pendingCount, 'pendiente', 'pendientes')} ·{' '}
+      {formatCount(completedCount, 'completada', 'completadas')}
+    </Typography>
+  );
+}
+
+interface SaveStatusProps {
+  isError: boolean;
+  isSuccess: boolean;
+}
+
+function SaveStatus({ isError, isSuccess }: SaveStatusProps) {
+  if (isError) {
+    return <Alert severity="error">No se pudieron guardar las notas.</Alert>;
+  }
+
+  if (isSuccess) {
+    return <Alert severity="success">Notas guardadas en el CMS.</Alert>;
+  }
+
+  return null;
+}
+
+interface ProjectNoteRowProps {
+  note: ProjectNote;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+function ProjectNoteRow({ note, onToggle, onDelete }: ProjectNoteRowProps) {
+  return (
+    <Box
+      sx={{
+        borderRadius: 1,
+        border: '1px solid',
+        borderColor: note.done ? 'success.light' : 'divider',
+        p: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        bgcolor: note.done ? 'rgba(16,185,129,0.08)' : 'background.paper',
+      }}
+    >
+      <Checkbox
+        checked={note.done}
+        color="success"
+        onChange={() => onToggle(note.id)}
+        inputProps={{ 'aria-label': `Marcar pendiente: ${note.text}` }}
+      />
+      <Typography
+        variant="body2"
+        sx={{
+          flexGrow: 1,
+          minWidth: 0,
+          overflowWrap: 'anywhere',
+          textDecoration: note.done ? 'line-through' : 'none',
+        }}
+      >
+        {note.text}
+      </Typography>
+      <IconButton
+        onClick={() => onDelete(note.id)}
+        size="small"
+        aria-label={`Eliminar nota: ${note.text}`}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    </Box>
+  );
+}
+
+interface ProjectNotesListProps {
+  notes: readonly ProjectNote[];
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+function ProjectNotesList({ notes, onToggle, onDelete }: ProjectNotesListProps) {
+  if (notes.length === 0) {
+    return <Typography color="text.secondary">No hay notas aún.</Typography>;
+  }
+
+  return (
+    <LazyPaginatedList
+      items={notes}
+      pagination={{ itemLabel: 'notas', initialRowsPerPage: 10 }}
+      renderItems={(visibleNotes) => (
+        <Stack spacing={1}>
+          {visibleNotes.map((note) => (
+            <ProjectNoteRow key={note.id} note={note} onToggle={onToggle} onDelete={onDelete} />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface SaveActionsProps {
+  saving: boolean;
+  onSave: () => void;
+}
+
+function SaveActions({ saving, onSave }: SaveActionsProps) {
+  return (
+    <Stack direction="row" justifyContent="flex-end">
+      <Button
+        disabled={saving}
+        onClick={(event) => {
+          onSave();
+          event.currentTarget.focus();
+        }}
+        variant="contained"
+        startIcon={<SaveIcon />}
+      >
+        Guardar en CMS
+      </Button>
+    </Stack>
+  );
+}
 
 export default function LabelProjectsPage() {
   const qc = useQueryClient();
@@ -131,94 +326,23 @@ export default function LabelProjectsPage() {
     <PageShell
       title="Proyectos del label"
       subtitle="Guarda ideas, estado y pendientes de proyectos del label. Las notas se almacenan en el CMS para que el equipo las comparta."
+      actions={<LiveReloadAction loading={liveQuery.isLoading} onReload={handleReloadLive} />}
     >
-    <Stack spacing={3}>
-      {(listQuery.isLoading || liveQuery.isLoading) && <LinearProgress />}
+      <Stack spacing={3}>
+        {(listQuery.isLoading || liveQuery.isLoading) && <LinearProgress />}
 
-      <Card>
-        <CardContent>
-          <Stack spacing={2}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <TextField
-                fullWidth
-                label="Nota o pendiente"
-                placeholder="Agregar nota o pendiente"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <Button variant="contained" onClick={handleAdd} disabled={!input.trim()}>
-                Agregar
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<SyncIcon />}
-                onClick={handleReloadLive}
-                disabled={liveQuery.isLoading}
-              >
-                Cargar desde vivo
-              </Button>
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <NoteComposer value={input} onChange={setInput} onAdd={handleAdd} />
+              <NoteStats total={notes.length} pendingCount={pending.length} completedCount={completed.length} />
+              <SaveStatus isError={saveMutation.isError} isSuccess={saveMutation.isSuccess} />
+              <ProjectNotesList notes={notes} onToggle={handleToggle} onDelete={handleDelete} />
+              <SaveActions saving={saveMutation.isPending} onSave={handleSave} />
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip label={`${notes.length} notas`} />
-              <Chip label={`${pending.length} pendientes`} color="warning" variant="outlined" />
-              <Chip label={`${completed.length} completadas`} color="success" variant="outlined" />
-            </Stack>
-            {saveMutation.isError && (
-              <Alert severity="error">No se pudieron guardar las notas.</Alert>
-            )}
-            {saveMutation.isSuccess && <Alert severity="success">Notas guardadas en el CMS.</Alert>}
-            <Stack spacing={1}>
-              {notes.length === 0 && (
-                <Typography color="text.secondary">No hay notas aún.</Typography>
-              )}
-              {notes.map((n) => (
-                <Box
-                  key={n.id}
-                  sx={{
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: n.done ? 'success.light' : 'divider',
-                    p: 1.25,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    bgcolor: n.done ? 'rgba(16,185,129,0.08)' : 'background.paper',
-                  }}
-                >
-                  <Button
-                    size="small"
-                    variant={n.done ? 'contained' : 'outlined'}
-                    color={n.done ? 'success' : 'primary'}
-                    startIcon={<CheckCircleIcon />}
-                    onClick={() => handleToggle(n.id)}
-                  >
-                    {n.done ? 'Hecho' : 'Marcar'}
-                  </Button>
-                  <Typography
-                    variant="body2"
-                    sx={{ flexGrow: 1, textDecoration: n.done ? 'line-through' : 'none' }}
-                  >
-                    {n.text}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    aria-label={`Eliminar nota: ${n.text}`}
-                    onClick={() => handleDelete(n.id)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))}
-            </Stack>
-            <Stack direction="row" spacing={1}>
-              <Button variant="contained" onClick={handleSave} disabled={saveMutation.isPending}>
-                Guardar en CMS
-              </Button>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Stack>
+          </CardContent>
+        </Card>
+      </Stack>
     </PageShell>
   );
 }

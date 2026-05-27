@@ -39,6 +39,7 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
@@ -2195,40 +2196,47 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && isFan && myClubsQuery.data && myClubsQuery.data.length > 0 && (
           <Stack spacing={2}>
             <Typography variant="h6">Tus clubes</Typography>
-            <Grid container spacing={2}>
-              {myClubsQuery.data.map((club) => (
-                <Grid item xs={12} md={4} key={club.fcId}>
-                  <Card
-                    component={RouterLink}
-                    to={`/fans/clubs/${club.fcArtistId}`}
-                    sx={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      height: '100%',
-                      transition: 'transform 140ms ease, box-shadow 140ms ease',
-                      '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
-                    }}
-                  >
-                    {club.fcArtistImageUrl && (
-                      <CardMedia component="img" height={160} image={club.fcArtistImageUrl} alt={club.fcName} />
-                    )}
-                    <CardContent sx={{ flex: 1 }}>
-                      <Stack spacing={1}>
-                        <Typography variant="h6" fontWeight={700}>{club.fcName}</Typography>
-                        <Typography variant="body2" color="text.secondary">{club.fcFollowerCount} seguidores</Typography>
-                        {club.fcDescription && (
-                          <Typography variant="body2" color="text.secondary">
-                            {club.fcDescription.length > 100 ? `${club.fcDescription.slice(0, 100)}…` : club.fcDescription}
-                          </Typography>
+            <LazyPaginatedList
+              items={myClubsQuery.data}
+              loading={myClubsQuery.isFetching}
+              pagination={{ itemLabel: 'clubes', initialRowsPerPage: 6 }}
+              renderItems={(visibleClubs) => (
+                <Grid container spacing={2}>
+                  {visibleClubs.map((club) => (
+                    <Grid item xs={12} md={4} key={club.fcId}>
+                      <Card
+                        component={RouterLink}
+                        to={`/fans/clubs/${club.fcArtistId}`}
+                        sx={{
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          height: '100%',
+                          transition: 'transform 140ms ease, box-shadow 140ms ease',
+                          '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
+                        }}
+                      >
+                        {club.fcArtistImageUrl && (
+                          <CardMedia component="img" height={160} image={club.fcArtistImageUrl} alt={club.fcName} />
                         )}
-                      </Stack>
-                    </CardContent>
-                  </Card>
+                        <CardContent sx={{ flex: 1 }}>
+                          <Stack spacing={1}>
+                            <Typography variant="h6" fontWeight={700}>{club.fcName}</Typography>
+                            <Typography variant="body2" color="text.secondary">{club.fcFollowerCount} seguidores</Typography>
+                            {club.fcDescription && (
+                              <Typography variant="body2" color="text.secondary">
+                                {club.fcDescription.length > 100 ? `${club.fcDescription.slice(0, 100)}…` : club.fcDescription}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              )}
+            />
           </Stack>
         )}
 
@@ -2237,8 +2245,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         )}
 
         {!isHomeManagerView && showCatalogFilters && (
-          <Grid container spacing={3} id="artist-list">
-            {filteredArtists.map((artist) => {
+          <LazyPaginatedList
+            items={filteredArtists}
+            loading={artistsQuery.isFetching}
+            pagination={{ itemLabel: 'artistas', initialRowsPerPage: 12, resetKey: genreFilter }}
+            renderItems={(visibleArtists) => (
+              <Grid container spacing={3} id="artist-list">
+                {visibleArtists.map((artist) => {
             const spotifyUrl = artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
             const youtubeUrl =
               artist.apFeaturedVideoUrl ??
@@ -2463,8 +2476,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               </Card>
             </Grid>
               );
-            })}
-          </Grid>
+                })}
+              </Grid>
+            )}
+          />
         )}
       </Stack>
       </Box>
