@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import { collectLogicalFindings } from '../lib/logical-correctness-audit.mjs';
@@ -229,5 +230,41 @@ test('logical audit flags repeated component-local variable names as shadowing c
     );
   } finally {
     await fs.rm(variableShadowAuditTempRoot, { recursive: true, force: true });
+  }
+});
+
+test('teacher portal does not reuse the generic actionDisabled flag name across cards', async () => {
+  const teacherPortalAuditTempRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'logical-audit-teacher-portal-shadowing-test-'),
+  );
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+  const teacherPortalSourcePath = path.join(
+    repoRoot,
+    'tdf-hq-ui/src/pages/TeacherPortalPage.tsx',
+  );
+  const teacherPortalFixturePath = path.join(
+    teacherPortalAuditTempRoot,
+    'tdf-hq-ui/src/pages/TeacherPortalPage.tsx',
+  );
+
+  try {
+    await fs.mkdir(path.dirname(teacherPortalFixturePath), { recursive: true });
+    await fs.copyFile(teacherPortalSourcePath, teacherPortalFixturePath);
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: teacherPortalAuditTempRoot });
+    await execFileAsync('git', ['add', 'tdf-hq-ui/src/pages/TeacherPortalPage.tsx'], {
+      cwd: teacherPortalAuditTempRoot,
+    });
+
+    const teacherPortalFindings = await collectLogicalFindings(teacherPortalAuditTempRoot);
+    const genericActionDisabledShadowingFindings = teacherPortalFindings.filter(
+      (finding) =>
+        finding.rule === 'variable-shadowing' &&
+        finding.message === 'Variable "actionDisabled" may shadow a previous declaration; review scope.',
+    );
+
+    assert.deepEqual(genericActionDisabledShadowingFindings, []);
+  } finally {
+    await fs.rm(teacherPortalAuditTempRoot, { recursive: true, force: true });
   }
 });

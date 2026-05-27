@@ -198,7 +198,7 @@ function AgendaClassCard(props: AgendaClassCardProps) {
   const { classSession, markingAttendance, attendingClassId, savingClass, onEdit, onAttend } = props;
   const agendaCardRef = useRef<HTMLDivElement>(null);
   const isMarkingAttendance = markingAttendance && attendingClassId === classSession.classSessionId;
-  const actionDisabled = savingClass || markingAttendance;
+  const agendaActionDisabled = savingClass || markingAttendance;
   const agendaFocusActions = {
     edit: () => {
       onEdit(classSession);
@@ -229,7 +229,7 @@ function AgendaClassCard(props: AgendaClassCardProps) {
           <Button
             size="small"
             variant="outlined"
-            disabled={actionDisabled}
+            disabled={agendaActionDisabled}
             onClick={agendaFocusActions.edit}
             tabIndex={0}
             data-focus-target="class-dialog"
@@ -368,7 +368,7 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
   const { slot, deleting, deletingAvailabilityId, savingAvailability, onEdit, onDelete } = props;
   const availabilityCardRef = useRef<HTMLDivElement>(null);
   const isDeletingAvailability = deleting && deletingAvailabilityId === slot.availabilityId;
-  const actionDisabled = deleting || savingAvailability;
+  const availabilityActionDisabled = deleting || savingAvailability;
   const availabilityFocusActions = {
     edit: () => {
       onEdit(slot);
@@ -400,7 +400,7 @@ function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
           <Button
             size="small"
             variant="outlined"
-            disabled={actionDisabled}
+            disabled={availabilityActionDisabled}
             onClick={availabilityFocusActions.edit}
             tabIndex={0}
             data-focus-target="availability-dialog"
