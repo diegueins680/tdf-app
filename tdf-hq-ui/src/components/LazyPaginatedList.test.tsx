@@ -6,22 +6,24 @@ const { default: LazyPaginatedList } = await import('./LazyPaginatedList');
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const renderList = async (
-  container: HTMLElement,
+  mountNode: HTMLElement,
   props?: {
+    items?: readonly string[];
     loading?: boolean;
   },
 ) => {
-  let root: Root | null = createRoot(container);
+  const listItems = props?.items ?? ['Alpha', 'Beta', 'Gamma'];
+  let root: Root | null = createRoot(mountNode);
 
   await act(async () => {
     root?.render(
       <LazyPaginatedList
-        items={['Alpha', 'Beta', 'Gamma']}
+        items={listItems}
         loading={props?.loading}
         pagination={{ initialRowsPerPage: 2, itemLabel: 'items', rowsPerPageOptions: [2] }}
-        renderItems={(items, meta) => (
+        renderItems={(renderedItems, meta) => (
           <div data-testid="items" data-start-index={meta.startIndex} data-total-items={meta.totalItems}>
-            {items.join('|')}
+            {renderedItems.join('|')}
           </div>
         )}
       />,
@@ -37,7 +39,7 @@ const renderList = async (
         await flushPromises();
       });
       root = null;
-      document.body.removeChild(container);
+      document.body.removeChild(mountNode);
     },
   };
 };
@@ -48,40 +50,67 @@ describe('LazyPaginatedList', () => {
   });
 
   it('shows a compact loading affordance without hiding current rows', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderList(container, { loading: true });
+    const loadingHost = document.createElement('div');
+    document.body.appendChild(loadingHost);
+    const { cleanup } = await renderList(loadingHost, { loading: true });
 
     try {
-      const status = container.querySelector('[role="status"]');
-      const progress = container.querySelector('[role="progressbar"]');
-      const items = container.querySelector('[data-testid="items"]');
+      const loadingStatus = loadingHost.querySelector('[role="status"]');
+      const loadingProgress = loadingHost.querySelector('[role="progressbar"]');
+      const loadingItems = loadingHost.querySelector('[data-testid="items"]');
 
-      expect(status).not.toBeNull();
-      expect(status?.getAttribute('aria-live')).toBe('polite');
-      expect(container.firstElementChild?.getAttribute('aria-busy')).toBe('true');
-      expect(progress?.getAttribute('aria-label')).toBe('Cargando resultados...');
-      expect(container.textContent).toContain('Cargando resultados...');
-      expect(items?.textContent).toBe('Alpha|Beta');
+      expect(loadingStatus).not.toBeNull();
+      expect(loadingStatus?.getAttribute('aria-live')).toBe('polite');
+      expect(loadingHost.firstElementChild?.getAttribute('aria-busy')).toBe('true');
+      expect(loadingProgress?.getAttribute('aria-label')).toBe('Cargando resultados...');
+      expect(loadingHost.textContent).toContain('Cargando resultados...');
+      expect(loadingItems?.textContent).toBe('Alpha|Beta');
     } finally {
       await cleanup();
     }
   });
 
   it('keeps pagination controls behind one config object', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await renderList(container);
+    const paginationHost = document.createElement('div');
+    document.body.appendChild(paginationHost);
+    const { cleanup } = await renderList(paginationHost);
 
     try {
-      const items = container.querySelector('[data-testid="items"]');
+      const paginationItems = paginationHost.querySelector('[data-testid="items"]');
 
-      expect(container.querySelector('[role="status"]')).toBeNull();
-      expect(container.firstElementChild?.getAttribute('aria-busy')).toBeNull();
-      expect(items?.textContent).toBe('Alpha|Beta');
-      expect(items?.getAttribute('data-start-index')).toBe('0');
-      expect(items?.getAttribute('data-total-items')).toBe('3');
-      expect(container.textContent).toContain('1-2 de 3 items');
+      expect(paginationHost.querySelector('[role="status"]')).toBeNull();
+      expect(paginationHost.firstElementChild?.getAttribute('aria-busy')).toBeNull();
+      expect(paginationItems?.textContent).toBe('Alpha|Beta');
+      expect(paginationItems?.getAttribute('data-start-index')).toBe('0');
+      expect(paginationItems?.getAttribute('data-total-items')).toBe('3');
+      expect(paginationHost.textContent).toContain('1-2 de 3 items');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the rendered slice aligned with the current page metadata', async () => {
+    const pagingHost = document.createElement('div');
+    document.body.appendChild(pagingHost);
+    const { cleanup } = await renderList(pagingHost, { items: ['Alpha', 'Beta', 'Gamma', 'Delta'] });
+
+    try {
+      const nextPageButton = Array.from(pagingHost.querySelectorAll<HTMLButtonElement>('button')).find(
+        (candidate) => candidate.getAttribute('aria-label') === 'Go to next page',
+      );
+      expect(nextPageButton).not.toBeNull();
+
+      await act(async () => {
+        nextPageButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const secondPageItems = pagingHost.querySelector('[data-testid="items"]');
+
+      expect(secondPageItems?.textContent).toBe('Gamma|Delta');
+      expect(secondPageItems?.getAttribute('data-start-index')).toBe('2');
+      expect(secondPageItems?.getAttribute('data-total-items')).toBe('4');
+      expect(pagingHost.textContent).toContain('3-4 de 4 items');
     } finally {
       await cleanup();
     }
