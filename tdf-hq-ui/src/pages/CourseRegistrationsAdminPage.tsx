@@ -46,6 +46,7 @@ import {
   type CourseRegistrationReceiptDTO,
 } from '../api/courses';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
 
@@ -5058,6 +5059,7 @@ export default function CourseRegistrationsAdminPage() {
       return false;
     });
   }, [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, registrations]);
+  const registrationPaginationResetKey = [selectedSlug, status, localSearchKey, limit].join('|');
   const registrationIdsRequiringActionDisambiguator = useMemo(
     () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
     [searchedRegistrations],
@@ -8302,9 +8304,13 @@ export default function CourseRegistrationsAdminPage() {
             </Alert>
           )}
           {searchedRegistrations.length ? (
-            <Stack spacing={1.5}>
-              <Stack divider={<Divider flexItem />} spacing={2}>
-                {searchedRegistrations.map((reg) => {
+            <LazyPaginatedList
+              items={searchedRegistrations}
+              pagination={{ itemLabel: 'inscripciones', initialRowsPerPage: 25, resetKey: registrationPaginationResetKey }}
+              renderItems={(visibleRegistrations) => (
+                <Stack spacing={1.5}>
+                  <Stack divider={<Divider flexItem />} spacing={2}>
+                    {visibleRegistrations.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                   const rowIdentity = registrationIdentityDisplay(
                     reg.crFullName,
@@ -8560,9 +8566,11 @@ export default function CourseRegistrationsAdminPage() {
                       </Box>
                     </Box>
                   );
-                })}
-              </Stack>
-            </Stack>
+                    })}
+                  </Stack>
+                </Stack>
+              )}
+            />
           ) : null}
         </Paper>
       )}

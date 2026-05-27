@@ -32,6 +32,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
@@ -362,51 +363,59 @@ export default function LabelArtistsPage() {
                     actionOnClick={handleOpenNew}
                   />
                 )}
-                {filteredArtists.map((artist) => {
-                  const party = partyMap.get(artist.apArtistId);
-                  const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
-                  return (
-                    <Box
-                      key={artist.apArtistId}
-                      sx={{
-                        border: '1px solid rgba(148,163,184,0.35)',
-                        borderRadius: 2,
-                        p: 1.5,
-                        display: 'flex',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        gap: 1,
-                        alignItems: { xs: 'stretch', sm: 'center' },
-                      }}
-                    >
-                      <Box sx={{ minWidth: 220 }}>
-                        <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {artist.apCity ?? 'Sin ciudad'}
-                        </Typography>
-                      </Box>
-                      <TextField
-                        value={noteValue}
-                        onChange={(e) =>
-                          setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
-                        }
-                        aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
-                        placeholder="Agregar nota o pendiente"
-                        fullWidth
-                        size="small"
-                        multiline
-                        minRows={1}
-                      />
-                      <Button
-                        variant="contained"
-                        onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
-                        disabled={noteMutation.isPending}
-                        sx={{ minWidth: 140 }}
-                      >
-                        {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
-                      </Button>
-                    </Box>
-                  );
-                })}
+                <LazyPaginatedList
+                  items={filteredArtists}
+                  pagination={{ itemLabel: 'artistas', initialRowsPerPage: 10, resetKey: search.trim() }}
+                  renderItems={(visibleArtists) => (
+                    <Stack spacing={1.5}>
+                      {visibleArtists.map((artist) => {
+                        const party = partyMap.get(artist.apArtistId);
+                        const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
+                        return (
+                          <Box
+                            key={artist.apArtistId}
+                            sx={{
+                              border: '1px solid rgba(148,163,184,0.35)',
+                              borderRadius: 2,
+                              p: 1.5,
+                              display: 'flex',
+                              flexDirection: { xs: 'column', sm: 'row' },
+                              gap: 1,
+                              alignItems: { xs: 'stretch', sm: 'center' },
+                            }}
+                          >
+                            <Box sx={{ minWidth: 220 }}>
+                              <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {artist.apCity ?? 'Sin ciudad'}
+                              </Typography>
+                            </Box>
+                            <TextField
+                              value={noteValue}
+                              onChange={(e) =>
+                                setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
+                              }
+                              aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
+                              placeholder="Agregar nota o pendiente"
+                              fullWidth
+                              size="small"
+                              multiline
+                              minRows={1}
+                            />
+                            <Button
+                              variant="contained"
+                              onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
+                              disabled={noteMutation.isPending}
+                              sx={{ minWidth: 140 }}
+                            >
+                              {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
+                            </Button>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  )}
+                />
               </Stack>
             </Stack>
           </CardContent>
@@ -436,21 +445,25 @@ export default function LabelArtistsPage() {
             />
           )}
           {filteredArtists.length > 0 && (
-            <Box sx={{ overflowX: 'auto' }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Artista</TableCell>
-                    <TableCell>Slug</TableCell>
-                    <TableCell>Fans</TableCell>
-                    <TableCell>Cuenta</TableCell>
-                    <TableCell>Ciudad</TableCell>
-                    <TableCell>Enlaces</TableCell>
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredArtists.map((artist) => {
+            <LazyPaginatedList
+              items={filteredArtists}
+              pagination={{ itemLabel: 'artistas', initialRowsPerPage: 25, resetKey: search.trim() }}
+              renderItems={(visibleArtists) => (
+                <Box sx={{ overflowX: 'auto' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Artista</TableCell>
+                        <TableCell>Slug</TableCell>
+                        <TableCell>Fans</TableCell>
+                        <TableCell>Cuenta</TableCell>
+                        <TableCell>Ciudad</TableCell>
+                        <TableCell>Enlaces</TableCell>
+                        <TableCell align="right">Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleArtists.map((artist) => {
                     const spotifyUrl =
                       artist.apSpotifyUrl ??
                       (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
@@ -512,10 +525,12 @@ export default function LabelArtistsPage() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                </TableBody>
-              </Table>
-            </Box>
+                      })}
+                    </TableBody>
+                  </Table>
+                </Box>
+              )}
+            />
           )}
         </CardContent>
       </Card>

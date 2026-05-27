@@ -58,6 +58,7 @@ import {
   summarizeMarketplaceOrderList,
   type MarketplaceOrderFilters,
 } from '../utils/marketplace';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
   { value: 'paid', label: 'Pagado', color: 'success' },
@@ -742,6 +743,14 @@ export default function MarketplaceOrdersPage() {
   const availableStatusUpdatePresets = selectedOrder
     ? STATUS_PRESETS.filter((statusPreset) => statusPreset.value !== selectedOrder.moStatus)
     : STATUS_PRESETS;
+  const orderPaginationResetKey = [
+    statusFilter,
+    providerFilter,
+    search.trim(),
+    fromDate,
+    toDate,
+    activePaidOnlyFilter ? 'paid' : 'all',
+  ].join('|');
 
   return (
     <Box p={2}>
@@ -1164,148 +1173,154 @@ export default function MarketplaceOrdersPage() {
             </Typography>
           )}
           {filtered.length > 0 && !singleVisibleOrder && (
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Pedido</TableCell>
-                    <TableCell>Cliente</TableCell>
-                    {showBuyerPhoneColumn && <TableCell>Contacto</TableCell>}
-                    {showStatusColumn && <TableCell>Estado</TableCell>}
-                    <TableCell align="right">Total</TableCell>
-                    {showPaymentProviderColumn && <TableCell>Pago</TableCell>}
-                    <TableCell>Creado</TableCell>
-                    {showPaidAtColumn && <TableCell>Pagado</TableCell>}
-                    {showItemsColumn && <TableCell>Items</TableCell>}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                {filtered.map((order) => {
-                  const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
-                  const itemCountLabel = formatItemCountLabel(order.moItems);
-                  const itemSummary = summarizeItems(order.moItems);
-                  const paypalPayerEmail = getDistinctPaypalPayerEmail(order);
-                  const buyerIdentity = getOrderBuyerIdentity(order);
-                  const buyerEmail = normalizeEmailValue(order.moBuyerEmail);
-                  const buyerPhone = normalizeBuyerPhoneValue(order.moBuyerPhone);
-                  const showBuyerEmail = shouldShowBuyerEmailDetail(buyerEmail, buyerIdentity);
-                  const showBuyerPhone = shouldShowBuyerPhoneDetail(buyerPhone, buyerIdentity);
+            <LazyPaginatedList
+              items={filtered}
+              pagination={{ itemLabel: 'pedidos', initialRowsPerPage: 25, resetKey: orderPaginationResetKey }}
+              renderItems={(visibleOrders) => (
+                <TableContainer component={Paper}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Pedido</TableCell>
+                        <TableCell>Cliente</TableCell>
+                        {showBuyerPhoneColumn && <TableCell>Contacto</TableCell>}
+                        {showStatusColumn && <TableCell>Estado</TableCell>}
+                        <TableCell align="right">Total</TableCell>
+                        {showPaymentProviderColumn && <TableCell>Pago</TableCell>}
+                        <TableCell>Creado</TableCell>
+                        {showPaidAtColumn && <TableCell>Pagado</TableCell>}
+                        {showItemsColumn && <TableCell>Items</TableCell>}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                    {visibleOrders.map((order) => {
+                      const orderCurrencyCaption = sharedVisibleCurrencyCaption ? '' : getOrderCurrencyCaption(order);
+                      const itemCountLabel = formatItemCountLabel(order.moItems);
+                      const itemSummary = summarizeItems(order.moItems);
+                      const paypalPayerEmail = getDistinctPaypalPayerEmail(order);
+                      const buyerIdentity = getOrderBuyerIdentity(order);
+                      const buyerEmail = normalizeEmailValue(order.moBuyerEmail);
+                      const buyerPhone = normalizeBuyerPhoneValue(order.moBuyerPhone);
+                      const showBuyerEmail = shouldShowBuyerEmailDetail(buyerEmail, buyerIdentity);
+                      const showBuyerPhone = shouldShowBuyerPhoneDetail(buyerPhone, buyerIdentity);
 
-                  return (
-                    <TableRow
-                      key={order.moOrderId}
-                      hover
-                      tabIndex={0}
-                      aria-label={`Abrir orden ${order.moOrderId} de ${buyerIdentity}`}
-                      onClick={() => openOrder(order.moOrderId)}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        openOrder(order.moOrderId);
-                      }}
-                      sx={{
-                        cursor: 'pointer',
-                        '&:focus-visible': {
-                          outline: '2px solid',
-                          outlineColor: 'primary.main',
-                          outlineOffset: -2,
-                        },
-                      }}
-                    >
-                      <TableCell>
-                        <Stack spacing={0.5}>
-                          <Tooltip title={order.moOrderId}>
-                            <Typography variant="body2" fontWeight={600} sx={{ width: 'fit-content' }}>
-                              {order.moOrderId.slice(0, 8)}
+                      return (
+                        <TableRow
+                          key={order.moOrderId}
+                          hover
+                          tabIndex={0}
+                          aria-label={`Abrir orden ${order.moOrderId} de ${buyerIdentity}`}
+                          onClick={() => openOrder(order.moOrderId)}
+                          onKeyDown={(event) => {
+                            if (event.key !== 'Enter' && event.key !== ' ') return;
+                            event.preventDefault();
+                            openOrder(order.moOrderId);
+                          }}
+                          sx={{
+                            cursor: 'pointer',
+                            '&:focus-visible': {
+                              outline: '2px solid',
+                              outlineColor: 'primary.main',
+                              outlineOffset: -2,
+                            },
+                          }}
+                        >
+                          <TableCell>
+                            <Stack spacing={0.5}>
+                              <Tooltip title={order.moOrderId}>
+                                <Typography variant="body2" fontWeight={600} sx={{ width: 'fit-content' }}>
+                                  {order.moOrderId.slice(0, 8)}
+                                </Typography>
+                              </Tooltip>
+                              {orderCurrencyCaption && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {orderCurrencyCaption}
+                                </Typography>
+                              )}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={600}>
+                              {buyerIdentity}
                             </Typography>
-                          </Tooltip>
-                          {orderCurrencyCaption && (
-                            <Typography variant="caption" color="text.secondary">
-                              {orderCurrencyCaption}
-                            </Typography>
-                          )}
-                        </Stack>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={600}>
-                          {buyerIdentity}
-                        </Typography>
-                        {showBuyerEmail ? (
-                          <Link
-                            href={`mailto:${buyerEmail}`}
-                            underline="hover"
-                            variant="caption"
-                            color="text.secondary"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {buyerEmail}
-                          </Link>
-                        ) : null}
-                      </TableCell>
-                      {showBuyerPhoneColumn && (
-                        <TableCell>
-                          {showBuyerPhone ? (
-                            <Link
-                              href={`tel:${buyerPhone.replace(/\s+/g, '')}`}
-                              underline="hover"
-                              color="text.primary"
-                              variant="body2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {buyerPhone}
-                            </Link>
-                          ) : (
-                            '—'
-                          )}
-                        </TableCell>
-                      )}
-                      {showStatusColumn && (
-                        <TableCell>
-                          <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
-                        </TableCell>
-                      )}
-                      <TableCell align="right">{order.moTotalDisplay}</TableCell>
-                      {showPaymentProviderColumn && (
-                        <TableCell>
-                          <Stack spacing={0.5}>
-                            <Typography variant="body2">
-                              {formatPaymentProvider(order.moPaymentProvider)}
-                            </Typography>
-                            {paypalPayerEmail && (
+                            {showBuyerEmail ? (
                               <Link
-                                href={`mailto:${paypalPayerEmail}`}
+                                href={`mailto:${buyerEmail}`}
                                 underline="hover"
                                 variant="caption"
                                 color="text.secondary"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {paypalPayerEmail}
+                                {buyerEmail}
                               </Link>
-                            )}
-                          </Stack>
-                        </TableCell>
-                      )}
-                      <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
-                      {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
-                      {showItemsColumn && (
-                        <TableCell>
-                          {itemCountLabel && (
-                            <Typography variant="body2">{itemCountLabel}</Typography>
+                            ) : null}
+                          </TableCell>
+                          {showBuyerPhoneColumn && (
+                            <TableCell>
+                              {showBuyerPhone ? (
+                                <Link
+                                  href={`tel:${buyerPhone.replace(/\s+/g, '')}`}
+                                  underline="hover"
+                                  color="text.primary"
+                                  variant="body2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {buyerPhone}
+                                </Link>
+                              ) : (
+                                '—'
+                              )}
+                            </TableCell>
                           )}
-                          <Typography
-                            variant={itemCountLabel ? 'caption' : 'body2'}
-                            color={itemCountLabel ? 'text.secondary' : 'text.primary'}
-                          >
-                            {itemSummary}
-                          </Typography>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                          {showStatusColumn && (
+                            <TableCell>
+                              <Chip size="small" label={statusLabel(order.moStatus)} color={statusColor(order.moStatus)} />
+                            </TableCell>
+                          )}
+                          <TableCell align="right">{order.moTotalDisplay}</TableCell>
+                          {showPaymentProviderColumn && (
+                            <TableCell>
+                              <Stack spacing={0.5}>
+                                <Typography variant="body2">
+                                  {formatPaymentProvider(order.moPaymentProvider)}
+                                </Typography>
+                                {paypalPayerEmail && (
+                                  <Link
+                                    href={`mailto:${paypalPayerEmail}`}
+                                    underline="hover"
+                                    variant="caption"
+                                    color="text.secondary"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {paypalPayerEmail}
+                                  </Link>
+                                )}
+                              </Stack>
+                            </TableCell>
+                          )}
+                          <TableCell>{formatDate(order.moCreatedAt)}</TableCell>
+                          {showPaidAtColumn && <TableCell>{formatDate(order.moPaidAt)}</TableCell>}
+                          {showItemsColumn && (
+                            <TableCell>
+                              {itemCountLabel && (
+                                <Typography variant="body2">{itemCountLabel}</Typography>
+                              )}
+                              <Typography
+                                variant={itemCountLabel ? 'caption' : 'body2'}
+                                color={itemCountLabel ? 'text.secondary' : 'text.primary'}
+                              >
+                                {itemSummary}
+                              </Typography>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            />
           )}
         </CardContent>
       </Card>

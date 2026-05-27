@@ -39,6 +39,7 @@ import type {
   ServiceKind,
 } from '../api/types';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 interface FormState {
   id?: string;
@@ -272,46 +273,52 @@ export default function ServiceTypesPage() {
           {sortedItems.length === 0 ? (
             <Alert severity="info">Aún no tienes servicios. Crea el primero.</Alert>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Servicio</TableCell>
-                  <TableCell>Precio</TableCell>
-                  <TableCell>Unidad</TableCell>
-                  <TableCell>Tipo</TableCell>
-                  <TableCell>Modelo</TableCell>
-                  <TableCell>Estado</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {sortedItems.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{formatPrice(item)}</TableCell>
-                    <TableCell>{item.billingUnit ?? '—'}</TableCell>
-                    <TableCell>{item.kind ?? '—'}</TableCell>
-                    <TableCell>{item.pricingModel ?? '—'}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={item.active ? 'Activo' : 'Inactivo'}
-                        color={item.active ? 'success' : 'default'}
-                        variant={item.active ? 'filled' : 'outlined'}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEdit(item)} aria-label={`Editar servicio ${item.name}`}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDelete(item.id)} aria-label={`Eliminar servicio ${item.name}`}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <LazyPaginatedList
+              items={sortedItems}
+              pagination={{ itemLabel: 'servicios', initialRowsPerPage: 25 }}
+              renderItems={(visibleItems) => (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Servicio</TableCell>
+                      <TableCell>Precio</TableCell>
+                      <TableCell>Unidad</TableCell>
+                      <TableCell>Tipo</TableCell>
+                      <TableCell>Modelo</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell align="right">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleItems.map((item) => (
+                      <TableRow key={item.id} hover>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{formatPrice(item)}</TableCell>
+                        <TableCell>{item.billingUnit ?? '—'}</TableCell>
+                        <TableCell>{item.kind ?? '—'}</TableCell>
+                        <TableCell>{item.pricingModel ?? '—'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            label={item.active ? 'Activo' : 'Inactivo'}
+                            color={item.active ? 'success' : 'default'}
+                            variant={item.active ? 'filled' : 'outlined'}
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton size="small" onClick={() => handleEdit(item)} aria-label={`Editar servicio ${item.name}`}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" onClick={() => handleDelete(item.id)} aria-label={`Eliminar servicio ${item.name}`}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
           )}
           {isLoading && (
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>

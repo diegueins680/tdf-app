@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Admin, type AdminUser, type UserCommunicationHistory, type WhatsAppMessageAdmin } from '../api/admin';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface AdminUserCommunicationDialogProps {
   open: boolean;
@@ -534,17 +535,25 @@ function MessageHistory(props: MessageHistoryProps) {
         {COPY.historyTitle}
       </Typography>
       {messages.length === 0 ? <EmptyHistoryNotice /> : null}
-      {messages.map((message) => (
-        <MessageCard
-          key={message.id}
-          actionsDisabled={actionsDisabled}
-          focusAfterReplySelect={focusAfterReplySelect}
-          focusAfterResend={focusAfterResend}
-          message={message}
-          partyName={partyName}
-          resending={resendingMessageId === message.id}
-        />
-      ))}
+      <LazyPaginatedList
+        items={messages}
+        pagination={{ itemLabel: 'mensajes', initialRowsPerPage: 10 }}
+        renderItems={(visibleMessages) => (
+          <Stack spacing={1.5}>
+            {visibleMessages.map((message) => (
+              <MessageCard
+                key={message.id}
+                actionsDisabled={actionsDisabled}
+                focusAfterReplySelect={focusAfterReplySelect}
+                focusAfterResend={focusAfterResend}
+                message={message}
+                partyName={partyName}
+                resending={resendingMessageId === message.id}
+              />
+            ))}
+          </Stack>
+        )}
+      />
     </Stack>
   );
 }

@@ -23,6 +23,7 @@ import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
 import { isSessionAuthFailureMessage } from '../session/authEvents';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
 
@@ -642,37 +643,45 @@ export default function CalendarSyncPage() {
           {eventsErrorMessage && <Alert severity="error">{eventsErrorMessage}</Alert>}
           <Divider />
           <Stack spacing={1.5}>
-            {events.map((ev) => (
-              <Paper key={ev.eventId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {ev.startAt ? new Date(ev.startAt).toLocaleString() : 'Sin fecha'} —{' '}
-                      {ev.endAt ? new Date(ev.endAt).toLocaleString() : 'Sin fin'}
-                    </Typography>
-                    {ev.location && (
-                      <Typography variant="body2" color="text.secondary">
-                        {ev.location}
-                      </Typography>
-                    )}
-                    {ev.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {ev.description}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
-                    <Chip label={ev.status} size="small" />
-                    {ev.htmlLink && (
-                      <Button href={ev.htmlLink} target="_blank" rel="noreferrer" size="small">
-                        Ver en Google
-                      </Button>
-                    )}
-                  </Stack>
+            <LazyPaginatedList
+              items={events}
+              pagination={{ itemLabel: 'eventos', initialRowsPerPage: 10 }}
+              renderItems={(visibleEvents) => (
+                <Stack spacing={1.5}>
+                  {visibleEvents.map((ev) => (
+                    <Paper key={ev.eventId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {ev.startAt ? new Date(ev.startAt).toLocaleString() : 'Sin fecha'} —{' '}
+                            {ev.endAt ? new Date(ev.endAt).toLocaleString() : 'Sin fin'}
+                          </Typography>
+                          {ev.location && (
+                            <Typography variant="body2" color="text.secondary">
+                              {ev.location}
+                            </Typography>
+                          )}
+                          {ev.description && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              {ev.description}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
+                          <Chip label={ev.status} size="small" />
+                          {ev.htmlLink && (
+                            <Button href={ev.htmlLink} target="_blank" rel="noreferrer" size="small">
+                              Ver en Google
+                            </Button>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  ))}
                 </Stack>
-              </Paper>
-            ))}
+              )}
+            />
             {events.length === 0 && !eventsQuery.isLoading && (
               <Typography color="text.secondary">Sin eventos sincronizados para este calendario.</Typography>
             )}

@@ -29,6 +29,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Invoices, type GenerateSessionInvoiceInput, type GenerateSessionInvoiceResponse, type InvoiceDTO } from '../api/invoices';
 import { Sessions, type SessionDTO } from '../api/sessions';
 import type { PartyDTO } from '../api/types';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface SessionInvoiceGeneratorCardProps {
   parties: PartyDTO[];
@@ -654,28 +655,34 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
           ) : (sessionInvoicesQuery.data ?? []).length === 0 ? (
             <Alert severity="info">Esta sesión todavía no tiene facturas vinculadas.</Alert>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Número</TableCell>
-                  <TableCell>Estado</TableCell>
-                  <TableCell>Total</TableCell>
-                  <TableCell>SRI</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(sessionInvoicesQuery.data ?? []).map((invoice) => (
-                  <TableRow key={invoice.invId} hover>
-                    <TableCell>{invoice.invId}</TableCell>
-                    <TableCell>{invoice.number ?? '—'}</TableCell>
-                    <TableCell>{invoice.statusI}</TableCell>
-                    <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
-                    <TableCell>{invoice.sriDocumentId ?? '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <LazyPaginatedList
+              items={sessionInvoicesQuery.data ?? []}
+              pagination={{ itemLabel: 'facturas', initialRowsPerPage: 10, resetKey: selectedSession.sessionId }}
+              renderItems={(visibleInvoices) => (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Número</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>SRI</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleInvoices.map((invoice) => (
+                      <TableRow key={invoice.invId} hover>
+                        <TableCell>{invoice.invId}</TableCell>
+                        <TableCell>{invoice.number ?? '—'}</TableCell>
+                        <TableCell>{invoice.statusI}</TableCell>
+                        <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
+                        <TableCell>{invoice.sriDocumentId ?? '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
           )}
         </Stack>
       </CardContent>

@@ -33,6 +33,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido'] as const;
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
@@ -409,53 +410,59 @@ export default function LeadsPage() {
                   )}
                 </Stack>
               )}
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Lead</TableCell>
-                    <TableCell>Contacto</TableCell>
-                    {showNotesColumn && <TableCell>Notas / Estado</TableCell>}
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {leads.map((l) => (
-                    <TableRow key={l.partyId} hover>
-                      <TableCell>
-                        <Stack spacing={0.5}>
-                          <Button
-                            variant="text"
-                            onClick={(event) => {
-                              setRelatedParty(l);
-                              setRelatedAnchor(event.currentTarget);
-                            }}
-                            sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
-                          >
-                            <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                              {l.displayName}
-                            </Typography>
-                          </Button>
-                          {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
-                        </Stack>
-                      </TableCell>
-                      <TableCell>{getLeadContactSummary(l)}</TableCell>
-                      {showNotesColumn && <TableCell>{normalizeLeadFieldValue(l.notes) ?? '—'}</TableCell>}
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => {
-                            setSelected(l);
-                            setEditOpen(true);
-                          }}
-                        >
-                          Editar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <LazyPaginatedList
+                items={leads}
+                pagination={{ itemLabel: 'leads', initialRowsPerPage: 25, resetKey: trimmedSearch }}
+                renderItems={(visibleLeads) => (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Lead</TableCell>
+                        <TableCell>Contacto</TableCell>
+                        {showNotesColumn && <TableCell>Notas / Estado</TableCell>}
+                        <TableCell align="right">Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleLeads.map((l) => (
+                        <TableRow key={l.partyId} hover>
+                          <TableCell>
+                            <Stack spacing={0.5}>
+                              <Button
+                                variant="text"
+                                onClick={(event) => {
+                                  setRelatedParty(l);
+                                  setRelatedAnchor(event.currentTarget);
+                                }}
+                                sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start', alignSelf: 'flex-start' }}
+                              >
+                                <Typography fontWeight={700} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                                  {l.displayName}
+                                </Typography>
+                              </Button>
+                              {l.hasUserAccount && <Chip label="Cuenta de usuario" size="small" color="primary" />}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>{getLeadContactSummary(l)}</TableCell>
+                          {showNotesColumn && <TableCell>{normalizeLeadFieldValue(l.notes) ?? '—'}</TableCell>}
+                          <TableCell align="right">
+                            <Button
+                              size="small"
+                              startIcon={<EditIcon />}
+                              onClick={() => {
+                                setSelected(l);
+                                setEditOpen(true);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              />
             </>
           )}
         </Stack>

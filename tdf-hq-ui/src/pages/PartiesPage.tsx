@@ -47,6 +47,7 @@ import { canAccessPath } from '../utils/accessControl';
 import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import PageShell, { EmptyState } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -582,54 +583,60 @@ export default function PartiesPage() {
                 </Typography>
               )
             )}
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nombre</TableCell>
-                  <TableCell>Contacto</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filtered.map((party) => (
-                  <TableRow key={party.partyId} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Button
-                          variant="text"
-                          onClick={(event) => {
-                            setRelatedParty(party);
-                            setRelatedAnchor(event.currentTarget);
-                          }}
-                          sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
-                        >
-                          <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                            {party.displayName}
-                          </Typography>
-                        </Button>
-                        {party.isOrg && <Chip label="Empresa" size="small" />}
-                        {party.hasUserAccount && !allVisibleContactsHaveUserAccount && (
-                          <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
-                        )}
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{getPartyContactSummary(party)}</TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Acciones">
-                        <IconButton
-                          onClick={(event) => openActionsMenu(event, party)}
-                          aria-label={`Abrir acciones para ${party.displayName}`}
-                          aria-haspopup="menu"
-                          aria-expanded={actionsMenuTarget?.party.partyId === party.partyId ? 'true' : undefined}
-                        >
-                          <MoreHorizIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <LazyPaginatedList
+              items={filtered}
+              pagination={{ itemLabel: 'contactos', initialRowsPerPage: 25, resetKey: trimmedSearch }}
+              renderItems={(visibleParties) => (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Contacto</TableCell>
+                      <TableCell align="right">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleParties.map((party) => (
+                      <TableRow key={party.partyId} hover>
+                        <TableCell>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Button
+                              variant="text"
+                              onClick={(event) => {
+                                setRelatedParty(party);
+                                setRelatedAnchor(event.currentTarget);
+                              }}
+                              sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
+                            >
+                              <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                                {party.displayName}
+                              </Typography>
+                            </Button>
+                            {party.isOrg && <Chip label="Empresa" size="small" />}
+                            {party.hasUserAccount && !allVisibleContactsHaveUserAccount && (
+                              <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
+                            )}
+                          </Stack>
+                        </TableCell>
+                        <TableCell>{getPartyContactSummary(party)}</TableCell>
+                        <TableCell align="right">
+                          <Tooltip title="Acciones">
+                            <IconButton
+                              onClick={(event) => openActionsMenu(event, party)}
+                              aria-label={`Abrir acciones para ${party.displayName}`}
+                              aria-haspopup="menu"
+                              aria-expanded={actionsMenuTarget?.party.partyId === party.partyId ? 'true' : undefined}
+                            >
+                              <MoreHorizIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
           </>
         )}
       </Paper>

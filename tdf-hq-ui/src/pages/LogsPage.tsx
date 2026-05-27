@@ -21,6 +21,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Admin } from '../api/admin';
 import { formatTimestampForDisplay } from '../utils/dateTime';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 interface LogEntry {
   logTimestamp: string;
@@ -181,57 +182,63 @@ export default function LogsPage() {
               {`Mostrando un solo nivel: ${sharedLevelSummary}. La columna aparecerá cuando esta vista mezcle niveles distintos.`}
             </Typography>
           )}
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ width: 180 }}>Fecha y hora</TableCell>
-                  {showLevelColumn && <TableCell sx={{ width: 100 }}>Nivel</TableCell>}
-                  <TableCell>Mensaje</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {logsQuery.isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={visibleTableColumnCount} align="center">
-                      <CircularProgress size={24} />
-                    </TableCell>
-                  </TableRow>
-                )}
-                {logs.map((log, idx) => {
-                  const levelPresentation = getLevelPresentation(log.logLevel);
-
-                  return (
-                    <TableRow key={idx} hover>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                          {formatTimestampForDisplay(log.logTimestamp)}
-                        </Typography>
-                      </TableCell>
-                      {showLevelColumn && (
-                        <TableCell>
-                          <Chip label={levelPresentation.label} size="small" color={levelPresentation.color} />
-                        </TableCell>
-                      )}
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontFamily: 'monospace',
-                            fontSize: '0.875rem',
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                          }}
-                        >
-                          {log.logMessage}
-                        </Typography>
-                      </TableCell>
+          <LazyPaginatedList
+            items={logs}
+            pagination={{ itemLabel: 'logs', initialRowsPerPage: 25, resetKey: limit }}
+            renderItems={(visibleLogs, { startIndex }) => (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ width: 180 }}>Fecha y hora</TableCell>
+                      {showLevelColumn && <TableCell sx={{ width: 100 }}>Nivel</TableCell>}
+                      <TableCell>Mensaje</TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {logsQuery.isLoading && (
+                      <TableRow>
+                        <TableCell colSpan={visibleTableColumnCount} align="center">
+                          <CircularProgress size={24} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {visibleLogs.map((log, idx) => {
+                      const levelPresentation = getLevelPresentation(log.logLevel);
+
+                      return (
+                        <TableRow key={startIndex + idx} hover>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                              {formatTimestampForDisplay(log.logTimestamp)}
+                            </Typography>
+                          </TableCell>
+                          {showLevelColumn && (
+                            <TableCell>
+                              <Chip label={levelPresentation.label} size="small" color={levelPresentation.color} />
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontFamily: 'monospace',
+                                fontSize: '0.875rem',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {log.logMessage}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          />
         </Paper>
       )}
     </Stack>

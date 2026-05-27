@@ -37,6 +37,7 @@ import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import PageShell, { EmptyState } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -966,134 +967,140 @@ export default function InventoryPage() {
                   {`Mostrando una sola condición: ${sharedConditionSummary}. El detalle volverá cuando esta vista mezcle condiciones distintas.`}
                 </Typography>
               )}
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Equipo</TableCell>
-                    {showStatusColumn && <TableCell>Estado</TableCell>}
-                    {showCurrentCheckoutColumn && <TableCell>Tenencia actual</TableCell>}
-                    {showLocationColumn && <TableCell>Ubicación</TableCell>}
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {grouped.map((asset) => {
-                    const movementState = getInventoryMovementState(asset.status);
-                    const assetCondition = normalizeInventoryField(asset.condition);
-                    const paymentSummary = formatCheckoutPaymentSummary(
-                      asset.currentCheckoutPaymentType,
-                      asset.currentCheckoutPaymentInstallments,
-                      asset.currentCheckoutPaymentAmountCents,
-                      asset.currentCheckoutPaymentCurrency,
-                      asset.currentCheckoutPaymentOutstandingCents,
-                    );
-                    const hasCurrentCheckoutContext = Boolean(
-                      normalizeInventoryField(asset.currentCheckoutTarget)
-                      || asset.currentCheckoutAt
-                      || normalizeInventoryField(asset.currentCheckoutHolderEmail)
-                      || normalizeInventoryField(asset.currentCheckoutHolderPhone)
-                      || asset.currentCheckoutDueAt
-                      || paymentSummary
-                      || normalizeInventoryField(asset.currentCheckoutDisposition),
-                    );
-                    const checkoutContextSummary = buildCurrentCheckoutContextSummary({
-                      disposition: asset.currentCheckoutDisposition,
-                      checkedOutAt: asset.currentCheckoutAt,
-                      dueAt: asset.currentCheckoutDueAt,
-                      paymentSummary,
-                    });
-                    const checkoutContactSummary = buildCurrentCheckoutContactSummary({
-                      holderEmail: asset.currentCheckoutHolderEmail,
-                      holderPhone: asset.currentCheckoutHolderPhone,
-                    });
+              <LazyPaginatedList
+                items={grouped}
+                pagination={{ itemLabel: 'equipos', initialRowsPerPage: 25, resetKey: normalizedInventorySearch }}
+                renderItems={(visibleAssets) => (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Equipo</TableCell>
+                        {showStatusColumn && <TableCell>Estado</TableCell>}
+                        {showCurrentCheckoutColumn && <TableCell>Tenencia actual</TableCell>}
+                        {showLocationColumn && <TableCell>Ubicación</TableCell>}
+                        <TableCell align="right">Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleAssets.map((asset) => {
+                        const movementState = getInventoryMovementState(asset.status);
+                        const assetCondition = normalizeInventoryField(asset.condition);
+                        const paymentSummary = formatCheckoutPaymentSummary(
+                          asset.currentCheckoutPaymentType,
+                          asset.currentCheckoutPaymentInstallments,
+                          asset.currentCheckoutPaymentAmountCents,
+                          asset.currentCheckoutPaymentCurrency,
+                          asset.currentCheckoutPaymentOutstandingCents,
+                        );
+                        const hasCurrentCheckoutContext = Boolean(
+                          normalizeInventoryField(asset.currentCheckoutTarget)
+                          || asset.currentCheckoutAt
+                          || normalizeInventoryField(asset.currentCheckoutHolderEmail)
+                          || normalizeInventoryField(asset.currentCheckoutHolderPhone)
+                          || asset.currentCheckoutDueAt
+                          || paymentSummary
+                          || normalizeInventoryField(asset.currentCheckoutDisposition),
+                        );
+                        const checkoutContextSummary = buildCurrentCheckoutContextSummary({
+                          disposition: asset.currentCheckoutDisposition,
+                          checkedOutAt: asset.currentCheckoutAt,
+                          dueAt: asset.currentCheckoutDueAt,
+                          paymentSummary,
+                        });
+                        const checkoutContactSummary = buildCurrentCheckoutContactSummary({
+                          holderEmail: asset.currentCheckoutHolderEmail,
+                          holderPhone: asset.currentCheckoutHolderPhone,
+                        });
 
-                    return (
-                      <TableRow key={asset.assetId} hover>
-                        <TableCell>
-                          <Stack spacing={0.25}>
-                            <Typography variant="body2" fontWeight={700}>
-                              {asset.name}
-                            </Typography>
-                            {!sharedCategorySummary && (
-                              <Typography variant="caption" color="text.secondary">
-                                {asset.category}
-                              </Typography>
-                            )}
-                            {assetCondition && !sharedConditionSummary && (
-                              <Typography variant="caption" color="text.secondary">
-                                Condición: {assetCondition}
-                              </Typography>
-                            )}
-                          </Stack>
-                        </TableCell>
-                        {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}
-                        {showCurrentCheckoutColumn && (
-                          <TableCell>
-                            {hasCurrentCheckoutContext ? (
+                        return (
+                          <TableRow key={asset.assetId} hover>
+                            <TableCell>
                               <Stack spacing={0.25}>
-                                {normalizeInventoryField(asset.currentCheckoutTarget) && (
-                                  <Typography variant="body2">
-                                    {getCurrentTargetSummary(asset, roomMap)}
+                                <Typography variant="body2" fontWeight={700}>
+                                  {asset.name}
+                                </Typography>
+                                {!sharedCategorySummary && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {asset.category}
                                   </Typography>
                                 )}
-                                {checkoutContextSummary && (
+                                {assetCondition && !sharedConditionSummary && (
                                   <Typography variant="caption" color="text.secondary">
-                                    {checkoutContextSummary}
-                                  </Typography>
-                                )}
-                                {checkoutContactSummary && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    {checkoutContactSummary}
+                                    Condición: {assetCondition}
                                   </Typography>
                                 )}
                               </Stack>
-                            ) : (
-                              '—'
+                            </TableCell>
+                            {showStatusColumn && <TableCell>{getInventoryStatusLabel(asset.status)}</TableCell>}
+                            {showCurrentCheckoutColumn && (
+                              <TableCell>
+                                {hasCurrentCheckoutContext ? (
+                                  <Stack spacing={0.25}>
+                                    {normalizeInventoryField(asset.currentCheckoutTarget) && (
+                                      <Typography variant="body2">
+                                        {getCurrentTargetSummary(asset, roomMap)}
+                                      </Typography>
+                                    )}
+                                    {checkoutContextSummary && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {checkoutContextSummary}
+                                      </Typography>
+                                    )}
+                                    {checkoutContactSummary && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {checkoutContactSummary}
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                ) : (
+                                  '—'
+                                )}
+                              </TableCell>
                             )}
-                          </TableCell>
-                        )}
-                        {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
-                        <TableCell align="right">
-                          <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
-                            {movementState.canCheckout && (
-                              <Tooltip title="Registrar check-out">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => openCheckout(asset)}
-                                  aria-label={`Abrir check-out de ${asset.name}`}
-                                >
-                                  <ExitToAppIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            {movementState.canCheckin && (
-                              <Tooltip title="Registrar check-in">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => openCheckin(asset)}
-                                  aria-label={`Abrir check-in de ${asset.name}`}
-                                >
-                                  <HowToRegIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            <Tooltip title={INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}>
-                              <IconButton
-                                size="small"
-                                onClick={(event) => openActionsMenu(event, asset)}
-                                aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
-                                aria-haspopup="menu"
-                              >
-                                <MoreHorizIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                            {showLocationColumn && <TableCell>{normalizeInventoryField(asset.location) ?? '—'}</TableCell>}
+                            <TableCell align="right">
+                              <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+                                {movementState.canCheckout && (
+                                  <Tooltip title="Registrar check-out">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => openCheckout(asset)}
+                                      aria-label={`Abrir check-out de ${asset.name}`}
+                                    >
+                                      <ExitToAppIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {movementState.canCheckin && (
+                                  <Tooltip title="Registrar check-in">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => openCheckin(asset)}
+                                      aria-label={`Abrir check-in de ${asset.name}`}
+                                    >
+                                      <HowToRegIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                <Tooltip title={INVENTORY_ROW_SECONDARY_ACTIONS_LABEL}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(event) => openActionsMenu(event, asset)}
+                                    aria-label={`Abrir QR, enlace e historial de ${asset.name}`}
+                                    aria-haspopup="menu"
+                                  >
+                                    <MoreHorizIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              />
             </Stack>
           </CardContent>
         </Card>

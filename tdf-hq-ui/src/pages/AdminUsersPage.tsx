@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   '-',
@@ -1796,24 +1797,36 @@ export default function AdminUsersPage() {
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>
-                {activeVisibleUsers.map((user) => (
-                  <UserRow
-                    key={user.userId}
-                    user={user}
-                    showInactiveStatusChip={includeInactive && !user.active && !showInactiveOnlyScopeSummary}
-                    onOpenCommunications={() => setSelectedUser(user)}
-                    sharedModulesSummary={sharedModulesSummary}
-                    sharedRolesSummary={sharedRolesSummary}
-                    hideAccessSummary={hideAccessSummaryForCurrentRows}
-                    hidePendingStateChip={hideSingleRowPendingState}
-                    hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                    showIdentityDisambiguator={
-                      userIdsRequiringIdentityDisambiguator.has(user.userId)
-                      || userIdsMatchingProfileSearch.has(user.userId)
-                    }
-                    showExplicitWhatsAppAction={showExplicitWhatsAppAction}
-                  />
-                ))}
+                <LazyPaginatedList
+                  items={activeVisibleUsers}
+                  pagination={{
+                    itemLabel: 'usuarios',
+                    initialRowsPerPage: 25,
+                    resetKey: `${includeInactive ? 'with-inactive' : 'active'}|${deferredSearchQuery}`,
+                  }}
+                  renderItems={(visibleActiveUsers) => (
+                    <Stack spacing={1.5}>
+                      {visibleActiveUsers.map((user) => (
+                        <UserRow
+                          key={user.userId}
+                          user={user}
+                          showInactiveStatusChip={includeInactive && !user.active && !showInactiveOnlyScopeSummary}
+                          onOpenCommunications={() => setSelectedUser(user)}
+                          sharedModulesSummary={sharedModulesSummary}
+                          sharedRolesSummary={sharedRolesSummary}
+                          hideAccessSummary={hideAccessSummaryForCurrentRows}
+                          hidePendingStateChip={hideSingleRowPendingState}
+                          hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                          showIdentityDisambiguator={
+                            userIdsRequiringIdentityDisambiguator.has(user.userId)
+                            || userIdsMatchingProfileSearch.has(user.userId)
+                          }
+                          showExplicitWhatsAppAction={showExplicitWhatsAppAction}
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                />
                 {showInactiveUsersGroup ? (
                   <>
                     {showInactiveUsersGroupHeader && (
@@ -1853,26 +1866,36 @@ export default function AdminUsersPage() {
                       </Stack>
                     )}
                     {showInactiveUsersList && (
-                      <Stack id="admin-users-inactive-list" spacing={1.5}>
-                        {inactiveVisibleUsers.map((user) => (
-                          <UserRow
-                            key={user.userId}
-                            user={user}
-                            showInactiveStatusChip={false}
-                            onOpenCommunications={() => setSelectedUser(user)}
-                            sharedModulesSummary={sharedModulesSummary}
-                            sharedRolesSummary={sharedRolesSummary}
-                            hideAccessSummary={hideAccessSummaryForCurrentRows}
-                            hidePendingStateChip={hideSingleRowPendingState}
-                            hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                            showIdentityDisambiguator={
-                              userIdsRequiringIdentityDisambiguator.has(user.userId)
-                              || userIdsMatchingProfileSearch.has(user.userId)
-                            }
-                            showExplicitWhatsAppAction={showExplicitWhatsAppAction}
-                          />
-                        ))}
-                      </Stack>
+                      <LazyPaginatedList
+                        items={inactiveVisibleUsers}
+                        pagination={{
+                          itemLabel: 'usuarios inactivos',
+                          initialRowsPerPage: 10,
+                          resetKey: `inactive|${deferredSearchQuery}|${showInactiveUsers ? 'open' : 'closed'}`,
+                        }}
+                        renderItems={(visibleInactiveUsersPage) => (
+                          <Stack id="admin-users-inactive-list" spacing={1.5}>
+                            {visibleInactiveUsersPage.map((user) => (
+                              <UserRow
+                                key={user.userId}
+                                user={user}
+                                showInactiveStatusChip={false}
+                                onOpenCommunications={() => setSelectedUser(user)}
+                                sharedModulesSummary={sharedModulesSummary}
+                                sharedRolesSummary={sharedRolesSummary}
+                                hideAccessSummary={hideAccessSummaryForCurrentRows}
+                                hidePendingStateChip={hideSingleRowPendingState}
+                                hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                                showIdentityDisambiguator={
+                                  userIdsRequiringIdentityDisambiguator.has(user.userId)
+                                  || userIdsMatchingProfileSearch.has(user.userId)
+                                }
+                                showExplicitWhatsAppAction={showExplicitWhatsAppAction}
+                              />
+                            ))}
+                          </Stack>
+                        )}
+                      />
                     )}
                   </>
                 ) : null}

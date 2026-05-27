@@ -31,6 +31,7 @@ import { Fans } from '../api/fans';
 import type { ArtistProfileDTO, ArtistReleaseDTO, ArtistReleaseUpsert } from '../api/types';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { SessionGate } from '../components/SessionGate';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildReleaseStreamingSources } from '../utils/media';
 import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 
@@ -551,20 +552,28 @@ export default function LabelReleasesPage() {
               <Typography color="text.secondary">No hay releases registrados aún.</Typography>
             )}
 
-            <Grid container spacing={2}>
-              {filteredReleases.map((release) => {
-                const sources = buildReleaseStreamingSources({
-                  arReleaseId: release.arReleaseId,
-                  arArtistId: release.arArtistId,
-                  arTitle: release.arTitle,
-                  arReleaseDate: release.arReleaseDate,
-                  arDescription: release.arDescription,
-                  arCoverImageUrl: release.arCoverImageUrl,
-                  arSpotifyUrl: release.arSpotifyUrl,
-                  arYoutubeUrl: release.arYoutubeUrl,
-                });
-                return (
-                  <Grid item xs={12} md={6} key={`${release.arArtistId}-${release.arReleaseId}`}>
+            <LazyPaginatedList
+              items={filteredReleases}
+              pagination={{
+                itemLabel: 'lanzamientos',
+                initialRowsPerPage: 12,
+                resetKey: [search.trim(), filterArtistId ?? 'all', filterWindow, sortOrder].join('|'),
+              }}
+              renderItems={(visibleReleases) => (
+                <Grid container spacing={2}>
+                  {visibleReleases.map((release) => {
+                    const sources = buildReleaseStreamingSources({
+                      arReleaseId: release.arReleaseId,
+                      arArtistId: release.arArtistId,
+                      arTitle: release.arTitle,
+                      arReleaseDate: release.arReleaseDate,
+                      arDescription: release.arDescription,
+                      arCoverImageUrl: release.arCoverImageUrl,
+                      arSpotifyUrl: release.arSpotifyUrl,
+                      arYoutubeUrl: release.arYoutubeUrl,
+                    });
+                    return (
+                      <Grid item xs={12} md={6} key={`${release.arArtistId}-${release.arReleaseId}`}>
                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Stack direction="row" spacing={2}>
@@ -681,9 +690,11 @@ export default function LabelReleasesPage() {
                       </CardContent>
                     </Card>
                   </Grid>
-                );
-              })}
-            </Grid>
+                    );
+                  })}
+                </Grid>
+              )}
+            />
           </Stack>
         </CardContent>
       </Card>

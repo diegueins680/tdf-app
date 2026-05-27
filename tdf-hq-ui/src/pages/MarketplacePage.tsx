@@ -41,6 +41,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type {
   MarketplaceCartDTO,
   MarketplaceCartItemDTO,
@@ -1408,61 +1409,69 @@ export default function MarketplacePage() {
                 {search.trim() && <Chip label="Búsqueda activa" size="small" />}
               </Stack>
             )}
-            <Grid container spacing={2}>
-              {!listingsQuery.isLoading && filteredListings.length === 0 && (
-                <Grid item xs={12}>
-                  <Alert
-                    severity="info"
-                    action={
-                      <Button color="inherit" size="small" onClick={resetFilters}>
-                        Limpiar filtros
-                      </Button>
-                    }
-                  >
-                    No encontramos resultados con estos filtros.
-                  </Alert>
-                  <Card variant="outlined" sx={{ mt: 1 }}>
-                    <CardContent>
-                      <Stack spacing={1.5}>
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          ¿Te avisamos cuando vuelva a estar disponible?
-                        </Typography>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                          <TextField
-                            label="Nombre"
-                            value={buyerName}
-                            onChange={(e) => setBuyerName(e.target.value)}
-                            size="small"
-                          />
-                          <TextField
-                            label="Correo"
-                            value={buyerEmail}
-                            onChange={(e) => setBuyerEmail(e.target.value)}
-                            size="small"
-                          />
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => {
-                              const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
-                              localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
-                              setSavedBuyerSnapshot(payload);
-                              setToast('Guardamos tu contacto; te avisaremos.');
-                            }}
-                          >
-                            Guardar contacto
+            <LazyPaginatedList
+              items={sortedListings}
+              pagination={{
+                itemLabel: 'resultados',
+                initialRowsPerPage: 12,
+                resetKey: [search.trim(), resolvedCategory, resolvedCondition, purpose, sort].join('|'),
+              }}
+              renderItems={(visibleListings) => (
+                <Grid container spacing={2}>
+                  {!listingsQuery.isLoading && filteredListings.length === 0 && (
+                    <Grid item xs={12}>
+                      <Alert
+                        severity="info"
+                        action={
+                          <Button color="inherit" size="small" onClick={resetFilters}>
+                            Limpiar filtros
                           </Button>
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          Usaremos tu contacto solo para notificar disponibilidad.
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-              {sortedListings.map((item) => (
-                <Grid item xs={12} sm={6} key={item.miListingId}>
+                        }
+                      >
+                        No encontramos resultados con estos filtros.
+                      </Alert>
+                      <Card variant="outlined" sx={{ mt: 1 }}>
+                        <CardContent>
+                          <Stack spacing={1.5}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              ¿Te avisamos cuando vuelva a estar disponible?
+                            </Typography>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                label="Nombre"
+                                value={buyerName}
+                                onChange={(e) => setBuyerName(e.target.value)}
+                                size="small"
+                              />
+                              <TextField
+                                label="Correo"
+                                value={buyerEmail}
+                                onChange={(e) => setBuyerEmail(e.target.value)}
+                                size="small"
+                              />
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => {
+                                  const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
+                                  localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+                                  setSavedBuyerSnapshot(payload);
+                                  setToast('Guardamos tu contacto; te avisaremos.');
+                                }}
+                              >
+                                Guardar contacto
+                              </Button>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                              Usaremos tu contacto solo para notificar disponibilidad.
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  )}
+                  {visibleListings.map((item) => (
+                    <Grid item xs={12} sm={6} key={item.miListingId}>
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -1650,9 +1659,11 @@ export default function MarketplacePage() {
                       </Stack>
                     </CardContent>
                   </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              )}
+            />
             </Box>
           </Grid>
 

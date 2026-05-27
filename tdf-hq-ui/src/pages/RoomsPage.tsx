@@ -24,6 +24,7 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tan
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 export default function RoomsPage() {
   const qc = useQueryClient();
@@ -115,74 +116,80 @@ export default function RoomsPage() {
           description="Agrega tu primera sala para empezar a gestionar reservas."
         />
       ) : (
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rooms.map((room) => (
-              <TableRow key={room.roomId}>
-                <TableCell>
-                  {renameId === room.roomId ? (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField
-                        size="small"
-                        aria-label={`Nuevo nombre para ${room.rName}`}
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                      />
-                      <Button size="small" onClick={handleRenameSave} disabled={updateMutation.isPending}>
-                        Guardar
-                      </Button>
-                      <Button size="small" onClick={() => setRenameId(null)} color="inherit">
-                        Cancelar
-                      </Button>
-                    </Stack>
-                  ) : (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography fontWeight={600}>{room.rName}</Typography>
-                      <IconButton
-                        size="small"
-                        aria-label={`Renombrar ${room.rName}`}
-                        onClick={() => {
-                          setRenameId(room.roomId);
-                          setRenameValue(room.rName);
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                      label={room.rBookable ? 'Reservable' : 'Bloqueado'}
-                      color={room.rBookable ? 'success' : 'default'}
-                      size="small"
-                    />
-                    <Switch
-                      checked={room.rBookable}
-                      onChange={() => handleToggleBookable(room)}
-                      inputProps={{ 'aria-label': 'toggle bookable' }}
-                    />
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    ID: {room.roomId}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <LazyPaginatedList
+        items={rooms}
+        pagination={{ itemLabel: 'salas', initialRowsPerPage: 25 }}
+        renderItems={(visibleRooms) => (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Nombre</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {visibleRooms.map((room) => (
+                  <TableRow key={room.roomId}>
+                    <TableCell>
+                      {renameId === room.roomId ? (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <TextField
+                            size="small"
+                            aria-label={`Nuevo nombre para ${room.rName}`}
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                          />
+                          <Button size="small" onClick={handleRenameSave} disabled={updateMutation.isPending}>
+                            Guardar
+                          </Button>
+                          <Button size="small" onClick={() => setRenameId(null)} color="inherit">
+                            Cancelar
+                          </Button>
+                        </Stack>
+                      ) : (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography fontWeight={600}>{room.rName}</Typography>
+                          <IconButton
+                            size="small"
+                            aria-label={`Renombrar ${room.rName}`}
+                            onClick={() => {
+                              setRenameId(room.roomId);
+                              setRenameValue(room.rName);
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip
+                          label={room.rBookable ? 'Reservable' : 'Bloqueado'}
+                          color={room.rBookable ? 'success' : 'default'}
+                          size="small"
+                        />
+                        <Switch
+                          checked={room.rBookable}
+                          onChange={() => handleToggleBookable(room)}
+                          inputProps={{ 'aria-label': 'toggle bookable' }}
+                        />
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        ID: {room.roomId}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      />
       )}
     </Stack>
     </PageShell>

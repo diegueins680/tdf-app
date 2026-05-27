@@ -32,6 +32,7 @@ import type { Role } from '../api/generated/client';
 import { apiClient } from '../api/generated/client';
 import { ALL_ROLES } from '../constants/roles';
 import { normalizeRolesInput } from '../utils/roles';
+import LazyPaginatedList from './LazyPaginatedList';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -568,81 +569,87 @@ export default function UserRoleManagement() {
               </Stack>
             </Paper>
           ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Usuario</TableCell>
-                    {showContactColumn && <TableCell>Contacto</TableCell>}
-                    {showStatusColumn && <TableCell>Estado</TableCell>}
-                    <TableCell>{EDITABLE_ROLES_LABEL}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.map((user) => {
-                    const contactSummary = getContactSummary(user);
-                    const showIdentityDisambiguator = userIdsRequiringIdentityDisambiguator.has(user.id);
-
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <Stack spacing={0.25}>
-                            <Typography variant="body2" fontWeight={600}>
-                              {user.name}
-                            </Typography>
-                            {showIdentityDisambiguator && (
-                              <Typography variant="caption" color="text.secondary">
-                                ID {user.id}
-                              </Typography>
-                            )}
-                          </Stack>
-                        </TableCell>
-                        {showContactColumn && (
-                          <TableCell>
-                            {contactSummary ? (
-                              <Typography variant="body2">
-                                {contactSummary}
-                              </Typography>
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                {EMPTY_CONTACT_LABEL}
-                              </Typography>
-                            )}
-                          </TableCell>
-                        )}
-                        {showStatusColumn && (
-                          <TableCell>
-                            {user.status === 'Inactive' ? (
-                              <Chip label={STATUS_LABELS[user.status]} color={STATUS_COLORS[user.status]} size="small" />
-                            ) : null}
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <ButtonBase
-                            onClick={() => handleEditClick(user)}
-                            aria-label={buildEditRolesLabel(user, showIdentityDisambiguator, user.roles)}
-                            title={buildRoleButtonTitle({
-                              roles: user.roles,
-                              user,
-                              showIdentityDisambiguator,
-                            })}
-                            sx={{
-                              borderRadius: 1,
-                              display: 'inline-flex',
-                              justifyContent: 'flex-start',
-                              maxWidth: '100%',
-                              textAlign: 'left',
-                            }}
-                          >
-                            {renderRoleEditButtonContents(user.roles)}
-                          </ButtonBase>
-                        </TableCell>
+            <LazyPaginatedList
+              items={users}
+              pagination={{ itemLabel: 'usuarios', initialRowsPerPage: 25 }}
+              renderItems={(visibleUsers) => (
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Usuario</TableCell>
+                        {showContactColumn && <TableCell>Contacto</TableCell>}
+                        {showStatusColumn && <TableCell>Estado</TableCell>}
+                        <TableCell>{EDITABLE_ROLES_LABEL}</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {visibleUsers.map((user) => {
+                        const contactSummary = getContactSummary(user);
+                        const showIdentityDisambiguator = userIdsRequiringIdentityDisambiguator.has(user.id);
+
+                        return (
+                          <TableRow key={user.id}>
+                            <TableCell>
+                              <Stack spacing={0.25}>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {user.name}
+                                </Typography>
+                                {showIdentityDisambiguator && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    ID {user.id}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </TableCell>
+                            {showContactColumn && (
+                              <TableCell>
+                                {contactSummary ? (
+                                  <Typography variant="body2">
+                                    {contactSummary}
+                                  </Typography>
+                                ) : (
+                                  <Typography variant="body2" color="text.secondary">
+                                    {EMPTY_CONTACT_LABEL}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            )}
+                            {showStatusColumn && (
+                              <TableCell>
+                                {user.status === 'Inactive' ? (
+                                  <Chip label={STATUS_LABELS[user.status]} color={STATUS_COLORS[user.status]} size="small" />
+                                ) : null}
+                              </TableCell>
+                            )}
+                            <TableCell>
+                              <ButtonBase
+                                onClick={() => handleEditClick(user)}
+                                aria-label={buildEditRolesLabel(user, showIdentityDisambiguator, user.roles)}
+                                title={buildRoleButtonTitle({
+                                  roles: user.roles,
+                                  user,
+                                  showIdentityDisambiguator,
+                                })}
+                                sx={{
+                                  borderRadius: 1,
+                                  display: 'inline-flex',
+                                  justifyContent: 'flex-start',
+                                  maxWidth: '100%',
+                                  textAlign: 'left',
+                                }}
+                              >
+                                {renderRoleEditButtonContents(user.roles)}
+                              </ButtonBase>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            />
           )}
         </Stack>
       )}

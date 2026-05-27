@@ -25,6 +25,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { SocialEventsAPI, type RefundDTO } from '../api/socialEvents';
 import { getRefundStatusColor } from './RefundManagementPanel.logic';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface RefundManagementPanelProps {
   eventId: string;
@@ -130,91 +131,97 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
         </Alert>
       )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Order ID</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Reason</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Requested</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {refunds.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center">
-                  <Typography color="text.secondary">No refund requests</Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              refunds.map((refund) => (
-                <TableRow key={refund.refundId ?? refund.refundOrderId ?? refund.refundCreatedAt}>
-                  <TableCell>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {(refund.refundOrderId ?? '').slice(0, 8)}...
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{formatMoney(refund.refundAmountCents)}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                      {formatRefundReason(refund.refundReason)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={refund.refundStatus.toUpperCase()}
-                      color={getRefundStatusColor(refund.refundStatus)}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {refund.refundCreatedAt ? new Date(refund.refundCreatedAt).toLocaleDateString() : '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {refund.refundStatus === 'pending' && (
-                      <Stack direction="row" spacing={1}>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color="success"
-                          startIcon={<CheckIcon />}
-                          onClick={() => handleApprove(refund)}
-                          disabled={approveMutation.isPending || !refund.refundId}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<CloseIcon />}
-                          onClick={() => {
-                            setSelectedRefund(refund);
-                            setRejectDialogOpen(true);
-                          }}
-                          disabled={rejectMutation.isPending || !refund.refundId}
-                        >
-                          Reject
-                        </Button>
-                      </Stack>
-                    )}
-                    {refund.refundStatus === 'rejected' && refund.refundRejectionReason && (
-                      <Typography variant="caption" color="error">
-                        Rejected: {refund.refundRejectionReason}
-                      </Typography>
-                    )}
-                  </TableCell>
+      <LazyPaginatedList
+        items={refunds}
+        pagination={{ itemLabel: 'refunds', initialRowsPerPage: 10 }}
+        renderItems={(visibleRefunds) => (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Order ID</TableCell>
+                  <TableCell>Amount</TableCell>
+                  <TableCell>Reason</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Requested</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              </TableHead>
+              <TableBody>
+                {refunds.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <Typography color="text.secondary">No refund requests</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  visibleRefunds.map((refund) => (
+                    <TableRow key={refund.refundId ?? refund.refundOrderId ?? refund.refundCreatedAt}>
+                      <TableCell>
+                        <Typography variant="body2" fontFamily="monospace">
+                          {(refund.refundOrderId ?? '').slice(0, 8)}...
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{formatMoney(refund.refundAmountCents)}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                          {formatRefundReason(refund.refundReason)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={refund.refundStatus.toUpperCase()}
+                          color={getRefundStatusColor(refund.refundStatus)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {refund.refundCreatedAt ? new Date(refund.refundCreatedAt).toLocaleDateString() : '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        {refund.refundStatus === 'pending' && (
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              startIcon={<CheckIcon />}
+                              onClick={() => handleApprove(refund)}
+                              disabled={approveMutation.isPending || !refund.refundId}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<CloseIcon />}
+                              onClick={() => {
+                                setSelectedRefund(refund);
+                                setRejectDialogOpen(true);
+                              }}
+                              disabled={rejectMutation.isPending || !refund.refundId}
+                            >
+                              Reject
+                            </Button>
+                          </Stack>
+                        )}
+                        {refund.refundStatus === 'rejected' && refund.refundRejectionReason && (
+                          <Typography variant="caption" color="error">
+                            Rejected: {refund.refundRejectionReason}
+                          </Typography>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      />
 
       <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Reject Refund Request</DialogTitle>

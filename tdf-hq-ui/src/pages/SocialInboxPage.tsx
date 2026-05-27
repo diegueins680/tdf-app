@@ -42,6 +42,7 @@ import {
   getStoredInstagramResult,
   type MetaReviewAssetSelection,
 } from '../services/instagramAuth';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 interface MessageStats {
   incoming: SocialMessage[];
@@ -1279,89 +1280,100 @@ const ChannelPanel = ({
             ))}
           </Stack>
         )}
-        <TableContainer sx={{ maxHeight: 440 }}>
-          <Table size="small" stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
-                {showRepliedAtColumn && (
-                  <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
-                )}
-                <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
-                <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
-                {showReplyOutcomeColumn && (
-                  <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && (
-                <TableRow>
-                  <TableCell colSpan={visibleColumnCount} align="center">
-                    <CircularProgress size={22} />
-                  </TableCell>
-                </TableRow>
-              )}
-              {!loading && messages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={visibleColumnCount} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {!loading &&
-                messages.map((msg) => {
-                  const senderLabel = resolveSenderName(msg);
-                  const attachments = extractAttachments(msg.metadata);
-                  const rawBody = (msg.text ?? '').trim();
-                  const previewText =
-                    rawBody && rawBody.toLowerCase() !== '[attachment]'
-                      ? rawBody
-                      : attachments.length > 0
-                        ? 'Adjunto'
-                        : '';
-                  return (
-                    <TableRow
-                      key={msg.externalId}
-                      hover
-                      onClick={() => onSelect({ channel, message: msg })}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell>
-                        <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
+        <LazyPaginatedList
+          items={messages}
+          pagination={{
+            itemLabel: reviewMode ? 'messages' : 'mensajes',
+            initialRowsPerPage: 10,
+            resetKey: `${channel}|${activeFilterLabel}`,
+            labelRowsPerPage: reviewMode ? 'Per page' : 'Por página',
+          }}
+          renderItems={(visibleMessages) => (
+            <TableContainer sx={{ maxHeight: 440 }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
+                    {showRepliedAtColumn && (
+                      <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+                    )}
+                    <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
+                    <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
+                    {showReplyOutcomeColumn && (
+                      <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading && (
+                    <TableRow>
+                      <TableCell colSpan={visibleColumnCount} align="center">
+                        <CircularProgress size={22} />
                       </TableCell>
-                      {showRepliedAtColumn && (
-                        <TableCell>
-                          <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
-                        </TableCell>
-                      )}
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
-                          {senderLabel}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                          {previewText ? formatBody(previewText) : '—'}
-                        </Typography>
-                      </TableCell>
-                      {showReplyOutcomeColumn && (
-                        <TableCell>
-                          <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                            {msg.replyError
-                              ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
-                              : formatBody(msg.replyText)}
-                          </Typography>
-                        </TableCell>
-                      )}
                     </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  )}
+                  {!loading && messages.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={visibleColumnCount} align="center">
+                        <Typography variant="body2" color="text.secondary">
+                          {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    visibleMessages.map((msg) => {
+                      const senderLabel = resolveSenderName(msg);
+                      const attachments = extractAttachments(msg.metadata);
+                      const rawBody = (msg.text ?? '').trim();
+                      const previewText =
+                        rawBody && rawBody.toLowerCase() !== '[attachment]'
+                          ? rawBody
+                          : attachments.length > 0
+                            ? 'Adjunto'
+                            : '';
+                      return (
+                        <TableRow
+                          key={msg.externalId}
+                          hover
+                          onClick={() => onSelect({ channel, message: msg })}
+                          sx={{ cursor: 'pointer' }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
+                          </TableCell>
+                          {showRepliedAtColumn && (
+                            <TableCell>
+                              <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                              {senderLabel}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                              {previewText ? formatBody(previewText) : '—'}
+                            </Typography>
+                          </TableCell>
+                          {showReplyOutcomeColumn && (
+                            <TableCell>
+                              <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                {msg.replyError
+                                  ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
+                                  : formatBody(msg.replyText)}
+                              </Typography>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        />
       </Stack>
     </Paper>
   );

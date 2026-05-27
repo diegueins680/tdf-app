@@ -18,6 +18,7 @@ import type { AssetDTO, RoomDTO } from '../api/types';
 import { Inventory } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { buildInventoryScanUrl } from '../config/appConfig';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -141,12 +142,16 @@ export default function ReservasEquipoPage() {
           </CardContent>
         </Card>
 
-        <Grid container spacing={2}>
-          {assets.map((asset) => {
-            const chip = statusChip(asset.status);
-            const currentTarget = formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
-            return (
-              <Grid key={asset.assetId} item xs={12} md={6} lg={4}>
+        <LazyPaginatedList
+          items={assets}
+          pagination={{ itemLabel: 'equipos', initialRowsPerPage: 12 }}
+          renderItems={(visibleAssets) => (
+            <Grid container spacing={2}>
+              {visibleAssets.map((asset) => {
+                const chip = statusChip(asset.status);
+                const currentTarget = formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
+                return (
+                  <Grid key={asset.assetId} item xs={12} md={6} lg={4}>
                 <Card variant="outlined" sx={{ height: '100%' }}>
                   <CardContent>
                     <Stack spacing={1.25}>
@@ -227,10 +232,12 @@ export default function ReservasEquipoPage() {
                     </Stack>
                   </CardContent>
                 </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        />
       </Stack>
     </Box>
   );

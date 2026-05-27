@@ -36,6 +36,7 @@ import type {
 } from '../api/trials';
 import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -498,6 +499,7 @@ export default function TrialLessonsPage() {
     && !hasQuickFiltersActive;
   const collapseInitialFilters = showInitialEmptyState && !emptyFiltersExpanded;
   const showFilterControls = !collapseInitialFilters;
+  const trialPaginationResetKey = [subjectFilter, teacherFilter, statusFilter, fromInput, toInput].join('|');
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -742,118 +744,124 @@ export default function TrialLessonsPage() {
               </Typography>
             </Alert>
           )}
-          <Stack spacing={1.25}>
-            {data.map((cls) => {
-              const currentStatus = normalizeStatus(cls.status);
-              const meta = statusMeta[currentStatus];
-              const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
-              const subject = subjects.find((s) => s.subjectId === cls.subjectId);
-              const room = rooms.find((r) => r.roomId === cls.roomId);
-              const student = students.find((p) => p.studentId === cls.studentId);
-              const rowPending = statusPendingId === cls.classSessionId;
-              const hasBooking = Boolean(cls.bookingId);
-              const updatedDisplay = cls.updatedAt
-                ? formatDateTime(cls.updatedAt)
-                : formatDateTime(cls.endAt ?? cls.startAt);
-              return (
-                <Paper
-                  key={cls.classSessionId}
-                  data-testid={`trial-lesson-row-${cls.classSessionId}`}
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, borderColor: meta?.border ?? 'divider' }}
-                >
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 190 }}>
-                      <Chip
-                        size="small"
-                        icon={meta?.icon}
-                        label={meta?.label ?? cls.status}
-                        sx={{
-                          bgcolor: meta?.bg,
-                          color: meta?.color,
-                          borderColor: meta?.border,
-                          borderWidth: 1,
-                          borderStyle: 'solid',
-                          fontWeight: 700,
-                        }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(cls.startAt)}
-                      </Typography>
-                    </Stack>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography fontWeight={700}>{subject?.name ?? 'Materia'}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {teacher?.teacherName ?? cls.teacherName ?? 'Profesor'} · Sala {room?.rName ?? cls.roomName ?? cls.roomId ?? ''}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                        <Chip
-                          size="small"
-                          color={hasBooking ? 'success' : 'default'}
-                          label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
-                        />
-                        <Button
-                          size="small"
-                          variant="text"
-                          sx={{ textTransform: 'none', minWidth: 0 }}
-                          onClick={() => pushToCalendarWithPrefill(cls, subject?.name, student?.displayName)}
-                        >
-                          {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
-                        </Button>
+          <LazyPaginatedList
+            items={data}
+            pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey: trialPaginationResetKey }}
+            renderItems={(visibleClasses) => (
+              <Stack spacing={1.25}>
+                {visibleClasses.map((cls) => {
+                  const currentStatus = normalizeStatus(cls.status);
+                  const meta = statusMeta[currentStatus];
+                  const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
+                  const subject = subjects.find((s) => s.subjectId === cls.subjectId);
+                  const room = rooms.find((r) => r.roomId === cls.roomId);
+                  const student = students.find((p) => p.studentId === cls.studentId);
+                  const rowPending = statusPendingId === cls.classSessionId;
+                  const hasBooking = Boolean(cls.bookingId);
+                  const updatedDisplay = cls.updatedAt
+                    ? formatDateTime(cls.updatedAt)
+                    : formatDateTime(cls.endAt ?? cls.startAt);
+                  return (
+                    <Paper
+                      key={cls.classSessionId}
+                      data-testid={`trial-lesson-row-${cls.classSessionId}`}
+                      variant="outlined"
+                      sx={{ p: 1.5, borderRadius: 2, borderColor: meta?.border ?? 'divider' }}
+                    >
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 190 }}>
+                          <Chip
+                            size="small"
+                            icon={meta?.icon}
+                            label={meta?.label ?? cls.status}
+                            sx={{
+                              bgcolor: meta?.bg,
+                              color: meta?.color,
+                              borderColor: meta?.border,
+                              borderWidth: 1,
+                              borderStyle: 'solid',
+                              fontWeight: 700,
+                            }}
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            {formatDateTime(cls.startAt)}
+                          </Typography>
+                        </Stack>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography fontWeight={700}>{subject?.name ?? 'Materia'}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {teacher?.teacherName ?? cls.teacherName ?? 'Profesor'} · Sala {room?.rName ?? cls.roomName ?? cls.roomId ?? ''}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
+                          </Typography>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                            <Chip
+                              size="small"
+                              color={hasBooking ? 'success' : 'default'}
+                              label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
+                            />
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ textTransform: 'none', minWidth: 0 }}
+                              onClick={() => pushToCalendarWithPrefill(cls, subject?.name, student?.displayName)}
+                            >
+                              {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
+                            </Button>
+                          </Stack>
+                          {cls.notes && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              {cls.notes}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            Última actualización: {updatedDisplay || 'No disponible'}
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
+                            Editar
+                          </Button>
+                          {currentStatus !== 'realizada' && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              startIcon={
+                                rowPending
+                                  ? <CircularProgress size={14} />
+                                  : <CheckCircleIcon fontSize="small" />
+                              }
+                              onClick={() => handleQuickStatus(cls, 'realizada')}
+                              disabled={rowPending}
+                            >
+                              Realizada
+                            </Button>
+                          )}
+                          {currentStatus !== 'cancelada' && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              color="inherit"
+                              startIcon={
+                                rowPending
+                                  ? <CircularProgress size={14} />
+                                  : <CancelIcon fontSize="small" />
+                              }
+                              onClick={() => handleQuickStatus(cls, 'cancelada')}
+                              disabled={rowPending}
+                            >
+                              Cancelar
+                            </Button>
+                          )}
+                        </Stack>
                       </Stack>
-                      {cls.notes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {cls.notes}
-                        </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary">
-                        Última actualización: {updatedDisplay || 'No disponible'}
-                      </Typography>
-                    </Box>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
-                        Editar
-                      </Button>
-                      {currentStatus !== 'realizada' && (
-                        <Button
-                          variant="text"
-                          size="small"
-                          startIcon={
-                            rowPending
-                              ? <CircularProgress size={14} />
-                              : <CheckCircleIcon fontSize="small" />
-                          }
-                          onClick={() => handleQuickStatus(cls, 'realizada')}
-                          disabled={rowPending}
-                        >
-                          Realizada
-                        </Button>
-                      )}
-                      {currentStatus !== 'cancelada' && (
-                        <Button
-                          variant="text"
-                          size="small"
-                          color="inherit"
-                          startIcon={
-                            rowPending
-                              ? <CircularProgress size={14} />
-                              : <CancelIcon fontSize="small" />
-                          }
-                          onClick={() => handleQuickStatus(cls, 'cancelada')}
-                          disabled={rowPending}
-                        >
-                          Cancelar
-                        </Button>
-                      )}
-                    </Stack>
-                  </Stack>
-                </Paper>
-              );
-            })}
-          </Stack>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            )}
+          />
         </Stack>
       </Paper>
 

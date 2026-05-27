@@ -32,6 +32,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCard';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
@@ -466,6 +467,21 @@ export default function PaymentsPage() {
   }, [parties]);
 
   const payments = paymentsQuery.data ?? [];
+  const filteredPayments = useMemo(
+    () =>
+      payments.filter((pay) => {
+        if (fromFilter && pay.payPaidAt < fromFilter) return false;
+        if (toFilter && pay.payPaidAt > toFilter) return false;
+        if (methodFilter !== 'all' && pay.payMethod !== methodFilter) return false;
+        return true;
+      }),
+    [fromFilter, methodFilter, payments, toFilter],
+  );
+  const paymentsWithAttachments = useMemo(
+    () => filteredPayments.filter((payment) => payment.payAttachment),
+    [filteredPayments],
+  );
+  const paymentPaginationResetKey = [partyFilter?.partyId ?? 'all', fromFilter, toFilter, methodFilter].join('|');
 
   return (
     <Box>
@@ -582,90 +598,95 @@ export default function PaymentsPage() {
               </Box>
               {paymentsQuery.isFetching && <Typography variant="body2">Cargando...</Typography>}
             </Stack>
-            {payments.length === 0 ? (
+            {filteredPayments.length === 0 ? (
               <Alert severity="info">No hay pagos registrados con este filtro.</Alert>
             ) : (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Contacto</TableCell>
-                    <TableCell>Fecha</TableCell>
-                    <TableCell>Periodo</TableCell>
-                    <TableCell>Monto</TableCell>
-                    <TableCell>Metodo</TableCell>
-                    <TableCell>Referencia</TableCell>
-                    <TableCell>Comprobante</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {payments
-                    .filter((pay) => {
-                      if (fromFilter && pay.payPaidAt < fromFilter) return false;
-                      if (toFilter && pay.payPaidAt > toFilter) return false;
-                      if (methodFilter !== 'all' && pay.payMethod !== methodFilter) return false;
-                      return true;
-                    })
-                    .map((pay) => {
-                    const contact = partyLookup.get(pay.payPartyId);
-                    return (
-                      <TableRow key={pay.payId} hover>
-                        <TableCell>{pay.payId}</TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600}>
-                            {contact?.displayName ?? 'Contacto desconocido'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            ID {pay.payPartyId}
-                            {contact?.primaryEmail ? ` · ${contact.primaryEmail}` : ''}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
-                        <TableCell>{pay.payPeriod ?? '-'}</TableCell>
-                        <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
-                        <TableCell>{pay.payMethod}</TableCell>
-                        <TableCell>{pay.payReference ?? '-'}</TableCell>
-                        <TableCell>
-                          {pay.payAttachment ? (
-                            <Button
-                              size="small"
-                              startIcon={<DescriptionIcon fontSize="small" />}
-                              component="a"
-                              href={pay.payAttachment}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Ver
-                            </Button>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              —
-                            </Typography>
-                          )}
-                        </TableCell>
+              <LazyPaginatedList
+                items={filteredPayments}
+                pagination={{ itemLabel: 'pagos', initialRowsPerPage: 25, resetKey: paymentPaginationResetKey }}
+                renderItems={(visiblePayments) => (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Contacto</TableCell>
+                        <TableCell>Fecha</TableCell>
+                        <TableCell>Periodo</TableCell>
+                        <TableCell>Monto</TableCell>
+                        <TableCell>Metodo</TableCell>
+                        <TableCell>Referencia</TableCell>
+                        <TableCell>Comprobante</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    </TableHead>
+                    <TableBody>
+                      {visiblePayments.map((pay) => {
+                        const contact = partyLookup.get(pay.payPartyId);
+                        return (
+                          <TableRow key={pay.payId} hover>
+                            <TableCell>{pay.payId}</TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight={600}>
+                                {contact?.displayName ?? 'Contacto desconocido'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                ID {pay.payPartyId}
+                                {contact?.primaryEmail ? ` · ${contact.primaryEmail}` : ''}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
+                            <TableCell>{pay.payPeriod ?? '-'}</TableCell>
+                            <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
+                            <TableCell>{pay.payMethod}</TableCell>
+                            <TableCell>{pay.payReference ?? '-'}</TableCell>
+                            <TableCell>
+                              {pay.payAttachment ? (
+                                <Button
+                                  size="small"
+                                  startIcon={<DescriptionIcon fontSize="small" />}
+                                  component="a"
+                                  href={pay.payAttachment}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Ver
+                                </Button>
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  —
+                                </Typography>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              />
             )}
-            {payments.some((p) => p.payAttachment) && (
+            {paymentsWithAttachments.length > 0 && (
               <>
                 <Divider sx={{ my: 2 }} />
                 <Stack gap={1}>
                   <Typography variant="subtitle1">Adjuntos</Typography>
-                  {payments
-                    .filter((p) => p.payAttachment)
-                    .map((p) => (
-                      <Box key={p.payId}>
-                        <Typography variant="body2">
-                          #{p.payId} - {p.payPeriod ?? p.payPaidAt} -{' '}
-                          <a href={p.payAttachment ?? '#'} target="_blank" rel="noreferrer">
-                            {p.payAttachment}
-                          </a>
-                        </Typography>
-                      </Box>
-                    ))}
+                  <LazyPaginatedList
+                    items={paymentsWithAttachments}
+                    pagination={{ itemLabel: 'adjuntos', initialRowsPerPage: 10, resetKey: paymentPaginationResetKey }}
+                    renderItems={(visiblePaymentsWithAttachments) => (
+                      <Stack gap={1}>
+                        {visiblePaymentsWithAttachments.map((p) => (
+                          <Box key={p.payId}>
+                            <Typography variant="body2">
+                              #{p.payId} - {p.payPeriod ?? p.payPaidAt} -{' '}
+                              <a href={p.payAttachment ?? '#'} target="_blank" rel="noreferrer">
+                                {p.payAttachment}
+                              </a>
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    )}
+                  />
                 </Stack>
               </>
             )}

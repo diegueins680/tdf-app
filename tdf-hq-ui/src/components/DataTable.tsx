@@ -15,6 +15,7 @@ import {
   Skeleton,
 } from '@mui/material';
 import { EmptyState } from './PageShell';
+import LazyPaginatedList from './LazyPaginatedList';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -39,6 +40,10 @@ export interface DataTableProps<T> {
   size?: 'small' | 'medium';
   stickyHeader?: boolean;
   maxHeight?: string | number;
+  pagination?: boolean;
+  initialRowsPerPage?: number;
+  rowsPerPageOptions?: readonly number[];
+  itemLabel?: string;
 }
 
 export default function DataTable<T>({
@@ -56,8 +61,78 @@ export default function DataTable<T>({
   size = 'small',
   stickyHeader = true,
   maxHeight,
+  pagination = true,
+  initialRowsPerPage = 25,
+  rowsPerPageOptions = [10, 25, 50],
+  itemLabel = 'registros',
 }: DataTableProps<T>) {
   const showEmpty = !loading && rows.length === 0;
+  const renderTable = (visibleRows: readonly T[], startIndex = 0) => (
+    <TableContainer
+      component={Paper}
+      variant="outlined"
+      sx={{
+        maxHeight,
+        border: 'none',
+        boxShadow: 'none',
+        bgcolor: 'transparent',
+      }}
+    >
+      <Table size={size} stickyHeader={stickyHeader}>
+        <TableHead>
+          <TableRow>
+            {columns.map((col) => (
+              <TableCell
+                key={col.key}
+                align={col.align}
+                sx={{
+                  width: col.width,
+                  fontWeight: 700,
+                  bgcolor: 'background.paper',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {col.header}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {loading ? (
+            Array.from({ length: skeletonRows }).map((_, idx) => (
+              <TableRow key={`skel-${idx}`}>
+                {columns.map((col) => (
+                  <TableCell key={`${col.key}-skel-${idx}`} align={col.align}>
+                    <Skeleton variant="text" width="80%" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            visibleRows.map((row, idx) => (
+              <TableRow
+                key={keyExtractor(row)}
+                hover
+                sx={{
+                  '&:nth-of-type(even)': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                {columns.map((col) => (
+                  <TableCell key={col.key} align={col.align}>
+                    {col.cell(row, startIndex + idx)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
 
   return (
     <Card>
@@ -88,71 +163,14 @@ export default function DataTable<T>({
           >
             {emptyAction}
           </EmptyState>
+        ) : loading || !pagination ? (
+          renderTable(rows)
         ) : (
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{
-              maxHeight,
-              border: 'none',
-              boxShadow: 'none',
-              bgcolor: 'transparent',
-            }}
-          >
-            <Table size={size} stickyHeader={stickyHeader}>
-              <TableHead>
-                <TableRow>
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col.key}
-                      align={col.align}
-                      sx={{
-                        width: col.width,
-                        fontWeight: 700,
-                        bgcolor: 'background.paper',
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {col.header}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: skeletonRows }).map((_, idx) => (
-                    <TableRow key={`skel-${idx}`}>
-                      {columns.map((col) => (
-                        <TableCell key={`${col.key}-skel-${idx}`} align={col.align}>
-                          <Skeleton variant="text" width="80%" />
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  rows.map((row, idx) => (
-                    <TableRow
-                      key={keyExtractor(row)}
-                      hover
-                      sx={{
-                        '&:nth-of-type(even)': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                    >
-                      {columns.map((col) => (
-                        <TableCell key={col.key} align={col.align}>
-                          {col.cell(row, idx)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <LazyPaginatedList
+            items={rows}
+            pagination={{ itemLabel, initialRowsPerPage, rowsPerPageOptions }}
+            renderItems={(visibleRows, { startIndex }) => renderTable(visibleRows, startIndex)}
+          />
         )}
       </CardContent>
     </Card>

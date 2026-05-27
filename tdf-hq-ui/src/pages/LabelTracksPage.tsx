@@ -26,6 +26,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 import { parsePositiveSafeInt } from '../utils/ids';
 
@@ -373,112 +374,122 @@ export default function LabelTracksPage() {
         />
       </Stack>
 
-      <Stack spacing={1.5}>
-        {filteredTracks.map((track) => {
-          const isDone = track.ltStatus === 'done';
-          const isQuickEditing = quickEditId === track.ltId;
-          return (
-            <Card key={track.ltId} variant="outlined">
-              <CardContent>
-                <Stack direction="row" spacing={1} alignItems="flex-start">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleToggle(track)}
-                    aria-label={isDone ? `Reabrir track ${track.ltTitle}` : `Cerrar track ${track.ltTitle}`}
-                  >
-                    {isDone ? (
-                      <CheckCircleIcon color="success" />
-                    ) : (
-                      <RadioButtonUncheckedIcon color="disabled" />
-                    )}
-                  </IconButton>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={700} sx={{ textDecoration: isDone ? 'line-through' : 'none' }}>
-                      {track.ltTitle}
-                    </Typography>
-                    {track.ltNote && (
-                      <Typography variant="body2" color="text.secondary">
-                        {track.ltNote}
-                      </Typography>
-                    )}
-                    {isQuickEditing && (
-                      <Stack spacing={1} mt={1}>
-                        <TextField
-                          size="small"
-                          label="Editar nota rápido"
-                          value={quickEditValue}
-                          onChange={(e) => setQuickEditValue(e.target.value)}
-                          multiline
-                          minRows={2}
-                        />
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={() => {
-                              updateMutation.mutate({
-                                id: track.ltId,
-                                note: quickEditValue.trim(),
-                              });
-                              setQuickEditId(null);
-                            }}
-                          >
-                            Guardar nota
-                          </Button>
-                          <Button size="small" onClick={() => setQuickEditId(null)}>
-                            Cancelar
-                          </Button>
-                        </Stack>
-                      </Stack>
-                    )}
-                    <Stack direction="row" spacing={1} mt={1}>
-                      <Chip
+      <LazyPaginatedList
+        items={filteredTracks}
+        pagination={{
+          itemLabel: 'tracks',
+          initialRowsPerPage: 10,
+          resetKey: [statusFilter, query.trim(), timeFilter].join('|'),
+        }}
+        renderItems={(visibleTracks) => (
+          <Stack spacing={1.5}>
+            {visibleTracks.map((track) => {
+              const isDone = track.ltStatus === 'done';
+              const isQuickEditing = quickEditId === track.ltId;
+              return (
+                <Card key={track.ltId} variant="outlined">
+                  <CardContent>
+                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                      <IconButton
                         size="small"
-                        label={isDone ? 'Cerrado' : 'Abierto'}
-                        color={isDone ? 'success' : 'default'}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        Creado {new Date(track.ltCreatedAt).toLocaleDateString()}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                  <Stack direction="row" spacing={1}>
-                    <Button variant="text" size="small" onClick={() => openEdit(track)}>
-                      Editar
-                    </Button>
-                    {!isDone && (
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => updateMutation.mutate({ id: track.ltId, status: 'done' })}
+                        onClick={() => handleToggle(track)}
+                        aria-label={isDone ? `Reabrir track ${track.ltTitle}` : `Cerrar track ${track.ltTitle}`}
                       >
-                        Cerrar hoy
-                      </Button>
-                    )}
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        setQuickEditId(track.ltId);
-                        setQuickEditValue(track.ltNote ?? '');
-                      }}
-                    >
-                      Editar nota rápido
-                    </Button>
-                  </Stack>
-                  <IconButton
-                    size="small"
-                    onClick={() => deleteMutation.mutate(track.ltId)}
-                    aria-label={`Eliminar track ${track.ltTitle}`}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Stack>
+                        {isDone ? (
+                          <CheckCircleIcon color="success" />
+                        ) : (
+                          <RadioButtonUncheckedIcon color="disabled" />
+                        )}
+                      </IconButton>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography fontWeight={700} sx={{ textDecoration: isDone ? 'line-through' : 'none' }}>
+                          {track.ltTitle}
+                        </Typography>
+                        {track.ltNote && (
+                          <Typography variant="body2" color="text.secondary">
+                            {track.ltNote}
+                          </Typography>
+                        )}
+                        {isQuickEditing && (
+                          <Stack spacing={1} mt={1}>
+                            <TextField
+                              size="small"
+                              label="Editar nota rápido"
+                              value={quickEditValue}
+                              onChange={(e) => setQuickEditValue(e.target.value)}
+                              multiline
+                              minRows={2}
+                            />
+                            <Stack direction="row" spacing={1}>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => {
+                                  updateMutation.mutate({
+                                    id: track.ltId,
+                                    note: quickEditValue.trim(),
+                                  });
+                                  setQuickEditId(null);
+                                }}
+                              >
+                                Guardar nota
+                              </Button>
+                              <Button size="small" onClick={() => setQuickEditId(null)}>
+                                Cancelar
+                              </Button>
+                            </Stack>
+                          </Stack>
+                        )}
+                        <Stack direction="row" spacing={1} mt={1}>
+                          <Chip
+                            size="small"
+                            label={isDone ? 'Cerrado' : 'Abierto'}
+                            color={isDone ? 'success' : 'default'}
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            Creado {new Date(track.ltCreatedAt).toLocaleDateString()}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <Stack direction="row" spacing={1}>
+                        <Button variant="text" size="small" onClick={() => openEdit(track)}>
+                          Editar
+                        </Button>
+                        {!isDone && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => updateMutation.mutate({ id: track.ltId, status: 'done' })}
+                          >
+                            Cerrar hoy
+                          </Button>
+                        )}
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            setQuickEditId(track.ltId);
+                            setQuickEditValue(track.ltNote ?? '');
+                          }}
+                        >
+                          Editar nota rápido
+                        </Button>
+                      </Stack>
+                      <IconButton
+                        size="small"
+                        onClick={() => deleteMutation.mutate(track.ltId)}
+                        aria-label={`Eliminar track ${track.ltTitle}`}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </Stack>
+        )}
+      />
 
       <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} maxWidth="sm" fullWidth>
         <DialogTitle>Editar track</DialogTitle>
