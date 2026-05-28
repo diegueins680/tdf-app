@@ -221,6 +221,7 @@ liveSessionsServer user = intakeHandler
                 , partyInstagram        = Nothing
                 , partyEmergencyContact = Nothing
                 , partyNotes            = liveSessionMusicianPartyNotes lsmInstrument
+                , partyStripeCustomerId = Nothing
                 , partyCreatedAt        = now
                 }
               pure (key, mEmail)

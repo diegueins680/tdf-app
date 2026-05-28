@@ -1296,6 +1296,7 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyInstagram       = Nothing
       , partyEmergencyContact = Nothing
       , partyNotes           = Nothing
+      , partyStripeCustomerId = Nothing
       , partyCreatedAt       = now
       }
     _ ->
@@ -1345,6 +1346,7 @@ ensurePublicLeadParty now = do
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
         , partyNotes = Just publicLeadFallbackNotes
+        , partyStripeCustomerId = Nothing
         , partyCreatedAt = now
         }
     _ ->

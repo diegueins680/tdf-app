@@ -4525,6 +4525,7 @@ ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do
           , partyInstagram = Nothing
           , partyEmergencyContact = Nothing
           , partyNotes = Nothing
+          , partyStripeCustomerId = Nothing
           , partyCreatedAt = now
           }
       ensureCourseRegistrationPartyRoles pid
@@ -6481,6 +6482,7 @@ ensurePartyWithAccount mName emailAddr mPhone = do
           , partyInstagram = Nothing
           , partyEmergencyContact = Nothing
           , partyNotes = Nothing
+          , partyStripeCustomerId = Nothing
           , partyCreatedAt = now
           }
   partyId <- either throwError pure partyResult
@@ -7644,6 +7646,7 @@ createParty user req = do
           , partyInstagram = cInstagram req
           , partyEmergencyContact = cEmergencyContact req
           , partyNotes = cNotes req
+          , partyStripeCustomerId = Nothing
           , partyCreatedAt = now
           }
   pid <- liftIO $ flip runSqlPool pool $ insert p
@@ -11937,6 +11940,7 @@ ensurePartyForInquiry AdsInquiry{..} now = do
         , M.partyInstagram        = Nothing
         , M.partyEmergencyContact = Nothing
         , M.partyNotes            = Nothing
+        , M.partyStripeCustomerId = Nothing
         , M.partyCreatedAt        = now
         }
       ensureStudentRole pid

@@ -1682,6 +1682,7 @@ bandsServer user =
           , partyInstagram        = Nothing
           , partyEmergencyContact = Nothing
           , partyNotes            = Nothing
+          , partyStripeCustomerId = Nothing
           , partyCreatedAt        = now
           }
         let band = Band

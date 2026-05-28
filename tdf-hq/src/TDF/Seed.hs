@@ -1028,6 +1028,7 @@ ensureStaffParty now displayName email = do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
             pure (pid, PartyCreated)
@@ -1210,7 +1211,7 @@ ensurePartyRecord now name mlegal = do
     existing <- selectFirst [PartyDisplayName ==. name] []
     case existing of
         Just (Entity pid _) -> pure pid
-        Nothing -> insert $ Party mlegal name False Nothing Nothing Nothing Nothing Nothing Nothing Nothing now
+        Nothing -> insert $ Party mlegal name False Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing now
 
 upsertToken :: Text -> PartyId -> Maybe Text -> SqlPersistT IO ()
 upsertToken token pid label = do

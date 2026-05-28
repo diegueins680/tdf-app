@@ -1200,6 +1200,7 @@ completeGoogleLogin GoogleProfile{..} = do
                 , partyInstagram = Nothing
                 , partyEmergencyContact = Nothing
                 , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
                 , partyCreatedAt = now
                 }
           pid <- insert partyRecord
@@ -1388,6 +1389,7 @@ resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
         , partyNotes = Nothing
+        , partyStripeCustomerId = Nothing
         , partyCreatedAt = nowVal
         }
   pid <- insert partyRecord
