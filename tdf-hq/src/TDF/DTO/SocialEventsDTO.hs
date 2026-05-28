@@ -42,6 +42,7 @@ module TDF.DTO.SocialEventsDTO
   , WaitlistJoinDTO(..)
   , WaitlistEntryDTO(..)
   , StripePaymentIntentDTO(..)
+  , PaymentSheetParamsDTO(..)
   , TicketWithQRDTO(..)
   , EventBudgetLineDTO(..)
   , EventFinanceEntryDTO(..)
@@ -908,18 +909,23 @@ validateDiscountValue discountType value
   | otherwise = pure value
 
 data TicketPurchaseWithPromoDTO = TicketPurchaseWithPromoDTO
-  { tpwpPurchase   :: TicketPurchaseRequestDTO
-  , tpwpPromoCode  :: Maybe Text
+  { tpwpPurchase                :: TicketPurchaseRequestDTO
+  , tpwpPromoCode               :: Maybe Text
+  -- | When present, signals the request originates from a mobile PaymentSheet
+  -- and carries the Stripe-Version the mobile SDK was built against. The server
+  -- creates an attached Customer + ephemeral key and returns 'spiPaymentSheet'.
+  , tpwpMobileSdkStripeVersion  :: Maybe Text
   } deriving (Show, Eq, Generic)
 
 instance ToJSON TicketPurchaseWithPromoDTO where
   toJSON TicketPurchaseWithPromoDTO{..} = object
-    [ "ticketPurchaseTierId"       .= ticketPurchaseTierId tpwpPurchase
-    , "ticketPurchaseQuantity"     .= ticketPurchaseQuantity tpwpPurchase
-    , "ticketPurchaseBuyerPartyId" .= ticketPurchaseBuyerPartyId tpwpPurchase
-    , "ticketPurchaseBuyerName"    .= ticketPurchaseBuyerName tpwpPurchase
-    , "ticketPurchaseBuyerEmail"   .= ticketPurchaseBuyerEmail tpwpPurchase
-    , "ticketPurchasePromoCode"    .= tpwpPromoCode
+    [ "ticketPurchaseTierId"          .= ticketPurchaseTierId tpwpPurchase
+    , "ticketPurchaseQuantity"        .= ticketPurchaseQuantity tpwpPurchase
+    , "ticketPurchaseBuyerPartyId"    .= ticketPurchaseBuyerPartyId tpwpPurchase
+    , "ticketPurchaseBuyerName"       .= ticketPurchaseBuyerName tpwpPurchase
+    , "ticketPurchaseBuyerEmail"      .= ticketPurchaseBuyerEmail tpwpPurchase
+    , "ticketPurchasePromoCode"       .= tpwpPromoCode
+    , "ticketPurchaseMobileSdkStripeVersion" .= tpwpMobileSdkStripeVersion
     ]
 
 instance FromJSON TicketPurchaseWithPromoDTO where
@@ -927,7 +933,9 @@ instance FromJSON TicketPurchaseWithPromoDTO where
     rejectUnknownObjectFields "TicketPurchaseWithPromoDTO" ticketPurchaseWithPromoKeys o
     purchase <- parseJSON value
     promoCode <- o .:? "ticketPurchasePromoCode" >>= traverse validateOptionalPromoCode
-    pure $ TicketPurchaseWithPromoDTO purchase promoCode
+    mobileSdkVer <- o .:? "ticketPurchaseMobileSdkStripeVersion"
+      >>= traverse validateOptionalStripeVersion
+    pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer
   parseJSON _ = fail "TicketPurchaseWithPromoDTO must be an object"
 
 ticketPurchaseWithPromoKeys :: [Text]
@@ -938,7 +946,17 @@ ticketPurchaseWithPromoKeys =
   , "ticketPurchaseBuyerName"
   , "ticketPurchaseBuyerEmail"
   , "ticketPurchasePromoCode"
+  , "ticketPurchaseMobileSdkStripeVersion"
   ]
+
+-- | Reject empty/whitespace values; we use this as a feature flag for the
+-- PaymentSheet branch so it must be unambiguous when set.
+validateOptionalStripeVersion :: Text -> Parser Text
+validateOptionalStripeVersion ver =
+  let trimmed = T.strip ver
+  in if T.null trimmed
+       then fail "ticketPurchaseMobileSdkStripeVersion must not be blank if provided"
+       else pure trimmed
 
 validateOptionalPromoCode :: Text -> Parser Text
 validateOptionalPromoCode code =
@@ -1120,10 +1138,28 @@ data StripePaymentIntentDTO = StripePaymentIntentDTO
   , spiOrderId      :: Text
   , spiAmountCents  :: Int
   , spiCurrency     :: Text
+  -- | Present only when the request supplied @ticketPurchaseMobileSdkStripeVersion@.
+  -- Carries the extra parameters mobile PaymentSheet needs (customer, ephemeral
+  -- key, publishable key) so the client can call @initPaymentSheet@.
+  , spiPaymentSheet :: Maybe PaymentSheetParamsDTO
   } deriving (Show, Eq, Generic)
 
 instance ToJSON StripePaymentIntentDTO
 instance FromJSON StripePaymentIntentDTO
+
+-- | Parameters mobile PaymentSheet ('@stripe/stripe-react-native') expects from
+-- @initPaymentSheet({ customerId, customerEphemeralKeySecret, paymentIntentClientSecret })@.
+-- @paymentIntentClientSecret@ is the same value as 'spiClientSecret'; we duplicate
+-- it here so the mobile client only reads one object.
+data PaymentSheetParamsDTO = PaymentSheetParamsDTO
+  { psCustomerId                :: Text
+  , psEphemeralKeySecret        :: Text
+  , psPaymentIntentClientSecret :: Text
+  , psPublishableKey            :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON PaymentSheetParamsDTO
+instance FromJSON PaymentSheetParamsDTO
 
 -- =============================================================================
 -- QR CODES

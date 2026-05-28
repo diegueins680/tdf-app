@@ -4,7 +4,9 @@ module TDF.Services.Stripe
   ( StripeConfig(..)
   , defaultStripeApiVersion
   , createCustomer
+  , createEphemeralKey
   , createPaymentIntent
+  , createPaymentIntentForCustomer
   , createRefund
   , decodeStripeResponse
   , verifyWebhookSignature
@@ -149,6 +151,113 @@ createCustomer cfg mEmail mName mMetadata =
         bodyLBS
         "Failed to parse Stripe Customer response"
         "Stripe customer error"
+
+-- | Create a PaymentSheet-style PaymentIntent attached to a Customer.
+--
+-- Identical to 'createPaymentIntent' except it sets @customer=cus_*@, which is
+-- required for PaymentSheet to display saved payment methods and to persist
+-- methods chosen during checkout.
+--
+-- Preconditions:
+-- * customerId is a non-empty Stripe Customer id.
+-- * amount is expressed in the smallest currency unit accepted by Stripe.
+-- * metadata, when present, is already serialized into the expected form field.
+--
+-- Postcondition: the outgoing request pins the service Stripe API version from
+-- 'StripeConfig', includes the customer exactly once, and returns the same
+-- JSON/error contract as 'createPaymentIntent'.
+createPaymentIntentForCustomer
+  :: StripeConfig
+  -> Text        -- ^ Stripe Customer ID (cus_*)
+  -> Int         -- ^ Amount in cents
+  -> Text        -- ^ Currency (e.g., "usd")
+  -> Text        -- ^ Description
+  -> Maybe Text  -- ^ Optional metadata JSON string
+  -> IO (Either Text Value)
+createPaymentIntentForCustomer cfg customerId amountCents currency description mMetadata =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/payment_intents"
+        body = BS8.intercalate "&"
+          [ "amount=" <> BS8.pack (show amountCents)
+          , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+          , "customer=" <> urlEncode (TE.encodeUtf8 customerId)
+          , "description=" <> urlEncode (TE.encodeUtf8 description)
+          , "automatic_payment_methods[enabled]=true"
+          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+              ]
+          , requestBody = RequestBodyBS body
+          }
+
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe PaymentIntent response"
+        "Stripe API error"
+
+-- | Create a Stripe Ephemeral Key for a Customer for mobile PaymentSheet.
+--
+-- Resource invariant: HTTP managers are acquired only through
+-- 'withStripeManager', which brackets 'newManager' and 'closeManager'. The
+-- manager does not escape the callback.
+--
+-- Preconditions:
+-- * customerId is a non-empty Stripe Customer id.
+-- * clientStripeVersion is the exact @Stripe-Version@ required by the mobile
+--   SDK, not the merchant's pinned 'defaultStripeApiVersion'. The mobile client
+--   provides its expected version. See
+--   <https://docs.stripe.com/payments/accept-a-payment?platform=react-native>.
+--
+-- Postcondition: the outgoing request sends @clientStripeVersion@ in the
+-- @Stripe-Version@ header and returns the same JSON/error contract as
+-- 'decodeStripeResponse'.
+--
+-- Returns the full ephemeral key JSON; the mobile SDK only needs the @secret@
+-- field, but the whole object is forwarded so we don't need to update this
+-- function when the SDK starts reading new fields.
+createEphemeralKey
+  :: StripeConfig
+  -> Text  -- ^ Stripe Customer ID (cus_*)
+  -> Text  -- ^ Stripe-Version expected by the calling mobile SDK
+  -> IO (Either Text Value)
+createEphemeralKey cfg customerId clientStripeVersion =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/ephemeral_keys"
+        body = "customer=" <> urlEncode (TE.encodeUtf8 customerId)
+
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 clientStripeVersion)
+              ]
+          , requestBody = RequestBodyBS body
+          }
+
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe Ephemeral Key response"
+        "Stripe ephemeral key error"
 
 -- | Create a refund for a PaymentIntent
 --
