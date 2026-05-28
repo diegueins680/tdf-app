@@ -189,20 +189,20 @@ test('logical audit flags repeated component-local variable names as shadowing c
   );
   const variableShadowAuditSourcePath = path.join(variableShadowAuditTempRoot, 'cards.jsx');
   const variableShadowAuditDeclarationKeyword = 'con' + 'st';
-  const variableShadowAuditRepeatedName = 'focusActionsForCard';
+  const variableShadowAuditRepeatedName = 'actionDisabled';
 
   try {
     await fs.writeFile(
       variableShadowAuditSourcePath,
       [
         'function AgendaCard() {',
-        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
-        `  return <button onClick={${variableShadowAuditRepeatedName}.edit}>Edit</button>;`,
+        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = savingClass || markingAttendance;`,
+        `  return <button disabled={${variableShadowAuditRepeatedName}}>Edit</button>;`,
         '}',
         '',
         'function AvailabilityCard() {',
-        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
-        `  return <button onClick={${variableShadowAuditRepeatedName}.delete}>Delete</button>;`,
+        `  ${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = deleting || savingAvailability;`,
+        `  return <button disabled={${variableShadowAuditRepeatedName}}>Delete</button>;`,
         '}',
       ].join('\n'),
       'utf8',
@@ -224,7 +224,7 @@ test('logical audit flags repeated component-local variable names as shadowing c
       [
         {
           line: 7,
-          snippet: `${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = {};`,
+          snippet: `${variableShadowAuditDeclarationKeyword} ${variableShadowAuditRepeatedName} = deleting || savingAvailability;`,
         },
       ],
     );
