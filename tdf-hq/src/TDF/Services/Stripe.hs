@@ -2,6 +2,8 @@
 
 module TDF.Services.Stripe
   ( StripeConfig(..)
+  , defaultStripeApiVersion
+  , createCustomer
   , createPaymentIntent
   , createRefund
   , decodeStripeResponse
