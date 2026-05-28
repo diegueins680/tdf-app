@@ -348,6 +348,8 @@ import TDF.Server.SocialEventsHandlers (
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    parseStripeCustomerId,
+    parseStripeEphemeralKeySecret,
     parseStripePaymentIntentResponse,
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
@@ -968,6 +970,24 @@ main = hspec $ do
                 `shouldBe` Left "Could not parse Stripe client secret"
             parseStripePaymentIntentResponse A.Null
                 `shouldBe` Left "Could not parse Stripe response"
+
+        it "extracts Customer and Ephemeral Key fields from explicit Stripe payloads" $ do
+            parseStripeCustomerId
+                (A.object ["id" .= ("cus_123" :: Text)])
+                `shouldBe` Right "cus_123"
+            parseStripeEphemeralKeySecret
+                (A.object ["secret" .= ("ephkey_123" :: Text)])
+                `shouldBe` Right "ephkey_123"
+
+        it "rejects malformed Customer and Ephemeral Key payloads deterministically" $ do
+            parseStripeCustomerId (A.object [])
+                `shouldBe` Left "Could not parse Stripe customer response"
+            parseStripeCustomerId A.Null
+                `shouldBe` Left "Could not parse Stripe customer response"
+            parseStripeEphemeralKeySecret (A.object [])
+                `shouldBe` Left "Could not parse Stripe ephemeral key response"
+            parseStripeEphemeralKeySecret A.Null
+                `shouldBe` Left "Could not parse Stripe ephemeral key response"
 
         it "extracts Stripe webhook envelope and nested PaymentIntent ids predictably" $ do
             let webhookPayload =

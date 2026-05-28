@@ -274,19 +274,24 @@ resolveStripeCustomerForBuyer stripeCfg pid mBuyerEmail mBuyerName = do
   Env{..} <- ask
   mParty <- liftIO $ runSqlPool (get pid) envPool
   party <- maybe (throwError err404 { errBody = "Buyer party not found" }) pure mParty
-  case partyStripeCustomerId party of
-    Just existing -> pure existing
-    Nothing -> do
+  maybe
+    (createAndPersistStripeCustomer envPool party)
+    pure
+    (partyStripeCustomerId party)
+  where
+    createAndPersistStripeCustomer envPool party = do
       let emailForCustomer = mBuyerEmail <|> partyPrimaryEmail party
           nameForCustomer = mBuyerName <|> Just (partyDisplayName party)
       result <- liftIO $
         Stripe.createCustomer stripeCfg emailForCustomer nameForCustomer Nothing
-      customerJson <- case result of
-        Left err ->
+      customerJson <- either
+        (\err ->
           throwError err500
             { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe customer error: " <> err))
             }
-        Right value -> pure value
+        )
+        pure
+        result
       customerId <- eitherStripeServerError $ parseStripeCustomerId customerJson
       liftIO $ runSqlPool
         (update pid [PartyStripeCustomerId =. Just customerId])
@@ -2357,54 +2362,59 @@ socialEventsServer user = eventsServer
                 liftIO $ runSqlPool
                   (update orderKey [EventTicketOrderStripePaymentIntentId =. Just piId])
                   envPool
-          case tpwpMobileSdkStripeVersion of
-            Nothing -> do
-              result <- liftIO $ Stripe.createPaymentIntent
-                stripeCfg finalAmountCents currency description metadataJson
-              case result of
-                Left err -> rollbackOrder err
-                Right paymentIntent -> do
-                  (piId, clientSecret) <- eitherStripeServerError $
-                    parseStripePaymentIntentResponse paymentIntent
-                  persistPaymentIntentId piId
-                  pure StripePaymentIntentDTO
-                    { spiClientSecret = clientSecret
-                    , spiOrderId = renderKeyText orderKey
-                    , spiAmountCents = finalAmountCents
-                    , spiCurrency = currency
-                    , spiPaymentSheet = Nothing
-                    }
-            Just mobileSdkVer -> case stripePublishableKey envConfig of
-              Nothing -> rollbackOrder "Stripe publishable key not configured"
-              Just publishableKey -> do
+              createLegacyPaymentIntent = do
+                result <- liftIO $ Stripe.createPaymentIntent
+                  stripeCfg finalAmountCents currency description metadataJson
+                either rollbackOrder handleLegacyPaymentIntent result
+              handleLegacyPaymentIntent paymentIntent = do
+                (piId, clientSecret) <- eitherStripeServerError $
+                  parseStripePaymentIntentResponse paymentIntent
+                persistPaymentIntentId piId
+                pure StripePaymentIntentDTO
+                  { spiClientSecret = clientSecret
+                  , spiOrderId = renderKeyText orderKey
+                  , spiAmountCents = finalAmountCents
+                  , spiCurrency = currency
+                  , spiPaymentSheet = Nothing
+                  }
+              createMobilePaymentSheetIntent mobileSdkVer = do
+                publishableKey <- maybe
+                  (rollbackOrder "Stripe publishable key not configured")
+                  pure
+                  (stripePublishableKey envConfig)
                 -- Order: customer -> ephemeral key -> PI. Failing fast on
                 -- ephemeral key creation avoids orphaning a PI we cannot return
                 -- to the mobile client.
-                customerId <- resolveStripeCustomerForBuyer stripeCfg currentPartyId buyerEmail buyerName
+                buyerKey <- parseKeyOr400 "buyer party" currentPartyId
+                customerId <- resolveStripeCustomerForBuyer stripeCfg buyerKey buyerEmail buyerName
                 ephResult <- liftIO $ Stripe.createEphemeralKey stripeCfg customerId mobileSdkVer
-                ephemeralKeySecret <- case ephResult of
-                  Left err -> rollbackOrder ("ephemeral key: " <> err)
-                  Right ephJson -> eitherStripeServerError $ parseStripeEphemeralKeySecret ephJson
+                ephemeralKeySecret <- either
+                  (\err -> rollbackOrder ("ephemeral key: " <> err))
+                  (eitherStripeServerError . parseStripeEphemeralKeySecret)
+                  ephResult
                 piResult <- liftIO $ Stripe.createPaymentIntentForCustomer
                   stripeCfg customerId finalAmountCents currency description metadataJson
-                case piResult of
-                  Left err -> rollbackOrder err
-                  Right paymentIntent -> do
-                    (piId, clientSecret) <- eitherStripeServerError $
-                      parseStripePaymentIntentResponse paymentIntent
-                    persistPaymentIntentId piId
-                    pure StripePaymentIntentDTO
-                      { spiClientSecret = clientSecret
-                      , spiOrderId = renderKeyText orderKey
-                      , spiAmountCents = finalAmountCents
-                      , spiCurrency = currency
-                      , spiPaymentSheet = Just PaymentSheetParamsDTO
-                          { psCustomerId = customerId
-                          , psEphemeralKeySecret = ephemeralKeySecret
-                          , psPaymentIntentClientSecret = clientSecret
-                          , psPublishableKey = publishableKey
-                          }
+                either
+                  rollbackOrder
+                  (handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey)
+                  piResult
+              handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey paymentIntent = do
+                (piId, clientSecret) <- eitherStripeServerError $
+                  parseStripePaymentIntentResponse paymentIntent
+                persistPaymentIntentId piId
+                pure StripePaymentIntentDTO
+                  { spiClientSecret = clientSecret
+                  , spiOrderId = renderKeyText orderKey
+                  , spiAmountCents = finalAmountCents
+                  , spiCurrency = currency
+                  , spiPaymentSheet = Just PaymentSheetParamsDTO
+                      { psCustomerId = customerId
+                      , psEphemeralKeySecret = ephemeralKeySecret
+                      , psPaymentIntentClientSecret = clientSecret
+                      , psPublishableKey = publishableKey
                       }
+                  }
+          maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     stripeWebhook :: Aeson.Value -> Maybe T.Text -> AppM NoContent
