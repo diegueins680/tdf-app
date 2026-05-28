@@ -482,7 +482,7 @@ stripeTestConfig webhookSecret =
     Stripe.StripeConfig
         { Stripe.stripeSecretKey = "sk_test"
         , Stripe.stripeWebhookSecret = webhookSecret
-        , Stripe.stripeApiVersion = "2023-10-16"
+        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
         }
 
 stripeV1Signature :: Text -> Text -> BS.ByteString -> Text

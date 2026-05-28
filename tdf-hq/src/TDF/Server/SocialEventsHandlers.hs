@@ -2285,7 +2285,7 @@ socialEventsServer user = eventsServer
           let stripeCfg = Stripe.StripeConfig
                 { Stripe.stripeSecretKey = secretKey
                 , Stripe.stripeWebhookSecret = webhookSecret
-                , Stripe.stripeApiVersion = "2023-10-16"
+                , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
                 }
               description = "Tickets for event " <> renderKeyText eventKey
               metadata = Aeson.object
@@ -2331,7 +2331,7 @@ socialEventsServer user = eventsServer
           let stripeCfg = Stripe.StripeConfig
                 { Stripe.stripeSecretKey = secretKey
                 , Stripe.stripeWebhookSecret = webhookSecret
-                , Stripe.stripeApiVersion = "2023-10-16"
+                , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
                 }
           signature <- maybe (throwError err400 { errBody = "Missing Stripe-Signature header" }) pure mSignature
           let rawBody = BL.toStrict (Aeson.encode payload)
@@ -2447,7 +2447,7 @@ socialEventsServer user = eventsServer
           let stripeCfg = Stripe.StripeConfig
                 { Stripe.stripeSecretKey = secretKey
                 , Stripe.stripeWebhookSecret = webhookSecret
-                , Stripe.stripeApiVersion = "2023-10-16"
+                , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
                 }
           result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
           case result of

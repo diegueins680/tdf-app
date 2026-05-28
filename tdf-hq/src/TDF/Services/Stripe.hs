@@ -28,12 +28,22 @@ import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac)
 import           Data.ByteArray (convert)
 
--- | Configuration for Stripe API
+-- | Configuration for Stripe API.
+--
+-- 'stripeSecretKey' accepts either a secret key (sk_) or a restricted key (rk_);
+-- both authenticate as bearer tokens at the same endpoints. Production deployments
+-- should prefer restricted keys scoped to only the resources this service touches
+-- (PaymentIntents, Refunds, Customers, and Webhook Endpoints).
 data StripeConfig = StripeConfig
   { stripeSecretKey     :: Text
   , stripeWebhookSecret :: Text
   , stripeApiVersion    :: Text
   } deriving (Show, Eq)
+
+-- | The Stripe API version this service is written against. Centralized so
+-- the value moves in one place when upgrading. See <https://docs.stripe.com/changelog>.
+defaultStripeApiVersion :: Text
+defaultStripeApiVersion = "2026-04-22.dahlia"
 
 -- | Resource invariant: every manager allocated for a single Stripe request is
 -- closed exactly once, even if request construction, I/O, or response decoding
@@ -91,6 +101,54 @@ createPaymentIntent cfg amountCents currency description mMetadata =
         bodyLBS
         "Failed to parse Stripe PaymentIntent response"
         "Stripe API error"
+
+-- | Create a Stripe Customer.
+--
+-- Returns the full Customer JSON response; caller is expected to extract @id@
+-- (a @cus_*@ identifier) and persist it. Customers are the attachment point for
+-- saved payment methods, PaymentSheet ephemeral keys, and Subscriptions.
+--
+-- Preconditions:
+-- * email, when present, is a syntactically valid email; Stripe does not validate
+--   deliverability.
+-- * metadata, when present, is already serialized into the form-field shape
+--   Stripe expects (same convention as 'createPaymentIntent').
+createCustomer
+  :: StripeConfig
+  -> Maybe Text  -- ^ Optional email
+  -> Maybe Text  -- ^ Optional display name
+  -> Maybe Text  -- ^ Optional metadata JSON string
+  -> IO (Either Text Value)
+createCustomer cfg mEmail mName mMetadata =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/customers"
+        body = BS.intercalate "&" $ filter (not . BS.null)
+          [ maybe "" (\e -> "email=" <> urlEncode (TE.encodeUtf8 e)) mEmail
+          , maybe "" (\n -> "name=" <> urlEncode (TE.encodeUtf8 n)) mName
+          , maybe "" (\m -> "metadata=" <> urlEncode (TE.encodeUtf8 m)) mMetadata
+          ]
+
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+              ]
+          , requestBody = RequestBodyBS body
+          }
+
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe Customer response"
+        "Stripe customer error"
 
 -- | Create a refund for a PaymentIntent
 --
