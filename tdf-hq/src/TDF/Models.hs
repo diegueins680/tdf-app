@@ -252,6 +252,7 @@ Party
     instagram        Text Maybe
     emergencyContact Text Maybe
     notes            Text Maybe
+    stripeCustomerId Text Maybe
     createdAt        UTCTime
     deriving Show Generic
 PartyRole
