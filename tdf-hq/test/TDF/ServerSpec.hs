@@ -1486,6 +1486,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 resolved <- resolveInvoiceCustomerId (fromSqlKey partyId)
@@ -1900,6 +1901,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 resolved <- resolvePartyRoleAssignmentTarget (fromSqlKey partyId)
@@ -1973,6 +1975,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 resolved <- resolveSocialTargetPartyId (fromSqlKey partyId)
@@ -2070,6 +2073,7 @@ spec = describe "TDF.Server helpers" $ do
                                     , partyInstagram = Nothing
                                     , partyEmergencyContact = Nothing
                                     , partyNotes = Nothing
+                                    , partyStripeCustomerId = Nothing
                                     , partyCreatedAt = now
                                     }
                         insertArtistProfile artistKey =
@@ -2607,6 +2611,7 @@ spec = describe "TDF.Server helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                     friendPartyId <- insert Party
@@ -2620,6 +2625,7 @@ spec = describe "TDF.Server helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                     outsiderPartyId <- insert Party
@@ -2633,6 +2639,7 @@ spec = describe "TDF.Server helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                     threadId <- insert ChatThread
@@ -2698,6 +2705,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 omitted <- resolveOptionalBookingPartyReference "engineerPartyId" Nothing
@@ -2767,6 +2775,7 @@ spec = describe "TDF.Server helpers" $ do
                                 , partyInstagram = Nothing
                                 , partyEmergencyContact = Nothing
                                 , partyNotes = Nothing
+                                , partyStripeCustomerId = Nothing
                                 , partyCreatedAt = now
                                 }
                     customerId <- insertTestParty "Studio Customer" "customer@example.com"
@@ -2833,6 +2842,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
                             }
             resolveBookingEngineerName (Just "Manual Override") (Just engineerParty)
@@ -2857,6 +2867,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
                             }
 
@@ -2884,6 +2895,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 omitted <- resolveOptionalProposalClientPartyReference Nothing
@@ -3037,6 +3049,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 productKey <- insert PackageProduct
@@ -3111,6 +3124,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 resolvePackagePurchaseRefs
@@ -3136,6 +3150,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 productKey <- insert PackageProduct
@@ -4214,6 +4229,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = now
                             }
                 expectedId <- insert (mkParty "Single Email" "single@example.com")
@@ -4260,6 +4276,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = now
                             }
                     emailInquiry =
@@ -4321,6 +4338,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = now
                             }
                 expectedId <- insert (mkParty "Single Course Lead" "+593991111111")
@@ -4573,6 +4591,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -4650,6 +4669,7 @@ spec = describe "TDF.Server helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = now
                             }
                     insertCredential partyId username =
@@ -7638,6 +7658,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ArtistProfile
@@ -7675,6 +7696,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ArtistProfile
@@ -7705,6 +7727,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 validateSignupFanArtistTargets
@@ -7900,6 +7923,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -7926,6 +7950,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -7957,6 +7982,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -7988,6 +8014,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -8017,6 +8044,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 credId <- insert UserCredential
@@ -8061,6 +8089,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 credId <- insert UserCredential
@@ -8107,6 +8136,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -8139,6 +8169,7 @@ spec = describe "TDF.Server helpers" $ do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -14345,6 +14376,7 @@ seedSessionUsernameFallbackRows = do
                     , partyInstagram = Nothing
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
                     , partyCreatedAt = now
                     }
         insertCredential partyId username =
