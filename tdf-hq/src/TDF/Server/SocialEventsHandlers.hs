@@ -394,6 +394,106 @@ markCourseRegistrationStatus now newStatus piId = do
           envPool
       pure NoContent
 
+-- | Webhook handler for `checkout.session.completed`. Records the
+-- subscription id on the course registration and flips it to @paid@. Looks up
+-- the registration by @metadata.course_registration_id@ on the session, which
+-- our subscription-checkout handler always sets.
+handleStripeCheckoutSessionCompleted :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripeCheckoutSessionCompleted now payload = do
+  let mRegIdText = parseMaybe
+        (Aeson.withObject "event" $ \evt -> do
+          dataObj <- evt Aeson..: "data" :: Parser Object
+          obj <- dataObj Aeson..: "object" :: Parser Object
+          metadataObj <- obj Aeson..: "metadata" :: Parser Object
+          metadataObj Aeson..: "course_registration_id" :: Parser T.Text)
+        payload
+      mSubId = parseMaybe
+        (Aeson.withObject "event" $ \evt -> do
+          dataObj <- evt Aeson..: "data" :: Parser Object
+          obj <- dataObj Aeson..: "object" :: Parser Object
+          obj Aeson..: "subscription" :: Parser T.Text)
+        payload
+  case (mRegIdText, mSubId) of
+    (Just regIdText, Just subId) -> case readMaybe (T.unpack regIdText) of
+      Nothing -> pure NoContent
+      Just regIdNum -> do
+        Env{..} <- ask
+        let regKey = toSqlKey regIdNum :: ME.CourseRegistrationId
+        mReg <- liftIO $ runSqlPool (get regKey) envPool
+        case mReg of
+          Nothing -> pure NoContent
+          Just reg -> do
+            when (ME.courseRegistrationStatus reg == "pending_payment") $
+              liftIO $ runSqlPool
+                (update regKey
+                  [ ME.CourseRegistrationStatus =. "paid"
+                  , ME.CourseRegistrationStripeSubscriptionId =. Just subId
+                  , ME.CourseRegistrationSubscriptionStatus =. Just "active"
+                  , ME.CourseRegistrationUpdatedAt =. now
+                  ])
+                envPool
+            pure NoContent
+    _ -> pure NoContent
+
+-- | Webhook handler for `customer.subscription.updated`. Mirrors the
+-- subscription status onto the registration. Terminal statuses also flip the
+-- registration status itself so the application treats it as cancelled.
+handleStripeSubscriptionUpdated :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripeSubscriptionUpdated now payload =
+  case parseSubscriptionEvent payload of
+    Nothing -> pure NoContent
+    Just (subId, subStatus) -> do
+      Env{..} <- ask
+      mReg <- liftIO $ runSqlPool
+        (selectFirst [ME.CourseRegistrationStripeSubscriptionId ==. Just subId] [])
+        envPool
+      case mReg of
+        Nothing -> pure NoContent
+        Just (Entity regKey _) -> do
+          let terminalStatuses = ["canceled", "unpaid", "incomplete_expired"]
+              registrationUpdates =
+                (ME.CourseRegistrationSubscriptionStatus =. Just subStatus)
+                  : (ME.CourseRegistrationUpdatedAt =. now)
+                  : [ ME.CourseRegistrationStatus =. "cancelled"
+                    | subStatus `elem` terminalStatuses
+                    ]
+          liftIO $ runSqlPool (update regKey registrationUpdates) envPool
+          pure NoContent
+
+-- | Webhook handler for `customer.subscription.deleted`. Always flips the
+-- registration to @cancelled@.
+handleStripeSubscriptionDeleted :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripeSubscriptionDeleted now payload =
+  case parseSubscriptionEvent payload of
+    Nothing -> pure NoContent
+    Just (subId, _) -> do
+      Env{..} <- ask
+      mReg <- liftIO $ runSqlPool
+        (selectFirst [ME.CourseRegistrationStripeSubscriptionId ==. Just subId] [])
+        envPool
+      case mReg of
+        Nothing -> pure NoContent
+        Just (Entity regKey _) -> do
+          liftIO $ runSqlPool
+            (update regKey
+              [ ME.CourseRegistrationStatus =. "cancelled"
+              , ME.CourseRegistrationSubscriptionStatus =. Just "canceled"
+              , ME.CourseRegistrationUpdatedAt =. now
+              ])
+            envPool
+          pure NoContent
+
+-- | Parse (@id@, @status@) from a customer.subscription.* event payload.
+parseSubscriptionEvent :: Aeson.Value -> Maybe (T.Text, T.Text)
+parseSubscriptionEvent =
+  parseMaybe $
+    Aeson.withObject "event" $ \evt -> do
+      dataObj <- evt Aeson..: "data" :: Parser Object
+      obj <- dataObj Aeson..: "object" :: Parser Object
+      sid <- obj Aeson..: "id" :: Parser T.Text
+      st <- obj Aeson..: "status" :: Parser T.Text
+      pure (sid, st)
+
 data TicketCheckInLookup
   = TicketCheckInLookupById Int64
   | TicketCheckInLookupByCode T.Text
@@ -2474,6 +2574,13 @@ socialEventsServer user = eventsServer
                 "payment_intent.payment_failed" ->
                   handleStripePaymentIntentFailed now payload
                 "charge.refunded" -> pure NoContent
+                "checkout.session.completed" ->
+                  handleStripeCheckoutSessionCompleted now payload
+                "customer.subscription.updated" ->
+                  handleStripeSubscriptionUpdated now payload
+                "customer.subscription.deleted" ->
+                  handleStripeSubscriptionDeleted now payload
+                "invoice.paid" -> pure NoContent
                 _ -> pure NoContent
         _ -> throwError err500 { errBody = "Stripe is not configured" }
 
