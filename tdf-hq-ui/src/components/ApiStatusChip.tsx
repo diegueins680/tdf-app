@@ -5,7 +5,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Meta } from '../api/meta';
 
 export default function ApiStatusChip() {
-  const { data, isFetching } = useQuery({
+  const { data, isError, isFetching } = useQuery({
     queryKey: ['meta', 'health-indicator'],
     queryFn: Meta.health,
     refetchInterval: 60_000,
@@ -25,7 +25,7 @@ export default function ApiStatusChip() {
     );
   }
 
-  const healthy = (data?.status ?? '').toLowerCase() === 'ok';
+  const healthy = !isError && (data?.status ?? '').toLowerCase() === 'ok';
   return (
     <Chip
       role="status"

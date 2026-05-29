@@ -18,10 +18,12 @@ const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0
 
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((promiseResolve) => {
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
     resolve = promiseResolve;
+    reject = promiseReject;
   });
-  return { promise, resolve };
+  return { promise, reject, resolve };
 };
 
 const renderChip = async (container: HTMLElement, qc: QueryClient) => {
@@ -103,6 +105,38 @@ describe('ApiStatusChip', () => {
 
       await waitForExpectation(() => {
         expect(container.textContent).toContain('API: online');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not keep showing stale online status after a failed health refetch', async () => {
+    const failedHealth = createDeferred<HealthStatus>();
+    healthMock.mockReturnValue(failedHealth.promise);
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+    qc.setQueryData(['meta', 'health-indicator'], { status: 'ok' } satisfies HealthStatus);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderChip(container, qc);
+
+    try {
+      expect(healthMock).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain('API: verificando...');
+
+      await act(async () => {
+        failedHealth.reject(new Error('offline'));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('API: offline');
+        expect(container.textContent).not.toContain('API: online');
         expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
       });
     } finally {
