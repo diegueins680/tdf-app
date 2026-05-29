@@ -3,11 +3,14 @@
 module TDF.Services.Stripe
   ( StripeConfig(..)
   , defaultStripeApiVersion
+  , createAccountLink
   , createCheckoutSessionForSubscription
+  , createConnectExpressAccount
   , createCustomer
   , createEphemeralKey
   , createPaymentIntent
   , createPaymentIntentForCustomer
+  , createPaymentIntentForTip
   , createRefund
   , decodeStripeResponse
   , verifyWebhookSignature
@@ -47,6 +50,13 @@ data StripeConfig = StripeConfig
 -- the value moves in one place when upgrading. See <https://docs.stripe.com/changelog>.
 defaultStripeApiVersion :: Text
 defaultStripeApiVersion = "2026-04-22.dahlia"
+
+type StripeAccountId = Text
+type StripeAmountCents = Int
+type StripeCountryCode = Text
+type StripeCurrencyCode = Text
+type StripeMetadataForm = Text
+type StripeRedirectUrl = Text
 
 -- | Resource invariant: every manager allocated for a single Stripe request is
 -- closed exactly once, even if request construction, I/O, or response decoding
@@ -261,6 +271,258 @@ createCheckoutSessionForSubscription cfg priceId customerId successUrl cancelUrl
         bodyLBS
         "Failed to parse Stripe Checkout Session response"
         "Stripe checkout session error"
+
+-- | Create a Stripe Express payout account for an artist receiving tips.
+--
+-- Resource invariant:
+-- * validates local preconditions before allocating an HTTP manager;
+-- * allocates the manager only through 'withStripeManager', which brackets
+--   'newManager' with 'closeManager';
+-- * the manager cannot escape the callback.
+--
+-- Preconditions:
+-- * country is an ISO 3166-1 alpha-2 country code; it is normalized to
+--   uppercase before the request is sent.
+-- * email, when present, is already accepted by the calling signup/profile
+--   flow.
+-- * metadata, when present, is already serialized into Stripe form fields.
+--
+-- Returns the full account JSON; caller persists @id@ (@acct_*@) and immediately
+-- requests an 'createAccountLink' for onboarding.
+createConnectExpressAccount
+  :: StripeConfig
+  -> StripeCountryCode     -- ^ ISO 3166-1 alpha-2 country code (e.g. "EC", "US")
+  -> Maybe Text            -- ^ Optional email to prefill on the onboarding form
+  -> Maybe StripeMetadataForm
+  -> IO (Either Text Value)
+createConnectExpressAccount cfg country mEmail mMetadata =
+  case normalizeStripeCountryCode country of
+    Left err -> pure (Left err)
+    Right countryCode ->
+      withStripeManager $ \manager -> do
+        let url = "https://api.stripe.com/v1/accounts"
+            body = BS8.intercalate "&" $ filter (not . BS.null)
+              [ "type=express"
+              , "country=" <> urlEncode (TE.encodeUtf8 countryCode)
+              , "capabilities[card_payments][requested]=true"
+              , "capabilities[transfers][requested]=true"
+              , maybe "" (\e -> "email=" <> urlEncode (TE.encodeUtf8 e)) mEmail
+              , maybe "" (\m -> "metadata=" <> urlEncode (TE.encodeUtf8 m)) mMetadata
+              ]
+
+        initialRequest <- parseRequest url
+        let request = initialRequest
+              { method = "POST"
+              , requestHeaders =
+                  [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+                  , ("Content-Type", "application/x-www-form-urlencoded")
+                  , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+                  ]
+              , requestBody = RequestBodyBS body
+              }
+
+        response <- httpLbs request manager
+        let status = statusCode (responseStatus response)
+            bodyLBS = responseBody response
+
+        pure $
+          decodeStripeResponse
+            status
+            bodyLBS
+            "Failed to parse Stripe Account response"
+            "Stripe account error"
+
+-- | Create a Stripe Account Link for hosted payout onboarding. The returned
+-- URL is single-use and short-lived (~minutes); always generate one fresh when
+-- the artist clicks the onboarding CTA.
+--
+-- Resource invariant: validates local fields before allocation and then uses
+-- only 'withStripeManager' for the HTTP manager lifetime.
+--
+-- Preconditions:
+-- * accountId is a normalized @acct_*@ identifier.
+-- * refreshUrl and returnUrl are non-blank URLs accepted by the configured
+--   Stripe environment.
+--
+-- Postcondition: all outcomes use 'decodeStripeResponse'; malformed success
+-- bodies never parse as successful JSON.
+createAccountLink
+  :: StripeConfig
+  -> StripeAccountId   -- ^ Stripe account id (acct_*)
+  -> StripeRedirectUrl -- ^ refresh URL; Stripe sends the user here if the link expires
+  -> StripeRedirectUrl -- ^ return URL; Stripe sends the user here after they finish
+  -> IO (Either Text Value)
+createAccountLink cfg accountId refreshUrl returnUrl =
+  case (,,)
+    <$> normalizeStripeAccountId accountId
+    <*> normalizeRequiredStripeText "refreshUrl" refreshUrl
+    <*> normalizeRequiredStripeText "returnUrl" returnUrl of
+      Left err -> pure (Left err)
+      Right (accountIdValue, refreshUrlValue, returnUrlValue) ->
+        withStripeManager $ \manager -> do
+          let url = "https://api.stripe.com/v1/account_links"
+              body = BS8.intercalate "&"
+                [ "account=" <> urlEncode (TE.encodeUtf8 accountIdValue)
+                , "refresh_url=" <> urlEncode (TE.encodeUtf8 refreshUrlValue)
+                , "return_url=" <> urlEncode (TE.encodeUtf8 returnUrlValue)
+                , "type=account_onboarding"
+                ]
+
+          initialRequest <- parseRequest url
+          let request = initialRequest
+                { method = "POST"
+                , requestHeaders =
+                    [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+                    , ("Content-Type", "application/x-www-form-urlencoded")
+                    , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+                    ]
+                , requestBody = RequestBodyBS body
+                }
+
+          response <- httpLbs request manager
+          let status = statusCode (responseStatus response)
+              bodyLBS = responseBody response
+
+          pure $
+            decodeStripeResponse
+              status
+              bodyLBS
+              "Failed to parse Stripe Account Link response"
+              "Stripe account link error"
+
+-- | Create a PaymentIntent for a destination charge tip. The platform collects
+-- @applicationFeeCents@, and the rest is routed to the artist payout account
+-- via @transfer_data[destination]@.
+--
+-- Resource invariant: local preconditions are checked before manager
+-- allocation; the network phase uses 'withStripeManager' so cleanup is
+-- guaranteed on success, failure, and exceptions.
+--
+-- Preconditions:
+-- * destinationAccountId is an @acct_*@ id that has finished onboarding.
+-- * amountCents is positive and within Stripe's integer amount envelope.
+-- * applicationFeeCents >= 0 and <= amountCents.
+-- * currency is a three-letter code; it is normalized to lowercase.
+--
+-- Postcondition: all outcomes use 'decodeStripeResponse'; the returned success
+-- value is valid JSON from Stripe and non-success statuses return @Left@.
+createPaymentIntentForTip
+  :: StripeConfig
+  -> StripeAccountId       -- ^ destination Stripe account id (acct_*)
+  -> StripeAmountCents     -- ^ Amount in cents
+  -> StripeAmountCents     -- ^ Application fee in cents (platform cut)
+  -> StripeCurrencyCode    -- ^ Currency (e.g., "usd")
+  -> Text                  -- ^ Description
+  -> Maybe StripeMetadataForm
+  -> IO (Either Text Value)
+createPaymentIntentForTip cfg destinationAccountId amountCents applicationFeeCents currency description mMetadata =
+  case (,,,)
+    <$> normalizeStripeAccountId destinationAccountId
+    <*> validateStripeAmountCents "amountCents" amountCents
+    <*> validateStripeApplicationFee amountCents applicationFeeCents
+    <*> normalizeStripeCurrencyCode currency of
+      Left err -> pure (Left err)
+      Right (destinationAccountIdValue, amountCentsValue, applicationFeeCentsValue, currencyValue) ->
+        withStripeManager $ \manager -> do
+          let url = "https://api.stripe.com/v1/payment_intents"
+              body = BS8.intercalate "&"
+                [ "amount=" <> BS8.pack (show amountCentsValue)
+                , "currency=" <> TE.encodeUtf8 currencyValue
+                , "application_fee_amount=" <> BS8.pack (show applicationFeeCentsValue)
+                , "transfer_data[destination]=" <> urlEncode (TE.encodeUtf8 destinationAccountIdValue)
+                , "description=" <> urlEncode (TE.encodeUtf8 description)
+                , "automatic_payment_methods[enabled]=true"
+                ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+
+          initialRequest <- parseRequest url
+          let request = initialRequest
+                { method = "POST"
+                , requestHeaders =
+                    [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+                    , ("Content-Type", "application/x-www-form-urlencoded")
+                    , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+                    ]
+                , requestBody = RequestBodyBS body
+                }
+
+          response <- httpLbs request manager
+          let status = statusCode (responseStatus response)
+              bodyLBS = responseBody response
+
+          pure $
+            decodeStripeResponse
+              status
+              bodyLBS
+              "Failed to parse Stripe PaymentIntent response"
+              "Stripe API error"
+
+normalizeStripeCountryCode :: Text -> Either Text StripeCountryCode
+normalizeStripeCountryCode rawCountry =
+  let country = T.toUpper (T.strip rawCountry)
+  in if T.length country == 2 && T.all isAsciiUpperChar country
+       then Right country
+       else Left "country must be a 2-letter ISO code"
+
+normalizeStripeAccountId :: Text -> Either Text StripeAccountId
+normalizeStripeAccountId rawAccountId =
+  let accountId = T.strip rawAccountId
+  in if T.isPrefixOf "acct_" accountId
+        && T.length accountId > T.length ("acct_" :: Text)
+        && T.length accountId <= 128
+        && T.all isStripeIdChar accountId
+       then Right accountId
+       else Left "Stripe account id must be an acct_* identifier"
+
+normalizeRequiredStripeText :: Text -> Text -> Either Text Text
+normalizeRequiredStripeText fieldName rawValue =
+  let value = T.strip rawValue
+  in if T.null value
+       then Left (fieldName <> " must not be blank")
+       else Right value
+
+validateStripeAmountCents :: Text -> Int -> Either Text StripeAmountCents
+validateStripeAmountCents fieldName amount
+  | amount <= 0 =
+      Left (fieldName <> " must be greater than zero")
+  | amount > maxStripeAmountCents =
+      Left (fieldName <> " exceeds Stripe's maximum integer amount")
+  | otherwise =
+      Right amount
+
+validateStripeApplicationFee :: Int -> Int -> Either Text StripeAmountCents
+validateStripeApplicationFee amount fee
+  | fee < 0 =
+      Left "applicationFeeCents must not be negative"
+  | fee > amount =
+      Left "applicationFeeCents must not exceed amountCents"
+  | otherwise =
+      Right fee
+
+normalizeStripeCurrencyCode :: Text -> Either Text StripeCurrencyCode
+normalizeStripeCurrencyCode rawCurrency =
+  let currency = T.toLower (T.strip rawCurrency)
+  in if T.length currency == 3 && T.all isAsciiLowerChar currency
+       then Right currency
+       else Left "currency must be a 3-letter ISO code"
+
+maxStripeAmountCents :: Int
+maxStripeAmountCents = 99999999
+
+isStripeIdChar :: Char -> Bool
+isStripeIdChar ch =
+  isAsciiLowerChar ch || isAsciiUpperChar ch || isAsciiDigitChar ch || ch == '_'
+
+isAsciiLowerChar :: Char -> Bool
+isAsciiLowerChar ch =
+  ch >= 'a' && ch <= 'z'
+
+isAsciiUpperChar :: Char -> Bool
+isAsciiUpperChar ch =
+  ch >= 'A' && ch <= 'Z'
+
+isAsciiDigitChar :: Char -> Bool
+isAsciiDigitChar ch =
+  ch >= '0' && ch <= '9'
 
 -- | Create a Stripe Ephemeral Key for a Customer for mobile PaymentSheet.
 --

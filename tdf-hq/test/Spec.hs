@@ -342,6 +342,8 @@ import TDF.Server.SocialEventsHandlers (
     parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
     parseVenueIdEither,
+    parseCheckoutSessionCourseSubscription,
+    parseSubscriptionEvent,
     validateEventCreateUpdateDimensions,
     validateVenueCreateUpdateFields,
     normalizeTicketOrderStatus,
@@ -922,6 +924,48 @@ main = hspec $ do
                     "Stripe API error"
                     QC.=== Left ("Stripe API error with status: " <> Data.Text.pack (show status))
 
+        it "rejects invalid payout account creation preconditions before HTTP allocation" $
+            Stripe.createConnectExpressAccount
+                (stripeTestConfig "whsec_test")
+                "ecuador"
+                Nothing
+                Nothing
+                `shouldReturn` Left "country must be a 2-letter ISO code"
+
+        it "rejects invalid account link preconditions before HTTP allocation" $ do
+            Stripe.createAccountLink
+                (stripeTestConfig "whsec_test")
+                "account_123"
+                "https://example.com/refresh"
+                "https://example.com/return"
+                `shouldReturn` Left "Stripe account id must be an acct_* identifier"
+            Stripe.createAccountLink
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                ""
+                "https://example.com/return"
+                `shouldReturn` Left "refreshUrl must not be blank"
+
+        it "rejects invalid tip PaymentIntent preconditions before HTTP allocation" $ do
+            Stripe.createPaymentIntentForTip
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                1000
+                1001
+                "usd"
+                "tip"
+                Nothing
+                `shouldReturn` Left "applicationFeeCents must not exceed amountCents"
+            Stripe.createPaymentIntentForTip
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                1000
+                100
+                "US1"
+                "tip"
+                Nothing
+                `shouldReturn` Left "currency must be a 3-letter ISO code"
+
         it "accepts generated webhook signatures that satisfy the HMAC contract" $
             QC.property $ \(StripeHeaderToken secret) (StripeHeaderToken timestamp) (StripeBody rawBody) ->
                 let header =
@@ -1006,6 +1050,80 @@ main = hspec $ do
                 `shouldBe` Right ("evt_123", "payment_intent.succeeded")
             parseStripeWebhookPaymentIntentId webhookPayload
                 `shouldBe` Just "pi_123"
+
+        it "extracts checkout session course subscription fields only when complete" $ do
+            let checkoutPayload regId subscriptionId =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object
+                                                [ "course_registration_id" .= (regId :: Text)
+                                                ]
+                                        , "subscription" .= (subscriptionId :: Text)
+                                        ]
+                                ]
+                        ]
+            parseCheckoutSessionCourseSubscription
+                (checkoutPayload "42" "sub_123")
+                `shouldBe` Just (42, "sub_123")
+            parseCheckoutSessionCourseSubscription
+                (checkoutPayload "not-a-number" "sub_123")
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["metadata" .= A.object []]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["subscription" .= ("sub_123" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription A.Null
+                `shouldBe` Nothing
+
+        it "extracts subscription webhook fields only when id and status are present" $ do
+            let subscriptionPayload subscriptionId status =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= (subscriptionId :: Text)
+                                        , "status" .= (status :: Text)
+                                        ]
+                                ]
+                        ]
+            parseSubscriptionEvent
+                (subscriptionPayload "sub_123" "past_due")
+                `shouldBe` Just ("sub_123", "past_due")
+            parseSubscriptionEvent
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["id" .= ("sub_123" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseSubscriptionEvent
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["status" .= ("active" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseSubscriptionEvent A.Null
+                `shouldBe` Nothing
 
         it "rejects malformed Stripe webhook payloads with deterministic outcomes" $ do
             parseStripeWebhookEventEnvelope

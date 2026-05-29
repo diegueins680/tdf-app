@@ -2295,12 +2295,19 @@ isAsciiHexDigit ch =
     || (ch >= 'A' && ch <= 'F')
 
 -- =============================================================================
--- ARTIST TIPPING (Stripe Connect)
+-- ARTIST TIPPING (Stripe destination charges)
 -- =============================================================================
 
 -- | Body for `POST /artists/:artistId/tips`. Currency is the ISO 4217 code
--- (e.g. "usd", "eur"); validated server-side against what the connected
--- account supports via Stripe's PaymentIntent response.
+-- (e.g. "usd", "eur"); this DTO performs no IO and acquires no resources.
+--
+-- Contract:
+-- * @amountCents@ is positive and within Stripe's integer amount envelope.
+-- * @currency@ is normalized to a lowercase three-letter ASCII code.
+-- * optional text fields reject explicit nulls; blank strings normalize to
+--   absence.
+-- * the Stripe HTTP resource lifetime is owned by @TDF.Services.Stripe@ via
+--   its bracketed manager helper, never by this JSON type.
 data ArtistTipRequest = ArtistTipRequest
   { atrAmountCents  :: Int
   , atrCurrency     :: Text
@@ -2310,22 +2317,94 @@ data ArtistTipRequest = ArtistTipRequest
   } deriving (Show, Generic)
 
 instance ToJSON ArtistTipRequest where
-  toJSON (ArtistTipRequest amount cur name email msg) = object
+  toJSON (ArtistTipRequest amount cur name email msg) = object $
     [ "amountCents" .= amount
     , "currency"    .= cur
-    , "tipperName"  .= name
-    , "tipperEmail" .= email
-    , "message"     .= msg
     ]
+    <> maybe [] (\nameVal -> ["tipperName" .= nameVal]) name
+    <> maybe [] (\emailVal -> ["tipperEmail" .= emailVal]) email
+    <> maybe [] (\msgVal -> ["message" .= msgVal]) msg
 
 instance FromJSON ArtistTipRequest where
-  parseJSON = withObject "ArtistTipRequest" $ \o -> do
-    amount <- o .: "amountCents"
-    cur    <- o .: "currency"
-    name   <- o .:? "tipperName"
-    email  <- o .:? "tipperEmail"
-    msg    <- o .:? "message"
-    pure (ArtistTipRequest amount cur name email msg)
+  parseJSON value = do
+    rejectNullRequiredFields "ArtistTipRequest" ["amountCents", "currency"] value
+    rejectNullOptionalFields "ArtistTipRequest" ["tipperName", "tipperEmail", "message"] value
+    withObject "ArtistTipRequest" parseArtistTipRequestObject value
+
+parseArtistTipRequestObject :: Object -> Parser ArtistTipRequest
+parseArtistTipRequestObject o = do
+  rejectUnknownArtistTipRequestKeys o
+  amount <- o .: "amountCents" >>= validateArtistTipAmountCents
+  cur <- o .: "currency" >>= validateArtistTipCurrency
+  name <- o .:? "tipperName" >>= validateOptionalArtistTipText "tipperName" 160
+  email <- o .:? "tipperEmail" >>= validateOptionalArtistTipEmail
+  msg <- o .:? "message" >>= validateOptionalArtistTipText "message" 1000
+  pure (ArtistTipRequest amount cur name email msg)
+
+rejectUnknownArtistTipRequestKeys :: Object -> Parser ()
+rejectUnknownArtistTipRequestKeys o =
+  case filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o)) of
+    key:_ -> fail ("Unknown field in ArtistTipRequest: " <> T.unpack key)
+    [] -> pure ()
+  where
+    allowedKeys =
+      [ "amountCents"
+      , "currency"
+      , "tipperName"
+      , "tipperEmail"
+      , "message"
+      ]
+
+maxArtistTipAmountCents :: Int
+maxArtistTipAmountCents = 99999999
+
+validateArtistTipAmountCents :: Int -> Parser Int
+validateArtistTipAmountCents amount
+  | amount <= 0 =
+      fail "amountCents must be greater than zero"
+  | amount > maxArtistTipAmountCents =
+      fail "amountCents exceeds Stripe's maximum integer amount"
+  | otherwise =
+      pure amount
+
+validateArtistTipCurrency :: Text -> Parser Text
+validateArtistTipCurrency rawCurrency =
+  let currency = T.toLower (T.strip rawCurrency)
+  in if T.length currency == 3 && T.all isAsciiLower currency
+       then pure currency
+       else fail "currency must be a 3-letter ISO code"
+
+validateOptionalArtistTipText :: String -> Int -> Maybe Text -> Parser (Maybe Text)
+validateOptionalArtistTipText _ _ Nothing =
+  pure Nothing
+validateOptionalArtistTipText fieldName maxLength (Just rawValue) =
+  let value = T.strip rawValue
+  in if T.null value
+       then pure Nothing
+       else if T.length value > maxLength
+         then fail (fieldName <> " must be " <> show maxLength <> " characters or fewer")
+         else if T.any isUnsafeArtistTipTextChar value
+           then fail (fieldName <> " must not contain control characters, hidden formatting characters, or Unicode separator spaces")
+           else pure (Just value)
+
+validateOptionalArtistTipEmail :: Maybe Text -> Parser (Maybe Text)
+validateOptionalArtistTipEmail Nothing =
+  pure Nothing
+validateOptionalArtistTipEmail (Just rawEmail) = do
+  mEmail <- validateOptionalArtistTipText "tipperEmail" 254 (Just rawEmail)
+  case mEmail of
+    Nothing -> pure Nothing
+    Just email ->
+      let normalized = T.toLower email
+      in if isValidMarketplaceBuyerEmail normalized
+           then pure (Just normalized)
+           else fail "tipperEmail must be a valid email address"
+
+isUnsafeArtistTipTextChar :: Char -> Bool
+isUnsafeArtistTipTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 data ArtistTipResponse = ArtistTipResponse
   { atrespTipId        :: Int64

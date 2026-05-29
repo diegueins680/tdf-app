@@ -22,6 +22,7 @@ import qualified TDF.DTO.SocialEventsDTO as SocialEvents
 import qualified TDF.DTO.SocialSyncDTO as SocialSync
 import TDF.API.Types
     ( AssetCheckoutRequest (..)
+    , ArtistTipRequest (..)
     , BandCreate (..)
     , BandMemberInput (..)
     , ClockInRequest (..)
@@ -137,6 +138,37 @@ spec = do
                 body
                 `shouldSatisfy` isLeft
             verifyMetaWebhookSignature (Just "secret") Nothing body
+                `shouldSatisfy` isLeft
+
+    describe "ArtistTipRequest FromJSON" $ do
+        it "normalizes canonical tip payloads into the Stripe request contract" $
+            case decodeArtistTipRequest
+                "{\"amountCents\":2500,\"currency\":\" USD \",\"tipperName\":\" Ada Lovelace \",\"tipperEmail\":\" ADA@EXAMPLE.COM \",\"message\":\" gracias \"}"
+             of
+                Left err ->
+                    expectationFailure ("Expected artist tip payload to decode, got: " <> err)
+                Right (ArtistTipRequest amountVal currencyVal nameVal emailVal messageVal) -> do
+                    amountVal `shouldBe` 2500
+                    currencyVal `shouldBe` "usd"
+                    nameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    messageVal `shouldBe` Just "gracias"
+
+        it "rejects malformed tip payloads before handler or Stripe IO" $ do
+            decodeArtistTipRequest
+                "{\"amountCents\":0,\"currency\":\"usd\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"US1\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"tipperEmail\":\"not-an-email\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"tipperName\":null}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "UserRoleUpdatePayload FromJSON" $ do
@@ -2944,6 +2976,8 @@ spec = do
     invalidUtf8 = BL.pack [0xff]
     decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
     decodeUserRoleUpdate = eitherDecode
+    decodeArtistTipRequest :: BL8.ByteString -> Either String ArtistTipRequest
+    decodeArtistTipRequest = eitherDecode
     decodeDropdownOptionCreate :: BL8.ByteString -> Either String DropdownOptionCreate
     decodeDropdownOptionCreate = eitherDecode
     decodeDropdownOptionUpdate :: BL8.ByteString -> Either String DropdownOptionUpdate
