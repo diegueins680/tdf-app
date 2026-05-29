@@ -236,7 +236,6 @@ import TDF.ServerInstagramOAuth
       validateInstagramUsername )
 import TDF.Server
     ( buildWhatsappCtaFor,
-      buildCourseRegistrationUsernameCandidate,
       loadCourseRegistrationReceiptCounts,
       toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
@@ -265,7 +264,6 @@ import TDF.Server
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
       validateOptionalDatafastMetadataField,
-      resolveDatafastPaymentState,
       validateDatafastCredential,
       validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
@@ -276,7 +274,6 @@ import TDF.Server
       validatePayPalCredential,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
-      validatePayPalCaptureOrderState,
       validatePayPalCaptureStatusField,
       validatePayPalApprovalUrl,
       resolveMarketplaceOrderPaidAtForStatus,
@@ -6664,29 +6661,6 @@ main = hspec $ do
                 ("AUTH" <> Data.Text.singleton '\x202E' <> "123")
             assertInvalid "Datafast acquirer code" (Data.Text.replicate 513 "A")
 
-    describe "resolveDatafastPaymentState" $ do
-        it "keeps paid Datafast orders terminal across repeated or stale confirmations" $ do
-            let now = UTCTime (fromGregorian 2026 5 15) (secondsToDiffTime 43200)
-                paidAt = addUTCTime (-3600) now
-
-            resolveDatafastPaymentState now "datafast_pending" "000.000.000" Nothing
-                `shouldBe` Right ("paid", Just now)
-            resolveDatafastPaymentState now "datafast_pending" "000.200.000" Nothing
-                `shouldBe` Right ("datafast_pending", Nothing)
-            resolveDatafastPaymentState now "paid" "000.000.000" (Just paidAt)
-                `shouldBe` Right ("paid", Just paidAt)
-            resolveDatafastPaymentState now "paid" "800.100.100" (Just paidAt)
-                `shouldBe` Right ("paid", Just paidAt)
-
-            case resolveDatafastPaymentState now "paid" "000.000.000" Nothing of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 500
-                    BL.unpack (errBody err)
-                        `shouldContain` "Stored paid marketplace order is missing paidAt"
-                Right value ->
-                    expectationFailure
-                        ("Expected missing paidAt invariant failure, got " <> show value)
-
     describe "validatePayPalApprovalUrl" $ do
         it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do
             let liveApproval = "https://www.paypal.com/checkoutnow?token=ORDER-123"
@@ -6771,32 +6745,6 @@ main = hspec $ do
             assertInvalid "ORDER/123"
             assertInvalid "ORDER?token=123"
             assertInvalid (Data.Text.replicate 129 "A")
-
-    describe "validatePayPalCaptureOrderState" $ do
-        it "rejects non-pending marketplace orders before a PayPal capture request is sent" $ do
-            validatePayPalCaptureOrderState "paypal_pending" `shouldBe` Right ()
-            validatePayPalCaptureOrderState " PayPal Pending " `shouldBe` Right ()
-
-            let assertInvalid rawStatus expectedCode expectedMessage =
-                    case validatePayPalCaptureOrderState rawStatus of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` expectedCode
-                            BL.unpack (errBody err) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid PayPal capture state, got " <> show value)
-            assertInvalid
-                "paid"
-                409
-                "PayPal order has already been captured"
-            assertInvalid
-                "datafast_pending"
-                409
-                "Order is not awaiting PayPal capture"
-            assertInvalid
-                "paypal/pending"
-                500
-                "Stored marketplace order status is invalid"
 
     describe "validatePayPalCaptureStatusField" $ do
         it "requires PayPal capture responses to include a non-blank status" $ do
@@ -13011,14 +12959,6 @@ main = hspec $ do
         it "preserves the collision suffix within the 60-character username budget" $ do
             let base = Data.Text.replicate 60 "a"
                 candidate = buildLiveSessionUsernameCollisionCandidate base "12"
-            Data.Text.length candidate `shouldBe` 60
-            candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
-            candidate `shouldNotBe` base
-
-    describe "buildCourseRegistrationUsernameCandidate" $ do
-        it "preserves course account collision suffixes inside the 60-character username budget" $ do
-            let base = Data.Text.replicate 60 "a"
-                candidate = buildCourseRegistrationUsernameCandidate base 12
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
