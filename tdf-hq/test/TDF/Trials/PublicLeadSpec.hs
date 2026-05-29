@@ -2997,6 +2997,7 @@ initializePartySchema = do
     \\"instagram\" VARCHAR NULL,\
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -3095,6 +3096,7 @@ initializeTrialsSchema = do
     \\"instagram\" VARCHAR NULL,\
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -3197,6 +3199,7 @@ initializeTrialsSchema = do
     \\"status\" VARCHAR NOT NULL,\
     \\"created_by\" INTEGER NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -3218,6 +3221,7 @@ initializeTrialsSchema = do
     \\"start_at\" TIMESTAMP NOT NULL,\
     \\"end_at\" TIMESTAMP NOT NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []

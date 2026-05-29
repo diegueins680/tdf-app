@@ -7417,6 +7417,7 @@ initializeBandSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -7493,6 +7494,7 @@ initializePaymentValidationSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
