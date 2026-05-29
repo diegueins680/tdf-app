@@ -283,7 +283,7 @@ data InstagramMedia = InstagramMedia
   , imMediaUrl  :: Maybe Text
   , imPermalink :: Maybe Text
   , imTimestamp :: Maybe Text
-  } deriving (Show, Generic)
+  } deriving (Eq, Show, Generic)
 
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o ->
@@ -294,6 +294,7 @@ instance FromJSON InstagramMedia where
                    <*> o .:? "timestamp"
 
 newtype InstagramMediaList = InstagramMediaList { imlData :: [InstagramMedia] }
+  deriving (Eq, Show)
 
 instance FromJSON InstagramMediaList where
   parseJSON = withObject "InstagramMediaList" $ \o ->

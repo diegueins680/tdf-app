@@ -45,7 +45,7 @@ data InstagramMedia = InstagramMedia
   , imMediaUrl  :: Maybe Text
   , imPermalink :: Maybe Text
   , imTimestamp :: Maybe UTCTime
-  } deriving (Show, Generic)
+  } deriving (Eq, Show, Generic)
 
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o -> do
@@ -140,6 +140,7 @@ isInstagramPermalinkUrl url =
     host = T.toLower rawHost
 
 newtype InstagramMediaList = InstagramMediaList [InstagramMedia]
+  deriving (Eq, Show)
 
 instance FromJSON InstagramMediaList where
   parseJSON = withObject "InstagramMediaList" $ \o -> do
