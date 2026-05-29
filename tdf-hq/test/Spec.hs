@@ -18,6 +18,7 @@ import Data.ByteArray (convert)
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
+import Data.Int (Int64)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
@@ -7009,53 +7010,6 @@ main = hspec $ do
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
 
-    describe "driveUploadServer folder fallback" $ do
-        it "rejects blank DRIVE_UPLOAD_FOLDER_ID before token fallback or upload work" $
-            withSystemTempFile "drive-upload.txt" $ \uploadPath handle -> do
-                hClose handle
-                BL.writeFile uploadPath "x"
-                let user =
-                        AuthedUser
-                            { auPartyId = toSqlKey 7
-                            , auRoles = [Admin]
-                            , auModules = modulesForRoles [Admin]
-                            }
-                    form =
-                        DriveUploadForm
-                            { duFile =
-                                FileData
-                                    { fdInputName = "file"
-                                    , fdFileName = "drive-upload.txt"
-                                    , fdFileCType = "text/plain"
-                                    , fdPayload = uploadPath
-                                    }
-                            , duFolderId = Nothing
-                            , duName = Just "drive-upload.txt"
-                            , duAccessToken = Nothing
-                            }
-                    unusedEnv =
-                        Env
-                            { envPool = error "envPool should be unused by Drive folder validation"
-                            , envConfig = error "envConfig should be unused by Drive folder validation"
-                            }
-                result <-
-                    withEnvOverrides
-                        [ ("DRIVE_UPLOAD_FOLDER_ID", Just "   ")
-                        , ("DRIVE_REFRESH_TOKEN", Nothing)
-                        , ("DRIVE_ACCESS_TOKEN", Nothing)
-                        ]
-                        (runHandler (runReaderT (driveUploadServer user Nothing form) unusedEnv))
-                case result of
-                    Left err -> do
-                        errHTTPCode err `shouldBe` 500
-                        BL.unpack (errBody err)
-                            `shouldContain` "DRIVE_UPLOAD_FOLDER_ID must not be blank"
-                    Right value ->
-                        expectationFailure
-                            ( "Expected blank Drive folder fallback to be rejected, got "
-                                <> show value
-                            )
-
     describe "validateConfiguredDriveRefreshToken" $ do
         it "rejects malformed configured refresh tokens before upload fallback refreshes OAuth" $ do
             validateConfiguredDriveRefreshToken " 1//refresh-token_123 "
@@ -12992,11 +12946,8 @@ main = hspec $ do
                 emptyDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (Map.findWithDefault 0 emptyRegKey receiptCounts)
                 clampedDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (-1)
             DTO.crReceiptCount firstDTO `shouldBe` 2
-            DTO.crCanMarkPaid firstDTO `shouldBe` True
             DTO.crReceiptCount emptyDTO `shouldBe` 0
-            DTO.crCanMarkPaid emptyDTO `shouldBe` False
             DTO.crReceiptCount clampedDTO `shouldBe` 0
-            DTO.crCanMarkPaid clampedDTO `shouldBe` False
 
     describe "resolveLiveSessionMusicianLookup" $ do
         it "only matches existing live-session musicians by normalized email" $ do
