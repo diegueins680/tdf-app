@@ -1104,7 +1104,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
 
         it "rejects non-positive dropdown option ids before update lookups hit the database" $ do
             let _listOptions :<|> _createOption :<|> updateOption =
-                    dropdownsHandlersFor (mkUser [Admin])
+                    dropdownsHandlersFor "asset-category" (mkUser [Admin])
                 updateReq =
                     DropdownOptionUpdate
                         { douValue = Nothing
@@ -1113,7 +1113,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , douActive = Just True
                         }
                 assertRejected rawId = do
-                    result <- runAdminTest (updateOption "asset-category" rawId updateReq)
+                    result <- runAdminTest (updateOption rawId updateReq)
                     case result of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
@@ -1833,11 +1833,12 @@ usersHandlersFor user =
                 usersRouter
 
 dropdownsHandlersFor
-    :: AuthedUser
+    :: T.Text
+    -> AuthedUser
     -> (Maybe Bool -> AdminTestM [DropdownOptionDTO])
         :<|> (DropdownOptionCreate -> AdminTestM DropdownOptionDTO)
         :<|> (T.Text -> DropdownOptionUpdate -> AdminTestM DropdownOptionDTO)
-dropdownsHandlersFor user =
+dropdownsHandlersFor category user =
     case adminServer user of
         _seed
             :<|> dropdownsRouter
@@ -1850,7 +1851,7 @@ dropdownsHandlersFor user =
             :<|> _brain
             :<|> _rag
             :<|> _social ->
-                dropdownsRouter
+                dropdownsRouter category
 
 artistsHandlersFor
     :: AuthedUser
