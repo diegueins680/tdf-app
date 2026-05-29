@@ -624,6 +624,10 @@ initializeTicketCheckInSchema = do
         \status VARCHAR NOT NULL,\
         \metadata VARCHAR NULL,\
         \purchased_at TIMESTAMP NOT NULL,\
+        \stripe_payment_intent_id VARCHAR NULL,\
+        \promo_code_id INTEGER NULL,\
+        \original_amount_cents INTEGER NULL,\
+        \payment_method VARCHAR NULL,\
         \created_at TIMESTAMP NOT NULL,\
         \updated_at TIMESTAMP NOT NULL\
         \)"
@@ -639,6 +643,11 @@ initializeTicketCheckInSchema = do
         \code VARCHAR NOT NULL,\
         \status VARCHAR NOT NULL,\
         \checked_in_at TIMESTAMP NULL,\
+        \current_holder_party_id VARCHAR NULL,\
+        \current_holder_email VARCHAR NULL,\
+        \current_holder_name VARCHAR NULL,\
+        \original_holder_party_id VARCHAR NULL,\
+        \transfer_history VARCHAR NULL,\
         \created_at TIMESTAMP NOT NULL,\
         \updated_at TIMESTAMP NOT NULL\
         \)"
