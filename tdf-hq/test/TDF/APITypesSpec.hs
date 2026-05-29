@@ -488,6 +488,38 @@ spec = do
                 "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":null}}"
                 `shouldSatisfy` isLeft
 
+    describe "CoursePaymentIntentRequest FromJSON" $ do
+        it "accepts omitted and canonical mobile Stripe version selectors" $ do
+            case decodeCoursePaymentIntent "{}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected omitted course payment intent selector to decode, got: " <> err)
+                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
+                    mobileSdkStripeVersionVal `shouldBe` Nothing
+
+            case decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\" 2026-04-22.dahlia \"}"
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected course payment intent payload to decode, got: " <> err)
+                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
+                    mobileSdkStripeVersionVal `shouldBe` Just "2026-04-22.dahlia"
+
+        it "rejects ambiguous or unsafe mobile Stripe version selectors" $ do
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":null}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\\nInjected: yes\"}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\",\"stripeVersion\":\"typo\"}"
+                `shouldSatisfy` isLeft
+
     describe "AdsInquiry FromJSON" $ do
         it "accepts canonical public ads inquiry payloads" $
             case decodeAdsInquiry
@@ -2947,6 +2979,8 @@ spec = do
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
     decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode
+    decodeCoursePaymentIntent :: BL8.ByteString -> Either String Courses.CoursePaymentIntentRequest
+    decodeCoursePaymentIntent = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode
     decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate

@@ -27,7 +27,7 @@ module TDF.Routes.Courses
   , WhatsAppWebhookAPI
   ) where
 
-import           Data.Char (isAlphaNum)
+import           Data.Char (isAlphaNum, isControl)
 import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -350,11 +350,14 @@ instance ToJSON CourseUpsert
 
 -- | Body for `POST /public/courses/:slug/registrations/:id/payment-intent`.
 --
--- @mobileSdkStripeVersion@: when set, returns the @spiPaymentSheet@ block with
--- customer + ephemeral key for native PaymentSheet. Web checkouts (Payment
--- Element) omit it and only use @spiClientSecret@. Mobile path requires the
--- registration already have a linked party — anonymous mobile checkouts are
--- not yet supported.
+-- Type contract:
+-- * omitted @mobileSdkStripeVersion@ selects the web Payment Element response;
+-- * present @mobileSdkStripeVersion@ is stripped, non-empty, and control-free
+--   before it may be forwarded as Stripe's @Stripe-Version@ header.
+--
+-- Resource invariant: this DTO performs no acquisition and retains no external
+-- handles. The handler's Stripe HTTP calls use 'TDF.Services.Stripe.withStripeManager',
+-- which brackets manager allocation and cleanup.
 data CoursePaymentIntentRequest = CoursePaymentIntentRequest
   { mobileSdkStripeVersion :: Maybe Text
   } deriving (Show, Generic)
@@ -365,8 +368,23 @@ instance FromJSON CoursePaymentIntentRequest where
       "CoursePaymentIntentRequest"
       ["mobileSdkStripeVersion"]
       value
-    genericParseJSON strictObjectOptions value
+    CoursePaymentIntentRequest rawMobileSdkStripeVersion <-
+      genericParseJSON strictObjectOptions value
+    checkedMobileSdkStripeVersion <-
+      traverse validateCourseMobileSdkStripeVersion rawMobileSdkStripeVersion
+    pure CoursePaymentIntentRequest
+      { mobileSdkStripeVersion = checkedMobileSdkStripeVersion
+      }
 instance ToJSON CoursePaymentIntentRequest
+
+validateCourseMobileSdkStripeVersion :: Text -> Parser Text
+validateCourseMobileSdkStripeVersion rawVersion =
+  let trimmed = T.strip rawVersion
+  in if T.null trimmed
+       then fail "mobileSdkStripeVersion must not be blank if provided"
+       else if T.any isControl trimmed
+         then fail "mobileSdkStripeVersion must not contain control characters"
+         else pure trimmed
 
 type CoursesPublicAPI =
        "public" :> "courses" :> Capture "slug" Text :> Get '[JSON] CourseMetadata

@@ -120,7 +120,19 @@ import           TDF.Auth
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
-import           TDF.Server.SocialEventsHandlers (socialEventsServer)
+import           TDF.Server.SocialEventsHandlers
+  ( socialEventsServer
+  , eitherStripeServerError
+  , parseStripeCustomerId
+  , parseStripeEphemeralKeySecret
+  , parseStripePaymentIntentResponse
+  , resolveStripeCustomerForBuyer
+  )
+import qualified TDF.Services.Stripe as Stripe
+import           TDF.DTO.SocialEventsDTO
+  ( PaymentSheetParamsDTO(..)
+  , StripePaymentIntentDTO(..)
+  )
 import           TDF.ServerExtra (bandsServer, facebookServer, facebookWebhookServer, instagramServer, instagramWebhookServer, inventoryPublicServer, inventoryServer, loadBandForParty, paymentsServer, pipelinesServer, roomsPublicServer, roomsServer, serviceCatalogPublicServer, serviceCatalogServer, sessionsServer)
 import qualified TDF.ServerExtra as ServerExtra
 import qualified TDF.ServerAuth as AuthServer
@@ -1096,13 +1108,131 @@ fanPublicServer =
     getPublicClub = fanClubPublicGetClub
     getPublicClubEvents = fanClubPublicGetEvents
 
+-- | POST /public/courses/:slug/registrations/:id/payment-intent
+--
+-- Issues a Stripe PaymentIntent against the course's listed @priceCents@ and
+-- tags it with metadata @{purpose, course_registration_id, course_slug}@ so the
+-- @payment_intent.succeeded@ webhook (in 'SocialEventsHandlers') can flip this
+-- registration to @paid@. The PaymentIntent id is persisted on the registration
+-- row for O(1) webhook lookup.
+--
+-- When the request carries @mobileSdkStripeVersion@, returns the
+-- 'PaymentSheetParamsDTO' block (customer + ephemeral key + publishable key);
+-- this path requires the registration already have a linked party — anonymous
+-- mobile checkouts are not supported in this phase.
+createCoursePaymentIntent
+  :: Text
+  -> Int64
+  -> Courses.CoursePaymentIntentRequest
+  -> AppM StripePaymentIntentDTO
+createCoursePaymentIntent rawSlug regIdRaw req = do
+  Env{..} <- ask
+  Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  when (ME.courseRegistrationStatus reg /= "pending_payment") $
+    throwError err400 { errBody = "Registration is not awaiting payment" }
+  when (isJust (ME.courseRegistrationStripePaymentIntentId reg)) $
+    throwError err409 { errBody = "Payment already initiated for this registration" }
+  let slugVal = ME.courseRegistrationCourseSlug reg
+  mCourse <- runDB $ getBy (Trials.UniqueCourseSlug slugVal)
+  courseEnt <- maybe (throwNotFound "Curso no encontrado") pure mCourse
+  let course = entityVal courseEnt
+      amountCents = Trials.coursePriceCents course
+      currency = Trials.courseCurrency course
+  when (amountCents <= 0) $
+    throwError err400 { errBody = "Course is free; no payment required." }
+  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) -> do
+      let stripeCfg = Stripe.StripeConfig
+            { Stripe.stripeSecretKey = secretKey
+            , Stripe.stripeWebhookSecret = webhookSecret
+            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+            }
+          description = "Course registration " <> slugVal <> " #" <> T.pack (show regIdRaw)
+          metadata = object
+            [ "purpose" .= ("course_registration" :: Text)
+            , "course_registration_id" .= regIdRaw
+            , "course_slug" .= slugVal
+            ]
+          metadataJson =
+            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+          persistPi piId =
+            runDB $ update regKey
+              [ ME.CourseRegistrationStripePaymentIntentId =. Just piId
+              , ME.CourseRegistrationUpdatedAt =. ME.courseRegistrationUpdatedAt reg
+              ]
+          stripeFailure prefix err =
+            throwError err500
+              { errBody = BL.fromStrict (TE.encodeUtf8 (prefix <> err))
+              }
+      case Courses.mobileSdkStripeVersion req of
+        Nothing -> do
+          result <- liftIO $
+            Stripe.createPaymentIntent stripeCfg amountCents currency description metadataJson
+          case result of
+            Left err -> stripeFailure "Stripe error: " err
+            Right paymentIntent -> do
+              (piId, clientSecret) <- eitherStripeServerError $
+                parseStripePaymentIntentResponse paymentIntent
+              persistPi piId
+              pure StripePaymentIntentDTO
+                { spiClientSecret = clientSecret
+                , spiOrderId = T.pack (show regIdRaw)
+                , spiAmountCents = amountCents
+                , spiCurrency = currency
+                , spiPaymentSheet = Nothing
+                }
+        Just mobileSdkVer ->
+          case (ME.courseRegistrationPartyId reg, stripePublishableKey envConfig) of
+            (Nothing, _) ->
+              throwError err400
+                { errBody = "Mobile payment requires a logged-in attendee."
+                }
+            (_, Nothing) ->
+              throwError err500
+                { errBody = "Stripe publishable key not configured."
+                }
+            (Just partyKey, Just publishableKey) -> do
+              customerId <- resolveStripeCustomerForBuyer stripeCfg partyKey
+                (ME.courseRegistrationEmail reg)
+                (ME.courseRegistrationFullName reg)
+              ephResult <- liftIO $
+                Stripe.createEphemeralKey stripeCfg customerId mobileSdkVer
+              ephemeralKeySecret <- case ephResult of
+                Left err -> stripeFailure "Stripe ephemeral key error: " err
+                Right ephJson -> eitherStripeServerError $
+                  parseStripeEphemeralKeySecret ephJson
+              piResult <- liftIO $
+                Stripe.createPaymentIntentForCustomer
+                  stripeCfg customerId amountCents currency description metadataJson
+              case piResult of
+                Left err -> stripeFailure "Stripe error: " err
+                Right paymentIntent -> do
+                  (piId, clientSecret) <- eitherStripeServerError $
+                    parseStripePaymentIntentResponse paymentIntent
+                  persistPi piId
+                  pure StripePaymentIntentDTO
+                    { spiClientSecret = clientSecret
+                    , spiOrderId = T.pack (show regIdRaw)
+                    , spiAmountCents = amountCents
+                    , spiCurrency = currency
+                    , spiPaymentSheet = Just PaymentSheetParamsDTO
+                        { psCustomerId = customerId
+                        , psEphemeralKeySecret = ephemeralKeySecret
+                        , psPaymentIntentClientSecret = clientSecret
+                        , psPublishableKey = publishableKey
+                        }
+                    }
+    _ -> throwError err500 { errBody = "Stripe is not configured" }
+
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
        courseMetadataH
   :<|> registrationH
+  :<|> paymentIntentH
   where
     courseMetadataH slug = loadCourseMetadata slug
     registrationH slug payload = createOrUpdateRegistration slug payload
+    paymentIntentH slug regId payload = createCoursePaymentIntent slug regId payload
 
 coursesAdminServer :: AuthedUser -> ServerT Courses.CoursesAdminAPI AppM
 coursesAdminServer user =

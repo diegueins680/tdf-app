@@ -83,6 +83,8 @@ module TDF.Server.SocialEventsHandlers
   , parseStripeRefundResponse
   , parseStripeCustomerId
   , parseStripeEphemeralKeySecret
+  , resolveStripeCustomerForBuyer
+  , eitherStripeServerError
   ) where
 
 import           Control.Applicative ((<|>))
@@ -184,6 +186,7 @@ import           TDF.DTO.SocialEventsDTO
   )
 import           TDF.DB (Env(..))
 import           TDF.Models (Party(..), PartyId, EntityField(PartyStripeCustomerId))
+import qualified TDF.ModelsExtra as ME
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
@@ -317,7 +320,7 @@ handleStripePaymentIntentSucceeded now payload =
         (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
         envPool
       case mOrder of
-        Nothing -> pure NoContent
+        Nothing -> markCourseRegistrationStatus now "paid" piId
         Just (Entity orderKey order) -> do
           when (eventTicketOrderStatus order == "pending") $ do
             _ <- liftIO $ runSqlPool (do
@@ -357,7 +360,7 @@ handleStripePaymentIntentFailed now payload =
         (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
         envPool
       case mOrder of
-        Nothing -> pure NoContent
+        Nothing -> markCourseRegistrationStatus now "cancelled" piId
         Just (Entity orderKey order) -> do
           when (eventTicketOrderStatus order == "pending") $ do
             liftIO $ runSqlPool (do
@@ -369,6 +372,27 @@ handleStripePaymentIntentFailed now payload =
                 Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
               ) envPool
           pure NoContent
+
+-- | Webhook fallback that flips a course registration to @newStatus@ when its
+-- PaymentIntent is the one the webhook fired for. Idempotent: only acts when
+-- the registration is still in @pending_payment@ (Stripe replays events).
+markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
+markCourseRegistrationStatus now newStatus piId = do
+  Env{..} <- ask
+  mReg <- liftIO $ runSqlPool
+    (selectFirst [ME.CourseRegistrationStripePaymentIntentId ==. Just piId] [])
+    envPool
+  case mReg of
+    Nothing -> pure NoContent
+    Just (Entity regKey reg) -> do
+      when (ME.courseRegistrationStatus reg == "pending_payment") $
+        liftIO $ runSqlPool
+          (update regKey
+            [ ME.CourseRegistrationStatus =. newStatus
+            , ME.CourseRegistrationUpdatedAt =. now
+            ])
+          envPool
+      pure NoContent
 
 data TicketCheckInLookup
   = TicketCheckInLookupById Int64
