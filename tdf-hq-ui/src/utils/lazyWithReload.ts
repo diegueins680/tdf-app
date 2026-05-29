@@ -1,4 +1,8 @@
-import { lazy } from 'react';
+import { lazy, type ComponentType } from 'react';
+
+// React.lazy uses ComponentType<any>; keep that compatibility for routed pages with props.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LazyComponent = ComponentType<any>;
 
 const LEGACY_CHUNK_RELOAD_KEY = 'chunk_reload_attempted';
 const CHUNK_RELOAD_KEY = 'tdf-hq-ui/chunk-reload-attempted';
@@ -43,7 +47,7 @@ const shouldReloadForChunkError = () => {
   }
 };
 
-export function lazyWithReload<T extends React.ComponentType<any>>(
+export function lazyWithReload<T extends LazyComponent>(
   factory: () => Promise<{ default: T }>,
 ) {
   return lazy(() =>
@@ -56,7 +60,9 @@ export function lazyWithReload<T extends React.ComponentType<any>>(
         if (isChunkLoadError(error) && shouldReloadForChunkError()) {
           window.location.reload();
           // Keep React quiet while the browser swaps in the fresh asset graph.
-          return new Promise(() => {}) as Promise<{ default: T }>;
+          return new Promise<{ default: T }>(() => {
+            // Intentionally unresolved.
+          });
         }
 
         throw error;

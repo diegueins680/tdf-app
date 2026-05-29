@@ -1,11 +1,17 @@
 import { useEffect, useMemo } from 'react';
-import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { ChatKit, useChatKit } from '@openai/chatkit-react';
 import { env, reportMissingEnv } from '../utils/env';
 import { createChatKitClientSecretFetcher } from '../utils/chatkit';
+import { useChatKitScript } from '../hooks/useChatKitScript';
 
 export default function ChatKitPage() {
   const workflowId = env.read('VITE_CHATKIT_WORKFLOW_ID') ?? '';
+  const supportsChatKit =
+    typeof window !== 'undefined'
+    && typeof window.crypto?.randomUUID === 'function'
+    && typeof window.customElements !== 'undefined';
+  const chatKitScript = useChatKitScript(Boolean(workflowId) && supportsChatKit);
 
   useEffect(() => {
     reportMissingEnv(['VITE_CHATKIT_WORKFLOW_ID']);
@@ -51,9 +57,35 @@ export default function ChatKitPage() {
             }}
           >
             {workflowId ? (
-              <Box sx={{ flex: 1, minHeight: 0 }}>
-                <ChatKit control={chatkit.control} style={{ height: '100%', width: '100%' }} />
-              </Box>
+              !supportsChatKit ? (
+                <Box sx={{ p: 3 }}>
+                  <Alert severity="warning">
+                    Este navegador no soporta los requisitos de ChatKit.
+                  </Alert>
+                </Box>
+              ) : chatKitScript.status === 'ready' ? (
+                <Box sx={{ flex: 1, minHeight: 0 }}>
+                  <ChatKit control={chatkit.control} style={{ height: '100%', width: '100%' }} />
+                </Box>
+              ) : chatKitScript.status === 'error' ? (
+                <Box sx={{ p: 3 }}>
+                  <Alert severity="warning">
+                    {chatKitScript.errorMessage ?? 'No se pudo cargar ChatKit.'}
+                  </Alert>
+                </Box>
+              ) : (
+                <Stack
+                  spacing={1.5}
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ flex: 1, minHeight: 360 }}
+                >
+                  <CircularProgress size={32} />
+                  <Typography variant="body2" color="text.secondary">
+                    Cargando ChatKit...
+                  </Typography>
+                </Stack>
+              )
             ) : (
               <Box sx={{ p: 3 }}>
                 <Typography color="text.secondary">
