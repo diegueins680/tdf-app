@@ -14483,6 +14483,7 @@ initializeAuthSchema = do
         \\"featured_video_url\" VARCHAR NULL,\
         \\"genres\" VARCHAR NULL,\
         \\"highlights\" VARCHAR NULL,\
+        \\"stripe_account_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NULL,\
         \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\"),\
@@ -14527,6 +14528,9 @@ initializeAuthSchema = do
         \\"utm_medium\" VARCHAR NULL,\
         \\"utm_campaign\" VARCHAR NULL,\
         \\"utm_content\" VARCHAR NULL,\
+        \\"stripe_payment_intent_id\" VARCHAR NULL,\
+        \\"stripe_subscription_id\" VARCHAR NULL,\
+        \\"subscription_status\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"

@@ -3067,6 +3067,7 @@ initializeArtistProfileSchema =
     \\"featured_video_url\" VARCHAR NULL,\
     \\"genres\" VARCHAR NULL,\
     \\"highlights\" VARCHAR NULL,\
+    \\"stripe_account_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL,\
     \\"updated_at\" TIMESTAMP NULL,\
     \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\")\
