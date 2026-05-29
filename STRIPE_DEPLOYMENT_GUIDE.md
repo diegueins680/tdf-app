@@ -193,3 +193,87 @@ Frontend (Cloudflare Pages):
 - Stripe docs: https://stripe.com/docs/webhooks
 - TDF issues: Check backend logs with `flyctl logs --app tdf-hq`
 - Database: Verify webhook events table has records
+
+---
+
+## 2026-05-28 update — Stripe surface beyond ticketing
+
+The deployment story above covers the original ticketing checkout. As of
+2026-05-28 the backend exposes four more Stripe-backed surfaces. This section
+documents what's new; nothing in the sections above is invalidated.
+
+### Pinned API version
+
+`tdf-hq/src/TDF/Services/Stripe.hs` exports `defaultStripeApiVersion = "2026-04-22.dahlia"`
+and every handler reads from this constant — there is no longer any
+`"2023-10-16"` literal in the code. Bumping the version is a one-line change
+followed by a redeploy.
+
+### Restricted keys (recommended over `sk_`)
+
+`STRIPE_SECRET_KEY` accepts either a secret key (`sk_*`) or a restricted key
+(`rk_*`). Production deployments should use a restricted key with the
+permissions enumerated in `tdf-hq/.env.example`:
+
+- PaymentIntents: write
+- Customers: write
+- Refunds: write
+- Webhook Endpoints: read
+- Accounts (Connect): write (only when tipping is live)
+- Account Links (Connect): write (only when tipping is live)
+- Checkout Sessions: write (only when course subscriptions are live)
+
+The code path is identical; only the key value changes.
+
+### New backend endpoints
+
+| Method | Path | Purpose | Phase |
+|--------|------|---------|-------|
+| POST | `/social-events/stripe/create-payment-intent` (extended) | Same ticket-buy flow, now returns optional `spiPaymentSheet` block when the request includes `ticketPurchaseMobileSdkStripeVersion` | 2 |
+| POST | `/public/courses/:slug/registrations/:registrationId/payment-intent` | Attendee one-off course payment | 3 |
+| POST | `/public/courses/:slug/registrations/:registrationId/checkout-session` | Hosted Stripe Checkout in `subscription` mode for recurring courses | 4 |
+| POST | `/artists/:artistId/tips` | Public Connect destination charge that pays out to the artist's connected account, keeping `artistTipPlatformFeeBps` (1000 = 10%) for the platform | 5 |
+
+### New environment variables
+
+- `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` — required on `tdf-mobile` for the
+  native PaymentSheet flow. Without it, `StripeProvider` falls through and the
+  app still boots but in-app purchases are disabled.
+- `EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER` — required only if Apple Pay is
+  enabled in PaymentSheet.
+
+### Schema changes (idempotent migrations in `tdf-hq/sql/`)
+
+- `party.stripe_customer_id` — set by `resolveStripeCustomerForBuyer` the first
+  time a logged-in party transacts.
+- `course_registration.stripe_payment_intent_id`,
+  `course_registration.stripe_subscription_id`,
+  `course_registration.subscription_status` — webhook lookup keys.
+- `course.stripe_subscription_price_id` — when set, the course is sold via
+  Checkout Session in subscription mode; when null, the one-off PaymentIntent
+  endpoint is the only path.
+- `artist_profile.stripe_account_id` — the connected Stripe Express account.
+- `artist_tip` table — one row per attempted/completed tip.
+
+### Connect onboarding (Phase 5, partially deferred)
+
+`createConnectExpressAccount` and `createAccountLink` are wired in
+`TDF.Services.Stripe`, but no public onboarding endpoint exists yet. For now,
+populate `artist_profile.stripe_account_id` directly (admin UI or SQL) with an
+already-onboarded `acct_*` id. The artist-facing onboarding flow is a future
+PR.
+
+### Verifying the rollout
+
+```sh
+# 1. Backend boots and the new endpoints are reachable
+curl -X POST https://tdf-hq.fly.dev/public/courses/UNKNOWN/registrations/1/payment-intent \
+  -H "Content-Type: application/json" -d '{}'
+# expect 404 "Registro no encontrado" (the endpoint is wired)
+
+# 2. Webhook still verifies signatures
+flyctl logs --app tdf-hq | grep 'stripe-webhook'
+
+# 3. Customer object created on first authenticated checkout
+psql $DATABASE_URL -c "SELECT COUNT(*) FROM party WHERE stripe_customer_id IS NOT NULL;"
+```

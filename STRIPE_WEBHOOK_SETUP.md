@@ -358,5 +358,64 @@ For TDF ticketing system issues:
 
 ---
 
-**Last Updated:** 2026-05-24
-**Tested With:** Stripe API Version 2024-11-20.acacia
+## 2026-05-28 update — additional webhook events
+
+The original ticketing flow listened to two events. The course-payment and
+artist-tipping work added more. Configure all of these on the same webhook
+endpoint (`/social-events/stripe/webhook`) — the dispatcher in
+`tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:stripeWebhook` already routes
+them.
+
+### Event types to enable
+
+| Event | Source | What the handler does |
+|-------|--------|------------------------|
+| `payment_intent.succeeded` | ticket purchase, course one-off, artist tip | First tries `event_ticket_order`. If no match → falls through to `course_registration`. If still no match → falls through to `artist_tip`. The matching row's status flips to paid. |
+| `payment_intent.payment_failed` | same as above | Same dispatch chain; status flips to cancelled (courses, tickets) or failed (artist tips). |
+| `charge.refunded` | ticket refunds | Currently no-op; refund flow is initiated server-side via the refund endpoint, not via webhook. |
+| `checkout.session.completed` | course subscription | Records `course_registration.stripe_subscription_id` (from `data.object.subscription`) and flips `subscription_status` to `active` + registration `status` to `paid`. Looks up the registration by `metadata.course_registration_id` which the subscription-checkout handler always sets. |
+| `customer.subscription.updated` | course subscription | Mirrors Stripe's subscription `status` onto `course_registration.subscription_status`. Terminal statuses (`canceled`, `unpaid`, `incomplete_expired`) also flip the registration's own `status` to `cancelled`. |
+| `customer.subscription.deleted` | course subscription | Always flips the registration to `cancelled` and `subscription_status = canceled`. |
+| `invoice.paid` | course subscription renewals | Currently logged and no-op. Hook here when you want to track renewal cadence. |
+
+### Idempotency
+
+Every handler reads the row first and only writes when the current state is
+the expected pre-state (`pending`, `pending_payment`). Stripe replays no-op,
+so it's safe to leave delivery-retries on the default schedule.
+
+### Dispatch chain (one webhook, many surfaces)
+
+```
+payment_intent.succeeded
+  ├── event_ticket_order match → mark paid + create EventTicket rows
+  ├── course_registration match → flip status to paid
+  └── artist_tip match → flip status to paid
+```
+
+The fall-through is intentional — adding a new Stripe-paid surface in the
+future means another link in this chain, not a new webhook endpoint.
+
+### Metadata convention
+
+Every PaymentIntent the backend creates carries a `purpose` metadata field so
+Stripe Dashboard searches can filter by source:
+
+- `purpose=ticket_purchase` (extension of the existing ticketing flow)
+- `purpose=course_registration`
+- `purpose=course_subscription`
+- `purpose=artist_tip`
+
+Plus a stable id (`order_id`, `course_registration_id`, `artist_tip_id`) so
+support can join a Stripe row to a TDF row without grepping logs.
+
+### Connect (Phase 5)
+
+When artist Connect onboarding lands, add `account.updated`, `payout.paid`,
+and `payout.failed` here. The handlers are not implemented yet — the current
+dispatcher silently ignores them, which is the safe default.
+
+---
+
+**Last Updated:** 2026-05-28
+**Tested With:** Stripe API Version 2026-04-22.dahlia (pinned by `defaultStripeApiVersion`)
