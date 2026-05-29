@@ -1224,15 +1224,106 @@ createCoursePaymentIntent rawSlug regIdRaw req = do
                     }
     _ -> throwError err500 { errBody = "Stripe is not configured" }
 
+-- | POST /public/courses/:slug/registrations/:id/checkout-session
+--
+-- Creates a Stripe Checkout Session in @subscription@ mode for a course that
+-- has been configured with a recurring Stripe Price. Returns the hosted
+-- Checkout URL the buyer is redirected to.
+--
+-- Preconditions enforced:
+-- * The course must have @stripeSubscriptionPriceId@ set — non-recurring
+--   courses must use 'createCoursePaymentIntent' instead.
+-- * The registration must be in @pending_payment@ and not already linked to a
+--   subscription.
+-- * The registration must have a linked party; anonymous subscriptions are
+--   not supported.
+createCourseCheckoutSession
+  :: Text
+  -> Int64
+  -> Courses.CourseCheckoutSessionRequest
+  -> AppM Courses.CourseCheckoutSessionResponse
+createCourseCheckoutSession rawSlug regIdRaw req = do
+  Env{..} <- ask
+  Entity regKey reg <- fetchCourseRegistrationEntity rawSlug regIdRaw
+  when (ME.courseRegistrationStatus reg /= "pending_payment") $
+    throwError err400 { errBody = "Registration is not awaiting payment" }
+  when (isJust (ME.courseRegistrationStripeSubscriptionId reg)) $
+    throwError err409 { errBody = "Subscription already started for this registration" }
+  let slugVal = ME.courseRegistrationCourseSlug reg
+  mCourse <- runDB $ getBy (Trials.UniqueCourseSlug slugVal)
+  courseEnt <- maybe (throwNotFound "Curso no encontrado") pure mCourse
+  let course = entityVal courseEnt
+  priceId <- case Trials.courseStripeSubscriptionPriceId course of
+    Nothing -> throwError err400
+      { errBody = "This course is not configured for subscription billing" }
+    Just p -> pure p
+  partyKey <- case ME.courseRegistrationPartyId reg of
+    Nothing -> throwError err400
+      { errBody = "Subscription checkout requires a logged-in attendee" }
+    Just p -> pure p
+  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) -> do
+      let stripeCfg = Stripe.StripeConfig
+            { Stripe.stripeSecretKey = secretKey
+            , Stripe.stripeWebhookSecret = webhookSecret
+            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+            }
+      customerId <- resolveStripeCustomerForBuyer stripeCfg partyKey
+        (ME.courseRegistrationEmail reg)
+        (ME.courseRegistrationFullName reg)
+      let metadata = object
+            [ "purpose" .= ("course_subscription" :: Text)
+            , "course_registration_id" .= regIdRaw
+            , "course_slug" .= slugVal
+            ]
+          metadataJson =
+            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+      result <- liftIO $
+        Stripe.createCheckoutSessionForSubscription
+          stripeCfg
+          priceId
+          customerId
+          (Courses.successUrl req)
+          (Courses.cancelUrl req)
+          metadataJson
+      sessionJson <- case result of
+        Left err -> throwError err500
+          { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe checkout error: " <> err))
+          }
+        Right val -> pure val
+      (sid, sUrl) <- eitherStripeServerError $
+        parseStripeCheckoutSessionResponse sessionJson
+      -- Intentionally do NOT persist subscription_id yet: the buyer may abandon
+      -- Checkout. The webhook handler for `checkout.session.completed` records
+      -- the subscription id once the session resolves.
+      _ <- pure regKey
+      pure Courses.CourseCheckoutSessionResponse
+        { Courses.sessionId  = sid
+        , Courses.sessionUrl = sUrl
+        }
+    _ -> throwError err500 { errBody = "Stripe is not configured" }
+
+-- | Extract (@id@, @url@) from a Checkout Session response. Both are required
+-- — Stripe always returns them for subscription-mode sessions.
+parseStripeCheckoutSessionResponse :: Value -> Either Text (Text, Text)
+parseStripeCheckoutSessionResponse v =
+  let sidM = parseMaybe (withObject "session" (\o -> o .: "id")) v
+      urlM = parseMaybe (withObject "session" (\o -> o .: "url")) v
+  in case (sidM, urlM) of
+       (Just sid, Just sUrl) -> Right (sid, sUrl)
+       _ -> Left "Could not parse Stripe Checkout Session response"
+
 coursesPublicServer :: ServerT CoursesPublicAPI AppM
 coursesPublicServer =
        courseMetadataH
   :<|> registrationH
   :<|> paymentIntentH
+  :<|> checkoutSessionH
   where
     courseMetadataH slug = loadCourseMetadata slug
     registrationH slug payload = createOrUpdateRegistration slug payload
     paymentIntentH slug regId payload = createCoursePaymentIntent slug regId payload
+    checkoutSessionH slug regId payload = createCourseCheckoutSession slug regId payload
 
 coursesAdminServer :: AuthedUser -> ServerT Courses.CoursesAdminAPI AppM
 coursesAdminServer user =
