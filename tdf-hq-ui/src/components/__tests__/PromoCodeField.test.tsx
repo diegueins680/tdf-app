@@ -1,10 +1,16 @@
+import { jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PromoCodeField } from '../PromoCodeField';
-import * as socialEventsApi from '../../api/socialEvents';
+import type { ReactNode } from 'react';
 
-vi.mock('../../api/socialEvents');
+const validatePromoCode = jest.fn<() => Promise<unknown>>();
+
+jest.unstable_mockModule('../../api/socialEvents', () => ({
+  SocialEventsAPI: { validatePromoCode },
+}));
+
+const { PromoCodeField } = await import('../PromoCodeField');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -14,16 +20,16 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
 
 describe('PromoCodeField', () => {
-  const mockOnValidCode = vi.fn();
+  const mockOnValidCode = jest.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders promo code input field', () => {
@@ -52,7 +58,7 @@ describe('PromoCodeField', () => {
       pcIsActive: true,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockResolvedValue(
+    validatePromoCode.mockResolvedValue(
       mockPromoCode
     );
 
@@ -71,7 +77,7 @@ describe('PromoCodeField', () => {
     // Wait for debounce and validation
     await waitFor(
       () => {
-        expect(socialEventsApi.SocialEventsAPI.validatePromoCode).toHaveBeenCalledWith(
+        expect(validatePromoCode).toHaveBeenCalledWith(
           'event-1',
           'SAVE20',
           'tier-1'
@@ -88,7 +94,7 @@ describe('PromoCodeField', () => {
   });
 
   it('shows error for invalid promo code', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockRejectedValue(
+    validatePromoCode.mockRejectedValue(
       new Error('Invalid promo code')
     );
 
@@ -127,7 +133,7 @@ describe('PromoCodeField', () => {
       pcIsActive: true,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockResolvedValue(
+    validatePromoCode.mockResolvedValue(
       mockPromoCode
     );
 
@@ -164,7 +170,7 @@ describe('PromoCodeField', () => {
       pcIsActive: true,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockResolvedValue(
+    validatePromoCode.mockResolvedValue(
       mockPromoCode
     );
 
@@ -201,7 +207,7 @@ describe('PromoCodeField', () => {
       pcIsActive: true,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockResolvedValue(
+    validatePromoCode.mockResolvedValue(
       mockPromoCode
     );
 

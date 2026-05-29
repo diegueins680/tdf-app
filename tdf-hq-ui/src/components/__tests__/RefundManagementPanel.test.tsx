@@ -1,10 +1,18 @@
+import { jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RefundManagementPanel } from '../RefundManagementPanel';
-import * as socialEventsApi from '../../api/socialEvents';
+import type { ReactNode } from 'react';
 
-vi.mock('../../api/socialEvents');
+const listRefunds = jest.fn<() => Promise<unknown>>();
+const approveRefund = jest.fn<() => Promise<unknown>>();
+const rejectRefund = jest.fn<() => Promise<unknown>>();
+
+jest.unstable_mockModule('../../api/socialEvents', () => ({
+  SocialEventsAPI: { listRefunds, approveRefund, rejectRefund },
+}));
+
+const { RefundManagementPanel } = await import('../RefundManagementPanel');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -14,7 +22,7 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
@@ -64,11 +72,11 @@ describe('RefundManagementPanel', () => {
   ];
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders refund list', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
 
@@ -83,7 +91,7 @@ describe('RefundManagementPanel', () => {
   });
 
   it('shows loading state', () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockImplementation(
+    listRefunds.mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -95,7 +103,7 @@ describe('RefundManagementPanel', () => {
   });
 
   it('shows empty state when no refunds', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue([]);
+    listRefunds.mockResolvedValue([]);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -107,10 +115,10 @@ describe('RefundManagementPanel', () => {
   });
 
   it('approves refund request', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
-    vi.mocked(socialEventsApi.SocialEventsAPI.approveRefund).mockResolvedValue({
+    approveRefund.mockResolvedValue({
       ...mockRefunds[0],
       trrStatus: 'approved',
       trrProcessedAt: '2026-05-20T12:00:00Z',
@@ -128,7 +136,7 @@ describe('RefundManagementPanel', () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(socialEventsApi.SocialEventsAPI.approveRefund).toHaveBeenCalledWith(
+      expect(approveRefund).toHaveBeenCalledWith(
         'event-1',
         'refund-1'
       );
@@ -136,17 +144,17 @@ describe('RefundManagementPanel', () => {
   });
 
   it('rejects refund request with reason', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
-    vi.mocked(socialEventsApi.SocialEventsAPI.rejectRefund).mockResolvedValue({
+    rejectRefund.mockResolvedValue({
       ...mockRefunds[0],
       trrStatus: 'rejected',
       trrProcessedAt: '2026-05-20T12:00:00Z',
     });
 
     // Mock window.prompt
-    global.prompt = vi.fn(() => 'Past refund deadline');
+    global.prompt = jest.fn(() => 'Past refund deadline');
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -160,7 +168,7 @@ describe('RefundManagementPanel', () => {
     fireEvent.click(rejectButton);
 
     await waitFor(() => {
-      expect(socialEventsApi.SocialEventsAPI.rejectRefund).toHaveBeenCalledWith(
+      expect(rejectRefund).toHaveBeenCalledWith(
         'event-1',
         'refund-1',
         'Past refund deadline'
@@ -169,7 +177,7 @@ describe('RefundManagementPanel', () => {
   });
 
   it('displays refund status chips correctly', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
 
@@ -184,7 +192,7 @@ describe('RefundManagementPanel', () => {
   });
 
   it('formats refund amounts correctly', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
 
@@ -199,10 +207,10 @@ describe('RefundManagementPanel', () => {
   });
 
   it('handles approval error', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
-    vi.mocked(socialEventsApi.SocialEventsAPI.approveRefund).mockRejectedValue(
+    approveRefund.mockRejectedValue(
       new Error('Stripe refund failed')
     );
 
@@ -223,7 +231,7 @@ describe('RefundManagementPanel', () => {
   });
 
   it('disables action buttons for processed refunds', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.listRefunds).mockResolvedValue(
+    listRefunds.mockResolvedValue(
       mockRefunds
     );
 

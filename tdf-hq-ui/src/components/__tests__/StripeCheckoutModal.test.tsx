@@ -1,12 +1,19 @@
+import { jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StripeCheckoutModal } from '../StripeCheckoutModal';
-import * as socialEventsApi from '../../api/socialEvents';
+import type { ReactNode } from 'react';
 
-vi.mock('../../api/socialEvents');
+const validatePromoCode = jest.fn<() => Promise<unknown>>();
+const createPaymentIntent = jest.fn<() => Promise<unknown>>();
+
+jest.unstable_mockModule('../../api/socialEvents', () => ({
+  SocialEventsAPI: { validatePromoCode, createPaymentIntent },
+}));
+
+const { StripeCheckoutModal } = await import('../StripeCheckoutModal');
 
 const stripePromise = loadStripe('pk_test_mock');
 
@@ -18,7 +25,7 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <Elements stripe={stripePromise}>{children}</Elements>
     </QueryClientProvider>
@@ -38,11 +45,11 @@ describe('StripeCheckoutModal', () => {
     ettSalesEndDate: '2026-12-31T23:59:59Z',
   };
 
-  const mockOnClose = vi.fn();
-  const mockOnSuccess = vi.fn();
+  const mockOnClose = jest.fn();
+  const mockOnSuccess = jest.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders buyer details form on step 1', () => {
@@ -94,7 +101,7 @@ describe('StripeCheckoutModal', () => {
       pcIsActive: true,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.validatePromoCode).mockResolvedValue(
+    validatePromoCode.mockResolvedValue(
       mockPromoCode
     );
 
@@ -135,7 +142,7 @@ describe('StripeCheckoutModal', () => {
       spiAmount: 5000,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.createPaymentIntent).mockResolvedValue(
+    createPaymentIntent.mockResolvedValue(
       mockPaymentIntent
     );
 
@@ -167,7 +174,7 @@ describe('StripeCheckoutModal', () => {
   });
 
   it('handles payment errors', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.createPaymentIntent).mockRejectedValue(
+    createPaymentIntent.mockRejectedValue(
       new Error('Payment failed')
     );
 

@@ -1,10 +1,16 @@
+import { jest } from '@jest/globals';
+import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TicketTransferDialog } from '../TicketTransferDialog';
-import * as socialEventsApi from '../../api/socialEvents';
+import type { ReactNode } from 'react';
 
-vi.mock('../../api/socialEvents');
+const createTransfer = jest.fn<() => Promise<unknown>>();
+
+jest.unstable_mockModule('../../api/socialEvents', () => ({
+  SocialEventsAPI: { createTransfer },
+}));
+
+const { TicketTransferDialog } = await import('../TicketTransferDialog');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -14,7 +20,7 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
@@ -31,11 +37,11 @@ describe('TicketTransferDialog', () => {
     etStatus: 'active',
   };
 
-  const mockOnClose = vi.fn();
-  const mockOnSuccess = vi.fn();
+  const mockOnClose = jest.fn();
+  const mockOnSuccess = jest.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('renders transfer form', () => {
@@ -77,7 +83,7 @@ describe('TicketTransferDialog', () => {
       expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
     });
 
-    expect(socialEventsApi.SocialEventsAPI.createTransfer).not.toHaveBeenCalled();
+    expect(createTransfer).not.toHaveBeenCalled();
   });
 
   it('successfully creates transfer', async () => {
@@ -94,7 +100,7 @@ describe('TicketTransferDialog', () => {
       ttAcceptedAt: null,
     };
 
-    vi.mocked(socialEventsApi.SocialEventsAPI.createTransfer).mockResolvedValue(
+    createTransfer.mockResolvedValue(
       mockTransfer
     );
 
@@ -120,7 +126,7 @@ describe('TicketTransferDialog', () => {
     fireEvent.click(transferButton);
 
     await waitFor(() => {
-      expect(socialEventsApi.SocialEventsAPI.createTransfer).toHaveBeenCalledWith(
+      expect(createTransfer).toHaveBeenCalledWith(
         'event-1',
         'ticket-1',
         {
@@ -135,7 +141,7 @@ describe('TicketTransferDialog', () => {
   });
 
   it('shows error message on transfer failure', async () => {
-    vi.mocked(socialEventsApi.SocialEventsAPI.createTransfer).mockRejectedValue(
+    createTransfer.mockRejectedValue(
       new Error('Transfer not allowed for this ticket')
     );
 

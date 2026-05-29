@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testomatio/reporter": "^1.6.17",
     "@types/jest": "^30.0.0",
