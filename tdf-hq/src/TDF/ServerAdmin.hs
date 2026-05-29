@@ -106,6 +106,8 @@ import           TDF.API.Admin          ( AdminAPI
                                         , BrainEntryCreate(..)
                                         , BrainEntryDTO(..)
                                         , BrainEntryUpdate(..)
+                                        , ConnectOnboardingLinkRequest(..)
+                                        , ConnectOnboardingLinkResponse(..)
                                         , EmailTestRequest(..)
                                         , EmailTestResponse(..)
                                         , RagIndexStatus(..)
@@ -114,6 +116,7 @@ import           TDF.API.Admin          ( AdminAPI
                                         , UserCommunicationHistoryDTO(..)
                                         , WhatsAppMessageAdminDTO(..)
                                         )
+import qualified TDF.Services.Stripe    as Stripe
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
@@ -135,7 +138,7 @@ import           TDF.Auth               ( AuthedUser
                                         , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
-import           TDF.Config             (ragRefreshHours, seedTriggerToken)
+import           TDF.Config             (ragRefreshHours, seedTriggerToken, stripeSecretKey, stripeWebhookSecret)
 import           TDF.Models
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
@@ -152,7 +155,8 @@ import qualified TDF.Trials.Server      as TrialsServer
                                             ( hasAmbiguousPublicUrlPath
                                             , isValidHttpUrl
                                             )
-import           Data.Aeson (object, (.=))
+import           Data.Aeson (object, withObject, (.:), (.=))
+import           Data.Aeson.Types (parseMaybe)
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
@@ -251,6 +255,7 @@ adminServer user =
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
+      :<|> artistConnectOnboardingLinkAdmin
 
     logsRouter =
       listLogsHandler :<|> clearLogsProtected
@@ -682,6 +687,66 @@ adminServer user =
             ]
           entity <- withPool $ getJustEntity releaseKey
           pure (artistReleaseEntityToDTOAdmin entity)
+
+    artistConnectOnboardingLinkAdmin artistIdRaw req = do
+      ensureModule ModuleAdmin user
+      artistId <- either throwError pure
+        (validatePositiveAdminLookupId "artistProfileId" artistIdRaw)
+      let refreshUrl = T.strip (colRefreshUrl req)
+          returnUrl = T.strip (colReturnUrl req)
+      when (not ("https://" `T.isPrefixOf` refreshUrl) ||
+            not ("https://" `T.isPrefixOf` returnUrl)) $
+        throwError err400
+          { errBody = "colRefreshUrl and colReturnUrl must be https URLs" }
+      let profileKey = toSqlKey artistId :: ArtistProfileId
+      mProfile <- withPool $ get profileKey
+      profile <- maybe (throwError err404) pure mProfile
+      cfg <- asks envConfig
+      case (stripeSecretKey cfg, stripeWebhookSecret cfg) of
+        (Just secretKey, Just webhookSecret) -> do
+          let stripeCfg = Stripe.StripeConfig
+                { Stripe.stripeSecretKey = secretKey
+                , Stripe.stripeWebhookSecret = webhookSecret
+                , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                }
+          (accountId, accountCreated) <- case artistProfileStripeAccountId profile of
+            Just existing -> pure (existing, False)
+            Nothing -> do
+              -- Default to EC since TDF Records is an Ecuador-based platform;
+              -- per-request override is colCountry.
+              let country = fromMaybe "EC" (colCountry req)
+              mEmail <- withPool $ do
+                mParty <- get (artistProfileArtistPartyId profile)
+                pure (mParty >>= partyPrimaryEmail)
+              acctResult <- liftIO $
+                Stripe.createConnectExpressAccount stripeCfg country mEmail Nothing
+              accountJson <- case acctResult of
+                Left err -> throwError err500
+                  { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe account error: " <> err)) }
+                Right val -> pure val
+              newId <- case parseMaybe (withObject "account" (.: "id")) accountJson of
+                Just sid -> pure sid
+                Nothing -> throwError err500
+                  { errBody = "Could not parse Stripe account id" }
+              withPool $ update profileKey
+                [ArtistProfileStripeAccountId =. Just newId]
+              pure (newId, True)
+          linkResult <- liftIO $
+            Stripe.createAccountLink stripeCfg accountId refreshUrl returnUrl
+          linkJson <- case linkResult of
+            Left err -> throwError err500
+              { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe account link error: " <> err)) }
+            Right val -> pure val
+          onboardingUrl <- case parseMaybe (withObject "account_link" (.: "url")) linkJson of
+            Just url -> pure url
+            Nothing -> throwError err500
+              { errBody = "Could not parse Stripe account link url" }
+          pure ConnectOnboardingLinkResponse
+            { colAccountId = accountId
+            , colOnboardingUrl = onboardingUrl
+            , colAccountCreated = accountCreated
+            }
+        _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user

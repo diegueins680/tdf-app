@@ -69,6 +69,9 @@ type ArtistAdminAPI =
          ( ReqBody '[JSON] ArtistReleaseUpsert :> Post '[JSON] ArtistReleaseDTO
        :<|> Capture "releaseId" Int64 :> ReqBody '[JSON] ArtistReleaseUpsert :> Put '[JSON] ArtistReleaseDTO
          )
+  :<|> "profiles" :> Capture "artistProfileId" Int64 :> "connect" :> "onboarding-link"
+         :> ReqBody '[JSON] ConnectOnboardingLinkRequest
+         :> Post '[JSON] ConnectOnboardingLinkResponse
 
 type LogsAPI =
        QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]
@@ -450,3 +453,35 @@ camelDrop :: Int -> String -> String
 camelDrop n xs = case drop n xs of
   (c:cs) -> toLower c : cs
   []     -> []
+
+-- | Body for `POST /admin/artists/profiles/:id/connect/onboarding-link`.
+-- Both URLs must be absolute https URLs Stripe can redirect the artist to.
+data ConnectOnboardingLinkRequest = ConnectOnboardingLinkRequest
+  { colRefreshUrl :: Text
+  , colReturnUrl  :: Text
+  -- | ISO-3166 alpha-2 country. Used only when this is the artist's first
+  -- Connect Express account; ignored on subsequent regenerations of the link.
+  , colCountry    :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON ConnectOnboardingLinkRequest where
+  parseJSON = withObject "ConnectOnboardingLinkRequest" $ \o -> do
+    rRefresh <- o .:! "colRefreshUrl"
+    rReturn  <- o .:! "colReturnUrl"
+    rCountry <- o .:? "colCountry"
+    case (rRefresh, rReturn) of
+      (Just rf, Just rt) -> pure (ConnectOnboardingLinkRequest rf rt rCountry)
+      _ -> fail "ConnectOnboardingLinkRequest requires colRefreshUrl and colReturnUrl"
+instance ToJSON ConnectOnboardingLinkRequest where
+  toJSON = genericToJSON defaultOptions { rejectUnknownFields = True }
+
+data ConnectOnboardingLinkResponse = ConnectOnboardingLinkResponse
+  { colAccountId     :: Text
+  , colOnboardingUrl :: Text
+  -- | True when the account was created by this request; false when an
+  -- existing @acct_*@ id was reused. Helpful for analytics on onboarding
+  -- progress.
+  , colAccountCreated :: Bool
+  } deriving (Show, Generic)
+instance ToJSON ConnectOnboardingLinkResponse
+instance FromJSON ConnectOnboardingLinkResponse
