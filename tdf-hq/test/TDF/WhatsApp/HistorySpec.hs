@@ -647,5 +647,6 @@ seedParty now displayName whatsapp primaryPhone =
     , M.partyInstagram = Nothing
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
     , M.partyCreatedAt = now
     }

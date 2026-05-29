@@ -447,6 +447,7 @@ spec = describe "social event handler helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                 )

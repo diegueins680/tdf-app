@@ -198,9 +198,11 @@ CourseRegistration
     utmMedium    Text Maybe
     utmCampaign  Text Maybe
     utmContent   Text Maybe
+    stripePaymentIntentId Text Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
     IndexCourseRegistrationParty partyId createdAt !force
+    UniqueCourseRegistrationStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
 CourseRegistrationReceipt

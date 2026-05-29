@@ -305,6 +305,7 @@ insertParty name = do
             , partyInstagram = Nothing
             , partyEmergencyContact = Nothing
             , partyNotes = Nothing
+            , partyStripeCustomerId = Nothing
             , partyCreatedAt = now
             }
 

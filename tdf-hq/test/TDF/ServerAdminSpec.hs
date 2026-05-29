@@ -1208,6 +1208,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                 )
@@ -1268,6 +1269,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
                             , partyCreatedAt = now
                             }
                     )

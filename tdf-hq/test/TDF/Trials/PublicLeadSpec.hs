@@ -114,6 +114,7 @@ spec = do
                 , Models.partyInstagram = Nothing
                 , Models.partyEmergencyContact = Nothing
                 , Models.partyNotes = Nothing
+                , Models.partyStripeCustomerId = Nothing
                 , Models.partyCreatedAt = now
                 }
         _ <- insert (party "Duplicate Public Lead A")
@@ -293,6 +294,7 @@ spec = do
               , Models.partyInstagram = Nothing
               , Models.partyEmergencyContact = Nothing
               , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+              , Models.partyStripeCustomerId = Nothing
               , Models.partyCreatedAt = now
               }
         _ <- insert (fallbackParty "Public Trial Interest A")
@@ -320,6 +322,7 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -345,6 +348,7 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -373,6 +377,7 @@ spec = do
             , Models.partyEmergencyContact = Nothing
             , Models.partyNotes =
                 Just "System fallback party for anonymous public trial interests."
+            , Models.partyStripeCustomerId = Nothing
             , Models.partyCreatedAt = now
             }
         ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
@@ -399,6 +404,7 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Models.ArtistProfile
@@ -442,6 +448,7 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Trials.LeadInterest
@@ -478,6 +485,7 @@ spec = do
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes =
               Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         _ <- insert Trials.TrialRequest
@@ -517,6 +525,7 @@ spec = do
             , Models.partyEmergencyContact = Nothing
             , Models.partyNotes =
                 Just "System fallback party for anonymous public trial interests."
+            , Models.partyStripeCustomerId = Nothing
             , Models.partyCreatedAt = now
             }
           assertRejected attach = do
@@ -2884,6 +2893,7 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         targetStudentId <- insert Models.Party
@@ -2897,6 +2907,7 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
+          , Models.partyStripeCustomerId = Nothing
           , Models.partyCreatedAt = now
           }
         privateStudentUpdateHandler
@@ -3412,6 +3423,7 @@ insertPartyFixture displayName now =
     , Models.partyInstagram = Nothing
     , Models.partyEmergencyContact = Nothing
     , Models.partyNotes = Nothing
+    , Models.partyStripeCustomerId = Nothing
     , Models.partyCreatedAt = now
     }
 

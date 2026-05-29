@@ -7662,6 +7662,7 @@ seedPaymentReferenceFixture now = do
     , M.partyInstagram = Nothing
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
     , M.partyCreatedAt = now
     }
   otherPartyId <- insert M.Party
@@ -7675,6 +7676,7 @@ seedPaymentReferenceFixture now = do
     , M.partyInstagram = Nothing
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
     , M.partyCreatedAt = now
     }
   catalogId <- insert M.ServiceCatalog
