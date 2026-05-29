@@ -3667,14 +3667,15 @@ spec = describe "TDF.Server helpers" $ do
                 (validateMetaBackfillOptions (object ["onlyUnread" .= A.Null]))
 
     describe "resolveInstagramBackfillTarget" $ do
+        let backfillCfg = marketplaceTestConfig False
         it "uses /me only when the account id is omitted and trims explicit account targets" $ do
-            resolveInstagramBackfillTarget "   "
+            resolveInstagramBackfillTarget backfillCfg "   "
                 `shouldBe` Right ("/me/conversations", "")
-            resolveInstagramBackfillTarget "  17841400000000000  "
+            resolveInstagramBackfillTarget backfillCfg "  17841400000000000  "
                 `shouldBe` Right ("/17841400000000000/conversations", "17841400000000000")
 
         it "rejects malformed Instagram account ids instead of falling back to /me" $
-            case resolveInstagramBackfillTarget "1784\naccess" of
+            case resolveInstagramBackfillTarget backfillCfg "1784\naccess" of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 400
                     BL8.unpack (errBody serverErr)
