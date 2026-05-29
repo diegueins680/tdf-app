@@ -84,6 +84,7 @@ import           Database.Persist.Postgresql ()
 import           TDF.API
 import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
 import           TDF.API.Types (maxMarketplaceCartItemQuantity)
+import qualified TDF.API.Types as APITypes
 import           TDF.API.WhatsApp (validateHookVerifyRequest)
 import qualified TDF.API      as Api
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
@@ -1048,6 +1049,7 @@ fanPublicServer =
   :<|> fanArtistProfile
   :<|> fanArtistReleases
   :<|> fanArtistFans
+  :<|> tipArtist
   :<|> getPublicClub
   :<|> getPublicClubEvents
   where
@@ -1107,6 +1109,106 @@ fanPublicServer =
 
     getPublicClub = fanClubPublicGetClub
     getPublicClubEvents = fanClubPublicGetEvents
+
+    tipArtist :: Int64 -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
+    tipArtist artistIdRaw req = createArtistTip artistIdRaw req
+
+-- | Platform's cut of every artist tip, in basis points. 1000 = 10%.
+-- Centralized so the rate is a one-line change when negotiated terms shift.
+artistTipPlatformFeeBps :: Int
+artistTipPlatformFeeBps = 1000
+
+-- | POST /artists/:artistId/tips
+--
+-- Public destination charge that routes funds from the tipper to the artist's
+-- connected Stripe account, keeping 'artistTipPlatformFeeBps' for the platform.
+-- The tip row is persisted in @pending@ status BEFORE the Stripe call so we
+-- always have an audit trail even if Stripe returns a transient error; the
+-- @payment_intent.succeeded@ webhook flips it to @paid@.
+createArtistTip
+  :: Int64
+  -> APITypes.ArtistTipRequest
+  -> AppM APITypes.ArtistTipResponse
+createArtistTip artistIdRaw req = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  when (APITypes.atrAmountCents req <= 0) $
+    throwError err400 { errBody = "Tip amount must be greater than zero" }
+  when (T.null (T.strip (APITypes.atrCurrency req))) $
+    throwError err400 { errBody = "Tip currency is required" }
+  let artistProfileKey = toSqlKey artistIdRaw :: ArtistProfileId
+  mProfile <- runDB $ get artistProfileKey
+  profile <- maybe (throwNotFound "Artista no encontrado") pure mProfile
+  destinationAccountId <- case artistProfileStripeAccountId profile of
+    Nothing -> throwError err400
+      { errBody = "This artist has not finished payout onboarding" }
+    Just acct -> pure acct
+  let amountCents = APITypes.atrAmountCents req
+      currency = T.toLower (T.strip (APITypes.atrCurrency req))
+      platformFeeCents = (amountCents * artistTipPlatformFeeBps) `div` 10000
+      tipRow = ME.ArtistTip
+        { ME.artistTipArtistProfileId = artistProfileKey
+        , ME.artistTipTipperPartyId = Nothing
+        , ME.artistTipTipperEmail = APITypes.atrTipperEmail req
+        , ME.artistTipTipperName = APITypes.atrTipperName req
+        , ME.artistTipAmountCents = amountCents
+        , ME.artistTipCurrency = currency
+        , ME.artistTipPlatformFeeCents = platformFeeCents
+        , ME.artistTipStripePaymentIntentId = Nothing
+        , ME.artistTipStatus = "pending"
+        , ME.artistTipMessage = APITypes.atrMessage req
+        , ME.artistTipCreatedAt = now
+        , ME.artistTipUpdatedAt = now
+        }
+  tipKey <- runDB $ insert tipRow
+  case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) -> do
+      let stripeCfg = Stripe.StripeConfig
+            { Stripe.stripeSecretKey = secretKey
+            , Stripe.stripeWebhookSecret = webhookSecret
+            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+            }
+          tipperLabel = fromMaybe "anonymous" (APITypes.atrTipperName req)
+          description = "Tip to artist " <> T.pack (show artistIdRaw) <> " from " <> tipperLabel
+          metadata = object
+            [ "purpose" .= ("artist_tip" :: Text)
+            , "artist_tip_id" .= fromSqlKey tipKey
+            , "artist_profile_id" .= artistIdRaw
+            ]
+          metadataJson =
+            Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+      result <- liftIO $
+        Stripe.createPaymentIntentForTip
+          stripeCfg
+          destinationAccountId
+          amountCents
+          platformFeeCents
+          currency
+          description
+          metadataJson
+      case result of
+        Left err -> do
+          runDB $ update tipKey
+            [ ME.ArtistTipStatus =. "failed"
+            , ME.ArtistTipUpdatedAt =. now
+            ]
+          throwError err500
+            { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe tip error: " <> err))
+            }
+        Right paymentIntent -> do
+          (piId, clientSecret) <- eitherStripeServerError $
+            parseStripePaymentIntentResponse paymentIntent
+          runDB $ update tipKey
+            [ ME.ArtistTipStripePaymentIntentId =. Just piId
+            , ME.ArtistTipUpdatedAt =. now
+            ]
+          pure APITypes.ArtistTipResponse
+            { APITypes.atrespTipId = fromSqlKey tipKey
+            , APITypes.atrespClientSecret = clientSecret
+            , APITypes.atrespAmountCents = amountCents
+            , APITypes.atrespCurrency = currency
+            }
+    _ -> throwError err500 { errBody = "Stripe is not configured" }
 
 -- | POST /public/courses/:slug/registrations/:id/payment-intent
 --

@@ -25,7 +25,7 @@ import           Database.Persist.TH
 import           GHC.Generics       (Generic)
 import           Web.PathPieces     (toPathPiece)
 
-import           TDF.Models         (InvoiceId, PartyId, ServiceKind)
+import           TDF.Models         (ArtistProfileId, InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
 data AssetStatus = Active | Booked | OutForMaintenance | Retired
@@ -764,6 +764,23 @@ InternPermissionRequest
     decisionNotes Text Maybe
     createdAt     UTCTime default=now()
     updatedAt     UTCTime default=now()
+    deriving Show Generic
+
+ArtistTip
+    artistProfileId       ArtistProfileId
+    tipperPartyId         PartyId Maybe
+    tipperEmail           Text Maybe
+    tipperName            Text Maybe
+    amountCents           Int
+    currency              Text
+    platformFeeCents      Int
+    stripePaymentIntentId Text Maybe
+    status                Text default='pending'
+    message               Text Maybe
+    createdAt             UTCTime default=now()
+    updatedAt             UTCTime default=now()
+    IndexArtistTipArtist artistProfileId createdAt !force
+    UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
 |]

@@ -288,6 +288,7 @@ seedVerde70FanClub now = do
                 , artistProfileFeaturedVideoUrl = Nothing
                 , artistProfileGenres           = Just "Rock"
                 , artistProfileHighlights       = Nothing
+                , artistProfileStripeAccountId  = Nothing
                 , artistProfileCreatedAt        = now
                 , artistProfileUpdatedAt        = Just now
                 }
@@ -374,6 +375,7 @@ seedArtistProfiles now = do
                     , artistProfileFeaturedVideoUrl = Nothing
                     , artistProfileGenres           = Just genres
                     , artistProfileHighlights       = Nothing
+                    , artistProfileStripeAccountId  = Nothing
                     , artistProfileCreatedAt        = now
                     , artistProfileUpdatedAt        = Just now
                     }

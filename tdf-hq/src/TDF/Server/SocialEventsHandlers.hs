@@ -80,6 +80,8 @@ module TDF.Server.SocialEventsHandlers
   , parseStripePaymentIntentResponse
   , parseStripeWebhookEventEnvelope
   , parseStripeWebhookPaymentIntentId
+  , parseCheckoutSessionCourseSubscription
+  , parseSubscriptionEvent
   , parseStripeRefundResponse
   , parseStripeCustomerId
   , parseStripeEphemeralKeySecret
@@ -376,6 +378,9 @@ handleStripePaymentIntentFailed now payload =
 -- | Webhook fallback that flips a course registration to @newStatus@ when its
 -- PaymentIntent is the one the webhook fired for. Idempotent: only acts when
 -- the registration is still in @pending_payment@ (Stripe replays events).
+-- Falls through to 'markArtistTipStatus' when no matching course registration
+-- exists, so a single webhook handler can route both course payments and
+-- artist tips.
 markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
 markCourseRegistrationStatus now newStatus piId = do
   Env{..} <- ask
@@ -383,7 +388,7 @@ markCourseRegistrationStatus now newStatus piId = do
     (selectFirst [ME.CourseRegistrationStripePaymentIntentId ==. Just piId] [])
     envPool
   case mReg of
-    Nothing -> pure NoContent
+    Nothing -> markArtistTipStatus now (translateToArtistTipStatus newStatus) piId
     Just (Entity regKey reg) -> do
       when (ME.courseRegistrationStatus reg == "pending_payment") $
         liftIO $ runSqlPool
@@ -394,62 +399,98 @@ markCourseRegistrationStatus now newStatus piId = do
           envPool
       pure NoContent
 
+-- | Webhook fallback for artist tip PaymentIntents. Same shape as
+-- 'markCourseRegistrationStatus' but operates on the @artist_tip@ table.
+-- Idempotent: only acts on tips still in @pending@.
+markArtistTipStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
+markArtistTipStatus now newStatus piId = do
+  Env{..} <- ask
+  mTip <- liftIO $ runSqlPool
+    (selectFirst [ME.ArtistTipStripePaymentIntentId ==. Just piId] [])
+    envPool
+  case mTip of
+    Nothing -> pure NoContent
+    Just (Entity tipKey tip) -> do
+      when (ME.artistTipStatus tip == "pending") $
+        liftIO $ runSqlPool
+          (update tipKey
+            [ ME.ArtistTipStatus =. newStatus
+            , ME.ArtistTipUpdatedAt =. now
+            ])
+          envPool
+      pure NoContent
+
+-- | The course registration status enum uses @cancelled@ for the failure path;
+-- the artist_tip status enum uses @failed@. This mapping keeps both surfaces
+-- aligned with their own conventions while routing through one webhook.
+translateToArtistTipStatus :: T.Text -> T.Text
+translateToArtistTipStatus "cancelled" = "failed"
+translateToArtistTipStatus s = s
+
 -- | Webhook handler for `checkout.session.completed`. Records the
 -- subscription id on the course registration and flips it to @paid@. Looks up
 -- the registration by @metadata.course_registration_id@ on the session, which
 -- our subscription-checkout handler always sets.
 handleStripeCheckoutSessionCompleted :: UTCTime -> Aeson.Value -> AppM NoContent
-handleStripeCheckoutSessionCompleted now payload = do
-  let mRegIdText = parseMaybe
-        (Aeson.withObject "event" $ \evt -> do
-          dataObj <- evt Aeson..: "data" :: Parser Object
-          obj <- dataObj Aeson..: "object" :: Parser Object
-          metadataObj <- obj Aeson..: "metadata" :: Parser Object
-          metadataObj Aeson..: "course_registration_id" :: Parser T.Text)
-        payload
-      mSubId = parseMaybe
-        (Aeson.withObject "event" $ \evt -> do
-          dataObj <- evt Aeson..: "data" :: Parser Object
-          obj <- dataObj Aeson..: "object" :: Parser Object
-          obj Aeson..: "subscription" :: Parser T.Text)
-        payload
-  case (mRegIdText, mSubId) of
-    (Just regIdText, Just subId) -> case readMaybe (T.unpack regIdText) of
-      Nothing -> pure NoContent
-      Just regIdNum -> do
-        Env{..} <- ask
-        let regKey = toSqlKey regIdNum :: ME.CourseRegistrationId
-        mReg <- liftIO $ runSqlPool (get regKey) envPool
-        case mReg of
-          Nothing -> pure NoContent
-          Just reg -> do
-            when (ME.courseRegistrationStatus reg == "pending_payment") $
-              liftIO $ runSqlPool
-                (update regKey
-                  [ ME.CourseRegistrationStatus =. "paid"
-                  , ME.CourseRegistrationStripeSubscriptionId =. Just subId
-                  , ME.CourseRegistrationSubscriptionStatus =. Just "active"
-                  , ME.CourseRegistrationUpdatedAt =. now
-                  ])
-                envPool
-            pure NoContent
-    _ -> pure NoContent
+handleStripeCheckoutSessionCompleted now payload =
+  maybe (pure NoContent) markRegistrationPaid $
+    parseCheckoutSessionCourseSubscription payload
+  where
+    markRegistrationPaid (regIdNum, subId) = do
+      Env{..} <- ask
+      let regKey = toSqlKey regIdNum :: ME.CourseRegistrationId
+      mReg <- liftIO $ runSqlPool (get regKey) envPool
+      maybe
+        (pure NoContent)
+        (\reg -> do
+          when (ME.courseRegistrationStatus reg == "pending_payment") $
+            liftIO $ runSqlPool
+              (update regKey
+                [ ME.CourseRegistrationStatus =. "paid"
+                , ME.CourseRegistrationStripeSubscriptionId =. Just subId
+                , ME.CourseRegistrationSubscriptionStatus =. Just "active"
+                , ME.CourseRegistrationUpdatedAt =. now
+                ])
+              envPool
+          pure NoContent)
+        mReg
+
+-- | Parse the course registration id and subscription id from a completed
+-- checkout session webhook payload.
+parseCheckoutSessionCourseSubscription :: Aeson.Value -> Maybe (Int64, T.Text)
+parseCheckoutSessionCourseSubscription payload = do
+  regIdText <- parseMaybe
+    (Aeson.withObject "event" $ \evt -> do
+      dataObj <- evt Aeson..: "data" :: Parser Object
+      obj <- dataObj Aeson..: "object" :: Parser Object
+      metadataObj <- obj Aeson..: "metadata" :: Parser Object
+      metadataObj Aeson..: "course_registration_id" :: Parser T.Text)
+    payload
+  subId <- parseMaybe
+    (Aeson.withObject "event" $ \evt -> do
+      dataObj <- evt Aeson..: "data" :: Parser Object
+      obj <- dataObj Aeson..: "object" :: Parser Object
+      obj Aeson..: "subscription" :: Parser T.Text)
+    payload
+  regIdNum <- readMaybe (T.unpack regIdText)
+  pure (regIdNum, subId)
 
 -- | Webhook handler for `customer.subscription.updated`. Mirrors the
 -- subscription status onto the registration. Terminal statuses also flip the
 -- registration status itself so the application treats it as cancelled.
 handleStripeSubscriptionUpdated :: UTCTime -> Aeson.Value -> AppM NoContent
 handleStripeSubscriptionUpdated now payload =
-  case parseSubscriptionEvent payload of
-    Nothing -> pure NoContent
-    Just (subId, subStatus) -> do
+  maybe (pure NoContent) updateSubscriptionRegistration $
+    parseSubscriptionEvent payload
+  where
+    updateSubscriptionRegistration (subId, subStatus) = do
       Env{..} <- ask
       mReg <- liftIO $ runSqlPool
         (selectFirst [ME.CourseRegistrationStripeSubscriptionId ==. Just subId] [])
         envPool
-      case mReg of
-        Nothing -> pure NoContent
-        Just (Entity regKey _) -> do
+      maybe
+        (pure NoContent)
+        (\(Entity regKey _) -> do
           let terminalStatuses = ["canceled", "unpaid", "incomplete_expired"]
               registrationUpdates =
                 (ME.CourseRegistrationSubscriptionStatus =. Just subStatus)
@@ -458,22 +499,24 @@ handleStripeSubscriptionUpdated now payload =
                     | subStatus `elem` terminalStatuses
                     ]
           liftIO $ runSqlPool (update regKey registrationUpdates) envPool
-          pure NoContent
+          pure NoContent)
+        mReg
 
 -- | Webhook handler for `customer.subscription.deleted`. Always flips the
 -- registration to @cancelled@.
 handleStripeSubscriptionDeleted :: UTCTime -> Aeson.Value -> AppM NoContent
 handleStripeSubscriptionDeleted now payload =
-  case parseSubscriptionEvent payload of
-    Nothing -> pure NoContent
-    Just (subId, _) -> do
+  maybe (pure NoContent) cancelSubscriptionRegistration $
+    parseSubscriptionEvent payload
+  where
+    cancelSubscriptionRegistration (subId, _) = do
       Env{..} <- ask
       mReg <- liftIO $ runSqlPool
         (selectFirst [ME.CourseRegistrationStripeSubscriptionId ==. Just subId] [])
         envPool
-      case mReg of
-        Nothing -> pure NoContent
-        Just (Entity regKey _) -> do
+      maybe
+        (pure NoContent)
+        (\(Entity regKey _) -> do
           liftIO $ runSqlPool
             (update regKey
               [ ME.CourseRegistrationStatus =. "cancelled"
@@ -481,7 +524,8 @@ handleStripeSubscriptionDeleted now payload =
               , ME.CourseRegistrationUpdatedAt =. now
               ])
             envPool
-          pure NoContent
+          pure NoContent)
+        mReg
 
 -- | Parse (@id@, @status@) from a customer.subscription.* event payload.
 parseSubscriptionEvent :: Aeson.Value -> Maybe (T.Text, T.Text)

@@ -2293,3 +2293,58 @@ isAsciiHexDigit ch =
   isDigit ch
     || (ch >= 'a' && ch <= 'f')
     || (ch >= 'A' && ch <= 'F')
+
+-- =============================================================================
+-- ARTIST TIPPING (Stripe Connect)
+-- =============================================================================
+
+-- | Body for `POST /artists/:artistId/tips`. Currency is the ISO 4217 code
+-- (e.g. "usd", "eur"); validated server-side against what the connected
+-- account supports via Stripe's PaymentIntent response.
+data ArtistTipRequest = ArtistTipRequest
+  { atrAmountCents  :: Int
+  , atrCurrency     :: Text
+  , atrTipperName   :: Maybe Text
+  , atrTipperEmail  :: Maybe Text
+  , atrMessage      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistTipRequest where
+  toJSON (ArtistTipRequest amount cur name email msg) = object
+    [ "amountCents" .= amount
+    , "currency"    .= cur
+    , "tipperName"  .= name
+    , "tipperEmail" .= email
+    , "message"     .= msg
+    ]
+
+instance FromJSON ArtistTipRequest where
+  parseJSON = withObject "ArtistTipRequest" $ \o -> do
+    amount <- o .: "amountCents"
+    cur    <- o .: "currency"
+    name   <- o .:? "tipperName"
+    email  <- o .:? "tipperEmail"
+    msg    <- o .:? "message"
+    pure (ArtistTipRequest amount cur name email msg)
+
+data ArtistTipResponse = ArtistTipResponse
+  { atrespTipId        :: Int64
+  , atrespClientSecret :: Text
+  , atrespAmountCents  :: Int
+  , atrespCurrency     :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistTipResponse where
+  toJSON (ArtistTipResponse tid sec amount cur) = object
+    [ "tipId"        .= tid
+    , "clientSecret" .= sec
+    , "amountCents"  .= amount
+    , "currency"     .= cur
+    ]
+instance FromJSON ArtistTipResponse where
+  parseJSON = withObject "ArtistTipResponse" $ \o ->
+    ArtistTipResponse
+      <$> o .: "tipId"
+      <*> o .: "clientSecret"
+      <*> o .: "amountCents"
+      <*> o .: "currency"

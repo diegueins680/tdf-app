@@ -275,6 +275,7 @@ ArtistProfile
     featuredVideoUrl Text Maybe
     genres           Text Maybe
     highlights       Text Maybe
+    stripeAccountId  Text Maybe
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
     UniqueArtistProfile artistPartyId

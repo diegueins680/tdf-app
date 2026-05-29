@@ -42,7 +42,7 @@ import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (LooseJSON, PartyRelatedDTO, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, LooseJSON, PartyRelatedDTO, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
 import           TDF.API.Radio     (RadioAPI)
 import           TDF.Models        (RoleEnum)
 import           TDF.DTO
@@ -375,6 +375,9 @@ type FanPublicAPI =
          :> QueryParam "page" Int
          :> QueryParam "pageSize" Int
          :> Get '[JSON] ArtistFansResponse
+  :<|> "artists" :> Capture "artistId" Int64 :> "tips"
+         :> ReqBody '[JSON] ArtistTipRequest
+         :> Post '[JSON] ArtistTipResponse
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
   :<|> "clubs" :> Capture "artistId" Int64 :> "events" :> Get '[JSON] [FanClubEventDTO]
 

@@ -165,6 +165,7 @@ upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
       , artistProfileFeaturedVideoUrl = normalizedFeaturedVideoUrl
       , artistProfileGenres           = normalizedGenres
       , artistProfileHighlights       = normalizedHighlights
+      , artistProfileStripeAccountId  = Nothing
       , artistProfileCreatedAt        = now
       , artistProfileUpdatedAt        = Just now
       }
@@ -254,6 +255,7 @@ ensureArtistProfileEntity artistId = do
             , artistProfileFeaturedVideoUrl = Nothing
             , artistProfileGenres           = Nothing
             , artistProfileHighlights       = Nothing
+            , artistProfileStripeAccountId  = Nothing
             , artistProfileCreatedAt        = now
             , artistProfileUpdatedAt        = Nothing
             }
