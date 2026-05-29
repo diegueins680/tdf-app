@@ -2092,6 +2092,7 @@ spec = describe "TDF.Server helpers" $ do
                                     , artistProfileFeaturedVideoUrl = Nothing
                                     , artistProfileGenres = Nothing
                                     , artistProfileHighlights = Nothing
+                                    , artistProfileStripeAccountId = Nothing
                                     , artistProfileCreatedAt = now
                                     , artistProfileUpdatedAt = Nothing
                                     }
@@ -4427,6 +4428,9 @@ spec = describe "TDF.Server helpers" $ do
                             , ME.courseRegistrationUtmMedium = Nothing
                             , ME.courseRegistrationUtmCampaign = Nothing
                             , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationStripePaymentIntentId = Nothing
+                            , ME.courseRegistrationStripeSubscriptionId = Nothing
+                            , ME.courseRegistrationSubscriptionStatus = Nothing
                             , ME.courseRegistrationCreatedAt = createdAt
                             , ME.courseRegistrationUpdatedAt = createdAt
                             }
@@ -4485,6 +4489,9 @@ spec = describe "TDF.Server helpers" $ do
                             , ME.courseRegistrationUtmMedium = Nothing
                             , ME.courseRegistrationUtmCampaign = Nothing
                             , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationStripePaymentIntentId = Nothing
+                            , ME.courseRegistrationStripeSubscriptionId = Nothing
+                            , ME.courseRegistrationSubscriptionStatus = Nothing
                             , ME.courseRegistrationCreatedAt = createdAt
                             , ME.courseRegistrationUpdatedAt = createdAt
                             }
@@ -4522,6 +4529,9 @@ spec = describe "TDF.Server helpers" $ do
                             , ME.courseRegistrationUtmMedium = Nothing
                             , ME.courseRegistrationUtmCampaign = Nothing
                             , ME.courseRegistrationUtmContent = Nothing
+                            , ME.courseRegistrationStripePaymentIntentId = Nothing
+                            , ME.courseRegistrationStripeSubscriptionId = Nothing
+                            , ME.courseRegistrationSubscriptionStatus = Nothing
                             , ME.courseRegistrationCreatedAt = createdAt
                             , ME.courseRegistrationUpdatedAt = createdAt
                             }
@@ -4558,6 +4568,9 @@ spec = describe "TDF.Server helpers" $ do
                     , ME.courseRegistrationUtmMedium = Nothing
                     , ME.courseRegistrationUtmCampaign = Nothing
                     , ME.courseRegistrationUtmContent = Nothing
+                    , ME.courseRegistrationStripePaymentIntentId = Nothing
+                    , ME.courseRegistrationStripeSubscriptionId = Nothing
+                    , ME.courseRegistrationSubscriptionStatus = Nothing
                     , ME.courseRegistrationCreatedAt = now
                     , ME.courseRegistrationUpdatedAt = now
                     }
@@ -7676,6 +7689,7 @@ spec = describe "TDF.Server helpers" $ do
                     , artistProfileFeaturedVideoUrl = Nothing
                     , artistProfileGenres = Nothing
                     , artistProfileHighlights = Nothing
+                    , artistProfileStripeAccountId = Nothing
                     , artistProfileCreatedAt = now
                     , artistProfileUpdatedAt = Nothing
                     }
@@ -7714,6 +7728,7 @@ spec = describe "TDF.Server helpers" $ do
                     , artistProfileFeaturedVideoUrl = Nothing
                     , artistProfileGenres = Nothing
                     , artistProfileHighlights = Nothing
+                    , artistProfileStripeAccountId = Nothing
                     , artistProfileCreatedAt = now
                     , artistProfileUpdatedAt = Nothing
                     }
