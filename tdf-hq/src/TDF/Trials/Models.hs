@@ -175,6 +175,7 @@ Course
     instructorName       Text Maybe
     instructorBio        Text Maybe
     instructorAvatarUrl  Text Maybe
+    stripeSubscriptionPriceId Text Maybe
     createdAt            UTCTime default=CURRENT_TIMESTAMP
     updatedAt            UTCTime default=CURRENT_TIMESTAMP
     UniqueCourseSlug     slug

@@ -4478,6 +4478,7 @@ saveCourse Courses.CourseUpsert{..} = do
         , Trials.courseInstructorName = instructorNameClean
         , Trials.courseInstructorBio = instructorBioClean
         , Trials.courseInstructorAvatarUrl = instructorAvatarClean
+        , Trials.courseStripeSubscriptionPriceId = Nothing
         , Trials.courseCreatedAt = now
         , Trials.courseUpdatedAt = now
         }
@@ -5420,6 +5421,8 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationUtmCampaign = utmCampaignVal
         , ME.courseRegistrationUtmContent = utmContentVal
         , ME.courseRegistrationStripePaymentIntentId = Nothing
+        , ME.courseRegistrationStripeSubscriptionId = Nothing
+        , ME.courseRegistrationSubscriptionStatus = Nothing
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }

@@ -3,6 +3,7 @@
 module TDF.Services.Stripe
   ( StripeConfig(..)
   , defaultStripeApiVersion
+  , createCheckoutSessionForSubscription
   , createCustomer
   , createEphemeralKey
   , createPaymentIntent
@@ -206,6 +207,60 @@ createPaymentIntentForCustomer cfg customerId amountCents currency description m
         bodyLBS
         "Failed to parse Stripe PaymentIntent response"
         "Stripe API error"
+
+-- | Create a Stripe Checkout Session in @subscription@ mode.
+--
+-- Returns the full Session JSON; the caller usually only needs the @url@ field
+-- (hosted Checkout page to redirect the buyer to).
+--
+-- Preconditions:
+-- * priceId is an existing recurring Stripe Price (@price_*@).
+-- * customerId is an existing Stripe Customer (@cus_*@). PaymentSheet-style
+--   anonymous sessions would use @customer_email@ instead — for the course
+--   subscription flow we always have a Party-backed customer.
+-- * successUrl and cancelUrl are absolute https URLs the browser can reach.
+-- * metadata, when present, is a serialized form-field metadata block.
+createCheckoutSessionForSubscription
+  :: StripeConfig
+  -> Text        -- ^ Stripe Price ID (price_*)
+  -> Text        -- ^ Stripe Customer ID (cus_*)
+  -> Text        -- ^ success URL
+  -> Text        -- ^ cancel URL
+  -> Maybe Text  -- ^ optional metadata JSON string
+  -> IO (Either Text Value)
+createCheckoutSessionForSubscription cfg priceId customerId successUrl cancelUrl mMetadata =
+  withStripeManager $ \manager -> do
+    let url = "https://api.stripe.com/v1/checkout/sessions"
+        body = BS8.intercalate "&"
+          [ "mode=subscription"
+          , "customer=" <> urlEncode (TE.encodeUtf8 customerId)
+          , "line_items[0][price]=" <> urlEncode (TE.encodeUtf8 priceId)
+          , "line_items[0][quantity]=1"
+          , "success_url=" <> urlEncode (TE.encodeUtf8 successUrl)
+          , "cancel_url=" <> urlEncode (TE.encodeUtf8 cancelUrl)
+          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+
+    initialRequest <- parseRequest url
+    let request = initialRequest
+          { method = "POST"
+          , requestHeaders =
+              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+              , ("Content-Type", "application/x-www-form-urlencoded")
+              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+              ]
+          , requestBody = RequestBodyBS body
+          }
+
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe Checkout Session response"
+        "Stripe checkout session error"
 
 -- | Create a Stripe Ephemeral Key for a Customer for mobile PaymentSheet.
 --

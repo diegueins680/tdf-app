@@ -462,6 +462,7 @@ seedProductionCourse now = do
                     , Trials.courseInstructorName = instructorName
                     , Trials.courseInstructorBio = instructorBio
                     , Trials.courseInstructorAvatarUrl = instructorAvatar
+                    , Trials.courseStripeSubscriptionPriceId = Nothing
                     , Trials.courseCreatedAt = now
                     , Trials.courseUpdatedAt = now
                     }
