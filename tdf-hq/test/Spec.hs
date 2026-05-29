@@ -602,6 +602,10 @@ initializeTicketCheckInSchema = do
         \sales_end TIMESTAMP NULL,\
         \is_active BOOLEAN NOT NULL,\
         \position INTEGER NULL,\
+        \enable_waitlist BOOLEAN NOT NULL DEFAULT 0,\
+        \allow_transfers BOOLEAN NOT NULL DEFAULT 0,\
+        \refund_policy VARCHAR NOT NULL DEFAULT 'none',\
+        \refund_deadline TIMESTAMP NULL,\
         \created_at TIMESTAMP NOT NULL,\
         \updated_at TIMESTAMP NOT NULL\
         \)"
