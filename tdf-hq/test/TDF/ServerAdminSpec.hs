@@ -25,6 +25,8 @@ import TDF.API.Admin
     , AdminWhatsAppResendRequest (..)
     , AdminWhatsAppSendRequest (..)
     , AdminWhatsAppSendResponse
+    , ConnectOnboardingLinkRequest
+    , ConnectOnboardingLinkResponse
     , EmailTestRequest (..)
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
@@ -1127,7 +1129,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertRejected "-7"
 
         it "rejects non-positive artist and release ids before admin artist writes hit the database" $ do
-            let (artistProfiles :<|> artistReleases) :<|> _connectOnboarding =
+            let artistProfiles :<|> artistReleases :<|> _connectOnboarding =
                     artistsHandlersFor (mkUser [Admin])
                 _listProfiles :<|> upsertArtistProfile = artistProfiles
                 createArtistRelease :<|> updateArtistRelease = artistReleases
@@ -1852,11 +1854,11 @@ dropdownsHandlersFor user =
 
 artistsHandlersFor
     :: AuthedUser
-    -> (((AdminTestM [ArtistProfileDTO]
+    -> (AdminTestM [ArtistProfileDTO]
         :<|> (ArtistProfileUpsert -> AdminTestM ArtistProfileDTO))
         :<|> ((ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)
-        :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)))
-        :<|> (Int64 -> ConnectOnboardingLinkRequest -> AdminTestM ConnectOnboardingLinkResponse))
+              :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO))
+        :<|> (Int64 -> ConnectOnboardingLinkRequest -> AdminTestM ConnectOnboardingLinkResponse)
 artistsHandlersFor user =
     case adminServer user of
         _seed
