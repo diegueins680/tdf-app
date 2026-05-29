@@ -21,6 +21,8 @@ module TDF.Routes.Courses
   , CourseSessionIn(..)
   , CourseSyllabusIn(..)
   , CoursePaymentIntentRequest(..)
+  , CourseCheckoutSessionRequest(..)
+  , CourseCheckoutSessionResponse(..)
   , CoursesPublicAPI
   , CoursesAdminAPI
   , WhatsAppHooksAPI
@@ -28,7 +30,7 @@ module TDF.Routes.Courses
   ) where
 
 import           Data.Char (isAlphaNum, isControl)
-import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:), (.:!))
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (Parser)
@@ -386,11 +388,56 @@ validateCourseMobileSdkStripeVersion rawVersion =
          then fail "mobileSdkStripeVersion must not contain control characters"
          else pure trimmed
 
+-- | Body for `POST /public/courses/:slug/registrations/:id/checkout-session`.
+--
+-- The hosted Stripe Checkout flow redirects the buyer back to one of two
+-- caller-supplied URLs (success or cancel). Both must be absolute https URLs.
+data CourseCheckoutSessionRequest = CourseCheckoutSessionRequest
+  { successUrl :: Text
+  , cancelUrl  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseCheckoutSessionRequest where
+  parseJSON value@(Object o) = do
+    rejectNullOptionalFields "CourseCheckoutSessionRequest" [] value
+    _ <- genericParseJSON strictObjectOptions value
+      :: Parser CourseCheckoutSessionRequest
+    rawSuccess <- o .: "successUrl"
+    rawCancel <- o .: "cancelUrl"
+    validatedSuccess <- validateCheckoutReturnUrl "successUrl" rawSuccess
+    validatedCancel <- validateCheckoutReturnUrl "cancelUrl" rawCancel
+    pure CourseCheckoutSessionRequest
+      { successUrl = validatedSuccess
+      , cancelUrl  = validatedCancel
+      }
+  parseJSON _ = fail "CourseCheckoutSessionRequest must be an object"
+instance ToJSON CourseCheckoutSessionRequest
+
+validateCheckoutReturnUrl :: String -> Text -> Parser Text
+validateCheckoutReturnUrl fieldName raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then fail (fieldName <> " must not be blank")
+       else if not ("https://" `T.isPrefixOf` trimmed)
+         then fail (fieldName <> " must be an https URL")
+       else if T.any isControl trimmed
+         then fail (fieldName <> " must not contain control characters")
+       else pure trimmed
+
+data CourseCheckoutSessionResponse = CourseCheckoutSessionResponse
+  { sessionId  :: Text
+  , sessionUrl :: Text
+  } deriving (Show, Generic)
+instance FromJSON CourseCheckoutSessionResponse
+instance ToJSON CourseCheckoutSessionResponse
+
 type CoursesPublicAPI =
        "public" :> "courses" :> Capture "slug" Text :> Get '[JSON] CourseMetadata
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> ReqBody '[JSON] CourseRegistrationRequest :> PostCreated '[JSON] CourseRegistrationResponse
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "payment-intent"
          :> ReqBody '[JSON] CoursePaymentIntentRequest :> Post '[JSON] StripePaymentIntentDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "checkout-session"
+         :> ReqBody '[JSON] CourseCheckoutSessionRequest :> Post '[JSON] CourseCheckoutSessionResponse
 
 type CoursesAdminAPI =
        "courses" :> ReqBody '[JSON] CourseUpsert :> Post '[JSON] CourseMetadata
