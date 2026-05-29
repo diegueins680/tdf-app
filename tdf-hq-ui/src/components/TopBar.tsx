@@ -11,6 +11,7 @@ import {
   Toolbar,
   Typography,
   Dialog,
+  DialogActions,
   DialogTitle,
   DialogContent,
   TextField,
@@ -20,28 +21,67 @@ import {
   ListItemText,
   Tooltip,
 } from '@mui/material';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
 import NotificationBell from './NotificationBell';
 import { NAV_GROUPS } from './SidebarNav';
 import { canAccessPath } from '../utils/accessControl';
-import { formatFriendlyPath } from '../utils/navigationLabels';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
 }
 
+interface QuickNavResultLimitContract {
+  readonly resultsPerKeyboardPage: number;
+  readonly renderedKeyboardPages: number;
+}
+
+// Cap how many results the command palette renders at once. The limit is
+// expressed as keyboard pages so the invariant is tied to how users navigate.
+const QUICK_NAV_RESULT_LIMIT_CONTRACT = {
+  resultsPerKeyboardPage: 10,
+  renderedKeyboardPages: 3,
+} as const satisfies QuickNavResultLimitContract;
+
+export const QUICK_NAV_VISIBLE_RESULT_LIMIT =
+  QUICK_NAV_RESULT_LIMIT_CONTRACT.resultsPerKeyboardPage *
+  QUICK_NAV_RESULT_LIMIT_CONTRACT.renderedKeyboardPages;
+
+function assertValidQuickNavResultLimit(limit: number): void {
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    throw new Error('Quick-nav visible result limit must be a positive safe integer.');
+  }
+}
+
+assertValidQuickNavResultLimit(QUICK_NAV_VISIBLE_RESULT_LIMIT);
+
+export function limitQuickNavItems<T>(items: readonly T[]): readonly T[] {
+  if (!Array.isArray(items)) {
+    throw new TypeError('Quick-nav items must be provided as an array.');
+  }
+
+  const visibleItems = items.slice(0, QUICK_NAV_VISIBLE_RESULT_LIMIT);
+  if (
+    visibleItems.length > QUICK_NAV_VISIBLE_RESULT_LIMIT ||
+    visibleItems.length > items.length
+  ) {
+    throw new Error('Quick-nav result limiting violated its postcondition.');
+  }
+
+  return visibleItems;
+}
+
 export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarProps) {
   const { session } = useSession();
   const navigate = useNavigate();
-  const location = useLocation();
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [quickQuery, setQuickQuery] = useState('');
   const [quickHighlight, setQuickHighlight] = useState(0);
   const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const quickItemRefs = useRef<(HTMLElement | null)[]>([]);
 
   const canUsePath = useCallback(
     (path: string) => canAccessPath(path, session?.roles, session?.modules),
@@ -64,6 +104,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
         item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query),
     );
   }, [quickNavItems, quickQuery]);
+
+  const visibleQuickItems = useMemo(
+    () => limitQuickNavItems(filteredQuickItems),
+    [filteredQuickItems],
+  );
+  const hiddenQuickCount = filteredQuickItems.length - visibleQuickItems.length;
 
   const openQuickNav = useCallback(() => {
     setQuickNavOpen(true);
@@ -94,13 +140,18 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   }, [quickQuery]);
 
   useEffect(() => {
+    if (!quickNavOpen) return;
+    quickItemRefs.current[quickHighlight]?.scrollIntoView?.({ block: 'nearest' });
+  }, [quickHighlight, quickNavOpen]);
+
+  useEffect(() => {
     if (quickNavOpen) {
       setTimeout(() => quickInputRef.current?.focus(), 0);
     }
   }, [quickNavOpen]);
 
   const handleSelectQuick = (idx: number) => {
-    const target = filteredQuickItems[idx];
+    const target = visibleQuickItems[idx];
     if (!target) return;
     navigate(target.path);
     closeQuickNav();
@@ -224,12 +275,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             onKeyDown={(event) => {
               if (event.key === 'ArrowDown') {
                 event.preventDefault();
-                setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
+                setQuickHighlight((prev) => (prev + 1) % Math.max(visibleQuickItems.length, 1));
               } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 setQuickHighlight((prev) => {
-                  if (filteredQuickItems.length === 0) return 0;
-                  return prev <= 0 ? filteredQuickItems.length - 1 : prev - 1;
+                  if (visibleQuickItems.length === 0) return 0;
+                  return prev <= 0 ? visibleQuickItems.length - 1 : prev - 1;
                 });
               } else if (event.key === 'Enter') {
                 event.preventDefault();
@@ -253,9 +304,12 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             </Typography>
           ) : (
             <List dense>
-              {filteredQuickItems.slice(0, 30).map((item, idx) => (
+              {visibleQuickItems.map((item, idx) => (
                 <ListItemButton
                   key={`${item.path}-${idx}`}
+                  ref={(node: HTMLElement | null) => {
+                    quickItemRefs.current[idx] = node;
+                  }}
                   selected={idx === quickHighlight}
                   onClick={() => handleSelectQuick(idx)}
                   sx={{ borderRadius: 1.5, mb: 0.25 }}
@@ -269,7 +323,17 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
               ))}
             </List>
           )}
+          {hiddenQuickCount > 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, px: 0.5 }}>
+              Mostrando {visibleQuickItems.length} de {filteredQuickItems.length}. Escribe para refinar la búsqueda.
+            </Typography>
+          )}
         </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
+          <Typography variant="caption" color="text.disabled">
+            ↑↓ para navegar · ↵ para abrir · esc para cerrar
+          </Typography>
+        </DialogActions>
       </Dialog>
     </AppBar>
   );
