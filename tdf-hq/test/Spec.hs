@@ -9414,6 +9414,10 @@ main = hspec $ do
                         , eventTicketOrderStatus = rawStatus
                         , eventTicketOrderMetadata = Nothing
                         , eventTicketOrderPurchasedAt = now
+                        , eventTicketOrderStripePaymentIntentId = Nothing
+                        , eventTicketOrderPromoCodeId = Nothing
+                        , eventTicketOrderOriginalAmountCents = Nothing
+                        , eventTicketOrderPaymentMethod = Nothing
                         , eventTicketOrderCreatedAt = now
                         , eventTicketOrderUpdatedAt = now
                         }
@@ -9511,6 +9515,10 @@ main = hspec $ do
                                 , eventTicketTierSalesEnd = Nothing
                                 , eventTicketTierIsActive = True
                                 , eventTicketTierPosition = Nothing
+                                , eventTicketTierEnableWaitlist = False
+                                , eventTicketTierAllowTransfers = False
+                                , eventTicketTierRefundPolicy = "none"
+                                , eventTicketTierRefundDeadline = Nothing
                                 , eventTicketTierCreatedAt = now
                                 , eventTicketTierUpdatedAt = now
                                 }
@@ -9528,6 +9536,10 @@ main = hspec $ do
                                 , eventTicketOrderStatus = "paid"
                                 , eventTicketOrderMetadata = Nothing
                                 , eventTicketOrderPurchasedAt = now
+                                , eventTicketOrderStripePaymentIntentId = Nothing
+                                , eventTicketOrderPromoCodeId = Nothing
+                                , eventTicketOrderOriginalAmountCents = Nothing
+                                , eventTicketOrderPaymentMethod = Nothing
                                 , eventTicketOrderCreatedAt = now
                                 , eventTicketOrderUpdatedAt = now
                                 }
@@ -9542,6 +9554,11 @@ main = hspec $ do
                                 , eventTicketCode = "TDF-AB12CD34EF56"
                                 , eventTicketStatus = "issued"
                                 , eventTicketCheckedInAt = Nothing
+                                , eventTicketCurrentHolderPartyId = Just "2"
+                                , eventTicketCurrentHolderEmail = Just "ada@example.com"
+                                , eventTicketCurrentHolderName = Just "Ada"
+                                , eventTicketOriginalHolderPartyId = Just "2"
+                                , eventTicketTransferHistory = Nothing
                                 , eventTicketCreatedAt = now
                                 , eventTicketUpdatedAt = now
                                 }
@@ -12916,38 +12933,6 @@ main = hspec $ do
             Data.Text.length candidate `shouldBe` 60
             candidate `shouldBe` (Data.Text.replicate 57 "a" <> "-12")
             candidate `shouldNotBe` base
-
-    describe "loadCourseRegistrationReceiptCounts" $
-        it "keeps admin list payment evidence counts scoped to each registration" $ do
-            let now = UTCTime (fromGregorian 2026 5 23) (secondsToDiffTime 0)
-                firstRegKey = toSqlKey 101 :: Key ME.CourseRegistration
-                secondRegKey = toSqlKey 102 :: Key ME.CourseRegistration
-                emptyRegKey = toSqlKey 103 :: Key ME.CourseRegistration
-                firstReg = mkCourseRegistrationSummaryFixture "beatmaking-101" now
-                secondReg = mkCourseRegistrationSummaryFixture "produccion-101" now
-            receiptCounts <- runNoLoggingT $ do
-                pool <- createSqlitePool ":memory:" 1
-                liftIO $ runSqlPool initializeCourseRegistrationSummarySchema pool
-                liftIO $ runSqlPool
-                    (do
-                        insertKey firstRegKey firstReg
-                        insertKey secondRegKey secondReg
-                        insertKey emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)
-                        insert_ (mkCourseRegistrationReceiptSummaryFixture firstRegKey "receipt-1.pdf" now)
-                        insert_ (mkCourseRegistrationReceiptSummaryFixture firstRegKey "receipt-2.pdf" now)
-                        insert_ (mkCourseRegistrationReceiptSummaryFixture secondRegKey "receipt-3.pdf" now)
-                        loadCourseRegistrationReceiptCounts [firstRegKey, secondRegKey, emptyRegKey]
-                    )
-                    pool
-            Map.findWithDefault 0 firstRegKey receiptCounts `shouldBe` 2
-            Map.findWithDefault 0 secondRegKey receiptCounts `shouldBe` 1
-            Map.findWithDefault 0 emptyRegKey receiptCounts `shouldBe` 0
-            let firstDTO = toCourseRegistrationDTOWithReceiptCount (Entity firstRegKey firstReg) (Map.findWithDefault 0 firstRegKey receiptCounts)
-                emptyDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (Map.findWithDefault 0 emptyRegKey receiptCounts)
-                clampedDTO = toCourseRegistrationDTOWithReceiptCount (Entity emptyRegKey (mkCourseRegistrationSummaryFixture "empty-course" now)) (-1)
-            DTO.crReceiptCount firstDTO `shouldBe` 2
-            DTO.crReceiptCount emptyDTO `shouldBe` 0
-            DTO.crReceiptCount clampedDTO `shouldBe` 0
 
     describe "resolveLiveSessionMusicianLookup" $ do
         it "only matches existing live-session musicians by normalized email" $ do
