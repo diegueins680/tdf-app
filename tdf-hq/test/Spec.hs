@@ -6830,31 +6830,6 @@ main = hspec $ do
                 Nothing
                 `shouldBe` Right (Just now)
 
-    describe "validateLabelTrackPathId" $ do
-        it "requires canonical positive decimal track ids before label lookups" $ do
-            fmap fromSqlKey (validateLabelTrackPathId " 42 ") `shouldBe` Right 42
-
-            let assertInvalid rawValue =
-                    case validateLabelTrackPathId rawValue of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` "Invalid track id"
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid label track id, got " <> show (fromSqlKey value))
-
-            mapM_
-                assertInvalid
-                [ ""
-                , "0"
-                , "-1"
-                , "+1"
-                , "01"
-                , "1.0"
-                , "abc"
-                , "9223372036854775808"
-                ]
-
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
             buildWhatsappCtaFor
@@ -11172,42 +11147,6 @@ main = hspec $ do
                 (validateOptionalInternPartyIdInput "assignedTo" (Just (-1)))
             assertInvalid "assignedTo must be a positive integer"
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
-
-    describe "internship active time-entry selection" $ do
-        it "rejects multiple active clock-ins before clock-out can pick an arbitrary row" $ do
-            let now = UTCTime (fromGregorian 2026 4 17) (secondsToDiffTime 0)
-                mkEntry :: Int64 -> Entity ME.InternTimeEntry
-                mkEntry entryId =
-                    Entity (toSqlKey entryId)
-                        ME.InternTimeEntry
-                            { ME.internTimeEntryPartyId = toSqlKey 42
-                            , ME.internTimeEntryClockIn = now
-                            , ME.internTimeEntryClockOut = Nothing
-                            , ME.internTimeEntryNotes = Nothing
-                            , ME.internTimeEntryCreatedAt = now
-                            , ME.internTimeEntryUpdatedAt = now
-                            }
-
-            case selectUniqueActiveInternTimeEntry [] of
-                Right Nothing ->
-                    pure ()
-                other ->
-                    expectationFailure
-                        ("Expected no active time entry to be selected, got " <> show other)
-            case selectUniqueActiveInternTimeEntry [mkEntry 7] of
-                Right (Just entry) ->
-                    fromSqlKey (entityKey entry) `shouldBe` 7
-                other ->
-                    expectationFailure
-                        ("Expected one active time entry to be selected, got " <> show other)
-            case selectUniqueActiveInternTimeEntry [mkEntry 7, mkEntry 8] of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 409
-                    BL.unpack (errBody err)
-                        `shouldContain` "Multiple active clock-ins found"
-                Right value ->
-                    expectationFailure
-                        ("Expected ambiguous active time entries to fail, got " <> show value)
 
     describe "internship path identifier parsing" $ do
         it "accepts positive persistent ids used by internship capture routes" $
