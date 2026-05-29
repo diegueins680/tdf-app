@@ -20,6 +20,7 @@ module TDF.Routes.Courses
   , CourseUpsert(..)
   , CourseSessionIn(..)
   , CourseSyllabusIn(..)
+  , CoursePaymentIntentRequest(..)
   , CoursesPublicAPI
   , CoursesAdminAPI
   , WhatsAppHooksAPI
@@ -42,6 +43,7 @@ import           Servant
 import           TDF.API.Types (RawJSON, rejectNullOptionalFields)
 import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
+import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO)
 
 data CourseSession = CourseSession
   { label :: Text
@@ -346,9 +348,31 @@ instance FromJSON CourseUpsert where
     genericParseJSON strictObjectOptions value
 instance ToJSON CourseUpsert
 
+-- | Body for `POST /public/courses/:slug/registrations/:id/payment-intent`.
+--
+-- @mobileSdkStripeVersion@: when set, returns the @spiPaymentSheet@ block with
+-- customer + ephemeral key for native PaymentSheet. Web checkouts (Payment
+-- Element) omit it and only use @spiClientSecret@. Mobile path requires the
+-- registration already have a linked party — anonymous mobile checkouts are
+-- not yet supported.
+data CoursePaymentIntentRequest = CoursePaymentIntentRequest
+  { mobileSdkStripeVersion :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CoursePaymentIntentRequest where
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CoursePaymentIntentRequest"
+      ["mobileSdkStripeVersion"]
+      value
+    genericParseJSON strictObjectOptions value
+instance ToJSON CoursePaymentIntentRequest
+
 type CoursesPublicAPI =
        "public" :> "courses" :> Capture "slug" Text :> Get '[JSON] CourseMetadata
   :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> ReqBody '[JSON] CourseRegistrationRequest :> PostCreated '[JSON] CourseRegistrationResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "payment-intent"
+         :> ReqBody '[JSON] CoursePaymentIntentRequest :> Post '[JSON] StripePaymentIntentDTO
 
 type CoursesAdminAPI =
        "courses" :> ReqBody '[JSON] CourseUpsert :> Post '[JSON] CourseMetadata

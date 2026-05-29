@@ -5289,6 +5289,7 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do
         , ME.courseRegistrationUtmMedium = utmMediumVal
         , ME.courseRegistrationUtmCampaign = utmCampaignVal
         , ME.courseRegistrationUtmContent = utmContentVal
+        , ME.courseRegistrationStripePaymentIntentId = Nothing
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
