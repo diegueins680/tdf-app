@@ -438,7 +438,8 @@ import TDF.Config
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
-      smtpPort )
+      smtpPort,
+      smtpUseTLS )
 import TDF.Version (VersionInfo (..), getVersionInfo)
 import TDF.Seed (seededCredentialSeedingAllowed)
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
@@ -12956,6 +12957,7 @@ main = hspec $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
                         , partyCreatedAt = now
                         }
                 singleParty =
@@ -14201,6 +14203,7 @@ seedRadioPresenceParty =
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
         , partyNotes = Nothing
+        , partyStripeCustomerId = Nothing
         , partyCreatedAt = UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 0)
         }
 
@@ -14340,6 +14343,9 @@ mkCourseRegistrationSummaryFixture slug now =
         , ME.courseRegistrationUtmMedium = Nothing
         , ME.courseRegistrationUtmCampaign = Nothing
         , ME.courseRegistrationUtmContent = Nothing
+        , ME.courseRegistrationStripePaymentIntentId = Nothing
+        , ME.courseRegistrationStripeSubscriptionId = Nothing
+        , ME.courseRegistrationSubscriptionStatus = Nothing
         , ME.courseRegistrationCreatedAt = now
         , ME.courseRegistrationUpdatedAt = now
         }
@@ -14379,6 +14385,7 @@ insertSocialSyncPartyFixture keyVal displayName =
                 , partyInstagram = Nothing
                 , partyEmergencyContact = Nothing
                 , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
                 , partyCreatedAt = currentSocialSyncTestTime
                 }
         pure partyId
@@ -14403,6 +14410,7 @@ insertSocialSyncArtistProfileFixture keyVal partyId =
                 , artistProfileFeaturedVideoUrl = Nothing
                 , artistProfileGenres = Nothing
                 , artistProfileHighlights = Nothing
+                , artistProfileStripeAccountId = Nothing
                 , artistProfileCreatedAt = currentSocialSyncTestTime
                 , artistProfileUpdatedAt = Nothing
                 }
