@@ -421,6 +421,7 @@ spec = do
           , Models.artistProfileFeaturedVideoUrl = Nothing
           , Models.artistProfileGenres = Nothing
           , Models.artistProfileHighlights = Nothing
+          , Models.artistProfileStripeAccountId = Nothing
           , Models.artistProfileCreatedAt = now
           , Models.artistProfileUpdatedAt = Nothing
           }

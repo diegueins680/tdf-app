@@ -1,4 +1,7 @@
-resolver: ./stack-snapshot.yaml
+resolver: lts-24.42
 packages: [ . ]
 extra-deps:
   - smtp-mail-0.5.0.0
+# The .cabal upper bounds were pinned for the old ghc-9.6.6 vendored snapshot.
+# allow-newer lets them float to the lts-24.42 (ghc-9.10.3) curated versions.
+allow-newer: true

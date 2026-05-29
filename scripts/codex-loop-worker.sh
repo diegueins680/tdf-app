@@ -58,6 +58,7 @@ $TASK_GOAL
 Constraints:
 - Stay scoped to this subtask only.
 - You may inspect, edit, and test the repository locally.
+- Build and test the Haskell backend in tdf-hq/ with stack ONLY. The project uses lts-24.42 (GHC 9.10.3) via tdf-hq/stack.yaml; use 'stack build' and 'stack test' (run from inside tdf-hq/). Do NOT use cabal or the system GHC — that is a different toolchain the project does not use, its build artifacts (dist-newstyle/) are ignored, and a green cabal build does not mean a green project build.
 - Do not commit, push, pull, rebase, or start a long-running server.
 - Do not modify or stage unrelated user artifacts, especially pre-existing files under screencast/meta-app-review/output/ or screencast/meta-app-review/frame-check/.
 - Prefer the smallest defensible change over large speculative rewrites.

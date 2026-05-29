@@ -7,6 +7,7 @@
 - Dev script: `scripts/dev_run.sh` (exports env, builds, runs).
 
 ## Build, Run, and Dev
+- Toolchain: **stack only** — `stack.yaml` uses `lts-24.42` (GHC 9.10.3). Do **not** use `cabal` or the system GHC; it is a different toolchain the project does not use, its `dist-newstyle/` artifacts are ignored, and a green `cabal` build does not imply a green project build.
 - Env: `set -a; source config/default.env; set +a`.
 - Build: `stack setup` then `stack build`.
 - Run: `stack run` (or `bash scripts/dev_run.sh`).
