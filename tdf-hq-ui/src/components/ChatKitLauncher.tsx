@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
+  CircularProgress,
   Drawer,
   Fab,
   IconButton,
@@ -16,13 +17,18 @@ import { env, reportMissingEnv } from '../utils/env';
 import { createChatKitClientSecretFetcher } from '../utils/chatkit';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
+import { useChatKitScript } from '../hooks/useChatKitScript';
 
 export default function ChatKitLauncher() {
   const [open, setOpen] = useState(false);
   const { session } = useSession();
   const workflowId = env.read('VITE_CHATKIT_WORKFLOW_ID') ?? '';
-  const supportsChatKit = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function';
+  const supportsChatKit =
+    typeof window !== 'undefined'
+    && typeof window.crypto?.randomUUID === 'function'
+    && typeof window.customElements !== 'undefined';
   const canUseChatKit = canAccessPath('/herramientas/chatkit', session?.roles, session?.modules);
+  const chatKitScript = useChatKitScript(open && Boolean(workflowId) && supportsChatKit && canUseChatKit);
 
   useEffect(() => {
     if (!supportsChatKit) return;
@@ -88,9 +94,27 @@ export default function ChatKitLauncher() {
         </Stack>
         <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
           {workflowId ? (
-            <Box sx={{ height: '100%' }}>
-              <ChatKit control={chatkit.control} style={{ height: '100%', width: '100%' }} />
-            </Box>
+            chatKitScript.status === 'ready' ? (
+              <Box sx={{ height: '100%' }}>
+                <ChatKit control={chatkit.control} style={{ height: '100%', width: '100%' }} />
+              </Box>
+            ) : chatKitScript.status === 'error' ? (
+              <Alert severity="warning">
+                {chatKitScript.errorMessage ?? 'No se pudo cargar ChatKit.'}
+              </Alert>
+            ) : (
+              <Stack
+                spacing={1.5}
+                alignItems="center"
+                justifyContent="center"
+                sx={{ minHeight: 240 }}
+              >
+                <CircularProgress size={28} />
+                <Typography variant="body2" color="text.secondary">
+                  Cargando ChatKit...
+                </Typography>
+              </Stack>
+            )
           ) : (
             <Alert severity="warning">
               Define `VITE_CHATKIT_WORKFLOW_ID` para activar el chat.
