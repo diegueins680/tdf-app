@@ -18,6 +18,14 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import AlbumOutlinedIcon from '@mui/icons-material/AlbumOutlined';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import type { ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
@@ -36,6 +44,7 @@ export interface NavItem {
 export interface NavGroup {
   title: string;
   items: NavItem[];
+  icon?: ReactNode;
 }
 
 type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
@@ -47,6 +56,7 @@ const MAX_SHORTCUT_RECENTS = 6;
 export const NAV_GROUPS: NavGroup[] = [
   {
     title: 'CREAR',
+    icon: <AutoAwesomeOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'Inicio', path: '/inicio' },
       { label: 'Calendario', path: '/estudio/calendario' },
@@ -66,6 +76,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'GENTE',
+    icon: <PeopleAltOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'Comunidad', path: '/fans' },
       { label: 'Tienda', path: '/marketplace' },
@@ -87,6 +98,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'SELLO',
+    icon: <AlbumOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'Artistas', path: '/label/artistas' },
       { label: 'Proyectos', path: '/label/proyectos' },
@@ -97,6 +109,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'OPERAR',
+    icon: <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'Inventario', path: '/operacion/inventario' },
       { label: 'Órdenes tienda', path: '/operacion/ordenes-marketplace' },
@@ -106,6 +119,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'ADMIN',
+    icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: COURSE_REGISTRATIONS_NAV_LABEL, path: '/configuracion/inscripciones-curso' },
       { label: 'Cursos', path: '/configuracion/cursos' },
@@ -124,6 +138,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'HERRAMIENTAS',
+    icon: <BuildOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'ChatKit', path: '/herramientas/chatkit' },
       { label: 'Agente Tidal', path: '/herramientas/tidal-agent' },
@@ -133,6 +148,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: 'AYUDA',
+    icon: <HelpOutlineOutlinedIcon sx={{ fontSize: 16 }} />,
     items: [
       { label: 'Manual', path: '/manual' },
       { label: 'Documentación', path: '/docs' },
@@ -490,9 +506,16 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           return (
             <Box key={group.title}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
-                <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
-                  {group.title}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, color: 'text.disabled' }}>
+                  {group.icon && (
+                    <Box component="span" aria-hidden="true" sx={{ display: 'inline-flex' }}>
+                      {group.icon}
+                    </Box>
+                  )}
+                  <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
+                    {group.title}
+                  </Typography>
+                </Stack>
                 {group.items.length > 1 && (
                   <IconButton
                     size="small"
