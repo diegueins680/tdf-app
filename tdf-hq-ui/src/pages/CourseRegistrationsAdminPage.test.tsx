@@ -401,6 +401,13 @@ const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+// The registration list paginates at this page size (see LazyPaginatedList
+// `initialRowsPerPage` in CourseRegistrationsAdminPage). Busy-list assertions
+// can therefore only observe the first page of dossier triggers in the DOM;
+// the full loaded count is verified separately via the "N inscripciones
+// cargadas" messaging.
+const REGISTRATION_PAGE_SIZE = 25;
+
 const getDossierTriggers = (root: ParentNode) =>
   Array.from(root.querySelectorAll<HTMLButtonElement>('button[aria-label^="Abrir expediente de "]'));
 
@@ -12225,7 +12232,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente visible: Portal de inscripcion.');
       expect(container.textContent).not.toContain('Fuente visible: Portal de registro.');
       expect(container.textContent).not.toContain('Fuente visible: Ficha de inscripcion.');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12294,7 +12301,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12351,7 +12358,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Intake pages');
       expect(container.textContent).not.toContain('Fuente: Admissions pages');
       expect(container.textContent).not.toContain('Fuente: Landing pages');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12481,7 +12488,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Waitlist');
       expect(container.textContent).not.toContain('Waiting list');
       expect(container.textContent).not.toContain('Lista de espera');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12537,7 +12544,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.textContent).not.toContain('Fuente: Registro publico');
       expect(container.textContent).not.toContain('Fuente: Registro publico de curso');
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12600,7 +12607,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12677,7 +12684,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12742,7 +12749,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12807,7 +12814,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -12958,7 +12965,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13173,7 +13180,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13244,7 +13251,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13305,7 +13312,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13369,7 +13376,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13432,7 +13439,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13499,7 +13506,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13560,7 +13567,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13613,7 +13620,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Fuente:');
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13681,7 +13688,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13747,7 +13754,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13872,7 +13879,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -13965,7 +13972,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14026,7 +14033,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14099,7 +14106,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14154,7 +14161,7 @@ describe('CourseRegistrationsAdminPage', () => {
       );
       expect(container.textContent).not.toContain('Fuente:');
       expect(container.textContent).not.toContain('Fuente visible:');
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14229,7 +14236,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14318,7 +14325,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -14380,7 +14387,7 @@ describe('CourseRegistrationsAdminPage', () => {
         expect(container.textContent).not.toContain(`Fuente: ${sourceLabel}`);
         expect(container.textContent).not.toContain(`Fuente visible: ${sourceLabel}.`);
       });
-      expect(getDossierTriggers(container)).toHaveLength(defaultSources.length);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(defaultSources.length, REGISTRATION_PAGE_SIZE));
     });
 
     listRegistrationsMock.mockClear();
@@ -16813,7 +16820,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getDossierTriggers(container)).toHaveLength(200);
+      expect(getDossierTriggers(container)).toHaveLength(Math.min(200, REGISTRATION_PAGE_SIZE));
       expect(container.textContent).not.toContain('No hay coincidencias para "sin coincidencias"');
       expect(hasLabel(container, loadLimitLabel)).toBe(false);
       expect(countButtonsByText(container, 'Ajustar límite')).toBe(1);
