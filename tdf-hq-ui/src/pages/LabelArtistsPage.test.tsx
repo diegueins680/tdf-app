@@ -191,10 +191,62 @@ describe('LabelArtistsPage', () => {
         expect(container.textContent).toContain('La Ruta');
         expect(container.querySelector('input[aria-label="Buscar artistas"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar artistas"]')).not.toBeNull();
+        expect(getButtonsByText(container, 'Refrescar')).toHaveLength(1);
         expect(container.textContent).toContain('Notas rápidas por artista');
         expect(hasTableHeader(container, 'Artista')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).not.toContain('Todavía no hay perfiles de artista.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('returns focus to the refresh button after reloading artists', async () => {
+    let resolveRefresh: (artists: ArtistProfileDTO[]) => void = () => undefined;
+    const refreshPromise = new Promise<ArtistProfileDTO[]>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    listArtistProfilesMock
+      .mockResolvedValueOnce([buildArtist()])
+      .mockImplementationOnce(() => refreshPromise);
+    listPartiesMock.mockResolvedValue([buildParty()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      let refreshButton: HTMLButtonElement | null = null;
+      await waitForExpectation(() => {
+        refreshButton = container.querySelector<HTMLButtonElement>('button[aria-label="Refrescar artistas"]');
+        expect(refreshButton).not.toBeNull();
+      });
+      if (!refreshButton) throw new Error('Refresh button not found');
+
+      await act(async () => {
+        refreshButton?.focus();
+        await flushPromises();
+      });
+      expect(document.activeElement).toBe(refreshButton);
+
+      await act(async () => {
+        refreshButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+      expect(listArtistProfilesMock).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        resolveRefresh([buildArtist({ apFollowerCount: 13 })]);
+        await refreshPromise;
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const focusedRefreshButton = container.querySelector<HTMLButtonElement>('button[aria-label="Refrescar artistas"]');
+        expect(focusedRefreshButton).not.toBeNull();
+        expect(document.activeElement).toBe(focusedRefreshButton);
       });
     } finally {
       await cleanup();

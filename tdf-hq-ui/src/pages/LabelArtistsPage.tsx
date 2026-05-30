@@ -292,10 +292,6 @@ export default function LabelArtistsPage() {
     upsertMutation.mutate({ draft: form, originalDisplayName: originalName });
   };
 
-  const handleRefresh = () => {
-    void qc.invalidateQueries({ queryKey: ['admin', 'artists'] });
-  };
-
   const renderLinkChip = (label: string, url: string | null) => {
     if (!url) return null;
     return (
@@ -325,27 +321,56 @@ export default function LabelArtistsPage() {
       )}
     >
       <Stack spacing={3}>
+      <Typography variant="caption" color="text.secondary">
+        Label / Artistas
+      </Typography>
       {bannerMessage && (
         <Alert severity="success" onClose={() => setBannerMessage(null)}>
           {bannerMessage}
         </Alert>
       )}
-      <TextField
-        size="small"
-        aria-label="Buscar artistas"
-        placeholder="Buscar por nombre, slug o ciudad"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        inputProps={{ 'aria-label': 'Buscar artistas' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ minWidth: { xs: 200, md: 280 } }}
-      />
+      {(showArtistSearch || showArtistRefresh) && (
+        <Stack direction="row" spacing={1} alignItems="center">
+          {showArtistSearch && (
+            <TextField
+              size="small"
+              aria-label="Buscar artistas"
+              placeholder="Buscar por nombre, slug o ciudad"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              inputProps={{ 'aria-label': 'Buscar artistas' }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: { xs: 200, md: 280 } }}
+            />
+          )}
+          {showArtistRefresh && (
+            <Button
+              tabIndex={0}
+              onClick={(event) => {
+                const refreshButton = event.currentTarget;
+                void artistsQuery.refetch().finally(() => {
+                  window.setTimeout(() => {
+                    if (refreshButton.isConnected) refreshButton.focus();
+                  }, 0);
+                });
+              }}
+              aria-label="Refrescar artistas"
+              disabled={artistsQuery.isFetching}
+              size="small"
+              startIcon={<RefreshIcon />}
+              variant="outlined"
+            >
+              {artistsQuery.isFetching ? 'Actualizando' : 'Refrescar'}
+            </Button>
+          )}
+        </Stack>
+      )}
       {showQuickNotesCard && (
         <Card>
           <CardContent>
@@ -433,9 +458,7 @@ export default function LabelArtistsPage() {
           {showFirstArtistSetup && (
             <EmptyState
               title="Sin artistas"
-              description="Aún no hay perfiles de artista. Crea el primero para empezar."
-              actionLabel="Nuevo perfil"
-              actionOnClick={handleOpenNew}
+              description="Todavía no hay perfiles de artista. Usa Nuevo perfil para enlazar el primer contacto del CRM; la búsqueda, notas rápidas, refresco y tabla aparecerán cuando exista al menos un perfil."
             />
           )}
           {!showFirstArtistSetup && !artistsQuery.isLoading && filteredArtists.length === 0 && !artistsQuery.error && (
