@@ -94,7 +94,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
     return NAV_GROUPS.flatMap((group) =>
       group.items
         .filter((item) => canUsePath(item.path))
-        .map((item) => ({ ...item, group: group.title })),
+        .map((item) => ({ ...item, group: group.title, groupIcon: group.icon })),
     );
   }, [canUsePath]);
 
@@ -322,6 +322,15 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
                   onClick={() => handleSelectQuick(idx)}
                   sx={{ borderRadius: 1.5, mb: 0.25 }}
                 >
+                  {item.groupIcon && (
+                    <Box
+                      component="span"
+                      aria-hidden="true"
+                      sx={{ display: 'inline-flex', color: 'text.secondary', mr: 1.5 }}
+                    >
+                      {item.groupIcon}
+                    </Box>
+                  )}
                   <ListItemText
                     primary={item.label}
                     secondary={item.group}

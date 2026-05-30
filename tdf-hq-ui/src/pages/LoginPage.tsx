@@ -34,6 +34,7 @@ import {
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -157,6 +158,7 @@ const parseNonNegativeSafeInt = (value: string): number | undefined => {
 };
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const servicePreparingMessage = 'Estamos activando el servicio. Apenas termine podrás iniciar sesión.';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -1242,8 +1244,14 @@ export default function LoginPage() {
           </Box>
         </Stack>
       </Container>
-      <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Recuperar acceso</DialogTitle>
+      <Dialog
+        open={resetDialogOpen}
+        onClose={closeResetDialog}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="login-reset-dialog-title"
+      >
+        <DialogTitle id="login-reset-dialog-title">{t('login.resetDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
@@ -1272,8 +1280,14 @@ export default function LoginPage() {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={signupDialogOpen} onClose={closeSignupDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Crear cuenta</DialogTitle>
+      <Dialog
+        open={signupDialogOpen}
+        onClose={closeSignupDialog}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="login-signup-dialog-title"
+      >
+        <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {googleClientId && (

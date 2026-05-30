@@ -18,6 +18,14 @@ void i18n.use(initReactI18next).init({
           loading: 'Cargando notificaciones',
           empty: 'Sin notificaciones',
         },
+        login: {
+          resetDialog: {
+            title: 'Recuperar acceso',
+          },
+          signupDialog: {
+            title: 'Crear cuenta',
+          },
+        },
       },
     },
     en: {
@@ -31,6 +39,14 @@ void i18n.use(initReactI18next).init({
           markAllLoading: 'Marking...',
           loading: 'Loading notifications',
           empty: 'No notifications',
+        },
+        login: {
+          resetDialog: {
+            title: 'Recover access',
+          },
+          signupDialog: {
+            title: 'Create account',
+          },
         },
       },
     },
