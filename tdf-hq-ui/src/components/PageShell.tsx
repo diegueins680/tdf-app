@@ -42,10 +42,16 @@ export default function PageShell({
         >
           <Stack spacing={0.5} sx={{ minWidth: 0 }}>
             {loading ? (
-              <>
-                <Skeleton variant="text" width={200} height={36} />
-                <Skeleton variant="text" width={280} height={20} />
-              </>
+              <Box
+                role="status"
+                aria-busy="true"
+                aria-live="polite"
+                aria-label="Cargando…"
+                sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
+              >
+                <Skeleton variant="text" width={200} height={36} aria-hidden="true" />
+                <Skeleton variant="text" width={280} height={20} aria-hidden="true" />
+              </Box>
             ) : (
               <>
                 <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '1.75rem' } }}>
@@ -162,9 +168,15 @@ export function EmptyState({
 
 export function SkeletonCards({ count = 3 }: { count?: number }) {
   return (
-    <Stack spacing={3}>
+    <Stack
+      spacing={3}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Cargando contenido…"
+    >
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} />
+        <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} aria-hidden="true" />
       ))}
     </Stack>
   );
