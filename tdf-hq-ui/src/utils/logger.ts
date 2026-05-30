@@ -3,7 +3,9 @@
  * Use this instead of direct console.* calls to avoid leaking
  * internal state in production builds.
  */
-const isDev = import.meta.env.DEV;
+// Guard the access: import.meta.env is defined by Vite at build time but is
+// absent under some runners (e.g. jest), where reading `.DEV` directly throws.
+const isDev = Boolean((import.meta.env as { DEV?: boolean } | undefined)?.DEV);
 
 export const logger = {
   log: (...args: unknown[]) => {
