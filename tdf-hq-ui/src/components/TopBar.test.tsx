@@ -104,6 +104,23 @@ describe('TopBar command palette', () => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
+  it('labels the palette dialog with its title for assistive tech', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderTopBar(container);
+
+    try {
+      await openPalette(container);
+      const dialog = document.body.querySelector('[role="dialog"]');
+      const labelledBy = dialog?.getAttribute('aria-labelledby');
+      expect(labelledBy).toBe('quick-nav-dialog-title');
+      const title = labelledBy ? document.getElementById(labelledBy) : null;
+      expect(title?.textContent).toContain('Ir a otra sección');
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows keyboard navigation hints when the palette opens', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

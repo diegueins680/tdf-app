@@ -63,7 +63,9 @@ export function limitQuickNavItems<T>(items: readonly T[]): readonly T[] {
     throw new TypeError('Quick-nav items must be provided as an array.');
   }
 
-  const visibleItems = items.slice(0, QUICK_NAV_VISIBLE_RESULT_LIMIT);
+  // `Array.isArray` narrows the readonly input to `any[]`; restore the element
+  // type so callers keep the precise `readonly T[]` contract.
+  const visibleItems = items.slice(0, QUICK_NAV_VISIBLE_RESULT_LIMIT) as T[];
   if (
     visibleItems.length > QUICK_NAV_VISIBLE_RESULT_LIMIT ||
     visibleItems.length > items.length
@@ -262,8 +264,14 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
       </Toolbar>
 
       {/* Quick-nav dialog */}
-      <Dialog open={quickNavOpen} onClose={closeQuickNav} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ pb: 1 }}>Ir a otra sección</DialogTitle>
+      <Dialog
+        open={quickNavOpen}
+        onClose={closeQuickNav}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="quick-nav-dialog-title"
+      >
+        <DialogTitle id="quick-nav-dialog-title" sx={{ pb: 1 }}>Ir a otra sección</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth

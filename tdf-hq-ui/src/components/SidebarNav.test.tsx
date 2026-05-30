@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals';
-import { act } from 'react';
+import { act, isValidElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
+import type { NavGroup } from './SidebarNav';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 
 const session = {
@@ -23,9 +24,14 @@ jest.unstable_mockModule('../hooks/useChatUnreadCount', () => ({
   useChatUnreadCount: () => chatUnreadCount,
 }));
 
-const { default: SidebarNav } = await import('./SidebarNav');
+const { default: SidebarNav, NAV_GROUPS, SIDEBAR_NAV_ICON_LAYOUT } = await import('./SidebarNav');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+const getGroupIconFontSize = (icon: NavGroup['icon']): unknown => {
+  if (!isValidElement(icon)) return undefined;
+  return (icon.props as { sx?: { fontSize?: unknown } }).sx?.fontSize;
+};
 
 const renderNav = async (container: HTMLElement, initialEntry: string) => {
   let root: Root | null = createRoot(container);
@@ -62,6 +68,19 @@ describe('SidebarNav', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  it('keeps every top-level group icon on the shared compact-size contract', () => {
+    /**
+     * @precondition top-level nav group icons are React elements with MUI sx props.
+     * @invariant every group header icon uses the same compact pixel dimension.
+     * @postcondition any ad hoc per-group fontSize drift fails this contract.
+     */
+    const iconSizesByGroup = NAV_GROUPS.map((group) => [group.title, getGroupIconFontSize(group.icon)]);
+
+    expect(iconSizesByGroup).toEqual(
+      NAV_GROUPS.map((group) => [group.title, SIDEBAR_NAV_ICON_LAYOUT.groupHeaderIconSizePx]),
+    );
   });
 
   it('hides default shortcut duplicates until there are actual recent admin destinations', async () => {

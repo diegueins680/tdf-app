@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, Stack, Typography, Button, Skeleton } from '@mui/material';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 
 type PositivePixelDimension = number;
@@ -146,6 +147,9 @@ export function EmptyState({
       )
     ) : null;
 
+  // Fall back to a soft, neutral illustration so empty pages never feel stark.
+  const resolvedIcon = icon ?? <InboxOutlinedIcon fontSize="inherit" />;
+
   return (
     <Box
       sx={{
@@ -159,23 +163,22 @@ export function EmptyState({
         gap: 2,
       }}
     >
-      {icon && (
-        <Box
-          sx={{
-            width: 72,
-            height: 72,
-            borderRadius: 3,
-            bgcolor: 'action.hover',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'text.secondary',
-            fontSize: 32,
-          }}
-        >
-          {icon}
-        </Box>
-      )}
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 72,
+          height: 72,
+          borderRadius: 3,
+          bgcolor: 'action.hover',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.secondary',
+          fontSize: 32,
+        }}
+      >
+        {resolvedIcon}
+      </Box>
       <Stack spacing={0.5} alignItems="center">
         <Typography variant="h5" color="text.primary">
           {title}

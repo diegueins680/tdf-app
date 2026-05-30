@@ -2,7 +2,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-import PageShell, { SkeletonCards } from './PageShell';
+import PageShell, { EmptyState, SkeletonCards } from './PageShell';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -67,6 +67,30 @@ describe('PageShell loading accessibility', () => {
     try {
       expect(readyShellNode.querySelector('[role="status"]')).toBeNull();
       expect(readyShellNode.textContent).toContain('Artistas');
+    } finally {
+      await cleanup();
+    }
+  });
+});
+
+describe('EmptyState', () => {
+  beforeAll(() => {
+    (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  it('renders a decorative default illustration when no icon is provided', async () => {
+    const emptyStateNode = document.createElement('div');
+    document.body.appendChild(emptyStateNode);
+    const { cleanup } = await render(
+      emptyStateNode,
+      <EmptyState title="Sin artistas" description="Crea el primero para empezar." />,
+    );
+
+    try {
+      // The decorative icon container is always present and hidden from AT,
+      // while the title/description carry the meaning.
+      expect(emptyStateNode.querySelector('[aria-hidden="true"]')).not.toBeNull();
+      expect(emptyStateNode.textContent).toContain('Sin artistas');
     } finally {
       await cleanup();
     }
