@@ -2,6 +2,25 @@ import type { ReactNode } from 'react';
 import { Box, Stack, Typography, Button, Skeleton } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
+type PositivePixelDimension = number;
+
+interface LoadingHeaderSkeletonDimensions {
+  readonly titleWidthPx: PositivePixelDimension;
+  readonly titleHeightPx: PositivePixelDimension;
+  readonly subtitleWidthPx: PositivePixelDimension;
+  readonly subtitleHeightPx: PositivePixelDimension;
+}
+
+// Invariant: every skeleton dimension is a positive pixel value that reserves stable loading layout space.
+const LOADING_HEADER_SKELETON_DIMENSIONS = {
+  titleWidthPx: 200,
+  titleHeightPx: 36,
+  subtitleWidthPx: 280,
+  subtitleHeightPx: 20,
+} as const satisfies LoadingHeaderSkeletonDimensions;
+
+const SKELETON_CARD_HEIGHT_PX: PositivePixelDimension = 120;
+
 export interface PageShellProps {
   title: string;
   subtitle?: string;
@@ -49,8 +68,18 @@ export default function PageShell({
                 aria-label="Cargando…"
                 sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
               >
-                <Skeleton variant="text" width={200} height={36} aria-hidden="true" />
-                <Skeleton variant="text" width={280} height={20} aria-hidden="true" />
+                <Skeleton
+                  variant="text"
+                  width={LOADING_HEADER_SKELETON_DIMENSIONS.titleWidthPx}
+                  height={LOADING_HEADER_SKELETON_DIMENSIONS.titleHeightPx}
+                  aria-hidden="true"
+                />
+                <Skeleton
+                  variant="text"
+                  width={LOADING_HEADER_SKELETON_DIMENSIONS.subtitleWidthPx}
+                  height={LOADING_HEADER_SKELETON_DIMENSIONS.subtitleHeightPx}
+                  aria-hidden="true"
+                />
               </Box>
             ) : (
               <>
@@ -176,7 +205,13 @@ export function SkeletonCards({ count = 3 }: { count?: number }) {
       aria-label="Cargando contenido…"
     >
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} aria-hidden="true" />
+        <Skeleton
+          key={i}
+          variant="rounded"
+          height={SKELETON_CARD_HEIGHT_PX}
+          sx={{ borderRadius: 3 }}
+          aria-hidden="true"
+        />
       ))}
     </Stack>
   );

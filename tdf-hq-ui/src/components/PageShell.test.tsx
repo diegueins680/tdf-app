@@ -6,8 +6,8 @@ import PageShell, { SkeletonCards } from './PageShell';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const render = async (container: HTMLElement, node: React.ReactNode) => {
-  let root: Root | null = createRoot(container);
+const render = async (mountNode: HTMLElement, node: React.ReactNode) => {
+  let root: Root | null = createRoot(mountNode);
   await act(async () => {
     root?.render(
       <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -24,7 +24,7 @@ const render = async (container: HTMLElement, node: React.ReactNode) => {
         await flushPromises();
       });
       root = null;
-      document.body.removeChild(container);
+      document.body.removeChild(mountNode);
     },
   };
 };
@@ -35,38 +35,38 @@ describe('PageShell loading accessibility', () => {
   });
 
   it('announces the header loading state to assistive tech', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
+    const loadingShellNode = document.createElement('div');
+    document.body.appendChild(loadingShellNode);
     const { cleanup } = await render(
-      container,
+      loadingShellNode,
       <PageShell title="Artistas" loading>
         <div>contenido</div>
       </PageShell>,
     );
 
     try {
-      const status = container.querySelector('[role="status"]');
-      expect(status).not.toBeNull();
-      expect(status?.getAttribute('aria-busy')).toBe('true');
-      expect(status?.getAttribute('aria-label')).toBe('Cargando…');
+      const loadingStatus = loadingShellNode.querySelector('[role="status"]');
+      expect(loadingStatus).not.toBeNull();
+      expect(loadingStatus?.getAttribute('aria-busy')).toBe('true');
+      expect(loadingStatus?.getAttribute('aria-label')).toBe('Cargando…');
     } finally {
       await cleanup();
     }
   });
 
   it('does not expose a loading status once content is ready', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
+    const readyShellNode = document.createElement('div');
+    document.body.appendChild(readyShellNode);
     const { cleanup } = await render(
-      container,
+      readyShellNode,
       <PageShell title="Artistas">
         <div>contenido</div>
       </PageShell>,
     );
 
     try {
-      expect(container.querySelector('[role="status"]')).toBeNull();
-      expect(container.textContent).toContain('Artistas');
+      expect(readyShellNode.querySelector('[role="status"]')).toBeNull();
+      expect(readyShellNode.textContent).toContain('Artistas');
     } finally {
       await cleanup();
     }
@@ -79,15 +79,15 @@ describe('SkeletonCards accessibility', () => {
   });
 
   it('exposes an aria-busy status region while loading', async () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const { cleanup } = await render(container, <SkeletonCards count={2} />);
+    const skeletonCardsNode = document.createElement('div');
+    document.body.appendChild(skeletonCardsNode);
+    const { cleanup } = await render(skeletonCardsNode, <SkeletonCards count={2} />);
 
     try {
-      const status = container.querySelector('[role="status"]');
-      expect(status).not.toBeNull();
-      expect(status?.getAttribute('aria-busy')).toBe('true');
-      expect(status?.getAttribute('aria-label')).toBe('Cargando contenido…');
+      const skeletonStatus = skeletonCardsNode.querySelector('[role="status"]');
+      expect(skeletonStatus).not.toBeNull();
+      expect(skeletonStatus?.getAttribute('aria-busy')).toBe('true');
+      expect(skeletonStatus?.getAttribute('aria-label')).toBe('Cargando contenido…');
     } finally {
       await cleanup();
     }
