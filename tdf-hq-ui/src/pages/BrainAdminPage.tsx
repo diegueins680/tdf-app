@@ -526,7 +526,10 @@ export default function BrainAdminPage() {
             ) : (
               <BrainEntriesList
                 entries={entries}
-                loading={entriesQuery.isFetching}
+                // Suppress the list's own progress bar during the very first
+                // load: the dedicated "Cargando entradas" notice already covers
+                // it. The bar still shows for refetches over existing entries.
+                loading={entriesQuery.isFetching && !entriesQuery.isLoading}
                 includeInactive={includeInactive}
                 onEdit={openEdit}
               />
