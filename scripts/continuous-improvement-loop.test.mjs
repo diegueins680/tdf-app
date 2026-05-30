@@ -42,13 +42,14 @@ test('exports syncSubmodulesRecursively as a function', async () => {
   assert.strictEqual(typeof syncSubmodulesRecursively, 'function');
 });
 
-test('validateLoopConfig returns true for minimal valid config', async () => {
+test('validateLoopConfig returns object with pushBranch for valid config', async () => {
   const { validateLoopConfig } = await import('./continuous-improvement-loop.mjs');
-  const result = await validateLoopConfig({ model: 'gpt-4o', task: 'test', cwd: '/Users/diegosaa/GitHub/tdf-app' });
-  assert.strictEqual(result, true);
+  const result = await validateLoopConfig('/Users/diegosaa/GitHub/tdf-app', { model: 'gpt-4o', task: 'test', dryRun: true });
+  assert.strictEqual(typeof result, 'object');
+  assert.strictEqual(typeof result.pushBranch, 'string');
 });
 
-test('validateLoopConfig throws for missing model', async () => {
+test('validateLoopConfig throws when targeting main without override', async () => {
   const { validateLoopConfig } = await import('./continuous-improvement-loop.mjs');
-  await assert.rejects(async () => validateLoopConfig({ task: 'test', cwd: '/Users/diegosaa/GitHub/tdf-app' }), /model/);
+  await assert.rejects(async () => validateLoopConfig('/Users/diegosaa/GitHub/tdf-app', { model: 'gpt-4o', task: 'test', dryRun: false, allowPushToMain: false }), /main/);
 });
