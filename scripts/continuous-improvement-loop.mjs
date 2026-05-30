@@ -1840,7 +1840,7 @@ async function main() {
   await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
 }
 
-export { main };
+export { main, discoverImprovementIdea };
 
 function isCliEntry() {
   if (!process.argv[1]) {
