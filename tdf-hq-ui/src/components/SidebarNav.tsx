@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Component, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   Badge,
   Box,
@@ -25,7 +25,7 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import type { ErrorInfo, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
@@ -50,6 +50,7 @@ export interface NavGroup {
 type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
 type NavShortcutItem = NavItem & { group: string };
 type PositivePixelDimension = number;
+type PositiveSafeInteger = number;
 
 interface SidebarNavIconLayoutContract {
   readonly baseGridUnitPx: PositivePixelDimension;
@@ -57,8 +58,20 @@ interface SidebarNavIconLayoutContract {
   readonly groupHeaderIconSizePx: PositivePixelDimension;
 }
 
+interface UnreadBadgeDisplayContract {
+  readonly maxExactCount: PositiveSafeInteger;
+  readonly overflowLabel: string;
+}
+
+interface HighlightedLabelStyleContract {
+  readonly matchFontWeight: PositiveSafeInteger;
+}
+
 const QUICK_RECENTS_KEY = 'tdf-quick-nav-recents';
 const MAX_SHORTCUT_RECENTS = 6;
+const UNREAD_BADGE_MAX_EXACT_COUNT = 99;
+const SEARCH_MATCH_FONT_WEIGHT = 700;
+export const SIDEBAR_NAV_NO_RESULTS_BOUNDARY_NAME = 'sidebar-nav-no-results';
 
 // Invariant: top-level group icons stay compact enough to align with caption
 // headers without increasing the sidebar row height.
@@ -69,6 +82,19 @@ export const SIDEBAR_NAV_ICON_LAYOUT = {
     return this.baseGridUnitPx * this.groupHeaderIconGridUnits;
   },
 } as const satisfies SidebarNavIconLayoutContract;
+
+// Invariant: unread badges display exact values until the UI's compact badge
+// width would become unstable, then switch to a fixed overflow label.
+export const SIDEBAR_NAV_UNREAD_BADGE_DISPLAY = {
+  maxExactCount: UNREAD_BADGE_MAX_EXACT_COUNT,
+  overflowLabel: `${UNREAD_BADGE_MAX_EXACT_COUNT}+`,
+} as const satisfies UnreadBadgeDisplayContract;
+
+// Invariant: search-highlight emphasis uses one named weight so visual drift is
+// detectable in tests instead of being hidden in inline sx literals.
+export const SIDEBAR_NAV_HIGHLIGHTED_LABEL_STYLE = {
+  matchFontWeight: SEARCH_MATCH_FONT_WEIGHT,
+} as const satisfies HighlightedLabelStyleContract;
 
 function assertPositivePixelDimension(value: PositivePixelDimension, label: string): void {
   if (!Number.isFinite(value) || !(value > 0)) {
@@ -93,6 +119,14 @@ assertPositiveUnitCount(
 assertPositivePixelDimension(
   SIDEBAR_NAV_ICON_LAYOUT.groupHeaderIconSizePx,
   'Sidebar nav group header icon size',
+);
+assertPositiveUnitCount(
+  SIDEBAR_NAV_UNREAD_BADGE_DISPLAY.maxExactCount,
+  'Sidebar nav unread badge exact-count limit',
+);
+assertPositiveUnitCount(
+  SIDEBAR_NAV_HIGHLIGHTED_LABEL_STYLE.matchFontWeight,
+  'Sidebar nav highlighted-label font weight',
 );
 
 const GROUP_HEADER_ICON_SX = {
@@ -229,6 +263,18 @@ const isRouteActive = (currentPath: string, itemPath: string) =>
 
 const chatBadgeCountForPath = (path: string, unreadCount: number) => (path === '/chat' ? unreadCount : 0);
 
+/**
+ * @precondition caller has already suppressed non-positive counts.
+ * @postcondition returns an exact number up to maxExactCount and the fixed
+ * overflow label for all larger counts.
+ */
+export const formatUnreadBadgeContent = (
+  count: number,
+): number | typeof SIDEBAR_NAV_UNREAD_BADGE_DISPLAY.overflowLabel =>
+  count > SIDEBAR_NAV_UNREAD_BADGE_DISPLAY.maxExactCount
+    ? SIDEBAR_NAV_UNREAD_BADGE_DISPLAY.overflowLabel
+    : count;
+
 interface SidebarFrameProps {
   open: boolean;
   children: ReactNode;
@@ -358,7 +404,7 @@ function UnreadBadge(props: UnreadBadgeProps) {
   return (
     <Badge
       color="error"
-      badgeContent={count > 99 ? '99+' : count}
+      badgeContent={formatUnreadBadgeContent(count)}
       sx={{ '& .MuiBadge-badge': { fontSize: 11, height: 18, minWidth: 18 } }}
     >
       <span>{children}</span>
@@ -368,22 +414,22 @@ function UnreadBadge(props: UnreadBadgeProps) {
 
 interface HighlightedLabelProps {
   label: string;
-  query: string;
+  searchQuery: string;
 }
 
 function HighlightedLabel(props: HighlightedLabelProps) {
-  const { label, query } = props;
-  const matchIndex = query ? label.toLowerCase().indexOf(query.toLowerCase()) : -1;
+  const { label, searchQuery } = props;
+  const matchIndex = searchQuery ? label.toLowerCase().indexOf(searchQuery.toLowerCase()) : -1;
   if (matchIndex === -1) return <>{label}</>;
 
   const before = label.slice(0, matchIndex);
-  const match = label.slice(matchIndex, matchIndex + query.length);
-  const after = label.slice(matchIndex + query.length);
+  const match = label.slice(matchIndex, matchIndex + searchQuery.length);
+  const after = label.slice(matchIndex + searchQuery.length);
 
   return (
     <span>
       {before}
-      <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
+      <Box component="span" sx={{ color: 'primary.main', fontWeight: SIDEBAR_NAV_HIGHLIGHTED_LABEL_STYLE.matchFontWeight }}>
         {match}
       </Box>
       {after}
@@ -433,7 +479,7 @@ interface ShortcutLinkProps {
 
 function ShortcutLink(props: ShortcutLinkProps) {
   const { item, isLast, activePath, unreadCount, onVisit } = props;
-  const active = isRouteActive(activePath, item.path);
+  const isShortcutActive = isRouteActive(activePath, item.path);
 
   return (
     <ListItemButton
@@ -444,17 +490,17 @@ function ShortcutLink(props: ShortcutLinkProps) {
       }}
       component={RouterLink}
       to={item.path}
-      selected={active}
-      aria-current={active ? 'page' : undefined}
+      selected={isShortcutActive}
+      aria-current={isShortcutActive ? 'page' : undefined}
       sx={{
         borderRadius: 1.5,
         mb: isLast ? 0 : 0.5,
-        bgcolor: active ? 'action.selected' : 'transparent',
-        color: active ? 'primary.main' : 'text.primary',
+        bgcolor: isShortcutActive ? 'action.selected' : 'transparent',
+        color: isShortcutActive ? 'primary.main' : 'text.primary',
         '&:hover': { bgcolor: 'action.hover' },
       }}
     >
-      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: active ? 'primary.main' : 'text.disabled' }} />
+      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isShortcutActive ? 'primary.main' : 'text.disabled' }} />
       <ListItemText
         primary={(
           <UnreadBadge count={unreadCount}>
@@ -469,12 +515,47 @@ function ShortcutLink(props: ShortcutLinkProps) {
   );
 }
 
-function NoResults() {
-  return (
-    <Typography variant="body2" sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
-      Sin coincidencias.
-    </Typography>
-  );
+const SIDEBAR_NAV_NO_RESULTS_CONTENT = (
+  <Typography variant="body2" sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
+    Sin coincidencias.
+  </Typography>
+);
+
+interface SidebarNavErrorBoundaryProps {
+  boundaryName: typeof SIDEBAR_NAV_NO_RESULTS_BOUNDARY_NAME;
+  children: ReactNode;
+}
+
+interface SidebarNavErrorBoundaryState {
+  error: Error | null;
+}
+
+export class SidebarNavErrorBoundary extends Component<SidebarNavErrorBoundaryProps, SidebarNavErrorBoundaryState> {
+  override state: SidebarNavErrorBoundaryState = { error: null };
+
+  static getDerivedStateFromError(error: Error): SidebarNavErrorBoundaryState {
+    return { error };
+  }
+
+  override componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Sidebar nav critical subtree failed', {
+      boundaryName: this.props.boundaryName,
+      error,
+      componentStack: info.componentStack,
+    });
+  }
+
+  override render() {
+    if (!this.state.error) {
+      return this.props.children;
+    }
+
+    return (
+      <Typography role="status" variant="body2" sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
+        No pudimos mostrar esta sección.
+      </Typography>
+    );
+  }
 }
 
 interface NavGroupHeaderProps {
@@ -516,7 +597,7 @@ interface NavGroupSectionProps {
   group: NavGroupView;
   highlightedPath: string | null;
   isExpanded: boolean;
-  query: string;
+  searchQuery: string;
   onToggle: (title: string) => void;
   onVisit: (path: string) => void;
 }
@@ -529,7 +610,7 @@ function NavGroupSection(props: NavGroupSectionProps) {
     group,
     highlightedPath,
     isExpanded,
-    query,
+    searchQuery,
     onToggle,
     onVisit,
   } = props;
@@ -546,7 +627,7 @@ function NavGroupSection(props: NavGroupSectionProps) {
               groupTitle={group.title}
               activePath={activePath}
               highlighted={highlightedPath === item.path}
-              query={query}
+              searchQuery={searchQuery}
               unreadCount={chatBadgeCountForPath(item.path, chatUnreadCount)}
               onVisit={onVisit}
             />
@@ -565,15 +646,15 @@ interface NavItemLinkProps {
   groupTitle: string;
   highlighted: boolean;
   item: NavItem;
-  query: string;
+  searchQuery: string;
   unreadCount: number;
   onVisit: (path: string) => void;
 }
 
 function NavItemLink(props: NavItemLinkProps) {
-  const { activePath, groupTitle, highlighted, item, query, unreadCount, onVisit } = props;
-  const active = isRouteActive(activePath, item.path);
-  const selected = highlighted || (!query && active);
+  const { activePath, groupTitle, highlighted, item, searchQuery, unreadCount, onVisit } = props;
+  const isNavItemActive = isRouteActive(activePath, item.path);
+  const selected = highlighted || (!searchQuery && isNavItemActive);
 
   return (
     <ListItemButton
@@ -585,25 +666,25 @@ function NavItemLink(props: NavItemLinkProps) {
       component={RouterLink}
       to={item.path}
       selected={selected}
-      aria-current={active ? 'page' : undefined}
+      aria-current={isNavItemActive ? 'page' : undefined}
       sx={{
         borderRadius: 1.5,
         mb: 0.5,
-        color: active ? 'primary.main' : 'text.primary',
-        bgcolor: highlighted ? 'action.hover' : active ? 'action.selected' : 'transparent',
+        color: isNavItemActive ? 'primary.main' : 'text.primary',
+        bgcolor: highlighted ? 'action.hover' : isNavItemActive ? 'action.selected' : 'transparent',
         '&:hover': { bgcolor: 'action.hover' },
       }}
     >
-      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: active ? 'primary.main' : 'text.disabled' }} />
+      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isNavItemActive ? 'primary.main' : 'text.disabled' }} />
       <ListItemText
         primary={(
           <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             <UnreadBadge count={unreadCount}>
-              <HighlightedLabel label={item.label} query={query} />
+              <HighlightedLabel label={item.label} searchQuery={searchQuery} />
             </UnreadBadge>
           </Box>
         )}
-        secondary={query ? groupTitle : undefined}
+        secondary={searchQuery ? groupTitle : undefined}
         primaryTypographyProps={{ fontSize: 13 }}
         secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
       />
@@ -671,15 +752,15 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   }, [canUsePath]);
 
   const filteredNavGroups = useMemo((): NavGroupView[] => {
-    const query = filter.trim().toLowerCase();
-    if (!query) return allowedNavGroups;
+    const normalizedSearchQuery = filter.trim().toLowerCase();
+    if (!normalizedSearchQuery) return allowedNavGroups;
     return allowedNavGroups
       .map((group) => ({
         ...group,
         items: group.items.filter(
           (item) =>
-            item.label.toLowerCase().includes(query) ||
-            item.path.toLowerCase().includes(query),
+            item.label.toLowerCase().includes(normalizedSearchQuery) ||
+            item.path.toLowerCase().includes(normalizedSearchQuery),
         ),
         restricted: group.restricted,
       }))
@@ -841,7 +922,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     }
   };
 
-  const query = filter.trim();
+  const searchQuery = filter.trim();
   const highlightedPath = highlightIndex >= 0 ? flatFilteredItems[highlightIndex]?.path ?? null : null;
 
   return (
@@ -853,7 +934,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         onKeyDown={handleSearchKeyDown}
       />
       <List disablePadding sx={{ flex: 1, overflowY: 'auto', px: 1.5 }}>
-        {query ? null : (
+        {searchQuery ? null : (
           <ShortcutSection
             items={shortcutItems}
             activePath={location.pathname}
@@ -861,9 +942,13 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
             onVisit={handleVisit}
           />
         )}
-        {filteredNavGroups.length === 0 ? <NoResults /> : null}
+        {filteredNavGroups.length === 0 ? (
+          <SidebarNavErrorBoundary boundaryName={SIDEBAR_NAV_NO_RESULTS_BOUNDARY_NAME}>
+            {SIDEBAR_NAV_NO_RESULTS_CONTENT}
+          </SidebarNavErrorBoundary>
+        ) : null}
         {filteredNavGroups.map((group) => {
-          const isExpanded = query.length > 0 || expandedGroups.has(group.title) || Boolean(group.restricted);
+          const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title) || Boolean(group.restricted);
           return (
             <NavGroupSection
               key={group.title}
@@ -871,7 +956,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               activePath={location.pathname}
               highlightedPath={highlightedPath}
               isExpanded={isExpanded}
-              query={query}
+              searchQuery={searchQuery}
               chatUnreadCount={chatUnreadCount}
               getAccessHref={buildAccessMailto}
               onToggle={toggleGroup}
