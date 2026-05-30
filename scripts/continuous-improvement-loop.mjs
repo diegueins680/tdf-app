@@ -1840,6 +1840,8 @@ async function main() {
   await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
 }
 
+export { main };
+
 function isCliEntry() {
   if (!process.argv[1]) {
     return false;
