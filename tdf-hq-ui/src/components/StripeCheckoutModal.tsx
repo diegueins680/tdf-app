@@ -34,7 +34,8 @@ import {
   normalizeCheckoutQuantity,
 } from './StripeCheckoutModal.logic';
 
-const stripePromise = loadStripe(import.meta.env?.['VITE_STRIPE_PUBLISHABLE_KEY'] ?? '');
+const stripeEnv = import.meta.env as Record<string, string | undefined> | undefined;
+const stripePromise = loadStripe(stripeEnv?.['VITE_STRIPE_PUBLISHABLE_KEY'] ?? '');
 
 interface StripeCheckoutModalProps {
   open: boolean;

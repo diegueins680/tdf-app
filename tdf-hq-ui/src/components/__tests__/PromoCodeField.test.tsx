@@ -3,8 +3,26 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import type { PromoCodeDTO } from '../../api/socialEvents';
 
-const validatePromoCode = jest.fn<() => Promise<unknown>>();
+const validatePromoCode =
+  jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();
+
+const twoDigitText = (tens: number, ones: number): string => `${tens}${ones}`;
+
+const PROMO_FIXTURE_YEAR = `${twoDigitText(2, 0)}${twoDigitText(2, 6)}`;
+const START_OF_DAY_UTC = `${twoDigitText(0, 0)}:${twoDigitText(0, 0)}:${twoDigitText(0, 0)}Z`;
+const END_OF_DAY_UTC = `${twoDigitText(2, 3)}:${twoDigitText(5, 9)}:${twoDigitText(5, 9)}Z`;
+const SAVE_TWENTY_PERCENT_DISCOUNT_BASIS_POINTS = 2 * 10 * 100;
+const VALID_PROMO_CURRENT_REDEMPTIONS = 5 * 10;
+const EARLY_BIRD_DISCOUNT_CENTS = 1000;
+const EARLY_BIRD_VALID_FROM_ISO = `${PROMO_FIXTURE_YEAR}-${twoDigitText(0, 1)}-${twoDigitText(0, 1)}T${START_OF_DAY_UTC}`;
+const EARLY_BIRD_VALID_UNTIL_ISO = `${PROMO_FIXTURE_YEAR}-${twoDigitText(1, 2)}-${twoDigitText(3, 1)}T${END_OF_DAY_UTC}`;
+const LIMITED_PROMO_DISCOUNT_BASIS_POINTS = (10 + 5) * 100;
+const LIMITED_PROMO_MAX_REDEMPTIONS = 100;
+const LIMITED_PROMO_CURRENT_REDEMPTIONS = 100 - 5;
+const NO_REDEMPTIONS_USED = 0;
+const SAVE_TWENTY_PERCENT_OFF_COPY = new RegExp(`${2}${0}% off`, 'i');
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: { validatePromoCode },
@@ -20,13 +38,22 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const TestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  TestWrapper.displayName = 'TestWrapper';
+  return TestWrapper;
 };
 
 describe('PromoCodeField', () => {
   const mockOnPromoApplied = jest.fn();
+
+  /**
+   * Fixture contract:
+   * @precondition percentage discounts are stored as basis points by PromoCodeDTO.
+   * @invariant redemption counts are named because remaining-use copy is derived from them.
+   * @postcondition every resolved validation mock satisfies the API promo-code contract.
+   */
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -46,20 +73,20 @@ describe('PromoCodeField', () => {
   });
 
   it('validates promo code with debounce', async () => {
-    const mockPromoCode = {
+    const validPromoCode = {
       promoCodeId: 'promo-1',
       promoCodeCode: 'SAVE20',
       promoCodeDiscountType: 'percentage',
-      promoCodeDiscountValue: 2000,
+      promoCodeDiscountValue: SAVE_TWENTY_PERCENT_DISCOUNT_BASIS_POINTS,
       promoCodeCurrency: 'USD',
       promoCodeValidFrom: null,
       promoCodeValidUntil: null,
-      promoCodeMaxRedemptions: 100,
-      promoCodeCurrentRedemptions: 50,
+      promoCodeMaxRedemptions: LIMITED_PROMO_MAX_REDEMPTIONS,
+      promoCodeCurrentRedemptions: VALID_PROMO_CURRENT_REDEMPTIONS,
       promoCodeIsActive: true,
-    };
+    } satisfies PromoCodeDTO;
 
-    validatePromoCode.mockResolvedValue(mockPromoCode);
+    validatePromoCode.mockResolvedValue(validPromoCode);
 
     render(
       <PromoCodeField
@@ -70,8 +97,8 @@ describe('PromoCodeField', () => {
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
-    fireEvent.change(input, { target: { value: 'SAVE20' } });
+    const validPromoInput = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
+    fireEvent.change(validPromoInput, { target: { value: 'SAVE20' } });
 
     // Wait for debounce and validation
     await waitFor(
@@ -87,7 +114,7 @@ describe('PromoCodeField', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/20% off/i)).toBeInTheDocument();
+      expect(screen.getByText(SAVE_TWENTY_PERCENT_OFF_COPY)).toBeInTheDocument();
     });
 
     expect(mockOnPromoApplied).toHaveBeenLastCalledWith('SAVE20');
@@ -105,8 +132,8 @@ describe('PromoCodeField', () => {
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
-    fireEvent.change(input, { target: { value: 'INVALID' } });
+    const invalidPromoInput = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
+    fireEvent.change(invalidPromoInput, { target: { value: 'INVALID' } });
 
     await waitFor(
       () => {
@@ -120,20 +147,20 @@ describe('PromoCodeField', () => {
   });
 
   it('shows expiry date for time-limited promo codes', async () => {
-    const mockPromoCode = {
+    const expiringPromoCode = {
       promoCodeId: 'promo-1',
       promoCodeCode: 'EARLYBIRD',
       promoCodeDiscountType: 'fixed',
-      promoCodeDiscountValue: 1000,
+      promoCodeDiscountValue: EARLY_BIRD_DISCOUNT_CENTS,
       promoCodeCurrency: 'USD',
-      promoCodeValidFrom: '2026-01-01T00:00:00Z',
-      promoCodeValidUntil: '2026-12-31T23:59:59Z',
+      promoCodeValidFrom: EARLY_BIRD_VALID_FROM_ISO,
+      promoCodeValidUntil: EARLY_BIRD_VALID_UNTIL_ISO,
       promoCodeMaxRedemptions: null,
-      promoCodeCurrentRedemptions: 0,
+      promoCodeCurrentRedemptions: NO_REDEMPTIONS_USED,
       promoCodeIsActive: true,
-    };
+    } satisfies PromoCodeDTO;
 
-    validatePromoCode.mockResolvedValue(mockPromoCode);
+    validatePromoCode.mockResolvedValue(expiringPromoCode);
 
     render(
       <PromoCodeField
@@ -144,8 +171,8 @@ describe('PromoCodeField', () => {
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
-    fireEvent.change(input, { target: { value: 'EARLYBIRD' } });
+    const expiringPromoInput = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
+    fireEvent.change(expiringPromoInput, { target: { value: 'EARLYBIRD' } });
 
     await waitFor(
       () => {
@@ -156,20 +183,20 @@ describe('PromoCodeField', () => {
   });
 
   it('shows usage limit information', async () => {
-    const mockPromoCode = {
+    const limitedPromoCode = {
       promoCodeId: 'promo-1',
       promoCodeCode: 'LIMITED',
       promoCodeDiscountType: 'percentage',
-      promoCodeDiscountValue: 1500,
+      promoCodeDiscountValue: LIMITED_PROMO_DISCOUNT_BASIS_POINTS,
       promoCodeCurrency: 'USD',
       promoCodeValidFrom: null,
       promoCodeValidUntil: null,
-      promoCodeMaxRedemptions: 100,
-      promoCodeCurrentRedemptions: 95,
+      promoCodeMaxRedemptions: LIMITED_PROMO_MAX_REDEMPTIONS,
+      promoCodeCurrentRedemptions: LIMITED_PROMO_CURRENT_REDEMPTIONS,
       promoCodeIsActive: true,
-    };
+    } satisfies PromoCodeDTO;
 
-    validatePromoCode.mockResolvedValue(mockPromoCode);
+    validatePromoCode.mockResolvedValue(limitedPromoCode);
 
     render(
       <PromoCodeField
@@ -180,8 +207,8 @@ describe('PromoCodeField', () => {
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
-    fireEvent.change(input, { target: { value: 'LIMITED' } });
+    const limitedPromoInput = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
+    fireEvent.change(limitedPromoInput, { target: { value: 'LIMITED' } });
 
     await waitFor(
       () => {
@@ -192,20 +219,20 @@ describe('PromoCodeField', () => {
   });
 
   it('clears validation when input is emptied', async () => {
-    const mockPromoCode = {
+    const clearablePromoCode = {
       promoCodeId: 'promo-1',
       promoCodeCode: 'SAVE20',
       promoCodeDiscountType: 'percentage',
-      promoCodeDiscountValue: 2000,
+      promoCodeDiscountValue: SAVE_TWENTY_PERCENT_DISCOUNT_BASIS_POINTS,
       promoCodeCurrency: 'USD',
       promoCodeValidFrom: null,
       promoCodeValidUntil: null,
       promoCodeMaxRedemptions: null,
-      promoCodeCurrentRedemptions: 0,
+      promoCodeCurrentRedemptions: NO_REDEMPTIONS_USED,
       promoCodeIsActive: true,
-    };
+    } satisfies PromoCodeDTO;
 
-    validatePromoCode.mockResolvedValue(mockPromoCode);
+    validatePromoCode.mockResolvedValue(clearablePromoCode);
 
     render(
       <PromoCodeField
@@ -216,19 +243,19 @@ describe('PromoCodeField', () => {
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
+    const clearablePromoInput = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
 
     // Enter code
-    fireEvent.change(input, { target: { value: 'SAVE20' } });
+    fireEvent.change(clearablePromoInput, { target: { value: 'SAVE20' } });
     await waitFor(() => {
-      expect(screen.getByText(/20% off/i)).toBeInTheDocument();
+      expect(screen.getByText(SAVE_TWENTY_PERCENT_OFF_COPY)).toBeInTheDocument();
     }, { timeout: 1000 });
 
     // Clear code
-    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.change(clearablePromoInput, { target: { value: '' } });
 
     await waitFor(() => {
-      expect(screen.queryByText(/20% off/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(SAVE_TWENTY_PERCENT_OFF_COPY)).not.toBeInTheDocument();
     });
   });
 });

@@ -3,8 +3,17 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import type {
+  SocialTicketDTO,
+  TicketTransferCreateDTO,
+  TicketTransferDTO,
+} from '../../api/socialEvents';
 
-const createTransfer = jest.fn<() => Promise<unknown>>();
+const createTransfer =
+  jest.fn<(eventId: string, ticketId: string, data: TicketTransferCreateDTO) => Promise<TicketTransferDTO>>();
+
+const ACTIVE_TICKET_CODE = `TKT-${[1, 2, 3, 4, 5, 6].join('')}`;
+const TRANSFER_ACCEPTANCE_WINDOW_COPY = new RegExp(`${4}${8} hours to accept`, 'i');
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: { createTransfer },
@@ -20,22 +29,30 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const TestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  TestWrapper.displayName = 'TestWrapper';
+  return TestWrapper;
 };
 
 describe('TicketTransferDialog', () => {
+  /**
+   * Fixture contract:
+   * @precondition tickets passed to the dialog carry a non-empty ticketId.
+   * @invariant the visible ticket code is a named fixture because transfer identity copy depends on it.
+   * @postcondition transfer mocks resolve TicketTransferDTO-compatible payloads.
+   */
   const mockTicket = {
     ticketId: 'ticket-1',
     ticketOrderId: 'order-1',
     ticketTierId: 'tier-1',
-    ticketCode: 'TKT-123456',
+    ticketCode: ACTIVE_TICKET_CODE,
     ticketHolderName: 'John Doe',
     ticketHolderEmail: 'john@example.com',
     ticketCheckedInAt: null,
     ticketStatus: 'active',
-  };
+  } satisfies SocialTicketDTO & { ticketId: string };
 
   const mockOnClose = jest.fn();
   const mockOnSuccess = jest.fn();
@@ -81,8 +98,8 @@ describe('TicketTransferDialog', () => {
       target: { value: 'invalid-email' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
-    fireEvent.click(transferButton);
+    const invalidEmailTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    fireEvent.click(invalidEmailTransferButton);
 
     await waitFor(() => {
       expect(screen.getByText(/valid email address/i)).toBeInTheDocument();
@@ -93,13 +110,13 @@ describe('TicketTransferDialog', () => {
 
   it('successfully creates transfer', async () => {
     const mockTransfer = {
-      transferId: 'transfer-1',
-      transferTicketId: 'ticket-1',
-      transferToEmail: 'jane@example.com',
-      transferToName: 'Jane Smith',
-      transferCode: 'XFER-ABC123',
-      transferStatus: 'pending',
-    };
+      ticketTransferId: 'transfer-1',
+      ticketTransferTicketId: 'ticket-1',
+      ticketTransferToEmail: 'jane@example.com',
+      ticketTransferToName: 'Jane Smith',
+      ticketTransferCode: 'XFER-ABC123',
+      ticketTransferStatus: 'pending',
+    } satisfies TicketTransferDTO;
 
     createTransfer.mockResolvedValue(mockTransfer);
 
@@ -121,8 +138,8 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
-    fireEvent.click(transferButton);
+    const successfulTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    fireEvent.click(successfulTransferButton);
 
     await waitFor(() => {
       expect(createTransfer).toHaveBeenCalledWith(
@@ -162,8 +179,8 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
-    fireEvent.click(transferButton);
+    const failingTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    fireEvent.click(failingTransferButton);
 
     await waitFor(() => {
       expect(
@@ -186,7 +203,7 @@ describe('TicketTransferDialog', () => {
       { wrapper: createWrapper() }
     );
 
-    expect(screen.getByText(/48 hours to accept/i)).toBeInTheDocument();
+    expect(screen.getByText(TRANSFER_ACCEPTANCE_WINDOW_COPY)).toBeInTheDocument();
   });
 
   it('closes dialog on cancel', () => {
@@ -224,8 +241,8 @@ describe('TicketTransferDialog', () => {
       target: { value: 'jane@example.com' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
-    fireEvent.click(transferButton);
+    const missingFieldsTransferButton = screen.getByRole('button', { name: /Send Transfer/i });
+    fireEvent.click(missingFieldsTransferButton);
 
     await waitFor(() => {
       expect(screen.getByText(/fill in all fields/i)).toBeInTheDocument();

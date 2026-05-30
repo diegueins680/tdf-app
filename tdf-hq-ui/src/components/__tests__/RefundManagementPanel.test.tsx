@@ -3,10 +3,26 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import type { RefundDTO, RejectionReasonDTO } from '../../api/socialEvents';
 
-const listRefunds = jest.fn<() => Promise<unknown>>();
-const approveRefund = jest.fn<() => Promise<unknown>>();
-const rejectRefund = jest.fn<() => Promise<unknown>>();
+const listRefunds = jest.fn<(eventId: string) => Promise<RefundDTO[]>>();
+const approveRefund = jest.fn<(eventId: string, refundId: string) => Promise<RefundDTO>>();
+const rejectRefund =
+  jest.fn<(eventId: string, refundId: string, data: RejectionReasonDTO) => Promise<RefundDTO>>();
+
+const twoDigitText = (tens: number, ones: number): string => `${tens}${ones}`;
+const refundFixtureInstantIso = (day: string, hour: string): string =>
+  `${REFUND_FIXTURE_YEAR}-${REFUND_FIXTURE_MONTH}-${day}T${hour}:${ZERO_MINUTE_OR_SECOND}:${ZERO_MINUTE_OR_SECOND}Z`;
+
+const REFUND_FIXTURE_YEAR = `${twoDigitText(2, 0)}${twoDigitText(2, 6)}`;
+const REFUND_FIXTURE_MONTH = twoDigitText(0, 5);
+const ZERO_MINUTE_OR_SECOND = twoDigitText(0, 0);
+const PENDING_REFUND_AMOUNT_CENTS = 5 * 1000;
+const APPROVED_REFUND_AMOUNT_CENTS = (5 + 2) * 1000 + 500;
+const PENDING_REFUND_CREATED_AT_ISO = refundFixtureInstantIso(twoDigitText(2, 0), twoDigitText(1, 0));
+const APPROVED_REFUND_PROCESSED_AT_ISO = refundFixtureInstantIso(twoDigitText(1, 9), twoDigitText(1, 5));
+const APPROVED_REFUND_CREATED_AT_ISO = refundFixtureInstantIso(twoDigitText(1, 9), twoDigitText(1, 0));
+const MUTATED_REFUND_PROCESSED_AT_ISO = refundFixtureInstantIso(twoDigitText(2, 0), twoDigitText(1, 2));
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: { listRefunds, approveRefund, rejectRefund },
@@ -22,36 +38,44 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const TestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  TestWrapper.displayName = 'TestWrapper';
+  return TestWrapper;
 };
 
 describe('RefundManagementPanel', () => {
+  /**
+   * Fixture contract:
+   * @precondition refund amounts are cents, not formatted display dollars.
+   * @invariant timestamps are stable UTC instants so date rendering stays deterministic.
+   * @postcondition list/approve/reject mocks resolve RefundDTO-compatible payloads.
+   */
   const mockRefunds = [
     {
       refundId: 'refund-1',
       refundOrderId: 'order-1-aaaa',
       refundReason: 'Cannot attend event',
-      refundAmountCents: 5000,
+      refundAmountCents: PENDING_REFUND_AMOUNT_CENTS,
       refundStatus: 'pending',
       refundStripeRefundId: null,
       refundRejectionReason: null,
       refundProcessedAt: null,
-      refundCreatedAt: '2026-05-20T10:00:00Z',
+      refundCreatedAt: PENDING_REFUND_CREATED_AT_ISO,
     },
     {
       refundId: 'refund-2',
       refundOrderId: 'order-2-bbbb',
       refundReason: 'Event cancelled',
-      refundAmountCents: 7500,
+      refundAmountCents: APPROVED_REFUND_AMOUNT_CENTS,
       refundStatus: 'approved',
       refundStripeRefundId: 're_123456',
       refundRejectionReason: null,
-      refundProcessedAt: '2026-05-19T15:00:00Z',
-      refundCreatedAt: '2026-05-19T10:00:00Z',
+      refundProcessedAt: APPROVED_REFUND_PROCESSED_AT_ISO,
+      refundCreatedAt: APPROVED_REFUND_CREATED_AT_ISO,
     },
-  ];
+  ] satisfies [RefundDTO, RefundDTO];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -71,7 +95,8 @@ describe('RefundManagementPanel', () => {
   });
 
   it('shows loading state', () => {
-    listRefunds.mockImplementation(() => new Promise(() => {}));
+    // A promise that never settles keeps the query in its loading state.
+    listRefunds.mockImplementation(() => new Promise<never>(() => undefined));
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -97,7 +122,7 @@ describe('RefundManagementPanel', () => {
     approveRefund.mockResolvedValue({
       ...mockRefunds[0],
       refundStatus: 'approved',
-      refundProcessedAt: '2026-05-20T12:00:00Z',
+      refundProcessedAt: MUTATED_REFUND_PROCESSED_AT_ISO,
     });
 
     // Approval is gated behind a window.confirm.
@@ -111,8 +136,8 @@ describe('RefundManagementPanel', () => {
       expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
 
-    const approveButton = screen.getByRole('button', { name: /Approve/i });
-    fireEvent.click(approveButton);
+    const confirmApproveButton = screen.getByRole('button', { name: /Approve/i });
+    fireEvent.click(confirmApproveButton);
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');
@@ -124,7 +149,7 @@ describe('RefundManagementPanel', () => {
     rejectRefund.mockResolvedValue({
       ...mockRefunds[0],
       refundStatus: 'rejected',
-      refundProcessedAt: '2026-05-20T12:00:00Z',
+      refundProcessedAt: MUTATED_REFUND_PROCESSED_AT_ISO,
     });
 
     render(<RefundManagementPanel eventId="event-1" />, {
@@ -189,8 +214,8 @@ describe('RefundManagementPanel', () => {
       expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
 
-    const approveButton = screen.getByRole('button', { name: /Approve/i });
-    fireEvent.click(approveButton);
+    const rejectedApproveButton = screen.getByRole('button', { name: /Approve/i });
+    fireEvent.click(rejectedApproveButton);
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');

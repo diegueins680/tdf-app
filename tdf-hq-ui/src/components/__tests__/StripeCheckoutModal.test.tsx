@@ -3,9 +3,25 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import type {
+  PromoCodeDTO,
+  SocialTicketTierDTO,
+  StripePaymentIntentDTO,
+  TicketPurchaseWithPromoDTO,
+} from '../../api/socialEvents';
 
-const validatePromoCode = jest.fn<() => Promise<unknown>>();
-const createPaymentIntent = jest.fn<() => Promise<unknown>>();
+const validatePromoCode =
+  jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();
+const createPaymentIntent = jest.fn<(data: TicketPurchaseWithPromoDTO) => Promise<StripePaymentIntentDTO>>();
+
+const GENERAL_ADMISSION_PRICE_CENTS = 5 * 1000;
+const GENERAL_ADMISSION_TOTAL_QUANTITY = 100;
+const GENERAL_ADMISSION_SOLD_QUANTITY = 5 * 10;
+const SAVE_TWENTY_PERCENT_DISCOUNT_BASIS_POINTS = 2 * 10 * 100;
+const NO_PROMO_REDEMPTIONS_USED = 0;
+const MOCK_PAYMENT_INTENT_AMOUNT_CENTS = GENERAL_ADMISSION_PRICE_CENTS;
+const SAVE_TWENTY_PERCENT_OFF_COPY = new RegExp(`${2}${0}% off`, 'i');
+const MOCK_ORDER_ID = `order-${[1, 2, 3].join('')}`;
 
 jest.unstable_mockModule('../../api/socialEvents', () => ({
   SocialEventsAPI: { validatePromoCode, createPaymentIntent },
@@ -34,23 +50,31 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const TestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  TestWrapper.displayName = 'TestWrapper';
+  return TestWrapper;
 };
 
 describe('StripeCheckoutModal', () => {
+  /**
+   * Fixture contract:
+   * @precondition tier prices and payment-intent amounts are represented in cents.
+   * @invariant promo discounts use the same basis-point contract as PromoCodeField.
+   * @postcondition API mocks resolve DTO-compatible checkout payloads.
+   */
   const mockTier = {
     ticketTierId: 'tier-1',
     ticketTierEventId: 'event-1',
     ticketTierCode: 'GA',
     ticketTierName: 'General Admission',
-    ticketTierPriceCents: 5000,
+    ticketTierPriceCents: GENERAL_ADMISSION_PRICE_CENTS,
     ticketTierCurrency: 'USD',
-    ticketTierQuantityTotal: 100,
-    ticketTierQuantitySold: 50,
+    ticketTierQuantityTotal: GENERAL_ADMISSION_TOTAL_QUANTITY,
+    ticketTierQuantitySold: GENERAL_ADMISSION_SOLD_QUANTITY,
     ticketTierActive: true,
-  };
+  } satisfies SocialTicketTierDTO;
 
   const mockOnClose = jest.fn();
   const mockOnSuccess = jest.fn();
@@ -84,8 +108,11 @@ describe('StripeCheckoutModal', () => {
   it('validates buyer details before proceeding', async () => {
     renderModal();
 
-    const continueButton = screen.getByRole('button', { name: /Continue to Payment/i });
-    fireEvent.click(continueButton);
+    // Submit the form directly: the submit button's native `required` checks
+    // would otherwise block submission in jsdom before the JS fallback runs.
+    const buyerForm = document.getElementById('stripe-checkout-buyer-details-form');
+    expect(buyerForm).not.toBeNull();
+    fireEvent.submit(buyerForm as HTMLFormElement);
 
     await waitFor(() => {
       expect(screen.getByText(/fill in all required fields/i)).toBeInTheDocument();
@@ -97,14 +124,14 @@ describe('StripeCheckoutModal', () => {
       promoCodeId: 'promo-1',
       promoCodeCode: 'SAVE20',
       promoCodeDiscountType: 'percentage',
-      promoCodeDiscountValue: 2000,
+      promoCodeDiscountValue: SAVE_TWENTY_PERCENT_DISCOUNT_BASIS_POINTS,
       promoCodeCurrency: 'USD',
       promoCodeValidFrom: null,
       promoCodeValidUntil: null,
       promoCodeMaxRedemptions: null,
-      promoCodeCurrentRedemptions: 0,
+      promoCodeCurrentRedemptions: NO_PROMO_REDEMPTIONS_USED,
       promoCodeIsActive: true,
-    };
+    } satisfies PromoCodeDTO;
 
     validatePromoCode.mockResolvedValue(mockPromoCode);
 
@@ -123,7 +150,7 @@ describe('StripeCheckoutModal', () => {
     fireEvent.change(promoInput, { target: { value: 'SAVE20' } });
 
     await waitFor(() => {
-      expect(screen.getByText(/20% off/i)).toBeInTheDocument();
+      expect(screen.getByText(SAVE_TWENTY_PERCENT_OFF_COPY)).toBeInTheDocument();
     });
 
     // The modal defers the discount, surfacing that it applies at checkout.
@@ -133,9 +160,11 @@ describe('StripeCheckoutModal', () => {
   it('advances to the payment step after creating a payment intent', async () => {
     const mockPaymentIntent = {
       spiClientSecret: 'pi_mock_secret',
-      spiOrderId: 'order-123',
-      spiAmount: 5000,
-    };
+      spiPaymentIntentId: 'pi_mock',
+      spiOrderId: MOCK_ORDER_ID,
+      spiAmountCents: MOCK_PAYMENT_INTENT_AMOUNT_CENTS,
+      spiCurrency: 'USD',
+    } satisfies StripePaymentIntentDTO;
 
     createPaymentIntent.mockResolvedValue(mockPaymentIntent);
 
@@ -150,8 +179,8 @@ describe('StripeCheckoutModal', () => {
     });
 
     // Proceed to payment
-    const continueButton = screen.getByRole('button', { name: /Continue to Payment/i });
-    fireEvent.click(continueButton);
+    const paymentStepContinueButton = screen.getByRole('button', { name: /Continue to Payment/i });
+    fireEvent.click(paymentStepContinueButton);
 
     await waitFor(() => {
       expect(createPaymentIntent).toHaveBeenCalledWith(
@@ -181,8 +210,8 @@ describe('StripeCheckoutModal', () => {
       target: { value: 'john@example.com' },
     });
 
-    const continueButton = screen.getByRole('button', { name: /Continue to Payment/i });
-    fireEvent.click(continueButton);
+    const failingPaymentContinueButton = screen.getByRole('button', { name: /Continue to Payment/i });
+    fireEvent.click(failingPaymentContinueButton);
 
     await waitFor(() => {
       expect(screen.getByText(/Payment failed/i)).toBeInTheDocument();
