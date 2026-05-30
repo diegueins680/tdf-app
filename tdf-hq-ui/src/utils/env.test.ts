@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { env, reportMissingEnv } from './env';
+import { logger } from './logger';
 
 type EnvTestWindow = Window & {
   __ENV__?: Record<string, string | undefined>;
@@ -27,24 +28,29 @@ describe('env utils', () => {
     expect(env.read('VITE_SAMPLE')).toBe('enabled');
   });
 
-  it('tracks missing vars across calls and warns only for newly missing keys', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  it('tracks missing vars across calls and reports only newly missing keys through the logger', () => {
+    const loggerWarnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     reportMissingEnv(['VITE_A']);
     expect(testWindow.__MISSING_ENV__).toEqual(['VITE_A']);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenLastCalledWith('Faltan variables de entorno críticas:', 'VITE_A');
+    expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
+    expect(loggerWarnSpy).toHaveBeenLastCalledWith('Faltan variables de entorno críticas', { keys: ['VITE_A'] });
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
 
     reportMissingEnv(['VITE_A']);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
 
     testWindow.__ENV__ = { VITE_A: 'configured' };
     reportMissingEnv(['VITE_A', 'VITE_B']);
     expect(testWindow.__MISSING_ENV__).toEqual(['VITE_B']);
-    expect(warnSpy).toHaveBeenCalledTimes(2);
-    expect(warnSpy).toHaveBeenLastCalledWith('Faltan variables de entorno críticas:', 'VITE_B');
+    expect(loggerWarnSpy).toHaveBeenCalledTimes(2);
+    expect(loggerWarnSpy).toHaveBeenLastCalledWith('Faltan variables de entorno críticas', { keys: ['VITE_B'] });
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
 
     reportMissingEnv(['VITE_B']);
-    expect(warnSpy).toHaveBeenCalledTimes(2);
+    expect(loggerWarnSpy).toHaveBeenCalledTimes(2);
+    expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 });
