@@ -316,6 +316,7 @@ import TDF.Server
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
     , resolveResourcesForBooking
+    , runDb
     , resolvePackagePurchaseRefs
     , resolveInvoiceCustomerId
     , createInvoice
@@ -11207,6 +11208,46 @@ spec = describe "TDF.Server helpers" $ do
                 Right resourceKeys ->
                     expectationFailure
                         ("Expected unavailable DJ fallback rooms to be rejected, got: " <> show resourceKeys)
+
+        it "returns resource conflicts through Handler instead of escaping as an internal server error" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeResourceSchema pool
+            runSqlPool
+                (do
+                    boothOneId <- insertBookingResourceFixture "DJ Booth 1" "dj-booth-1"
+                    boothTwoId <- insertBookingResourceFixture "DJ Booth 2" "dj-booth-2"
+                    insertBookingResourceHoldFixture
+                        "Existing DJ booking 1"
+                        boothOneId
+                        startsAt
+                        endsAt
+                    insertBookingResourceHoldFixture
+                        "Existing DJ booking 2"
+                        boothTwoId
+                        startsAt
+                        endsAt
+                )
+                pool
+            result <-
+                runHandler $
+                    runReaderT
+                        (runDb $ resolveResourcesForBooking (Just "dj practice") [] startsAt endsAt)
+                        Env
+                            { envPool = pool
+                            , envConfig = marketplaceTestConfig False
+                            }
+
+            case result of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain`
+                            "default resources for service dj practice are unavailable: DJ Booth 1, DJ Booth 2"
+                Right resourceKeys ->
+                    expectationFailure
+                        ("Expected Handler to return the booking conflict, got: " <> show resourceKeys)
 
         it "rejects duplicate explicit room ids instead of silently deduplicating booking intent" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)

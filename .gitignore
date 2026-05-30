@@ -11,6 +11,7 @@ neon-env-vars
 # Build artifacts - Backend (Haskell)
 .stack-work/
 .stack-root/
+.stack-root-local/
 *.hi
 *.o
 *.dyn_hi

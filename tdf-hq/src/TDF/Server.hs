@@ -621,7 +621,11 @@ runDB = runDb
 runDb :: SqlPersistT IO a -> AppM a
 runDb action = do
   Env{..} <- ask
-  liftIO $ runSqlPool action envPool
+  result <- liftIO $ tryServerError (runSqlPool action envPool)
+  either throwError pure result
+
+tryServerError :: IO a -> IO (Either ServerError a)
+tryServerError = try
 
 type CombinedAPI = TrialsAPI :<|> API
 
@@ -8722,7 +8726,7 @@ createPublicBooking PublicBookingReq{..} = do
     either throwError pure $
       validatePublicBookingNotes pbNotes
   (partyId, _) <- ensurePartyWithAccount (Just fullNameClean) emailClean phoneClean
-  resourceKeys <- liftIO $ flip runSqlPool pool $
+  resourceKeys <- runDB $
     resolveResourcesForBooking serviceTypeClean (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
@@ -8792,7 +8796,7 @@ createBooking user req = do
     Left msg -> throwBadRequest msg
     Right () -> pure ()
 
-  resourceKeys <- liftIO $ flip runSqlPool pool $
+  resourceKeys <- runDB $
     resolveResourcesForBooking serviceTypeClean requestedRooms (cbStartsAt req) (cbEndsAt req)
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
