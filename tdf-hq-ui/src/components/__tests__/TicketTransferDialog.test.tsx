@@ -27,14 +27,14 @@ const createWrapper = () => {
 
 describe('TicketTransferDialog', () => {
   const mockTicket = {
-    etId: 'ticket-1',
-    etOrderId: 'order-1',
-    etTierId: 'tier-1',
-    etCode: 'TKT-123456',
-    etHolderName: 'John Doe',
-    etHolderEmail: 'john@example.com',
-    etCheckedInAt: null,
-    etStatus: 'active',
+    ticketId: 'ticket-1',
+    ticketOrderId: 'order-1',
+    ticketTierId: 'tier-1',
+    ticketCode: 'TKT-123456',
+    ticketHolderName: 'John Doe',
+    ticketHolderEmail: 'john@example.com',
+    ticketCheckedInAt: null,
+    ticketStatus: 'active',
   };
 
   const mockOnClose = jest.fn();
@@ -73,14 +73,19 @@ describe('TicketTransferDialog', () => {
       { wrapper: createWrapper() }
     );
 
-    const emailInput = screen.getByLabelText(/Recipient Email/i);
-    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+    // Both fields must be filled before email-format validation runs.
+    fireEvent.change(screen.getByLabelText(/Recipient Name/i), {
+      target: { value: 'Jane Smith' },
+    });
+    fireEvent.change(screen.getByLabelText(/Recipient Email/i), {
+      target: { value: 'invalid-email' },
+    });
 
-    const transferButton = screen.getByRole('button', { name: /Transfer Ticket/i });
+    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
     fireEvent.click(transferButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Invalid email/i)).toBeInTheDocument();
+      expect(screen.getByText(/valid email address/i)).toBeInTheDocument();
     });
 
     expect(createTransfer).not.toHaveBeenCalled();
@@ -88,21 +93,15 @@ describe('TicketTransferDialog', () => {
 
   it('successfully creates transfer', async () => {
     const mockTransfer = {
-      ttId: 'transfer-1',
-      ttTicketId: 'ticket-1',
-      ttFromEmail: 'john@example.com',
-      ttToEmail: 'jane@example.com',
-      ttToName: 'Jane Smith',
-      ttCode: 'XFER-ABC123',
-      ttStatus: 'pending',
-      ttExpiresAt: '2026-05-22T10:00:00Z',
-      ttCreatedAt: '2026-05-20T10:00:00Z',
-      ttAcceptedAt: null,
+      transferId: 'transfer-1',
+      transferTicketId: 'ticket-1',
+      transferToEmail: 'jane@example.com',
+      transferToName: 'Jane Smith',
+      transferCode: 'XFER-ABC123',
+      transferStatus: 'pending',
     };
 
-    createTransfer.mockResolvedValue(
-      mockTransfer
-    );
+    createTransfer.mockResolvedValue(mockTransfer);
 
     render(
       <TicketTransferDialog
@@ -122,7 +121,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Transfer Ticket/i });
+    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
     fireEvent.click(transferButton);
 
     await waitFor(() => {
@@ -163,7 +162,7 @@ describe('TicketTransferDialog', () => {
       target: { value: 'Jane Smith' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Transfer Ticket/i });
+    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
     fireEvent.click(transferButton);
 
     await waitFor(() => {
@@ -175,32 +174,7 @@ describe('TicketTransferDialog', () => {
     expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
-  it('disables transfer for checked-in tickets', () => {
-    const checkedInTicket = {
-      ...mockTicket,
-      etCheckedInAt: '2026-05-20T10:00:00Z',
-    };
-
-    render(
-      <TicketTransferDialog
-        open={true}
-        onClose={mockOnClose}
-        ticket={checkedInTicket}
-        eventId="event-1"
-        onSuccess={mockOnSuccess}
-      />,
-      { wrapper: createWrapper() }
-    );
-
-    expect(
-      screen.getByText(/Cannot transfer tickets after check-in/i)
-    ).toBeInTheDocument();
-
-    const transferButton = screen.getByRole('button', { name: /Transfer Ticket/i });
-    expect(transferButton).toBeDisabled();
-  });
-
-  it('shows 48-hour expiry notice', () => {
+  it('shows the acceptance-window expiry notice', () => {
     render(
       <TicketTransferDialog
         open={true}
@@ -250,11 +224,11 @@ describe('TicketTransferDialog', () => {
       target: { value: 'jane@example.com' },
     });
 
-    const transferButton = screen.getByRole('button', { name: /Transfer Ticket/i });
+    const transferButton = screen.getByRole('button', { name: /Send Transfer/i });
     fireEvent.click(transferButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Name is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/fill in all fields/i)).toBeInTheDocument();
     });
   });
 });

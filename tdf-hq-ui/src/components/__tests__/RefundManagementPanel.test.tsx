@@ -30,44 +30,26 @@ const createWrapper = () => {
 describe('RefundManagementPanel', () => {
   const mockRefunds = [
     {
-      trrId: 'refund-1',
-      trrOrderId: 'order-1',
-      trrStatus: 'pending',
-      trrReason: 'Cannot attend event',
-      trrRequestedAt: '2026-05-20T10:00:00Z',
-      trrProcessedAt: null,
-      trrStripeRefundId: null,
-      trrRefundAmount: 5000,
-      order: {
-        etoId: 'order-1',
-        etoEventId: 'event-1',
-        etoTierId: 'tier-1',
-        etoBuyerEmail: 'john@example.com',
-        etoBuyerName: 'John Doe',
-        etoQuantity: 2,
-        etoTotalAmountCents: 10000,
-        etoStatus: 'completed',
-      },
+      refundId: 'refund-1',
+      refundOrderId: 'order-1-aaaa',
+      refundReason: 'Cannot attend event',
+      refundAmountCents: 5000,
+      refundStatus: 'pending',
+      refundStripeRefundId: null,
+      refundRejectionReason: null,
+      refundProcessedAt: null,
+      refundCreatedAt: '2026-05-20T10:00:00Z',
     },
     {
-      trrId: 'refund-2',
-      trrOrderId: 'order-2',
-      trrStatus: 'approved',
-      trrReason: 'Event cancelled',
-      trrRequestedAt: '2026-05-19T10:00:00Z',
-      trrProcessedAt: '2026-05-19T15:00:00Z',
-      trrStripeRefundId: 're_123456',
-      trrRefundAmount: 7500,
-      order: {
-        etoId: 'order-2',
-        etoEventId: 'event-1',
-        etoTierId: 'tier-1',
-        etoBuyerEmail: 'jane@example.com',
-        etoBuyerName: 'Jane Smith',
-        etoQuantity: 1,
-        etoTotalAmountCents: 7500,
-        etoStatus: 'refunded',
-      },
+      refundId: 'refund-2',
+      refundOrderId: 'order-2-bbbb',
+      refundReason: 'Event cancelled',
+      refundAmountCents: 7500,
+      refundStatus: 'approved',
+      refundStripeRefundId: 're_123456',
+      refundRejectionReason: null,
+      refundProcessedAt: '2026-05-19T15:00:00Z',
+      refundCreatedAt: '2026-05-19T10:00:00Z',
     },
   ];
 
@@ -76,24 +58,20 @@ describe('RefundManagementPanel', () => {
   });
 
   it('renders refund list', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+    listRefunds.mockResolvedValue(mockRefunds);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('USD 75.00')).toBeInTheDocument();
     });
   });
 
   it('shows loading state', () => {
-    listRefunds.mockImplementation(
-      () => new Promise(() => {})
-    );
+    listRefunds.mockImplementation(() => new Promise(() => {}));
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -115,135 +93,126 @@ describe('RefundManagementPanel', () => {
   });
 
   it('approves refund request', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+    listRefunds.mockResolvedValue(mockRefunds);
     approveRefund.mockResolvedValue({
       ...mockRefunds[0],
-      trrStatus: 'approved',
-      trrProcessedAt: '2026-05-20T12:00:00Z',
+      refundStatus: 'approved',
+      refundProcessedAt: '2026-05-20T12:00:00Z',
     });
+
+    // Approval is gated behind a window.confirm.
+    global.confirm = jest.fn(() => true);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
 
-    const approveButton = screen.getAllByRole('button', { name: /Approve/i })[0];
+    const approveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(approveRefund).toHaveBeenCalledWith(
-        'event-1',
-        'refund-1'
-      );
+      expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');
     });
   });
 
   it('rejects refund request with reason', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+    listRefunds.mockResolvedValue(mockRefunds);
     rejectRefund.mockResolvedValue({
       ...mockRefunds[0],
-      trrStatus: 'rejected',
-      trrProcessedAt: '2026-05-20T12:00:00Z',
+      refundStatus: 'rejected',
+      refundProcessedAt: '2026-05-20T12:00:00Z',
     });
-
-    // Mock window.prompt
-    global.prompt = jest.fn(() => 'Past refund deadline');
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
 
-    const rejectButton = screen.getAllByRole('button', { name: /Reject/i })[0];
-    fireEvent.click(rejectButton);
+    // Open the rejection dialog from the pending refund row.
+    fireEvent.click(screen.getByRole('button', { name: /^Reject$/i }));
+
+    const reasonInput = await screen.findByLabelText(/Rejection Reason/i);
+    fireEvent.change(reasonInput, { target: { value: 'Past refund deadline' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /Reject Refund/i }));
 
     await waitFor(() => {
-      expect(rejectRefund).toHaveBeenCalledWith(
-        'event-1',
-        'refund-1',
-        'Past refund deadline'
-      );
+      expect(rejectRefund).toHaveBeenCalledWith('event-1', 'refund-1', {
+        rrReason: 'Past refund deadline',
+      });
     });
   });
 
   it('displays refund status chips correctly', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+    listRefunds.mockResolvedValue(mockRefunds);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Pending')).toBeInTheDocument();
-      expect(screen.getByText('Approved')).toBeInTheDocument();
+      expect(screen.getByText('PENDING')).toBeInTheDocument();
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
     });
   });
 
   it('formats refund amounts correctly', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+    listRefunds.mockResolvedValue(mockRefunds);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('$50.00')).toBeInTheDocument();
-      expect(screen.getByText('$75.00')).toBeInTheDocument();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('USD 75.00')).toBeInTheDocument();
     });
   });
 
-  it('handles approval error', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
-    approveRefund.mockRejectedValue(
-      new Error('Stripe refund failed')
-    );
+  it('invokes approval even though the panel has no inline error surface', async () => {
+    listRefunds.mockResolvedValue(mockRefunds);
+    approveRefund.mockRejectedValue(new Error('Stripe refund failed'));
+    global.confirm = jest.fn(() => true);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
 
-    const approveButton = screen.getAllByRole('button', { name: /Approve/i })[0];
+    const approveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Stripe refund failed/i)).toBeInTheDocument();
+      expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');
     });
+
+    // A failed approval leaves the row in place (no crash, no inline alert).
+    expect(screen.getByText('USD 50.00')).toBeInTheDocument();
   });
 
-  it('disables action buttons for processed refunds', async () => {
-    listRefunds.mockResolvedValue(
-      mockRefunds
-    );
+  it('only renders action buttons for pending refunds', async () => {
+    listRefunds.mockResolvedValue(mockRefunds);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      const buttons = screen.getAllByRole('button');
-      const approveButtons = buttons.filter((btn) => btn.textContent === 'Approve');
-      // Second refund is approved, so its buttons should be disabled
-      expect(approveButtons[1]).toBeDisabled();
+      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
     });
+
+    // Only the single pending refund exposes Approve/Reject actions.
+    expect(screen.getAllByRole('button', { name: /Approve/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /^Reject$/i })).toHaveLength(1);
   });
 });

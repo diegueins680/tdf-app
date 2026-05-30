@@ -26,7 +26,7 @@ const createWrapper = () => {
 };
 
 describe('PromoCodeField', () => {
-  const mockOnValidCode = jest.fn();
+  const mockOnPromoApplied = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -37,41 +37,40 @@ describe('PromoCodeField', () => {
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    expect(screen.getByPlaceholderText(/Enter promo code/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/ENTER-CODE-HERE/i)).toBeInTheDocument();
   });
 
   it('validates promo code with debounce', async () => {
     const mockPromoCode = {
-      pcId: 'promo-1',
-      pcCode: 'SAVE20',
-      pcDiscountType: 'percentage',
-      pcDiscountValue: 20,
-      pcValidFrom: null,
-      pcValidUntil: null,
-      pcMaxRedemptions: 100,
-      pcCurrentRedemptions: 50,
-      pcIsActive: true,
+      promoCodeId: 'promo-1',
+      promoCodeCode: 'SAVE20',
+      promoCodeDiscountType: 'percentage',
+      promoCodeDiscountValue: 2000,
+      promoCodeCurrency: 'USD',
+      promoCodeValidFrom: null,
+      promoCodeValidUntil: null,
+      promoCodeMaxRedemptions: 100,
+      promoCodeCurrentRedemptions: 50,
+      promoCodeIsActive: true,
     };
 
-    validatePromoCode.mockResolvedValue(
-      mockPromoCode
-    );
+    validatePromoCode.mockResolvedValue(mockPromoCode);
 
     render(
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/Enter promo code/i);
+    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
     fireEvent.change(input, { target: { value: 'SAVE20' } });
 
     // Wait for debounce and validation
@@ -79,6 +78,7 @@ describe('PromoCodeField', () => {
       () => {
         expect(validatePromoCode).toHaveBeenCalledWith(
           'event-1',
+          'SAVE20',
           'SAVE20',
           'tier-1'
         );
@@ -90,24 +90,22 @@ describe('PromoCodeField', () => {
       expect(screen.getByText(/20% off/i)).toBeInTheDocument();
     });
 
-    expect(mockOnValidCode).toHaveBeenCalledWith(mockPromoCode);
+    expect(mockOnPromoApplied).toHaveBeenLastCalledWith('SAVE20');
   });
 
   it('shows error for invalid promo code', async () => {
-    validatePromoCode.mockRejectedValue(
-      new Error('Invalid promo code')
-    );
+    validatePromoCode.mockRejectedValue(new Error('Invalid promo code'));
 
     render(
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/Enter promo code/i);
+    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
     fireEvent.change(input, { target: { value: 'INVALID' } });
 
     await waitFor(
@@ -117,36 +115,36 @@ describe('PromoCodeField', () => {
       { timeout: 1000 }
     );
 
-    expect(mockOnValidCode).not.toHaveBeenCalled();
+    // Invalid codes report null to the parent.
+    expect(mockOnPromoApplied).toHaveBeenLastCalledWith(null);
   });
 
   it('shows expiry date for time-limited promo codes', async () => {
     const mockPromoCode = {
-      pcId: 'promo-1',
-      pcCode: 'EARLYBIRD',
-      pcDiscountType: 'fixed_amount',
-      pcDiscountValue: 1000,
-      pcValidFrom: '2026-01-01T00:00:00Z',
-      pcValidUntil: '2026-12-31T23:59:59Z',
-      pcMaxRedemptions: null,
-      pcCurrentRedemptions: 0,
-      pcIsActive: true,
+      promoCodeId: 'promo-1',
+      promoCodeCode: 'EARLYBIRD',
+      promoCodeDiscountType: 'fixed',
+      promoCodeDiscountValue: 1000,
+      promoCodeCurrency: 'USD',
+      promoCodeValidFrom: '2026-01-01T00:00:00Z',
+      promoCodeValidUntil: '2026-12-31T23:59:59Z',
+      promoCodeMaxRedemptions: null,
+      promoCodeCurrentRedemptions: 0,
+      promoCodeIsActive: true,
     };
 
-    validatePromoCode.mockResolvedValue(
-      mockPromoCode
-    );
+    validatePromoCode.mockResolvedValue(mockPromoCode);
 
     render(
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/Enter promo code/i);
+    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
     fireEvent.change(input, { target: { value: 'EARLYBIRD' } });
 
     await waitFor(
@@ -159,31 +157,30 @@ describe('PromoCodeField', () => {
 
   it('shows usage limit information', async () => {
     const mockPromoCode = {
-      pcId: 'promo-1',
-      pcCode: 'LIMITED',
-      pcDiscountType: 'percentage',
-      pcDiscountValue: 15,
-      pcValidFrom: null,
-      pcValidUntil: null,
-      pcMaxRedemptions: 100,
-      pcCurrentRedemptions: 95,
-      pcIsActive: true,
+      promoCodeId: 'promo-1',
+      promoCodeCode: 'LIMITED',
+      promoCodeDiscountType: 'percentage',
+      promoCodeDiscountValue: 1500,
+      promoCodeCurrency: 'USD',
+      promoCodeValidFrom: null,
+      promoCodeValidUntil: null,
+      promoCodeMaxRedemptions: 100,
+      promoCodeCurrentRedemptions: 95,
+      promoCodeIsActive: true,
     };
 
-    validatePromoCode.mockResolvedValue(
-      mockPromoCode
-    );
+    validatePromoCode.mockResolvedValue(mockPromoCode);
 
     render(
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/Enter promo code/i);
+    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
     fireEvent.change(input, { target: { value: 'LIMITED' } });
 
     await waitFor(
@@ -196,31 +193,30 @@ describe('PromoCodeField', () => {
 
   it('clears validation when input is emptied', async () => {
     const mockPromoCode = {
-      pcId: 'promo-1',
-      pcCode: 'SAVE20',
-      pcDiscountType: 'percentage',
-      pcDiscountValue: 20,
-      pcValidFrom: null,
-      pcValidUntil: null,
-      pcMaxRedemptions: null,
-      pcCurrentRedemptions: 0,
-      pcIsActive: true,
+      promoCodeId: 'promo-1',
+      promoCodeCode: 'SAVE20',
+      promoCodeDiscountType: 'percentage',
+      promoCodeDiscountValue: 2000,
+      promoCodeCurrency: 'USD',
+      promoCodeValidFrom: null,
+      promoCodeValidUntil: null,
+      promoCodeMaxRedemptions: null,
+      promoCodeCurrentRedemptions: 0,
+      promoCodeIsActive: true,
     };
 
-    validatePromoCode.mockResolvedValue(
-      mockPromoCode
-    );
+    validatePromoCode.mockResolvedValue(mockPromoCode);
 
     render(
       <PromoCodeField
         eventId="event-1"
         tierId="tier-1"
-        onValidCode={mockOnValidCode}
+        onPromoApplied={mockOnPromoApplied}
       />,
       { wrapper: createWrapper() }
     );
 
-    const input = screen.getByPlaceholderText(/Enter promo code/i);
+    const input = screen.getByPlaceholderText(/ENTER-CODE-HERE/i);
 
     // Enter code
     fireEvent.change(input, { target: { value: 'SAVE20' } });

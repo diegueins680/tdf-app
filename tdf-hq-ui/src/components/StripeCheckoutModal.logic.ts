@@ -109,7 +109,11 @@ export function checkoutModalReducer(state: CheckoutModalState, action: Checkout
       };
       break;
     case 'promoChanged':
-      nextCheckoutModalState = { ...state, promoCode: action.promoCode };
+      // Bail out when the promo code is unchanged so a child re-emitting the
+      // same value (e.g. PromoCodeField clearing on mount) cannot drive a
+      // render loop through a non-memoized onPromoApplied callback.
+      nextCheckoutModalState =
+        state.promoCode === action.promoCode ? state : { ...state, promoCode: action.promoCode };
       break;
     case 'buyerSubmitStarted':
       nextCheckoutModalState = { ...state, loading: true, error: null };
