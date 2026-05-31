@@ -386,7 +386,7 @@ async function getCurrentBranch(repoRoot) {
   return stdout.trim();
 }
 
-export async function resolveLoopPushBranch(repoRoot, config = {}) {
+async function resolveLoopPushBranch(repoRoot, config = {}) {
   const configuredBranch = normalizeGitBranchShortName(config.pushBranch);
   if (configuredBranch) {
     return configuredBranch;
@@ -399,7 +399,7 @@ function isPushToMainOverrideEnabled(config = {}) {
   return Boolean(config.allowPushToMain) || isTruthyFlag(process.env[ALLOW_PUSH_TO_MAIN_ENV]);
 }
 
-export async function validateLoopConfig(repoRoot, config = {}) {
+async function validateLoopConfig(repoRoot, config = {}) {
   const pushBranch = await resolveLoopPushBranch(repoRoot, config);
   const pushingEnabled = !config.dryRun;
   const allowPushToMain = isPushToMainOverrideEnabled(config);
@@ -643,7 +643,7 @@ async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') 
   };
 }
 
-export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
+async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
   const remoteName = config.pushRemote || 'origin';
   const baseBranch = 'main';
   const startedAt = new Date().toISOString();
@@ -996,7 +996,7 @@ async function pushHead(repoRoot, remoteName, branchName) {
   await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
 }
 
-export async function syncSubmodulesRecursively(repoRoot) {
+async function syncSubmodulesRecursively(repoRoot) {
   await execText('git', ['submodule', 'sync', '--recursive'], repoRoot);
   await execText('git', ['submodule', 'update', '--init', '--recursive'], repoRoot);
 }
@@ -1276,7 +1276,7 @@ async function fetchFailedWorkflowDiagnosticsSafely(owner, repo, workflowRun) {
   }
 }
 
-export async function waitForGreenCi(repoRoot, config, sha) {
+async function waitForGreenCi(repoRoot, config, sha) {
   const deadline = Date.now() + Number(config.ciTimeoutMinutes) * 60_000;
   const remote = await getGitHubRemote(repoRoot, config.pushRemote);
   let sawChecks = false;
@@ -1418,7 +1418,7 @@ export async function waitForGreenCi(repoRoot, config, sha) {
   }
 }
 
-export async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
+async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
   const pushBranch = config.pushBranch || (await getCurrentBranch(repoRoot));
   if (!pushBranch) {
     throw new Error('Unable to determine current branch for latest-commit GitHub polling.');
@@ -1839,6 +1839,17 @@ async function main() {
 
   await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
 }
+
+export {
+  main,
+  discoverImprovementIdea,
+  resolveLoopPushBranch,
+  validateLoopConfig,
+  reconcileNonMainBranchesOntoMain,
+  syncSubmodulesRecursively,
+  waitForGreenCi,
+  syncAndPollLatestRemoteCi,
+};
 
 function isCliEntry() {
   if (!process.argv[1]) {

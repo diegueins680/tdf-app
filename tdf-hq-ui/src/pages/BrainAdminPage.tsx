@@ -234,7 +234,7 @@ export default function BrainAdminPage() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null as number | null);
-  const [form, setForm] = useState(emptyForm as BrainFormState);
+  const [form, setForm] = useState<BrainFormState>(emptyForm);
   const [formError, setFormError] = useState(null as string | null);
   const [refreshNotice, setRefreshNotice] = useState(null as string | null);
 

@@ -1,6 +1,26 @@
 import type { ReactNode } from 'react';
 import { Box, Stack, Typography, Button, Skeleton } from '@mui/material';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import { Link as RouterLink } from 'react-router-dom';
+
+type PositivePixelDimension = number;
+
+interface LoadingHeaderSkeletonDimensions {
+  readonly titleWidthPx: PositivePixelDimension;
+  readonly titleHeightPx: PositivePixelDimension;
+  readonly subtitleWidthPx: PositivePixelDimension;
+  readonly subtitleHeightPx: PositivePixelDimension;
+}
+
+// Invariant: every skeleton dimension is a positive pixel value that reserves stable loading layout space.
+const LOADING_HEADER_SKELETON_DIMENSIONS = {
+  titleWidthPx: 200,
+  titleHeightPx: 36,
+  subtitleWidthPx: 280,
+  subtitleHeightPx: 20,
+} as const satisfies LoadingHeaderSkeletonDimensions;
+
+const SKELETON_CARD_HEIGHT_PX: PositivePixelDimension = 120;
 
 export interface PageShellProps {
   title: string;
@@ -42,10 +62,26 @@ export default function PageShell({
         >
           <Stack spacing={0.5} sx={{ minWidth: 0 }}>
             {loading ? (
-              <>
-                <Skeleton variant="text" width={200} height={36} />
-                <Skeleton variant="text" width={280} height={20} />
-              </>
+              <Box
+                role="status"
+                aria-busy="true"
+                aria-live="polite"
+                aria-label="Cargando…"
+                sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}
+              >
+                <Skeleton
+                  variant="text"
+                  width={LOADING_HEADER_SKELETON_DIMENSIONS.titleWidthPx}
+                  height={LOADING_HEADER_SKELETON_DIMENSIONS.titleHeightPx}
+                  aria-hidden="true"
+                />
+                <Skeleton
+                  variant="text"
+                  width={LOADING_HEADER_SKELETON_DIMENSIONS.subtitleWidthPx}
+                  height={LOADING_HEADER_SKELETON_DIMENSIONS.subtitleHeightPx}
+                  aria-hidden="true"
+                />
+              </Box>
             ) : (
               <>
                 <Typography variant="h3" sx={{ fontSize: { xs: '1.35rem', md: '1.75rem' } }}>
@@ -111,6 +147,9 @@ export function EmptyState({
       )
     ) : null;
 
+  // Fall back to a soft, neutral illustration so empty pages never feel stark.
+  const resolvedIcon = icon ?? <InboxOutlinedIcon fontSize="inherit" />;
+
   return (
     <Box
       sx={{
@@ -124,23 +163,22 @@ export function EmptyState({
         gap: 2,
       }}
     >
-      {icon && (
-        <Box
-          sx={{
-            width: 72,
-            height: 72,
-            borderRadius: 3,
-            bgcolor: 'action.hover',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'text.secondary',
-            fontSize: 32,
-          }}
-        >
-          {icon}
-        </Box>
-      )}
+      <Box
+        aria-hidden="true"
+        sx={{
+          width: 72,
+          height: 72,
+          borderRadius: 3,
+          bgcolor: 'action.hover',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.secondary',
+          fontSize: 32,
+        }}
+      >
+        {resolvedIcon}
+      </Box>
       <Stack spacing={0.5} alignItems="center">
         <Typography variant="h5" color="text.primary">
           {title}
@@ -162,9 +200,21 @@ export function EmptyState({
 
 export function SkeletonCards({ count = 3 }: { count?: number }) {
   return (
-    <Stack spacing={3}>
+    <Stack
+      spacing={3}
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Cargando contenido…"
+    >
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} />
+        <Skeleton
+          key={i}
+          variant="rounded"
+          height={SKELETON_CARD_HEIGHT_PX}
+          sx={{ borderRadius: 3 }}
+          aria-hidden="true"
+        />
       ))}
     </Stack>
   );
