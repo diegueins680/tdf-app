@@ -85,6 +85,6 @@ test('main dry-run throws without push branch override', async () => {
 test('discoverImprovementIdea lane is one of the expected values', async () => {
   const { discoverImprovementIdea } = await import('./continuous-improvement-loop.mjs');
   const idea = await discoverImprovementIdea('/Users/diegosaa/GitHub/tdf-app', { persistState: false });
-  const expectedLanes = ['login-proof', 'store-publish', 'continuous-improvement', 'developer-experience', 'infrastructure', 'logical'];
+  const expectedLanes = ['login-proof', 'store-publish', 'continuous-improvement', 'developer-experience', 'infrastructure', 'logical', 'ux', 'ui', 'backend', 'formal'];
   assert.ok(expectedLanes.includes(idea.lane), `lane "${idea.lane}" should be one of ${expectedLanes.join(', ')}`);
 });
