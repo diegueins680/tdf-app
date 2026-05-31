@@ -319,7 +319,12 @@ start_child() {
   fi
   # Also rotate the .old backup if it exists and is oversized, to prevent unbounded disk growth
   local old_log
-  old_log="$(ls -t "$LOG_FILE."*.old 2>/dev/null | head -n 1)"
+  old_log=""
+  for f in "$LOG_FILE."*.old; do
+    [ -f "$f" ] || continue
+    old_log="$f"
+    break
+  done
   if [ -n "$old_log" ] && [ "$(stat -f%z "$old_log" 2>/dev/null || stat -c%s "$old_log" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
     rm -f "$old_log"
   fi
