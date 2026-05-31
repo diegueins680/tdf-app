@@ -45,6 +45,32 @@ log() {
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
 }
 
+# POSIX-compatible log rotation: keep at most N .old backups, remove oldest first
+rotate_old_logs() {
+  local max_backups="${CONTINUOUS_LOOP_LOG_MAX_BACKUPS:-3}"
+  local count=0
+  # Count existing .old files (newest first by filename timestamp order)
+  for f in "$LOG_FILE."*.old; do
+    [ -f "$f" ] || continue
+    count=$((count + 1))
+  done
+  while [ "$count" -gt "$max_backups" ]; do
+    local oldest=""
+    for f in "$LOG_FILE."*.old; do
+      [ -f "$f" ] || continue
+      if [ -z "$oldest" ] || [ "$f" \< "$oldest" ]; then
+        oldest="$f"
+      fi
+    done
+    if [ -n "$oldest" ]; then
+      rm -f "$oldest"
+      count=$((count - 1))
+    else
+      break
+    fi
+  done
+}
+
 gh_auth_token_available() {
   if gh auth token >/dev/null 2>&1; then
     return 0
@@ -317,7 +343,8 @@ start_child() {
   if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
     mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
   fi
-  # Also rotate the .old backup if it exists and is oversized, to prevent unbounded disk growth
+  # Rotate old backups: keep at most N and remove any oversized
+  rotate_old_logs
   local old_log
   old_log=""
   for f in "$LOG_FILE."*.old; do
