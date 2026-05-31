@@ -53,3 +53,31 @@ test('validateLoopConfig throws when targeting main without override', async () 
   const { validateLoopConfig } = await import('./continuous-improvement-loop.mjs');
   await assert.rejects(async () => validateLoopConfig('/Users/diegosaa/GitHub/tdf-app', { model: 'gpt-4o', task: 'test', dryRun: false, allowPushToMain: false }), /main/);
 });
+
+test('discoverImprovementIdea returns an object with title, markdown, and lane', async () => {
+  const { discoverImprovementIdea } = await import('./continuous-improvement-loop.mjs');
+  const idea = await discoverImprovementIdea('/Users/diegosaa/GitHub/tdf-app', { persistState: false });
+  assert.strictEqual(typeof idea, 'object');
+  assert.strictEqual(typeof idea.title, 'string');
+  assert.ok(idea.title.length > 0, 'title should be non-empty');
+  assert.strictEqual(typeof idea.markdown, 'string');
+  assert.ok(idea.markdown.length > 0, 'markdown should be non-empty');
+  assert.strictEqual(typeof idea.lane, 'string');
+  assert.ok(idea.lane.length > 0, 'lane should be non-empty');
+});
+
+test('main dry-run throws without push branch override', async () => {
+  const { main } = await import('./continuous-improvement-loop.mjs');
+  // When on main with no pushBranch configured and allowPushToMain false, main should reject
+  await assert.rejects(async () =>
+    main('/Users/diegosaa/GitHub/tdf-app', {
+      model: 'gpt-4o',
+      task: 'test',
+      dryRun: true,
+      maxIterations: 1,
+      stopOnNoChanges: true,
+      iterationDelaySeconds: 0,
+    }),
+    /main/
+  );
+});
