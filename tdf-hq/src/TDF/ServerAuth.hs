@@ -341,12 +341,18 @@ validateSignupInternshipFields rolesVal startAt endAt requiredHours skills areas
     present fieldName isProvided =
       if isProvided then Just fieldName else Nothing
 
+sanitizeSignupInternshipText :: Text -> Text
+sanitizeSignupInternshipText =
+  T.filter (not . isUnsafeSignupInternshipTextChar)
+
 validateSignupInternshipTextField :: Text -> Maybe Text -> Either ServerError ()
 validateSignupInternshipTextField fieldName rawValue =
   case cleanOptional rawValue of
     Nothing -> Right ()
-    Just cleanValue
-      | T.length cleanValue > maxSignupInternshipTextChars ->
+    Just cleanValue ->
+      let sanitized = sanitizeSignupInternshipText cleanValue
+      in if T.length sanitized > maxSignupInternshipTextChars
+        then
           Left err400
             { errBody =
                 BL.fromStrict
@@ -358,18 +364,7 @@ validateSignupInternshipTextField fieldName rawValue =
                       )
                   )
             }
-      | T.any isUnsafeSignupInternshipTextChar cleanValue ->
-          Left err400
-            { errBody =
-                BL.fromStrict
-                  ( TE.encodeUtf8
-                      ( fieldName
-                          <> " must not contain control characters or hidden formatting characters"
-                      )
-                  )
-            }
-      | otherwise ->
-          Right ()
+        else Right ()
 
 maxSignupInternshipTextChars :: Int
 maxSignupInternshipTextChars = 1000
@@ -1316,7 +1311,7 @@ runSignupDb emailVal passwordVal displayNameText phoneVal rolesVal fanArtistIdsV
               rolesToApply = nub (rolesWithArtist ++ existingRoles)
           applyRoles pid rolesToApply
           when (Intern `elem` rolesToApply) $
-            upsertInternProfile pid internStartAt internEndAt internRequiredHours internSkills internAreas nowVal
+            upsertInternProfile pid internStartAt internEndAt internRequiredHours (fmap sanitizeSignupInternshipText internSkills) (fmap sanitizeSignupInternshipText internAreas) nowVal
           forM_ fanArtistIdsVal $ \artistId -> do
             let artistKey = toSqlKey (fromIntegral artistId) :: Key Party
             when (artistKey /= pid) $
