@@ -11677,11 +11677,10 @@ openAIChatModelCandidates primaryModel =
   nub $
     filter (not . T.null)
       [ T.strip primaryModel
-      , "kimi-k2.6"
-      , "kimi-k2.5"
+      , "gpt-4.1-mini"
       , "gpt-4o-mini"
-      , "gpt-3.5-turbo"
-      , "gpt-4-turbo"
+      , "gpt-4.1"
+      , "gpt-4o"
       ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
@@ -11890,7 +11889,7 @@ resolveWorkflowId primary fallback =
 normalizeChatKitBase :: Text -> Text
 normalizeChatKitBase base =
   let trimmed = T.dropWhileEnd (== '/') (T.strip base)
-  in if T.null trimmed then "https://api.moonshot.ai" else trimmed
+  in if T.null trimmed then "https://api.openai.com" else trimmed
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =

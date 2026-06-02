@@ -5762,7 +5762,7 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
-            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model kimi-latest"
+            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model gpt-4.1-mini"
                 `shouldBe` False
             shouldRetryWithFallbackModel 400 "Invalid model response format"
                 `shouldBe` False
@@ -14300,7 +14300,7 @@ marketplaceTestConfig seedFlag =
         , openAiModel = "gpt-5-chat-latest"
         , openAiEmbedModel = "text-embedding-3-small"
         , chatKitWorkflowId = Nothing
-        , chatKitApiBase = "https://api.moonshot.cn"
+        , chatKitApiBase = "https://api.openai.com"
         , ragTopK = 8
         , ragChunkWords = 220
         , ragChunkOverlap = 40

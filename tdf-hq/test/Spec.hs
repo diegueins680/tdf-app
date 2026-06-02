@@ -1698,7 +1698,7 @@ main = hspec $ do
 
         it "normalizes configured outbound API base URLs before building requests" $
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just " https://api.moonshot.cn/ ")
+                [ ("CHATKIT_API_BASE", Just " https://api.openai.com/ ")
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -1710,7 +1710,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    chatKitApiBase cfg `shouldBe` "https://api.moonshot.cn"
+                    chatKitApiBase cfg `shouldBe` "https://api.openai.com"
                     facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
                     facebookMessagingApiBase cfg
                         `shouldBe` "https://graph.facebook.com/v22.0"
@@ -1752,7 +1752,7 @@ main = hspec $ do
                 "CHATKIT_API_BASE is configured but blank; unset it to use the default"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn?proxy=1"
+                "https://api.openai.com?proxy=1"
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
                 "FACEBOOK_MESSAGING_API_BASE"
@@ -1768,11 +1768,11 @@ main = hspec $ do
                 "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn/v1//chat"
+                "https://api.openai.com/v1//chat"
                 "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn:0443"
+                "https://api.openai.com:0443"
                 "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
@@ -1991,10 +1991,10 @@ main = hspec $ do
 
         it "normalizes configured OpenAI chat models before fallback requests are built" $
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just " kimi-latest ") ]
+                [ ("OPENAI_MODEL", Just " gpt-4.1-mini ") ]
                 $ do
                     cfg <- loadConfig
-                    openAiModel cfg `shouldBe` "kimi-latest"
+                    openAiModel cfg `shouldBe` "gpt-4.1-mini"
 
         it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
             let assertInvalid rawModel expectedMessage =
@@ -2006,7 +2006,7 @@ main = hspec $ do
                 "gpt 4.1"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
-                "kimi-latest\nsource"
+                "gpt-4.1-mini\nsource"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"

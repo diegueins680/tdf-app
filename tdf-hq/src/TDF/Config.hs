@@ -586,7 +586,7 @@ loadConfig = do
   chatKitApiBaseVal <-
     validateConfiguredApiBaseUrl
       "CHATKIT_API_BASE"
-      "https://api.moonshot.ai"
+      "https://api.openai.com"
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
@@ -1231,7 +1231,7 @@ defaultOpenAiEmbedModel :: Text
 defaultOpenAiEmbedModel = "text-embedding-3-small"
 
 defaultOpenAiModel :: Text
-defaultOpenAiModel = "kimi-k2.6"
+defaultOpenAiModel = "gpt-4.1-mini"
 
 normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiApiKey envName rawKey
