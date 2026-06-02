@@ -76,7 +76,12 @@ import Servant.Multipart
     )
 import Servant.Server.Internal.Handler (runHandler)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
-import TDF.Config (AppConfig(..))
+import TDF.Config
+    ( AppConfig (..)
+    , llmProvider
+    , llmProviderApiBase
+    , llmProviderDefaultChatModel
+    )
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
@@ -5762,7 +5767,9 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` False
             shouldRetryWithFallbackModel 429 "rate limit exceeded"
                 `shouldBe` False
-            shouldRetryWithFallbackModel 429 "Rate limit exceeded for model gpt-4.1-mini"
+            shouldRetryWithFallbackModel
+                429
+                ("Rate limit exceeded for model " <> llmProviderDefaultChatModel llmProvider)
                 `shouldBe` False
             shouldRetryWithFallbackModel 400 "Invalid model response format"
                 `shouldBe` False
@@ -14300,7 +14307,7 @@ marketplaceTestConfig seedFlag =
         , openAiModel = "gpt-5-chat-latest"
         , openAiEmbedModel = "text-embedding-3-small"
         , chatKitWorkflowId = Nothing
-        , chatKitApiBase = "https://api.openai.com"
+        , chatKitApiBase = llmProviderApiBase llmProvider
         , ragTopK = 8
         , ragChunkWords = 220
         , ragChunkOverlap = 40

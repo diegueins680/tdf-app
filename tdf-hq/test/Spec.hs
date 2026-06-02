@@ -416,6 +416,9 @@ import TDF.Config
       instagramMessagingAccountId,
       instagramMessagingToken,
       instagramVerifyToken,
+      llmProvider,
+      llmProviderApiBase,
+      llmProviderDefaultChatModel,
       loadConfig,
       openAiApiKey,
       openAiEmbedModel,
@@ -1696,9 +1699,11 @@ main = hspec $ do
                 "https://hq.example.com/app\8238admin"
                 "HQ_APP_URL must not contain hidden formatting characters"
 
-        it "normalizes configured outbound API base URLs before building requests" $
+        it "normalizes configured outbound API base URLs before building requests" $ do
+            let providerApiBaseText = llmProviderApiBase llmProvider
+                providerApiBase = Data.Text.unpack providerApiBaseText
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just " https://api.openai.com/ ")
+                [ ("CHATKIT_API_BASE", Just (" " <> providerApiBase <> "/ "))
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -1710,7 +1715,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    chatKitApiBase cfg `shouldBe` "https://api.openai.com"
+                    chatKitApiBase cfg `shouldBe` providerApiBaseText
                     facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
                     facebookMessagingApiBase cfg
                         `shouldBe` "https://graph.facebook.com/v22.0"
@@ -1719,6 +1724,7 @@ main = hspec $ do
                         `shouldBe` "https://graph.facebook.com/v23.0"
 
         it "rejects malformed outbound API base URLs before token-bearing requests are built" $ do
+            let providerApiBase = Data.Text.unpack (llmProviderApiBase llmProvider)
             let apiBaseKeys =
                     [ "CHATKIT_API_BASE"
                     , "FACEBOOK_GRAPH_BASE"
@@ -1752,7 +1758,7 @@ main = hspec $ do
                 "CHATKIT_API_BASE is configured but blank; unset it to use the default"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com?proxy=1"
+                (providerApiBase <> "?proxy=1")
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
                 "FACEBOOK_MESSAGING_API_BASE"
@@ -1768,11 +1774,11 @@ main = hspec $ do
                 "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com/v1//chat"
+                (providerApiBase <> "/v1//chat")
                 "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com:0443"
+                (providerApiBase <> ":0443")
                 "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
@@ -1989,14 +1995,17 @@ main = hspec $ do
                 ("text-embedding-3-small" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
                 "OPENAI_EMBED_MODEL must use only ASCII letters"
 
-        it "normalizes configured OpenAI chat models before fallback requests are built" $
+        it "normalizes configured OpenAI chat models before fallback requests are built" $ do
+            let providerChatModelText = llmProviderDefaultChatModel llmProvider
+                providerChatModel = Data.Text.unpack providerChatModelText
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just " gpt-4.1-mini ") ]
+                [ ("OPENAI_MODEL", Just (" " <> providerChatModel <> " ")) ]
                 $ do
                     cfg <- loadConfig
-                    openAiModel cfg `shouldBe` "gpt-4.1-mini"
+                    openAiModel cfg `shouldBe` providerChatModelText
 
         it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
+            let providerChatModel = Data.Text.unpack (llmProviderDefaultChatModel llmProvider)
             let assertInvalid rawModel expectedMessage =
                     withEnvOverrides
                         [ ("OPENAI_MODEL", Just rawModel) ]
@@ -2006,7 +2015,7 @@ main = hspec $ do
                 "gpt 4.1"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
-                "gpt-4.1-mini\nsource"
+                (providerChatModel <> "\nsource")
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"
