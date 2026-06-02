@@ -22,7 +22,7 @@ import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Bits (xor)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isInfixOf, sortOn)
+import           Data.List (find, nub, isInfixOf, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_, toList)
 import           Data.Char
