@@ -40,6 +40,11 @@ interface MockResponseOptions {
   body?: string;
 }
 
+const HTTP_STATUS_SERVER_ERROR_BASE = 500;
+const HTTP_STATUS_BAD_GATEWAY_OFFSET = 2;
+const HTTP_STATUS_BAD_GATEWAY: NonNullable<MockResponseOptions['status']> =
+  HTTP_STATUS_SERVER_ERROR_BASE + HTTP_STATUS_BAD_GATEWAY_OFFSET;
+
 const buildResponse = (opts: MockResponseOptions = {}): Response => {
   const {
     ok = true,
@@ -235,7 +240,7 @@ describe('api client', () => {
     fetchMock.mockResolvedValueOnce(
       buildResponse({
         ok: false,
-        status: 502,
+        status: HTTP_STATUS_BAD_GATEWAY,
         statusText: 'Bad Gateway',
         contentType: 'application/json',
         body: malformedBody,
