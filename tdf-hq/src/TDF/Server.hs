@@ -95,6 +95,8 @@ import           TDF.Config ( AppConfig(..)
                             , courseInstructorAvatarFallback
                             , courseMapFallback
                             , courseSlugFallback
+                            , llmChatModelCandidates
+                            , normalizeLlmApiBase
                             , normalizeConfiguredGraphNodeId
                             , normalizeConfiguredGoogleClientId
                             , normalizeConfiguredBaseUrl
@@ -11602,9 +11604,9 @@ callOpenAIChat cfg messages =
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
       manager <- pure sharedTlsManager
-      let apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+      let apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
       reqBase <- parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
-      let models = openAIChatModelCandidates (openAiModel cfg)
+      let models = llmChatModelCandidates (openAiModel cfg)
       tryModels manager reqBase key models Nothing
   where
     tryModels :: Manager -> Request -> Text -> [Text] -> Maybe Text -> IO (Either Text Text)
@@ -11671,17 +11673,6 @@ openAIChatRequestErrorMessage :: SomeException -> Text
 openAIChatRequestErrorMessage err =
   fromMaybe "OpenAI chat request failed" $
     sanitizeApiErrorMessage ("OpenAI chat request failed: " <> T.pack (displayException err))
-
-openAIChatModelCandidates :: Text -> [Text]
-openAIChatModelCandidates primaryModel =
-  nub $
-    filter (not . T.null)
-      [ T.strip primaryModel
-      , "gpt-4.1-mini"
-      , "gpt-4o-mini"
-      , "gpt-4.1"
-      , "gpt-4o"
-      ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
 shouldRetryWithFallbackModel status rawMessage =
@@ -11771,7 +11762,7 @@ tidalAgentServer user TidalAgentRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
-      apiBase = normalizeChatKitBase (chatKitApiBase envConfig)
+      apiBase = normalizeLlmApiBase (chatKitApiBase envConfig)
   manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
   let body = encode $ object
@@ -11823,7 +11814,7 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let userId = T.pack (show (fromSqlKey (auPartyId user)))
-      apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+      apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
   manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chatkit/sessions"))
   let body = encode $ object
@@ -11885,11 +11876,6 @@ resolveWorkflowId primary fallback =
         Right workflowId -> Right workflowId
         Left msg ->
           Left status { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-
-normalizeChatKitBase :: Text -> Text
-normalizeChatKitBase base =
-  let trimmed = T.dropWhileEnd (== '/') (T.strip base)
-  in if T.null trimmed then "https://api.openai.com" else trimmed
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =
