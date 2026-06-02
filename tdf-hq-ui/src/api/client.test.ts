@@ -230,6 +230,21 @@ describe('api client', () => {
     await expect(get('/errors-array')).rejects.toThrow('Campo requerido');
   });
 
+  it('falls back to the raw body when JSON error payloads are malformed', async () => {
+    const malformedBody = '{"message":"truncated"';
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        contentType: 'application/json',
+        body: malformedBody,
+      }),
+    );
+
+    await expect(get('/malformed-error')).rejects.toThrow(malformedBody);
+  });
+
   it('notifies the session layer when protected API auth has expired', async () => {
     const listener = jest.fn();
     window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
