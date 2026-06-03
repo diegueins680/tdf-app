@@ -78,6 +78,40 @@ describe('ApiStatusChip', () => {
     healthMock.mockReset();
   });
 
+  it('shows a visible checking state on the first health lookup', async () => {
+    const pendingHealth = createDeferred<HealthStatus>();
+    healthMock.mockReturnValue(pendingHealth.promise);
+
+    const firstLookupQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+
+    const firstLookupContainer = document.createElement('div');
+    document.body.appendChild(firstLookupContainer);
+    const { cleanup } = await renderChip(firstLookupContainer, firstLookupQueryClient);
+
+    try {
+      expect(healthMock).toHaveBeenCalledTimes(1);
+      expect(firstLookupContainer.textContent).toContain('API: verificando...');
+      expect(firstLookupContainer.textContent).not.toContain('API: online');
+      expect(firstLookupContainer.textContent).not.toContain('API: offline');
+      expect(firstLookupContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
+      expect(firstLookupContainer.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
+
+      await act(async () => {
+        pendingHealth.resolve({ status: 'ok' });
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(firstLookupContainer.textContent).toContain('API: online');
+        expect(firstLookupContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows a visible checking state while cached API status is refetching', async () => {
     const pendingHealth = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(pendingHealth.promise);
