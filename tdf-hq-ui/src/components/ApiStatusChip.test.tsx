@@ -79,8 +79,8 @@ describe('ApiStatusChip', () => {
   });
 
   it('shows a visible checking state on the first health lookup', async () => {
-    const pendingHealth = createDeferred<HealthStatus>();
-    healthMock.mockReturnValue(pendingHealth.promise);
+    const initialHealthLookup = createDeferred<HealthStatus>();
+    healthMock.mockReturnValue(initialHealthLookup.promise);
 
     const firstLookupQueryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -99,7 +99,7 @@ describe('ApiStatusChip', () => {
       expect(firstLookupContainer.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
       await act(async () => {
-        pendingHealth.resolve({ status: 'ok' });
+        initialHealthLookup.resolve({ status: 'ok' });
         await flushPromises();
       });
 
@@ -113,8 +113,8 @@ describe('ApiStatusChip', () => {
   });
 
   it('shows a visible checking state while cached API status is refetching', async () => {
-    const pendingHealth = createDeferred<HealthStatus>();
-    healthMock.mockReturnValue(pendingHealth.promise);
+    const cachedStatusRefetch = createDeferred<HealthStatus>();
+    healthMock.mockReturnValue(cachedStatusRefetch.promise);
 
     const checkingQueryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -133,7 +133,7 @@ describe('ApiStatusChip', () => {
       expect(checkingContainer.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
       await act(async () => {
-        pendingHealth.resolve({ status: 'ok' });
+        cachedStatusRefetch.resolve({ status: 'ok' });
         await flushPromises();
       });
 
