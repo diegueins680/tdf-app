@@ -12,12 +12,12 @@
  * See: docs/analytics.md
  */
 import posthog from 'posthog-js';
+import { env } from '../utils/env';
 
 function readConfig() {
-  const env = (import.meta.env ?? {}) as Record<string, string | undefined>;
   return {
-    key: env.VITE_POSTHOG_KEY?.trim(),
-    host: env.VITE_POSTHOG_HOST?.trim() ?? 'https://eu.i.posthog.com',
+    key: env.read('VITE_POSTHOG_KEY'),
+    host: env.read('VITE_POSTHOG_HOST') ?? 'https://eu.i.posthog.com',
   };
 }
 

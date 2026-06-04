@@ -3,49 +3,66 @@
  *
  * Mocks posthog-js so we never reach the network from a unit test.
  */
-jest.mock('posthog-js', () => {
-  const init = jest.fn();
-  const capture = jest.fn();
-  const identify = jest.fn();
-  const reset = jest.fn();
-  return {
-    __esModule: true,
-    default: { init, capture, identify, reset },
-  };
+import { jest } from '@jest/globals';
+
+const initMock = jest.fn();
+const captureMock = jest.fn();
+const identifyMock = jest.fn();
+const resetMock = jest.fn();
+
+jest.unstable_mockModule('posthog-js', () => ({
+  __esModule: true,
+  default: {
+    init: initMock,
+    capture: captureMock,
+    identify: identifyMock,
+    reset: resetMock,
+  },
+}));
+
+const { __resetAnalyticsForTests, getAnalyticsClient } = await import('../analytics/posthog');
+
+type AnalyticsFixtureIds = Readonly<{
+  noKeyEventId: string;
+  forwardedEventId: string;
+  forwardedArtistId: string;
+  identifiedUserId: string;
+}>;
+
+// Invariant: analytics IDs are opaque strings; these tests assert passthrough behavior only.
+const analyticsFixtureIds: AnalyticsFixtureIds = Object.freeze({
+  noKeyEventId: 'event-rsvp-no-key',
+  forwardedEventId: 'event-rsvp-forwarded',
+  forwardedArtistId: 'artist-aria',
+  identifiedUserId: 'user-aria',
 });
 
-import posthog from 'posthog-js';
-
-import { __resetAnalyticsForTests, getAnalyticsClient } from '../analytics/posthog';
-
-const initMock = (posthog as unknown as { init: jest.Mock }).init;
-const captureMock = (posthog as unknown as { capture: jest.Mock }).capture;
-const identifyMock = (posthog as unknown as { identify: jest.Mock }).identify;
-const resetMock = (posthog as unknown as { reset: jest.Mock }).reset;
+type AnalyticsTestWindow = Window & {
+  __ENV__?: Record<string, string | undefined>;
+};
 
 describe('analytics/posthog (web)', () => {
-  const originalKey = (import.meta as unknown as { env: Record<string, string | undefined> }).env.VITE_POSTHOG_KEY;
-  const env = (import.meta as unknown as { env: Record<string, string | undefined> }).env;
+  const testWindow = window as AnalyticsTestWindow;
 
   beforeEach(() => {
+    delete testWindow.__ENV__;
     __resetAnalyticsForTests();
-    initMock.mockClear();
-    captureMock.mockClear();
-    identifyMock.mockClear();
-    resetMock.mockClear();
+    initMock.mockReset();
+    captureMock.mockReset();
+    identifyMock.mockReset();
+    resetMock.mockReset();
   });
 
   afterAll(() => {
-    env.VITE_POSTHOG_KEY = originalKey;
+    delete testWindow.__ENV__;
     __resetAnalyticsForTests();
   });
 
   test('returns a no-op client when no key is configured', () => {
-    delete env.VITE_POSTHOG_KEY;
     const client = getAnalyticsClient();
     expect(client.ready).toBe(false);
-    client.capture('rsvp_created', { eventId: '1' });
-    client.identify('42');
+    client.capture('rsvp_created', { eventId: analyticsFixtureIds.noKeyEventId });
+    client.identify(analyticsFixtureIds.identifiedUserId);
     client.reset();
     client.page('Home');
     expect(initMock).not.toHaveBeenCalled();
@@ -55,24 +72,30 @@ describe('analytics/posthog (web)', () => {
   });
 
   test('forwards calls to PostHog when a key is configured', () => {
-    env.VITE_POSTHOG_KEY = 'phc_unit_test';
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const client = getAnalyticsClient();
     expect(client.ready).toBe(true);
     expect(initMock).toHaveBeenCalledTimes(1);
 
-    client.capture('rsvp_created', { eventId: '7', artistId: '99' });
-    client.identify('42', { username: 'aria' });
+    client.capture('rsvp_created', {
+      eventId: analyticsFixtureIds.forwardedEventId,
+      artistId: analyticsFixtureIds.forwardedArtistId,
+    });
+    client.identify(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
     client.page('Home');
     client.reset();
 
-    expect(captureMock).toHaveBeenCalledWith('rsvp_created', { eventId: '7', artistId: '99' });
-    expect(identifyMock).toHaveBeenCalledWith('42', { username: 'aria' });
+    expect(captureMock).toHaveBeenCalledWith('rsvp_created', {
+      eventId: analyticsFixtureIds.forwardedEventId,
+      artistId: analyticsFixtureIds.forwardedArtistId,
+    });
+    expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
     expect(captureMock).toHaveBeenCalledWith('$pageview', { name: 'Home' });
     expect(resetMock).toHaveBeenCalled();
   });
 
   test('memoizes the client across calls', () => {
-    env.VITE_POSTHOG_KEY = 'phc_unit_test';
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const c1 = getAnalyticsClient();
     const c2 = getAnalyticsClient();
     expect(c1).toBe(c2);
