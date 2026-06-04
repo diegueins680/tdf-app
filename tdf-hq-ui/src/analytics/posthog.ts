@@ -13,6 +13,7 @@
  */
 import posthog from 'posthog-js';
 import { env } from '../utils/env';
+import { logger } from '../utils/logger';
 
 function readConfig() {
   return {
@@ -31,9 +32,12 @@ export interface AnalyticsClient {
 
 let cachedClient: AnalyticsClient | null = null;
 
+function logAnalyticsFailure(operation: string, error: unknown): void {
+  logger.warn(`[analytics] ${operation} failed`, { error });
+}
+
 function buildNoopClient(reason: string): AnalyticsClient {
-  // eslint-disable-next-line no-console
-  console.info(`[analytics] PostHog disabled: ${reason}. Events will not be sent.`);
+  logger.log(`[analytics] PostHog disabled: ${reason}. Events will not be sent.`);
   return {
     ready: false,
     capture: () => undefined,
@@ -71,32 +75,28 @@ export function getAnalyticsClient(): AnalyticsClient {
       try {
         posthog.capture(event, properties);
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[analytics] capture failed', err);
+        logAnalyticsFailure('capture', err);
       }
     },
     identify: (distinctId, properties) => {
       try {
         posthog.identify(distinctId, properties);
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[analytics] identify failed', err);
+        logAnalyticsFailure('identify', err);
       }
     },
     reset: () => {
       try {
         posthog.reset();
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[analytics] reset failed', err);
+        logAnalyticsFailure('reset', err);
       }
     },
     page: (name, properties) => {
       try {
         posthog.capture('$pageview', { ...properties, name });
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[analytics] page failed', err);
+        logAnalyticsFailure('page', err);
       }
     },
   };
