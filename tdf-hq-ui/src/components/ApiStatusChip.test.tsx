@@ -1,7 +1,6 @@
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
+import { render, waitFor } from '@testing-library/react';
 import type { HealthStatus } from '../api/types';
 
 const healthMock = jest.fn<() => Promise<HealthStatus>>();
@@ -14,8 +13,6 @@ jest.unstable_mockModule('../api/meta', () => ({
 
 const { default: ApiStatusChip } = await import('./ApiStatusChip');
 
-const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -26,48 +23,16 @@ const createDeferred = <T,>() => {
   return { promise, reject, resolve };
 };
 
-const renderChip = async (hostElement: HTMLElement, queryClient: QueryClient) => {
-  let root: Root | null = createRoot(hostElement);
+const createQueryClient = () => new QueryClient({
+  defaultOptions: { queries: { retry: false, gcTime: 0 } },
+});
 
-  await act(async () => {
-    root?.render(
-      <QueryClientProvider client={queryClient}>
-        <ApiStatusChip />
-      </QueryClientProvider>,
-    );
-    await flushPromises();
-    await flushPromises();
-  });
-
-  return {
-    cleanup: async () => {
-      if (!root) return;
-      await act(async () => {
-        root?.unmount();
-        await flushPromises();
-      });
-      root = null;
-      queryClient.clear();
-      document.body.removeChild(hostElement);
-    },
-  };
-};
-
-const waitForExpectation = async (assertion: () => void, attempts = 12) => {
-  let lastError: unknown;
-  for (let index = 0; index < attempts; index += 1) {
-    try {
-      assertion();
-      return;
-    } catch (error) {
-      lastError = error;
-      await act(async () => {
-        await flushPromises();
-      });
-    }
-  }
-  throw lastError;
-};
+const renderChip = (queryClient: QueryClient) =>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <ApiStatusChip />
+    </QueryClientProvider>,
+  );
 
 describe('ApiStatusChip', () => {
   beforeAll(() => {
@@ -82,33 +47,26 @@ describe('ApiStatusChip', () => {
     const initialHealthLookup = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(initialHealthLookup.promise);
 
-    const firstLookupQueryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false, gcTime: 0 } },
-    });
-
-    const firstLookupContainer = document.createElement('div');
-    document.body.appendChild(firstLookupContainer);
-    const { cleanup } = await renderChip(firstLookupContainer, firstLookupQueryClient);
+    const firstLookupQueryClient = createQueryClient();
+    const { container, unmount } = renderChip(firstLookupQueryClient);
 
     try {
       expect(healthMock).toHaveBeenCalledTimes(1);
-      expect(firstLookupContainer.textContent).toContain('API: verificando...');
-      expect(firstLookupContainer.textContent).not.toContain('API: online');
-      expect(firstLookupContainer.textContent).not.toContain('API: offline');
-      expect(firstLookupContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
-      expect(firstLookupContainer.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
+      expect(container.textContent).toContain('API: verificando...');
+      expect(container.textContent).not.toContain('API: online');
+      expect(container.textContent).not.toContain('API: offline');
+      expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
+      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
-      await act(async () => {
-        initialHealthLookup.resolve({ status: 'ok' });
-        await flushPromises();
-      });
+      initialHealthLookup.resolve({ status: 'ok' });
 
-      await waitForExpectation(() => {
-        expect(firstLookupContainer.textContent).toContain('API: online');
-        expect(firstLookupContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+      await waitFor(() => {
+        expect(container.textContent).toContain('API: online');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
       });
     } finally {
-      await cleanup();
+      unmount();
+      firstLookupQueryClient.clear();
     }
   });
 
@@ -116,33 +74,27 @@ describe('ApiStatusChip', () => {
     const cachedStatusRefetch = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(cachedStatusRefetch.promise);
 
-    const checkingQueryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false, gcTime: 0 } },
-    });
+    const checkingQueryClient = createQueryClient();
     checkingQueryClient.setQueryData(['meta', 'health-indicator'], { status: 'ok' } satisfies HealthStatus);
 
-    const checkingContainer = document.createElement('div');
-    document.body.appendChild(checkingContainer);
-    const { cleanup } = await renderChip(checkingContainer, checkingQueryClient);
+    const { container, unmount } = renderChip(checkingQueryClient);
 
     try {
       expect(healthMock).toHaveBeenCalledTimes(1);
-      expect(checkingContainer.textContent).toContain('API: verificando...');
-      expect(checkingContainer.textContent).not.toContain('API: online');
-      expect(checkingContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
-      expect(checkingContainer.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
+      expect(container.textContent).toContain('API: verificando...');
+      expect(container.textContent).not.toContain('API: online');
+      expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
+      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
-      await act(async () => {
-        cachedStatusRefetch.resolve({ status: 'ok' });
-        await flushPromises();
-      });
+      cachedStatusRefetch.resolve({ status: 'ok' });
 
-      await waitForExpectation(() => {
-        expect(checkingContainer.textContent).toContain('API: online');
-        expect(checkingContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+      await waitFor(() => {
+        expect(container.textContent).toContain('API: online');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
       });
     } finally {
-      await cleanup();
+      unmount();
+      checkingQueryClient.clear();
     }
   });
 
@@ -150,31 +102,25 @@ describe('ApiStatusChip', () => {
     const failedHealth = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(failedHealth.promise);
 
-    const failedQueryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false, gcTime: 0 } },
-    });
+    const failedQueryClient = createQueryClient();
     failedQueryClient.setQueryData(['meta', 'health-indicator'], { status: 'ok' } satisfies HealthStatus);
 
-    const failedContainer = document.createElement('div');
-    document.body.appendChild(failedContainer);
-    const { cleanup } = await renderChip(failedContainer, failedQueryClient);
+    const { container, unmount } = renderChip(failedQueryClient);
 
     try {
       expect(healthMock).toHaveBeenCalledTimes(1);
-      expect(failedContainer.textContent).toContain('API: verificando...');
+      expect(container.textContent).toContain('API: verificando...');
 
-      await act(async () => {
-        failedHealth.reject(new Error('offline'));
-        await flushPromises();
-      });
+      failedHealth.reject(new Error('offline'));
 
-      await waitForExpectation(() => {
-        expect(failedContainer.textContent).toContain('API: offline');
-        expect(failedContainer.textContent).not.toContain('API: online');
-        expect(failedContainer.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+      await waitFor(() => {
+        expect(container.textContent).toContain('API: offline');
+        expect(container.textContent).not.toContain('API: online');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
       });
     } finally {
-      await cleanup();
+      unmount();
+      failedQueryClient.clear();
     }
   });
 });
