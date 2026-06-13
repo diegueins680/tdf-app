@@ -19,8 +19,9 @@ export default function ApiStatusChip() {
         aria-busy="true"
         icon={<CircularProgress size={14} color="inherit" aria-label="Verificando API" />}
         label="API: verificando..."
+        color="info"
         size="small"
-        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: '#f8fafc' }}
+        variant="outlined"
       />
     );
   }
