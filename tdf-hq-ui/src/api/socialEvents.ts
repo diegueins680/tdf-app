@@ -198,17 +198,18 @@ export interface PromoCodeDTO {
 }
 
 export interface TicketPurchaseWithPromoDTO {
-  tpwpTierId: string;
-  tpwpQuantity: number;
-  tpwpBuyerPartyId?: string | null;
-  tpwpBuyerName: string;
-  tpwpBuyerEmail: string;
-  tpwpPromoCode?: string | null;
+  ticketPurchaseTierId: string;
+  ticketPurchaseQuantity: number;
+  ticketPurchaseBuyerPartyId?: string | null;
+  ticketPurchaseBuyerName?: string | null;
+  ticketPurchaseBuyerEmail?: string | null;
+  ticketPurchasePromoCode?: string | null;
+  ticketPurchaseMobileSdkStripeVersion?: string | null;
 }
 
 export interface StripePaymentIntentDTO {
   spiClientSecret: string;
-  spiPaymentIntentId: string;
+  spiPaymentIntentId?: string | null;
   spiOrderId: string;
   spiAmountCents: number;
   spiCurrency: string;

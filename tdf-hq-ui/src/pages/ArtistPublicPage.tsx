@@ -25,7 +25,6 @@ import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import type { ArtistReleaseDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
-import { parsePositiveSafeInt } from '../utils/ids';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -101,31 +100,15 @@ export default function ArtistPublicPage() {
   const hasToken = Boolean(session);
 
   const segment = (slugOrId ?? '').trim();
-  const numericId = useMemo(() => parsePositiveSafeInt(segment), [segment]);
-
-  const artistsQuery = useQuery({
-    queryKey: ['fan-artists'],
-    queryFn: Fans.listArtists,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const artistFromList = useMemo(() => {
-    const artists = artistsQuery.data ?? [];
-    if (numericId) {
-      return artists.find((artist) => artist.apArtistId === numericId) ?? null;
-    }
-    const needle = segment.toLowerCase();
-    return artists.find((artist) => (artist.apSlug ?? '').toLowerCase() === needle) ?? null;
-  }, [artistsQuery.data, numericId, segment]);
-
-  const artistId = numericId ?? artistFromList?.apArtistId ?? null;
 
   const artistQuery = useQuery({
-    queryKey: ['public-artist', artistId],
-    queryFn: () => Fans.getArtist(artistId!),
-    enabled: Boolean(artistId),
+    queryKey: ['public-artist', segment],
+    queryFn: () => Fans.getPublicArtist(segment),
+    enabled: Boolean(segment),
     retry: false,
   });
+
+  const artistId = artistQuery.data?.apArtistId ?? null;
 
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
@@ -157,16 +140,17 @@ export default function ArtistPublicPage() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
     },
   });
 
-  const artist = artistQuery.data ?? artistFromList;
+  const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
 
   const profileLink = useMemo(() => {
     if (!artist) return null;
-    if (artist.apSlug) return `/artista/${artist.apSlug}`;
-    return `/artista/${artist.apArtistId}`;
+    if (artist.apSlug) return `/a/${artist.apSlug}`;
+    return `/a/${artist.apArtistId}`;
   }, [artist]);
 
   if (!segment) {
@@ -177,16 +161,7 @@ export default function ArtistPublicPage() {
     );
   }
 
-  if (!numericId && artistsQuery.isLoading) {
-    return (
-      <Box py={4} display="flex" alignItems="center" gap={1.5}>
-        <CircularProgress size={20} />
-        <Typography>Cargando artista...</Typography>
-      </Box>
-    );
-  }
-
-  if (!artistId && !artistsQuery.isLoading) {
+  if (artistQuery.isError) {
     return (
       <Box py={4}>
         <Alert

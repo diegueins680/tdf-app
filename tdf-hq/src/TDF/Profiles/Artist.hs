@@ -5,8 +5,10 @@ module TDF.Profiles.Artist
   ( upsertArtistProfileRecord
   , validateArtistProfileUpsert
   , loadArtistProfileDTO
+  , loadArtistProfileBySlugDTO
   , loadOrCreateArtistProfileDTO
   , loadAllArtistProfilesDTO
+  , searchArtistProfilesDTO
   , buildArtistProfileDTOs
   , fetchPartyNameMap
   , fetchFollowerCounts
@@ -224,6 +226,19 @@ loadArtistProfileDTO artistId = do
       dtos <- buildArtistProfileDTOs [entity]
       pure (listToMaybe dtos)
 
+loadArtistProfileBySlugDTO :: MonadIO m => Text -> SqlPersistT m (Maybe ArtistProfileDTO)
+loadArtistProfileBySlugDTO rawSlug = do
+  let slugVal = T.toLower (T.strip rawSlug)
+  if T.null slugVal
+    then pure Nothing
+    else do
+      mEntity <- selectFirst [ArtistProfileSlug ==. Just slugVal] [Asc ArtistProfileArtistPartyId]
+      case mEntity of
+        Nothing     -> pure Nothing
+        Just entity -> do
+          dtos <- buildArtistProfileDTOs [entity]
+          pure (listToMaybe dtos)
+
 loadOrCreateArtistProfileDTO :: MonadIO m => PartyId -> SqlPersistT m ArtistProfileDTO
 loadOrCreateArtistProfileDTO artistId = do
   _ <- ensureArtistProfileEntity artistId
@@ -261,6 +276,47 @@ ensureArtistProfileEntity artistId = do
             }
       key <- insert record
       pure (Entity key record)
+
+searchArtistProfilesDTO
+  :: MonadIO m
+  => Maybe Text
+  -> Maybe Text
+  -> SqlPersistT m [ArtistProfileDTO]
+searchArtistProfilesDTO rawQuery rawGenre = do
+  dtos <- loadAllArtistProfilesDTO
+  let mQuery = normalizeSearchTerm rawQuery
+      mGenre = normalizeSearchTerm rawGenre
+  pure
+    [ dto
+    | dto <- dtos
+    , profileMatchesQuery mQuery dto
+    , profileMatchesGenre mGenre dto
+    ]
+
+normalizeSearchTerm :: Maybe Text -> Maybe Text
+normalizeSearchTerm raw =
+  T.toCaseFold <$> cleanOptionalText raw
+
+profileMatchesQuery :: Maybe Text -> ArtistProfileDTO -> Bool
+profileMatchesQuery Nothing _ = True
+profileMatchesQuery (Just needle) ArtistProfileDTO{..} =
+  any (matchesText needle)
+    [ Just apDisplayName
+    , apSlug
+    , apBio
+    , apCity
+    , apGenres
+    , apHighlights
+    ]
+
+profileMatchesGenre :: Maybe Text -> ArtistProfileDTO -> Bool
+profileMatchesGenre Nothing _ = True
+profileMatchesGenre (Just needle) ArtistProfileDTO{..} =
+  matchesText needle apGenres
+
+matchesText :: Text -> Maybe Text -> Bool
+matchesText needle raw =
+  maybe False (T.isInfixOf needle . T.toCaseFold) raw
 
 buildArtistProfileDTOs :: MonadIO m => [Entity ArtistProfile] -> SqlPersistT m [ArtistProfileDTO]
 buildArtistProfileDTOs profiles = do

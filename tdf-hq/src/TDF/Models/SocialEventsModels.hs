@@ -1,26 +1,28 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module TDF.Models.SocialEventsModels where
 
-import           Data.Text          (Text)
-import           Data.Time          (UTCTime)
-import           GHC.Generics       (Generic)
-import           Database.Persist.TH
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Database.Persist.TH
+import GHC.Generics (Generic)
 
-share [mkPersist sqlSettings, mkMigrate "migrateSocialEvents"] [persistLowerCase|
+share
+    [mkPersist sqlSettings, mkMigrate "migrateSocialEvents"]
+    [persistLowerCase|
 ArtistProfile sql=social_artist_profile
     partyId Text Maybe
     name Text

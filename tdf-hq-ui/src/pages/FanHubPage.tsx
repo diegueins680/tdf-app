@@ -646,7 +646,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistPublicPath = useMemo(() => {
     if (!session?.partyId) return null;
     const slug = slugify(artistDraft.apuSlug ?? '');
-    return slug ? `/artista/${slug}` : `/artista/${session.partyId}`;
+    return slug ? `/a/${slug}` : `/a/${session.partyId}`;
   }, [artistDraft.apuSlug, session?.partyId]);
 
   const artistPublicUrl = useMemo(() => {
@@ -2258,7 +2258,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const artistProfilePath = artist.apSlug ? `/artista/${artist.apSlug}` : `/artista/${artist.apArtistId}`;
+            const artistProfilePath = artist.apSlug ? `/a/${artist.apSlug}` : `/a/${artist.apArtistId}`;
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }

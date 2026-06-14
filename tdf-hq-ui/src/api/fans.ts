@@ -2,6 +2,7 @@ import { get, post, put, del } from './client';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
+  ArtistProfilePhotoUpdate,
   ArtistProfileUpsert,
   FanProfileDTO,
   FanProfileUpdate,
@@ -42,6 +43,16 @@ const remove: (path: string) => unknown = del;
 
 export const Fans = {
   listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
+  listPublicArtists: async () => (await read('/artists')) as ArtistProfileDTO[],
+  searchArtists: async (query?: { q?: string; genre?: string }) => {
+    const params = new URLSearchParams();
+    if (query?.q) params.set('q', query.q);
+    if (query?.genre) params.set('genre', query.genre);
+    const qs = params.toString();
+    return (await read(`/artists/search${qs ? `?${qs}` : ''}`)) as ArtistProfileDTO[];
+  },
+  getPublicArtist: async (artistRef: number | string) =>
+    (await read(`/artists/${encodeURIComponent(String(artistRef))}/public`)) as ArtistProfileDTO,
   getArtist: async (artistId: number) => (await read(`/fans/artists/${artistId}`)) as ArtistProfileDTO,
   getReleases: async (artistId: number) => (await read(`/fans/artists/${artistId}/releases`)) as ArtistReleaseDTO[],
   getArtistFans: async (artistId: number, page = 1, pageSize = 5) =>
@@ -56,6 +67,12 @@ export const Fans = {
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
     (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
+  createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
+    (await send('/artists/me/profile', payload)) as ArtistProfileDTO,
+  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
+    (await update('/artists/me/profile', payload)) as ArtistProfileDTO,
+  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
+    (await send('/artists/me/photo', payload)) as ArtistProfileDTO,
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,

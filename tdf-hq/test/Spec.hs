@@ -331,6 +331,9 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
     normalizeMomentReaction,
+    normalizeLiveBroadcastTitle,
+    normalizeLiveBroadcastDescription,
+    normalizeLiveBroadcastQuality,
     normalizePositivePartyIdText,
     validateMomentMediaDimension,
     validateMomentMediaDuration,
@@ -9065,6 +9068,71 @@ main = hspec $ do
             assertInvalid
                 (validateMomentMediaDuration (Just (-1)))
                 "Moment media duration must be 0 or greater"
+
+    describe "live broadcast normalizers" $ do
+        it "requires a non-empty title and trims accepted titles" $ do
+            normalizeLiveBroadcastTitle (Just "  Frente al escenario  ")
+                `shouldBe` Right "Frente al escenario"
+            let assertInvalidTitle rawTitle expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast title to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastTitle rawTitle)
+            assertInvalidTitle Nothing "Live broadcast title is required"
+            assertInvalidTitle (Just "   ") "Live broadcast title is required"
+            assertInvalidTitle
+                (Just (Data.Text.replicate 121 "a"))
+                "Live broadcast title must be 120 characters or less"
+            assertInvalidTitle
+                (Just ("set" <> Data.Text.singleton '\x202e' <> "view"))
+                "Live broadcast title must not contain control characters"
+
+        it "accepts missing descriptions and rejects unsafe or oversize descriptions" $ do
+            normalizeLiveBroadcastDescription Nothing `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "   ") `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "  Empieza el encore  ")
+                `shouldBe` Right (Just "Empieza el encore")
+            let assertInvalidDescription rawDescription expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast description to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastDescription rawDescription)
+            assertInvalidDescription
+                (Just (Data.Text.replicate 281 "b"))
+                "Live broadcast description must be 280 characters or less"
+            assertInvalidDescription
+                (Just ("encore" <> Data.Text.singleton '\x202e'))
+                "Live broadcast description must not contain control characters"
+
+        it "defaults blank quality to auto and rejects unsupported quality values" $ do
+            normalizeLiveBroadcastQuality Nothing `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "   ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just " AUTO ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "720p") `shouldBe` Right "720p"
+            normalizeLiveBroadcastQuality (Just "480P") `shouldBe` Right "480p"
+            either
+                (\err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Live broadcast quality must be one of: auto, 720p, 480p"
+                )
+                (\value ->
+                    expectationFailure
+                        ("Expected invalid live broadcast quality to fail, got " <> show value)
+                )
+                (normalizeLiveBroadcastQuality (Just "1080p"))
 
     describe "parseFollowerQueryParamEither" $ do
         it "canonicalizes numeric follower query params before delete lookups" $ do

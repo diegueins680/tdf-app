@@ -9,6 +9,7 @@ type FansApiPathFixtureContract = Readonly<{
   leaderboardClubId: number;
   weeklyLeaderboardPeriod: string;
   discoveryFeedLimit: number;
+  artistSlug: string;
 }>;
 
 const LEADERBOARD_PATH_FIXTURE_CLUB_ID = 10 + 2;
@@ -20,6 +21,7 @@ const FANS_API_PATH_FIXTURES = {
   leaderboardClubId: LEADERBOARD_PATH_FIXTURE_CLUB_ID,
   weeklyLeaderboardPeriod: 'week',
   discoveryFeedLimit: DISCOVERY_FEED_FIXTURE_LIMIT,
+  artistSlug: 'los mentores',
 } as const satisfies FansApiPathFixtureContract;
 
 const EXPECTED_LEADERBOARD_PATH =
@@ -29,6 +31,11 @@ const EXPECTED_WEEKLY_LEADERBOARD_PATH =
 const EXPECTED_DISCOVERY_FEED_PATH = '/fans/discovery';
 const EXPECTED_LIMITED_DISCOVERY_FEED_PATH =
   `${EXPECTED_DISCOVERY_FEED_PATH}?limit=${FANS_API_PATH_FIXTURES.discoveryFeedLimit}`;
+const EXPECTED_ARTIST_SEARCH_PATH = '/artists/search';
+const EXPECTED_FILTERED_ARTIST_SEARCH_PATH =
+  `${EXPECTED_ARTIST_SEARCH_PATH}?q=neo+soul&genre=latin`;
+const EXPECTED_PUBLIC_ARTIST_PATH =
+  `/artists/${encodeURIComponent(FANS_API_PATH_FIXTURES.artistSlug)}/public`;
 
 jest.unstable_mockModule('./client', () => ({
   get: getMock,
@@ -85,5 +92,34 @@ describe('Fans API optional query paths', () => {
 
     await Fans.listNotifications(true);
     expect(getMock).toHaveBeenCalledWith('/fans/me/notifications?unreadOnly=true');
+  });
+
+  it('builds public artist search paths with filters only when provided', async () => {
+    await Fans.searchArtists();
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_ARTIST_SEARCH_PATH);
+
+    await Fans.searchArtists({ q: 'neo soul', genre: 'latin' });
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_FILTERED_ARTIST_SEARCH_PATH);
+  });
+
+  it('builds direct public artist lookup paths with encoded refs', async () => {
+    await Fans.getPublicArtist(FANS_API_PATH_FIXTURES.artistSlug);
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_PUBLIC_ARTIST_PATH);
+  });
+
+  it('uses the artist profile alias routes for profile creation and photo updates', async () => {
+    const profilePayload = {
+      apuArtistId: 42,
+      apuDisplayName: 'Los Mentores',
+    };
+    const photoPayload = {
+      apuHeroImageUrl: 'https://cdn.example.test/hero.jpg',
+    };
+
+    await Fans.createMyArtistProfile(profilePayload);
+    expect(postMock).toHaveBeenCalledWith('/artists/me/profile', profilePayload);
+
+    await Fans.updateMyArtistPhoto(photoPayload);
+    expect(postMock).toHaveBeenCalledWith('/artists/me/photo', photoPayload);
   });
 });

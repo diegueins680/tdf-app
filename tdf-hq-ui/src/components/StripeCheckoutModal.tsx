@@ -164,7 +164,11 @@ function CheckoutForm({ tier, buyerDetails, promoCode, orderId, onSuccess, onBac
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        const completedOrderId = orderId?.trim() || paymentIntent.id;
+        const trimmedOrderId = orderId?.trim();
+        let completedOrderId = paymentIntent.id;
+        if (trimmedOrderId) {
+          completedOrderId = trimmedOrderId;
+        }
         onSuccess(completedOrderId);
         return;
       }
@@ -314,11 +318,11 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier, 
 
     try {
       const payload: TicketPurchaseWithPromoDTO = {
-        tpwpTierId: tier.ticketTierId ?? '',
-        tpwpQuantity: quantity,
-        tpwpBuyerName: name,
-        tpwpBuyerEmail: email,
-        tpwpPromoCode: state.promoCode ?? undefined,
+        ticketPurchaseTierId: tier.ticketTierId ?? '',
+        ticketPurchaseQuantity: quantity,
+        ticketPurchaseBuyerName: name,
+        ticketPurchaseBuyerEmail: email,
+        ticketPurchasePromoCode: state.promoCode ?? undefined,
       };
 
       const response = await SocialEventsAPI.createPaymentIntent(payload);

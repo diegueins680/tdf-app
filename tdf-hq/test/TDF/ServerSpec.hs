@@ -82,6 +82,7 @@ import TDF.Config
     , llmProviderApiBase
     , llmProviderDefaultChatModel
     )
+import qualified TDF.Courses.Production as ProductionCourse
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env (..))
@@ -11636,6 +11637,23 @@ spec = describe "TDF.Server helpers" $ do
              in do
                     assertInvalid (parseCourseFollowUpType (Just "   "))
                     assertInvalid (parseCourseFollowUpType (Just "telegram"))
+
+    describe "production course rolling schedule" $ do
+        it "selects a Saturday at least four weeks after the current day" $ do
+            let today = fromGregorian 2026 6 14
+                startDate = ProductionCourse.nextProductionCourseStartDate today
+            startDate `shouldBe` fromGregorian 2026 7 18
+            startDate >= ProductionCourse.minimumProductionStartDate today `shouldBe` True
+
+        it "generates stable monthly and day-specific slugs for automatic cohorts" $ do
+            let startDate = fromGregorian 2026 7 18
+            ProductionCourse.productionCourseSlugForStartDate startDate
+                `shouldBe` "produccion-musical-jul-2026"
+            ProductionCourse.productionCourseDaySlugForStartDate startDate
+                `shouldBe` "produccion-musical-jul-18-2026"
+            ProductionCourse.productionCourseSubtitleForStartDate startDate
+                `shouldBe`
+                    "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 18 de julio"
 
     describe "course upsert required text validation" $ do
         it "trims meaningful required course text before persistence" $

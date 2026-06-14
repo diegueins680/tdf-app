@@ -569,6 +569,10 @@ export interface ArtistProfileUpsert {
   apuHighlights?: string | null;
 }
 
+export interface ArtistProfilePhotoUpdate {
+  apuHeroImageUrl: string;
+}
+
 export interface PaymentDTO {
   payId: number;
   payPartyId: number;
