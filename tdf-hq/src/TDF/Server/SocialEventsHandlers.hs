@@ -2572,7 +2572,6 @@ socialEventsServer user =
         orderKey <- parseKeyOr400 "ticket order" orderIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
         newStatus <- case parseTicketOrderStatus ticketOrderStatus of
             Nothing -> throwError err400{errBody = "Invalid ticket order status"}
             Just "pending" -> throwError err400{errBody = "Use paid, cancelled or refunded"}
@@ -2588,6 +2587,13 @@ socialEventsServer user =
                 (validateStoredTicketOrderStatus (Just (eventTicketOrderStatus order)))
         when (oldStatus `elem` ["cancelled", "refunded"] && newStatus == "paid") $
             throwError err400{errBody = "Closed orders cannot be moved back to paid"}
+        let buyerOwnPendingCancellation =
+                eventTicketOrderBuyerPartyId order == Just currentPartyId
+                    && oldStatus == "pending"
+                    && newStatus == "cancelled"
+        when (not buyerOwnPendingCancellation) $ do
+            _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+            pure ()
 
         mTier <- liftIO $ runSqlPool (get (eventTicketOrderTierId order)) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
