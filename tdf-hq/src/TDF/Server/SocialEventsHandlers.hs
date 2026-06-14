@@ -121,6 +121,7 @@ import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
 import           System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
+import           System.Environment (lookupEnv)
 import           System.FilePath ((</>), takeExtension, takeFileName)
 import           Text.Read (readMaybe)
 
@@ -164,6 +165,10 @@ import           TDF.DTO.SocialEventsDTO
   , EventMomentReactionRequestDTO(..)
   , EventMomentCommentDTO(..)
   , EventMomentCommentCreateDTO(..)
+  , EventLiveBroadcastDTO(..)
+  , EventLiveBroadcastCreateDTO(..)
+  , EventLiveBroadcastEndDTO(..)
+  , EventLiveBroadcastHeartbeatDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , TicketOrderStatusUpdateDTO(..)
@@ -191,6 +196,12 @@ import           TDF.Models (Party(..), PartyId, EntityField(PartyStripeCustomer
 import qualified TDF.ModelsExtra as ME
 import           TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
+import           TDF.ServerRadio
+  ( resolveRadioTransmissionEnvBase
+  , validateRadioTransmissionIngestBase
+  , validateRadioTransmissionPublicBase
+  , validateRadioTransmissionWhipBase
+  )
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
@@ -961,6 +972,7 @@ socialEventsServer user = eventsServer
                :<|> rsvpsServer
                :<|> invitationsServer
                :<|> momentsServer
+               :<|> liveBroadcastsServer
                :<|> ticketsServer
                :<|> budgetServer
                :<|> financeServer
@@ -1677,6 +1689,12 @@ socialEventsServer user = eventsServer
                :<|> createMoment
                :<|> reactToMoment
                :<|> commentOnMoment
+
+    liveBroadcastsServer :: ServerT LiveBroadcastsRoutes AppM
+    liveBroadcastsServer = listLiveBroadcasts
+               :<|> createLiveBroadcast
+               :<|> heartbeatLiveBroadcast
+               :<|> endLiveBroadcast
 
     listInvitations :: T.Text -> AppM [InvitationDTO]
     listInvitations eventIdStr = do

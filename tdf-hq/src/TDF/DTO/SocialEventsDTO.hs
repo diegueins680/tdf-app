@@ -25,6 +25,10 @@ module TDF.DTO.SocialEventsDTO
   , EventMomentReactionRequestDTO(..)
   , EventMomentCommentDTO(..)
   , EventMomentCommentCreateDTO(..)
+  , EventLiveBroadcastDTO(..)
+  , EventLiveBroadcastCreateDTO(..)
+  , EventLiveBroadcastEndDTO(..)
+  , EventLiveBroadcastHeartbeatDTO(..)
   , TicketTierDTO(..)
   , TicketPurchaseRequestDTO(..)
   , maxTicketPurchaseQuantity
@@ -633,6 +637,105 @@ instance FromJSON EventMomentCommentCreateDTO where
     EventMomentCommentCreateDTO
       <$> o .:? "emccAuthorName"
       <*> o .: "emccBody"
+
+data EventLiveBroadcastDTO = EventLiveBroadcastDTO
+  { elbId                 :: Maybe Text
+  , elbEventId            :: Maybe Text
+  , elbArtistId           :: Text
+  , elbArtistName         :: Text
+  , elbBroadcasterName    :: Text
+  , elbBroadcasterPartyId :: Maybe Text
+  , elbTitle              :: Text
+  , elbDescription        :: Maybe Text
+  , elbStatus             :: Text
+  , elbPlaybackUrl        :: Maybe Text
+  , elbIngestUrl          :: Maybe Text
+  , elbWhipUrl            :: Maybe Text
+  , elbStreamKey          :: Maybe Text
+  , elbViewerCount        :: Int
+  , elbStartedAt          :: Maybe UTCTime
+  , elbEndedAt            :: Maybe UTCTime
+  , elbLastHeartbeatAt    :: Maybe UTCTime
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventLiveBroadcastDTO
+instance FromJSON EventLiveBroadcastDTO
+
+data EventLiveBroadcastCreateDTO = EventLiveBroadcastCreateDTO
+  { elbCreateArtistId           :: Text
+  , elbCreateArtistName         :: Maybe Text
+  , elbCreateBroadcasterName    :: Maybe Text
+  , elbCreateBroadcasterPartyId :: Maybe Text
+  , elbCreateTitle              :: Maybe Text
+  , elbCreateDescription        :: Maybe Text
+  , elbCreateQuality            :: Maybe Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventLiveBroadcastCreateDTO
+instance FromJSON EventLiveBroadcastCreateDTO where
+  parseJSON = withObject "EventLiveBroadcastCreateDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventLiveBroadcastCreateDTO"
+      [ "elbCreateArtistId"
+      , "elbCreateArtistName"
+      , "elbCreateBroadcasterName"
+      , "elbCreateBroadcasterPartyId"
+      , "elbCreateTitle"
+      , "elbCreateDescription"
+      , "elbCreateQuality"
+      ]
+      o
+    rejectNullObjectFields
+      [ "elbCreateArtistName"
+      , "elbCreateBroadcasterName"
+      , "elbCreateBroadcasterPartyId"
+      , "elbCreateTitle"
+      , "elbCreateDescription"
+      , "elbCreateQuality"
+      ]
+      o
+    EventLiveBroadcastCreateDTO
+      <$> (o .: "elbCreateArtistId" >>= normalizeRequiredText "elbCreateArtistId")
+      <*> o .:? "elbCreateArtistName"
+      <*> o .:? "elbCreateBroadcasterName"
+      <*> o .:? "elbCreateBroadcasterPartyId"
+      <*> o .:? "elbCreateTitle"
+      <*> o .:? "elbCreateDescription"
+      <*> o .:? "elbCreateQuality"
+
+data EventLiveBroadcastEndDTO = EventLiveBroadcastEndDTO
+  { elbEndBroadcasterPartyId :: Maybe Text
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventLiveBroadcastEndDTO
+instance FromJSON EventLiveBroadcastEndDTO where
+  parseJSON = withObject "EventLiveBroadcastEndDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventLiveBroadcastEndDTO"
+      [ "elbEndBroadcasterPartyId"
+      ]
+      o
+    rejectNullObjectFields
+      [ "elbEndBroadcasterPartyId"
+      ]
+      o
+    EventLiveBroadcastEndDTO
+      <$> o .:? "elbEndBroadcasterPartyId"
+
+data EventLiveBroadcastHeartbeatDTO = EventLiveBroadcastHeartbeatDTO
+  { elbhViewerDelta :: Maybe Int
+  } deriving (Show, Eq, Generic)
+instance ToJSON EventLiveBroadcastHeartbeatDTO
+instance FromJSON EventLiveBroadcastHeartbeatDTO where
+  parseJSON = withObject "EventLiveBroadcastHeartbeatDTO" $ \o -> do
+    rejectUnknownObjectFields
+      "EventLiveBroadcastHeartbeatDTO"
+      [ "elbhViewerDelta"
+      ]
+      o
+    rejectNullObjectFields
+      [ "elbhViewerDelta"
+      ]
+      o
+    EventLiveBroadcastHeartbeatDTO
+      <$> o .:? "elbhViewerDelta"
 
 data TicketTierDTO = TicketTierDTO
   { ticketTierId            :: Maybe Text

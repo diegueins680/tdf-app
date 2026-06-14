@@ -116,6 +116,26 @@ EventMomentComment
     updatedAt UTCTime default=now()
     deriving Show Generic
 
+EventLiveBroadcast
+    eventId SocialEventId
+    artistId ArtistProfileId
+    broadcasterPartyId Text
+    broadcasterName Text
+    title Text
+    description Text Maybe
+    status Text
+    playbackUrl Text Maybe
+    ingestUrl Text Maybe
+    whipUrl Text Maybe
+    streamKey Text Maybe
+    viewerCount Int
+    startedAt UTCTime
+    endedAt UTCTime Maybe
+    lastHeartbeatAt UTCTime
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
 ArtistGenre
     artistId ArtistProfileId
     genre Text

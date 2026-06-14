@@ -12,6 +12,7 @@ module TDF.API.SocialEventsAPI
   , RsvpRoutes
   , InvitationsRoutes
   , MomentsRoutes
+  , LiveBroadcastsRoutes
   , TicketsRoutes
   , BudgetRoutes
   , FinanceRoutes
@@ -63,6 +64,10 @@ import TDF.DTO.SocialEventsDTO
   , EventMomentReactionRequestDTO
   , EventMomentCommentDTO
   , EventMomentCommentCreateDTO
+  , EventLiveBroadcastDTO
+  , EventLiveBroadcastCreateDTO
+  , EventLiveBroadcastEndDTO
+  , EventLiveBroadcastHeartbeatDTO
   , TicketTierDTO
   , TicketPurchaseRequestDTO
   , TicketOrderStatusUpdateDTO
@@ -386,6 +391,12 @@ type MomentsRoutes =
   :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "reactions" :> ReqBody '[JSON] EventMomentReactionRequestDTO :> Post '[JSON] EventMomentDTO
   :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "comments" :> ReqBody '[JSON] EventMomentCommentCreateDTO :> Post '[JSON] EventMomentCommentDTO
 
+type LiveBroadcastsRoutes =
+       "events" :> Capture "eventId" Text :> "live-broadcasts" :> Get '[JSON] [EventLiveBroadcastDTO]
+  :<|> "events" :> Capture "eventId" Text :> "live-broadcasts" :> ReqBody '[JSON] EventLiveBroadcastCreateDTO :> Post '[JSON] EventLiveBroadcastDTO
+  :<|> "events" :> Capture "eventId" Text :> "live-broadcasts" :> Capture "broadcastId" Text :> "heartbeat" :> ReqBody '[JSON] EventLiveBroadcastHeartbeatDTO :> Post '[JSON] EventLiveBroadcastDTO
+  :<|> "events" :> Capture "eventId" Text :> "live-broadcasts" :> Capture "broadcastId" Text :> "end" :> ReqBody '[JSON] EventLiveBroadcastEndDTO :> Post '[JSON] EventLiveBroadcastDTO
+
 type TicketsRoutes =
        -- Existing routes
        "events" :> Capture "eventId" Text :> "ticket-tiers" :> Get '[JSON] [TicketTierDTO]
@@ -463,6 +474,7 @@ type SocialEventsAPI = EventsRoutes
                :<|> RsvpRoutes
                :<|> InvitationsRoutes
                :<|> MomentsRoutes
+               :<|> LiveBroadcastsRoutes
                :<|> TicketsRoutes
                :<|> BudgetRoutes
                :<|> FinanceRoutes
