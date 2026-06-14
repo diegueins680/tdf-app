@@ -1880,6 +1880,133 @@ socialEventsServer user = eventsServer
         Nothing -> throwError err500 { errBody = "Moment comment could not be loaded after insert" }
         Just commentRow -> pure (momentCommentEntityToDTO commentKey commentRow)
 
+    -- Live broadcasts
+    listLiveBroadcasts :: T.Text -> AppM [EventLiveBroadcastDTO]
+    listLiveBroadcasts eventIdStr = do
+      Env{..} <- ask
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      rows <- liftIO $ runSqlPool
+        (selectList [EventLiveBroadcastEventId ==. eventKey] [Desc EventLiveBroadcastStartedAt])
+        envPool
+      accessibleRows <- liftIO $
+        filterM
+          (\(Entity _ broadcastRow) ->
+             canAccessLiveBroadcast envPool currentPartyId broadcastRow)
+          rows
+      liftIO $ mapM
+        (\(Entity broadcastKey broadcastRow) ->
+           liveBroadcastEntityToDTO envPool broadcastKey broadcastRow)
+        accessibleRows
+
+    createLiveBroadcast
+      :: T.Text
+      -> EventLiveBroadcastCreateDTO
+      -> AppM EventLiveBroadcastDTO
+    createLiveBroadcast eventIdStr EventLiveBroadcastCreateDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      artistKey <- parseArtistId elbCreateArtistId
+      artistRow <- requireEventArtistProfile envPool eventKey artistKey
+      requireArtistFollower envPool artistKey currentPartyId
+      validateLiveBroadcastBroadcaster currentPartyId elbCreateBroadcasterPartyId
+      let fallbackTitle = artistProfileName artistRow <> " en vivo"
+      titleVal <- either throwError pure $
+        normalizeLiveBroadcastTitle (cleanMaybeText elbCreateTitle <|> Just fallbackTitle)
+      descriptionVal <- either throwError pure $
+        normalizeLiveBroadcastDescription elbCreateDescription
+      _quality <- either throwError pure $
+        normalizeLiveBroadcastQuality elbCreateQuality
+      mExisting <- liftIO $ runSqlPool
+        (selectFirst
+          [ EventLiveBroadcastEventId ==. eventKey
+          , EventLiveBroadcastBroadcasterPartyId ==. currentPartyId
+          , EventLiveBroadcastStatus ==. "live"
+          ]
+          [])
+        envPool
+      when (isJust mExisting) $
+        throwError err409 { errBody = "Broadcaster already has an active live session for this event" }
+      streamKey <- liftIO (UUID.toText <$> UUIDV4.nextRandom)
+      (playbackUrl, ingestUrl, whipUrl) <- resolveLiveBroadcastStreamEndpoints streamKey
+      let broadcasterName =
+            fromMaybe ("Party " <> currentPartyId) (cleanMaybeText elbCreateBroadcasterName)
+      broadcastKey <- liftIO $ runSqlPool
+        (insert EventLiveBroadcast
+          { eventLiveBroadcastEventId = eventKey
+          , eventLiveBroadcastArtistId = artistKey
+          , eventLiveBroadcastBroadcasterPartyId = currentPartyId
+          , eventLiveBroadcastBroadcasterName = broadcasterName
+          , eventLiveBroadcastTitle = titleVal
+          , eventLiveBroadcastDescription = descriptionVal
+          , eventLiveBroadcastStatus = "live"
+          , eventLiveBroadcastPlaybackUrl = Just playbackUrl
+          , eventLiveBroadcastIngestUrl = Just ingestUrl
+          , eventLiveBroadcastWhipUrl = Just whipUrl
+          , eventLiveBroadcastStreamKey = Just streamKey
+          , eventLiveBroadcastViewerCount = 0
+          , eventLiveBroadcastStartedAt = now
+          , eventLiveBroadcastEndedAt = Nothing
+          , eventLiveBroadcastLastHeartbeatAt = now
+          , eventLiveBroadcastCreatedAt = now
+          , eventLiveBroadcastUpdatedAt = now
+          })
+        envPool
+      liftIO $ loadLiveBroadcastDTO envPool broadcastKey
+
+    heartbeatLiveBroadcast
+      :: T.Text
+      -> T.Text
+      -> EventLiveBroadcastHeartbeatDTO
+      -> AppM EventLiveBroadcastDTO
+    heartbeatLiveBroadcast eventIdStr broadcastIdStr EventLiveBroadcastHeartbeatDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      broadcastKey <- parseKeyOr400 "live broadcast" broadcastIdStr
+      broadcastRow <- requireLiveBroadcastForEvent envPool eventKey broadcastKey
+      canAccess <- liftIO $ canAccessLiveBroadcast envPool currentPartyId broadcastRow
+      unless canAccess $
+        throwError err403 { errBody = "Live broadcast is only available to this artist fanclub" }
+      let viewerDelta = max (-1000) (min 1000 (fromMaybe 0 elbhViewerDelta))
+          nextViewerCount = max 0 (eventLiveBroadcastViewerCount broadcastRow + viewerDelta)
+      liftIO $ runSqlPool
+        (update broadcastKey
+          [ EventLiveBroadcastViewerCount =. nextViewerCount
+          , EventLiveBroadcastLastHeartbeatAt =. now
+          , EventLiveBroadcastUpdatedAt =. now
+          ])
+        envPool
+      liftIO $ loadLiveBroadcastDTO envPool broadcastKey
+
+    endLiveBroadcast
+      :: T.Text
+      -> T.Text
+      -> EventLiveBroadcastEndDTO
+      -> AppM EventLiveBroadcastDTO
+    endLiveBroadcast eventIdStr broadcastIdStr EventLiveBroadcastEndDTO{..} = do
+      Env{..} <- ask
+      now <- liftIO getCurrentTime
+      eventKey <- parseKeyOr400 "event" eventIdStr
+      _ <- requireExistingEvent envPool eventKey
+      broadcastKey <- parseKeyOr400 "live broadcast" broadcastIdStr
+      broadcastRow <- requireLiveBroadcastForEvent envPool eventKey broadcastKey
+      validateLiveBroadcastBroadcaster currentPartyId elbEndBroadcasterPartyId
+      when (eventLiveBroadcastBroadcasterPartyId broadcastRow /= currentPartyId) $
+        throwError err403 { errBody = "Only the broadcaster can end this live session" }
+      liftIO $ runSqlPool
+        (update broadcastKey
+          [ EventLiveBroadcastStatus =. "ended"
+          , EventLiveBroadcastEndedAt =. Just now
+          , EventLiveBroadcastLastHeartbeatAt =. now
+          , EventLiveBroadcastUpdatedAt =. now
+          ])
+        envPool
+      liftIO $ loadLiveBroadcastDTO envPool broadcastKey
+
     -- Tickets
     ticketsServer :: ServerT TicketsRoutes AppM
     ticketsServer = listTicketTiers
@@ -3482,6 +3609,37 @@ socialEventsServer user = eventsServer
         throwError err400 { errBody = "Moment does not belong to this event" }
       pure momentRow
 
+    requireLiveBroadcastForEvent
+      :: ConnectionPool
+      -> SocialEventId
+      -> EventLiveBroadcastId
+      -> AppM EventLiveBroadcast
+    requireLiveBroadcastForEvent pool eventKey broadcastKey = do
+      mBroadcast <- liftIO $ runSqlPool (get broadcastKey) pool
+      broadcastRow <- maybe (throwError err404 { errBody = "Live broadcast not found" }) pure mBroadcast
+      when (eventLiveBroadcastEventId broadcastRow /= eventKey) $
+        throwError err400 { errBody = "Live broadcast does not belong to this event" }
+      pure broadcastRow
+
+    requireEventArtistProfile
+      :: ConnectionPool
+      -> SocialEventId
+      -> ArtistProfileId
+      -> AppM ArtistProfile
+    requireEventArtistProfile pool eventKey artistKey = do
+      mArtist <- liftIO $ runSqlPool (get artistKey) pool
+      artistRow <- maybe (throwError err404 { errBody = "Artist not found" }) pure mArtist
+      mLineup <- liftIO $ runSqlPool (get (EventArtistKey eventKey artistKey)) pool
+      when (isNothing mLineup) $
+        throwError err400 { errBody = "Artist is not in this event lineup" }
+      pure artistRow
+
+    requireArtistFollower :: ConnectionPool -> ArtistProfileId -> T.Text -> AppM ()
+    requireArtistFollower pool artistKey partyId = do
+      mFollow <- liftIO $ runSqlPool (get (ArtistFollowKey artistKey partyId)) pool
+      when (isNothing mFollow) $
+        throwError err403 { errBody = "Only followers of this artist can start a fanclub live broadcast" }
+
     parseIds :: T.Text -> T.Text -> AppM (SocialEventId, EventInvitationId)
     parseIds eventIdStr invitationIdStr =
       case parseInvitationIdsEither eventIdStr invitationIdStr of
@@ -3948,6 +4106,105 @@ validateMomentMediaDuration (Just value)
 resolveMomentAuthorName :: T.Text -> Maybe T.Text -> T.Text
 resolveMomentAuthorName currentParty mAuthorName =
   fromMaybe ("Party " <> currentParty) (cleanMaybeText mAuthorName)
+
+validateLiveBroadcastBroadcaster :: T.Text -> Maybe T.Text -> AppM ()
+validateLiveBroadcastBroadcaster currentPartyId mRawBroadcaster =
+  case cleanMaybeText mRawBroadcaster of
+    Nothing -> pure ()
+    Just rawBroadcaster ->
+      case normalizePositivePartyIdText rawBroadcaster of
+        Nothing ->
+          throwError err400 { errBody = "broadcasterPartyId must be a positive integer" }
+        Just normalized
+          | normalized == currentPartyId -> pure ()
+          | otherwise ->
+              throwError err403 { errBody = "broadcasterPartyId must match authenticated party" }
+
+normalizeLiveBroadcastTitle :: Maybe T.Text -> Either ServerError T.Text
+normalizeLiveBroadcastTitle mTitle =
+  case cleanMaybeText mTitle of
+    Nothing ->
+      Left err400 { errBody = "Live broadcast title is required" }
+    Just titleVal
+      | T.length titleVal > 120 ->
+          Left err400 { errBody = "Live broadcast title must be 120 characters or less" }
+      | maybe False (T.any isUnsafeMomentTextChar) mTitle ->
+          Left err400
+            { errBody =
+                "Live broadcast title must not contain control characters or hidden formatting characters"
+            }
+      | otherwise -> Right titleVal
+
+normalizeLiveBroadcastDescription :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+normalizeLiveBroadcastDescription mDescription =
+  case cleanMaybeText mDescription of
+    Nothing -> Right Nothing
+    Just descriptionVal
+      | T.length descriptionVal > 280 ->
+          Left err400 { errBody = "Live broadcast description must be 280 characters or less" }
+      | maybe False (T.any isUnsafeMomentTextChar) mDescription ->
+          Left err400
+            { errBody =
+                "Live broadcast description must not contain control characters or hidden formatting characters"
+            }
+      | otherwise -> Right (Just descriptionVal)
+
+normalizeLiveBroadcastQuality :: Maybe T.Text -> Either ServerError T.Text
+normalizeLiveBroadcastQuality mQuality =
+  case fmap (T.toLower . T.strip) mQuality of
+    Nothing -> Right "auto"
+    Just "" -> Right "auto"
+    Just "auto" -> Right "auto"
+    Just "720p" -> Right "720p"
+    Just "480p" -> Right "480p"
+    Just _ ->
+      Left err400 { errBody = "Live broadcast quality must be one of: auto, 720p, 480p" }
+
+resolveLiveBroadcastStreamEndpoints :: T.Text -> AppM (T.Text, T.Text, T.Text)
+resolveLiveBroadcastStreamEndpoints streamKey = do
+  mListenBaseRaw <- liftIO (lookupEnv "RADIO_PUBLIC_BASE")
+  listenBaseRaw <- either throwError pure $
+    resolveRadioTransmissionEnvBase
+      "RADIO_PUBLIC_BASE"
+      "https://tdf-hq.fly.dev/live"
+      mListenBaseRaw
+  listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
+  let fallbackIngest = deriveLiveBroadcastBase listenBase "rtmp" "/live"
+      fallbackWhip = deriveLiveBroadcastBase listenBase "https" "/whip"
+  mIngestBaseRaw <- liftIO (lookupEnv "RADIO_INGEST_BASE")
+  mWhipBaseRaw <- liftIO (lookupEnv "RADIO_WHIP_BASE")
+  ingestBaseRaw <- either throwError pure $
+    resolveRadioTransmissionEnvBase
+      "RADIO_INGEST_BASE"
+      fallbackIngest
+      mIngestBaseRaw
+  whipBaseRaw <- either throwError pure $
+    resolveRadioTransmissionEnvBase
+      "RADIO_WHIP_BASE"
+      fallbackWhip
+      mWhipBaseRaw
+  ingestBase <- either throwError pure (validateRadioTransmissionIngestBase ingestBaseRaw)
+  whipBase <- either throwError pure (validateRadioTransmissionWhipBase whipBaseRaw)
+  pure
+    ( appendLiveBroadcastPath listenBase streamKey
+    , appendLiveBroadcastPath ingestBase streamKey
+    , appendLiveBroadcastPath whipBase streamKey
+    )
+
+appendLiveBroadcastPath :: T.Text -> T.Text -> T.Text
+appendLiveBroadcastPath base path =
+  T.dropWhileEnd (== '/') base <> "/" <> path
+
+deriveLiveBroadcastBase :: T.Text -> T.Text -> T.Text -> T.Text
+deriveLiveBroadcastBase baseUrl newScheme newPath =
+  let noScheme =
+        fromMaybe
+          baseUrl
+          (T.stripPrefix "https://" baseUrl <|> T.stripPrefix "http://" baseUrl)
+      host = T.takeWhile (/= '/') noScheme
+      cleanHost = if T.null host then "localhost" else host
+      normalizedPath = if T.isPrefixOf "/" newPath then newPath else "/" <> newPath
+  in newScheme <> "://" <> cleanHost <> normalizedPath
 
 normalizeBudgetCentsMaybe :: Maybe Int -> Maybe Int
 normalizeBudgetCentsMaybe mBudget =
@@ -4823,6 +5080,53 @@ loadEventMoments pool eventKey = runSqlPool (do
         comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
     pure (momentEntityToDTO momentKey momentRow reactions comments)
   ) pool
+
+liveBroadcastEntityToDTO
+  :: ConnectionPool
+  -> EventLiveBroadcastId
+  -> EventLiveBroadcast
+  -> IO EventLiveBroadcastDTO
+liveBroadcastEntityToDTO pool broadcastKey broadcastRow = runSqlPool (do
+  mArtist <- get (eventLiveBroadcastArtistId broadcastRow)
+  let artistName = maybe "Artista" artistProfileName mArtist
+  pure EventLiveBroadcastDTO
+    { elbId = Just (renderKeyText broadcastKey)
+    , elbEventId = Just (renderKeyText (eventLiveBroadcastEventId broadcastRow))
+    , elbArtistId = renderKeyText (eventLiveBroadcastArtistId broadcastRow)
+    , elbArtistName = artistName
+    , elbBroadcasterName = eventLiveBroadcastBroadcasterName broadcastRow
+    , elbBroadcasterPartyId = Just (eventLiveBroadcastBroadcasterPartyId broadcastRow)
+    , elbTitle = eventLiveBroadcastTitle broadcastRow
+    , elbDescription = eventLiveBroadcastDescription broadcastRow
+    , elbStatus = eventLiveBroadcastStatus broadcastRow
+    , elbPlaybackUrl = eventLiveBroadcastPlaybackUrl broadcastRow
+    , elbIngestUrl = eventLiveBroadcastIngestUrl broadcastRow
+    , elbWhipUrl = eventLiveBroadcastWhipUrl broadcastRow
+    , elbStreamKey = eventLiveBroadcastStreamKey broadcastRow
+    , elbViewerCount = eventLiveBroadcastViewerCount broadcastRow
+    , elbStartedAt = Just (eventLiveBroadcastStartedAt broadcastRow)
+    , elbEndedAt = eventLiveBroadcastEndedAt broadcastRow
+    , elbLastHeartbeatAt = Just (eventLiveBroadcastLastHeartbeatAt broadcastRow)
+    }
+  ) pool
+
+loadLiveBroadcastDTO :: ConnectionPool -> EventLiveBroadcastId -> IO EventLiveBroadcastDTO
+loadLiveBroadcastDTO pool broadcastKey = runSqlPool (do
+  mBroadcast <- get broadcastKey
+  case mBroadcast of
+    Nothing -> liftIO (ioError (userError "Live broadcast not found"))
+    Just broadcastRow -> liftIO (liveBroadcastEntityToDTO pool broadcastKey broadcastRow)
+  ) pool
+
+canAccessLiveBroadcast :: ConnectionPool -> T.Text -> EventLiveBroadcast -> IO Bool
+canAccessLiveBroadcast pool partyId broadcastRow =
+  if eventLiveBroadcastBroadcasterPartyId broadcastRow == partyId
+    then pure True
+    else do
+      mFollow <- runSqlPool
+        (get (ArtistFollowKey (eventLiveBroadcastArtistId broadcastRow) partyId))
+        pool
+      pure (isJust mFollow)
 
 eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
 eventEntityToDTO eid eventRow artists = do

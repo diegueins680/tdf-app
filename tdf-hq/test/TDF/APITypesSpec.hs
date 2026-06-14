@@ -2853,6 +2853,64 @@ spec = do
                 "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"video\",\"emCreateMediaDurationMs\":-1}"
                 `shouldSatisfy` isLeft
 
+    describe "social event live broadcast request FromJSON" $ do
+        it "accepts canonical live broadcast create payloads and trims lookup fields" $
+            case decodeEventLiveBroadcastCreate (BL8.concat
+                [ "{\"elbCreateArtistId\":\" 42 \""
+                , ",\"elbCreateArtistName\":\"  La Banda \""
+                , ",\"elbCreateBroadcasterName\":\"  Ada Fan \""
+                , ",\"elbCreateBroadcasterPartyId\":\" 7 \""
+                , ",\"elbCreateTitle\":\"  Frente al escenario \""
+                , ",\"elbCreateDescription\":\"  Empieza el encore \""
+                , ",\"elbCreateQuality\":\"720p\"}"
+                ])
+             of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical live broadcast create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.elbCreateArtistId payload `shouldBe` "42"
+                    SocialEvents.elbCreateArtistName payload `shouldBe` Just "La Banda"
+                    SocialEvents.elbCreateBroadcasterName payload `shouldBe` Just "Ada Fan"
+                    SocialEvents.elbCreateBroadcasterPartyId payload `shouldBe` Just "7"
+                    SocialEvents.elbCreateTitle payload `shouldBe` Just "Frente al escenario"
+                    SocialEvents.elbCreateDescription payload `shouldBe` Just "Empieza el encore"
+                    SocialEvents.elbCreateQuality payload `shouldBe` Just "720p"
+
+        it "rejects ambiguous or malformed live broadcast creates before handler validation" $ do
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"artistId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateTitle\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateQuality\":null}"
+                `shouldSatisfy` isLeft
+
+        it "accepts end and heartbeat payloads while rejecting unknown fields" $ do
+            case decodeEventLiveBroadcastEnd "{\"elbEndBroadcasterPartyId\":\" 7 \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected live broadcast end payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.elbEndBroadcasterPartyId payload `shouldBe` Just "7"
+            case decodeEventLiveBroadcastHeartbeat "{\"elbhViewerDelta\":1}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected live broadcast heartbeat payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.elbhViewerDelta payload `shouldBe` Just 1
+            decodeEventLiveBroadcastEnd
+                "{\"elbEndBroadcasterPartyId\":\"7\",\"broadcastId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastHeartbeat
+                "{\"elbhViewerDelta\":1,\"viewerCount\":\"typo\"}"
+                `shouldSatisfy` isLeft
+
     describe "SocialSyncIngestRequest FromJSON" $ do
         it "accepts canonical ingest posts and trims identity fields before handler validation" $
             case decodeSocialSyncIngest
@@ -3138,6 +3196,12 @@ spec = do
     decodeEventFinanceEntry = eitherDecode
     decodeEventMomentCreate :: BL8.ByteString -> Either String SocialEvents.EventMomentCreateDTO
     decodeEventMomentCreate = eitherDecode
+    decodeEventLiveBroadcastCreate :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastCreateDTO
+    decodeEventLiveBroadcastCreate = eitherDecode
+    decodeEventLiveBroadcastEnd :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastEndDTO
+    decodeEventLiveBroadcastEnd = eitherDecode
+    decodeEventLiveBroadcastHeartbeat :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastHeartbeatDTO
+    decodeEventLiveBroadcastHeartbeat = eitherDecode
     decodeSocialSyncIngest :: BL8.ByteString -> Either String SocialSync.SocialSyncIngestRequest
     decodeSocialSyncIngest = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
