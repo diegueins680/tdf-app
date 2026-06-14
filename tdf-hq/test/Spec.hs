@@ -8923,10 +8923,16 @@ main = hspec $ do
                     , artistUpdatedAt = Nothing
                     }
 
-        it "preserves omitted artist references and canonicalizes explicit positive ids" $ do
+        it "requires explicit artist ids and canonicalizes explicit positive ids" $ do
             fmap (map fromSqlKey)
-                (validateEventArtistIds [mkArtist Nothing, mkArtist (Just " 0042 "), mkArtist (Just "7")])
+                (validateEventArtistIds [mkArtist (Just " 0042 "), mkArtist (Just "7")])
                 `shouldBe` Right [42, 7]
+            case validateEventArtistIds [mkArtist Nothing] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId is required"
+                Right value ->
+                    expectationFailure ("Expected missing event artist id to be rejected, got " <> show value)
 
         it "rejects duplicate artist ids before event writes hit the join-table constraint" $
             case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
