@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act } from 'react';
 import { render, waitFor } from '@testing-library/react';
 import type { HealthStatus } from '../api/types';
 
@@ -22,6 +23,8 @@ const createDeferred = <T,>() => {
   });
   return { promise, reject, resolve };
 };
+
+const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const createQueryClient = () => new QueryClient({
   defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -61,7 +64,10 @@ describe('ApiStatusChip', () => {
       expect(statusChip?.className).toContain('MuiChip-outlined');
       expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
-      initialHealthLookup.resolve({ status: 'ok' });
+      await act(async () => {
+        initialHealthLookup.resolve({ status: 'ok' });
+        await flushPromises();
+      });
 
       await waitFor(() => {
         expect(container.textContent).toContain('API: online');
@@ -89,7 +95,10 @@ describe('ApiStatusChip', () => {
       expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
       expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
 
-      cachedStatusRefetch.resolve({ status: 'ok' });
+      await act(async () => {
+        cachedStatusRefetch.resolve({ status: 'ok' });
+        await flushPromises();
+      });
 
       await waitFor(() => {
         expect(container.textContent).toContain('API: online');
@@ -114,7 +123,10 @@ describe('ApiStatusChip', () => {
       expect(healthMock).toHaveBeenCalledTimes(1);
       expect(container.textContent).toContain('API: verificando...');
 
-      failedHealth.reject(new Error('offline'));
+      await act(async () => {
+        failedHealth.reject(new Error('offline'));
+        await flushPromises();
+      });
 
       await waitFor(() => {
         expect(container.textContent).toContain('API: offline');
