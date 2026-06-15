@@ -36,7 +36,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import type { ArtistProfileUpsert, FanProfileUpdate } from '../api/types';
+import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
@@ -63,6 +63,7 @@ import { ReleaseFeed } from '../features/releases/ReleaseFeed';
 import { FanProfileEditor } from '../features/fans/FanProfileEditor';
 import { FollowedArtists } from '../features/fans/FollowedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
+import { useFanProfile } from '../features/fans/useFanProfile';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
@@ -230,10 +231,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   }, [GENRE_FILTER_KEY, genreFilter]);
 
-  const profileQuery = useQuery({
-    queryKey: ['fan-profile', viewerId],
-    queryFn: Fans.getProfile,
+  const {
+    profileDraft,
+    profileQuery,
+    saveProfile: handleSaveProfile,
+    setProfileDraft,
+    updateProfileMutation,
+  } = useFanProfile({
     enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    viewerId,
   });
 
   const followsQuery = useQuery({
@@ -254,13 +260,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     enabled: Boolean(viewerId && canEditArtist && hasAuthToken),
   });
 
-  const [profileDraft, setProfileDraft] = useState<FanProfileUpdate>({
-    fpuDisplayName: '',
-    fpuBio: '',
-    fpuCity: '',
-    fpuFavoriteGenres: '',
-    fpuAvatarUrl: '',
-  });
   const [artistDraft, setArtistDraft] = useState<ArtistProfileUpsert>({
     apuArtistId: session?.partyId ?? 0,
     apuDisplayName: '',
@@ -289,17 +288,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
   });
 
-  useEffect(() => {
-    if (profileQuery.data) {
-      setProfileDraft({
-        fpuDisplayName: profileQuery.data.fpDisplayName ?? '',
-        fpuBio: profileQuery.data.fpBio ?? '',
-        fpuCity: profileQuery.data.fpCity ?? '',
-        fpuFavoriteGenres: profileQuery.data.fpFavoriteGenres ?? '',
-        fpuAvatarUrl: profileQuery.data.fpAvatarUrl ?? '',
-      });
-    }
-  }, [profileQuery.data]);
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
       const dto = artistProfileQuery.data;
@@ -342,12 +330,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   }, [focusArtist]);
 
-  const updateProfileMutation = useMutation({
-    mutationFn: Fans.updateProfile,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
-    },
-  });
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
     onSuccess: () => {
@@ -578,10 +560,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const normalizeField = (value?: string | null) => {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : null;
-  };
-
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileDraft);
   };
 
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {

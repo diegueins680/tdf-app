@@ -88,4 +88,38 @@ describe('ReleaseFeed', () => {
       '/login?signup=1&roles=Fan&redirect=/fans',
     );
   });
+
+  it('renders a clear empty state for release managers', () => {
+    renderReleaseFeed({
+      canManageReleases: true,
+      isFan: false,
+      isHomeManagerView: true,
+      releaseFeed: [],
+      visibleFeed: [],
+    });
+
+    expect(
+      screen.getByText(
+        'Todavía no hay lanzamientos visibles en el hub. Crea uno o completa los enlaces a plataformas para que aparezca aquí.',
+      ),
+    ).not.toBeNull();
+    expect(screen.getByRole('link', { name: 'Crear lanzamiento' }).getAttribute('href')).toBe('/label/releases');
+  });
+
+  it('prevents saving an empty quick-upload link', () => {
+    const onSaveReleaseLink = jest.fn();
+
+    renderReleaseFeed({
+      canManageReleases: true,
+      pendingUploadRelease: release,
+      releaseLinkDraft: '',
+      onSaveReleaseLink,
+    });
+
+    const saveButton = screen.getByRole('button', { name: 'Guardar enlace' });
+    expect(saveButton.getAttribute('disabled')).not.toBeNull();
+
+    fireEvent.click(saveButton);
+    expect(onSaveReleaseLink).not.toHaveBeenCalled();
+  });
 });
