@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { useEffect, useMemo, useRef, useState, type ReactNode, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   Alert,
   AlertTitle,
@@ -19,13 +19,11 @@ import {
   Link,
   LinearProgress,
   Snackbar,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
@@ -49,7 +47,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
 import { buildReleaseStreamingSources } from '../utils/media';
-import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
+import { formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
@@ -63,6 +61,11 @@ import {
   resolveReleaseAudioUrl,
   type ReleaseFeedItem,
 } from '../features/releases/ReleasePlayerActions';
+import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/useReleaseFeed';
+import { FanProfileEditor } from '../features/fans/FanProfileEditor';
+import { FollowedArtists } from '../features/fans/FollowedArtists';
+import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
+import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -397,13 +400,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [feedLimit, setFeedLimit] = useState(4);
   const [artistEditorOpen, setArtistEditorOpen] = useState(() => focusArtist);
-  interface TargetArtist {
-    id: number;
-    name: string;
-    spotifyUrl?: string | null;
-    youtubeUrl?: string | null;
-  }
-  const targetArtists = useMemo<TargetArtist[]>(() => {
+  const targetArtists = useMemo<ReleaseFeedArtist[]>(() => {
     if (isFan && hasFollows) {
       return follows.map((follow) => ({
         id: follow.ffArtistId,
@@ -426,11 +423,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
-  const releaseArtistIds = useMemo(
-    () => targetArtists.map((artist) => artist.id).sort((a, b) => a - b),
-    [targetArtists],
-  );
-  const hasReleaseTargets = targetArtists.length > 0;
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -443,25 +435,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  const releaseFeedQuery = useQuery({
-    queryKey: ['fan-release-feed', releaseArtistIds, canSeeReleaseFeed],
-    enabled: canSeeReleaseFeed && targetArtists.length > 0,
-    queryFn: async () => {
-      const perArtist = await Promise.all(
-        targetArtists.map(async (artist) => {
-          const releases = await Fans.getReleases(artist.id);
-          return releases.map((release) => ({
-            ...release,
-            artistName: artist.name,
-          }));
-        }),
-      );
-      const flat = perArtist.flat() as ReleaseFeedItem[];
-      return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
-    },
+  const { hasReleaseTargets, releaseFeed, releaseFeedQuery } = useReleaseFeed({
+    enabled: canSeeReleaseFeed,
+    targetArtists,
   });
-
-  const releaseFeed = useMemo(() => releaseFeedQuery.data ?? [], [releaseFeedQuery.data]);
   const latestReleaseByArtist = useMemo(() => {
     const map = new Map<number, ReleaseFeedItem>();
     releaseFeed.forEach((r) => {
@@ -509,8 +486,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
-    const payload = buildReleaseStreamUpdatePayload(release, streamUrl);
-    await Admin.updateArtistRelease(release.arReleaseId, payload);
+    const streamUpdatePayload = buildReleaseStreamUpdatePayload(release, streamUrl);
+    await Admin.updateArtistRelease(release.arReleaseId, streamUpdatePayload);
     void releaseFeedQuery.refetch();
     setReleaseUploadToast('Stream actualizado.');
   };
@@ -1635,111 +1612,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         )}
 
         {isFan && (
-          <ProfileSectionCard
-            title="Tu perfil fan"
-            description="Personaliza cómo te ve la comunidad cuando sigues a un artista."
-            actions={
-              <Button
-                variant="contained"
-                sx={{ alignSelf: 'flex-start' }}
-                onClick={handleSaveProfile}
-                disabled={updateProfileMutation.isPending}
-              >
-                {updateProfileMutation.isPending ? 'Guardando…' : 'Guardar perfil'}
-              </Button>
-            }
-          >
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-              <Stack spacing={1} alignItems="center" sx={{ minWidth: 140 }}>
-                <Box sx={{ position: 'relative', width: 104, height: 104 }}>
-                  <Avatar
-                    src={profileDraft.fpuAvatarUrl ?? undefined}
-                    alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
-                    sx={{ width: 104, height: 104 }}
-                  />
-                  <IconButton
-                    size="small"
-                    onClick={() => avatarInputRef.current?.click()}
-                    sx={{
-                      position: 'absolute',
-                      bottom: -8,
-                      right: -8,
-                      bgcolor: 'primary.main',
-                      color: '#fff',
-                      boxShadow: 2,
-                      '&:hover': { bgcolor: 'primary.dark' },
-                    }}
-                    aria-label="Editar avatar"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={avatarInputRef}
-                    onChange={handleAvatarFileChange}
-                    style={{ display: 'none' }}
-                  />
-                </Box>
-                <TextField
-                  label="Avatar (pega enlace o sube)"
-                  placeholder="https://..."
-                  value={profileDraft.fpuAvatarUrl ?? ''}
-                  onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
-                  fullWidth
-                  size="small"
-                />
-                <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="contained" onClick={() => avatarInputRef.current?.click()}>
-                    Subir imagen
-                  </Button>
-                  {profileDraft.fpuAvatarUrl && (
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: '' }))}
-                    >
-                      Quitar
-                    </Button>
-                  )}
-                </Stack>
-              </Stack>
-              <Stack flex={1} spacing={2}>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField
-                    label="Nombre público"
-                    value={profileDraft.fpuDisplayName ?? ''}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuDisplayName: event.target.value }))}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Ciudad"
-                    value={profileDraft.fpuCity ?? ''}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuCity: event.target.value }))}
-                    fullWidth
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField
-                    label="Géneros favoritos"
-                    value={profileDraft.fpuFavoriteGenres ?? ''}
-                    onChange={(event) =>
-                      setProfileDraft((prev) => ({ ...prev, fpuFavoriteGenres: event.target.value }))
-                    }
-                    fullWidth
-                  />
-                </Stack>
-                <TextField
-                  label="Bio"
-                  multiline
-                  minRows={2}
-                  value={profileDraft.fpuBio ?? ''}
-                  onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuBio: event.target.value }))}
-                  fullWidth
-                />
-              </Stack>
-            </Stack>
-          </ProfileSectionCard>
+          <FanProfileEditor
+            avatarInputRef={avatarInputRef}
+            displayNameFallback={session?.displayName}
+            profileDraft={profileDraft}
+            saving={updateProfileMutation.isPending}
+            setProfileDraft={setProfileDraft}
+            onAvatarFileChange={handleAvatarFileChange}
+            onSave={handleSaveProfile}
+          />
         )}
 
         {canEditArtist && (
@@ -2041,21 +1922,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </div>
         )}
 
-        {viewerId && follows.length > 0 && (
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Artistas que sigues</Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
-              {follows.map((follow) => (
-                <Chip
-                  key={follow.ffArtistId}
-                  label={follow.ffArtistName}
-                  color="primary"
-                  icon={<FavoriteIcon />}
-                />
-              ))}
-            </Stack>
-          </Card>
-        )}
+        {viewerId && <FollowedArtists follows={follows} />}
 
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
@@ -2174,51 +2041,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Stack>
         )}
 
-        {!isHomeManagerView && isFan && myClubsQuery.data && myClubsQuery.data.length > 0 && (
-          <Stack spacing={2}>
-            <Typography variant="h6">Tus clubes</Typography>
-            <LazyPaginatedList
-              items={myClubsQuery.data}
-              loading={myClubsQuery.isFetching}
-              pagination={{ itemLabel: 'clubes', initialRowsPerPage: 6 }}
-              renderItems={(visibleClubs) => (
-                <Grid container spacing={2}>
-                  {visibleClubs.map((club) => (
-                    <Grid item xs={12} md={4} key={club.fcId}>
-                      <Card
-                        component={RouterLink}
-                        to={`/fans/clubs/${club.fcArtistId}`}
-                        sx={{
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          height: '100%',
-                          transition: 'transform 140ms ease, box-shadow 140ms ease',
-                          '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
-                        }}
-                      >
-                        {club.fcArtistImageUrl && (
-                          <CardMedia component="img" height={160} image={club.fcArtistImageUrl} alt={club.fcName} />
-                        )}
-                        <CardContent sx={{ flex: 1 }}>
-                          <Stack spacing={1}>
-                            <Typography variant="h6" fontWeight={700}>{club.fcName}</Typography>
-                            <Typography variant="body2" color="text.secondary">{club.fcFollowerCount} seguidores</Typography>
-                            {club.fcDescription && (
-                              <Typography variant="body2" color="text.secondary">
-                                {club.fcDescription.length > 100 ? `${club.fcDescription.slice(0, 100)}…` : club.fcDescription}
-                              </Typography>
-                            )}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            />
-          </Stack>
+        {!isHomeManagerView && isFan && myClubsQuery.data && (
+          <FanClubPreview clubs={myClubsQuery.data} loading={myClubsQuery.isFetching} />
         )}
 
         {!isHomeManagerView && !showCatalogFallback && filteredArtists.length === 0 && (
@@ -2506,33 +2330,5 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </>
-  );
-}
-function ProfileSectionCard({
-  title,
-  description,
-  actions,
-  children,
-}: {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <Card sx={{ p: 3 }}>
-      <Stack spacing={2}>
-        <Box>
-          <Typography variant="h6">{title}</Typography>
-          {description && (
-            <Typography variant="body2" color="text.secondary">
-              {description}
-            </Typography>
-          )}
-        </Box>
-        {children}
-        {actions}
-      </Stack>
-    </Card>
   );
 }
