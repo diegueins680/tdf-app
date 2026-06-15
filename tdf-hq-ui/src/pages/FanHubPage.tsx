@@ -40,7 +40,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
+import type { ArtistProfileUpsert, FanProfileUpdate } from '../api/types';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
@@ -56,6 +56,13 @@ import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
+import {
+  buildReleaseStreamUpdatePayload,
+  dispatchReleaseToRadio,
+  getReleasePlaybackUrls,
+  resolveReleaseAudioUrl,
+  type ReleaseFeedItem,
+} from '../features/releases/ReleasePlayerActions';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -436,9 +443,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  interface ReleaseFeedItem extends ArtistReleaseDTO {
-    artistName: string;
-  }
   const releaseFeedQuery = useQuery({
     queryKey: ['fan-release-feed', releaseArtistIds, canSeeReleaseFeed],
     enabled: canSeeReleaseFeed && targetArtists.length > 0,
@@ -505,17 +509,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
-    const normalized = streamUrl.trim();
-    const isYoutube = /youtu\.?be|youtube\.com/.test(normalized.toLowerCase());
-    const payload = {
-      aruArtistId: release.arArtistId,
-      aruTitle: release.arTitle,
-      aruReleaseDate: release.arReleaseDate ?? null,
-      aruDescription: release.arDescription ?? null,
-      aruCoverImageUrl: release.arCoverImageUrl ?? null,
-      aruSpotifyUrl: isYoutube ? release.arSpotifyUrl ?? null : normalized,
-      aruYoutubeUrl: isYoutube ? normalized : release.arYoutubeUrl ?? null,
-    };
+    const payload = buildReleaseStreamUpdatePayload(release, streamUrl);
     await Admin.updateArtistRelease(release.arReleaseId, payload);
     void releaseFeedQuery.refetch();
     setReleaseUploadToast('Stream actualizado.');
@@ -551,27 +545,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const handlePlayRelease = (release: ReleaseFeedItem) => {
-    const audioUrl =
-      releaseAudioMap[release.arReleaseId] ??
-      release.arSpotifyUrl ??
-      release.arYoutubeUrl ??
-      streamingFallbacks.get(release.arArtistId)?.spotify ??
-      streamingFallbacks.get(release.arArtistId)?.youtube ??
-      null;
+    const audioUrl = resolveReleaseAudioUrl(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
     if (!audioUrl) {
       setUploadError('Este lanzamiento todavía no tiene un enlace de audio. Sube el máster o pega un enlace.');
       return;
     }
     setUploadError(null);
-    window.dispatchEvent(
-      new CustomEvent('tdf-radio-load-stream', {
-        detail: {
-          streamUrl: audioUrl,
-          stationName: release.arTitle,
-          stationId: `release-${release.arReleaseId}`,
-        },
-      }),
-    );
+    dispatchReleaseToRadio(release, audioUrl);
   };
 
   const handleSaveReleaseLink = async () => {
@@ -1264,11 +1244,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               {canSeeReleaseFeed && releaseFeed.length > 0 && (
                 <Stack spacing={1.5}>
                   {visibleFeed.map((release) => {
-                    const cachedAudio = releaseAudioMap[release.arReleaseId];
-                    const spotifyUrl =
-                      cachedAudio ?? release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
-                    const youtubeUrl =
-                      release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
+                    const { spotifyUrl, youtubeUrl } = getReleasePlaybackUrls(
+                      release,
+                      releaseAudioMap,
+                      streamingFallbacks.get(release.arArtistId),
+                    );
                     const hasSpotify = Boolean(spotifyUrl);
                     const hasYoutube = Boolean(youtubeUrl);
                     const hasLinks = hasSpotify || hasYoutube;
