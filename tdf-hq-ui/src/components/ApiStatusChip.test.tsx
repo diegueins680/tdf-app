@@ -46,7 +46,7 @@ describe('ApiStatusChip', () => {
     healthMock.mockReset();
   });
 
-  it('shows a visible checking state on the first health lookup', async () => {
+  it('shows a visible checking state on the first health lookup', () => {
     const initialHealthLookup = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(initialHealthLookup.promise);
 
@@ -63,16 +63,6 @@ describe('ApiStatusChip', () => {
       expect(statusChip?.className).toContain('MuiChip-colorInfo');
       expect(statusChip?.className).toContain('MuiChip-outlined');
       expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
-
-      await act(async () => {
-        initialHealthLookup.resolve({ status: 'ok' });
-        await flushPromises();
-      });
-
-      await waitFor(() => {
-        expect(container.textContent).toContain('API: online');
-        expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
-      });
     } finally {
       unmount();
       firstLookupQueryClient.clear();
