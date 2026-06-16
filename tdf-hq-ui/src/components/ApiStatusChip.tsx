@@ -4,6 +4,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Meta } from '../api/meta';
 
+type ApiStatusChipProgressSizePx = 14;
+
+export const API_STATUS_CHIP_PROGRESS_SIZE_PX: ApiStatusChipProgressSizePx = 14;
+
 export default function ApiStatusChip() {
   const { data, isError, isFetching } = useQuery({
     queryKey: ['meta', 'health-indicator'],
@@ -20,7 +24,7 @@ export default function ApiStatusChip() {
         role="status"
         aria-live="polite"
         aria-busy="true"
-        icon={<CircularProgress size={14} color="inherit" aria-label="Verificando API" />}
+        icon={<CircularProgress size={API_STATUS_CHIP_PROGRESS_SIZE_PX} color="inherit" aria-label="Verificando API" />}
         label="API: verificando..."
         color="info"
         size="small"
@@ -39,7 +43,7 @@ export default function ApiStatusChip() {
       aria-busy={refreshingStatus ? true : undefined}
       icon={
         refreshingStatus
-          ? <CircularProgress size={14} color="inherit" aria-label="Actualizando API" />
+          ? <CircularProgress size={API_STATUS_CHIP_PROGRESS_SIZE_PX} color="inherit" aria-label="Actualizando API" />
           : healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />
       }
       label={`API: ${healthy ? 'online' : 'offline'}`}

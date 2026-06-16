@@ -12,7 +12,10 @@ jest.unstable_mockModule('../api/meta', () => ({
   },
 }));
 
-const { default: ApiStatusChip } = await import('./ApiStatusChip');
+const {
+  API_STATUS_CHIP_PROGRESS_SIZE_PX,
+  default: ApiStatusChip,
+} = await import('./ApiStatusChip');
 
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -36,6 +39,13 @@ const renderChip = (queryClient: QueryClient) =>
       <ApiStatusChip />
     </QueryClientProvider>,
   );
+
+const expectProgressbarUsesChipProgressSize = (progressbar: Element | null) => {
+  expect(progressbar).not.toBeNull();
+  const progressbarElement = progressbar as HTMLElement;
+  expect(progressbarElement.style.width).toBe(`${API_STATUS_CHIP_PROGRESS_SIZE_PX}px`);
+  expect(progressbarElement.style.height).toBe(`${API_STATUS_CHIP_PROGRESS_SIZE_PX}px`);
+};
 
 describe('ApiStatusChip', () => {
   beforeAll(() => {
@@ -62,7 +72,9 @@ describe('ApiStatusChip', () => {
       expect(statusChip?.getAttribute('aria-busy')).toBe('true');
       expect(statusChip?.className).toContain('MuiChip-colorInfo');
       expect(statusChip?.className).toContain('MuiChip-outlined');
-      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
+      const progressbar = container.querySelector('[role="progressbar"]');
+      expect(progressbar?.getAttribute('aria-label')).toBe('Verificando API');
+      expectProgressbarUsesChipProgressSize(progressbar);
     } finally {
       unmount();
       firstLookupQueryClient.clear();
@@ -83,7 +95,9 @@ describe('ApiStatusChip', () => {
       expect(container.textContent).toContain('API: online');
       expect(container.textContent).not.toContain('API: verificando...');
       expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
-      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Actualizando API');
+      const progressbar = container.querySelector('[role="progressbar"]');
+      expect(progressbar?.getAttribute('aria-label')).toBe('Actualizando API');
+      expectProgressbarUsesChipProgressSize(progressbar);
 
       await act(async () => {
         cachedStatusRefetch.resolve({ status: 'ok' });
