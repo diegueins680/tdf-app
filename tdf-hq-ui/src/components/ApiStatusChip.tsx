@@ -11,7 +11,10 @@ export default function ApiStatusChip() {
     refetchInterval: 60_000,
   });
 
-  if (isFetching) {
+  const hasStatus = data?.status != null;
+  const checkingInitialStatus = isFetching && !hasStatus;
+
+  if (checkingInitialStatus) {
     return (
       <Chip
         role="status"
@@ -27,11 +30,18 @@ export default function ApiStatusChip() {
   }
 
   const healthy = !isError && (data?.status ?? '').toLowerCase() === 'ok';
+  const refreshingStatus = isFetching && hasStatus;
+
   return (
     <Chip
       role="status"
       aria-live="polite"
-      icon={healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />}
+      aria-busy={refreshingStatus ? true : undefined}
+      icon={
+        refreshingStatus
+          ? <CircularProgress size={14} color="inherit" aria-label="Actualizando API" />
+          : healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />
+      }
       label={`API: ${healthy ? 'online' : 'offline'}`}
       color={healthy ? 'success' : 'warning'}
       size="small"

@@ -69,7 +69,7 @@ describe('ApiStatusChip', () => {
     }
   });
 
-  it('shows a visible checking state while cached API status is refetching', async () => {
+  it('keeps cached API status visible while refreshing it', async () => {
     const cachedStatusRefetch = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(cachedStatusRefetch.promise);
 
@@ -80,10 +80,10 @@ describe('ApiStatusChip', () => {
 
     try {
       expect(healthMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain('API: verificando...');
-      expect(container.textContent).not.toContain('API: online');
+      expect(container.textContent).toContain('API: online');
+      expect(container.textContent).not.toContain('API: verificando...');
       expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
-      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Verificando API');
+      expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-label')).toBe('Actualizando API');
 
       await act(async () => {
         cachedStatusRefetch.resolve({ status: 'ok' });
@@ -93,6 +93,7 @@ describe('ApiStatusChip', () => {
       await waitFor(() => {
         expect(container.textContent).toContain('API: online');
         expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBeNull();
+        expect(container.querySelector('[role="progressbar"]')).toBeNull();
       });
     } finally {
       unmount();
@@ -111,7 +112,8 @@ describe('ApiStatusChip', () => {
 
     try {
       expect(healthMock).toHaveBeenCalledTimes(1);
-      expect(container.textContent).toContain('API: verificando...');
+      expect(container.textContent).toContain('API: online');
+      expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
 
       await act(async () => {
         failedHealth.reject(new Error('offline'));
