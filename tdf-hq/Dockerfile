@@ -11,7 +11,9 @@ WORKDIR /app
 # OS deps for building persistent-postgresql + basic tools
 # Some CI networks inject MITM proxies that break apt signature checks; allow insecure
 # repositories only during image build (no secrets involved).
-RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
     libpq-dev pkg-config git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -31,7 +33,7 @@ ENV STACK_SETUP_URL_PRIMARY=https://raw.githubusercontent.com/commercialhaskell/
 ENV STACK_SETUP_URL_FALLBACK=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
 
 # Pre-fetch stack setup info with simple retries to avoid GitHub rate limits during stack setup
-RUN set -e; \
+RUN --mount=type=cache,target=/tmp/curl-cache,sharing=locked set -e; \
     for i in $(seq 1 8); do \
       if curl -fsSL "$STACK_SETUP_URL_PRIMARY" -o "$STACK_SETUP_PATH"; then break; fi; \
       if curl -fsSL -H "Accept: application/vnd.github.v3.raw" "$STACK_SETUP_URL_FALLBACK" -o "$STACK_SETUP_PATH"; then break; fi; \
@@ -52,7 +54,7 @@ COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 
 # Make sure Stack installs the correct compiler for the resolver
 # Also, be explicit and avoid any global "system-ghc" config
-RUN set -e; \
+RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \
     retry() { \
       for i in 1 2 3 4 5 6 7 8; do \
         "$@" && return 0; \
@@ -100,7 +102,9 @@ ARG BUILD_TIME=unknown
 WORKDIR /app
 
 # Runtime libs for Postgres + CA certs for Neon TLS
-RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
     libpq5 ca-certificates && \
     rm -rf /var/lib/apt/lists/*
@@ -119,4 +123,9 @@ COPY --from=builder /app/assets /app/assets
 ENV APP_PORT=8080
 # Production Docker/Fly deploys use the pre-initialized schema path.
 ENV RUN_MIGRATIONS=false
+
+# Non-root user for better security
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
 CMD ["/bin/sh","-c","APP_PORT=${PORT:-8080} /app/tdf-hq-exe"]
