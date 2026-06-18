@@ -43,7 +43,7 @@ const remove: (path: string) => unknown = del;
 
 export const Fans = {
   listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
-  listPublicArtists: async () => (await read('/artists')) as ArtistProfileDTO[],
+  listPublicArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
   searchArtists: async (query?: { q?: string; genre?: string }) => {
     const params = new URLSearchParams();
     if (query?.q) params.set('q', query.q);

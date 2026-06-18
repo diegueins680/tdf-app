@@ -31,6 +31,7 @@ const EXPECTED_WEEKLY_LEADERBOARD_PATH =
 const EXPECTED_DISCOVERY_FEED_PATH = '/fans/discovery';
 const EXPECTED_LIMITED_DISCOVERY_FEED_PATH =
   `${EXPECTED_DISCOVERY_FEED_PATH}?limit=${FANS_API_PATH_FIXTURES.discoveryFeedLimit}`;
+const EXPECTED_PUBLIC_ARTISTS_PATH = '/fans/artists';
 const EXPECTED_ARTIST_SEARCH_PATH = '/artists/search';
 const EXPECTED_FILTERED_ARTIST_SEARCH_PATH =
   `${EXPECTED_ARTIST_SEARCH_PATH}?q=neo+soul&genre=latin`;
@@ -100,6 +101,11 @@ describe('Fans API optional query paths', () => {
 
     await Fans.searchArtists({ q: 'neo soul', genre: 'latin' });
     expect(getMock).toHaveBeenCalledWith(EXPECTED_FILTERED_ARTIST_SEARCH_PATH);
+  });
+
+  it('uses the available fan artist feed for public artist rankings', async () => {
+    await Fans.listPublicArtists();
+    expect(getMock).toHaveBeenCalledWith(EXPECTED_PUBLIC_ARTISTS_PATH);
   });
 
   it('builds direct public artist lookup paths with encoded refs', async () => {
