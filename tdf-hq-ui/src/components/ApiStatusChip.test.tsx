@@ -56,7 +56,7 @@ describe('ApiStatusChip', () => {
     healthMock.mockReset();
   });
 
-  it('shows a visible checking state on the first health lookup', () => {
+  it('shows a visible checking state on the first health lookup', async () => {
     const initialHealthLookup = createDeferred<HealthStatus>();
     healthMock.mockReturnValue(initialHealthLookup.promise);
 
@@ -76,6 +76,10 @@ describe('ApiStatusChip', () => {
       expect(progressbar?.getAttribute('aria-label')).toBe('Verificando API');
       expectProgressbarUsesChipProgressSize(progressbar);
     } finally {
+      await act(async () => {
+        initialHealthLookup.resolve({ status: 'ok' });
+        await flushPromises();
+      });
       unmount();
       firstLookupQueryClient.clear();
     }
