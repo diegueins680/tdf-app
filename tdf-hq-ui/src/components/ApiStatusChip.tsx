@@ -35,6 +35,7 @@ export default function ApiStatusChip() {
 
   const healthy = !isError && (data?.status ?? '').toLowerCase() === 'ok';
   const refreshingStatus = isFetching && hasStatus;
+  const label = refreshingStatus ? 'API: actualizando...' : `API: ${healthy ? 'online' : 'offline'}`;
 
   return (
     <Chip
@@ -46,7 +47,7 @@ export default function ApiStatusChip() {
           ? <CircularProgress size={API_STATUS_CHIP_PROGRESS_SIZE_PX} color="inherit" aria-label="Actualizando API" />
           : healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />
       }
-      label={`API: ${healthy ? 'online' : 'offline'}`}
+      label={label}
       color={healthy ? 'success' : 'warning'}
       size="small"
       variant={healthy ? 'filled' : 'outlined'}
