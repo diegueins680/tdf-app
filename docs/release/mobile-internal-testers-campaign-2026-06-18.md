@@ -23,11 +23,11 @@ https://play.google.com/apps/testing/com.tdf.records
 iPhone / TestFlight URL:
 
 ```text
-TODO: add TestFlight public link or App Store Connect tester-invite flow.
+https://testflight.apple.com/join/7k3VE2JJ
 ```
 
 Confirm the Android opt-in link against the Play Console tester opt-in link before the full send.
-Confirm the iPhone TestFlight link or invitation flow before the full send.
+Confirm the iPhone TestFlight public link before the full send.
 
 ## Email
 
@@ -48,7 +48,9 @@ https://play.google.com/apps/testing/com.tdf.records
 
 Toca "Become a tester" / "Convertirse en tester" y luego instala o actualiza TDF Records desde Google Play.
 
-Si tienes iPhone, responde a este correo con la palabra "iPhone" y el correo de tu Apple ID para agregarte a TestFlight. Si ya recibiste invitación de TestFlight, ábrela desde tu iPhone e instala TDF Records.
+Si tienes iPhone, abre este enlace desde tu iPhone, instala TestFlight si te lo pide, y luego instala TDF Records:
+
+https://testflight.apple.com/join/7k3VE2JJ
 
 Cuando la pruebes, respóndenos con cualquier error, captura de pantalla o comentario. También ayuda mucho si nos dices tu modelo de teléfono y si usas Android o iPhone.
 
@@ -65,7 +67,8 @@ https://play.google.com/apps/testing/com.tdf.records
 
 Toca "Become a tester" / "Convertirse en tester" y luego instala o actualiza TDF Records desde Google Play.
 
-Si tienes iPhone, respóndenos con la palabra "iPhone" y el correo de tu Apple ID para agregarte a TestFlight. Si ya recibiste invitación de TestFlight, ábrela desde tu iPhone e instala TDF Records.
+Si tienes iPhone, abre este enlace desde tu iPhone, instala TestFlight si te lo pide, y luego instala TDF Records:
+https://testflight.apple.com/join/7k3VE2JJ
 
 Cuando la pruebes, respóndenos con cualquier error, captura o comentario. También ayuda mucho si nos dices tu modelo de teléfono y si usas Android o iPhone.
 
