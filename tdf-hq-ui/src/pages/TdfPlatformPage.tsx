@@ -22,7 +22,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SchoolIcon from '@mui/icons-material/School';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { Fans } from '../api/fans';
@@ -36,7 +37,14 @@ const FAN_SIGNUP_PATH = '/login?signup=1&roles=Fan&redirect=/fans';
 const ARTIST_SIGNUP_PATH = '/login?signup=1&intent=artist&redirect=/mi-artista';
 const HERO_VIDEO_SRC = '/videos/music-hero.mp4';
 
-const serviceCards = [
+type ServiceCardItem = {
+  title: string;
+  description: string;
+  icon: ReactNode;
+  path: string;
+};
+
+const serviceCards: readonly ServiceCardItem[] = [
   {
     title: 'Estudio y reservas',
     description: 'Grabación, mezcla, mastering, ensayos, podcast y sesiones privadas desde el ecosistema TDF.',
@@ -73,7 +81,7 @@ const serviceCards = [
     icon: <GroupsIcon />,
     path: '/fans',
   },
-] as const;
+];
 
 const fanBenefits = [
   'Acceso a material exclusivo de los artistas que sigues.',
@@ -177,7 +185,13 @@ function ValueCard({
           <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.72)' }}>
             {description}
           </Typography>
-          <Button component={RouterLink} to={to} variant="outlined" sx={{ alignSelf: 'flex-start', textTransform: 'none' }}>
+          <Button
+            disabled={false}
+            component={RouterLink}
+            to={to}
+            variant="outlined"
+            sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+          >
             {action}
           </Button>
         </Stack>
@@ -186,7 +200,22 @@ function ValueCard({
   );
 }
 
-function BenefitList({ items }: { items: readonly string[] }) {
+function EmptyListNotice({ message }: { message: string }) {
+  return (
+    <Alert
+      severity="info"
+      sx={{ bgcolor: 'rgba(15,23,42,0.88)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.2)' }}
+    >
+      {message}
+    </Alert>
+  );
+}
+
+function BenefitList({ items, emptyMessage }: { items: readonly string[]; emptyMessage: string }) {
+  if (items.length === 0) {
+    return <EmptyListNotice message={emptyMessage} />;
+  }
+
   return (
     <Stack spacing={1.2}>
       {items.map((item) => (
@@ -210,7 +239,19 @@ function BenefitList({ items }: { items: readonly string[] }) {
   );
 }
 
-function ArtistCarousel({ artists, loading, error }: { artists: ArtistProfileDTO[]; loading: boolean; error: boolean }) {
+function ArtistCarousel({
+  artists,
+  loading,
+  error,
+  emptyMessage,
+  profileAction,
+}: {
+  artists: ArtistProfileDTO[];
+  loading: boolean;
+  error: boolean;
+  emptyMessage: string;
+  profileAction: string;
+}) {
   if (loading) {
     return (
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'rgba(226,232,240,0.78)' }}>
@@ -229,11 +270,7 @@ function ArtistCarousel({ artists, loading, error }: { artists: ArtistProfileDTO
   }
 
   if (artists.length === 0) {
-    return (
-      <Alert severity="info" sx={{ bgcolor: 'rgba(15,23,42,0.88)', color: '#e2e8f0', border: '1px solid rgba(148,163,184,0.2)' }}>
-        El carrusel se llenará automáticamente cuando existan artistas publicados en la plataforma.
-      </Alert>
-    );
+    return <EmptyListNotice message={emptyMessage} />;
   }
 
   return (
@@ -307,12 +344,13 @@ function ArtistCarousel({ artists, loading, error }: { artists: ArtistProfileDTO
                 {artist.apBio || artist.apGenres || 'Perfil activo dentro de la comunidad TDF.'}
               </Typography>
               <Button
+                disabled={false}
                 component={RouterLink}
                 to={artistPathFor(artist)}
                 variant="text"
                 sx={{ alignSelf: 'flex-start', color: '#f4d58a', textTransform: 'none' }}
               >
-                Ver perfil
+                {profileAction}
               </Button>
             </Stack>
           </CardContent>
@@ -323,6 +361,7 @@ function ArtistCarousel({ artists, loading, error }: { artists: ArtistProfileDTO
 }
 
 export default function TdfPlatformPage() {
+  const { t } = useTranslation();
   const artistsQuery = useQuery({
     queryKey: ['tdf-platform', 'public-artists'],
     queryFn: Fans.listPublicArtists,
@@ -344,6 +383,24 @@ export default function TdfPlatformPage() {
     () => (artistsQuery.data ?? []).reduce((sum, artist) => sum + Math.max(0, artist.apFollowerCount ?? 0), 0),
     [artistsQuery.data],
   );
+
+  const copy = {
+    createAccount: t('tdfPlatform.cta.createAccount'),
+    fanProfile: t('tdfPlatform.cta.fanProfile'),
+    artistProfile: t('tdfPlatform.cta.artistProfile'),
+    createFanProfile: t('tdfPlatform.cta.createFanProfile'),
+    createArtistProfile: t('tdfPlatform.cta.createArtistProfile'),
+    viewArtistProfile: t('tdfPlatform.cta.viewArtistProfile'),
+    explore: t('tdfPlatform.cta.explore'),
+    reserveExperience: t('tdfPlatform.cta.reserveExperience'),
+    viewLocation: t('tdfPlatform.cta.viewLocation'),
+    viewReleases: t('tdfPlatform.cta.viewReleases'),
+    artistsEmpty: t('tdfPlatform.empty.artists'),
+    servicesEmpty: t('tdfPlatform.empty.services'),
+    fanBenefitsEmpty: t('tdfPlatform.empty.fanBenefits'),
+    artistBenefitsEmpty: t('tdfPlatform.empty.artistBenefits'),
+    startEyebrow: t('tdfPlatform.sections.startEyebrow'),
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#07090f', color: '#e2e8f0' }}>
@@ -407,6 +464,7 @@ export default function TdfPlatformPage() {
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button
+                disabled={false}
                 component={RouterLink}
                 to={GENERAL_SIGNUP_PATH}
                 variant="contained"
@@ -421,25 +479,27 @@ export default function TdfPlatformPage() {
                   '&:hover': { bgcolor: '#f4d58a' },
                 }}
               >
-                Crear cuenta
+                {copy.createAccount}
               </Button>
               <Button
+                disabled={false}
                 component={RouterLink}
                 to={FAN_SIGNUP_PATH}
                 variant="outlined"
                 size="large"
                 sx={{ color: '#f8fafc', borderColor: 'rgba(248,250,252,0.34)', textTransform: 'none' }}
               >
-                Perfil fan
+                {copy.fanProfile}
               </Button>
               <Button
+                disabled={false}
                 component={RouterLink}
                 to={ARTIST_SIGNUP_PATH}
                 variant="text"
                 size="large"
                 sx={{ color: '#67e8f9', textTransform: 'none' }}
               >
-                Perfil artista
+                {copy.artistProfile}
               </Button>
             </Stack>
             <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -458,7 +518,7 @@ export default function TdfPlatformPage() {
               <ValueCard
                 title="Para fans"
                 description="Crea tu perfil para seguir artistas, recibir contenido exclusivo y conectar con otros miembros que comparten tus gustos."
-                action="Crear perfil fan"
+                action={copy.createFanProfile}
                 to={FAN_SIGNUP_PATH}
                 accent="#22d3ee"
               />
@@ -467,7 +527,7 @@ export default function TdfPlatformPage() {
               <ValueCard
                 title="Para artistas"
                 description="Crea o reclama tu perfil para publicar tu mundo, conocer mejor a tus fans y activar experiencias directas con tu comunidad."
-                action="Crear perfil de artista"
+                action={copy.createArtistProfile}
                 to={ARTIST_SIGNUP_PATH}
                 accent="#fb7185"
               />
@@ -479,7 +539,7 @@ export default function TdfPlatformPage() {
                   title="Más que escuchar: participar."
                   body="El perfil fan convierte la curiosidad en una relación continua con artistas, lanzamientos y comunidad."
                 />
-                <BenefitList items={fanBenefits} />
+                <BenefitList items={fanBenefits} emptyMessage={copy.fanBenefitsEmpty} />
               </Stack>
             </Grid>
             <Grid item xs={12} md={6}>
@@ -489,7 +549,7 @@ export default function TdfPlatformPage() {
                   title="Más que publicar: conocer a tu audiencia."
                   body="El perfil de artista da una base propia para reunir señales, contar tu historia y mover a tus seguidores hacia experiencias reales."
                 />
-                <BenefitList items={artistBenefits} />
+                <BenefitList items={artistBenefits} emptyMessage={copy.artistBenefitsEmpty} />
               </Stack>
             </Grid>
           </Grid>
@@ -505,40 +565,47 @@ export default function TdfPlatformPage() {
               body="TDF conecta servicios musicales, contenido, perfiles y experiencias para que el valor no se quede solo en una publicación o una sesión aislada."
             />
             <Grid container spacing={2}>
-              {serviceCards.map((item) => (
-                <Grid item xs={12} sm={6} md={4} key={item.title}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      height: '100%',
-                      borderRadius: 2,
-                      bgcolor: 'rgba(15,23,42,0.62)',
-                      borderColor: 'rgba(148,163,184,0.2)',
-                      color: '#e2e8f0',
-                    }}
-                  >
-                    <CardContent>
-                      <Stack spacing={1.4}>
-                        <Box sx={{ color: '#f4d58a', display: 'flex' }}>{item.icon}</Box>
-                        <Typography variant="h6" sx={{ fontWeight: 850 }}>
-                          {item.title}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.72)' }}>
-                          {item.description}
-                        </Typography>
-                        <Button
-                          component={RouterLink}
-                          to={item.path}
-                          variant="text"
-                          sx={{ alignSelf: 'flex-start', color: '#67e8f9', textTransform: 'none', px: 0 }}
-                        >
-                          Explorar
-                        </Button>
-                      </Stack>
-                    </CardContent>
-                  </Card>
+              {serviceCards.length === 0 ? (
+                <Grid item xs={12}>
+                  <EmptyListNotice message={copy.servicesEmpty} />
                 </Grid>
-              ))}
+              ) : (
+                serviceCards.map((item) => (
+                  <Grid item xs={12} sm={6} md={4} key={item.title}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        height: '100%',
+                        borderRadius: 2,
+                        bgcolor: 'rgba(15,23,42,0.62)',
+                        borderColor: 'rgba(148,163,184,0.2)',
+                        color: '#e2e8f0',
+                      }}
+                    >
+                      <CardContent>
+                        <Stack spacing={1.4}>
+                          <Box sx={{ color: '#f4d58a', display: 'flex' }}>{item.icon}</Box>
+                          <Typography variant="h6" sx={{ fontWeight: 850 }}>
+                            {item.title}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.72)' }}>
+                            {item.description}
+                          </Typography>
+                          <Button
+                            disabled={false}
+                            component={RouterLink}
+                            to={item.path}
+                            variant="text"
+                            sx={{ alignSelf: 'flex-start', color: '#67e8f9', textTransform: 'none', px: 0 }}
+                          >
+                            {copy.explore}
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))
+              )}
             </Grid>
           </Stack>
         </Container>
@@ -566,7 +633,13 @@ export default function TdfPlatformPage() {
                 />
               </Stack>
             </Stack>
-            <ArtistCarousel artists={topArtists} loading={artistsQuery.isLoading} error={artistsQuery.isError} />
+            <ArtistCarousel
+              artists={topArtists}
+              loading={artistsQuery.isLoading}
+              error={artistsQuery.isError}
+              emptyMessage={copy.artistsEmpty}
+              profileAction={copy.viewArtistProfile}
+            />
           </Stack>
         </Container>
       </Box>
@@ -582,11 +655,26 @@ export default function TdfPlatformPage() {
                   body="La comunidad digital se conecta con experiencias presenciales: reservas, clases, sesiones en vivo, DJ Booth y encuentros alrededor de la música."
                 />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                  <Button component={RouterLink} to="/reservar" variant="contained" startIcon={<EventAvailableIcon />} sx={{ textTransform: 'none' }}>
-                    Reservar experiencia
+                  <Button
+                    disabled={false}
+                    component={RouterLink}
+                    to="/reservar"
+                    variant="contained"
+                    startIcon={<EventAvailableIcon />}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {copy.reserveExperience}
                   </Button>
-                  <Button component="a" href={STUDIO_MAP_URL} target="_blank" rel="noreferrer" variant="outlined" sx={{ textTransform: 'none' }}>
-                    Ver ubicación
+                  <Button
+                    disabled={false}
+                    component="a"
+                    href={STUDIO_MAP_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="outlined"
+                    sx={{ textTransform: 'none' }}
+                  >
+                    {copy.viewLocation}
                   </Button>
                 </Stack>
               </Stack>
@@ -613,7 +701,7 @@ export default function TdfPlatformPage() {
       <Box component="section" sx={{ py: { xs: 7, md: 10 }, bgcolor: '#0c1018' }}>
         <Container maxWidth="md">
           <Stack spacing={3} alignItems="center" textAlign="center">
-            <Eyebrow>Empieza por tu cuenta</Eyebrow>
+            <Eyebrow>{copy.startEyebrow}</Eyebrow>
             <Typography variant="h3" sx={{ color: '#f8fafc', fontWeight: 950 }}>
               Crea tu usuario y elige tu ruta dentro de TDF.
             </Typography>
@@ -623,16 +711,24 @@ export default function TdfPlatformPage() {
             <Divider flexItem sx={{ borderColor: 'rgba(148,163,184,0.16)' }} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button
+                disabled={false}
                 component={RouterLink}
                 to={GENERAL_SIGNUP_PATH}
                 variant="contained"
                 size="large"
                 sx={{ bgcolor: '#d6b66b', color: '#0b0f16', fontWeight: 900, textTransform: 'none', '&:hover': { bgcolor: '#f4d58a' } }}
               >
-                Crear cuenta
+                {copy.createAccount}
               </Button>
-              <Button component={RouterLink} to="/records" variant="outlined" size="large" sx={{ textTransform: 'none' }}>
-                Ver lanzamientos
+              <Button
+                disabled={false}
+                component={RouterLink}
+                to="/records"
+                variant="outlined"
+                size="large"
+                sx={{ textTransform: 'none' }}
+              >
+                {copy.viewReleases}
               </Button>
             </Stack>
           </Stack>
