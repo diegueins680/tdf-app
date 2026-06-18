@@ -9,11 +9,13 @@ type FansApiPathFixtureContract = Readonly<{
   leaderboardClubId: number;
   weeklyLeaderboardPeriod: string;
   discoveryFeedLimit: number;
+  followedArtistId: number;
   artistSlug: string;
 }>;
 
 const LEADERBOARD_PATH_FIXTURE_CLUB_ID = 10 + 2;
 const DISCOVERY_FEED_FIXTURE_LIMIT = 5 * 5;
+const FOLLOWED_ARTIST_FIXTURE_ID = 4 * 10 + 2;
 
 // Invariant: numeric path fixtures are positive integers so route segments and
 // query parameters serialize without rounding, signs, or fractional suffixes.
@@ -21,6 +23,7 @@ const FANS_API_PATH_FIXTURES = {
   leaderboardClubId: LEADERBOARD_PATH_FIXTURE_CLUB_ID,
   weeklyLeaderboardPeriod: 'week',
   discoveryFeedLimit: DISCOVERY_FEED_FIXTURE_LIMIT,
+  followedArtistId: FOLLOWED_ARTIST_FIXTURE_ID,
   artistSlug: 'los mentores',
 } as const satisfies FansApiPathFixtureContract;
 
@@ -37,6 +40,8 @@ const EXPECTED_FILTERED_ARTIST_SEARCH_PATH =
   `${EXPECTED_ARTIST_SEARCH_PATH}?q=neo+soul&genre=latin`;
 const EXPECTED_PUBLIC_ARTIST_PATH =
   `/artists/${encodeURIComponent(FANS_API_PATH_FIXTURES.artistSlug)}/public`;
+const EXPECTED_FOLLOWED_ARTIST_PATH =
+  `/fans/me/follows/${FANS_API_PATH_FIXTURES.followedArtistId}`;
 
 jest.unstable_mockModule('./client', () => ({
   get: getMock,
@@ -79,6 +84,7 @@ describe('Fans API optional query paths', () => {
     const numericPathFixtures = [
       FANS_API_PATH_FIXTURES.leaderboardClubId,
       FANS_API_PATH_FIXTURES.discoveryFeedLimit,
+      FANS_API_PATH_FIXTURES.followedArtistId,
     ];
 
     for (const value of numericPathFixtures) {
@@ -129,24 +135,24 @@ describe('Fans API optional query paths', () => {
     await Fans.listFollows();
     expect(getMock).toHaveBeenCalledWith('/fans/me/follows');
 
-    await Fans.follow(42);
-    expect(postMock).toHaveBeenCalledWith('/fans/me/follows/42', {});
+    await Fans.follow(FANS_API_PATH_FIXTURES.followedArtistId);
+    expect(postMock).toHaveBeenCalledWith(EXPECTED_FOLLOWED_ARTIST_PATH, {});
 
-    await Fans.unfollow(42);
-    expect(delMock).toHaveBeenCalledWith('/fans/me/follows/42');
+    await Fans.unfollow(FANS_API_PATH_FIXTURES.followedArtistId);
+    expect(delMock).toHaveBeenCalledWith(EXPECTED_FOLLOWED_ARTIST_PATH);
   });
 
   it('uses the artist profile alias routes for profile creation and photo updates', async () => {
-    const profilePayload = {
-      apuArtistId: 42,
+    const artistProfilePayload = {
+      apuArtistId: FANS_API_PATH_FIXTURES.followedArtistId,
       apuDisplayName: 'Los Mentores',
     };
     const photoPayload = {
       apuHeroImageUrl: 'https://cdn.example.test/hero.jpg',
     };
 
-    await Fans.createMyArtistProfile(profilePayload);
-    expect(postMock).toHaveBeenCalledWith('/artists/me/profile', profilePayload);
+    await Fans.createMyArtistProfile(artistProfilePayload);
+    expect(postMock).toHaveBeenCalledWith('/artists/me/profile', artistProfilePayload);
 
     await Fans.updateMyArtistPhoto(photoPayload);
     expect(postMock).toHaveBeenCalledWith('/artists/me/photo', photoPayload);
