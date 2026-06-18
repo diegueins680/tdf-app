@@ -76,11 +76,9 @@ describe('ApiStatusChip', () => {
       expect(progressbar?.getAttribute('aria-label')).toBe('Verificando API');
       expectProgressbarUsesChipProgressSize(progressbar);
     } finally {
-      await act(async () => {
-        initialHealthLookup.resolve({ status: 'ok' });
-        await flushPromises();
-      });
       unmount();
+      initialHealthLookup.resolve({ status: 'ok' });
+      await flushPromises();
       firstLookupQueryClient.clear();
     }
   });
