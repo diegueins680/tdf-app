@@ -107,6 +107,29 @@ describe('Fans API optional query paths', () => {
     expect(getMock).toHaveBeenCalledWith(EXPECTED_PUBLIC_ARTIST_PATH);
   });
 
+  it('uses fan profile and artist follow routes for fan onboarding', async () => {
+    const profilePayload = {
+      fpuDisplayName: 'Maria Caridad',
+      fpuFavoriteGenres: 'DJ, house',
+      fpuCity: 'Quito',
+    };
+
+    await Fans.getProfile();
+    expect(getMock).toHaveBeenCalledWith('/fans/me/profile');
+
+    await Fans.updateProfile(profilePayload);
+    expect(putMock).toHaveBeenCalledWith('/fans/me/profile', profilePayload);
+
+    await Fans.listFollows();
+    expect(getMock).toHaveBeenCalledWith('/fans/me/follows');
+
+    await Fans.follow(42);
+    expect(postMock).toHaveBeenCalledWith('/fans/me/follows/42', {});
+
+    await Fans.unfollow(42);
+    expect(delMock).toHaveBeenCalledWith('/fans/me/follows/42');
+  });
+
   it('uses the artist profile alias routes for profile creation and photo updates', async () => {
     const profilePayload = {
       apuArtistId: 42,
