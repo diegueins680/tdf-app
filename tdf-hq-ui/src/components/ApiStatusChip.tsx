@@ -36,6 +36,8 @@ export default function ApiStatusChip() {
   const healthy = !isError && (data?.status ?? '').toLowerCase() === 'ok';
   const refreshingStatus = isFetching && hasStatus;
   const label = refreshingStatus ? 'API: actualizando...' : `API: ${healthy ? 'online' : 'offline'}`;
+  const chipColor = refreshingStatus ? 'info' : healthy ? 'success' : 'warning';
+  const chipVariant = refreshingStatus || !healthy ? 'outlined' : 'filled';
 
   return (
     <Chip
@@ -48,9 +50,9 @@ export default function ApiStatusChip() {
           : healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />
       }
       label={label}
-      color={healthy ? 'success' : 'warning'}
+      color={chipColor}
       size="small"
-      variant={healthy ? 'filled' : 'outlined'}
+      variant={chipVariant}
     />
   );
 }

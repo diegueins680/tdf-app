@@ -97,7 +97,11 @@ describe('ApiStatusChip', () => {
       expect(container.textContent).toContain('API: actualizando...');
       expect(container.textContent).not.toContain('API: verificando...');
       expect(container.textContent).not.toContain('API: online');
-      expect(container.querySelector('[role="status"]')?.getAttribute('aria-busy')).toBe('true');
+      const statusChip = container.querySelector('[role="status"]');
+      expect(statusChip?.getAttribute('aria-busy')).toBe('true');
+      expect(statusChip?.className).toContain('MuiChip-colorInfo');
+      expect(statusChip?.className).toContain('MuiChip-outlined');
+      expect(statusChip?.className).not.toContain('MuiChip-colorSuccess');
       const progressbar = container.querySelector('[role="progressbar"]');
       expect(progressbar?.getAttribute('aria-label')).toBe('Actualizando API');
       expectProgressbarUsesChipProgressSize(progressbar);
