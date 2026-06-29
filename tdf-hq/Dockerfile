@@ -2,8 +2,8 @@
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
-# Use the exact GHC version required by the resolver to avoid Stack re-downloading it.
-FROM haskell:9.6.6-bullseye AS builder
+# Use the exact GHC version required by lts-24.42 to avoid Stack re-downloading it.
+FROM haskell:9.10.3-bullseye AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
@@ -48,12 +48,11 @@ RUN stack --version || true
 
 # Copy project definition first for better layer caching (context: repo root)
 COPY tdf-hq/stack.yaml stack.yaml
-COPY tdf-hq/stack-snapshot.yaml stack-snapshot.yaml
+COPY tdf-hq/stack.yaml.lock stack.yaml.lock
 COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
-# Make sure Stack installs the correct compiler for the resolver
-# Also, be explicit and avoid any global "system-ghc" config
+# Build dependencies with the system compiler that matches the resolver.
 RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \
     retry() { \
       for i in 1 2 3 4 5 6 7 8; do \
