@@ -3,7 +3,7 @@ ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
 
 # Use the exact GHC version required by lts-24.42 to avoid Stack re-downloading it.
-FROM haskell:9.10.3-bullseye AS builder
+FROM haskell:9.10.3-bookworm AS builder
 ARG SOURCE_COMMIT
 ARG BUILD_TIME
 WORKDIR /app
