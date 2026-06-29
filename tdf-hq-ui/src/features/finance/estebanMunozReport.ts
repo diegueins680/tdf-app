@@ -70,11 +70,11 @@ export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
   },
   promotionShare: {
     payerName: 'Paula Roman',
-    concept: 'Promoción de 5 masters',
+    concept: 'Realización de mastering',
     totalPaidCents: 20_000,
     estebanSharePercent: 40,
     units: 5,
-    sourceLabel: 'Pago Paula Roman por promoción de 5 masters',
+    sourceLabel: 'Pago Paula Roman por realización de mastering',
   } satisfies PromotionShareSource,
 } as const;
 
@@ -193,8 +193,8 @@ export const buildEstebanMunozReport = () => {
       detail: `${courseRows.length} cursos x 16 horas x $${source.coursePayment.hourlyRateCents / 100} por hora.`,
     },
     {
-      id: 'masters-promotion',
-      account: 'Participación por promoción',
+      id: 'mastering-work',
+      account: 'Participación por mastering',
       concept: source.promotionShare.concept,
       direction: 'tdf_owes_esteban',
       amountCents: promotionShareRow.estebanShareCents,
@@ -311,7 +311,7 @@ const buildPdfContentStream = (report: EstebanMunozReport) => {
   writeLine('Resumen', { size: 12, bold: true });
   writeLine(`Arriendo pendiente: ${formatMoneyPdf(report.rentDueCents)}`);
   writeLine(`Honorarios por clases: ${formatMoneyPdf(report.coursePayableCents)}`);
-  writeLine(`Participacion promocion masters: ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}`);
+  writeLine(`Participacion realizacion de mastering: ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}`);
   writeLine(`Total a favor de Esteban: ${formatMoneyPdf(report.payableToEstebanCents)}`);
   writeLine(`${directionLabel(report.netDirection)}: ${formatMoneyPdf(Math.abs(report.netAfterOffsetCents))}`);
   writeSpace();
@@ -331,7 +331,7 @@ const buildPdfContentStream = (report: EstebanMunozReport) => {
   });
   writeSpace();
 
-  writeLine('Promocion de masters', { size: 12, bold: true });
+  writeLine('Realizacion de mastering', { size: 12, bold: true });
   writeWrapped(
     `${report.promotionShareRow.payerName} pago ${formatMoneyPdf(report.promotionShareRow.totalPaidCents)} por ${report.promotionShareRow.concept.toLowerCase()}; ${report.promotionShareRow.estebanSharePercent}% corresponde a Esteban = ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}.`,
   );

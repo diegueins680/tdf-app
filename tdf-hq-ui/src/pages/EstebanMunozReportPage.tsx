@@ -169,7 +169,7 @@ export default function EstebanMunozReportPage() {
               <Grid item xs={12} md={3}>
                 <Metric
                   icon={<LocalOfferIcon />}
-                  label="Promoción masters"
+                  label="Mastering"
                   value={money(report.promotionShareRow.estebanShareCents)}
                   tone="credit"
                 />
@@ -309,7 +309,7 @@ export default function EstebanMunozReportPage() {
         <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="h6" fontWeight={800}>Participación por promoción de masters</Typography>
+              <Typography variant="h6" fontWeight={800}>Participación por realización de mastering</Typography>
               <Typography color="text.secondary">
                 {source.promotionShare.sourceLabel}. A Esteban le corresponde el {source.promotionShare.estebanSharePercent}% del pago recibido.
               </Typography>
@@ -334,7 +334,7 @@ export default function EstebanMunozReportPage() {
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={4}>
-                    <Typography fontWeight={800}>Total promoción masters</Typography>
+                    <Typography fontWeight={800}>Total realización de mastering</Typography>
                   </TableCell>
                   <TableCell align="right">
                     <Typography fontWeight={800}>{money(report.promotionShareRow.estebanShareCents)}</Typography>

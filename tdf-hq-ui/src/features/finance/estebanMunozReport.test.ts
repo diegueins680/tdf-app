@@ -33,19 +33,19 @@ describe('Esteban Muñoz account report', () => {
     expect(report.coursePayableCents).toBe(80_000);
   });
 
-  it('includes Paula Roman masters promotion with Esteban receiving 40 percent', () => {
+  it('includes Paula Roman mastering work with Esteban receiving 40 percent', () => {
     const report = buildEstebanMunozReport();
 
     expect(report.promotionShareRow).toMatchObject({
       payerName: 'Paula Roman',
-      concept: 'Promoción de 5 masters',
+      concept: 'Realización de mastering',
       totalPaidCents: 20_000,
       estebanSharePercent: 40,
       units: 5,
       estebanShareCents: 8_000,
     });
     expect(report.payableToEstebanCents).toBe(88_000);
-    expect(report.accountPositions.find((item) => item.id === 'masters-promotion')).toMatchObject({
+    expect(report.accountPositions.find((item) => item.id === 'mastering-work')).toMatchObject({
       direction: 'tdf_owes_esteban',
       amountCents: 8_000,
       status: 'Por pagar',
@@ -77,7 +77,7 @@ describe('Esteban Muñoz account report', () => {
     expect(source.startsWith('%PDF-1.4')).toBe(true);
     expect(source).toContain('Reporte Esteban Munoz');
     expect(source).toContain('Paula Roman pago $200.00');
-    expect(source).toContain('Participacion promocion masters: $80.00');
+    expect(source).toContain('Participacion realizacion de mastering: $80.00');
     expect(source).toContain('Esteban debe a TDF: $370.00');
   });
 });
