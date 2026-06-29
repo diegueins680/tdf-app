@@ -41,7 +41,7 @@ export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
     beneficiary: 'Muñoz Muñoz Esteban Hora',
   },
   coursePayment: {
-    hourlyRateCents: 3_000,
+    hourlyRateCents: 2_500,
     courses: [
       {
         slug: 'produccion-musical-feb-2026',
@@ -162,7 +162,7 @@ export const buildEstebanMunozReport = () => {
       direction: 'tdf_owes_esteban',
       amountCents: coursePayableCents,
       status: 'Por pagar',
-      detail: `${courseRows.length} cursos x 16 horas x $30 por hora.`,
+      detail: `${courseRows.length} cursos x 16 horas x $${source.coursePayment.hourlyRateCents / 100} por hora.`,
     },
     {
       id: 'last-receipt',

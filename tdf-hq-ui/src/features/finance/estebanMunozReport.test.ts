@@ -19,7 +19,7 @@ describe('Esteban Muñoz account report', () => {
     expect(report.rentDueCents).toBe(125_000);
   });
 
-  it('calculates two production courses at 16 hours each and 30 dollars per hour', () => {
+  it('calculates two production courses at 16 hours each and 25 dollars per hour', () => {
     const report = buildEstebanMunozReport();
 
     expect(report.courseRows).toHaveLength(2);
@@ -27,17 +27,17 @@ describe('Esteban Muñoz account report', () => {
       ['2026-02-28', '2026-03-07', '2026-03-14', '2026-03-21'],
       ['2026-06-06', '2026-06-13', '2026-06-20', '2026-06-27'],
     ]);
-    expect(report.courseRows.map((course) => course.subtotalCents)).toEqual([48_000, 48_000]);
-    expect(report.coursePayableCents).toBe(96_000);
+    expect(report.courseRows.map((course) => course.subtotalCents)).toEqual([40_000, 40_000]);
+    expect(report.coursePayableCents).toBe(80_000);
   });
 
   it('shows the compensated net as an amount owed from Esteban to TDF', () => {
     const report = buildEstebanMunozReport();
 
-    expect(report.netAfterOffsetCents).toBe(29_000);
+    expect(report.netAfterOffsetCents).toBe(45_000);
     expect(report.netDirection).toBe('esteban_owes_tdf');
     expect(report.accountPositions.find((item) => item.id === 'net')).toMatchObject({
-      amountCents: 29_000,
+      amountCents: 45_000,
       status: 'Saldo neto por cobrar',
     });
   });
