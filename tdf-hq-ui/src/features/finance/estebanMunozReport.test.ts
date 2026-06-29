@@ -1,5 +1,7 @@
 import {
   ESTEBAN_MUNOZ_REPORT_SOURCE,
+  buildEstebanMunozReportPdfBlob,
+  buildEstebanMunozReportPdfSource,
   buildEstebanMunozReport,
   formatMonthLabel,
   listMonthsAfterThrough,
@@ -31,13 +33,32 @@ describe('Esteban Muñoz account report', () => {
     expect(report.coursePayableCents).toBe(80_000);
   });
 
+  it('includes Paula Roman masters promotion with Esteban receiving 40 percent', () => {
+    const report = buildEstebanMunozReport();
+
+    expect(report.promotionShareRow).toMatchObject({
+      payerName: 'Paula Roman',
+      concept: 'Promoción de 5 masters',
+      totalPaidCents: 20_000,
+      estebanSharePercent: 40,
+      units: 5,
+      estebanShareCents: 8_000,
+    });
+    expect(report.payableToEstebanCents).toBe(88_000);
+    expect(report.accountPositions.find((item) => item.id === 'masters-promotion')).toMatchObject({
+      direction: 'tdf_owes_esteban',
+      amountCents: 8_000,
+      status: 'Por pagar',
+    });
+  });
+
   it('shows the compensated net as an amount owed from Esteban to TDF', () => {
     const report = buildEstebanMunozReport();
 
-    expect(report.netAfterOffsetCents).toBe(45_000);
+    expect(report.netAfterOffsetCents).toBe(37_000);
     expect(report.netDirection).toBe('esteban_owes_tdf');
     expect(report.accountPositions.find((item) => item.id === 'net')).toMatchObject({
-      amountCents: 45_000,
+      amountCents: 37_000,
       status: 'Saldo neto por cobrar',
     });
   });
@@ -46,5 +67,17 @@ describe('Esteban Muñoz account report', () => {
     expect(ESTEBAN_MUNOZ_REPORT_SOURCE.lastReceipt.originalDateLabel).toBe('04-01-2026');
     expect(formatMonthLabel(ESTEBAN_MUNOZ_REPORT_SOURCE.rent.lastPaidMonth)).toBe('enero 2026');
     expect(listMonthsAfterThrough('2026-06', '2026-01')).toEqual([]);
+  });
+
+  it('generates a downloadable PDF document with report totals', () => {
+    const pdf = buildEstebanMunozReportPdfBlob(buildEstebanMunozReport());
+    const source = buildEstebanMunozReportPdfSource(buildEstebanMunozReport());
+
+    expect(pdf.type).toBe('application/pdf');
+    expect(source.startsWith('%PDF-1.4')).toBe(true);
+    expect(source).toContain('Reporte Esteban Munoz');
+    expect(source).toContain('Paula Roman pago $200.00');
+    expect(source).toContain('Participacion promocion masters: $80.00');
+    expect(source).toContain('Esteban debe a TDF: $370.00');
   });
 });

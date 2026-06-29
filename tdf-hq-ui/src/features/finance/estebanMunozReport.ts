@@ -10,6 +10,15 @@ export interface CourseCompensationSource {
   hours: number;
 }
 
+export interface PromotionShareSource {
+  payerName: string;
+  concept: string;
+  totalPaidCents: number;
+  estebanSharePercent: number;
+  units: number;
+  sourceLabel: string;
+}
+
 export interface AccountPosition {
   id: string;
   account: string;
@@ -59,6 +68,14 @@ export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
       },
     ] satisfies CourseCompensationSource[],
   },
+  promotionShare: {
+    payerName: 'Paula Roman',
+    concept: 'Promoción de 5 masters',
+    totalPaidCents: 20_000,
+    estebanSharePercent: 40,
+    units: 5,
+    sourceLabel: 'Pago Paula Roman por promoción de 5 masters',
+  } satisfies PromotionShareSource,
 } as const;
 
 const MONTH_NAMES = [
@@ -122,6 +139,9 @@ export const listMonthsAfterThrough = (lastPaidMonth: YearMonth, throughMonth: Y
   return Array.from({ length: end - start + 1 }, (_, offset) => monthFromIndex(start + offset));
 };
 
+const calculatePercentShareCents = (amountCents: number, percent: number) =>
+  Math.round((amountCents * percent) / 100);
+
 export const buildEstebanMunozReport = () => {
   const source = ESTEBAN_MUNOZ_REPORT_SOURCE;
   const unpaidRentMonths = listMonthsAfterThrough(source.rent.lastPaidMonth, source.rent.throughMonth);
@@ -131,7 +151,15 @@ export const buildEstebanMunozReport = () => {
     subtotalCents: course.hours * source.coursePayment.hourlyRateCents,
   }));
   const coursePayableCents = courseRows.reduce((total, course) => total + course.subtotalCents, 0);
-  const netAfterOffsetCents = rentDueCents - coursePayableCents;
+  const promotionShareRow = {
+    ...source.promotionShare,
+    estebanShareCents: calculatePercentShareCents(
+      source.promotionShare.totalPaidCents,
+      source.promotionShare.estebanSharePercent,
+    ),
+  };
+  const payableToEstebanCents = coursePayableCents + promotionShareRow.estebanShareCents;
+  const netAfterOffsetCents = rentDueCents - payableToEstebanCents;
   const netDirection: AccountDirection =
     netAfterOffsetCents > 0
       ? 'esteban_owes_tdf'
@@ -165,6 +193,15 @@ export const buildEstebanMunozReport = () => {
       detail: `${courseRows.length} cursos x 16 horas x $${source.coursePayment.hourlyRateCents / 100} por hora.`,
     },
     {
+      id: 'masters-promotion',
+      account: 'Participación por promoción',
+      concept: source.promotionShare.concept,
+      direction: 'tdf_owes_esteban',
+      amountCents: promotionShareRow.estebanShareCents,
+      status: 'Por pagar',
+      detail: `${source.promotionShare.payerName} pagó $${source.promotionShare.totalPaidCents / 100}; ${source.promotionShare.estebanSharePercent}% corresponde a Esteban.`,
+    },
+    {
       id: 'last-receipt',
       account: 'Último comprobante',
       concept: source.lastReceipt.description,
@@ -176,7 +213,7 @@ export const buildEstebanMunozReport = () => {
     {
       id: 'net',
       account: 'Saldo neto',
-      concept: 'Compensación arriendo - honorarios',
+      concept: 'Compensación arriendo - cuentas a favor de Esteban',
       direction: netDirection,
       amountCents: Math.abs(netAfterOffsetCents),
       status: netStatus,
@@ -190,8 +227,161 @@ export const buildEstebanMunozReport = () => {
     rentDueCents,
     courseRows,
     coursePayableCents,
+    promotionShareRow,
+    payableToEstebanCents,
     netAfterOffsetCents,
     netDirection,
     accountPositions,
   };
 };
+
+export type EstebanMunozReport = ReturnType<typeof buildEstebanMunozReport>;
+
+export const ESTEBAN_MUNOZ_REPORT_PDF_FILENAME = 'reporte-esteban-munoz.pdf';
+
+const formatMoneyPdf = (cents: number) =>
+  `$${(cents / 100).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const directionLabel = (direction: AccountDirection) => {
+  if (direction === 'esteban_owes_tdf') return 'Esteban debe a TDF';
+  if (direction === 'tdf_owes_esteban') return 'TDF debe a Esteban';
+  return 'Registrado';
+};
+
+const normalizePdfText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, ' ');
+
+const escapePdfString = (value: string) =>
+  normalizePdfText(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+
+const wrapPdfText = (text: string, maxChars: number) => {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  });
+
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [''];
+};
+
+const buildPdfContentStream = (report: EstebanMunozReport) => {
+  const commands: string[] = [];
+  let y = 744;
+
+  const writeLine = (text: string, options: { size?: number; bold?: boolean; indent?: number } = {}) => {
+    const size = options.size ?? 10;
+    const x = 48 + (options.indent ?? 0);
+    const font = options.bold ? 'F2' : 'F1';
+    commands.push(`BT /${font} ${size} Tf ${x} ${y} Td (${escapePdfString(text)}) Tj ET`);
+    y -= size + 5;
+  };
+
+  const writeWrapped = (
+    text: string,
+    options: { size?: number; bold?: boolean; indent?: number; maxChars?: number } = {},
+  ) => {
+    wrapPdfText(text, options.maxChars ?? 92).forEach((line) => {
+      writeLine(line, options);
+    });
+  };
+
+  const writeSpace = (height = 8) => {
+    y -= height;
+  };
+
+  writeLine('Reporte Esteban Munoz', { size: 18, bold: true });
+  writeLine(`Estado de cuentas con TDF al ${formatDateLabel(report.source.cutoffDate)}.`, { size: 10 });
+  writeSpace();
+
+  writeLine('Resumen', { size: 12, bold: true });
+  writeLine(`Arriendo pendiente: ${formatMoneyPdf(report.rentDueCents)}`);
+  writeLine(`Honorarios por clases: ${formatMoneyPdf(report.coursePayableCents)}`);
+  writeLine(`Participacion promocion masters: ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}`);
+  writeLine(`Total a favor de Esteban: ${formatMoneyPdf(report.payableToEstebanCents)}`);
+  writeLine(`${directionLabel(report.netDirection)}: ${formatMoneyPdf(Math.abs(report.netAfterOffsetCents))}`);
+  writeSpace();
+
+  writeLine('Arriendo', { size: 12, bold: true });
+  writeWrapped(
+    `${report.unpaidRentMonths.length} meses pendientes (${report.unpaidRentMonths.map(formatMonthLabel).join(', ')}), a ${formatMoneyPdf(report.source.rent.monthlyAmountCents)} por mes.`,
+  );
+  writeSpace();
+
+  writeLine('Cursos de produccion', { size: 12, bold: true });
+  report.courseRows.forEach((course) => {
+    writeWrapped(
+      `${course.title}: ${course.hours} horas x ${formatMoneyPdf(report.source.coursePayment.hourlyRateCents)} = ${formatMoneyPdf(course.subtotalCents)}. Fechas: ${course.sessionDates.map(formatDateLabel).join(', ')}.`,
+      { indent: 12, maxChars: 88 },
+    );
+  });
+  writeSpace();
+
+  writeLine('Promocion de masters', { size: 12, bold: true });
+  writeWrapped(
+    `${report.promotionShareRow.payerName} pago ${formatMoneyPdf(report.promotionShareRow.totalPaidCents)} por ${report.promotionShareRow.concept.toLowerCase()}; ${report.promotionShareRow.estebanSharePercent}% corresponde a Esteban = ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}.`,
+  );
+  writeSpace();
+
+  writeLine('Comprobante base', { size: 12, bold: true });
+  writeWrapped(
+    `Comprobante ${report.source.lastReceipt.receiptNumber}, ${report.source.lastReceipt.originalDateLabel}, ${report.source.lastReceipt.description}, valor ${formatMoneyPdf(report.source.lastReceipt.amountCents)}. Aplicado hasta ${formatMonthLabel(report.source.rent.lastPaidMonth)}.`,
+  );
+  writeSpace();
+
+  writeLine('Cuentas mantenidas con TDF', { size: 12, bold: true });
+  report.accountPositions.forEach((position) => {
+    writeWrapped(
+      `${position.account}: ${position.concept}. ${position.status}. ${directionLabel(position.direction)}. Monto ${formatMoneyPdf(position.amountCents)}. ${position.detail}`,
+      { indent: 12, maxChars: 88 },
+    );
+  });
+
+  return commands.join('\n');
+};
+
+const buildPdfDocument = (contentStream: string) => {
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+    `<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream`,
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach((offset) => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  return pdf;
+};
+
+export const buildEstebanMunozReportPdfSource = (report: EstebanMunozReport = buildEstebanMunozReport()) =>
+  buildPdfDocument(buildPdfContentStream(report));
+
+export const buildEstebanMunozReportPdfBlob = (report: EstebanMunozReport = buildEstebanMunozReport()) =>
+  new Blob([buildEstebanMunozReportPdfSource(report)], { type: 'application/pdf' });

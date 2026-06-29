@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
@@ -18,13 +18,16 @@ import {
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import EventNoteIcon from '@mui/icons-material/EventNote';
+import DownloadIcon from '@mui/icons-material/Download';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import PrintIcon from '@mui/icons-material/Print';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SchoolIcon from '@mui/icons-material/School';
 import PageShell from '../components/PageShell';
 import {
+  ESTEBAN_MUNOZ_REPORT_PDF_FILENAME,
   buildEstebanMunozReport,
+  buildEstebanMunozReportPdfBlob,
   formatDateLabel,
   formatMonthLabel,
   type AccountDirection,
@@ -82,8 +85,15 @@ function Metric({
 
 export default function EstebanMunozReportPage() {
   const report = useMemo(() => buildEstebanMunozReport(), []);
+  const [pdfUrl, setPdfUrl] = useState('');
   const { source } = report;
   const netDirection = directionCopy[report.netDirection];
+
+  useEffect(() => {
+    const url = URL.createObjectURL(buildEstebanMunozReportPdfBlob(report));
+    setPdfUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [report]);
 
   return (
     <PageShell
@@ -103,6 +113,16 @@ export default function EstebanMunozReportPage() {
               to="/finanzas/pagos"
             >
               Pagos
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              component="a"
+              href={pdfUrl || undefined}
+              download={ESTEBAN_MUNOZ_REPORT_PDF_FILENAME}
+              disabled={!pdfUrl}
+            >
+              Descargar PDF
             </Button>
             <Button variant="contained" startIcon={<PrintIcon />} onClick={() => window.print()}>
               Imprimir
@@ -141,8 +161,16 @@ export default function EstebanMunozReportPage() {
               <Grid item xs={12} md={3}>
                 <Metric
                   icon={<SchoolIcon />}
-                  label="Honorarios por clases"
+                  label="Clases de producción"
                   value={money(report.coursePayableCents)}
+                  tone="credit"
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Metric
+                  icon={<LocalOfferIcon />}
+                  label="Promoción masters"
+                  value={money(report.promotionShareRow.estebanShareCents)}
                   tone="credit"
                 />
               </Grid>
@@ -152,14 +180,6 @@ export default function EstebanMunozReportPage() {
                   label="Neto después de compensar"
                   value={money(Math.abs(report.netAfterOffsetCents))}
                   tone={netMetricTone(report.netDirection)}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <Metric
-                  icon={<EventNoteIcon />}
-                  label="Meses de arriendo pendientes"
-                  value={`${report.unpaidRentMonths.length}`}
-                  tone="neutral"
                 />
               </Grid>
             </Grid>
@@ -279,6 +299,45 @@ export default function EstebanMunozReportPage() {
                   </TableCell>
                   <TableCell align="right">
                     <Typography fontWeight={800}>{money(report.coursePayableCents)}</Typography>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </Stack>
+        </Paper>
+
+        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h6" fontWeight={800}>Participación por promoción de masters</Typography>
+              <Typography color="text.secondary">
+                {source.promotionShare.sourceLabel}. A Esteban le corresponde el {source.promotionShare.estebanSharePercent}% del pago recibido.
+              </Typography>
+            </Box>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>Concepto</TableCell>
+                  <TableCell align="right">Pago recibido</TableCell>
+                  <TableCell align="right">Participación</TableCell>
+                  <TableCell align="right">A favor de Esteban</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell>{report.promotionShareRow.payerName}</TableCell>
+                  <TableCell>{report.promotionShareRow.concept}</TableCell>
+                  <TableCell align="right">{money(report.promotionShareRow.totalPaidCents)}</TableCell>
+                  <TableCell align="right">{report.promotionShareRow.estebanSharePercent}%</TableCell>
+                  <TableCell align="right">{money(report.promotionShareRow.estebanShareCents)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={4}>
+                    <Typography fontWeight={800}>Total promoción masters</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography fontWeight={800}>{money(report.promotionShareRow.estebanShareCents)}</Typography>
                   </TableCell>
                 </TableRow>
               </TableBody>
