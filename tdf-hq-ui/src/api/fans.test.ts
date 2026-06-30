@@ -101,6 +101,16 @@ describe('Fans API optional query paths', () => {
     expect(getMock).toHaveBeenCalledWith('/fans/me/notifications?unreadOnly=true');
   });
 
+  it('falls back to an empty notification state when production lacks notification routes', async () => {
+    const unsupportedRouteError = Object.assign(new Error('Not found'), { status: 404 });
+    getMock
+      .mockRejectedValueOnce(unsupportedRouteError)
+      .mockRejectedValueOnce(unsupportedRouteError);
+
+    await expect(Fans.listNotifications()).resolves.toEqual([]);
+    await expect(Fans.getNotificationCount()).resolves.toEqual({ ncUnread: 0 });
+  });
+
   it('builds public artist search paths with filters only when provided', async () => {
     await Fans.searchArtists();
     expect(getMock).toHaveBeenCalledWith(EXPECTED_ARTIST_SEARCH_PATH);

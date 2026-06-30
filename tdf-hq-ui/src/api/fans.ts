@@ -41,6 +41,13 @@ const send: (path: string, body: unknown) => unknown = post;
 const update: (path: string, body: unknown) => unknown = put;
 const remove: (path: string) => unknown = del;
 
+const isUnsupportedNotificationEndpoint = (error: unknown): boolean => (
+  typeof error === 'object'
+  && error !== null
+  && 'status' in error
+  && (error as { status?: unknown }).status === 404
+);
+
 export const Fans = {
   listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
   listPublicArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
@@ -176,10 +183,21 @@ export const Fans = {
   // Notifications
   listNotifications: async (unreadOnly?: boolean) => {
     const notificationsQuery = unreadOnly ? '?unreadOnly=true' : '';
-    return (await read(`/fans/me/notifications${notificationsQuery}`)) as NotificationDTO[];
+    try {
+      return (await read(`/fans/me/notifications${notificationsQuery}`)) as NotificationDTO[];
+    } catch (error) {
+      if (isUnsupportedNotificationEndpoint(error)) return [];
+      throw error;
+    }
   },
-  getNotificationCount: async () =>
-    (await read('/fans/me/notifications/count')) as NotificationCountDTO,
+  getNotificationCount: async () => {
+    try {
+      return (await read('/fans/me/notifications/count')) as NotificationCountDTO;
+    } catch (error) {
+      if (isUnsupportedNotificationEndpoint(error)) return { ncUnread: 0 };
+      throw error;
+    }
+  },
   markNotificationRead: async (notifId: number) => {
     await send(`/fans/me/notifications/${notifId}/read`, {});
   },
