@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -12,6 +11,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
@@ -59,6 +59,45 @@ const netMetricTone = (direction: AccountDirection) => {
   return 'neutral';
 };
 
+const tableSx = {
+  minWidth: 760,
+  '& thead th': {
+    bgcolor: 'action.hover',
+    color: 'text.secondary',
+    fontSize: 12,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+  },
+  '& tbody td': {
+    verticalAlign: 'top',
+  },
+  '& tbody tr:last-of-type td': {
+    borderBottom: 0,
+  },
+} as const;
+
+function Section({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, borderRadius: 2 }}>
+      <Stack spacing={2}>
+        <Box>
+          <Typography variant="h6" fontWeight={850}>{title}</Typography>
+          {subtitle && <Typography color="text.secondary">{subtitle}</Typography>}
+        </Box>
+        {children}
+      </Stack>
+    </Paper>
+  );
+}
+
 function Metric({
   icon,
   label,
@@ -73,13 +112,31 @@ function Metric({
   const toneColor = metricToneColor(tone);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2 }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 96,
+        p: 2,
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+      }}
+    >
       <Stack spacing={1}>
         <Box sx={{ color: toneColor, display: 'flex' }}>{icon}</Box>
         <Typography variant="body2" color="text.secondary">{label}</Typography>
-        <Typography variant="h5" fontWeight={800} color={toneColor}>{value}</Typography>
+        <Typography variant="h5" fontWeight={850} color={toneColor}>{value}</Typography>
       </Stack>
-    </Paper>
+    </Box>
+  );
+}
+
+function MoneyCell({ cents, strong = false }: { cents: number; strong?: boolean }) {
+  return (
+    <Typography component="span" fontWeight={strong ? 850 : 600} sx={{ whiteSpace: 'nowrap' }}>
+      {money(cents)}
+    </Typography>
   );
 }
 
@@ -100,20 +157,18 @@ export default function EstebanMunozReportPage() {
       title="Reporte Esteban Muñoz"
       subtitle={`Estado de cuentas con TDF al ${formatDateLabel(source.cutoffDate)}.`}
     >
-      <Stack spacing={3} sx={{ '@media print': { '& .print-hidden': { display: 'none' } } }}>
-        <Stack className="print-hidden" direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="space-between">
+      <Stack spacing={3} sx={{ pb: 7, '@media print': { '& .print-hidden': { display: 'none' } } }}>
+        <Stack
+          className="print-hidden"
+          direction={{ xs: 'column', md: 'row' }}
+          spacing={1.5}
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', md: 'center' }}
+        >
           <Alert severity="info" sx={{ flex: 1 }}>
             Reporte interno. La compensación de saldos no está ejecutada; requiere aprobación contable antes de liquidar.
           </Alert>
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              startIcon={<ReceiptLongIcon />}
-              component={RouterLink}
-              to="/finanzas/pagos"
-            >
-              Pagos
-            </Button>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
@@ -130,9 +185,9 @@ export default function EstebanMunozReportPage() {
           </Stack>
         </Stack>
 
-        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
-          <Stack spacing={2.5}>
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
+        <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}>
+          <Stack spacing={3}>
+            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2.5}>
               <Box>
                 <Typography variant="overline" color="text.secondary">Cuenta personal TDF</Typography>
                 <Typography variant="h4" fontWeight={900}>{source.personName}</Typography>
@@ -140,8 +195,8 @@ export default function EstebanMunozReportPage() {
                   Último mes pagado: {formatMonthLabel(source.rent.lastPaidMonth)}. Corte de arriendo: {formatMonthLabel(source.rent.throughMonth)}.
                 </Typography>
               </Box>
-              <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
-                <Chip label={netDirection.label} color={netDirection.color} sx={{ mb: 1 }} />
+              <Box sx={{ textAlign: { xs: 'left', md: 'right' }, minWidth: 220 }}>
+                <Chip label={netDirection.label} color={netDirection.color} sx={{ mb: 1, fontWeight: 800 }} />
                 <Typography variant="h3" fontWeight={900}>
                   {money(Math.abs(report.netAfterOffsetCents))}
                 </Typography>
@@ -149,8 +204,8 @@ export default function EstebanMunozReportPage() {
               </Box>
             </Stack>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={3}>
+            <Grid container spacing={1.5}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Metric
                   icon={<AccountBalanceWalletIcon />}
                   label="Arriendo pendiente"
@@ -158,7 +213,7 @@ export default function EstebanMunozReportPage() {
                   tone="debt"
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Metric
                   icon={<SchoolIcon />}
                   label="Clases de producción"
@@ -166,7 +221,7 @@ export default function EstebanMunozReportPage() {
                   tone="credit"
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Metric
                   icon={<LocalOfferIcon />}
                   label="Mastering"
@@ -174,7 +229,7 @@ export default function EstebanMunozReportPage() {
                   tone="credit"
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Metric
                   icon={<CalculateIcon />}
                   label="Neto después de compensar"
@@ -188,24 +243,22 @@ export default function EstebanMunozReportPage() {
 
         <Grid container spacing={2}>
           <Grid item xs={12} lg={7}>
-            <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, height: '100%' }}>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="h6" fontWeight={800}>Arriendo mensual</Typography>
-                  <Typography color="text.secondary">
-                    {money(source.rent.monthlyAmountCents)} por mes. El comprobante adjunto se toma como pago aplicado hasta {formatMonthLabel(source.rent.lastPaidMonth)}.
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                  {report.unpaidRentMonths.map((month) => (
-                    <Chip key={month} label={formatMonthLabel(month)} color="error" variant="outlined" />
-                  ))}
-                </Stack>
-                <Divider />
-                <Table size="small">
+            <Section
+              title="Arriendo mensual"
+              subtitle={`${money(source.rent.monthlyAmountCents)} por mes. El comprobante adjunto se toma como pago aplicado hasta ${formatMonthLabel(source.rent.lastPaidMonth)}.`}
+            >
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {report.unpaidRentMonths.map((month) => (
+                  <Chip key={month} label={formatMonthLabel(month)} color="error" variant="outlined" />
+                ))}
+              </Stack>
+              <Divider />
+              <TableContainer>
+                <Table size="small" sx={tableSx}>
                   <TableHead>
                     <TableRow>
                       <TableCell>Concepto</TableCell>
+                      <TableCell>Periodo</TableCell>
                       <TableCell align="right">Cantidad</TableCell>
                       <TableCell align="right">Valor unitario</TableCell>
                       <TableCell align="right">Subtotal</TableCell>
@@ -213,25 +266,24 @@ export default function EstebanMunozReportPage() {
                   </TableHead>
                   <TableBody>
                     <TableRow>
-                      <TableCell>Meses pendientes de renta</TableCell>
+                      <TableCell>
+                        <Typography fontWeight={750}>Meses pendientes de renta</Typography>
+                      </TableCell>
+                      <TableCell>{report.unpaidRentMonths.map(formatMonthLabel).join(', ')}</TableCell>
                       <TableCell align="right">{report.unpaidRentMonths.length}</TableCell>
-                      <TableCell align="right">{money(source.rent.monthlyAmountCents)}</TableCell>
-                      <TableCell align="right">{money(report.rentDueCents)}</TableCell>
+                      <TableCell align="right"><MoneyCell cents={source.rent.monthlyAmountCents} /></TableCell>
+                      <TableCell align="right"><MoneyCell cents={report.rentDueCents} strong /></TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
-              </Stack>
-            </Paper>
+              </TableContainer>
+            </Section>
           </Grid>
 
           <Grid item xs={12} lg={5}>
-            <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2, height: '100%' }}>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="h6" fontWeight={800}>Comprobante base</Typography>
-                  <Typography color="text.secondary">{source.lastReceipt.source}</Typography>
-                </Box>
-                <Table size="small">
+            <Section title="Comprobante base" subtitle={source.lastReceipt.source}>
+              <TableContainer>
+                <Table size="small" sx={{ ...tableSx, minWidth: 420 }}>
                   <TableBody>
                     <TableRow>
                       <TableCell>Fecha</TableCell>
@@ -243,7 +295,7 @@ export default function EstebanMunozReportPage() {
                     </TableRow>
                     <TableRow>
                       <TableCell>Valor transferido</TableCell>
-                      <TableCell align="right">{money(source.lastReceipt.amountCents)}</TableCell>
+                      <TableCell align="right"><MoneyCell cents={source.lastReceipt.amountCents} /></TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Descripción</TableCell>
@@ -255,20 +307,17 @@ export default function EstebanMunozReportPage() {
                     </TableRow>
                   </TableBody>
                 </Table>
-              </Stack>
-            </Paper>
+              </TableContainer>
+            </Section>
           </Grid>
         </Grid>
 
-        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Box>
-              <Typography variant="h6" fontWeight={800}>Honorarios por clases de producción</Typography>
-              <Typography color="text.secondary">
-                Tarifa aplicada: {money(source.coursePayment.hourlyRateCents)} por hora. Total: 2 cursos de 16 horas cada uno.
-              </Typography>
-            </Box>
-            <Table size="small">
+        <Section
+          title="Honorarios por clases de producción"
+          subtitle={`Tarifa aplicada: ${money(source.coursePayment.hourlyRateCents)} por hora. Total: ${report.courseRows.length} cursos de 16 horas cada uno.`}
+        >
+          <TableContainer>
+            <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Curso</TableCell>
@@ -281,40 +330,35 @@ export default function EstebanMunozReportPage() {
               <TableBody>
                 {report.courseRows.map((course) => (
                   <TableRow key={course.slug}>
-                    <TableCell>
-                      <Typography fontWeight={700}>{course.title}</Typography>
+                    <TableCell sx={{ width: '32%' }}>
+                      <Typography fontWeight={750}>{course.title}</Typography>
                       <Typography variant="body2" color="text.secondary">{course.sourceLabel}</Typography>
                     </TableCell>
-                    <TableCell>
-                      {course.sessionDates.map(formatDateLabel).join(', ')}
-                    </TableCell>
+                    <TableCell>{course.sessionDates.map(formatDateLabel).join(', ')}</TableCell>
                     <TableCell align="right">{course.hours}</TableCell>
-                    <TableCell align="right">{money(source.coursePayment.hourlyRateCents)}</TableCell>
-                    <TableCell align="right">{money(course.subtotalCents)}</TableCell>
+                    <TableCell align="right"><MoneyCell cents={source.coursePayment.hourlyRateCents} /></TableCell>
+                    <TableCell align="right"><MoneyCell cents={course.subtotalCents} /></TableCell>
                   </TableRow>
                 ))}
-                <TableRow>
+                <TableRow sx={{ bgcolor: 'action.hover' }}>
                   <TableCell colSpan={4}>
-                    <Typography fontWeight={800}>Total honorarios</Typography>
+                    <Typography fontWeight={850}>Total honorarios</Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography fontWeight={800}>{money(report.coursePayableCents)}</Typography>
+                    <MoneyCell cents={report.coursePayableCents} strong />
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-          </Stack>
-        </Paper>
+          </TableContainer>
+        </Section>
 
-        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Box>
-              <Typography variant="h6" fontWeight={800}>Participación por realización de mastering</Typography>
-              <Typography color="text.secondary">
-                {source.promotionShare.sourceLabel}. A Esteban le corresponde el {source.promotionShare.estebanSharePercent}% del pago recibido.
-              </Typography>
-            </Box>
-            <Table size="small">
+        <Section
+          title="Participación por realización de mastering"
+          subtitle={`${source.promotionShare.sourceLabel}. A Esteban le corresponde el ${source.promotionShare.estebanSharePercent}% del pago recibido.`}
+        >
+          <TableContainer>
+            <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Cliente</TableCell>
@@ -328,32 +372,29 @@ export default function EstebanMunozReportPage() {
                 <TableRow>
                   <TableCell>{report.promotionShareRow.payerName}</TableCell>
                   <TableCell>{report.promotionShareRow.concept}</TableCell>
-                  <TableCell align="right">{money(report.promotionShareRow.totalPaidCents)}</TableCell>
+                  <TableCell align="right"><MoneyCell cents={report.promotionShareRow.totalPaidCents} /></TableCell>
                   <TableCell align="right">{report.promotionShareRow.estebanSharePercent}%</TableCell>
-                  <TableCell align="right">{money(report.promotionShareRow.estebanShareCents)}</TableCell>
+                  <TableCell align="right"><MoneyCell cents={report.promotionShareRow.estebanShareCents} /></TableCell>
                 </TableRow>
-                <TableRow>
+                <TableRow sx={{ bgcolor: 'action.hover' }}>
                   <TableCell colSpan={4}>
-                    <Typography fontWeight={800}>Total realización de mastering</Typography>
+                    <Typography fontWeight={850}>Total realización de mastering</Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography fontWeight={800}>{money(report.promotionShareRow.estebanShareCents)}</Typography>
+                    <MoneyCell cents={report.promotionShareRow.estebanShareCents} strong />
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-          </Stack>
-        </Paper>
+          </TableContainer>
+        </Section>
 
-        <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Box>
-              <Typography variant="h6" fontWeight={800}>Cuentas mantenidas con TDF</Typography>
-              <Typography color="text.secondary">
-                Vista consolidada de saldos a cobrar, saldos a pagar y movimientos base.
-              </Typography>
-            </Box>
-            <Table size="small">
+        <Section
+          title="Cuentas mantenidas con TDF"
+          subtitle="Vista consolidada de saldos a cobrar, saldos a pagar y movimientos base."
+        >
+          <TableContainer>
+            <Table size="small" sx={tableSx}>
               <TableHead>
                 <TableRow>
                   <TableCell>Cuenta</TableCell>
@@ -366,23 +407,24 @@ export default function EstebanMunozReportPage() {
               <TableBody>
                 {report.accountPositions.map((item) => {
                   const copy = directionCopy[item.direction];
+                  const isNet = item.id === 'net';
                   return (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Typography fontWeight={700}>{item.account}</Typography>
+                    <TableRow key={item.id} sx={isNet ? { bgcolor: 'action.hover' } : undefined}>
+                      <TableCell sx={{ width: '30%' }}>
+                        <Typography fontWeight={isNet ? 850 : 750}>{item.account}</Typography>
                         <Typography variant="body2" color="text.secondary">{item.detail}</Typography>
                       </TableCell>
                       <TableCell>{item.concept}</TableCell>
                       <TableCell>{item.status}</TableCell>
-                      <TableCell><Chip size="small" label={copy.label} color={copy.color} /></TableCell>
-                      <TableCell align="right">{money(item.amountCents)}</TableCell>
+                      <TableCell><Chip size="small" label={copy.label} color={copy.color} sx={{ fontWeight: 800 }} /></TableCell>
+                      <TableCell align="right"><MoneyCell cents={item.amountCents} strong={isNet} /></TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-          </Stack>
-        </Paper>
+          </TableContainer>
+        </Section>
       </Stack>
     </PageShell>
   );

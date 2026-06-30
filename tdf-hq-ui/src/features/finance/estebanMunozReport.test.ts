@@ -76,8 +76,11 @@ describe('Esteban Muñoz account report', () => {
     expect(pdf.type).toBe('application/pdf');
     expect(source.startsWith('%PDF-1.4')).toBe(true);
     expect(source).toContain('Reporte Esteban Munoz');
-    expect(source).toContain('Paula Roman pago $200.00');
-    expect(source).toContain('Participacion realizacion de mastering: $80.00');
+    expect(source).toContain('Resumen ejecutivo');
+    expect(source).toContain('Participacion por realizacion de mastering');
+    expect(source).toContain('Paula Roman');
+    expect(source).toContain('$200.00');
+    expect(source).toContain('$80.00');
     expect(source).toContain('Esteban debe a TDF: $370.00');
   });
 });

@@ -251,6 +251,9 @@ const directionLabel = (direction: AccountDirection) => {
   return 'Registrado';
 };
 
+const directionAmountLabel = (direction: AccountDirection, amountCents: number) =>
+  `${directionLabel(direction)}: ${formatMoneyPdf(amountCents)}`;
+
 const normalizePdfText = (value: string) =>
   value
     .normalize('NFD')
@@ -259,6 +262,8 @@ const normalizePdfText = (value: string) =>
 
 const escapePdfString = (value: string) =>
   normalizePdfText(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+
+const escapePdfStringForWidth = (value: string) => normalizePdfText(value);
 
 const wrapPdfText = (text: string, maxChars: number) => {
   const words = text.split(/\s+/).filter(Boolean);
@@ -279,89 +284,413 @@ const wrapPdfText = (text: string, maxChars: number) => {
   return lines.length > 0 ? lines : [''];
 };
 
+type PdfAlign = 'left' | 'right' | 'center';
+
+interface PdfColumn {
+  label: string;
+  width: number;
+  align?: PdfAlign;
+}
+
+interface PdfCell {
+  text: string;
+  bold?: boolean;
+}
+
+type PdfRow = Array<string | PdfCell>;
+
+const PDF = {
+  pageWidth: 612,
+  pageHeight: 792,
+  marginX: 42,
+  marginBottom: 46,
+  contentWidth: 528,
+  headerTop: 748,
+  colors: {
+    ink: [0.12, 0.13, 0.16],
+    muted: [0.42, 0.45, 0.5],
+    line: [0.82, 0.84, 0.88],
+    softLine: [0.9, 0.91, 0.94],
+    panel: [0.96, 0.97, 0.99],
+    dark: [0.08, 0.09, 0.12],
+    red: [0.82, 0.18, 0.16],
+    green: [0.12, 0.56, 0.27],
+    purple: [0.42, 0.25, 0.9],
+    white: [1, 1, 1],
+  },
+} as const;
+
+const color = (rgb: readonly number[]) => rgb.join(' ');
+
+const textWidthEstimate = (value: string, fontSize: number, bold = false) =>
+  escapePdfStringForWidth(value).length * fontSize * (bold ? 0.55 : 0.5);
+
 const buildPdfContentStream = (report: EstebanMunozReport) => {
-  const commands: string[] = [];
-  let y = 744;
+  const pages: string[][] = [];
+  let commands: string[] = [];
+  let y: number = PDF.headerTop;
+  let pageNumber = 0;
 
-  const writeLine = (text: string, options: { size?: number; bold?: boolean; indent?: number } = {}) => {
-    const size = options.size ?? 10;
-    const x = 48 + (options.indent ?? 0);
-    const font = options.bold ? 'F2' : 'F1';
-    commands.push(`BT /${font} ${size} Tf ${x} ${y} Td (${escapePdfString(text)}) Tj ET`);
-    y -= size + 5;
+  const push = (command: string) => commands.push(command);
+
+  const newPage = () => {
+    if (commands.length > 0) {
+      pages.push(commands);
+    }
+    commands = [];
+    pageNumber += 1;
+    y = PDF.headerTop;
+    push(`${color(PDF.colors.dark)} rg 0 742 612 50 re f`);
+    push(`${color(PDF.colors.white)} rg`);
+    push(`BT /F2 15 Tf 42 765 Td (TDF RECORDS) Tj ET`);
+    push(`BT /F1 8 Tf 42 752 Td (Estado de cuenta / pagina ${pageNumber}) Tj ET`);
+    y = 720;
   };
 
-  const writeWrapped = (
-    text: string,
-    options: { size?: number; bold?: boolean; indent?: number; maxChars?: number } = {},
+  const ensureSpace = (height: number) => {
+    if (y - height < PDF.marginBottom) newPage();
+  };
+
+  const rect = (
+    x: number,
+    top: number,
+    width: number,
+    height: number,
+    options: { fill?: readonly number[]; stroke?: readonly number[] } = {},
   ) => {
-    wrapPdfText(text, options.maxChars ?? 92).forEach((line) => {
-      writeLine(line, options);
+    if (options.fill) {
+      push(`${color(options.fill)} rg ${x} ${top - height} ${width} ${height} re f`);
+    }
+    if (options.stroke) {
+      push(`${color(options.stroke)} RG ${x} ${top - height} ${width} ${height} re S`);
+    }
+  };
+
+  const line = (x1: number, y1: number, x2: number, y2: number, stroke: readonly number[] = PDF.colors.line) => {
+    push(`${color(stroke)} RG ${x1} ${y1} m ${x2} ${y2} l S`);
+  };
+
+  const text = (
+    value: string,
+    x: number,
+    baseline: number,
+    options: {
+      size?: number;
+      bold?: boolean;
+      fill?: readonly number[];
+      align?: PdfAlign;
+      width?: number;
+    } = {},
+  ) => {
+    const size = options.size ?? 9;
+    const font = options.bold ? 'F2' : 'F1';
+    const fill = options.fill ?? PDF.colors.ink;
+    const align = options.align ?? 'left';
+    const estimated = textWidthEstimate(value, size, Boolean(options.bold));
+    const offset =
+      align === 'right' && options.width
+        ? Math.max(options.width - estimated, 0)
+        : align === 'center' && options.width
+          ? Math.max((options.width - estimated) / 2, 0)
+          : 0;
+    push(`${color(fill)} rg BT /${font} ${size} Tf ${x + offset} ${baseline} Td (${escapePdfString(value)}) Tj ET`);
+  };
+
+  const wrapped = (
+    value: string,
+    x: number,
+    baseline: number,
+    width: number,
+    options: { size?: number; bold?: boolean; fill?: readonly number[]; maxLines?: number } = {},
+  ) => {
+    const size = options.size ?? 9;
+    const maxChars = Math.max(10, Math.floor(width / (size * 0.5)));
+    const lines = wrapPdfText(value, maxChars).slice(0, options.maxLines ?? 6);
+    lines.forEach((lineText, index) => {
+      text(lineText, x, baseline - index * (size + 3), options);
     });
+    return lines.length;
   };
 
-  const writeSpace = (height = 8) => {
-    y -= height;
+  const sectionTitle = (title: string, subtitle?: string) => {
+    ensureSpace(subtitle ? 44 : 28);
+    text(title, PDF.marginX, y, { size: 13, bold: true });
+    y -= 15;
+    if (subtitle) {
+      wrapped(subtitle, PDF.marginX, y, PDF.contentWidth, { size: 8, fill: PDF.colors.muted, maxLines: 2 });
+      y -= 18;
+    } else {
+      y -= 5;
+    }
+    line(PDF.marginX, y, PDF.marginX + PDF.contentWidth, y, PDF.colors.softLine);
+    y -= 12;
   };
 
-  writeLine('Reporte Esteban Munoz', { size: 18, bold: true });
-  writeLine(`Estado de cuentas con TDF al ${formatDateLabel(report.source.cutoffDate)}.`, { size: 10 });
-  writeSpace();
+  const summaryBox = (
+    label: string,
+    value: string,
+    x: number,
+    top: number,
+    width: number,
+    tone: 'debt' | 'credit' | 'neutral',
+  ) => {
+    const toneColor = tone === 'debt' ? PDF.colors.red : tone === 'credit' ? PDF.colors.green : PDF.colors.purple;
+    rect(x, top, width, 58, { fill: PDF.colors.panel, stroke: PDF.colors.softLine });
+    text(label, x + 10, top - 20, { size: 8, fill: PDF.colors.muted });
+    text(value, x + 10, top - 42, { size: 13, bold: true, fill: toneColor });
+  };
 
-  writeLine('Resumen', { size: 12, bold: true });
-  writeLine(`Arriendo pendiente: ${formatMoneyPdf(report.rentDueCents)}`);
-  writeLine(`Honorarios por clases: ${formatMoneyPdf(report.coursePayableCents)}`);
-  writeLine(`Participacion realizacion de mastering: ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}`);
-  writeLine(`Total a favor de Esteban: ${formatMoneyPdf(report.payableToEstebanCents)}`);
-  writeLine(`${directionLabel(report.netDirection)}: ${formatMoneyPdf(Math.abs(report.netAfterOffsetCents))}`);
-  writeSpace();
+  const table = (columns: PdfColumn[], rows: PdfRow[], options: { footerRows?: number } = {}) => {
+    const headerHeight = 22;
+    ensureSpace(headerHeight + 24);
+    rect(PDF.marginX, y, PDF.contentWidth, headerHeight, { fill: PDF.colors.dark });
+    let x = PDF.marginX;
+    columns.forEach((column) => {
+      text(column.label, x + 7, y - 14, {
+        size: 7.5,
+        bold: true,
+        fill: PDF.colors.white,
+        align: column.align,
+        width: column.width - 14,
+      });
+      x += column.width;
+    });
+    y -= headerHeight;
 
-  writeLine('Arriendo', { size: 12, bold: true });
-  writeWrapped(
-    `${report.unpaidRentMonths.length} meses pendientes (${report.unpaidRentMonths.map(formatMonthLabel).join(', ')}), a ${formatMoneyPdf(report.source.rent.monthlyAmountCents)} por mes.`,
-  );
-  writeSpace();
+    rows.forEach((row, rowIndex) => {
+      const footerStart = rows.length - (options.footerRows ?? 0);
+      const isFooter = rowIndex >= footerStart;
+      const cellLines = row.map((raw, cellIndex) => {
+        const cell = typeof raw === 'string' ? { text: raw } : raw;
+        const column = columns[cellIndex]!;
+        const size = isFooter || cell.bold ? 8.5 : 8;
+        const maxChars = Math.max(8, Math.floor((column.width - 14) / (size * 0.5)));
+        return wrapPdfText(cell.text, maxChars).slice(0, 4);
+      });
+      const lineCount = Math.max(...cellLines.map((lines) => lines.length), 1);
+      const rowHeight = Math.max(24, 10 + lineCount * 10);
+      ensureSpace(rowHeight);
+      if (isFooter) {
+        rect(PDF.marginX, y, PDF.contentWidth, rowHeight, { fill: [0.94, 0.95, 0.98] });
+      } else if (rowIndex % 2 === 1) {
+        rect(PDF.marginX, y, PDF.contentWidth, rowHeight, { fill: [0.985, 0.988, 0.995] });
+      }
+      line(PDF.marginX, y - rowHeight, PDF.marginX + PDF.contentWidth, y - rowHeight, PDF.colors.softLine);
 
-  writeLine('Cursos de produccion', { size: 12, bold: true });
-  report.courseRows.forEach((course) => {
-    writeWrapped(
-      `${course.title}: ${course.hours} horas x ${formatMoneyPdf(report.source.coursePayment.hourlyRateCents)} = ${formatMoneyPdf(course.subtotalCents)}. Fechas: ${course.sessionDates.map(formatDateLabel).join(', ')}.`,
-      { indent: 12, maxChars: 88 },
-    );
+      x = PDF.marginX;
+      row.forEach((raw, cellIndex) => {
+        const cell = typeof raw === 'string' ? { text: raw } : raw;
+        const column = columns[cellIndex]!;
+        const bold = isFooter || Boolean(cell.bold);
+        const fill = isFooter ? PDF.colors.ink : PDF.colors.ink;
+        const lines = cellLines[cellIndex]!;
+        lines.forEach((lineText, lineIndex) => {
+          text(lineText, x + 7, y - 15 - lineIndex * 10, {
+            size: bold ? 8.5 : 8,
+            bold,
+            fill,
+            align: column.align,
+            width: column.width - 14,
+          });
+        });
+        x += column.width;
+      });
+      y -= rowHeight;
+    });
+    y -= 18;
+  };
+
+  newPage();
+
+  text('Reporte Esteban Munoz', PDF.marginX, y, { size: 24, bold: true });
+  text(`Estado de cuentas con TDF al ${formatDateLabel(report.source.cutoffDate)}.`, PDF.marginX, y - 20, {
+    size: 10,
+    fill: PDF.colors.muted,
   });
-  writeSpace();
+  rect(390, y + 2, 180, 64, { fill: [0.98, 0.93, 0.93], stroke: [0.93, 0.7, 0.7] });
+  text(directionLabel(report.netDirection), 402, y - 18, { size: 8, bold: true, fill: PDF.colors.red });
+  text(formatMoneyPdf(Math.abs(report.netAfterOffsetCents)), 402, y - 43, { size: 18, bold: true, fill: PDF.colors.red });
+  text('Saldo neto si se aprueba compensacion', 402, y - 56, { size: 7.5, fill: PDF.colors.muted });
+  y -= 98;
 
-  writeLine('Realizacion de mastering', { size: 12, bold: true });
-  writeWrapped(
-    `${report.promotionShareRow.payerName} pago ${formatMoneyPdf(report.promotionShareRow.totalPaidCents)} por ${report.promotionShareRow.concept.toLowerCase()}; ${report.promotionShareRow.estebanSharePercent}% corresponde a Esteban = ${formatMoneyPdf(report.promotionShareRow.estebanShareCents)}.`,
+  sectionTitle(
+    'Resumen ejecutivo',
+    'La compensacion de saldos no esta ejecutada; requiere aprobacion contable antes de liquidar.',
   );
-  writeSpace();
-
-  writeLine('Comprobante base', { size: 12, bold: true });
-  writeWrapped(
-    `Comprobante ${report.source.lastReceipt.receiptNumber}, ${report.source.lastReceipt.originalDateLabel}, ${report.source.lastReceipt.description}, valor ${formatMoneyPdf(report.source.lastReceipt.amountCents)}. Aplicado hasta ${formatMonthLabel(report.source.rent.lastPaidMonth)}.`,
+  const gap = 8;
+  const boxWidth = (PDF.contentWidth - gap * 3) / 4;
+  const boxTop = y;
+  summaryBox('Arriendo pendiente', formatMoneyPdf(report.rentDueCents), PDF.marginX, boxTop, boxWidth, 'debt');
+  summaryBox(
+    'Clases de produccion',
+    formatMoneyPdf(report.coursePayableCents),
+    PDF.marginX + boxWidth + gap,
+    boxTop,
+    boxWidth,
+    'credit',
   );
-  writeSpace();
+  summaryBox(
+    'Mastering',
+    formatMoneyPdf(report.promotionShareRow.estebanShareCents),
+    PDF.marginX + (boxWidth + gap) * 2,
+    boxTop,
+    boxWidth,
+    'credit',
+  );
+  summaryBox(
+    'Saldo neto',
+    formatMoneyPdf(Math.abs(report.netAfterOffsetCents)),
+    PDF.marginX + (boxWidth + gap) * 3,
+    boxTop,
+    boxWidth,
+    'debt',
+  );
+  y -= 82;
 
-  writeLine('Cuentas mantenidas con TDF', { size: 12, bold: true });
-  report.accountPositions.forEach((position) => {
-    writeWrapped(
-      `${position.account}: ${position.concept}. ${position.status}. ${directionLabel(position.direction)}. Monto ${formatMoneyPdf(position.amountCents)}. ${position.detail}`,
-      { indent: 12, maxChars: 88 },
-    );
+  sectionTitle('Arriendo mensual');
+  table(
+    [
+      { label: 'Concepto', width: 210 },
+      { label: 'Periodo', width: 170 },
+      { label: 'Cantidad', width: 70, align: 'right' },
+      { label: 'Subtotal', width: 78, align: 'right' },
+    ],
+    [
+      [
+        { text: 'Meses pendientes de renta', bold: true },
+        report.unpaidRentMonths.map(formatMonthLabel).join(', '),
+        String(report.unpaidRentMonths.length),
+        formatMoneyPdf(report.rentDueCents),
+      ],
+      [
+        'Base aplicada',
+        `Ultimo mes pagado: ${formatMonthLabel(report.source.rent.lastPaidMonth)}. Corte: ${formatMonthLabel(report.source.rent.throughMonth)}.`,
+        '1',
+        formatMoneyPdf(report.source.rent.monthlyAmountCents),
+      ],
+    ],
+  );
+
+  sectionTitle('Comprobante base');
+  table(
+    [
+      { label: 'Fecha', width: 92 },
+      { label: 'No.', width: 60 },
+      { label: 'Descripcion', width: 170 },
+      { label: 'Destino', width: 126 },
+      { label: 'Valor', width: 80, align: 'right' },
+    ],
+    [
+      [
+        `${report.source.lastReceipt.originalDateLabel}`,
+        report.source.lastReceipt.receiptNumber,
+        `${report.source.lastReceipt.description}. Aplicado hasta ${formatMonthLabel(report.source.rent.lastPaidMonth)}.`,
+        `${report.source.lastReceipt.financialEntity} / ${report.source.lastReceipt.destinationAccount}`,
+        formatMoneyPdf(report.source.lastReceipt.amountCents),
+      ],
+    ],
+  );
+
+  sectionTitle('Honorarios por clases de produccion');
+  table(
+    [
+      { label: 'Curso', width: 185 },
+      { label: 'Fechas registradas', width: 193 },
+      { label: 'Horas', width: 48, align: 'right' },
+      { label: 'Tarifa', width: 50, align: 'right' },
+      { label: 'Subtotal', width: 52, align: 'right' },
+    ],
+    [
+      ...report.courseRows.map((course): PdfRow => [
+        { text: course.title, bold: true },
+        course.sessionDates.map(formatDateLabel).join(', '),
+        String(course.hours),
+        formatMoneyPdf(report.source.coursePayment.hourlyRateCents),
+        formatMoneyPdf(course.subtotalCents),
+      ]),
+      ['Total honorarios', '', '', '', { text: formatMoneyPdf(report.coursePayableCents), bold: true }],
+    ],
+    { footerRows: 1 },
+  );
+
+  newPage();
+
+  sectionTitle('Participacion por realizacion de mastering');
+  table(
+    [
+      { label: 'Cliente', width: 110 },
+      { label: 'Concepto', width: 178 },
+      { label: 'Pago recibido', width: 90, align: 'right' },
+      { label: 'Participacion', width: 74, align: 'right' },
+      { label: 'A favor de Esteban', width: 76, align: 'right' },
+    ],
+    [
+      [
+        report.promotionShareRow.payerName,
+        report.promotionShareRow.concept,
+        formatMoneyPdf(report.promotionShareRow.totalPaidCents),
+        `${report.promotionShareRow.estebanSharePercent}%`,
+        formatMoneyPdf(report.promotionShareRow.estebanShareCents),
+      ],
+      ['Total mastering', '', '', '', { text: formatMoneyPdf(report.promotionShareRow.estebanShareCents), bold: true }],
+    ],
+    { footerRows: 1 },
+  );
+
+  sectionTitle('Cuentas mantenidas con TDF');
+  table(
+    [
+      { label: 'Cuenta', width: 134 },
+      { label: 'Concepto', width: 135 },
+      { label: 'Estado', width: 96 },
+      { label: 'Direccion', width: 91 },
+      { label: 'Monto', width: 72, align: 'right' },
+    ],
+    report.accountPositions.map((position): PdfRow => [
+      { text: `${position.account}. ${position.detail}`, bold: position.id === 'net' },
+      position.concept,
+      position.status,
+      directionLabel(position.direction),
+      { text: formatMoneyPdf(position.amountCents), bold: position.id === 'net' },
+    ]),
+  );
+
+  sectionTitle('Cierre');
+  const closingLines = [
+    `Total a favor de Esteban: ${formatMoneyPdf(report.payableToEstebanCents)}.`,
+    `Arriendo pendiente a favor de TDF: ${formatMoneyPdf(report.rentDueCents)}.`,
+    directionAmountLabel(report.netDirection, Math.abs(report.netAfterOffsetCents)),
+    'Este reporte presenta un escenario contable de compensacion; no reemplaza la aprobacion final de TDF y Esteban.',
+  ];
+  closingLines.forEach((lineText) => {
+    wrapped(lineText, PDF.marginX, y, PDF.contentWidth, { size: 10, maxLines: 2 });
+    y -= 18;
   });
 
-  return commands.join('\n');
+  pages.push(commands);
+  return pages.map((pageCommands) => pageCommands.join('\n'));
 };
 
-const buildPdfDocument = (contentStream: string) => {
+const buildPdfDocument = (contentStreams: string[]) => {
+  const pageCount = contentStreams.length;
+  const pageObjectStart = 3;
+  const contentObjectStart = pageObjectStart + pageCount;
+  const fontObjectStart = contentObjectStart + pageCount;
+  const fontRegularId = fontObjectStart;
+  const fontBoldId = fontObjectStart + 1;
+  const pageIds = Array.from({ length: pageCount }, (_, index) => pageObjectStart + index);
+  const contentIds = Array.from({ length: pageCount }, (_, index) => contentObjectStart + index);
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageCount} >>`,
+    ...pageIds.map((_, index) =>
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentIds[index]} 0 R >>`,
+    ),
+    ...contentStreams.map((contentStream) =>
+      `<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream`,
+    ),
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
-    `<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream`,
   ];
 
   let pdf = '%PDF-1.4\n';
