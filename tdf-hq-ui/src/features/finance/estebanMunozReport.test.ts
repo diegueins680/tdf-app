@@ -8,17 +8,18 @@ import {
 } from './estebanMunozReport';
 
 describe('Esteban Muñoz account report', () => {
-  it('calculates rent due from the month after the last paid receipt through June 2026', () => {
+  it('calculates rent due from January through June 2026', () => {
     const report = buildEstebanMunozReport();
 
     expect(report.unpaidRentMonths).toEqual([
+      '2026-01',
       '2026-02',
       '2026-03',
       '2026-04',
       '2026-05',
       '2026-06',
     ]);
-    expect(report.rentDueCents).toBe(125_000);
+    expect(report.rentDueCents).toBe(150_000);
   });
 
   it('calculates two production courses at 16 hours each and 25 dollars per hour', () => {
@@ -44,7 +45,6 @@ describe('Esteban Muñoz account report', () => {
       units: 5,
       estebanShareCents: 8_000,
     });
-    expect(report.payableToEstebanCents).toBe(88_000);
     expect(report.accountPositions.find((item) => item.id === 'mastering-work')).toMatchObject({
       direction: 'tdf_owes_esteban',
       amountCents: 8_000,
@@ -52,20 +52,33 @@ describe('Esteban Muñoz account report', () => {
     });
   });
 
+  it('includes the previous 500 dollar payable TDF owed to Esteban', () => {
+    const report = buildEstebanMunozReport();
+
+    expect(report.previousPayableCents).toBe(50_000);
+    expect(report.payableToEstebanCents).toBe(138_000);
+    expect(report.accountPositions.find((item) => item.id === 'previous-tdf-payable')).toMatchObject({
+      account: 'Saldo anterior a favor',
+      direction: 'tdf_owes_esteban',
+      amountCents: 50_000,
+      status: 'Por pagar',
+    });
+  });
+
   it('shows the compensated net as an amount owed from Esteban to TDF', () => {
     const report = buildEstebanMunozReport();
 
-    expect(report.netAfterOffsetCents).toBe(37_000);
+    expect(report.netAfterOffsetCents).toBe(12_000);
     expect(report.netDirection).toBe('esteban_owes_tdf');
     expect(report.accountPositions.find((item) => item.id === 'net')).toMatchObject({
-      amountCents: 37_000,
+      amountCents: 12_000,
       status: 'Saldo neto por cobrar',
     });
   });
 
   it('keeps the receipt policy explicit', () => {
     expect(ESTEBAN_MUNOZ_REPORT_SOURCE.lastReceipt.originalDateLabel).toBe('04-01-2026');
-    expect(formatMonthLabel(ESTEBAN_MUNOZ_REPORT_SOURCE.rent.lastPaidMonth)).toBe('enero 2026');
+    expect(formatMonthLabel(ESTEBAN_MUNOZ_REPORT_SOURCE.rent.lastPaidMonth)).toBe('diciembre 2025');
     expect(listMonthsAfterThrough('2026-06', '2026-01')).toEqual([]);
   });
 
@@ -81,6 +94,8 @@ describe('Esteban Muñoz account report', () => {
     expect(source).toContain('Paula Roman');
     expect(source).toContain('$200.00');
     expect(source).toContain('$80.00');
-    expect(source).toContain('Esteban debe a TDF: $370.00');
+    expect(source).toContain('Saldo anterior');
+    expect(source).toContain('$500.00');
+    expect(source).toContain('Esteban debe a TDF: $120.00');
   });
 });

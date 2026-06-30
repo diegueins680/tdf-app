@@ -19,6 +19,15 @@ export interface PromotionShareSource {
   sourceLabel: string;
 }
 
+export interface PreviousPayableSource {
+  id: string;
+  account: string;
+  concept: string;
+  amountCents: number;
+  status: string;
+  detail: string;
+}
+
 export interface AccountPosition {
   id: string;
   account: string;
@@ -34,7 +43,7 @@ export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
   cutoffDate: '2026-06-23',
   rent: {
     monthlyAmountCents: 25_000,
-    lastPaidMonth: '2026-01' as YearMonth,
+    lastPaidMonth: '2025-12' as YearMonth,
     throughMonth: '2026-06' as YearMonth,
   },
   lastReceipt: {
@@ -76,6 +85,16 @@ export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
     units: 5,
     sourceLabel: 'Pago Paula Roman por realización de mastering',
   } satisfies PromotionShareSource,
+  previousPayables: [
+    {
+      id: 'previous-tdf-payable',
+      account: 'Saldo anterior a favor',
+      concept: 'Pendiente previo reconocido por TDF',
+      amountCents: 50_000,
+      status: 'Por pagar',
+      detail: 'Pendiente previo que TDF debía a Esteban antes del corte actual.',
+    },
+  ] satisfies PreviousPayableSource[],
 } as const;
 
 const MONTH_NAMES = [
@@ -158,7 +177,11 @@ export const buildEstebanMunozReport = () => {
       source.promotionShare.estebanSharePercent,
     ),
   };
-  const payableToEstebanCents = coursePayableCents + promotionShareRow.estebanShareCents;
+  const previousPayableCents = source.previousPayables.reduce(
+    (total, payable) => total + payable.amountCents,
+    0,
+  );
+  const payableToEstebanCents = coursePayableCents + promotionShareRow.estebanShareCents + previousPayableCents;
   const netAfterOffsetCents = rentDueCents - payableToEstebanCents;
   const netDirection: AccountDirection =
     netAfterOffsetCents > 0
@@ -201,6 +224,15 @@ export const buildEstebanMunozReport = () => {
       status: 'Por pagar',
       detail: `${source.promotionShare.payerName} pagó $${source.promotionShare.totalPaidCents / 100}; ${source.promotionShare.estebanSharePercent}% corresponde a Esteban.`,
     },
+    ...source.previousPayables.map((payable): AccountPosition => ({
+      id: payable.id,
+      account: payable.account,
+      concept: payable.concept,
+      direction: 'tdf_owes_esteban',
+      amountCents: payable.amountCents,
+      status: payable.status,
+      detail: payable.detail,
+    })),
     {
       id: 'last-receipt',
       account: 'Último comprobante',
@@ -228,6 +260,7 @@ export const buildEstebanMunozReport = () => {
     courseRows,
     coursePayableCents,
     promotionShareRow,
+    previousPayableCents,
     payableToEstebanCents,
     netAfterOffsetCents,
     netDirection,
@@ -518,7 +551,7 @@ const buildPdfContentStream = (report: EstebanMunozReport) => {
     'La compensacion de saldos no esta ejecutada; requiere aprobacion contable antes de liquidar.',
   );
   const gap = 8;
-  const boxWidth = (PDF.contentWidth - gap * 3) / 4;
+  const boxWidth = (PDF.contentWidth - gap * 4) / 5;
   const boxTop = y;
   summaryBox('Arriendo pendiente', formatMoneyPdf(report.rentDueCents), PDF.marginX, boxTop, boxWidth, 'debt');
   summaryBox(
@@ -538,12 +571,20 @@ const buildPdfContentStream = (report: EstebanMunozReport) => {
     'credit',
   );
   summaryBox(
-    'Saldo neto',
-    formatMoneyPdf(Math.abs(report.netAfterOffsetCents)),
+    'Saldo anterior',
+    formatMoneyPdf(report.previousPayableCents),
     PDF.marginX + (boxWidth + gap) * 3,
     boxTop,
     boxWidth,
-    'debt',
+    'credit',
+  );
+  summaryBox(
+    'Saldo neto',
+    formatMoneyPdf(Math.abs(report.netAfterOffsetCents)),
+    PDF.marginX + (boxWidth + gap) * 4,
+    boxTop,
+    boxWidth,
+    report.netDirection === 'tdf_owes_esteban' ? 'credit' : report.netDirection === 'settled' ? 'neutral' : 'debt',
   );
   y -= 82;
 

@@ -205,7 +205,7 @@ export default function EstebanMunozReportPage() {
             </Stack>
 
             <Grid container spacing={1.5}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4} lg={2.4}>
                 <Metric
                   icon={<AccountBalanceWalletIcon />}
                   label="Arriendo pendiente"
@@ -213,7 +213,7 @@ export default function EstebanMunozReportPage() {
                   tone="debt"
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4} lg={2.4}>
                 <Metric
                   icon={<SchoolIcon />}
                   label="Clases de producción"
@@ -221,7 +221,7 @@ export default function EstebanMunozReportPage() {
                   tone="credit"
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4} lg={2.4}>
                 <Metric
                   icon={<LocalOfferIcon />}
                   label="Mastering"
@@ -229,7 +229,15 @@ export default function EstebanMunozReportPage() {
                   tone="credit"
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} sm={6} md={4} lg={2.4}>
+                <Metric
+                  icon={<ReceiptLongIcon />}
+                  label="Saldo anterior a favor"
+                  value={money(report.previousPayableCents)}
+                  tone="credit"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4} lg={2.4}>
                 <Metric
                   icon={<CalculateIcon />}
                   label="Neto después de compensar"
