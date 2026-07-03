@@ -53,7 +53,7 @@ import Control.Monad (forM_, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
-import Data.Aeson (FromJSON (..), Value (..), eitherDecode, withObject, (.:), (.:?))
+import Data.Aeson (FromJSON (..), Value (..), eitherDecode, object, withObject, (.:), (.:?), (.=))
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
 import Data.Char
@@ -108,6 +108,7 @@ import qualified TDF.LogBuffer as LogBuf
 import TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
+import TDF.UserActivity (recordUserActivity)
 
 type AppM = ReaderT Env Handler
 
@@ -598,6 +599,31 @@ withSessionCookie response@LoginResponse{token = sessionToken} = do
   cfg <- asks envConfig
   pure (addHeader (sessionCookieHeader cfg sessionToken) response)
 
+recordAuthActivity :: Text -> LoginResponse -> AppM ()
+recordAuthActivity actionName LoginResponse{partyId = responsePartyId} = do
+  Env pool _ <- ask
+  let actorId = toSqlKey responsePartyId :: PartyId
+      entityId = T.pack (show responsePartyId)
+  result <- liftIO $ try $
+    flip runSqlPool pool $
+      recordUserActivity
+        (Just actorId)
+        "auth"
+        entityId
+        actionName
+        (Just (object ["partyId" .= responsePartyId]))
+  case result of
+    Left (err :: SomeException) -> do
+      let msg =
+            "[Auth][Activity] Failed to record "
+              <> actionName
+              <> " for partyId="
+              <> entityId
+              <> ": "
+              <> T.pack (displayException err)
+      liftIO $ LogBuf.addLog LogBuf.LogWarning msg
+    Right () -> pure ()
+
 login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 login rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
@@ -605,7 +631,9 @@ login rawRequest = do
   result <- liftIO $ flip runSqlPool pool (runLogin username password)
   case result of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-    Right res -> withSessionCookie res
+    Right res -> do
+      recordAuthActivity "login_password" res
+      withSessionCookie res
 
 googleLogin :: GoogleLoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 googleLogin GoogleLoginRequest{..} = do
@@ -622,7 +650,9 @@ googleLogin GoogleLoginRequest{..} = do
       result <- liftIO $ flip runSqlPool pool (completeGoogleLogin profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
-        Right resp -> withSessionCookie resp
+        Right resp -> do
+          recordAuthActivity "login_google" resp
+          withSessionCookie resp
 
 signup :: SignupRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 signup SignupRequest
@@ -691,6 +721,7 @@ signup SignupRequest
     Left SignupProfileError ->
       throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 "Failed to load user profile") }
     Right resp -> do
+      recordAuthActivity "signup" resp
       welcomeResult <-
         liftIO $
           ((try $

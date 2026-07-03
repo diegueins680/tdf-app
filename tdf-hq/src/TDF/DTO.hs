@@ -444,6 +444,22 @@ data LogEntryDTO = LogEntryDTO
   } deriving (Show, Generic)
 instance ToJSON LogEntryDTO
 
+data UserActivityDTO = UserActivityDTO
+  { uaId             :: Int64
+  , uaCreatedAt      :: UTCTime
+  , uaActorPartyId   :: Maybe Int64
+  , uaActorName      :: Text
+  , uaActorUsernames :: [Text]
+  , uaActorRoles     :: [Text]
+  , uaEntity         :: Text
+  , uaEntityId       :: Text
+  , uaAction         :: Text
+  , uaMetadata       :: Maybe Value
+  } deriving (Show, Generic)
+
+instance ToJSON UserActivityDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
+
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text
   , cDisplayName      :: Text

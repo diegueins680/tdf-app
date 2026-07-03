@@ -68,6 +68,7 @@ executable tdf-hq-exe
     TDF.Services.Stripe
     TDF.Pipelines
     TDF.RagStore
+    TDF.UserActivity
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server

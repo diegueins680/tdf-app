@@ -29,7 +29,7 @@ import           Data.Char      ( GeneralCategory(Format, LineSeparator, Paragra
                                 )
 import           GHC.Generics (Generic)
 import           Data.Int      (Int64)
-import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO)
+import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO, UserActivityDTO)
 
 type DropdownCategoryAPI =
        QueryParam "includeInactive" Bool :> Get '[JSON] [DropdownOptionDTO]
@@ -77,6 +77,9 @@ type LogsAPI =
        QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]
   :<|> Delete '[JSON] NoContent
 
+type ActivityAPI =
+       QueryParam "limit" Int :> Get '[JSON] [UserActivityDTO]
+
 type BrainAdminAPI =
        "brain" :> "entries"
          :> QueryParam "includeInactive" Bool
@@ -105,6 +108,7 @@ type AdminAPI =
   :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
   :<|> "logs" :> LogsAPI
+  :<|> "activity" :> ActivityAPI
   :<|> "email-test" :> ReqBody '[JSON] EmailTestRequest :> Post '[JSON] EmailTestResponse
   :<|> BrainAdminAPI
   :<|> RagAdminAPI

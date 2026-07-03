@@ -58,6 +58,7 @@ const TidalAgentPage = lazy(() => import('../pages/TidalAgentPage'));
 const TrialLessonsPage = lazy(() => import('../pages/TrialLessonsPage'));
 const UserRoleManagement = lazy(() => import('../components/UserRoleManagement'));
 const UxOptionsPage = lazy(() => import('../pages/UxOptionsPage'));
+const UserActivityPage = lazy(() => import('../pages/UserActivityPage'));
 const WhatsAppConsentPage = lazy(() => import('../pages/WhatsAppConsentPage'));
 
 export function renderProtectedRoutes() {
@@ -147,6 +148,7 @@ export function renderProtectedRoutes() {
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />
           <Route path="estado" element={<SystemStatusPage />} />
+          <Route path="actividad" element={<UserActivityPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="brain" element={<BrainAdminPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />

@@ -22,6 +22,19 @@ export interface LogEntry {
   logMessage: string;
 }
 
+export interface UserActivity {
+  id: number;
+  createdAt: string;
+  actorPartyId?: number | null;
+  actorName: string;
+  actorUsernames: string[];
+  actorRoles: string[];
+  entity: string;
+  entityId: string;
+  action: string;
+  metadata?: unknown;
+}
+
 export interface AdminUser {
   userId: number;
   partyId?: number | null;
@@ -118,6 +131,10 @@ export const Admin = {
   getLogs: (limit?: number): Promise<LogEntry[]> => {
     const params = limit ? `?limit=${limit}` : '';
     return get(`/admin/logs${params}`);
+  },
+  getActivity: (limit?: number): Promise<UserActivity[]> => {
+    const params = limit ? `?limit=${limit}` : '';
+    return get(`/admin/activity${params}`);
   },
   clearLogs: () => del('/admin/logs'),
   listDropdowns: (category: string, includeInactive?: boolean) =>
