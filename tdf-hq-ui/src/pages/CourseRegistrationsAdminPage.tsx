@@ -6695,6 +6695,18 @@ export default function CourseRegistrationsAdminPage() {
     }
   };
 
+  const handleRegistrationSortKeyChange = (value: string) => {
+    const nextSortKey = parseRegistrationSortKey(value);
+    setHasUsedFilterControl(true);
+    setRegistrationSortKey(nextSortKey);
+    setRegistrationSortDirection(defaultRegistrationSortDirection(nextSortKey));
+  };
+
+  const handleRegistrationSortDirectionChange = (value: string) => {
+    setHasUsedFilterControl(true);
+    setRegistrationSortDirection(parseRegistrationSortDirection(value, registrationSortKey));
+  };
+
   const handleToggleAdvancedFilters = () => {
     setHasUsedFilterControl(true);
     setShowAdvancedFilters((current) => !current);
@@ -8384,44 +8396,94 @@ export default function CourseRegistrationsAdminPage() {
             </Alert>
           )}
           {regsQuery.isLoading && <Typography>{initialRegistrationLoadingMessage}</Typography>}
-          {showLocalSearchControl && (
+          {showRegistrationResultsToolbar && (
             <Box sx={{ mb: 2 }}>
-              <Stack spacing={1} alignItems="flex-start">
-                <TextField
-                  label={LOCAL_SEARCH_LABEL}
-                  value={localSearch}
-                  onChange={(e) => {
-                    const nextLocalSearch = normalizeVisibleLocalSearchInput(e.target.value);
-                    if (nextLocalSearch) setHasUsedFilterControl(true);
-                    setLocalSearch(nextLocalSearch);
-                  }}
-                  placeholder={localSearchPlaceholder}
-                  helperText={localSearchHelperText}
-                  size="small"
-                  fullWidth
-                  autoComplete="off"
-                  inputProps={{
-                    spellCheck: false,
-                    title: localSearchInputTitle,
-                  }}
-                  data-testid="course-registration-local-search"
-                  InputProps={{
-                    endAdornment: showLocalSearchInlineClearAction ? (
-                      <InputAdornment position="end">
-                        <Tooltip title="Limpiar búsqueda">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            aria-label="Limpiar búsqueda"
-                            onClick={handleClearLocalSearch}
-                          >
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </InputAdornment>
-                    ) : undefined,
-                  }}
-                />
+              <Stack spacing={1.25} alignItems="stretch">
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={1.5}
+                  alignItems={{ xs: 'stretch', md: 'flex-start' }}
+                >
+                  {showLocalSearchControl && (
+                    <TextField
+                      label={LOCAL_SEARCH_LABEL}
+                      value={localSearch}
+                      onChange={(e) => {
+                        const nextLocalSearch = normalizeVisibleLocalSearchInput(e.target.value);
+                        if (nextLocalSearch) setHasUsedFilterControl(true);
+                        setLocalSearch(nextLocalSearch);
+                      }}
+                      placeholder={localSearchPlaceholder}
+                      helperText={localSearchHelperText}
+                      size="small"
+                      fullWidth
+                      autoComplete="off"
+                      inputProps={{
+                        spellCheck: false,
+                        title: localSearchInputTitle,
+                      }}
+                      data-testid="course-registration-local-search"
+                      sx={{ flex: '1 1 360px' }}
+                      InputProps={{
+                        endAdornment: showLocalSearchInlineClearAction ? (
+                          <InputAdornment position="end">
+                            <Tooltip title="Limpiar búsqueda">
+                              <IconButton
+                                edge="end"
+                                size="small"
+                                aria-label="Limpiar búsqueda"
+                                onClick={handleClearLocalSearch}
+                              >
+                                <ClearIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </InputAdornment>
+                        ) : undefined,
+                      }}
+                    />
+                  )}
+                  {showRegistrationSortControls && (
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1}
+                      sx={{
+                        flex: showLocalSearchControl ? '0 0 auto' : '1 1 auto',
+                        minWidth: { xs: '100%', md: registrationSortKey === 'default' ? 190 : 360 },
+                      }}
+                    >
+                      <TextField
+                        select
+                        label={REGISTRATION_SORT_LABEL}
+                        value={registrationSortKey}
+                        onChange={(e) => handleRegistrationSortKeyChange(e.target.value)}
+                        size="small"
+                        sx={{ minWidth: { xs: '100%', sm: 180 } }}
+                      >
+                        {registrationSortKeys.map((key) => (
+                          <MenuItem key={key} value={key}>
+                            {registrationSortLabels[key]}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      {registrationSortKey !== 'default' && (
+                        <TextField
+                          select
+                          label={REGISTRATION_SORT_DIRECTION_LABEL}
+                          value={registrationSortDirection}
+                          onChange={(e) => handleRegistrationSortDirectionChange(e.target.value)}
+                          size="small"
+                          sx={{ minWidth: { xs: '100%', sm: 170 } }}
+                        >
+                          {registrationSortDirections.map((direction) => (
+                            <MenuItem key={direction} value={direction}>
+                              {registrationSortDirectionLabels[direction]}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
                 {showLocalSearchUtilityRow && (
                   <Stack
                     direction="row"
