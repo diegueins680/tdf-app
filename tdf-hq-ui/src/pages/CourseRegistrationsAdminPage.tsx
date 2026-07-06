@@ -51,6 +51,8 @@ import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
+type RegistrationSortKey = 'default' | 'name' | 'createdAt' | 'updatedAt' | 'course' | 'status' | 'source';
+type RegistrationSortDirection = 'asc' | 'desc';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
@@ -258,6 +260,8 @@ const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH = 64;
 const COHORT_FILTER_LABEL = 'Formulario público';
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
+const REGISTRATION_SORT_LABEL = 'Ordenar por';
+const REGISTRATION_SORT_DIRECTION_LABEL = 'Dirección';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
 const LOCAL_SEARCH_COMPACT_CONTEXT_TITLE = 'Otros datos: estado, curso, fuente, origen o nota cuando existan.';
