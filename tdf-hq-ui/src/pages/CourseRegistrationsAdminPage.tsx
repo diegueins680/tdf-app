@@ -5201,8 +5201,7 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchDigitsKey = normalizeLocalSearchDigits(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {
-    if (!localSearchKey) return registrations;
-    return registrations.filter((reg) => {
+    const matchingRegistrations = !localSearchKey ? registrations : registrations.filter((reg) => {
       const courseSlug = reg.crCourseSlug.trim();
       const haystack = [
         normalizeRegistrationNameValue(reg.crFullName),
@@ -5225,8 +5224,30 @@ export default function CourseRegistrationsAdminPage() {
 
       return false;
     });
-  }, [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, registrations]);
-  const registrationPaginationResetKey = [selectedSlug, status, localSearchKey, limit].join('|');
+
+    return sortCourseRegistrations(matchingRegistrations, {
+      cohortLabelsBySlug,
+      cohortSummaryLabelsBySlug,
+      direction: registrationSortDirection,
+      sortKey: registrationSortKey,
+    });
+  }, [
+    cohortLabelsBySlug,
+    cohortSummaryLabelsBySlug,
+    localSearchDigitsKey,
+    localSearchKey,
+    registrationSortDirection,
+    registrationSortKey,
+    registrations,
+  ]);
+  const registrationPaginationResetKey = [
+    selectedSlug,
+    status,
+    localSearchKey,
+    limit,
+    registrationSortKey,
+    registrationSortDirection,
+  ].join('|');
   const registrationIdsRequiringActionDisambiguator = useMemo(
     () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
     [searchedRegistrations],
@@ -5383,6 +5404,8 @@ export default function CourseRegistrationsAdminPage() {
   const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
     && !showAdvancedFilters;
   const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
+  const showRegistrationSortControls = loadedRegistrationCount > 1 || registrationSortKey !== 'default';
+  const showRegistrationResultsToolbar = showLocalSearchControl || showRegistrationSortControls;
   const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
   const statusFiltersSummarizeBusyListRows = showBusyListSearchOnboarding
     && status === 'all'
@@ -6531,16 +6554,20 @@ export default function CourseRegistrationsAdminPage() {
     if (slug.trim()) params.set('slug', slug.trim());
     if (status !== 'all') params.set('status', status);
     if (limit && limit !== DEFAULT_LIMIT) params.set('limit', String(limit));
+    if (registrationSortKey !== 'default') {
+      params.set('sort', registrationSortKey);
+      params.set('dir', registrationSortDirection);
+    }
     setSearchParams(params, { replace: true });
-  }, [slug, status, limit, setSearchParams]);
+  }, [slug, status, limit, registrationSortKey, registrationSortDirection, setSearchParams]);
 
   useEffect(() => {
     setCopyMessage(null);
-  }, [localSearchKey, slug, status, limit, visibleCsvScopeKey]);
+  }, [localSearchKey, slug, status, limit, registrationSortKey, registrationSortDirection, visibleCsvScopeKey]);
 
   useEffect(() => {
     setPageFlash(null);
-  }, [localSearchKey, slug, status, limit]);
+  }, [localSearchKey, slug, status, limit, registrationSortKey, registrationSortDirection]);
 
   useEffect(() => {
     if (!selectedDossier) {
@@ -6656,6 +6683,8 @@ export default function CourseRegistrationsAdminPage() {
     setSlug('');
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
+    setRegistrationSortKey('default');
+    setRegistrationSortDirection(defaultRegistrationSortDirection('default'));
     setShowAdvancedFilters(false);
   };
 
