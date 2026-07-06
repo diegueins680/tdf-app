@@ -11,7 +11,7 @@ import           Data.Char
   , isSpace
   , toLower
   )
-import           Data.List          (isPrefixOf)
+import           Data.List          (isPrefixOf, nub)
 import           Data.Maybe         (fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
@@ -84,6 +84,40 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   } deriving (Show)
+
+data LlmProviderConfig = LlmProviderConfig
+  { llmProviderName :: Text
+  , llmProviderApiBase :: Text
+  , llmProviderDefaultChatModel :: Text
+  , llmProviderChatFallbackModels :: [Text]
+  , llmProviderDefaultEmbedModel :: Text
+  } deriving (Eq, Show)
+
+llmProvider :: LlmProviderConfig
+llmProvider =
+  LlmProviderConfig
+    { llmProviderName = "openai"
+    , llmProviderApiBase = "https://api.openai.com"
+    , llmProviderDefaultChatModel = "gpt-4.1-mini"
+    , llmProviderChatFallbackModels =
+        [ "gpt-4.1-mini"
+        , "gpt-4o-mini"
+        , "gpt-4.1"
+        , "gpt-4o"
+        ]
+    , llmProviderDefaultEmbedModel = "text-embedding-3-small"
+    }
+
+llmChatModelCandidates :: Text -> [Text]
+llmChatModelCandidates primaryModel =
+  nub $
+    filter (not . T.null) $
+      T.strip primaryModel : llmProviderChatFallbackModels llmProvider
+
+normalizeLlmApiBase :: Text -> Text
+normalizeLlmApiBase base =
+  let trimmed = T.dropWhileEnd (== '/') (T.strip base)
+  in if T.null trimmed then llmProviderApiBase llmProvider else trimmed
 
 openAiEmbedDimensions :: Text -> Maybe Int
 openAiEmbedDimensions model =
@@ -586,7 +620,7 @@ loadConfig = do
   chatKitApiBaseVal <-
     validateConfiguredApiBaseUrl
       "CHATKIT_API_BASE"
-      "https://api.moonshot.ai"
+      (llmProviderApiBase llmProvider)
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
@@ -1228,10 +1262,10 @@ validateConfiguredOpenAiApiKey (Just rawKey) =
     Right apiKey -> pure apiKey
 
 defaultOpenAiEmbedModel :: Text
-defaultOpenAiEmbedModel = "text-embedding-3-small"
+defaultOpenAiEmbedModel = llmProviderDefaultEmbedModel llmProvider
 
 defaultOpenAiModel :: Text
-defaultOpenAiModel = "kimi-k2.6"
+defaultOpenAiModel = llmProviderDefaultChatModel llmProvider
 
 normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiApiKey envName rawKey

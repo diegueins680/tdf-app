@@ -26,6 +26,29 @@ void i18n.use(initReactI18next).init({
             title: 'Crear cuenta',
           },
         },
+        tdfPlatform: {
+          cta: {
+            createAccount: 'Crear cuenta',
+            fanProfile: 'Perfil fan',
+            artistProfile: 'Perfil artista',
+            createFanProfile: 'Crear perfil fan',
+            createArtistProfile: 'Crear perfil de artista',
+            viewArtistProfile: 'Ver perfil',
+            explore: 'Explorar',
+            reserveExperience: 'Reservar experiencia',
+            viewLocation: 'Ver ubicación',
+            viewReleases: 'Ver lanzamientos',
+          },
+          empty: {
+            artists: 'El carrusel se llenará automáticamente cuando existan artistas publicados en la plataforma.',
+            services: 'Pronto verás nuevas rutas TDF en este espacio.',
+            fanBenefits: 'Pronto agregaremos beneficios para fans.',
+            artistBenefits: 'Pronto agregaremos beneficios para artistas.',
+          },
+          sections: {
+            startEyebrow: 'Empieza por tu cuenta',
+          },
+        },
       },
     },
     en: {
@@ -46,6 +69,29 @@ void i18n.use(initReactI18next).init({
           },
           signupDialog: {
             title: 'Create account',
+          },
+        },
+        tdfPlatform: {
+          cta: {
+            createAccount: 'Create account',
+            fanProfile: 'Fan profile',
+            artistProfile: 'Artist profile',
+            createFanProfile: 'Create fan profile',
+            createArtistProfile: 'Create artist profile',
+            viewArtistProfile: 'View profile',
+            explore: 'Explore',
+            reserveExperience: 'Reserve experience',
+            viewLocation: 'View location',
+            viewReleases: 'View releases',
+          },
+          empty: {
+            artists: 'The carousel will fill automatically when artists are published on the platform.',
+            services: 'New TDF routes will appear here soon.',
+            fanBenefits: 'Fan benefits will appear here soon.',
+            artistBenefits: 'Artist benefits will appear here soon.',
+          },
+          sections: {
+            startEyebrow: 'Start on your own',
           },
         },
       },

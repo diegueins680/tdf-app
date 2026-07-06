@@ -8,6 +8,7 @@ import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 const PUBLIC_NAV_ITEMS = [
+  { label: 'TDF', to: '/tdf' },
   { label: 'Comunidad', to: '/fans' },
   { label: 'Tienda', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
@@ -57,7 +58,7 @@ export default function PublicBranding({
     if (location.pathname.startsWith('/marketplace')) {
       return { label: 'Necesito ayuda', kind: 'route', value: '/feedback' };
     }
-    return { label: 'Ir a la comunidad', kind: 'route', value: '/fans' };
+    return { label: 'Crear cuenta', kind: 'route', value: '/login?signup=1&redirect=/fans' };
   }, [location.pathname]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
@@ -97,9 +98,9 @@ export default function PublicBranding({
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Box
                   component={RouterLink}
-                  to="/inicio"
+                  to="/tdf"
                   sx={{ display: 'inline-flex', alignItems: 'center' }}
-                  aria-label="Ir al inicio"
+                  aria-label="Ir a TDF"
                 >
                   <BrandLogo
                     variant="wordmark"

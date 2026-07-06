@@ -4,6 +4,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Meta } from '../api/meta';
 
+type ApiStatusChipProgressSizePx = 14;
+
+export const API_STATUS_CHIP_PROGRESS_SIZE_PX: ApiStatusChipProgressSizePx = 14;
+
 export default function ApiStatusChip() {
   const { data, isError, isFetching } = useQuery({
     queryKey: ['meta', 'health-indicator'],
@@ -11,30 +15,44 @@ export default function ApiStatusChip() {
     refetchInterval: 60_000,
   });
 
-  if (isFetching) {
+  const hasStatus = data?.status != null;
+  const checkingInitialStatus = isFetching && !hasStatus;
+
+  if (checkingInitialStatus) {
     return (
       <Chip
         role="status"
         aria-live="polite"
         aria-busy="true"
-        icon={<CircularProgress size={14} color="inherit" aria-label="Verificando API" />}
+        icon={<CircularProgress size={API_STATUS_CHIP_PROGRESS_SIZE_PX} color="inherit" aria-label="Verificando API" />}
         label="API: verificando..."
+        color="info"
         size="small"
-        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: '#f8fafc' }}
+        variant="outlined"
       />
     );
   }
 
   const healthy = !isError && (data?.status ?? '').toLowerCase() === 'ok';
+  const refreshingStatus = isFetching && hasStatus;
+  const label = refreshingStatus ? 'API: actualizando...' : `API: ${healthy ? 'online' : 'offline'}`;
+  const chipColor = refreshingStatus ? 'info' : healthy ? 'success' : 'warning';
+  const chipVariant = refreshingStatus || !healthy ? 'outlined' : 'filled';
+
   return (
     <Chip
       role="status"
       aria-live="polite"
-      icon={healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />}
-      label={`API: ${healthy ? 'online' : 'offline'}`}
-      color={healthy ? 'success' : 'warning'}
+      aria-busy={refreshingStatus ? true : undefined}
+      icon={
+        refreshingStatus
+          ? <CircularProgress size={API_STATUS_CHIP_PROGRESS_SIZE_PX} color="inherit" aria-label="Actualizando API" />
+          : healthy ? <CheckCircleIcon fontSize="small" /> : <ErrorOutlineIcon fontSize="small" />
+      }
+      label={label}
+      color={chipColor}
       size="small"
-      variant={healthy ? 'filled' : 'outlined'}
+      variant={chipVariant}
     />
   );
 }

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
+import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 
 export interface SessionUser {
@@ -296,6 +297,22 @@ export function SessionProvider({ children }: SessionProviderProps) {
       return updatedSession;
     });
   }, []);
+
+  // Identify the user in analytics whenever the session changes. Reset on
+  // logout so the next user does not inherit the previous distinct id.
+  useEffect(() => {
+    const analytics = getAnalyticsClient();
+    if (!analytics.ready) return;
+    if (session?.partyId != null) {
+      analytics.identify(String(session.partyId), {
+        username: session.username,
+        displayName: session.displayName,
+        roles: session.roles,
+      });
+    } else {
+      analytics.reset();
+    }
+  }, [session]);
 
   const value = useMemo<SessionContextValue>(
     () => ({ session, loading, login, logout, setApiToken }),

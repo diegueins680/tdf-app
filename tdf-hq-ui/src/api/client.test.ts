@@ -40,6 +40,11 @@ interface MockResponseOptions {
   body?: string;
 }
 
+const HTTP_STATUS_SERVER_ERROR_BASE = 500;
+const HTTP_STATUS_BAD_GATEWAY_OFFSET = 2;
+const HTTP_STATUS_BAD_GATEWAY: NonNullable<MockResponseOptions['status']> =
+  HTTP_STATUS_SERVER_ERROR_BASE + HTTP_STATUS_BAD_GATEWAY_OFFSET;
+
 const buildResponse = (opts: MockResponseOptions = {}): Response => {
   const {
     ok = true,
@@ -228,6 +233,21 @@ describe('api client', () => {
     );
 
     await expect(get('/errors-array')).rejects.toThrow('Campo requerido');
+  });
+
+  it('falls back to the raw body when JSON error payloads are malformed', async () => {
+    const malformedBody = '{"message":"truncated"';
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: HTTP_STATUS_BAD_GATEWAY,
+        statusText: 'Bad Gateway',
+        contentType: 'application/json',
+        body: malformedBody,
+      }),
+    );
+
+    await expect(get('/malformed-error')).rejects.toThrow(malformedBody);
   });
 
   it('notifies the session layer when protected API auth has expired', async () => {

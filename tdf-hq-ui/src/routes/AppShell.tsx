@@ -83,6 +83,7 @@ export function Shell() {
     || location.pathname.startsWith('/configuracion/cursos')
     || location.pathname.startsWith('/configuracion/inscripciones-curso')
     || location.pathname.startsWith('/configuracion/usuarios-admin')
+    || location.pathname.startsWith('/configuracion/actividad')
     || location.pathname.startsWith('/configuracion/cms')
     || location.pathname.startsWith('/configuracion/roles-permisos')
     || location.pathname.startsWith('/escuela/clases')
@@ -176,6 +177,7 @@ export function ConfigurationIndexRedirect() {
     '/configuracion/whatsapp-consentimiento',
     '/configuracion/integraciones/calendario',
     '/configuracion/estado',
+    '/configuracion/actividad',
     '/configuracion/logs',
     '/configuracion/brain',
     '/configuracion/opciones-ux',

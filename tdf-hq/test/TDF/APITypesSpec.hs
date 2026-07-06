@@ -17,50 +17,50 @@ import qualified TDF.API.Facebook as Facebook
 import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
 import qualified TDF.API.Proposals as Proposals
+import TDF.API.Types (
+    ArtistTipRequest (..),
+    AssetCheckoutRequest (..),
+    BandCreate (..),
+    BandMemberInput (..),
+    ClockInRequest (..),
+    ClockOutRequest (..),
+    DriveTokenExchangeRequest (..),
+    DriveTokenRefreshRequest (..),
+    DropdownOptionCreate (..),
+    DropdownOptionUpdate (..),
+    InternPermissionCreate (..),
+    InternPermissionUpdate (..),
+    InternProfileUpdate (..),
+    InternProjectCreate (..),
+    InternProjectUpdate (..),
+    InternTaskCreate (..),
+    InternTaskUpdate (..),
+    InternTodoCreate (..),
+    InternTodoUpdate (..),
+    LabelTrackCreate (..),
+    LabelTrackUpdate (..),
+    LooseJSON,
+    MarketplaceCartItemUpdate (..),
+    MarketplaceCheckoutReq (..),
+    MarketplaceOrderUpdate (..),
+    PaypalCaptureReq (..),
+    PipelineCardCreate (..),
+    PipelineCardUpdate (..),
+    RolePayload (..),
+    ServiceCatalogCreate (..),
+    ServiceCatalogUpdate (..),
+    SessionCreate (..),
+    SessionUpdate (..),
+    UserRoleUpdatePayload (..),
+    maxMarketplaceCartItemQuantity,
+    verifyMetaWebhookSignature,
+ )
 import qualified TDF.DTO as DTO
 import qualified TDF.DTO.SocialEventsDTO as SocialEvents
 import qualified TDF.DTO.SocialSyncDTO as SocialSync
-import TDF.API.Types
-    ( AssetCheckoutRequest (..)
-    , ArtistTipRequest (..)
-    , BandCreate (..)
-    , BandMemberInput (..)
-    , ClockInRequest (..)
-    , ClockOutRequest (..)
-    , DriveTokenExchangeRequest (..)
-    , DriveTokenRefreshRequest (..)
-    , DropdownOptionCreate (..)
-    , DropdownOptionUpdate (..)
-    , InternProfileUpdate (..)
-    , InternPermissionCreate (..)
-    , InternPermissionUpdate (..)
-    , InternProjectCreate (..)
-    , InternProjectUpdate (..)
-    , InternTaskCreate (..)
-    , InternTodoCreate (..)
-    , InternTodoUpdate (..)
-    , InternTaskUpdate (..)
-    , LooseJSON
-    , MarketplaceCheckoutReq (..)
-    , MarketplaceCartItemUpdate (..)
-    , maxMarketplaceCartItemQuantity
-    , MarketplaceOrderUpdate (..)
-    , PaypalCaptureReq (..)
-    , PipelineCardCreate (..)
-    , PipelineCardUpdate (..)
-    , RolePayload (..)
-    , ServiceCatalogCreate (..)
-    , ServiceCatalogUpdate (..)
-    , SessionCreate (..)
-    , SessionUpdate (..)
-    , LabelTrackCreate (..)
-    , LabelTrackUpdate (..)
-    , UserRoleUpdatePayload (..)
-    , verifyMetaWebhookSignature
-    )
+import TDF.Models (RoleEnum (Admin, Teacher))
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
-import TDF.Models (RoleEnum (Admin, Teacher))
 import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
@@ -143,8 +143,7 @@ spec = do
     describe "ArtistTipRequest FromJSON" $ do
         it "normalizes canonical tip payloads into the Stripe request contract" $
             case decodeArtistTipRequest
-                "{\"amountCents\":2500,\"currency\":\" USD \",\"tipperName\":\" Ada Lovelace \",\"tipperEmail\":\" ADA@EXAMPLE.COM \",\"message\":\" gracias \"}"
-             of
+                "{\"amountCents\":2500,\"currency\":\" USD \",\"tipperName\":\" Ada Lovelace \",\"tipperEmail\":\" ADA@EXAMPLE.COM \",\"message\":\" gracias \"}" of
                 Left err ->
                     expectationFailure ("Expected artist tip payload to decode, got: " <> err)
                 Right (ArtistTipRequest amountVal currencyVal nameVal emailVal messageVal) -> do
@@ -192,8 +191,7 @@ spec = do
     describe "Dropdown option write payload FromJSON" $ do
         it "accepts canonical admin dropdown create and update payloads" $ do
             case decodeDropdownOptionCreate
-                "{\"docValue\":\"stage\",\"docLabel\":\"Stage\",\"docSortOrder\":3,\"docActive\":true}"
-             of
+                "{\"docValue\":\"stage\",\"docLabel\":\"Stage\",\"docSortOrder\":3,\"docActive\":true}" of
                 Left err ->
                     expectationFailure ("Expected dropdown option create payload to decode, got: " <> err)
                 Right (DropdownOptionCreate valueVal labelVal sortOrderVal activeVal) -> do
@@ -203,8 +201,7 @@ spec = do
                     activeVal `shouldBe` Just True
 
             case decodeDropdownOptionUpdate
-                "{\"douValue\":\"stage-two\",\"douLabel\":null,\"douSortOrder\":4,\"douActive\":false}"
-             of
+                "{\"douValue\":\"stage-two\",\"douLabel\":null,\"douSortOrder\":4,\"douActive\":false}" of
                 Left err ->
                     expectationFailure ("Expected dropdown option update payload to decode, got: " <> err)
                 Right (DropdownOptionUpdate valueVal labelVal sortOrderVal activeVal) -> do
@@ -308,21 +305,21 @@ spec = do
         it
             "rejects malformed prompts and model selectors before upstream calls"
             $ do
-            decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithPrompt (BL8.pack (replicate 2001 'a')))
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u0000beat")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u202Ebeat")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt/4o-mini?preview=1")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt-4o\\nmini")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
+                decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt (BL8.pack (replicate 2001 'a')))
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u0000beat")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u202Ebeat")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt/4o-mini?preview=1")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt-4o\\nmini")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
         it "rejects explicit null model selectors instead of falling back to configured defaults" $
             case decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":null}" of
@@ -359,8 +356,7 @@ spec = do
                 "{\"customerId\":null,\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}]}" of
                 Left err ->
                     err
-                        `shouldContain`
-                            "customerId must be omitted instead of null to use the session client fallback"
+                        `shouldContain` "customerId must be omitted instead of null to use the session client fallback"
                 Right value ->
                     expectationFailure
                         ( "Expected null session invoice customerId to be rejected, got: "
@@ -370,8 +366,7 @@ spec = do
     describe "social reply request FromJSON" $ do
         it "accepts canonical and legacy manual reply payloads" $ do
             case decodeInstagramReply
-                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"ig-msg-1\"}"
-             of
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"ig-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Instagram reply payload to decode, got: " <> err)
                 Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
@@ -380,8 +375,7 @@ spec = do
                     externalIdVal `shouldBe` Just "ig-msg-1"
 
             case decodeInstagramReply
-                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}"
-             of
+                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected legacy Instagram reply payload to decode, got: " <> err)
                 Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
@@ -390,8 +384,7 @@ spec = do
                     externalIdVal `shouldBe` Just "ig-msg-1"
 
             case decodeFacebookReply
-                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"fb-msg-1\"}"
-             of
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"fb-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Facebook reply payload to decode, got: " <> err)
                 Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
@@ -400,8 +393,7 @@ spec = do
                     externalIdVal `shouldBe` Just "fb-msg-1"
 
             case decodeFacebookReply
-                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}"
-             of
+                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected legacy Facebook reply payload to decode, got: " <> err)
                 Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
@@ -410,8 +402,7 @@ spec = do
                     externalIdVal `shouldBe` Just "fb-msg-1"
 
             case decodeWhatsAppReply
-                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":\"wa-msg-1\"}"
-             of
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":\"wa-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical WhatsApp reply payload to decode, got: " <> err)
                 Right (API.WhatsAppReplyReq senderVal messageVal externalIdVal) -> do
@@ -430,8 +421,7 @@ spec = do
                 "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
             case decodeWhatsAppReply
-                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":null}"
-             of
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":null}" of
                 Left err ->
                     err `shouldContain` "wrExternalId must be omitted instead of null"
                 Right value ->
@@ -440,8 +430,7 @@ spec = do
 
         it "normalizes social reply ids and text before handler fallback dispatch" $ do
             case decodeInstagramReply
-                "{\"senderId\":\" ig-sender_1 \",\"message\":\" Hola\\nlinea dos \",\"externalId\":\" mid.ig.1 \"}"
-             of
+                "{\"senderId\":\" ig-sender_1 \",\"message\":\" Hola\\nlinea dos \",\"externalId\":\" mid.ig.1 \"}" of
                 Left err ->
                     expectationFailure ("Expected normalized Instagram reply payload, got: " <> err)
                 Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
@@ -450,8 +439,7 @@ spec = do
                     externalIdVal `shouldBe` Just "mid.ig.1"
 
             case decodeFacebookReply
-                "{\"senderId\":\" fb-sender_1 \",\"message\":\" Hola\\tMeta \",\"externalId\":\" mid.fb.1 \"}"
-             of
+                "{\"senderId\":\" fb-sender_1 \",\"message\":\" Hola\\tMeta \",\"externalId\":\" mid.fb.1 \"}" of
                 Left err ->
                     expectationFailure ("Expected normalized Facebook reply payload, got: " <> err)
                 Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
@@ -482,24 +470,23 @@ spec = do
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"}}"
-             of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"}}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal) -> do
-                        fullNameVal `shouldBe` Just "Ada Lovelace"
-                        emailVal `shouldBe` Just "ada@example.com"
-                        phoneVal `shouldBe` Just "+593991234567"
-                        sourceVal `shouldBe` "landing"
-                        howHeardVal `shouldBe` Just "instagram"
-                        case utmVal of
-                            Nothing ->
-                                expectationFailure "Expected canonical course registration payload to preserve utm tags"
-                            Just (Courses.UTMTags utmSourceVal utmMediumVal utmCampaignVal utmContentVal) -> do
-                                    utmSourceVal `shouldBe` Just "ig"
-                                    utmMediumVal `shouldBe` Just "social"
-                                    utmCampaignVal `shouldBe` Just "launch"
-                                    utmContentVal `shouldBe` Just "reel"
+                    fullNameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    phoneVal `shouldBe` Just "+593991234567"
+                    sourceVal `shouldBe` "landing"
+                    howHeardVal `shouldBe` Just "instagram"
+                    case utmVal of
+                        Nothing ->
+                            expectationFailure "Expected canonical course registration payload to preserve utm tags"
+                        Just (Courses.UTMTags utmSourceVal utmMediumVal utmCampaignVal utmContentVal) -> do
+                            utmSourceVal `shouldBe` Just "ig"
+                            utmMediumVal `shouldBe` Just "social"
+                            utmCampaignVal `shouldBe` Just "launch"
+                            utmContentVal `shouldBe` Just "reel"
 
         it "rejects unexpected top-level or nested utm keys so malformed registration bodies fail explicitly" $ do
             decodeCourseRegistration
@@ -530,8 +517,7 @@ spec = do
                     mobileSdkStripeVersionVal `shouldBe` Nothing
 
             case decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":\" 2026-04-22.dahlia \"}"
-             of
+                "{\"mobileSdkStripeVersion\":\" 2026-04-22.dahlia \"}" of
                 Left err ->
                     expectationFailure
                         ("Expected course payment intent payload to decode, got: " <> err)
@@ -555,8 +541,7 @@ spec = do
     describe "AdsInquiry FromJSON" $ do
         it "accepts canonical public ads inquiry payloads" $
             case decodeAdsInquiry
-                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"course\":\"Ableton\",\"message\":\"Quiero info\",\"channel\":\"instagram\"}"
-             of
+                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"course\":\"Ableton\",\"message\":\"Quiero info\",\"channel\":\"instagram\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical ads inquiry payload to decode, got: " <> err)
                 Right (API.AdsInquiry nameVal emailVal phoneVal courseVal messageVal channelVal) -> do
@@ -593,8 +578,7 @@ spec = do
     describe "AdsAssistRequest FromJSON" $ do
         it "accepts canonical public ads assist payloads" $
             case decodeAdsAssist
-                "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":\"whatsapp\",\"aarAdId\":42,\"aarCampaignId\":7}"
-             of
+                "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":\"whatsapp\",\"aarAdId\":42,\"aarCampaignId\":7}" of
                 Left err ->
                     expectationFailure ("Expected canonical ads assist payload to decode, got: " <> err)
                 Right (DTO.AdsAssistRequest adIdVal campaignIdVal messageVal channelVal partyIdVal) -> do
@@ -628,8 +612,7 @@ spec = do
     describe "Ads admin write payload FromJSON" $ do
         it "accepts canonical campaign, ad creative, and example write payloads" $ do
             case decodeCampaignUpsert
-                "{\"cuName\":\"Meta Leads\",\"cuObjective\":\"book trials\",\"cuPlatform\":\"instagram\",\"cuStatus\":\"active\",\"cuBudgetCents\":12000}"
-             of
+                "{\"cuName\":\"Meta Leads\",\"cuObjective\":\"book trials\",\"cuPlatform\":\"instagram\",\"cuStatus\":\"active\",\"cuBudgetCents\":12000}" of
                 Left err ->
                     expectationFailure ("Expected campaign payload to decode, got: " <> err)
                 Right (DTO.CampaignUpsert idVal nameVal objectiveVal platformVal statusVal budgetVal _ _) -> do
@@ -641,8 +624,7 @@ spec = do
                     budgetVal `shouldBe` Just 12000
 
             case decodeAdCreativeUpsert
-                "{\"acuCampaignId\":7,\"acuExternalId\":\"ad-123\",\"acuName\":\"Trial class reel\",\"acuChannel\":\"instagram\",\"acuStatus\":\"active\"}"
-             of
+                "{\"acuCampaignId\":7,\"acuExternalId\":\"ad-123\",\"acuName\":\"Trial class reel\",\"acuChannel\":\"instagram\",\"acuStatus\":\"active\"}" of
                 Left err ->
                     expectationFailure ("Expected ad creative payload to decode, got: " <> err)
                 Right (DTO.AdCreativeUpsert idVal campaignIdVal externalIdVal nameVal channelVal _ _ _ statusVal _) -> do
@@ -654,8 +636,7 @@ spec = do
                     statusVal `shouldBe` Just "active"
 
             case decodeAdConversationExampleCreate
-                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro, te cuento opciones\",\"aecTags\":[\"lead\",\"trial\"]}"
-             of
+                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro, te cuento opciones\",\"aecTags\":[\"lead\",\"trial\"]}" of
                 Left err ->
                     expectationFailure ("Expected ad conversation example payload to decode, got: " <> err)
                 Right (DTO.AdConversationExampleCreate userMessageVal assistantMessageVal tagsVal) -> do
@@ -677,8 +658,7 @@ spec = do
     describe "CmsContentIn FromJSON" $ do
         it "accepts canonical CMS content payloads" $
             case decodeCmsContent
-                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}"
-             of
+                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}" of
                 Left err ->
                     expectationFailure ("Expected canonical CMS content payload to decode, got: " <> err)
                 Right (API.CmsContentIn slugVal localeVal titleVal statusVal payloadVal) -> do
@@ -704,8 +684,7 @@ spec = do
     describe "CourseRegistrationFollowUp payload FromJSON" $ do
         it "accepts canonical follow-up create and update payloads" $ do
             case decodeFollowUpCreate
-                "{\"entryType\":\"call\",\"subject\":\"Confirm payment\",\"notes\":\"Client asked to pay tomorrow\",\"attachmentUrl\":\"https://files.example.com/receipt.pdf\",\"attachmentName\":\"receipt.pdf\",\"nextFollowUpAt\":\"2026-05-02T15:00:00Z\"}"
-             of
+                "{\"entryType\":\"call\",\"subject\":\"Confirm payment\",\"notes\":\"Client asked to pay tomorrow\",\"attachmentUrl\":\"https://files.example.com/receipt.pdf\",\"attachmentName\":\"receipt.pdf\",\"nextFollowUpAt\":\"2026-05-02T15:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course follow-up create payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationFollowUpCreate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
@@ -717,8 +696,7 @@ spec = do
                     nextFollowUpAtVal `shouldBe` Just "2026-05-02T15:00:00Z"
 
             case decodeFollowUpUpdate
-                "{\"notes\":\"Moved reminder to next week\",\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
-             of
+                "{\"notes\":\"Moved reminder to next week\",\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course follow-up update payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationFollowUpUpdate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
@@ -786,8 +764,7 @@ spec = do
                     notesVal `shouldBe` Just "Follow up after bank transfer"
 
             case decodeCourseRegistrationReceiptCreate
-                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}"
-             of
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course receipt create payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationReceiptCreate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
@@ -797,8 +774,7 @@ spec = do
                     notesVal `shouldBe` Just "Banco Pichincha"
 
             case decodeCourseRegistrationReceiptUpdate
-                "{\"notes\":\"Comprobante actualizado\"}"
-             of
+                "{\"notes\":\"Comprobante actualizado\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course receipt update payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
@@ -808,8 +784,7 @@ spec = do
                     notesVal `shouldBe` Just "Comprobante actualizado"
 
             case decodeCourseUpsert
-                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}"
-             of
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}" of
                 Left err ->
                     expectationFailure ("Expected canonical course upsert payload to decode, got: " <> err)
                 Right (Courses.CourseUpsert slugVal titleVal _ _ _ priceCentsVal currencyVal capacityVal _ _ _ _ _ _ dawsVal includesVal instructorNameVal _ _ sessionsVal syllabusVal) -> do
@@ -929,8 +904,7 @@ spec = do
     describe "Proposal payload FromJSON" $ do
         it "accepts canonical create, update, and version payloads" $ do
             case decodeProposalCreate
-                "{\"pcTitle\":\"Live session package\",\"pcStatus\":\"draft\",\"pcContactEmail\":\"sales@example.com\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":\"Initial draft\"}"
-             of
+                "{\"pcTitle\":\"Live session package\",\"pcStatus\":\"draft\",\"pcContactEmail\":\"sales@example.com\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":\"Initial draft\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal create payload to decode, got: " <> err)
                 Right (Proposals.ProposalCreate titleVal statusVal _ _ _ contactEmailVal _ _ _ latexVal templateKeyVal versionNotesVal) -> do
@@ -942,8 +916,7 @@ spec = do
                     versionNotesVal `shouldBe` Just "Initial draft"
 
             case decodeProposalUpdate
-                "{\"puTitle\":\"Updated package\",\"puStatus\":\"sent\",\"puClientPartyId\":42,\"puNotes\":\"Waiting on signature\"}"
-             of
+                "{\"puTitle\":\"Updated package\",\"puStatus\":\"sent\",\"puClientPartyId\":42,\"puNotes\":\"Waiting on signature\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal update payload to decode, got: " <> err)
                 Right (Proposals.ProposalUpdate titleVal statusVal _ clientPartyIdVal _ _ _ _ notesVal) -> do
@@ -953,8 +926,7 @@ spec = do
                     notesVal `shouldBe` Just (Just "Waiting on signature")
 
             case decodeProposalVersionCreate
-                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":\"Regenerated PDF\"}"
-             of
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":\"Regenerated PDF\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal version payload to decode, got: " <> err)
                 Right (Proposals.ProposalVersionCreate latexVal templateKeyVal notesVal) -> do
@@ -976,12 +948,20 @@ spec = do
                         ("Expected proposal clear patch payload to decode, got: " <> err)
                 Right
                     ( Proposals.ProposalUpdate
-                        _ _ _ clientPartyIdVal _ contactEmailVal _ pipelineCardIdVal notesVal
-                      ) -> do
-                    clientPartyIdVal `shouldBe` Just Nothing
-                    contactEmailVal `shouldBe` Just Nothing
-                    pipelineCardIdVal `shouldBe` Just Nothing
-                    notesVal `shouldBe` Just Nothing
+                            _
+                            _
+                            _
+                            clientPartyIdVal
+                            _
+                            contactEmailVal
+                            _
+                            pipelineCardIdVal
+                            notesVal
+                        ) -> do
+                        clientPartyIdVal `shouldBe` Just Nothing
+                        contactEmailVal `shouldBe` Just Nothing
+                        pipelineCardIdVal `shouldBe` Just Nothing
+                        notesVal `shouldBe` Just Nothing
 
         it "rejects unexpected keys so malformed proposal writes fail explicitly" $ do
             decodeProposalCreate
@@ -1056,8 +1036,7 @@ spec = do
     describe "PipelineCard payload FromJSON" $ do
         it "accepts canonical pipeline create and patch payloads" $ do
             case decodePipelineCardCreate
-                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"stage\":\"Inquiry\",\"sortOrder\":2,\"notes\":\"Needs quote\"}"
-             of
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"stage\":\"Inquiry\",\"sortOrder\":2,\"notes\":\"Needs quote\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card create payload to decode, got: " <> err)
                 Right (PipelineCardCreate titleVal artistVal stageVal sortOrderVal notesVal) -> do
@@ -1068,8 +1047,7 @@ spec = do
                     notesVal `shouldBe` Just "Needs quote"
 
             case decodePipelineCardUpdate
-                "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}"
-             of
+                "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card patch payload to decode, got: " <> err)
                 Right (PipelineCardUpdate titleVal artistVal stageVal sortOrderVal notesVal) -> do
@@ -1113,8 +1091,7 @@ spec = do
     describe "Session write payload FromJSON" $ do
         it "accepts canonical session create payloads" $
             case decodeSessionCreate
-                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":\"confirmed\"}"
-             of
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":\"confirmed\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical session create payload to decode, got: " <> err)
                 Right (SessionCreate _ _ _ serviceVal _ _ engineerVal _ roomIdsVal _ _ _ _ _ _ statusVal) -> do
@@ -1125,16 +1102,16 @@ spec = do
 
         it "preserves explicit nulls on nullable session patch fields" $ do
             case decodeSessionUpdate
-                "{\"suBookingRef\":null,\"suAssistantRef\":null,\"suSampleRate\":null,\"suNotes\":null}"
-             of
+                "{\"suBookingRef\":null,\"suAssistantRef\":null,\"suSampleRate\":null,\"suNotes\":null}" of
                 Left err ->
                     expectationFailure ("Expected nullable session patch payload to decode, got: " <> err)
-                Right SessionUpdate
-                    { suBookingRef = bookingRefVal
-                    , suAssistantRef = assistantRefVal
-                    , suSampleRate = sampleRateVal
-                    , suNotes = notesVal
-                    } -> do
+                Right
+                    SessionUpdate
+                        { suBookingRef = bookingRefVal
+                        , suAssistantRef = assistantRefVal
+                        , suSampleRate = sampleRateVal
+                        , suNotes = notesVal
+                        } -> do
                         bookingRefVal `shouldBe` Just Nothing
                         assistantRefVal `shouldBe` Just Nothing
                         sampleRateVal `shouldBe` Just Nothing
@@ -1192,8 +1169,7 @@ spec = do
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
         it "accepts canonical payloads and trims request inputs" $ do
             case decodeInstagramOAuthExchange
-                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}"
-             of
+                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Instagram OAuth exchange payload to decode, got: " <> err)
                 Right (InstagramOAuth.InstagramOAuthExchangeRequest codeVal redirectUriVal) -> do
@@ -1243,8 +1219,7 @@ spec = do
     describe "Calendar admin request FromJSON" $ do
         it "normalizes canonical token exchange and sync payloads before handlers call Google" $ do
             case decodeCalendarTokenExchange
-                "{\"code\":\" oauth-code-123 \",\"calendarId\":\" primary \"}"
-             of
+                "{\"code\":\" oauth-code-123 \",\"calendarId\":\" primary \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical calendar token payload to decode, got: " <> err)
                 Right (Calendar.TokenExchangeIn codeVal redirectUriVal calendarIdVal) -> do
@@ -1253,8 +1228,7 @@ spec = do
                     calendarIdVal `shouldBe` "primary"
 
             case decodeCalendarSync
-                "{\"calendarId\":\" primary \",\"from\":\"2026-05-02T15:00:00Z\",\"to\":\"2026-05-02T16:00:00Z\"}"
-             of
+                "{\"calendarId\":\" primary \",\"from\":\"2026-05-02T15:00:00Z\",\"to\":\"2026-05-02T16:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical calendar sync payload to decode, got: " <> err)
                 Right (Calendar.SyncRequest calendarIdVal fromVal toVal) -> do
@@ -1269,14 +1243,12 @@ spec = do
                     , "integraciones/calendario \""
                     , ",\"calendarId\":\"primary\"}"
                     ]
-                )
-             of
+                ) of
                 Left err ->
                     expectationFailure ("Expected canonical calendar redirectUri to decode, got: " <> err)
                 Right (Calendar.TokenExchangeIn _ redirectUriVal _) ->
                     redirectUriVal
-                        `shouldBe`
-                            Just "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+                        `shouldBe` Just "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
 
         it "rejects blank, typoed, or inverted calendar admin bodies before ambiguous Google calls" $ do
             let oversizedCalendarId =
@@ -1389,123 +1361,126 @@ spec = do
         it
             "normalizes canonical Drive token exchange and refresh payloads before handlers call Google"
             $ do
-            case decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\" 4/0Adeu5OAuthCode \""
-                    , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \"}"
-                    ])
-             of
-                Left err ->
-                    expectationFailure
-                        ("Expected canonical Drive token payload to decode, got: " <> err)
-                Right (DriveTokenExchangeRequest codeVal verifierVal redirectUriVal) -> do
-                    codeVal `shouldBe` "4/0Adeu5OAuthCode"
-                    verifierVal `shouldBe` "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
-                    redirectUriVal `shouldBe` Nothing
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\" 4/0Adeu5OAuthCode \""
+                        , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \"}"
+                        ]
+                    ) of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive token payload to decode, got: " <> err)
+                    Right (DriveTokenExchangeRequest codeVal verifierVal redirectUriVal) -> do
+                        codeVal `shouldBe` "4/0Adeu5OAuthCode"
+                        verifierVal `shouldBe` "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                        redirectUriVal `shouldBe` Nothing
 
-            case decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\"4/0Adeu5OAuthCode\""
-                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
-                    , ",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/"
-                    , "google-drive/callback \"}"
-                    ])
-             of
-                Left err ->
-                    expectationFailure
-                        ("Expected canonical Drive redirectUri payload to decode, got: " <> err)
-                Right (DriveTokenExchangeRequest _ _ redirectUriVal) ->
-                    redirectUriVal
-                        `shouldBe`
-                            Just "https://tdf-app.pages.dev/oauth/google-drive/callback"
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"4/0Adeu5OAuthCode\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/"
+                        , "google-drive/callback \"}"
+                        ]
+                    ) of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive redirectUri payload to decode, got: " <> err)
+                    Right (DriveTokenExchangeRequest _ _ redirectUriVal) ->
+                        redirectUriVal
+                            `shouldBe` Just "https://tdf-app.pages.dev/oauth/google-drive/callback"
 
-            case decodeDriveTokenRefresh "{\"refreshToken\":\" 1//refresh-token_ABC.123 \"}" of
-                Left err ->
-                    expectationFailure
-                        ("Expected canonical Drive refresh payload to decode, got: " <> err)
-                Right (DriveTokenRefreshRequest refreshTokenVal) ->
-                    refreshTokenVal `shouldBe` "1//refresh-token_ABC.123"
+                case decodeDriveTokenRefresh "{\"refreshToken\":\" 1//refresh-token_ABC.123 \"}" of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive refresh payload to decode, got: " <> err)
+                    Right (DriveTokenRefreshRequest refreshTokenVal) ->
+                        refreshTokenVal `shouldBe` "1//refresh-token_ABC.123"
 
         it
             "rejects blank, typoed, or malformed Drive token bodies before ambiguous Google calls"
             $ do
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson "   " "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson "oauth code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson
-                    "oauth\\u202Ecode"
-                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson
-                    "oauth-cod\\u00E9"
-                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson "oauth-code" "short")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (driveTokenExchangeJson "oauth-code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP/")
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\"oauth-code\""
-                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
-                    , ",\"syncCursor\":\"stale\"}"
-                    ])
-                `shouldSatisfy` isLeft
-            decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\"oauth-code\""
-                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
-                    , ",\"redirectUri\":\"   \"}"
-                    ])
-                `shouldSatisfy` isLeft
-            case decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\"oauth-code\""
-                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
-                    , ",\"redirectUri\":null}"
-                    ])
-             of
-                Left err ->
-                    err `shouldContain` "redirectUri must be omitted instead of null"
-                Right value ->
-                    expectationFailure
-                        ("Expected null Drive redirectUri to be rejected, got: " <> show value)
-            decodeDriveTokenExchange
-                (BL8.concat
-                    [ "{\"code\":\"oauth-code\""
-                    , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
-                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/"
-                    , "google-drive/callback bad\"}"
-                    ])
-                `shouldSatisfy` isLeft
-            decodeDriveTokenRefresh
-                "{\"refreshToken\":\"   \"}"
-                `shouldSatisfy` isLeft
-            decodeDriveTokenRefresh
-                "{\"refreshToken\":\"refresh\\ntoken\"}"
-                `shouldSatisfy` isLeft
-            decodeDriveTokenRefresh
-                "{\"refreshToken\":\"refresh\\u202Etoken\"}"
-                `shouldSatisfy` isLeft
-            decodeDriveTokenRefresh
-                "{\"refreshToken\":\"refresh-tok\\u00E9n\"}"
-                `shouldSatisfy` isLeft
-            decodeDriveTokenRefresh
-                "{\"refreshToken\":\"refresh-token\",\"refresh_token\":\"legacy\"}"
-                `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "   " "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( driveTokenExchangeJson
+                        "oauth\\u202Ecode"
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( driveTokenExchangeJson
+                        "oauth-cod\\u00E9"
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth-code" "short")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth-code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP/")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"syncCursor\":\"stale\"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\"   \"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":null}"
+                        ]
+                    ) of
+                    Left err ->
+                        err `shouldContain` "redirectUri must be omitted instead of null"
+                    Right value ->
+                        expectationFailure
+                            ("Expected null Drive redirectUri to be rejected, got: " <> show value)
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/"
+                        , "google-drive/callback bad\"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"   \"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh\\ntoken\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh\\u202Etoken\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh-tok\\u00E9n\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh-token\",\"refresh_token\":\"legacy\"}"
+                    `shouldSatisfy` isLeft
 
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
         it "accepts canonical service-marketplace booking payloads" $
             case decodeServiceMarketplaceBooking
-                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\" bank_transfer \"}"
-             of
+                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\" bank_transfer \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical service-marketplace booking payload to decode, got: " <> err)
                 Right (API.ServiceMarketplaceBookingReq adIdVal slotIdVal titleVal notesVal paymentMethodVal) -> do
@@ -1537,8 +1512,7 @@ spec = do
     describe "Service catalog write payload FromJSON" $ do
         it "accepts canonical service catalog create and update payloads, including explicit clear updates" $ do
             case decodeServiceCatalogCreate
-                "{\"sccName\":\"Podcast\",\"sccRateCents\":4500,\"sccCurrency\":\"usd\",\"sccBillingUnit\":\"session\",\"sccActive\":true}"
-             of
+                "{\"sccName\":\"Podcast\",\"sccRateCents\":4500,\"sccCurrency\":\"usd\",\"sccBillingUnit\":\"session\",\"sccActive\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical service catalog create payload to decode, got: " <> err)
                 Right (ServiceCatalogCreate nameVal _ _ rateCentsVal currencyVal billingUnitVal taxBpsVal activeVal) -> do
@@ -1550,8 +1524,7 @@ spec = do
                     activeVal `shouldBe` Just True
 
             case decodeServiceCatalogUpdate
-                "{\"scuName\":\"Podcast Pro\",\"scuRateCents\":null,\"scuBillingUnit\":null,\"scuTaxBps\":1200,\"scuActive\":false}"
-             of
+                "{\"scuName\":\"Podcast Pro\",\"scuRateCents\":null,\"scuBillingUnit\":null,\"scuTaxBps\":1200,\"scuActive\":false}" of
                 Left err ->
                     expectationFailure ("Expected canonical service catalog update payload to decode, got: " <> err)
                 Right (ServiceCatalogUpdate nameVal _ _ rateCentsVal _ billingUnitVal taxBpsVal activeVal) -> do
@@ -1578,8 +1551,7 @@ spec = do
                     case decodeServiceCatalogCreate payload of
                         Left err ->
                             err
-                                `shouldContain`
-                                    (fieldName <> " must be omitted instead of null")
+                                `shouldContain` (fieldName <> " must be omitted instead of null")
                         Right value ->
                             expectationFailure
                                 ("Expected null service catalog default to be rejected, got: " <> show value)
@@ -1608,8 +1580,7 @@ spec = do
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do
             case decodeServiceAdCreate
-                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"description\":\"Detailed feedback\",\"feeCents\":5000,\"currency\":\"USD\",\"slotMinutes\":90}"
-             of
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"description\":\"Detailed feedback\",\"feeCents\":5000,\"currency\":\"USD\",\"slotMinutes\":90}" of
                 Left err ->
                     expectationFailure ("Expected canonical service ad create payload to decode, got: " <> err)
                 Right (API.ServiceAdCreateReq serviceCatalogIdVal roleTagVal headlineVal descriptionVal feeCentsVal currencyVal slotMinutesVal) -> do
@@ -1622,8 +1593,7 @@ spec = do
                     slotMinutesVal `shouldBe` Just 90
 
             case decodeServiceAdSlotCreate
-                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\"}"
-             of
+                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical service ad slot create payload to decode, got: " <> err)
                 Right (API.ServiceAdSlotCreateReq startsAtVal endsAtVal) -> do
@@ -1648,13 +1618,14 @@ spec = do
 
     describe "BandCreate FromJSON" $ do
         it "accepts canonical CRM band creation payloads" $
-            case decodeBandCreate (BL8.concat
-                [ "{\"bcName\":\"TDF House Band\""
-                , ",\"bcLabelArtist\":true"
-                , ",\"bcPrimaryGenre\":\"jazz\""
-                , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\"}]}"
-                ])
-             of
+            case decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcLabelArtist\":true"
+                    , ",\"bcPrimaryGenre\":\"jazz\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\"}]}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure ("Expected band create payload to decode, got: " <> err)
                 Right payload -> do
@@ -1669,14 +1640,15 @@ spec = do
                             expectationFailure ("Expected one band member, got: " <> show members)
 
         it "normalizes optional member roles before band creation stores them" $ do
-            case decodeBandCreate (BL8.concat
-                [ "{\"bcName\":\"TDF House Band\""
-                , ",\"bcMembers\":["
-                , "{\"bmPartyId\":42,\"bmRole\":\"  keys  \"},"
-                , "{\"bmPartyId\":43,\"bmRole\":\"   \"}"
-                , "]}"
-                ])
-             of
+            case decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":["
+                    , "{\"bmPartyId\":42,\"bmRole\":\"  keys  \"},"
+                    , "{\"bmPartyId\":43,\"bmRole\":\"   \"}"
+                    , "]}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure ("Expected band member roles to normalize, got: " <> err)
                 Right payload ->
@@ -1691,10 +1663,12 @@ spec = do
             decodeBandCreate
                 "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"members\":[]}"
                 `shouldSatisfy` isLeft
-            decodeBandCreate (BL8.concat
-                [ "{\"bcName\":\"TDF House Band\""
-                , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
-                ])
+            decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
 
         it "rejects malformed member ids and roles before band creation handler fallbacks" $ do
@@ -1707,24 +1681,27 @@ spec = do
                                 ("Expected malformed band create to fail, got: " <> show payload)
 
             assertInvalid
-                (BL8.concat
+                ( BL8.concat
                     [ "{\"bcName\":\"TDF House Band\""
                     , ",\"bcMembers\":[{\"bmPartyId\":0,\"bmRole\":\"keys\"}]}"
-                    ])
+                    ]
+                )
                 "bmPartyId must be a positive integer"
             assertInvalid
-                (BL8.concat
+                ( BL8.concat
                     [ "{\"bcName\":\"TDF House Band\""
                     , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\\nlead\"}]}"
-                    ])
+                    ]
+                )
                 "bmRole must not contain control characters"
             assertInvalid
-                (BL8.concat
+                ( BL8.concat
                     [ "{\"bcName\":\"TDF House Band\""
                     , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\""
                     , BL8.pack (replicate 81 'a')
                     , "\"}]}"
-                    ])
+                    ]
+                )
                 "bmRole must be 80 characters or fewer"
 
         it "rejects null band create defaults so omitted fields stay intentional" $ do
@@ -1754,8 +1731,7 @@ spec = do
     describe "MarketplaceCheckoutReq FromJSON" $ do
         it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $
             case decodeMarketplaceCheckout
-                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593 99 123 4567   \"}"
-             of
+                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593 99 123 4567   \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical marketplace checkout payload to decode, got: " <> err)
                 Right payload -> do
@@ -1817,19 +1793,20 @@ spec = do
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+1234567890123456\"}"
                 `shouldSatisfy` isLeft
-            decodeMarketplaceCheckout (BL8.concat
-                [ "{\"mcrBuyerName\":\"Ada Lovelace\""
-                , ",\"mcrBuyerEmail\":\"ada@example.com\""
-                , ",\"mcrBuyerPhone\":\"+\\u0665\\u0669\\u0663"
-                , "\\u0669\\u0669\\u0661\\u0662\\u0663\\u0664\\u0665\"}"
-                ])
+            decodeMarketplaceCheckout
+                ( BL8.concat
+                    [ "{\"mcrBuyerName\":\"Ada Lovelace\""
+                    , ",\"mcrBuyerEmail\":\"ada@example.com\""
+                    , ",\"mcrBuyerPhone\":\"+\\u0665\\u0669\\u0663"
+                    , "\\u0669\\u0669\\u0661\\u0662\\u0663\\u0664\\u0665\"}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
 
     describe "AssetCheckoutRequest FromJSON" $ do
         it "accepts canonical asset checkout payloads" $
             case decodeAssetCheckout
-                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}"
-             of
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}" of
                 Left err ->
                     expectationFailure ("Expected asset checkout payload to decode, got: " <> err)
                 Right payload -> do
@@ -1839,8 +1816,7 @@ spec = do
 
         it "rejects null checkout decision fields before handler fallback validation" $ do
             case decodeAssetCheckout
-                "{\"coTargetKind\":null,\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}"
-             of
+                "{\"coTargetKind\":null,\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}" of
                 Left err ->
                     err `shouldContain` "coTargetKind must be provided instead of null"
                 Right value ->
@@ -1848,8 +1824,7 @@ spec = do
                         ("Expected null checkout target kind to fail, got: " <> show value)
 
             case decodeAssetCheckout
-                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":null}"
-             of
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":null}" of
                 Left err ->
                     err `shouldContain` "coDisposition must be provided instead of null"
                 Right value ->
@@ -1868,25 +1843,28 @@ spec = do
                                 )
             mapM_
                 (uncurry assertNullRejected)
-                [ ( "coTargetParty"
-                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":null,\"coDisposition\":\"loan\"}"
-                  )
-                , ( "coPaymentAmount"
-                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coPaymentAmount\":null}"
-                  )
-                , ( "coDueAt"
-                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coDueAt\":null}"
-                  )
-                , ( "coNotes"
-                  , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coNotes\":null}"
-                  )
+                [
+                    ( "coTargetParty"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":null,\"coDisposition\":\"loan\"}"
+                    )
+                ,
+                    ( "coPaymentAmount"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coPaymentAmount\":null}"
+                    )
+                ,
+                    ( "coDueAt"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coDueAt\":null}"
+                    )
+                ,
+                    ( "coNotes"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coNotes\":null}"
+                    )
                 ]
 
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\" 1 \",\"mciuQuantity\":2}"
-             of
+                "{\"mciuListingId\":\" 1 \",\"mciuQuantity\":2}" of
                 Left err ->
                     expectationFailure ("Expected marketplace cart item payload to decode, got: " <> err)
                 Right payload -> do
@@ -1895,8 +1873,7 @@ spec = do
 
         it "accepts cart item removal and the configured public quantity cap" $ do
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":0}"
-             of
+                "{\"mciuListingId\":\"1\",\"mciuQuantity\":0}" of
                 Left err ->
                     expectationFailure ("Expected zero quantity cart item payload to decode, got: " <> err)
                 Right payload ->
@@ -1965,8 +1942,7 @@ spec = do
 
         it "rejects null order status instead of silently treating it as omitted" $
             case decodeMarketplaceOrderUpdate
-                "{\"mouStatus\":null,\"mouPaymentProvider\":\"paypal\"}"
-             of
+                "{\"mouStatus\":null,\"mouPaymentProvider\":\"paypal\"}" of
                 Left err ->
                     err `shouldContain` "mouStatus must be omitted instead of null"
                 Right value ->
@@ -1976,8 +1952,7 @@ spec = do
     describe "PaypalCaptureReq FromJSON" $ do
         it "accepts canonical PayPal capture payloads and trims identifiers" $
             case decodePaypalCapture
-                "{\"pcCaptureOrderId\":\" 42 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}"
-             of
+                "{\"pcCaptureOrderId\":\" 42 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}" of
                 Left err ->
                     expectationFailure ("Expected PayPal capture payload to decode, got: " <> err)
                 Right payload -> do
@@ -2018,8 +1993,7 @@ spec = do
     describe "LabelTrack write payload FromJSON" $ do
         it "accepts canonical label track create and update payloads" $ do
             case decodeLabelTrackCreate
-                "{\"ltcTitle\":\"Master final\",\"ltcNote\":\"Check credits\",\"ltcOwnerId\":8}"
-             of
+                "{\"ltcTitle\":\"Master final\",\"ltcNote\":\"Check credits\",\"ltcOwnerId\":8}" of
                 Left err ->
                     expectationFailure ("Expected label track create payload to decode, got: " <> err)
                 Right (LabelTrackCreate titleVal noteVal ownerIdVal) -> do
@@ -2028,8 +2002,7 @@ spec = do
                     ownerIdVal `shouldBe` Just 8
 
             case decodeLabelTrackUpdate
-                "{\"ltuTitle\":\"Master delivered\",\"ltuNote\":\"\",\"ltuStatus\":\"done\"}"
-             of
+                "{\"ltuTitle\":\"Master delivered\",\"ltuNote\":\"\",\"ltuStatus\":\"done\"}" of
                 Left err ->
                     expectationFailure ("Expected label track update payload to decode, got: " <> err)
                 Right (LabelTrackUpdate titleVal noteVal statusVal) -> do
@@ -2150,8 +2123,7 @@ spec = do
     describe "InternTaskCreate FromJSON" $ do
         it "accepts canonical task create payloads" $
             case decodeInternTaskCreate
-                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}"
-             of
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern task create payload to decode, got: " <> err)
                 Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal dueAtVal) -> do
@@ -2214,8 +2186,7 @@ spec = do
     describe "InternProject payload FromJSON" $ do
         it "accepts canonical project payloads and preserves explicit clears" $ do
             case decodeInternProjectCreate
-                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}"
-             of
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern project create payload to decode, got: " <> err)
                 Right (InternProjectCreate titleVal descriptionVal statusVal startAtVal dueAtVal) -> do
@@ -2267,8 +2238,7 @@ spec = do
     describe "InternPermission payload FromJSON" $ do
         it "accepts canonical permission payloads and preserves explicit note clears" $ do
             case decodeInternPermissionCreate
-                "{\"ipcCategory\":\"leave\",\"ipcReason\":\"Dentist\",\"ipcStartAt\":\"2026-04-20\",\"ipcEndAt\":\"2026-04-21\"}"
-             of
+                "{\"ipcCategory\":\"leave\",\"ipcReason\":\"Dentist\",\"ipcStartAt\":\"2026-04-20\",\"ipcEndAt\":\"2026-04-21\"}" of
                 Left err ->
                     expectationFailure ("Expected intern permission create payload to decode, got: " <> err)
                 Right (InternPermissionCreate categoryVal reasonVal startAtVal endAtVal) -> do
@@ -2278,8 +2248,7 @@ spec = do
                     endAtVal `shouldBe` Just (fromGregorian 2026 4 21)
 
             case decodeInternPermissionUpdate
-                "{\"ipuStatus\":\"approved\",\"ipuDecisionNotes\":\"Approved by admin\"}"
-             of
+                "{\"ipuStatus\":\"approved\",\"ipuDecisionNotes\":\"Approved by admin\"}" of
                 Left err ->
                     expectationFailure ("Expected intern permission update payload to decode, got: " <> err)
                 Right (InternPermissionUpdate statusVal notesVal) -> do
@@ -2499,9 +2468,10 @@ spec = do
 
     describe "social event create request FromJSON" $ do
         it "accepts canonical event create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
-            case (eitherDecode
-                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\"}"
-                    :: Either String SocialEvents.EventDTO) of
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\"}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical event create payload to decode, got: " <> err)
@@ -2510,35 +2480,40 @@ spec = do
                     SocialEvents.eventStatus payload `shouldBe` Just "draft"
                     SocialEvents.eventArtists payload `shouldBe` []
 
-            (eitherDecode
-                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\",\"unexpected\":true}"
-                    :: Either String SocialEvents.EventDTO)
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\",\"unexpected\":true}" ::
+                    Either String SocialEvents.EventDTO
+                )
                 `shouldSatisfy` isLeft
 
         it "rejects unexpected nested artist and social-link keys before event handlers silently drop artist intent" $ do
-            case (eitherDecode
-                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenres\":[\"electronic\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}"
-                    :: Either String SocialEvents.EventDTO) of
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenres\":[\"electronic\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical nested event artist payload to decode, got: " <> err)
                 Right payload ->
                     SocialEvents.eventArtists payload `shouldSatisfy` (not . null)
 
-            (eitherDecode
-                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenresTypo\":[\"electronic\"]}]}"
-                    :: Either String SocialEvents.EventDTO)
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenresTypo\":[\"electronic\"]}]}" ::
+                    Either String SocialEvents.EventDTO
+                )
                 `shouldSatisfy` isLeft
-            (eitherDecode
-                "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\",\"bandcamp\":\"https://ada.bandcamp.com\"}}]}"
-                    :: Either String SocialEvents.EventDTO)
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\",\"bandcamp\":\"https://ada.bandcamp.com\"}}]}" ::
+                    Either String SocialEvents.EventDTO
+                )
                 `shouldSatisfy` isLeft
 
     describe "social venue request FromJSON" $ do
         it "accepts canonical venue create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
-            case (eitherDecode
-                "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250}"
-                    :: Either String SocialEvents.VenueDTO) of
+            case ( eitherDecode
+                    "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250}" ::
+                    Either String SocialEvents.VenueDTO
+                 ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical venue create payload to decode, got: " <> err)
@@ -2547,9 +2522,10 @@ spec = do
                     SocialEvents.venueCity payload `shouldBe` Just "Quito"
                     SocialEvents.venueCapacity payload `shouldBe` Just 250
 
-            (eitherDecode
-                "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250,\"venuePhoneNumber\":\"+593991234567\"}"
-                    :: Either String SocialEvents.VenueDTO)
+            ( eitherDecode
+                    "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250,\"venuePhoneNumber\":\"+593991234567\"}" ::
+                    Either String SocialEvents.VenueDTO
+                )
                 `shouldSatisfy` isLeft
 
     describe "social event ticket request FromJSON" $ do
@@ -2569,16 +2545,17 @@ spec = do
                 `shouldSatisfy` isLeft
 
         it "accepts canonical ticket purchase and status update payloads" $ do
-            case decodeTicketTier (BL8.concat
-                [ "{\"ticketTierCode\":\"general\""
-                , ",\"ticketTierName\":\"General\""
-                , ",\"ticketTierPriceCents\":1200"
-                , ",\"ticketTierCurrency\":\"USD\""
-                , ",\"ticketTierQuantityTotal\":100"
-                , ",\"ticketTierQuantitySold\":0"
-                , ",\"ticketTierActive\":true}"
-                ])
-             of
+            case decodeTicketTier
+                ( BL8.concat
+                    [ "{\"ticketTierCode\":\"general\""
+                    , ",\"ticketTierName\":\"General\""
+                    , ",\"ticketTierPriceCents\":1200"
+                    , ",\"ticketTierCurrency\":\"USD\""
+                    , ",\"ticketTierQuantityTotal\":100"
+                    , ",\"ticketTierQuantitySold\":0"
+                    , ",\"ticketTierActive\":true}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical ticket tier payload to decode, got: " <> err)
@@ -2587,13 +2564,14 @@ spec = do
                     SocialEvents.ticketTierName payload `shouldBe` "General"
                     SocialEvents.ticketTierQuantitySold payload `shouldBe` 0
 
-            case decodeTicketPurchase (BL8.concat
-                [ "{\"ticketPurchaseTierId\":\"42\""
-                , ",\"ticketPurchaseQuantity\":2"
-                , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
-                , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\"}"
-                ])
-             of
+            case decodeTicketPurchase
+                ( BL8.concat
+                    [ "{\"ticketPurchaseTierId\":\"42\""
+                    , ",\"ticketPurchaseQuantity\":2"
+                    , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
+                    , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\"}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical ticket purchase payload to decode, got: " <> err)
@@ -2773,17 +2751,18 @@ spec = do
 
     describe "social event finance entry request FromJSON" $ do
         it "accepts canonical finance entries and rejects over-posted amount aliases" $ do
-            case decodeEventFinanceEntry (BL8.concat
-                [ "{\"efeDirection\":\"expense\""
-                , ",\"efeSource\":\"manual\""
-                , ",\"efeCategory\":\"production\""
-                , ",\"efeConcept\":\"Sound rental\""
-                , ",\"efeAmountCents\":5000"
-                , ",\"efeCurrency\":\"USD\""
-                , ",\"efeStatus\":\"planned\""
-                , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
-                ])
-             of
+            case decodeEventFinanceEntry
+                ( BL8.concat
+                    [ "{\"efeDirection\":\"expense\""
+                    , ",\"efeSource\":\"manual\""
+                    , ",\"efeCategory\":\"production\""
+                    , ",\"efeConcept\":\"Sound rental\""
+                    , ",\"efeAmountCents\":5000"
+                    , ",\"efeCurrency\":\"USD\""
+                    , ",\"efeStatus\":\"planned\""
+                    , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical finance entry payload to decode, got: " <> err)
@@ -2791,31 +2770,34 @@ spec = do
                     SocialEvents.efeAmountCents payload `shouldBe` 5000
                     SocialEvents.efeCurrency payload `shouldBe` "USD"
 
-            decodeEventFinanceEntry (BL8.concat
-                [ "{\"efeDirection\":\"expense\""
-                , ",\"efeSource\":\"manual\""
-                , ",\"efeCategory\":\"production\""
-                , ",\"efeConcept\":\"Sound rental\""
-                , ",\"efeAmountCents\":5000"
-                , ",\"amountCents\":1"
-                , ",\"efeCurrency\":\"USD\""
-                , ",\"efeStatus\":\"planned\""
-                , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
-                ])
+            decodeEventFinanceEntry
+                ( BL8.concat
+                    [ "{\"efeDirection\":\"expense\""
+                    , ",\"efeSource\":\"manual\""
+                    , ",\"efeCategory\":\"production\""
+                    , ",\"efeConcept\":\"Sound rental\""
+                    , ",\"efeAmountCents\":5000"
+                    , ",\"amountCents\":1"
+                    , ",\"efeCurrency\":\"USD\""
+                    , ",\"efeStatus\":\"planned\""
+                    , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
 
     describe "social event moment request FromJSON" $ do
         it "accepts canonical moment creates and normalizes media lookup fields" $
-            case decodeEventMomentCreate (BL8.concat
-                [ "{\"emCreateAuthorName\":\"Ada\""
-                , ",\"emCreateCaption\":\"En vivo\""
-                , ",\"emCreateMediaUrl\":\" https://cdn.example.com/moment.jpg \""
-                , ",\"emCreateMediaType\":\" PHOTO \""
-                , ",\"emCreateMediaWidth\":1080"
-                , ",\"emCreateMediaHeight\":1350"
-                , ",\"emCreateMediaDurationMs\":0}"
-                ])
-             of
+            case decodeEventMomentCreate
+                ( BL8.concat
+                    [ "{\"emCreateAuthorName\":\"Ada\""
+                    , ",\"emCreateCaption\":\"En vivo\""
+                    , ",\"emCreateMediaUrl\":\" https://cdn.example.com/moment.jpg \""
+                    , ",\"emCreateMediaType\":\" PHOTO \""
+                    , ",\"emCreateMediaWidth\":1080"
+                    , ",\"emCreateMediaHeight\":1350"
+                    , ",\"emCreateMediaDurationMs\":0}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical moment create payload to decode, got: " <> err)
@@ -2853,11 +2835,90 @@ spec = do
                 "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"video\",\"emCreateMediaDurationMs\":-1}"
                 `shouldSatisfy` isLeft
 
+    describe "social event live broadcast request FromJSON" $ do
+        it "accepts canonical live broadcast create payloads and trims lookup fields"
+            $ withRight
+                "Expected canonical live broadcast create payload to decode"
+                ( decodeEventLiveBroadcastCreate
+                    ( BL8.concat
+                        [ "{\"elbCreateArtistId\":\" 42 \""
+                        , ",\"elbCreateArtistName\":\"  La Banda \""
+                        , ",\"elbCreateBroadcasterName\":\"  Ada Fan \""
+                        , ",\"elbCreateBroadcasterPartyId\":\" 7 \""
+                        , ",\"elbCreateTitle\":\"  Frente al escenario \""
+                        , ",\"elbCreateDescription\":\"  Empieza el encore \""
+                        , ",\"elbCreateQuality\":\"720p\"}"
+                        ]
+                    )
+                )
+            $ \payload -> do
+                SocialEvents.elbCreateArtistId payload `shouldBe` "42"
+                SocialEvents.elbCreateArtistName payload `shouldBe` Just "La Banda"
+                SocialEvents.elbCreateBroadcasterName payload `shouldBe` Just "Ada Fan"
+                SocialEvents.elbCreateBroadcasterPartyId payload `shouldBe` Just "7"
+                SocialEvents.elbCreateTitle payload `shouldBe` Just "Frente al escenario"
+                SocialEvents.elbCreateDescription payload `shouldBe` Just "Empieza el encore"
+                SocialEvents.elbCreateQuality payload `shouldBe` Just "720p"
+
+        it "accepts omitted optional live broadcast fields for handler defaults" $ do
+            withRight
+                "Expected minimal live broadcast create payload to decode"
+                (decodeEventLiveBroadcastCreate "{\"elbCreateArtistId\":\"42\"}")
+                $ \payload -> do
+                    SocialEvents.elbCreateArtistId payload `shouldBe` "42"
+                    SocialEvents.elbCreateArtistName payload `shouldBe` Nothing
+                    SocialEvents.elbCreateBroadcasterName payload `shouldBe` Nothing
+                    SocialEvents.elbCreateBroadcasterPartyId payload `shouldBe` Nothing
+                    SocialEvents.elbCreateTitle payload `shouldBe` Nothing
+                    SocialEvents.elbCreateDescription payload `shouldBe` Nothing
+                    SocialEvents.elbCreateQuality payload `shouldBe` Nothing
+            withRight
+                "Expected empty live broadcast end payload to decode"
+                (decodeEventLiveBroadcastEnd "{}")
+                $ \payload ->
+                    SocialEvents.elbEndBroadcasterPartyId payload `shouldBe` Nothing
+            withRight
+                "Expected empty live broadcast heartbeat payload to decode"
+                (decodeEventLiveBroadcastHeartbeat "{}")
+                $ \payload ->
+                    SocialEvents.elbhViewerDelta payload `shouldBe` Nothing
+
+        it "rejects ambiguous or malformed live broadcast creates before handler validation" $ do
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"artistId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateTitle\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateQuality\":null}"
+                `shouldSatisfy` isLeft
+
+        it "accepts end and heartbeat payloads while rejecting unknown fields" $ do
+            withRight
+                "Expected live broadcast end payload to decode"
+                (decodeEventLiveBroadcastEnd "{\"elbEndBroadcasterPartyId\":\" 7 \"}")
+                $ \payload ->
+                    SocialEvents.elbEndBroadcasterPartyId payload `shouldBe` Just "7"
+            withRight
+                "Expected live broadcast heartbeat payload to decode"
+                (decodeEventLiveBroadcastHeartbeat "{\"elbhViewerDelta\":1}")
+                $ \payload ->
+                    SocialEvents.elbhViewerDelta payload `shouldBe` Just 1
+            decodeEventLiveBroadcastEnd
+                "{\"elbEndBroadcasterPartyId\":\"7\",\"broadcastId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastHeartbeat
+                "{\"elbhViewerDelta\":1,\"viewerCount\":\"typo\"}"
+                `shouldSatisfy` isLeft
+
     describe "SocialSyncIngestRequest FromJSON" $ do
         it "accepts canonical ingest posts and trims identity fields before handler validation" $
             case decodeSocialSyncIngest
-                "{\"posts\":[{\"platform\":\" Instagram \",\"externalPostId\":\" ig-post_42 \",\"likeCount\":3}]}"
-             of
+                "{\"posts\":[{\"platform\":\" Instagram \",\"externalPostId\":\" ig-post_42 \",\"likeCount\":3}]}" of
                 Left err ->
                     expectationFailure
                         ("Expected canonical social sync ingest payload to decode, got: " <> err)
@@ -2889,46 +2950,56 @@ spec = do
                                 )
             mapM_
                 (uncurry assertNullRejected)
-                [ ( "caption"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"caption\":null}]}"
-                  )
-                , ( "permalink"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"permalink\":null}]}"
-                  )
-                , ( "mediaUrls"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"mediaUrls\":null}]}"
-                  )
-                , ( "postedAt"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"postedAt\":null}]}"
-                  )
-                , ( "artistPartyId"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistPartyId\":null}]}"
-                  )
-                , ( "artistProfileId"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistProfileId\":null}]}"
-                  )
-                , ( "ingestSource"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
-                  )
-                , ( "likeCount"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"likeCount\":null}]}"
-                  )
-                , ( "commentCount"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"commentCount\":null}]}"
-                  )
-                , ( "shareCount"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"shareCount\":null}]}"
-                  )
-                , ( "viewCount"
-                  , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"viewCount\":null}]}"
-                  )
+                [
+                    ( "caption"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"caption\":null}]}"
+                    )
+                ,
+                    ( "permalink"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"permalink\":null}]}"
+                    )
+                ,
+                    ( "mediaUrls"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"mediaUrls\":null}]}"
+                    )
+                ,
+                    ( "postedAt"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"postedAt\":null}]}"
+                    )
+                ,
+                    ( "artistPartyId"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistPartyId\":null}]}"
+                    )
+                ,
+                    ( "artistProfileId"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistProfileId\":null}]}"
+                    )
+                ,
+                    ( "ingestSource"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
+                    )
+                ,
+                    ( "likeCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"likeCount\":null}]}"
+                    )
+                ,
+                    ( "commentCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"commentCount\":null}]}"
+                    )
+                ,
+                    ( "shareCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"shareCount\":null}]}"
+                    )
+                ,
+                    ( "viewCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"viewCount\":null}]}"
+                    )
                 ]
 
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
-                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"},{\"startAt\":\"2026-05-02T17:00:00Z\",\"endAt\":\"2026-05-02T18:00:00Z\"}],\"notes\":\"Afternoons preferred\",\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\"}"
-             of
+                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"},{\"startAt\":\"2026-05-02T17:00:00Z\",\"endAt\":\"2026-05-02T18:00:00Z\"}],\"notes\":\"Afternoons preferred\",\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical trial request payload to decode, got: " <> err)
                 Right (TrialRequestIn partyIdVal subjectIdVal preferredVal notesVal fullNameVal emailVal phoneVal) -> do
@@ -3138,6 +3209,12 @@ spec = do
     decodeEventFinanceEntry = eitherDecode
     decodeEventMomentCreate :: BL8.ByteString -> Either String SocialEvents.EventMomentCreateDTO
     decodeEventMomentCreate = eitherDecode
+    decodeEventLiveBroadcastCreate :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastCreateDTO
+    decodeEventLiveBroadcastCreate = eitherDecode
+    decodeEventLiveBroadcastEnd :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastEndDTO
+    decodeEventLiveBroadcastEnd = eitherDecode
+    decodeEventLiveBroadcastHeartbeat :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastHeartbeatDTO
+    decodeEventLiveBroadcastHeartbeat = eitherDecode
     decodeSocialSyncIngest :: BL8.ByteString -> Either String SocialSync.SocialSyncIngestRequest
     decodeSocialSyncIngest = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
@@ -3146,3 +3223,10 @@ spec = do
     isLeft (Right _) = False
     isRightUnit (Right ()) = True
     isRightUnit _ = False
+
+    withRight :: String -> Either String a -> (a -> Expectation) -> Expectation
+    withRight context decoded onRight =
+        either
+            (\err -> expectationFailure (context <> ", got: " <> err))
+            onRight
+            decoded

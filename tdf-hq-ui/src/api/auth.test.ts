@@ -182,4 +182,27 @@ describe('auth api', () => {
     ).rejects.toThrow('Usuario o contraseña inválidos');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('wraps login network failures with a stable service message', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const promise = loginRequest({
+      username: 'admin',
+      password: 'Password123',
+    });
+    const rejection = expect(promise).rejects.toThrow(
+      'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.',
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(2000);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(5000);
+
+    await rejection;
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
 });

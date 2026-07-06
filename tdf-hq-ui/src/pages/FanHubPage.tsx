@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { useEffect, useMemo, useRef, useState, type ReactNode, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   Alert,
   AlertTitle,
@@ -17,19 +17,15 @@ import {
   DialogTitle,
   Grid,
   Link,
-  LinearProgress,
   Snackbar,
-  IconButton,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import YouTubeIcon from '@mui/icons-material/YouTube';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -40,7 +36,8 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import type { ArtistProfileUpsert, FanProfileUpdate, ArtistReleaseDTO } from '../api/types';
+import type { ArtistProfileUpsert } from '../api/types';
+import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
@@ -48,14 +45,26 @@ import { useSession } from '../session/SessionContext';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
-import { buildReleaseStreamingSources } from '../utils/media';
-import { compareReleaseDateValues, formatReleaseDateLabel, parseReleaseTimestamp } from '../utils/releaseDate';
+import { parseReleaseTimestamp } from '../utils/releaseDate';
 import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { recordings, releases as featuredReleases, sessionVideos } from '../constants/recordsContent';
+import {
+  buildReleaseStreamUpdatePayload,
+  dispatchReleaseToRadio,
+  resolveReleaseAudioUrl,
+  type ReleaseFeedItem,
+} from '../features/releases/ReleasePlayerActions';
+import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/useReleaseFeed';
+import { ReleaseFeed } from '../features/releases/ReleaseFeed';
+import { FanProfileEditor } from '../features/fans/FanProfileEditor';
+import { FollowedArtists } from '../features/fans/FollowedArtists';
+import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
+import { useFanProfile } from '../features/fans/useFanProfile';
+import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -222,10 +231,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   }, [GENRE_FILTER_KEY, genreFilter]);
 
-  const profileQuery = useQuery({
-    queryKey: ['fan-profile', viewerId],
-    queryFn: Fans.getProfile,
+  const {
+    profileDraft,
+    profileQuery,
+    saveProfile: handleSaveProfile,
+    setProfileDraft,
+    updateProfileMutation,
+  } = useFanProfile({
     enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    viewerId,
   });
 
   const followsQuery = useQuery({
@@ -246,13 +260,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     enabled: Boolean(viewerId && canEditArtist && hasAuthToken),
   });
 
-  const [profileDraft, setProfileDraft] = useState<FanProfileUpdate>({
-    fpuDisplayName: '',
-    fpuBio: '',
-    fpuCity: '',
-    fpuFavoriteGenres: '',
-    fpuAvatarUrl: '',
-  });
   const [artistDraft, setArtistDraft] = useState<ArtistProfileUpsert>({
     apuArtistId: session?.partyId ?? 0,
     apuDisplayName: '',
@@ -281,17 +288,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
   });
 
-  useEffect(() => {
-    if (profileQuery.data) {
-      setProfileDraft({
-        fpuDisplayName: profileQuery.data.fpDisplayName ?? '',
-        fpuBio: profileQuery.data.fpBio ?? '',
-        fpuCity: profileQuery.data.fpCity ?? '',
-        fpuFavoriteGenres: profileQuery.data.fpFavoriteGenres ?? '',
-        fpuAvatarUrl: profileQuery.data.fpAvatarUrl ?? '',
-      });
-    }
-  }, [profileQuery.data]);
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
       const dto = artistProfileQuery.data;
@@ -334,12 +330,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   }, [focusArtist]);
 
-  const updateProfileMutation = useMutation({
-    mutationFn: Fans.updateProfile,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-profile', viewerId] });
-    },
-  });
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
     onSuccess: () => {
@@ -390,13 +380,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [feedLimit, setFeedLimit] = useState(4);
   const [artistEditorOpen, setArtistEditorOpen] = useState(() => focusArtist);
-  interface TargetArtist {
-    id: number;
-    name: string;
-    spotifyUrl?: string | null;
-    youtubeUrl?: string | null;
-  }
-  const targetArtists = useMemo<TargetArtist[]>(() => {
+  const targetArtists = useMemo<ReleaseFeedArtist[]>(() => {
     if (isFan && hasFollows) {
       return follows.map((follow) => ({
         id: follow.ffArtistId,
@@ -419,11 +403,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
-  const releaseArtistIds = useMemo(
-    () => targetArtists.map((artist) => artist.id).sort((a, b) => a - b),
-    [targetArtists],
-  );
-  const hasReleaseTargets = targetArtists.length > 0;
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -436,28 +415,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  interface ReleaseFeedItem extends ArtistReleaseDTO {
-    artistName: string;
-  }
-  const releaseFeedQuery = useQuery({
-    queryKey: ['fan-release-feed', releaseArtistIds, canSeeReleaseFeed],
-    enabled: canSeeReleaseFeed && targetArtists.length > 0,
-    queryFn: async () => {
-      const perArtist = await Promise.all(
-        targetArtists.map(async (artist) => {
-          const releases = await Fans.getReleases(artist.id);
-          return releases.map((release) => ({
-            ...release,
-            artistName: artist.name,
-          }));
-        }),
-      );
-      const flat = perArtist.flat() as ReleaseFeedItem[];
-      return flat.sort((a, b) => compareReleaseDateValues(a.arReleaseDate, b.arReleaseDate, 'desc'));
-    },
+  const { hasReleaseTargets, releaseFeed, releaseFeedQuery } = useReleaseFeed({
+    enabled: canSeeReleaseFeed,
+    targetArtists,
   });
-
-  const releaseFeed = useMemo(() => releaseFeedQuery.data ?? [], [releaseFeedQuery.data]);
   const latestReleaseByArtist = useMemo(() => {
     const map = new Map<number, ReleaseFeedItem>();
     releaseFeed.forEach((r) => {
@@ -505,18 +466,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
-    const normalized = streamUrl.trim();
-    const isYoutube = /youtu\.?be|youtube\.com/.test(normalized.toLowerCase());
-    const payload = {
-      aruArtistId: release.arArtistId,
-      aruTitle: release.arTitle,
-      aruReleaseDate: release.arReleaseDate ?? null,
-      aruDescription: release.arDescription ?? null,
-      aruCoverImageUrl: release.arCoverImageUrl ?? null,
-      aruSpotifyUrl: isYoutube ? release.arSpotifyUrl ?? null : normalized,
-      aruYoutubeUrl: isYoutube ? normalized : release.arYoutubeUrl ?? null,
-    };
-    await Admin.updateArtistRelease(release.arReleaseId, payload);
+    const streamUpdatePayload = buildReleaseStreamUpdatePayload(release, streamUrl);
+    await Admin.updateArtistRelease(release.arReleaseId, streamUpdatePayload);
     void releaseFeedQuery.refetch();
     setReleaseUploadToast('Stream actualizado.');
   };
@@ -551,27 +502,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const handlePlayRelease = (release: ReleaseFeedItem) => {
-    const audioUrl =
-      releaseAudioMap[release.arReleaseId] ??
-      release.arSpotifyUrl ??
-      release.arYoutubeUrl ??
-      streamingFallbacks.get(release.arArtistId)?.spotify ??
-      streamingFallbacks.get(release.arArtistId)?.youtube ??
-      null;
+    const audioUrl = resolveReleaseAudioUrl(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
     if (!audioUrl) {
       setUploadError('Este lanzamiento todavía no tiene un enlace de audio. Sube el máster o pega un enlace.');
       return;
     }
     setUploadError(null);
-    window.dispatchEvent(
-      new CustomEvent('tdf-radio-load-stream', {
-        detail: {
-          streamUrl: audioUrl,
-          stationName: release.arTitle,
-          stationId: `release-${release.arReleaseId}`,
-        },
-      }),
-    );
+    dispatchReleaseToRadio(release, audioUrl);
   };
 
   const handleSaveReleaseLink = async () => {
@@ -595,13 +532,34 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
   };
 
+  const handleDriveReleaseUploadComplete = (release: ReleaseFeedItem, files: DriveFileInfo[]) => {
+    const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+    if (!link) return;
+    setPendingUploadRelease(release);
+    setReleaseLinkDraft(link);
+    void (async () => {
+      try {
+        setUploadingReleaseId(release.arReleaseId);
+        await persistReleaseStream(release, link);
+        setPendingUploadRelease(null);
+        setReleaseLinkDraft('');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
+        setUploadError(msg);
+      } finally {
+        setUploadingReleaseId(null);
+      }
+    })();
+  };
+
+  const handleCancelReleaseUpload = () => {
+    setPendingUploadRelease(null);
+    setReleaseLinkDraft('');
+  };
+
   const normalizeField = (value?: string | null) => {
     const trimmed = value?.trim();
     return trimmed && trimmed.length > 0 ? trimmed : null;
-  };
-
-  const handleSaveProfile = () => {
-    updateProfileMutation.mutate(profileDraft);
   };
 
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -646,7 +604,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const artistPublicPath = useMemo(() => {
     if (!session?.partyId) return null;
     const slug = slugify(artistDraft.apuSlug ?? '');
-    return slug ? `/artista/${slug}` : `/artista/${session.partyId}`;
+    return slug ? `/a/${slug}` : `/a/${session.partyId}`;
   }, [artistDraft.apuSlug, session?.partyId]);
 
   const artistPublicUrl = useMemo(() => {
@@ -739,9 +697,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const emptyArtistMessage = genreFilter
     ? `No encontramos artistas en "${genreFilter}". Prueba otro genero o limpia el filtro.`
     : 'Pronto encontrarás artistas disponibles para seguir.';
-  const formatReleaseDate = (value?: string | null) => {
-    return formatReleaseDateLabel(value, { month: 'short', day: 'numeric' });
-  };
 
   return (
     <>
@@ -1152,325 +1107,38 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">{isHomeManagerView ? 'Actividad del hub' : 'Novedades de tus artistas'}</Typography>
-                {canSeeReleaseFeed && <Chip label={`${releaseFeed.length} lanzamientos`} size="small" />}
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                {isHomeManagerView
-                  ? 'Revisa qué lanzamientos ya tienen enlaces válidos y usa este bloque como control rápido antes de ir al módulo de lanzamientos.'
-                  : 'Reproduce lanzamientos sin salir del hub: si hay enlaces de Spotify o YouTube los cargamos en el reproductor embebido.'}
-              </Typography>
-              {!isAuthenticated && (
-                <Alert
-                  severity="info"
-                  action={
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      <Button
-                        component={RouterLink}
-                        to={loginPath}
-                        size="small"
-                        variant="contained"
-                        sx={{ textTransform: 'none' }}
-                      >
-                        Inicia sesión
-                      </Button>
-                      <Button
-                        component={RouterLink}
-                        to="/login?signup=1&roles=Fan&redirect=/fans"
-                        size="small"
-                        variant="outlined"
-                        sx={{ textTransform: 'none' }}
-                      >
-                        Crear cuenta fan
-                      </Button>
-                    </Stack>
-                  }
-                >
-                  Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.
-                </Alert>
-              )}
-              {isAuthenticated && !hasAuthToken && (
-                <Alert
-                  severity="info"
-                  action={
-                    <Button component={RouterLink} to={loginPath} size="small" variant="contained">
-                      Reingresar
-                    </Button>
-                  }
-                >
-                  Necesitamos renovar tu sesión para cargar tu feed personalizado.
-                </Alert>
-              )}
-              {isAuthenticated && hasAuthToken && !canSeeReleaseFeed && (
-                <Alert
-                  severity="info"
-                  action={
-                    !isFan && !canManageReleases ? (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => enableFanRoleMutation.mutate()}
-                        disabled={enableFanRoleMutation.isPending}
-                      >
-                        {enableFanRoleMutation.isPending ? 'Activando…' : 'Activar Fan'}
-                      </Button>
-                    ) : undefined
-                  }
-                >
-                  {canManageReleases
-                    ? 'Tu cuenta puede gestionar lanzamientos, pero aún no hay artistas disponibles para cargar este feed.'
-                    : 'Activa tu rol Fan para recibir lanzamientos personalizados en este hub.'}
-                </Alert>
-              )}
-              {canSeeReleaseFeed && releaseFeedQuery.isLoading && (
-                <Box display="flex" justifyContent="center" py={3}>
-                  <CircularProgress size={20} />
-                </Box>
-              )}
-              {canSeeReleaseFeed && !releaseFeedQuery.isLoading && releaseFeed.length === 0 && (
-                <Alert severity="info" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    {hasReleaseTargets
-                      ? isFan
-                        ? hasFollows
-                          ? 'No hay lanzamientos recientes de los artistas que sigues. Vuelve pronto o revisa los perfiles.'
-                          : 'Sigue al menos un artista para ver novedades recientes aquí.'
-                        : isHomeManagerView
-                          ? 'Todavía no hay lanzamientos visibles en el hub. Crea uno o completa los enlaces a plataformas para que aparezca aquí.'
-                          : 'No hay lanzamientos aún. Adjunta enlaces de audio o crea un lanzamiento para verlo aquí.'
-                      : isFan
-                        ? 'Sigue al menos un artista para ver novedades recientes aquí.'
-                        : isHomeManagerView
-                          ? 'Todavía no hay lanzamientos o artistas visibles para este hub.'
-                          : 'No hay artistas disponibles para mostrar lanzamientos.'}
-                  </Box>
-                  {canManageReleases && (
-                    <Button
-                      component={RouterLink}
-                      to="/label/releases"
-                      size="small"
-                      variant="outlined"
-                    >
-                      Crear lanzamiento
-                    </Button>
-                  )}
-                </Alert>
-              )}
-              {uploadError && (
-                <Alert severity="warning">{uploadError}</Alert>
-              )}
-              {canSeeReleaseFeed && releaseFeed.length > 0 && (
-                <Stack spacing={1.5}>
-                  {visibleFeed.map((release) => {
-                    const cachedAudio = releaseAudioMap[release.arReleaseId];
-                    const spotifyUrl =
-                      cachedAudio ?? release.arSpotifyUrl ?? streamingFallbacks.get(release.arArtistId)?.spotify ?? null;
-                    const youtubeUrl =
-                      release.arYoutubeUrl ?? streamingFallbacks.get(release.arArtistId)?.youtube ?? null;
-                    const hasSpotify = Boolean(spotifyUrl);
-                    const hasYoutube = Boolean(youtubeUrl);
-                    const hasLinks = hasSpotify || hasYoutube;
-                    const releaseWithFallback = {
-                      ...release,
-                      arSpotifyUrl: spotifyUrl,
-                      arYoutubeUrl: youtubeUrl,
-                    };
-                    const releaseSources = buildReleaseStreamingSources(releaseWithFallback);
-                    const hasStream = releaseSources.length > 0;
-                    return (
-                      <Box
-                        key={`${release.arArtistId}-${release.arReleaseId}`}
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          bgcolor: 'background.paper',
-                        }}
-                      >
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {release.arTitle}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {release.artistName}
-                            </Typography>
-                          </Box>
-                          <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />
-                        </Stack>
-                        {release.arDescription && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                            {release.arDescription.length > 140
-                              ? `${release.arDescription.slice(0, 140)}…`
-                              : release.arDescription}
-                          </Typography>
-                        )}
-                        {releaseSources.length > 0 && (
-                          <Box sx={{ mt: 1.5 }}>
-                            <StreamingPlayer
-                              title={release.arTitle}
-                              artist={release.artistName}
-                              posterUrl={release.arCoverImageUrl}
-                              sources={releaseSources}
-                              variant="compact"
-                            />
-                          </Box>
-                        )}
-                        {!hasLinks && !canManageReleases && (
-                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-                            Sin enlaces de audio todavía.
-                          </Typography>
-                        )}
-                        {(hasLinks || canManageReleases) && (
-                          <Stack direction="row" spacing={1} sx={{ mt: 1 }} alignItems="center">
-                            {hasLinks && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<PlayArrowIcon />}
-                                onClick={() => handlePlayRelease(release)}
-                                disabled={!hasStream || uploadingReleaseId === release.arReleaseId}
-                              >
-                                {uploadingReleaseId === release.arReleaseId ? 'Subiendo…' : 'Escuchar'}
-                              </Button>
-                            )}
-                            {!hasLinks && canManageReleases && (
-                              <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<CloudUploadIcon />}
-                                onClick={() => handleUploadTrigger(release)}
-                              >
-                                Adjuntar audio
-                              </Button>
-                            )}
-                            {hasYoutube && (
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                component="a"
-                                href={youtubeUrl ?? undefined}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Ver en YouTube
-                              </Button>
-                            )}
-                {canManageReleases && (
-                  <GoogleDriveUploadWidget
-                    label="Avanzado: Subir audio desde Drive"
-                    helperText="Opcional: usa Drive si ya tienes el máster listo allí."
-                    accept="audio/*"
-                    multiple={false}
-                    dense
-                    onComplete={(files) => {
-                      const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-                      if (!link) return;
-                      setPendingUploadRelease(release);
-                      setReleaseLinkDraft(link);
-                      void (async () => {
-                        try {
-                          setUploadingReleaseId(release.arReleaseId);
-                          await persistReleaseStream(release, link);
-                          setPendingUploadRelease(null);
-                          setReleaseLinkDraft('');
-                        } catch (err) {
-                          const msg = err instanceof Error ? err.message : 'No pudimos guardar el enlace.';
-                          setUploadError(msg);
-                        } finally {
-                          setUploadingReleaseId(null);
-                        }
-                      })();
-                    }}
-                  />
-                )}
-                          </Stack>
-                        )}
-                        {canManageReleases && pendingUploadRelease?.arReleaseId === release.arReleaseId && (
-                          <Box
-                            sx={{
-                              mt: 2,
-                              p: 2,
-                              borderRadius: 2,
-                              border: '1px dashed',
-                              borderColor: 'divider',
-                              bgcolor: 'background.default',
-                            }}
-                          >
-                            <Stack spacing={1.5}>
-                              <Typography variant="subtitle2" fontWeight={700}>
-                                Adjuntar audio rápidamente
-                              </Typography>
-                              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                                <TextField
-                                  label="Enlace de Spotify o YouTube"
-                                  placeholder="Pega un enlace de audio"
-                                  value={releaseLinkDraft}
-                                  onChange={(event) => setReleaseLinkDraft(event.target.value)}
-                                  fullWidth
-                                />
-                                <Button
-                                  variant="contained"
-                                  onClick={() => void handleSaveReleaseLink()}
-                                  disabled={uploadingReleaseId === release.arReleaseId}
-                                >
-                                  Guardar enlace
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  startIcon={<CloudUploadIcon />}
-                                  onClick={() => audioFileInputRef.current?.click()}
-                                  disabled={uploadingReleaseId === release.arReleaseId}
-                                >
-                                  Subir audio
-                                </Button>
-                                <Button
-                                  variant="text"
-                                  onClick={() => {
-                                    setPendingUploadRelease(null);
-                                    setReleaseLinkDraft('');
-                                  }}
-                                >
-                                  Cancelar
-                                </Button>
-                              </Stack>
-                              {uploadingReleaseId === release.arReleaseId && <LinearProgress />}
-                              <Typography variant="caption" color="text.secondary">
-                                Guarda con enlace directo o sube el máster; usaremos el enlace más reciente.
-                              </Typography>
-                              {uploadError && <Alert severity="warning">{uploadError}</Alert>}
-                            </Stack>
-                          </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
-                  {releaseFeed.length > feedLimit && (
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      Ver más lanzamientos
-                    </Button>
-                  )}
-                  {releaseFeed.length > 4 && feedLimit >= releaseFeed.length && (
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={() => setFeedLimit(4)}
-                      sx={{ alignSelf: 'flex-start' }}
-                    >
-                      Ver menos
-                    </Button>
-                  )}
-                </Stack>
-              )}
-            </Card>
+            <ReleaseFeed
+              audioFileInputRef={audioFileInputRef}
+              canManageReleases={canManageReleases}
+              canSeeReleaseFeed={canSeeReleaseFeed}
+              enableFanRolePending={enableFanRoleMutation.isPending}
+              feedLimit={feedLimit}
+              hasAuthToken={hasAuthToken}
+              hasFollows={hasFollows}
+              hasReleaseTargets={hasReleaseTargets}
+              isAuthenticated={isAuthenticated}
+              isFan={isFan}
+              isHomeManagerView={isHomeManagerView}
+              loading={releaseFeedQuery.isLoading}
+              loginPath={loginPath}
+              pendingUploadRelease={pendingUploadRelease}
+              releaseAudioMap={releaseAudioMap}
+              releaseFeed={releaseFeed}
+              releaseLinkDraft={releaseLinkDraft}
+              streamingFallbacks={streamingFallbacks}
+              uploadError={uploadError}
+              uploadingReleaseId={uploadingReleaseId}
+              visibleFeed={visibleFeed}
+              onCancelUpload={handleCancelReleaseUpload}
+              onDriveUploadComplete={handleDriveReleaseUploadComplete}
+              onEnableFanRole={() => enableFanRoleMutation.mutate()}
+              onPlayRelease={handlePlayRelease}
+              onReleaseLinkDraftChange={setReleaseLinkDraft}
+              onSaveReleaseLink={handleSaveReleaseLink}
+              onShowLess={() => setFeedLimit(4)}
+              onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+              onUploadTrigger={handleUploadTrigger}
+            />
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">
@@ -1655,111 +1323,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         )}
 
         {isFan && (
-          <ProfileSectionCard
-            title="Tu perfil fan"
-            description="Personaliza cómo te ve la comunidad cuando sigues a un artista."
-            actions={
-              <Button
-                variant="contained"
-                sx={{ alignSelf: 'flex-start' }}
-                onClick={handleSaveProfile}
-                disabled={updateProfileMutation.isPending}
-              >
-                {updateProfileMutation.isPending ? 'Guardando…' : 'Guardar perfil'}
-              </Button>
-            }
-          >
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="flex-start">
-              <Stack spacing={1} alignItems="center" sx={{ minWidth: 140 }}>
-                <Box sx={{ position: 'relative', width: 104, height: 104 }}>
-                  <Avatar
-                    src={profileDraft.fpuAvatarUrl ?? undefined}
-                    alt={profileDraft.fpuDisplayName ?? session?.displayName ?? ''}
-                    sx={{ width: 104, height: 104 }}
-                  />
-                  <IconButton
-                    size="small"
-                    onClick={() => avatarInputRef.current?.click()}
-                    sx={{
-                      position: 'absolute',
-                      bottom: -8,
-                      right: -8,
-                      bgcolor: 'primary.main',
-                      color: '#fff',
-                      boxShadow: 2,
-                      '&:hover': { bgcolor: 'primary.dark' },
-                    }}
-                    aria-label="Editar avatar"
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={avatarInputRef}
-                    onChange={handleAvatarFileChange}
-                    style={{ display: 'none' }}
-                  />
-                </Box>
-                <TextField
-                  label="Avatar (pega enlace o sube)"
-                  placeholder="https://..."
-                  value={profileDraft.fpuAvatarUrl ?? ''}
-                  onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: event.target.value }))}
-                  fullWidth
-                  size="small"
-                />
-                <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="contained" onClick={() => avatarInputRef.current?.click()}>
-                    Subir imagen
-                  </Button>
-                  {profileDraft.fpuAvatarUrl && (
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => setProfileDraft((prev) => ({ ...prev, fpuAvatarUrl: '' }))}
-                    >
-                      Quitar
-                    </Button>
-                  )}
-                </Stack>
-              </Stack>
-              <Stack flex={1} spacing={2}>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField
-                    label="Nombre público"
-                    value={profileDraft.fpuDisplayName ?? ''}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuDisplayName: event.target.value }))}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Ciudad"
-                    value={profileDraft.fpuCity ?? ''}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuCity: event.target.value }))}
-                    fullWidth
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField
-                    label="Géneros favoritos"
-                    value={profileDraft.fpuFavoriteGenres ?? ''}
-                    onChange={(event) =>
-                      setProfileDraft((prev) => ({ ...prev, fpuFavoriteGenres: event.target.value }))
-                    }
-                    fullWidth
-                  />
-                </Stack>
-                <TextField
-                  label="Bio"
-                  multiline
-                  minRows={2}
-                  value={profileDraft.fpuBio ?? ''}
-                  onChange={(event) => setProfileDraft((prev) => ({ ...prev, fpuBio: event.target.value }))}
-                  fullWidth
-                />
-              </Stack>
-            </Stack>
-          </ProfileSectionCard>
+          <FanProfileEditor
+            avatarInputRef={avatarInputRef}
+            displayNameFallback={session?.displayName}
+            profileDraft={profileDraft}
+            saving={updateProfileMutation.isPending}
+            setProfileDraft={setProfileDraft}
+            onAvatarFileChange={handleAvatarFileChange}
+            onSave={handleSaveProfile}
+          />
         )}
 
         {canEditArtist && (
@@ -2061,21 +1633,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </div>
         )}
 
-        {viewerId && follows.length > 0 && (
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Artistas que sigues</Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
-              {follows.map((follow) => (
-                <Chip
-                  key={follow.ffArtistId}
-                  label={follow.ffArtistName}
-                  color="primary"
-                  icon={<FavoriteIcon />}
-                />
-              ))}
-            </Stack>
-          </Card>
-        )}
+        {viewerId && <FollowedArtists follows={follows} />}
 
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
@@ -2194,51 +1752,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Stack>
         )}
 
-        {!isHomeManagerView && isFan && myClubsQuery.data && myClubsQuery.data.length > 0 && (
-          <Stack spacing={2}>
-            <Typography variant="h6">Tus clubes</Typography>
-            <LazyPaginatedList
-              items={myClubsQuery.data}
-              loading={myClubsQuery.isFetching}
-              pagination={{ itemLabel: 'clubes', initialRowsPerPage: 6 }}
-              renderItems={(visibleClubs) => (
-                <Grid container spacing={2}>
-                  {visibleClubs.map((club) => (
-                    <Grid item xs={12} md={4} key={club.fcId}>
-                      <Card
-                        component={RouterLink}
-                        to={`/fans/clubs/${club.fcArtistId}`}
-                        sx={{
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          height: '100%',
-                          transition: 'transform 140ms ease, box-shadow 140ms ease',
-                          '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
-                        }}
-                      >
-                        {club.fcArtistImageUrl && (
-                          <CardMedia component="img" height={160} image={club.fcArtistImageUrl} alt={club.fcName} />
-                        )}
-                        <CardContent sx={{ flex: 1 }}>
-                          <Stack spacing={1}>
-                            <Typography variant="h6" fontWeight={700}>{club.fcName}</Typography>
-                            <Typography variant="body2" color="text.secondary">{club.fcFollowerCount} seguidores</Typography>
-                            {club.fcDescription && (
-                              <Typography variant="body2" color="text.secondary">
-                                {club.fcDescription.length > 100 ? `${club.fcDescription.slice(0, 100)}…` : club.fcDescription}
-                              </Typography>
-                            )}
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            />
-          </Stack>
+        {!isHomeManagerView && isFan && myClubsQuery.data && (
+          <FanClubPreview clubs={myClubsQuery.data} loading={myClubsQuery.isFetching} />
         )}
 
         {!isHomeManagerView && !showCatalogFallback && filteredArtists.length === 0 && (
@@ -2258,7 +1773,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const artistProfilePath = artist.apSlug ? `/artista/${artist.apSlug}` : `/artista/${artist.apArtistId}`;
+            const artistProfilePath = artist.apSlug ? `/a/${artist.apSlug}` : `/a/${artist.apArtistId}`;
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
@@ -2526,33 +2041,5 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </>
-  );
-}
-function ProfileSectionCard({
-  title,
-  description,
-  actions,
-  children,
-}: {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <Card sx={{ p: 3 }}>
-      <Stack spacing={2}>
-        <Box>
-          <Typography variant="h6">{title}</Typography>
-          {description && (
-            <Typography variant="body2" color="text.secondary">
-              {description}
-            </Typography>
-          )}
-        </Box>
-        {children}
-        {actions}
-      </Stack>
-    </Card>
   );
 }

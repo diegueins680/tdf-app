@@ -15,6 +15,7 @@ import           Data.Aeson
   , genericToJSON
   , rejectUnknownFields
   , withObject
+  , (.:)
   )
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -105,6 +106,15 @@ data ArtistProfileUpsert = ArtistProfileUpsert
   } deriving (Show, Generic)
 instance FromJSON ArtistProfileUpsert where
   parseJSON = genericParseJSON strictDecodeOptions
+
+data ArtistProfilePhotoUpdate = ArtistProfilePhotoUpdate
+  { aphuHeroImageUrl :: Text
+  } deriving (Show, Generic)
+instance FromJSON ArtistProfilePhotoUpdate where
+  parseJSON = withObject "ArtistProfilePhotoUpdate" $ \obj -> do
+    case filter (/= AesonKey.fromText "apuHeroImageUrl") (AesonKeyMap.keys obj) of
+      [] -> ArtistProfilePhotoUpdate <$> obj .: "apuHeroImageUrl"
+      _  -> fail "ArtistProfilePhotoUpdate contains unexpected keys"
 
 data ArtistReleaseDTO = ArtistReleaseDTO
   { arArtistId     :: Int64
@@ -433,6 +443,22 @@ data LogEntryDTO = LogEntryDTO
   , logMessage   :: Text
   } deriving (Show, Generic)
 instance ToJSON LogEntryDTO
+
+data UserActivityDTO = UserActivityDTO
+  { uaId             :: Int64
+  , uaCreatedAt      :: UTCTime
+  , uaActorPartyId   :: Maybe Int64
+  , uaActorName      :: Text
+  , uaActorUsernames :: [Text]
+  , uaActorRoles     :: [Text]
+  , uaEntity         :: Text
+  , uaEntityId       :: Text
+  , uaAction         :: Text
+  , uaMetadata       :: Maybe Value
+  } deriving (Show, Generic)
+
+instance ToJSON UserActivityDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
 
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text

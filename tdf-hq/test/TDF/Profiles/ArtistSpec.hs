@@ -16,10 +16,12 @@ import Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
-import TDF.DTO (ArtistProfileDTO (..), ArtistProfileUpsert (..))
+import TDF.DTO (ArtistProfileDTO (..), ArtistProfilePhotoUpdate (..), ArtistProfileUpsert (..))
 import TDF.Models
 import TDF.Profiles.Artist (
+    loadArtistProfileBySlugDTO,
     loadOrCreateArtistProfileDTO,
+    searchArtistProfilesDTO,
     upsertArtistProfileRecord,
     validateArtistProfileUpsert,
  )
@@ -47,6 +49,20 @@ spec = do
             (A.eitherDecode
                 "{\"apuArtistId\":42,\"apuDisplayName\":\"Los Mentores\",\"unexpected\":true}"
                     :: Either String ArtistProfileUpsert)
+                `shouldSatisfy` isLeft
+
+    describe "ArtistProfilePhotoUpdate FromJSON" $ do
+        it "accepts canonical artist photo payloads" $
+            case A.eitherDecode "{\"apuHeroImageUrl\":\"https://cdn.tdf/hero.jpg\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical artist photo payload to decode, got: " <> err)
+                Right (ArtistProfilePhotoUpdate heroImageUrl) ->
+                    heroImageUrl `shouldBe` "https://cdn.tdf/hero.jpg"
+
+        it "rejects unexpected artist photo keys" $
+            (A.eitherDecode
+                "{\"apuHeroImageUrl\":\"https://cdn.tdf/hero.jpg\",\"heroImageUrl\":\"ignored\"}"
+                    :: Either String ArtistProfilePhotoUpdate)
                 `shouldSatisfy` isLeft
 
     describe "Artist profile helpers" $ do
@@ -198,6 +214,52 @@ spec = do
             apFeaturedVideoUrl dto `shouldBe` Just "https://youtube.com/watch?v=456"
             apGenres dto `shouldBe` Just "Latin Pop"
             apHighlights dto `shouldBe` Nothing
+
+        it "loads public artist profiles directly by slug" $ do
+            dto <- runInMemory $ do
+                now <- liftIO getCurrentTime
+                artistId <- insertParty "Los Mentores"
+                _ <- upsertArtistProfileRecord
+                    artistId
+                    (baseProfileUpsert
+                        { apuArtistId = fromSqlKey artistId
+                        , apuSlug = Just "los-mentores"
+                        , apuCity = Just "Quito"
+                        })
+                    now
+                loadArtistProfileBySlugDTO "LOS-MENTORES"
+
+            fmap apArtistId dto `shouldSatisfy` maybe False (> 0)
+            fmap apSlug dto `shouldBe` Just (Just "los-mentores")
+
+        it "filters artist discovery by free text and genre" $ do
+            results <- runInMemory $ do
+                now <- liftIO getCurrentTime
+                mentoresId <- insertParty "Los Mentores"
+                ruidoId <- insertParty "Ruido Blanco"
+                _ <- upsertArtistProfileRecord
+                    mentoresId
+                    (baseProfileUpsert
+                        { apuArtistId = fromSqlKey mentoresId
+                        , apuDisplayName = Just "Los Mentores"
+                        , apuSlug = Just "los-mentores"
+                        , apuCity = Just "Quito"
+                        , apuGenres = Just "Neo Soul, Latin"
+                        })
+                    now
+                _ <- upsertArtistProfileRecord
+                    ruidoId
+                    (baseProfileUpsert
+                        { apuArtistId = fromSqlKey ruidoId
+                        , apuDisplayName = Just "Ruido Blanco"
+                        , apuSlug = Just "ruido-blanco"
+                        , apuCity = Just "Guayaquil"
+                        , apuGenres = Just "Rock"
+                        })
+                    now
+                searchArtistProfilesDTO (Just "quito") (Just "soul")
+
+            map apDisplayName results `shouldBe` ["Los Mentores"]
 
 -- Helpers
 

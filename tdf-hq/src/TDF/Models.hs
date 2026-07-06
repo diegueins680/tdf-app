@@ -307,6 +307,17 @@ FanFollow
     createdAt        UTCTime
     UniqueFanFollow  fanPartyId artistPartyId
     deriving Show Generic
+EngagementEvent
+    actorPartyId     PartyId Maybe
+    targetArtistId   PartyId Maybe
+    entityType       Text
+    entityId         Int Maybe
+    eventType        Text
+    metadata         Text Maybe
+    createdAt        UTCTime
+    IndexEngagementArtistCreated targetArtistId createdAt !force
+    IndexEngagementActorCreated actorPartyId createdAt !force
+    deriving Show Generic
 PartyFollow
     followerPartyId  PartyId
     followingPartyId PartyId

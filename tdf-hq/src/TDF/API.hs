@@ -381,6 +381,12 @@ type FanPublicAPI =
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
   :<|> "clubs" :> Capture "artistId" Int64 :> "events" :> Get '[JSON] [FanClubEventDTO]
 
+type ArtistPublicAPI =
+       Get '[JSON] [ArtistProfileDTO]
+  :<|> "search" :> QueryParam "q" Text :> QueryParam "genre" Text :> Get '[JSON] [ArtistProfileDTO]
+  :<|> Capture "artistRef" Text :> "public" :> Get '[JSON] ArtistProfileDTO
+  :<|> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
+
 type RadioPublicAPI =
        "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
 
@@ -443,6 +449,14 @@ type FanSecureAPI =
       :<|> "inbox" :> Capture "messageId" Int64 :> "status" :> ReqBody '[JSON] FanClubInboxStatusReq :> Post '[JSON] FanClubInboxMessageDTO
          )
 
+type ArtistSecureAPI =
+       "me" :> "profile" :>
+         ( Get '[JSON] ArtistProfileDTO
+      :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
+      :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
+         )
+  :<|> "me" :> "photo" :> ReqBody '[JSON] ArtistProfilePhotoUpdate :> Post '[JSON] ArtistProfileDTO
+
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
 
 type SessionAPI =
@@ -461,6 +475,7 @@ type ProtectedAPI =
   :<|> "admin"    :> AdminAPI
   :<|> "api"      :> UserRolesAPI
   :<|> "fans"     :> FanSecureAPI
+  :<|> "artists"  :> ArtistSecureAPI
   :<|> InventoryAPI
   :<|> BandsAPI
   :<|> SessionsAPI
@@ -506,6 +521,7 @@ type API =
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
   :<|> "fans" :> FanPublicAPI
+  :<|> "artists" :> ArtistPublicAPI
   :<|> CoursesPublicAPI
   :<|> InstagramWebhookAPI
   :<|> FacebookWebhookAPI

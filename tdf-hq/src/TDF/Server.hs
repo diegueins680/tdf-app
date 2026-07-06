@@ -22,7 +22,7 @@ import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Bits (xor)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isInfixOf, sortOn)
+import           Data.List (find, foldl', nub, isInfixOf, sort, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_, toList)
 import           Data.Char
@@ -56,7 +56,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, UTCTime (..), addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
+  ( Day, UTCTime (..), addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
   , getCurrentTime, secondsToDiffTime, toGregorian, utctDay
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
@@ -91,10 +91,13 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
+import qualified TDF.Courses.Production as ProductionCourse
 import           TDF.Config ( AppConfig(..)
                             , courseInstructorAvatarFallback
                             , courseMapFallback
                             , courseSlugFallback
+                            , llmChatModelCandidates
+                            , normalizeLlmApiBase
                             , normalizeConfiguredGraphNodeId
                             , normalizeConfiguredGoogleClientId
                             , normalizeConfiguredBaseUrl
@@ -163,8 +166,10 @@ import qualified TDF.Email.Service as EmailSvc
 import           TDF.Profiles.Artist ( fetchArtistProfileMap
                                      , fetchPartyNameMap
                                      , loadAllArtistProfilesDTO
+                                     , loadArtistProfileBySlugDTO
                                      , loadArtistProfileDTO
                                      , loadOrCreateArtistProfileDTO
+                                     , searchArtistProfilesDTO
                                      , upsertArtistProfileRecord
                                      , validateArtistProfileUpsert
                                      )
@@ -657,6 +662,7 @@ server env =
   :<|> AuthServer.changePassword
   :<|> AuthServer.authV1Server
   :<|> fanPublicServer
+  :<|> artistPublicServer
   :<|> coursesPublicServer
   :<|> instagramWebhookServer
   :<|> facebookWebhookServer
@@ -1116,6 +1122,55 @@ fanPublicServer =
 
     tipArtist :: Int64 -> APITypes.ArtistTipRequest -> AppM APITypes.ArtistTipResponse
     tipArtist artistIdRaw req = createArtistTip artistIdRaw req
+
+artistPublicServer :: ServerT ArtistPublicAPI AppM
+artistPublicServer =
+       listArtists
+  :<|> searchArtists
+  :<|> artistPublicProfile
+  :<|> artistProfileById
+  where
+    listArtists :: AppM [ArtistProfileDTO]
+    listArtists = do
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool loadAllArtistProfilesDTO
+
+    searchArtists :: Maybe Text -> Maybe Text -> AppM [ArtistProfileDTO]
+    searchArtists mQuery mGenre = do
+      Env pool _ <- ask
+      liftIO $ flip runSqlPool pool $ searchArtistProfilesDTO mQuery mGenre
+
+    artistPublicProfile :: Text -> AppM ArtistProfileDTO
+    artistPublicProfile rawRef = do
+      let ref = T.strip rawRef
+      when (T.null ref) $
+        throwBadRequest "artistRef is required"
+      Env pool _ <- ask
+      mDto <- liftIO $ flip runSqlPool pool $
+        case parseArtistPublicRef ref of
+          ArtistPublicRefId artistId -> loadArtistProfileDTO (toSqlKey artistId)
+          ArtistPublicRefSlug slug   -> loadArtistProfileBySlugDTO slug
+      maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+
+    artistProfileById :: Int64 -> AppM ArtistProfileDTO
+    artistProfileById artistId = do
+      artistIdValid <- either throwError pure (validatePositiveIdField "artistId" artistId)
+      Env pool _ <- ask
+      mDto <- liftIO $ flip runSqlPool pool $ loadArtistProfileDTO (toSqlKey artistIdValid)
+      maybe (throwError err404 { errBody = "Artist profile not found" }) pure mDto
+
+data ArtistPublicRef
+  = ArtistPublicRefId Int64
+  | ArtistPublicRefSlug Text
+
+parseArtistPublicRef :: Text -> ArtistPublicRef
+parseArtistPublicRef ref
+  | T.all isDigit ref
+  , Just artistId <- readMaybe (T.unpack ref)
+  , artistId > 0 =
+      ArtistPublicRefId artistId
+  | otherwise =
+      ArtistPublicRefSlug (T.toLower ref)
 
 -- | Platform's cut of every artist tip, in basis points. 1000 = 10%.
 -- Centralized so the rate is a one-line change when negotiated terms shift.
@@ -2897,6 +2952,14 @@ fanSecureServer user =
   :<|> fanClubSecureListMyClubs user
   :<|> fanClubSecureArtistHandlers user
 
+artistSecureServer :: AuthedUser -> ServerT ArtistSecureAPI AppM
+artistSecureServer user =
+       ( artistGetOwnProfile user
+    :<|> artistUpdateOwnProfile user
+    :<|> artistUpdateOwnProfile user
+       )
+  :<|> artistUpdateOwnPhoto user
+
 socialServer :: AuthedUser -> ServerT SocialAPI AppM
 socialServer user =
        socialListFollowers user
@@ -3594,6 +3657,7 @@ protectedServer user =
   :<|> adminServer user
   :<|> userRolesServer user
   :<|> fanSecureServer user
+  :<|> artistSecureServer user
   :<|> inventoryServer user
   :<|> bandsServer user
   :<|> sessionsServer user
@@ -4425,9 +4489,9 @@ encodeGooglePathSegment =
 productionCourseSlug :: AppConfig -> Text
 productionCourseSlug = courseSlugFallback
 productionCoursePrice :: Double
-productionCoursePrice = 150
+productionCoursePrice = fromIntegral ProductionCourse.productionCoursePriceCents / 100
 productionCourseCapacity :: Int
-productionCourseCapacity = 16
+productionCourseCapacity = ProductionCourse.productionCourseCapacity
 
 -- Backward-compatible helpers used by cron jobs
 buildLandingUrl :: AppConfig -> Text
@@ -4436,65 +4500,359 @@ buildLandingUrl cfg = buildLandingUrlFor cfg (productionCourseSlug cfg)
 courseMetadataFor :: AppConfig -> Maybe Text -> Text -> Maybe CourseMetadata
 courseMetadataFor cfg mWaContact slugVal =
   let fallbackSlug = productionCourseSlug cfg
-  in if normalizeSlug slugVal /= fallbackSlug
-    then Nothing
-    else
-      let whatsappUrl = buildWhatsappCtaFor mWaContact "Curso de Producción Musical" (buildLandingUrl cfg)
-          sessions =
-            [ CourseSession "Sábado 1 · Introducción" (fromGregorian 2026 6 6)
-            , CourseSession "Sábado 2 · Grabación" (fromGregorian 2026 6 13)
-            , CourseSession "Sábado 3 · Mezcla" (fromGregorian 2026 6 20)
-            , CourseSession "Sábado 4 · Masterización" (fromGregorian 2026 6 27)
-            ]
-          syllabus =
-            [ SyllabusItem "Introducción a la producción musical" ["Conceptos básicos", "Herramientas esenciales"]
-            , SyllabusItem "Grabación y captura de audio" ["Técnicas de grabación", "Configuración de micrófonos"]
-            , SyllabusItem "Mezcla y edición" ["Ecualización y compresión", "Balance y panoramización"]
-            , SyllabusItem "Masterización y publicación" ["Mastering", "Distribución digital"]
-            ]
-      in Just CourseMetadata
-        { slug = fallbackSlug
-        , title = "Curso de Producción Musical"
-        , subtitle = "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 6 de junio"
-        , format = "Presencial"
-        , duration = "Cuatro sábados (16 horas en total)"
-        , price = productionCoursePrice
-        , currency = "USD"
-        , capacity = productionCourseCapacity
-        , remaining = productionCourseCapacity
-        , sessionStartHour = 15
-        , sessionDurationHours = 4
-        , locationLabel = "TDF Records – Quito"
-        , locationMapUrl = courseMapFallback cfg
-        , daws = ["Logic", "Luna"]
-        , includes =
-            [ "Acceso a grabaciones"
-            , "Certificado de participación"
-            , "Mentorías"
-            , "Grupo de WhatsApp"
-            , "Acceso a la plataforma de TDF Records"
-            ]
-        , instructorName = Just "Esteban Muñoz"
-        , instructorBio = Just "Productor e ingeniero residente en TDF Records, mentor del programa de producción."
-        , instructorAvatarUrl = Just (courseInstructorAvatarFallback cfg)
-        , sessions = sessions
-        , syllabus = syllabus
-        , whatsappCtaUrl = whatsappUrl
-        , landingUrl = buildLandingUrl cfg
-        }
+      startDate = firstSaturdayOfConfiguredProductionSlug fallbackSlug
+  in if normalizeSlug slugVal == fallbackSlug
+       then Just (productionCourseMetadataForStartDate cfg mWaContact fallbackSlug startDate Nothing)
+       else Nothing
+
+courseMetaSlug :: CourseMetadata -> Text
+courseMetaSlug Courses.CourseMetadata{Courses.slug = value} = value
+
+courseMetaTitle :: CourseMetadata -> Text
+courseMetaTitle Courses.CourseMetadata{Courses.title = value} = value
+
+courseMetaSubtitle :: CourseMetadata -> Text
+courseMetaSubtitle Courses.CourseMetadata{Courses.subtitle = value} = value
+
+courseMetaFormat :: CourseMetadata -> Text
+courseMetaFormat Courses.CourseMetadata{Courses.format = value} = value
+
+courseMetaDuration :: CourseMetadata -> Text
+courseMetaDuration Courses.CourseMetadata{Courses.duration = value} = value
+
+courseMetaPrice :: CourseMetadata -> Double
+courseMetaPrice Courses.CourseMetadata{Courses.price = value} = value
+
+courseMetaCurrency :: CourseMetadata -> Text
+courseMetaCurrency Courses.CourseMetadata{Courses.currency = value} = value
+
+courseMetaCapacity :: CourseMetadata -> Int
+courseMetaCapacity Courses.CourseMetadata{Courses.capacity = value} = value
+
+courseMetaSessionStartHour :: CourseMetadata -> Int
+courseMetaSessionStartHour Courses.CourseMetadata{Courses.sessionStartHour = value} = value
+
+courseMetaSessionDurationHours :: CourseMetadata -> Int
+courseMetaSessionDurationHours Courses.CourseMetadata{Courses.sessionDurationHours = value} = value
+
+courseMetaLocationLabel :: CourseMetadata -> Text
+courseMetaLocationLabel Courses.CourseMetadata{Courses.locationLabel = value} = value
+
+courseMetaLocationMapUrl :: CourseMetadata -> Text
+courseMetaLocationMapUrl Courses.CourseMetadata{Courses.locationMapUrl = value} = value
+
+courseMetaDaws :: CourseMetadata -> [Text]
+courseMetaDaws Courses.CourseMetadata{Courses.daws = value} = value
+
+courseMetaIncludes :: CourseMetadata -> [Text]
+courseMetaIncludes Courses.CourseMetadata{Courses.includes = value} = value
+
+courseMetaInstructorName :: CourseMetadata -> Maybe Text
+courseMetaInstructorName Courses.CourseMetadata{Courses.instructorName = value} = value
+
+courseMetaInstructorBio :: CourseMetadata -> Maybe Text
+courseMetaInstructorBio Courses.CourseMetadata{Courses.instructorBio = value} = value
+
+courseMetaInstructorAvatarUrl :: CourseMetadata -> Maybe Text
+courseMetaInstructorAvatarUrl Courses.CourseMetadata{Courses.instructorAvatarUrl = value} = value
+
+courseMetaSessions :: CourseMetadata -> [CourseSession]
+courseMetaSessions Courses.CourseMetadata{Courses.sessions = value} = value
+
+courseMetaSyllabus :: CourseMetadata -> [SyllabusItem]
+courseMetaSyllabus Courses.CourseMetadata{Courses.syllabus = value} = value
+
+courseMetaWhatsappCtaUrl :: CourseMetadata -> Text
+courseMetaWhatsappCtaUrl Courses.CourseMetadata{Courses.whatsappCtaUrl = value} = value
+
+courseMetaLandingUrl :: CourseMetadata -> Text
+courseMetaLandingUrl Courses.CourseMetadata{Courses.landingUrl = value} = value
+
+courseSessionLabel :: CourseSession -> Text
+courseSessionLabel Courses.CourseSession{Courses.label = value} = value
+
+courseSessionDate :: CourseSession -> Day
+courseSessionDate Courses.CourseSession{Courses.date = value} = value
+
+syllabusItemTitle :: SyllabusItem -> Text
+syllabusItemTitle Courses.SyllabusItem{Courses.title = value} = value
+
+syllabusItemTopics :: SyllabusItem -> [Text]
+syllabusItemTopics Courses.SyllabusItem{Courses.topics = value} = value
+
+productionCourseMetadataForStartDate
+  :: AppConfig
+  -> Maybe Text
+  -> Text
+  -> Day
+  -> Maybe CourseMetadata
+  -> CourseMetadata
+productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate =
+  let landing = buildLandingUrlFor cfg slugVal
+      templateText field defaultValue =
+        case mTemplate of
+          Just meta ->
+            let value = field meta
+            in if T.null (T.strip value) then defaultValue else value
+          Nothing -> defaultValue
+      templateList field defaultValue =
+        case mTemplate of
+          Just meta ->
+            let values = filter (not . T.null . T.strip) (field meta)
+            in if null values then defaultValue else values
+          Nothing -> defaultValue
+      templateMaybe field defaultValue =
+        case cleanOptional (mTemplate >>= field) of
+          Just value -> Just value
+          Nothing -> defaultValue
+      templateInt field defaultValue =
+        case mTemplate of
+          Just meta | field meta > 0 -> field meta
+          _ -> defaultValue
+      templatePrice =
+        case mTemplate of
+          Just meta | courseMetaPrice meta >= 0 -> courseMetaPrice meta
+          _ -> productionCoursePrice
+      sessions =
+        [ CourseSession labelTxt dayVal
+        | (labelTxt, dayVal) <- ProductionCourse.productionCourseSessions startDate
+        ]
+      syllabus =
+        [ SyllabusItem titleTxt topics
+        | (titleTxt, topics) <- ProductionCourse.productionCourseSyllabus
+        ]
+      titleVal = templateText courseMetaTitle ProductionCourse.productionCourseTitle
+  in CourseMetadata
+      { slug = slugVal
+      , title = titleVal
+      , subtitle = ProductionCourse.productionCourseSubtitleForStartDate startDate
+      , format = templateText courseMetaFormat ProductionCourse.productionCourseFormat
+      , duration = templateText courseMetaDuration ProductionCourse.productionCourseDuration
+      , price = templatePrice
+      , currency = templateText courseMetaCurrency "USD"
+      , capacity = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
+      , remaining = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
+      , sessionStartHour = templateInt courseMetaSessionStartHour ProductionCourse.productionCourseSessionStartHour
+      , sessionDurationHours = templateInt courseMetaSessionDurationHours ProductionCourse.productionCourseSessionDurationHours
+      , locationLabel = templateText courseMetaLocationLabel ProductionCourse.productionCourseLocationLabel
+      , locationMapUrl = templateText courseMetaLocationMapUrl (courseMapFallback cfg)
+      , daws = templateList courseMetaDaws ProductionCourse.productionCourseDaws
+      , includes = templateList courseMetaIncludes ProductionCourse.productionCourseIncludes
+      , instructorName = templateMaybe courseMetaInstructorName (Just ProductionCourse.productionCourseInstructorName)
+      , instructorBio = templateMaybe courseMetaInstructorBio (Just ProductionCourse.productionCourseInstructorBio)
+      , instructorAvatarUrl = templateMaybe courseMetaInstructorAvatarUrl (Just (courseInstructorAvatarFallback cfg))
+      , sessions = sessions
+      , syllabus = syllabus
+      , whatsappCtaUrl = buildWhatsappCtaFor mWaContact titleVal landing
+      , landingUrl = landing
+      }
+
+firstSaturdayOfConfiguredProductionSlug :: Text -> Day
+firstSaturdayOfConfiguredProductionSlug slugVal =
+  let fallback = fromGregorian 2026 6 6
+      parts = T.splitOn "-" slugVal
+      mYear = readMaybe . T.unpack =<< listToMaybe (reverse parts)
+      mMonth = listToMaybe (mapMaybe monthSlugToNumber parts)
+  in case (mYear, mMonth) of
+       (Just y, Just m) -> nextSaturdayOnOrAfterDay (fromGregorian y m 1)
+       _ -> fallback
+
+monthSlugToNumber :: Text -> Maybe Int
+monthSlugToNumber "ene" = Just 1
+monthSlugToNumber "feb" = Just 2
+monthSlugToNumber "mar" = Just 3
+monthSlugToNumber "abr" = Just 4
+monthSlugToNumber "may" = Just 5
+monthSlugToNumber "jun" = Just 6
+monthSlugToNumber "jul" = Just 7
+monthSlugToNumber "ago" = Just 8
+monthSlugToNumber "sep" = Just 9
+monthSlugToNumber "oct" = Just 10
+monthSlugToNumber "nov" = Just 11
+monthSlugToNumber "dic" = Just 12
+monthSlugToNumber _ = Nothing
+
+nextSaturdayOnOrAfterDay :: Day -> Day
+nextSaturdayOnOrAfterDay day =
+  head
+    [ candidate
+    | offset <- [0..6]
+    , let candidate = addDays offset day
+    , formatTime defaultTimeLocale "%u" candidate == "6"
+    ]
+
+ensureCurrentProductionCourseMetadata
+  :: AppConfig
+  -> WhatsAppEnv
+  -> Day
+  -> Text
+  -> AppM (Maybe CourseMetadata)
+ensureCurrentProductionCourseMetadata cfg waEnv today requestedSlug
+  | not (isProductionCoursePublicSlug cfg requestedSlug) = pure Nothing
+  | otherwise = do
+      productionMetas <- loadProductionCourseMetadatasFromDB cfg waEnv
+      let threshold = ProductionCourse.minimumProductionStartDate today
+          hasRequiredLead meta =
+            maybe False (>= threshold) (firstCourseSessionDate meta)
+          mRequestedValid =
+            find
+              (\meta -> normalizeSlug (courseMetaSlug meta) == requestedSlug && hasRequiredLead meta)
+              productionMetas
+          mEarliestValid =
+            listToMaybe
+              (sortOn
+                (fromMaybe (fromGregorian 9999 12 31) . firstCourseSessionDate)
+                (filter hasRequiredLead productionMetas))
+      case mRequestedValid <|> mEarliestValid of
+        Just meta -> pure (Just meta)
+        Nothing -> do
+          meta <- createProductionCourseForStartDate
+            cfg
+            waEnv
+            (ProductionCourse.nextProductionCourseStartDate today)
+            productionMetas
+          pure (Just meta)
+
+isProductionCoursePublicSlug :: AppConfig -> Text -> Bool
+isProductionCoursePublicSlug cfg slugVal =
+  let normalized = normalizeSlug slugVal
+  in normalized == "produccion-musical"
+      || normalized == productionCourseSlug cfg
+      || "produccion-musical-" `T.isPrefixOf` normalized
+
+firstCourseSessionDate :: CourseMetadata -> Maybe Day
+firstCourseSessionDate meta =
+  listToMaybe (sort [courseSessionDate session | session <- courseMetaSessions meta])
+
+loadProductionCourseMetadatasFromDB :: AppConfig -> WhatsAppEnv -> AppM [CourseMetadata]
+loadProductionCourseMetadatasFromDB cfg waEnv =
+  runDB $ do
+    courses <- selectList [] [Desc Trials.CourseUpdatedAt]
+    fmap catMaybes $ forM courses $ \(Entity cid course) -> do
+      if "produccion-musical-" `T.isPrefixOf` normalizeSlug (Trials.courseSlug course)
+        then do
+          sessions <- selectList
+            [Trials.CourseSessionModelCourseId ==. cid]
+            [Asc Trials.CourseSessionModelOrder, Asc Trials.CourseSessionModelDate]
+          syllabus <- selectList
+            [Trials.CourseSyllabusItemCourseId ==. cid]
+            [Asc Trials.CourseSyllabusItemOrder, Asc Trials.CourseSyllabusItemId]
+          pure (Just (toCourseMetadata cfg waEnv course sessions syllabus))
+        else pure Nothing
+
+createProductionCourseForStartDate
+  :: AppConfig
+  -> WhatsAppEnv
+  -> Day
+  -> [CourseMetadata]
+  -> AppM CourseMetadata
+createProductionCourseForStartDate cfg waEnv startDate productionMetas =
+  case find ((== Just startDate) . firstCourseSessionDate) productionMetas of
+    Just meta -> pure meta
+    Nothing -> do
+      now <- liftIO getCurrentTime
+      slugVal <- runDB (firstAvailableProductionCourseSlug startDate)
+      let mTemplate =
+            listToMaybe productionMetas
+              <|> courseMetadataFor cfg (waContactNumber waEnv) (productionCourseSlug cfg)
+          meta = productionCourseMetadataForStartDate cfg (waContactNumber waEnv) slugVal startDate mTemplate
+      runDB (insertProductionCourseMetadata now meta)
+      fromMaybe meta <$> loadCourseMetadataFromDB cfg waEnv slugVal
+
+firstAvailableProductionCourseSlug :: Day -> SqlPersistT IO Text
+firstAvailableProductionCourseSlug startDate =
+  firstAvailable
+    (baseSlug : daySlug : [daySlug <> "-" <> T.pack (show n) | n <- [2 :: Int ..]])
+  where
+    baseSlug = ProductionCourse.productionCourseSlugForStartDate startDate
+    daySlug = ProductionCourse.productionCourseDaySlugForStartDate startDate
+
+    firstAvailable [] = pure baseSlug
+    firstAvailable (candidate:rest) = do
+      mExisting <- getBy (Trials.UniqueCourseSlug candidate)
+      case mExisting of
+        Nothing -> pure candidate
+        Just _ -> firstAvailable rest
+
+insertProductionCourseMetadata :: UTCTime -> CourseMetadata -> SqlPersistT IO ()
+insertProductionCourseMetadata now meta = do
+  let cleanTextList values =
+        let cleaned = filter (not . T.null) (map T.strip values)
+        in if null cleaned then Nothing else Just cleaned
+      coursePriceCents = max 0 (round (courseMetaPrice meta * 100) :: Int)
+      textOr defaultValue value =
+        let cleaned = T.strip value
+        in if T.null cleaned then defaultValue else cleaned
+  courseId <- insert Trials.Course
+    { Trials.courseSlug = normalizeSlug (courseMetaSlug meta)
+    , Trials.courseTitle = textOr ProductionCourse.productionCourseTitle (courseMetaTitle meta)
+    , Trials.courseSubtitle = cleanOptional (Just (courseMetaSubtitle meta))
+    , Trials.courseFormat = cleanOptional (Just (courseMetaFormat meta))
+    , Trials.courseDuration = cleanOptional (Just (courseMetaDuration meta))
+    , Trials.coursePriceCents = coursePriceCents
+    , Trials.courseCurrency = textOr "USD" (courseMetaCurrency meta)
+    , Trials.courseCapacity = max 1 (courseMetaCapacity meta)
+    , Trials.courseSessionStartHour = Just (courseMetaSessionStartHour meta)
+    , Trials.courseSessionDurationHours = Just (courseMetaSessionDurationHours meta)
+    , Trials.courseLocationLabel = cleanOptional (Just (courseMetaLocationLabel meta))
+    , Trials.courseLocationMapUrl = cleanOptional (Just (courseMetaLocationMapUrl meta))
+    , Trials.courseWhatsappCtaUrl = cleanOptional (Just (courseMetaWhatsappCtaUrl meta))
+    , Trials.courseLandingUrl = cleanOptional (Just (courseMetaLandingUrl meta))
+    , Trials.courseDaws = Nothing
+    , Trials.courseIncludes = Nothing
+    , Trials.courseInstructorName = cleanOptional (courseMetaInstructorName meta)
+    , Trials.courseInstructorBio = cleanOptional (courseMetaInstructorBio meta)
+    , Trials.courseInstructorAvatarUrl = cleanOptional (courseMetaInstructorAvatarUrl meta)
+    , Trials.courseStripeSubscriptionPriceId = Nothing
+    , Trials.courseCreatedAt = now
+    , Trials.courseUpdatedAt = now
+    }
+  persistCourseTextArrayField courseId "daws" (cleanTextList (courseMetaDaws meta))
+  persistCourseTextArrayField courseId "includes" (cleanTextList (courseMetaIncludes meta))
+  for_ (zip [1 :: Int ..] (courseMetaSessions meta)) $ \(idx, session) ->
+    insert_ Trials.CourseSessionModel
+      { Trials.courseSessionModelCourseId = courseId
+      , Trials.courseSessionModelLabel = courseSessionLabel session
+      , Trials.courseSessionModelDate = courseSessionDate session
+      , Trials.courseSessionModelOrder = Just idx
+      }
+  for_ (zip [1 :: Int ..] (courseMetaSyllabus meta)) $ \(idx, item) ->
+    insert_ Trials.CourseSyllabusItem
+      { Trials.courseSyllabusItemCourseId = courseId
+      , Trials.courseSyllabusItemTitle = syllabusItemTitle item
+      , Trials.courseSyllabusItemTopics = syllabusItemTopics item
+      , Trials.courseSyllabusItemOrder = Just idx
+      }
+
+persistCourseTextArrayField :: Trials.CourseId -> Text -> Maybe [Text] -> SqlPersistT IO ()
+persistCourseTextArrayField courseId columnName Nothing =
+  rawExecute
+    ("UPDATE course SET " <> columnName <> " = NULL WHERE id = ?")
+    [PersistInt64 (fromSqlKey courseId)]
+persistCourseTextArrayField courseId columnName (Just values) =
+  rawExecute
+    ("UPDATE course SET " <> columnName <> " = ARRAY(SELECT jsonb_array_elements_text(?::jsonb)) WHERE id = ?")
+    [ PersistText (TE.decodeUtf8 (BL.toStrict (encode values)))
+    , PersistInt64 (fromSqlKey courseId)
+    ]
 
 loadCourseMetadata :: Text -> AppM CourseMetadata
 loadCourseMetadata rawSlug = do
   normalized <- either throwError pure (validateCourseSlug rawSlug)
   Env{..} <- ask
   waEnv <- liftIO loadWhatsAppEnv
-  mDbMeta <- loadCourseMetadataFromDB envConfig waEnv normalized
+  today <- utctDay <$> liftIO getCurrentTime
+  mProductionMeta <- ensureCurrentProductionCourseMetadata envConfig waEnv today normalized
+  mDbMeta <- case mProductionMeta of
+    Just _ -> pure Nothing
+    Nothing -> loadCourseMetadataFromDB envConfig waEnv normalized
   let fallbackMeta = courseMetadataFor envConfig (waContactNumber waEnv) normalized
-  baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure mDbMeta
+  baseMeta <- maybe (maybe (throwNotFound "Curso no encontrado") pure fallbackMeta) pure (mProductionMeta <|> mDbMeta)
   let Courses.CourseMetadata{ Courses.capacity = baseCapacity } = baseMeta
+      countSlug = normalizeSlug (courseMetaSlug baseMeta)
   countRegs <- runDB $
     count
-      [ ME.CourseRegistrationCourseSlug ==. normalized
+      [ ME.CourseRegistrationCourseSlug ==. countSlug
       , ME.CourseRegistrationStatus !=. "cancelled"
       ]
   let remainingSeats = max 0 (baseCapacity - fromIntegral countRegs)
@@ -7058,11 +7416,21 @@ fanFollowArtist user artistId = do
   Env pool _ <- ask
   mDto <- liftIO $ flip runSqlPool pool $ do
     now <- liftIO getCurrentTime
-    _ <- insertUnique FanFollow
+    insertedFollow <- insertUnique FanFollow
       { fanFollowFanPartyId    = fanKey
       , fanFollowArtistPartyId = targetKey
       , fanFollowCreatedAt     = now
       }
+    when (isJust insertedFollow) $ do
+      recordEngagementEvent
+        (Just fanKey)
+        (Just targetKey)
+        "artist"
+        (Just (fromIntegral (fromSqlKey targetKey)))
+        "follow"
+        Nothing
+        now
+      createArtistFollowerNotification fanKey targetKey now
     -- Auto-follow club members
     mClub <- getBy (UniqueFanClubArtist targetKey)
     case mClub of
@@ -7118,9 +7486,57 @@ fanUnfollowArtist user artistId = do
   when (artistKey == auPartyId user) $
     throwBadRequest "No puedes dejar de seguirte a ti mismo"
   Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $
-    deleteBy (UniqueFanFollow (auPartyId user) artistKey)
+  liftIO $ flip runSqlPool pool $ do
+    existingFollow <- getBy (UniqueFanFollow (auPartyId user) artistKey)
+    case existingFollow of
+      Nothing -> pure ()
+      Just _ -> do
+        now <- liftIO getCurrentTime
+        deleteBy (UniqueFanFollow (auPartyId user) artistKey)
+        recordEngagementEvent
+          (Just (auPartyId user))
+          (Just artistKey)
+          "artist"
+          (Just (fromIntegral (fromSqlKey artistKey)))
+          "unfollow"
+          Nothing
+          now
   pure NoContent
+
+recordEngagementEvent
+  :: Maybe PartyId
+  -> Maybe PartyId
+  -> Text
+  -> Maybe Int
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+recordEngagementEvent actorPartyId targetArtistId entityType entityId eventType metadata createdAt =
+  insert_ EngagementEvent
+    { engagementEventActorPartyId = actorPartyId
+    , engagementEventTargetArtistId = targetArtistId
+    , engagementEventEntityType = entityType
+    , engagementEventEntityId = entityId
+    , engagementEventEventType = eventType
+    , engagementEventMetadata = metadata
+    , engagementEventCreatedAt = createdAt
+    }
+
+createArtistFollowerNotification :: PartyId -> PartyId -> UTCTime -> SqlPersistT IO ()
+createArtistFollowerNotification fanKey artistKey now = do
+  mFan <- get fanKey
+  let fanName = maybe "Un fan" M.partyDisplayName mFan
+  insert_ Notification
+    { notificationRecipientPartyId = artistKey
+    , notificationNotifType = "artist_liked"
+    , notificationTitle = "Nuevo fan"
+    , notificationBody = fanName <> " empezó a seguir tu perfil."
+    , notificationTargetType = Just "artist"
+    , notificationTargetId = Just (fromIntegral (fromSqlKey artistKey))
+    , notificationIsRead = False
+    , notificationCreatedAt = now
+    }
 
 resolveFanFollowArtistTarget :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveFanFollowArtistTarget rawArtistId =
@@ -7529,6 +7945,31 @@ artistUpdateOwnProfile user payload = do
   Env pool _ <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ upsertArtistProfileRecord artistKey validated now
+
+artistUpdateOwnPhoto :: AuthedUser -> ArtistProfilePhotoUpdate -> AppM ArtistProfileDTO
+artistUpdateOwnPhoto user ArtistProfilePhotoUpdate{..} = do
+  requireArtistAccess user
+  let heroImageUrl = T.strip aphuHeroImageUrl
+  when (T.null heroImageUrl) $
+    throwBadRequest "heroImageUrl is required"
+  current <- artistGetOwnProfile user
+  let payload = ArtistProfileUpsert
+        { apuArtistId = fromSqlKey (auPartyId user)
+        , apuDisplayName = Just (apDisplayName current)
+        , apuSlug = apSlug current
+        , apuBio = apBio current
+        , apuCity = apCity current
+        , apuHeroImageUrl = Just heroImageUrl
+        , apuSpotifyArtistId = apSpotifyArtistId current
+        , apuSpotifyUrl = apSpotifyUrl current
+        , apuYoutubeChannelId = apYoutubeChannelId current
+        , apuYoutubeUrl = apYoutubeUrl current
+        , apuWebsiteUrl = apWebsiteUrl current
+        , apuFeaturedVideoUrl = apFeaturedVideoUrl current
+        , apuGenres = apGenres current
+        , apuHighlights = apHighlights current
+        }
+  artistUpdateOwnProfile user payload
 
 -- ============================================================================
 -- Notifications
@@ -11602,9 +12043,9 @@ callOpenAIChat cfg messages =
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
       manager <- pure sharedTlsManager
-      let apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+      let apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
       reqBase <- parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
-      let models = openAIChatModelCandidates (openAiModel cfg)
+      let models = llmChatModelCandidates (openAiModel cfg)
       tryModels manager reqBase key models Nothing
   where
     tryModels :: Manager -> Request -> Text -> [Text] -> Maybe Text -> IO (Either Text Text)
@@ -11671,18 +12112,6 @@ openAIChatRequestErrorMessage :: SomeException -> Text
 openAIChatRequestErrorMessage err =
   fromMaybe "OpenAI chat request failed" $
     sanitizeApiErrorMessage ("OpenAI chat request failed: " <> T.pack (displayException err))
-
-openAIChatModelCandidates :: Text -> [Text]
-openAIChatModelCandidates primaryModel =
-  nub $
-    filter (not . T.null)
-      [ T.strip primaryModel
-      , "kimi-k2.6"
-      , "kimi-k2.5"
-      , "gpt-4o-mini"
-      , "gpt-3.5-turbo"
-      , "gpt-4-turbo"
-      ]
 
 shouldRetryWithFallbackModel :: Int -> Text -> Bool
 shouldRetryWithFallbackModel status rawMessage =
@@ -11772,7 +12201,7 @@ tidalAgentServer user TidalAgentRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let model = fromMaybe (openAiModel envConfig) (taModel >>= nonEmptyText)
-      apiBase = normalizeChatKitBase (chatKitApiBase envConfig)
+      apiBase = normalizeLlmApiBase (chatKitApiBase envConfig)
   manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chat/completions"))
   let body = encode $ object
@@ -11824,7 +12253,7 @@ chatkitSessionServer user ChatKitSessionRequest{..} = do
     Nothing -> throwError err503 { errBody = "OPENAI_API_KEY no configurada" }
     Just key -> pure key
   let userId = T.pack (show (fromSqlKey (auPartyId user)))
-      apiBase = normalizeChatKitBase (chatKitApiBase cfg)
+      apiBase = normalizeLlmApiBase (chatKitApiBase cfg)
   manager <- pure sharedTlsManager
   reqBase <- liftIO $ parseRequest (T.unpack (apiBase <> "/v1/chatkit/sessions"))
   let body = encode $ object
@@ -11886,11 +12315,6 @@ resolveWorkflowId primary fallback =
         Right workflowId -> Right workflowId
         Left msg ->
           Left status { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
-
-normalizeChatKitBase :: Text -> Text
-normalizeChatKitBase base =
-  let trimmed = T.dropWhileEnd (== '/') (T.strip base)
-  in if T.null trimmed then "https://api.moonshot.ai" else trimmed
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =

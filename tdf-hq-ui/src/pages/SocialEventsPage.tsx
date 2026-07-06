@@ -50,6 +50,7 @@ import {
   getSocialEventsFinanceSummaryUiState,
   getSocialEventsOverviewUiState,
 } from './socialEventsPageState';
+import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
 
 interface InvitationState {
   partyId: string;
@@ -58,9 +59,12 @@ interface InvitationState {
 
 interface TicketPurchaseState {
   tierId: string;
-  quantity: string;
-  buyerName: string;
-  buyerEmail: string;
+}
+
+interface TicketCheckoutState {
+  eventId: string;
+  eventTitle: string;
+  tier: SocialTicketTierDTO;
 }
 
 interface TicketTierFormState {
@@ -419,6 +423,7 @@ export default function SocialEventsPage() {
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
+  const [ticketCheckout, setTicketCheckout] = useState<TicketCheckoutState | null>(null);
   const [ticketTierForms, setTicketTierForms] = useState<Record<string, TicketTierFormState>>({});
   const [budgetLineForms, setBudgetLineForms] = useState<Record<string, BudgetLineFormState>>({});
   const [financeEntryForms, setFinanceEntryForms] = useState<Record<string, FinanceEntryFormState>>({});
@@ -706,37 +711,6 @@ export default function SocialEventsPage() {
     onSuccess: (_resp, { eventId }) => {
       void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
       setFeedback({ kind: 'success', message: 'Respuesta enviada.' });
-    },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
-
-  const purchaseTicketsMutation = useMutation({
-    mutationFn: ({ eventId, fallbackTierId }: { eventId: string; fallbackTierId?: string }) => {
-      if (!sessionPartyId) throw new Error('Inicia sesión para comprar tickets.');
-      const draft = ticketPurchases[eventId] ?? {
-        tierId: fallbackTierId ?? '',
-        quantity: '1',
-        buyerName: '',
-        buyerEmail: '',
-      };
-      const quantity = parseOptionalUnsignedInt(draft.quantity);
-      if (!draft.tierId) throw new Error('Selecciona un tipo de ticket.');
-      if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
-      return SocialEventsAPI.buyTickets(eventId, {
-        ticketPurchaseTierId: draft.tierId,
-        ticketPurchaseQuantity: quantity,
-        ticketPurchaseBuyerName: draft.buyerName.trim() || null,
-        ticketPurchaseBuyerEmail: draft.buyerEmail.trim() || null,
-      });
-    },
-    onSuccess: (order, { eventId }) => {
-      setTicketPurchases((prev) => ({ ...prev, [eventId]: { tierId: '', quantity: '1', buyerName: '', buyerEmail: '' } }));
-      void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
-      void qc.invalidateQueries({ queryKey: ['social-ticket-orders', eventId] });
-      setFeedback({
-        kind: 'success',
-        message: `Compra registrada (${order.ticketOrderQuantity} ticket${order.ticketOrderQuantity > 1 ? 's' : ''}).`,
-      });
     },
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
@@ -1448,12 +1422,16 @@ export default function SocialEventsPage() {
               ? getSocialEventsFinanceSummaryUiState(financeSummary)
               : null;
             const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
+            const availableTiers = tiers.filter(
+              (tier) => Boolean(tier.ticketTierId) && tier.ticketTierActive && tierAvailability(tier) > 0,
+            );
             const purchaseDraft = ticketPurchases[eventId] ?? {
-              tierId: tiers[0]?.ticketTierId ?? '',
-              quantity: '1',
-              buyerName: '',
-              buyerEmail: '',
+              tierId: availableTiers[0]?.ticketTierId ?? '',
             };
+            const selectedPurchaseTier =
+              availableTiers.find((tier) => String(tier.ticketTierId ?? '') === purchaseDraft.tierId)
+              ?? availableTiers[0]
+              ?? null;
             const tierDraft = ticketTierForms[eventId] ?? { code: '', name: '', price: '', quantity: '', currency: 'USD' };
             const budgetDraft = budgetLineForms[eventId] ?? {
               code: '',
@@ -1720,13 +1698,18 @@ export default function SocialEventsPage() {
                                 select
                                 label="Tipo"
                                 size="small"
-                                value={purchaseDraft.tierId}
+                                value={selectedPurchaseTier?.ticketTierId ?? ''}
                                 onChange={(e) => setTicketPurchases((prev) => ({
                                   ...prev,
                                   [eventId]: { ...purchaseDraft, tierId: e.target.value },
                                 }))}
                                 sx={{ minWidth: 180 }}
                               >
+                                {availableTiers.length === 0 && (
+                                  <MenuItem value="" disabled>
+                                    Sin tickets disponibles
+                                  </MenuItem>
+                                )}
                                 {tiers.map((tier) => (
                                   <MenuItem
                                     key={tier.ticketTierId ?? tier.ticketTierCode}
@@ -1737,45 +1720,24 @@ export default function SocialEventsPage() {
                                   </MenuItem>
                                 ))}
                               </TextField>
-                              <TextField
-                                label="Cantidad"
-                                size="small"
-                                type="number"
-                                value={purchaseDraft.quantity}
-                                onChange={(e) => setTicketPurchases((prev) => ({
-                                  ...prev,
-                                  [eventId]: { ...purchaseDraft, quantity: e.target.value },
-                                }))}
-                                sx={{ width: 110 }}
-                              />
-                              <TextField
-                                label="Nombre comprador"
-                                size="small"
-                                value={purchaseDraft.buyerName}
-                                onChange={(e) => setTicketPurchases((prev) => ({
-                                  ...prev,
-                                  [eventId]: { ...purchaseDraft, buyerName: e.target.value },
-                                }))}
-                                sx={{ flex: 1 }}
-                              />
-                              <TextField
-                                label="Email comprador"
-                                size="small"
-                                value={purchaseDraft.buyerEmail}
-                                onChange={(e) => setTicketPurchases((prev) => ({
-                                  ...prev,
-                                  [eventId]: { ...purchaseDraft, buyerEmail: e.target.value },
-                                }))}
-                                sx={{ flex: 1 }}
-                              />
                               <Button
                                 variant="contained"
                                 size="small"
                                 startIcon={<SellIcon />}
-                                onClick={() => eventId && purchaseTicketsMutation.mutate({ eventId, fallbackTierId: tiers[0]?.ticketTierId ?? undefined })}
-                                disabled={purchaseTicketsMutation.isPending || !eventId || tiers.length === 0}
+                                onClick={() => {
+                                  if (!sessionPartyId) {
+                                    setFeedback({ kind: 'error', message: 'Inicia sesión para comprar tickets.' });
+                                    return;
+                                  }
+                                  if (!eventId || !selectedPurchaseTier?.ticketTierId) {
+                                    setFeedback({ kind: 'error', message: 'Selecciona un tipo de ticket disponible.' });
+                                    return;
+                                  }
+                                  setTicketCheckout({ eventId, eventTitle: ev.eventTitle, tier: selectedPurchaseTier });
+                                }}
+                                disabled={!eventId || availableTiers.length === 0}
                               >
-                                Comprar
+                                Comprar con tarjeta
                               </Button>
                             </Stack>
                           )}
@@ -2388,6 +2350,20 @@ export default function SocialEventsPage() {
             );
           })}
         </Grid>
+      )}
+      {ticketCheckout && (
+        <StripeCheckoutModal
+          open
+          eventId={ticketCheckout.eventId}
+          eventTitle={ticketCheckout.eventTitle}
+          tier={ticketCheckout.tier}
+          onClose={() => setTicketCheckout(null)}
+          onSuccess={(orderId) => {
+            void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', ticketCheckout.eventId] });
+            void qc.invalidateQueries({ queryKey: ['social-ticket-orders', ticketCheckout.eventId] });
+            setFeedback({ kind: 'success', message: `Pago aprobado. Orden ${orderId}.` });
+          }}
+        />
       )}
     </Box>
   );

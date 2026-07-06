@@ -8,7 +8,6 @@ const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
 const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
 const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
-const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
@@ -20,6 +19,7 @@ const CompaniesPage = lazy(() => import('../pages/CompaniesPage'));
 const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
+const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfilePage'));
@@ -42,7 +42,6 @@ const OrdersPage = lazy(() => import('../pages/OrdersPage'));
 const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
-const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const ReservasEquipoPage = lazy(() => import('../pages/ReservasEquipoPage'));
 const RoomsPage = lazy(() => import('../pages/RoomsPage'));
@@ -59,6 +58,7 @@ const TidalAgentPage = lazy(() => import('../pages/TidalAgentPage'));
 const TrialLessonsPage = lazy(() => import('../pages/TrialLessonsPage'));
 const UserRoleManagement = lazy(() => import('../components/UserRoleManagement'));
 const UxOptionsPage = lazy(() => import('../pages/UxOptionsPage'));
+const UserActivityPage = lazy(() => import('../pages/UserActivityPage'));
 const WhatsAppConsentPage = lazy(() => import('../pages/WhatsAppConsentPage'));
 
 export function renderProtectedRoutes() {
@@ -132,6 +132,7 @@ export function renderProtectedRoutes() {
 
         <Route path="/finanzas" element={<Outlet />}>
           <Route path="pagos" element={<PaymentsPage />} />
+          <Route path="reporte-esteban-munoz" element={<EstebanMunozReportPage />} />
           <Route index element={<Navigate to="pagos" replace />} />
         </Route>
 
@@ -147,6 +148,7 @@ export function renderProtectedRoutes() {
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />
           <Route path="estado" element={<SystemStatusPage />} />
+          <Route path="actividad" element={<UserActivityPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="brain" element={<BrainAdminPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />

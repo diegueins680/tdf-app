@@ -2,6 +2,7 @@ import { get, post, put, del } from './client';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
+  ArtistProfilePhotoUpdate,
   ArtistProfileUpsert,
   FanProfileDTO,
   FanProfileUpdate,
@@ -40,8 +41,25 @@ const send: (path: string, body: unknown) => unknown = post;
 const update: (path: string, body: unknown) => unknown = put;
 const remove: (path: string) => unknown = del;
 
+const isUnsupportedNotificationEndpoint = (error: unknown): boolean => (
+  typeof error === 'object'
+  && error !== null
+  && 'status' in error
+  && (error as { status?: unknown }).status === 404
+);
+
 export const Fans = {
   listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
+  listPublicArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
+  searchArtists: async (query?: { q?: string; genre?: string }) => {
+    const params = new URLSearchParams();
+    if (query?.q) params.set('q', query.q);
+    if (query?.genre) params.set('genre', query.genre);
+    const qs = params.toString();
+    return (await read(`/artists/search${qs ? `?${qs}` : ''}`)) as ArtistProfileDTO[];
+  },
+  getPublicArtist: async (artistRef: number | string) =>
+    (await read(`/artists/${encodeURIComponent(String(artistRef))}/public`)) as ArtistProfileDTO,
   getArtist: async (artistId: number) => (await read(`/fans/artists/${artistId}`)) as ArtistProfileDTO,
   getReleases: async (artistId: number) => (await read(`/fans/artists/${artistId}/releases`)) as ArtistReleaseDTO[],
   getArtistFans: async (artistId: number, page = 1, pageSize = 5) =>
@@ -56,6 +74,12 @@ export const Fans = {
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
     (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
+  createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
+    (await send('/artists/me/profile', payload)) as ArtistProfileDTO,
+  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
+    (await update('/artists/me/profile', payload)) as ArtistProfileDTO,
+  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
+    (await send('/artists/me/photo', payload)) as ArtistProfileDTO,
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,
@@ -159,10 +183,21 @@ export const Fans = {
   // Notifications
   listNotifications: async (unreadOnly?: boolean) => {
     const notificationsQuery = unreadOnly ? '?unreadOnly=true' : '';
-    return (await read(`/fans/me/notifications${notificationsQuery}`)) as NotificationDTO[];
+    try {
+      return (await read(`/fans/me/notifications${notificationsQuery}`)) as NotificationDTO[];
+    } catch (error) {
+      if (isUnsupportedNotificationEndpoint(error)) return [];
+      throw error;
+    }
   },
-  getNotificationCount: async () =>
-    (await read('/fans/me/notifications/count')) as NotificationCountDTO,
+  getNotificationCount: async () => {
+    try {
+      return (await read('/fans/me/notifications/count')) as NotificationCountDTO;
+    } catch (error) {
+      if (isUnsupportedNotificationEndpoint(error)) return { ncUnread: 0 };
+      throw error;
+    }
+  },
   markNotificationRead: async (notifId: number) => {
     await send(`/fans/me/notifications/${notifId}/read`, {});
   },

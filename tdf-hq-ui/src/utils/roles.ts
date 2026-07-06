@@ -41,6 +41,13 @@ export interface SignupFormState {
   internshipAreas: string;
 }
 
+const stripControlAndFormatChars = (value: string): string => {
+  return value
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+    .replace(/[\u200B-\u200F\uFEFF\u00AD\u2060\uFE0E\uFE0F]/g, '')
+    .replace(/[\u2028\u2029]/g, '');
+};
+
 const parseOptionalInt = (value: string): number | undefined => {
   const trimmed = value.trim();
   if (trimmed === '') return undefined;
@@ -101,8 +108,8 @@ export function buildSignupPayload(
     internshipStartAt: wantsInternRole && form.internshipStartAt.trim() ? form.internshipStartAt.trim() : undefined,
     internshipEndAt: wantsInternRole && form.internshipEndAt.trim() ? form.internshipEndAt.trim() : undefined,
     internshipRequiredHours: requiredHours,
-    internshipSkills: wantsInternRole && form.internshipSkills.trim() ? form.internshipSkills.trim() : undefined,
-    internshipAreas: wantsInternRole && form.internshipAreas.trim() ? form.internshipAreas.trim() : undefined,
+    internshipSkills: wantsInternRole && form.internshipSkills.trim() ? stripControlAndFormatChars(form.internshipSkills.trim()) : undefined,
+    internshipAreas: wantsInternRole && form.internshipAreas.trim() ? stripControlAndFormatChars(form.internshipAreas.trim()) : undefined,
     roles: roles.length ? roles : undefined,
     fanArtistIds: normalizedFavoriteArtistIds.length ? normalizedFavoriteArtistIds : undefined,
     claimArtistId: normalizedClaimId,

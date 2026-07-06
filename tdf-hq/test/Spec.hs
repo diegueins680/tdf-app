@@ -331,6 +331,9 @@ import TDF.Server.SocialEventsHandlers (
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
     normalizeMomentReaction,
+    normalizeLiveBroadcastTitle,
+    normalizeLiveBroadcastDescription,
+    normalizeLiveBroadcastQuality,
     normalizePositivePartyIdText,
     validateMomentMediaDimension,
     validateMomentMediaDuration,
@@ -416,6 +419,9 @@ import TDF.Config
       instagramMessagingAccountId,
       instagramMessagingToken,
       instagramVerifyToken,
+      llmProvider,
+      llmProviderApiBase,
+      llmProviderDefaultChatModel,
       loadConfig,
       openAiApiKey,
       openAiEmbedModel,
@@ -1696,9 +1702,11 @@ main = hspec $ do
                 "https://hq.example.com/app\8238admin"
                 "HQ_APP_URL must not contain hidden formatting characters"
 
-        it "normalizes configured outbound API base URLs before building requests" $
+        it "normalizes configured outbound API base URLs before building requests" $ do
+            let providerApiBaseText = llmProviderApiBase llmProvider
+                providerApiBase = Data.Text.unpack providerApiBaseText
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just " https://api.moonshot.cn/ ")
+                [ ("CHATKIT_API_BASE", Just (" " <> providerApiBase <> "/ "))
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -1710,7 +1718,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    chatKitApiBase cfg `shouldBe` "https://api.moonshot.cn"
+                    chatKitApiBase cfg `shouldBe` providerApiBaseText
                     facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
                     facebookMessagingApiBase cfg
                         `shouldBe` "https://graph.facebook.com/v22.0"
@@ -1719,6 +1727,7 @@ main = hspec $ do
                         `shouldBe` "https://graph.facebook.com/v23.0"
 
         it "rejects malformed outbound API base URLs before token-bearing requests are built" $ do
+            let providerApiBase = Data.Text.unpack (llmProviderApiBase llmProvider)
             let apiBaseKeys =
                     [ "CHATKIT_API_BASE"
                     , "FACEBOOK_GRAPH_BASE"
@@ -1752,7 +1761,7 @@ main = hspec $ do
                 "CHATKIT_API_BASE is configured but blank; unset it to use the default"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn?proxy=1"
+                (providerApiBase <> "?proxy=1")
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
             assertInvalid
                 "FACEBOOK_MESSAGING_API_BASE"
@@ -1768,11 +1777,11 @@ main = hspec $ do
                 "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn/v1//chat"
+                (providerApiBase <> "/v1//chat")
                 "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.moonshot.cn:0443"
+                (providerApiBase <> ":0443")
                 "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
@@ -1989,14 +1998,17 @@ main = hspec $ do
                 ("text-embedding-3-small" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
                 "OPENAI_EMBED_MODEL must use only ASCII letters"
 
-        it "normalizes configured OpenAI chat models before fallback requests are built" $
+        it "normalizes configured OpenAI chat models before fallback requests are built" $ do
+            let providerChatModelText = llmProviderDefaultChatModel llmProvider
+                providerChatModel = Data.Text.unpack providerChatModelText
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just " kimi-latest ") ]
+                [ ("OPENAI_MODEL", Just (" " <> providerChatModel <> " ")) ]
                 $ do
                     cfg <- loadConfig
-                    openAiModel cfg `shouldBe` "kimi-latest"
+                    openAiModel cfg `shouldBe` providerChatModelText
 
         it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
+            let providerChatModel = Data.Text.unpack (llmProviderDefaultChatModel llmProvider)
             let assertInvalid rawModel expectedMessage =
                     withEnvOverrides
                         [ ("OPENAI_MODEL", Just rawModel) ]
@@ -2006,7 +2018,7 @@ main = hspec $ do
                 "gpt 4.1"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
-                "kimi-latest\nsource"
+                (providerChatModel <> "\nsource")
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"
@@ -8911,10 +8923,16 @@ main = hspec $ do
                     , artistUpdatedAt = Nothing
                     }
 
-        it "preserves omitted artist references and canonicalizes explicit positive ids" $ do
+        it "requires explicit artist ids and canonicalizes explicit positive ids" $ do
             fmap (map fromSqlKey)
-                (validateEventArtistIds [mkArtist Nothing, mkArtist (Just " 0042 "), mkArtist (Just "7")])
+                (validateEventArtistIds [mkArtist (Just " 0042 "), mkArtist (Just "7")])
                 `shouldBe` Right [42, 7]
+            case validateEventArtistIds [mkArtist Nothing] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId is required"
+                Right value ->
+                    expectationFailure ("Expected missing event artist id to be rejected, got " <> show value)
 
         it "rejects duplicate artist ids before event writes hit the join-table constraint" $
             case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
@@ -9056,6 +9074,71 @@ main = hspec $ do
             assertInvalid
                 (validateMomentMediaDuration (Just (-1)))
                 "Moment media duration must be 0 or greater"
+
+    describe "live broadcast normalizers" $ do
+        it "requires a non-empty title and trims accepted titles" $ do
+            normalizeLiveBroadcastTitle (Just "  Frente al escenario  ")
+                `shouldBe` Right "Frente al escenario"
+            let assertInvalidTitle rawTitle expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast title to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastTitle rawTitle)
+            assertInvalidTitle Nothing "Live broadcast title is required"
+            assertInvalidTitle (Just "   ") "Live broadcast title is required"
+            assertInvalidTitle
+                (Just (Data.Text.replicate 121 "a"))
+                "Live broadcast title must be 120 characters or less"
+            assertInvalidTitle
+                (Just ("set" <> Data.Text.singleton '\x202e' <> "view"))
+                "Live broadcast title must not contain control characters"
+
+        it "accepts missing descriptions and rejects unsafe or oversize descriptions" $ do
+            normalizeLiveBroadcastDescription Nothing `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "   ") `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "  Empieza el encore  ")
+                `shouldBe` Right (Just "Empieza el encore")
+            let assertInvalidDescription rawDescription expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast description to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastDescription rawDescription)
+            assertInvalidDescription
+                (Just (Data.Text.replicate 281 "b"))
+                "Live broadcast description must be 280 characters or less"
+            assertInvalidDescription
+                (Just ("encore" <> Data.Text.singleton '\x202e'))
+                "Live broadcast description must not contain control characters"
+
+        it "defaults blank quality to auto and rejects unsupported quality values" $ do
+            normalizeLiveBroadcastQuality Nothing `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "   ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just " AUTO ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "720p") `shouldBe` Right "720p"
+            normalizeLiveBroadcastQuality (Just "480P") `shouldBe` Right "480p"
+            either
+                (\err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Live broadcast quality must be one of: auto, 720p, 480p"
+                )
+                (\value ->
+                    expectationFailure
+                        ("Expected invalid live broadcast quality to fail, got " <> show value)
+                )
+                (normalizeLiveBroadcastQuality (Just "1080p"))
 
     describe "parseFollowerQueryParamEither" $ do
         it "canonicalizes numeric follower query params before delete lookups" $ do

@@ -185,10 +185,10 @@ describe('StripeCheckoutModal', () => {
     await waitFor(() => {
       expect(createPaymentIntent).toHaveBeenCalledWith(
         expect.objectContaining({
-          tpwpTierId: 'tier-1',
-          tpwpQuantity: 1,
-          tpwpBuyerName: 'John Doe',
-          tpwpBuyerEmail: 'john@example.com',
+          ticketPurchaseTierId: 'tier-1',
+          ticketPurchaseQuantity: 1,
+          ticketPurchaseBuyerName: 'John Doe',
+          ticketPurchaseBuyerEmail: 'john@example.com',
         })
       );
     });

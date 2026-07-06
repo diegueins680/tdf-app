@@ -8,6 +8,7 @@ import './i18n';
 import { SessionProvider } from './session/SessionContext';
 import { AppThemeProvider } from './theme/AppThemeProvider';
 import { reportMissingEnv } from './utils/env';
+import { getAnalyticsClient } from './analytics/posthog';
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -25,6 +26,11 @@ const qc = new QueryClient({
 });
 
 reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);
+
+// Initialize analytics as early as possible so pageviews captured by
+// posthog-js include the landing route. If VITE_POSTHOG_KEY is unset
+// this is a no-op.
+getAnalyticsClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -38,6 +38,7 @@ executable tdf-hq-exe
     TDF.Contracts.API
     TDF.Contracts.Server
     TDF.Contracts.Types
+    TDF.Courses.Production
     TDF.API.SocialEventsAPI
     TDF.API.Types
     TDF.API.WhatsApp
@@ -67,6 +68,7 @@ executable tdf-hq-exe
     TDF.Services.Stripe
     TDF.Pipelines
     TDF.RagStore
+    TDF.UserActivity
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server
@@ -199,6 +201,7 @@ test-suite tdf-hq-test
     TDF.Config
     TDF.Cors
     TDF.Cron
+    TDF.Courses.Production
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO

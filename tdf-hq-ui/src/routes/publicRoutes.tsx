@@ -28,15 +28,19 @@ const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhats
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
+const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
 
 export function renderPublicRoutes() {
   return (
     <>
+      <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />
+      <Route path="/sobre-tdf" element={<Navigate to="/tdf" replace />} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
       <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
       <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
+      <Route path="/a/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
       <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
       <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />

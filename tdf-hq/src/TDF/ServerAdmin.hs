@@ -167,6 +167,10 @@ import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.RagStore           (getRagIndexStats, refreshRagIndex)
+import           TDF.UserActivity       ( listRecentUserActivities
+                                        , recordUserActivity
+                                        , validateUserActivityLimit
+                                        )
 import           System.IO              (hPutStrLn, stderr)
 
 data SocialUnholdLookup
@@ -216,6 +220,7 @@ adminServer user =
   :<|> rolesHandler
   :<|> artistsRouter
   :<|> logsRouter
+  :<|> activityHandler
   :<|> emailTestHandler
   :<|> brainRouter
   :<|> ragRouter
@@ -260,6 +265,11 @@ adminServer user =
     logsRouter =
       listLogsHandler :<|> clearLogsProtected
 
+    activityHandler mLimit = do
+      ensureModule ModuleAdmin user
+      limit <- either throwError pure (validateUserActivityLimit mLimit)
+      withPool (listRecentUserActivities limit)
+
     listLogsHandler mLimit = do
       ensureModule ModuleAdmin user
       limit <- either throwError pure (validateAdminLogsLimit mLimit)
@@ -267,7 +277,9 @@ adminServer user =
 
     clearLogsProtected = do
       ensureModule ModuleAdmin user
-      clearLogsHandler
+      result <- clearLogsHandler
+      recordActivity "server_logs" "buffer" "clear" Nothing
+      pure result
 
     emailTestHandler EmailTestRequest{..} = do
       ensureModule ModuleAdmin user
@@ -297,11 +309,15 @@ adminServer user =
           let msg = "[Admin][EmailTest] Failed for " <> targetEmail <> ": " <> T.pack (show err)
           liftIO $ addLog LogError msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
+          recordActivity "admin_email_test" "test" "failed" $
+            Just (object ["email" .= targetEmail, "subject" .= subj])
           pure EmailTestResponse { status = "error", message = Just msg }
         Right () -> do
           let msg = "[Admin][EmailTest] Sent to " <> targetEmail
           liftIO $ addLog LogInfo msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
+          recordActivity "admin_email_test" "test" "sent" $
+            Just (object ["email" .= targetEmail, "subject" .= subj])
           pure EmailTestResponse { status = "sent", message = Nothing }
 
     brainRouter =
@@ -312,6 +328,23 @@ adminServer user =
 
     socialRouter =
       socialUnholdHandler :<|> socialStatusHandler :<|> socialErrorsHandler
+
+    recordActivity entity entityId action details = do
+      pool <- asks envPool
+      result <- liftIO $ try $
+        runSqlPool (recordUserActivity (Just (auPartyId user)) entity entityId action details) pool
+      case result of
+        Left (err :: SomeException) -> do
+          liftIO $ addLog LogWarning $
+            "[Admin][Activity] Failed to record "
+              <> action
+              <> " "
+              <> entity
+              <> "#"
+              <> entityId
+              <> ": "
+              <> T.pack (show err)
+        Right () -> pure ()
 
     socialUnholdHandler SocialUnholdRequest{..} = do
       ensureStrictAdmin user
@@ -325,6 +358,8 @@ adminServer user =
           found <- unholdByExternalId channel extId
           ensureSocialUnholdTargetFound channel found
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId <> auditNoteSuffix note)
+          recordActivity "social_message" extId "unhold" $
+            Just (object ["channel" .= channel, "note" .= note])
           pure (object $
             [ "status" .= ("ok" :: Text)
             , "channel" .= channel
@@ -498,6 +533,8 @@ adminServer user =
         Just extId -> do
           _ <- unholdByExternalId channel extId
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId <> auditNoteSuffix note)
+          recordActivity "social_message" extId "unhold_latest" $
+            Just (object ["channel" .= channel, "senderId" .= senderId, "note" .= note])
           pure (object $
             [ "status" .= ("ok" :: Text)
             , "channel" .= channel
@@ -534,6 +571,8 @@ adminServer user =
         , ME.studioBrainEntryUpdatedAt = now
         }
       row <- withPool $ getJust entryId
+      recordActivity "studio_brain_entry" (T.pack (show (fromSqlKey entryId))) "create" $
+        Just (object ["title" .= title, "active" .= active])
       pure (brainEntryToDTO (Entity entryId row))
 
     brainUpdateHandler rawEntryId BrainEntryUpdate{..} = do
@@ -573,7 +612,16 @@ adminServer user =
                 Right <$> getEntity entryKey
       case result of
         Left err -> throwError err
-        Right maybeEntry -> maybe (throwError err404) (pure . brainEntryToDTO) maybeEntry
+        Right maybeEntry -> do
+          recordActivity "studio_brain_entry" (T.pack (show entryId)) "update" $
+            Just (object ["updatedFields" .= catMaybes
+              [ ("title" :: Text) <$ beuTitle
+              , ("body" :: Text) <$ beuBody
+              , ("category" :: Text) <$ beuCategory
+              , ("tags" :: Text) <$ beuTags
+              , ("active" :: Text) <$ beuActive
+              ]])
+          maybe (throwError err404) (pure . brainEntryToDTO) maybeEntry
 
     ragStatusHandler = do
       ensureModule ModuleAdmin user
@@ -600,11 +648,13 @@ adminServer user =
       case result of
         Left err ->
           throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
-        Right chunkCount ->
+        Right chunkCount -> do
+          recordActivity "rag_index" "default" "refresh" $
+            Just (object ["chunks" .= chunkCount])
           pure RagRefreshResponse
             { rrrStatus = "ok"
             , rrrChunks = chunkCount
-      }
+            }
 
     brainEntryToDTO (Entity key entry) = BrainEntryDTO
       { bedId = fromSqlKey key
@@ -639,6 +689,11 @@ adminServer user =
         Just _ -> do
           now <- liftIO getCurrentTime
           dto <- withPool $ upsertArtistProfileRecord artistKey validated now
+          recordActivity "artist_profile" (T.pack (show artistId)) "upsert" $
+            Just (object
+              [ "artistId" .= artistId
+              , "slug" .= apuSlug
+              ])
           pure dto
 
     createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
@@ -664,6 +719,10 @@ adminServer user =
             entity <- getJustEntity releaseId
             pure (Just (artistReleaseEntityToDTOAdmin entity))
       maybe (throwError err404) pure dto
+        >>= \result -> do
+          recordActivity "artist_release" (T.pack (show (arReleaseId result))) "create" $
+            Just (object ["artistId" .= aruArtistId, "title" .= aruTitle])
+          pure result
 
     updateArtistReleaseAdmin releaseId ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
@@ -686,7 +745,10 @@ adminServer user =
             , ArtistReleaseYoutubeUrl   =. aruYoutubeUrl
             ]
           entity <- withPool $ getJustEntity releaseKey
-          pure (artistReleaseEntityToDTOAdmin entity)
+          let result = artistReleaseEntityToDTOAdmin entity
+          recordActivity "artist_release" (T.pack (show releaseIdValid)) "update" $
+            Just (object ["artistId" .= artistId, "title" .= aruTitle])
+          pure result
 
     artistConnectOnboardingLinkAdmin artistIdRaw req = do
       ensureModule ModuleAdmin user
@@ -741,6 +803,8 @@ adminServer user =
             Just url -> pure url
             Nothing -> throwError err500
               { errBody = "Could not parse Stripe account link url" }
+          recordActivity "artist_profile" (T.pack (show artistId)) "connect_onboarding_link" $
+            Just (object ["accountCreated" .= accountCreated])
           pure ConnectOnboardingLinkResponse
             { colAccountId = accountId
             , colOnboardingUrl = onboardingUrl
@@ -788,6 +852,12 @@ adminServer user =
           , dropdownOptionUpdatedAt = now
           }
         getJustEntity optionId
+      recordActivity "dropdown_option" rawCategory "create" $
+        Just (object
+          [ "category" .= categoryKey
+          , "value" .= valueTxt
+          , "active" .= activeValue
+          ])
       pure (toDTO entity)
 
     updateOption rawCategory rawId DropdownOptionUpdate{..} = do
@@ -831,6 +901,17 @@ adminServer user =
                 else withPool $ do
                   update key updates
                   getJustEntity key
+              recordActivity "dropdown_option" rawId "update" $
+                Just (object
+                  [ "category" .= categoryKey
+                  , "updated" .= not (null updates)
+                  , "fields" .= catMaybes
+                    [ ("value" :: Text) <$ valueUpdate
+                    , ("label" :: Text) <$ douLabel
+                    , ("sortOrder" :: Text) <$ douSortOrder
+                    , ("active" :: Text) <$ activeUpdate
+                    ]
+                  ])
               pure (toDTO entity)
 
     listUsers mIncludeInactive = do
@@ -881,6 +962,13 @@ adminServer user =
       account <- withPool $ do
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
+      recordActivity "user_account" (T.pack (show (fromSqlKey credId))) "create" $
+        Just (object
+          [ "partyId" .= uacPartyId
+          , "username" .= uniqueUsername
+          , "active" .= activeValue
+          , "roles" .= fmap (map roleToText) uacRoles
+          ])
       welcomeResult <- liftIO $ try $
         EmailSvc.sendWelcome
           emailSvc
@@ -956,9 +1044,19 @@ adminServer user =
           when (not (null updates)) $
             withPool $ update credKey updates
           for_ uauRoles $ \rolesList -> withPool $ setPartyRoles (userCredentialPartyId cred) rolesList
-          withPool $ do
+          account <- withPool $ do
             fresh <- getJustEntity credKey
             loadUserAccount fresh
+          recordActivity "user_account" (T.pack (show userIdValid)) "update" $
+            Just (object
+              [ "fields" .= catMaybes
+                [ ("username" :: Text) <$ usernameUpdate
+                , ("active" :: Text) <$ uauActive
+                , ("password" :: Text) <$ passwordHash
+                , ("roles" :: Text) <$ uauRoles
+                ]
+              ])
+          pure account
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user
@@ -1125,6 +1223,15 @@ adminServer user =
           , " | failed="
           , T.pack (show failedCount)
           ]
+      recordActivity "admin_email_broadcast" "registered-users" finalStatus $
+        Just (object
+          [ "dryRun" .= dryRun
+          , "matchedUsers" .= matchedUsers
+          , "uniqueRecipients" .= length uniqueRecipients
+          , "processedRecipients" .= processedRecipients
+          , "sentCount" .= sentCount
+          , "failedCount" .= failedCount
+          ])
       pure AdminEmailBroadcastResponse
         { aersStatus = finalStatus
         , aersDryRun = dryRun
