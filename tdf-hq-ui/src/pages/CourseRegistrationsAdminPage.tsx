@@ -474,6 +474,33 @@ const statusFilterLabels: Record<StatusFilter, string> = {
   paid: 'Pagado',
   cancelled: 'Cancelado',
 };
+const registrationSortKeys: readonly RegistrationSortKey[] = [
+  'default',
+  'name',
+  'createdAt',
+  'updatedAt',
+  'course',
+  'status',
+  'source',
+];
+const registrationSortLabels: Record<RegistrationSortKey, string> = {
+  default: 'Predeterminado',
+  name: 'Nombre',
+  createdAt: 'Fecha de registro',
+  updatedAt: 'Última actualización',
+  course: 'Formulario público',
+  status: 'Estado',
+  source: 'Fuente',
+};
+const registrationSortDirections: readonly RegistrationSortDirection[] = ['asc', 'desc'];
+const registrationSortDirectionLabels: Record<RegistrationSortDirection, string> = {
+  asc: 'Ascendente',
+  desc: 'Descendente',
+};
+const registrationSortCollator = new Intl.Collator('es', {
+  numeric: true,
+  sensitivity: 'base',
+});
 const manualFollowUpTypeOptions = ['note', 'call', 'whatsapp', 'email'] as const;
 
 const emptyReceiptForm = (): ReceiptFormState => ({
@@ -495,6 +522,30 @@ const emptyFollowUpForm = (): FollowUpFormState => ({
 
 const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.some((status) => status === value);
+
+const isRegistrationSortKey = (value: string): value is RegistrationSortKey =>
+  registrationSortKeys.some((key) => key === value);
+
+const isRegistrationSortDirection = (value: string): value is RegistrationSortDirection =>
+  registrationSortDirections.some((direction) => direction === value);
+
+const parseRegistrationSortKey = (value: string | null): RegistrationSortKey => {
+  const trimmed = value?.trim() ?? '';
+  return isRegistrationSortKey(trimmed) ? trimmed : 'default';
+};
+
+const defaultRegistrationSortDirection = (key: RegistrationSortKey): RegistrationSortDirection =>
+  key === 'createdAt' || key === 'updatedAt' ? 'desc' : 'asc';
+
+const parseRegistrationSortDirection = (
+  value: string | null,
+  sortKey: RegistrationSortKey,
+): RegistrationSortDirection => {
+  const trimmed = value?.trim() ?? '';
+  return isRegistrationSortDirection(trimmed)
+    ? trimmed
+    : defaultRegistrationSortDirection(sortKey);
+};
 
 const normalizeBackendStatusToken = (status: string) =>
   status.trim().toLowerCase().replace(/[\s._/-]+/g, '_').replace(/^_+|_+$/g, '');
@@ -4327,6 +4378,109 @@ const registrationActionTargetLabelWithContext = (
   return `${baseLabel} (${registrationRecordLabel(reg.crId, true)})`;
 };
 
+const compareOptionalText = (
+  left: string | null | undefined,
+  right: string | null | undefined,
+  direction: RegistrationSortDirection,
+) => {
+  const leftValue = left?.trim() ?? '';
+  const rightValue = right?.trim() ?? '';
+  if (leftValue && !rightValue) return -1;
+  if (!leftValue && rightValue) return 1;
+  if (!leftValue && !rightValue) return 0;
+
+  const comparison = registrationSortCollator.compare(leftValue, rightValue);
+  return direction === 'asc' ? comparison : -comparison;
+};
+
+const compareOptionalNumber = (
+  left: number | null,
+  right: number | null,
+  direction: RegistrationSortDirection,
+) => {
+  if (left != null && right == null) return -1;
+  if (left == null && right != null) return 1;
+  if (left == null || right == null) return 0;
+
+  const comparison = left === right ? 0 : left < right ? -1 : 1;
+  return direction === 'asc' ? comparison : -comparison;
+};
+
+const timestampSortValue = (value: string | null | undefined) => {
+  const parsed = parseTimestamp(value);
+  return parsed ? parsed.getTime() : null;
+};
+
+const registrationCourseSortLabel = (
+  reg: CourseRegistrationDTO,
+  cohortSummaryLabelsBySlug: ReadonlyMap<string, string>,
+  cohortLabelsBySlug: ReadonlyMap<string, string>,
+) => {
+  const courseSlug = reg.crCourseSlug.trim();
+  return cohortSummaryLabelsBySlug.get(courseSlug)
+    ?? cohortLabelsBySlug.get(courseSlug)
+    ?? readableCohortFallbackLabel(courseSlug);
+};
+
+const compareRegistrationsBySort = (
+  left: CourseRegistrationDTO,
+  right: CourseRegistrationDTO,
+  {
+    cohortLabelsBySlug,
+    cohortSummaryLabelsBySlug,
+    direction,
+    sortKey,
+  }: {
+    cohortLabelsBySlug: ReadonlyMap<string, string>;
+    cohortSummaryLabelsBySlug: ReadonlyMap<string, string>;
+    direction: RegistrationSortDirection;
+    sortKey: RegistrationSortKey;
+  },
+) => {
+  switch (sortKey) {
+    case 'name':
+      return compareOptionalText(registrationActionTargetLabel(left), registrationActionTargetLabel(right), direction);
+    case 'createdAt':
+      return compareOptionalNumber(timestampSortValue(left.crCreatedAt), timestampSortValue(right.crCreatedAt), direction);
+    case 'updatedAt':
+      return compareOptionalNumber(timestampSortValue(left.crUpdatedAt), timestampSortValue(right.crUpdatedAt), direction);
+    case 'course':
+      return compareOptionalText(
+        registrationCourseSortLabel(left, cohortSummaryLabelsBySlug, cohortLabelsBySlug),
+        registrationCourseSortLabel(right, cohortSummaryLabelsBySlug, cohortLabelsBySlug),
+        direction,
+      );
+    case 'status':
+      return compareOptionalText(registrationStatusLabel(left.crStatus), registrationStatusLabel(right.crStatus), direction);
+    case 'source':
+      return compareOptionalText(registrationSourceLabel(left.crSource), registrationSourceLabel(right.crSource), direction);
+    case 'default':
+      return 0;
+    default:
+      return 0;
+  }
+};
+
+const sortCourseRegistrations = (
+  registrations: readonly CourseRegistrationDTO[],
+  options: {
+    cohortLabelsBySlug: ReadonlyMap<string, string>;
+    cohortSummaryLabelsBySlug: ReadonlyMap<string, string>;
+    direction: RegistrationSortDirection;
+    sortKey: RegistrationSortKey;
+  },
+) => {
+  if (options.sortKey === 'default') return registrations;
+
+  return registrations
+    .map((registration, index) => ({ index, registration }))
+    .sort((left, right) => {
+      const comparison = compareRegistrationsBySort(left.registration, right.registration, options);
+      return comparison || left.index - right.index;
+    })
+    .map(({ registration }) => registration);
+};
+
 const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
@@ -4728,9 +4882,18 @@ export default function CourseRegistrationsAdminPage() {
   const initialSlug = searchParams.get('slug') ?? '';
   const initialStatus = parseStatusFilter(searchParams.get('status'));
   const initialLimit = parsePositiveLimit(searchParams.get('limit'));
+  const initialRegistrationSortKey = parseRegistrationSortKey(searchParams.get('sort'));
+  const initialRegistrationSortDirection = parseRegistrationSortDirection(
+    searchParams.get('dir'),
+    initialRegistrationSortKey,
+  );
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
+  const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>(initialRegistrationSortKey);
+  const [registrationSortDirection, setRegistrationSortDirection] = useState<RegistrationSortDirection>(
+    initialRegistrationSortDirection,
+  );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
