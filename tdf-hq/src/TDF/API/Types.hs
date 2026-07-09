@@ -35,9 +35,8 @@ import           Network.HTTP.Media ((//))
 import           Servant
 
 import           Crypto.Hash.Algorithms (SHA256)
-import           Crypto.MAC.HMAC (HMAC, hmac)
-import           Data.ByteArray (constEq, convert)
-import qualified Data.ByteString.Base16 as B16
+import           Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
+import           Data.ByteArray (constEq)
 
 import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
 
@@ -2265,12 +2264,12 @@ verifyMetaWebhookSignature mAppSecret mSigHeader body =
         Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }
         Just sigRaw ->
           let expected =
-                B16.encode
-                  ( convert
-                      ( hmac (TE.encodeUtf8 appSecret) (BL.toStrict body)
-                          :: HMAC SHA256
+                TE.encodeUtf8 $
+                  T.pack $
+                    show
+                      ( hmacGetDigest
+                          (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)
                       )
-                  )
               matchesExpected digest =
                 TE.encodeUtf8 digest `constEq` expected
           in case parseMetaWebhookSignature sigRaw of

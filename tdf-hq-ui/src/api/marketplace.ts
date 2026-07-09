@@ -7,6 +7,7 @@ import type {
   PaypalCaptureRequest,
   MarketplaceOrderUpdatePayload,
   DatafastCheckoutDTO,
+  StripePaymentIntentDTO,
 } from './types';
 
 export interface CartItemUpdate {
@@ -29,6 +30,8 @@ export const Marketplace = {
     post<MarketplaceCartDTO>(`/marketplace/cart/${cartId}/items`, payload),
   checkout: (cartId: string, payload: CheckoutRequest) =>
     post<MarketplaceOrderDTO>(`/marketplace/cart/${cartId}/checkout`, payload),
+  stripePaymentIntent: (cartId: string, payload: CheckoutRequest) =>
+    post<StripePaymentIntentDTO>(`/marketplace/cart/${cartId}/stripe/payment-intent`, payload),
   datafastCheckout: (cartId: string, payload: CheckoutRequest) =>
     post<DatafastCheckoutDTO>(`/marketplace/cart/${cartId}/datafast/checkout`, payload),
   confirmDatafastPayment: (orderId: string, resourcePath: string) => {

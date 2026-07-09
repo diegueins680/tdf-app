@@ -50,7 +50,7 @@ export const createDefaultMarketplaceOrderFilters = (): MarketplaceOrderFilters 
 });
 
 export const applyMarketplaceOrderPreset = (
-  preset: 'last7' | 'paid' | 'paypal' | 'card',
+  preset: 'last7' | 'paid' | 'paypal' | 'stripe' | 'card',
   now: Date = new Date(),
 ): MarketplaceOrderFilters => {
   const next = createDefaultMarketplaceOrderFilters();
@@ -68,6 +68,10 @@ export const applyMarketplaceOrderPreset = (
     next.providerFilter = 'paypal';
     return next;
   }
+  if (preset === 'stripe') {
+    next.providerFilter = 'stripe';
+    return next;
+  }
   next.statusFilter = 'datafast_pending';
   next.providerFilter = 'datafast';
   return next;
@@ -76,6 +80,7 @@ export const applyMarketplaceOrderPreset = (
 export const getMarketplacePaymentProviderLabel = (provider: string): string => {
   const normalized = provider.trim().toLowerCase();
   if (normalized === 'paypal') return 'PayPal';
+  if (normalized === 'stripe') return 'Stripe';
   if (normalized === 'datafast') return 'Tarjeta (Datafast)';
   if (normalized === 'contact') return 'Manual/otros';
   return provider.trim();
@@ -102,6 +107,22 @@ export const getOrderStatusMeta = (status: string): OrderStatusMeta => {
     hasToken('fail', 'failed', 'reject', 'rejected', 'decline', 'declined', 'deny', 'denied', 'error', 'void', 'voided', 'expire', 'expired');
   const hasCancelled = () => hasToken('cancel', 'cancelled', 'canceled') || hasFragment('cancel');
   const hasRefunded = () => hasToken('refund', 'refunded', 'reversal', 'reversed', 'chargeback');
+
+  if (hasToken('stripe') || hasFragment('stripe')) {
+    if (hasRefunded()) {
+      return { label: 'Reembolsado', color: 'default', desc: 'Pago Stripe reembolsado.' };
+    }
+    if (hasRejected()) {
+      return { label: 'Pago rechazado', color: 'default', desc: 'El pago Stripe fue rechazado.' };
+    }
+    if (hasCancelled()) {
+      return { label: 'Cancelado', color: 'default', desc: 'Pago Stripe cancelado.' };
+    }
+    if (hasPaid()) {
+      return { label: 'Pagado', color: 'success', desc: 'Pago Stripe confirmado.' };
+    }
+    return { label: 'Pendiente', color: 'warning', desc: 'Pago Stripe pendiente de webhook.' };
+  }
 
   if (hasToken('datafast') || hasFragment('datafast')) {
     if (hasRefunded()) {

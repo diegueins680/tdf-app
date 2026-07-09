@@ -8531,6 +8531,10 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right (Just "datafast_failed")
             validateOptionalMarketplaceOrderStatus (Just "paypal-pending")
                 `shouldBe` Right (Just "paypal_pending")
+            validateOptionalMarketplaceOrderStatus (Just " Stripe Pending ")
+                `shouldBe` Right (Just "stripe_pending")
+            validateOptionalMarketplaceOrderStatus (Just "stripe-failed")
+                `shouldBe` Right (Just "stripe_failed")
 
         it "rejects blank or unknown marketplace statuses instead of silently broadening the list query" $ do
             let assertInvalid rawStatus =
@@ -8557,6 +8561,8 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe` Right (Just "paypal_pending")
             validateMarketplaceOrderUpdateStatus (Just "canceled")
                 `shouldBe` Right (Just "cancelled")
+            validateMarketplaceOrderUpdateStatus (Just "stripe pending")
+                `shouldBe` Right (Just "stripe_pending")
 
         it "rejects blank or unknown explicit statuses instead of turning admin updates into silent no-ops" $ do
             let assertInvalid rawStatus expectedMessage =

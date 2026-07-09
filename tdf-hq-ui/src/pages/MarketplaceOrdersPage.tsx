@@ -63,6 +63,8 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] }[] = [
   { value: 'paid', label: 'Pagado', color: 'success' },
   { value: 'pending', label: 'Pendiente', color: 'warning' },
+  { value: 'stripe_pending', label: 'Stripe pendiente', color: 'warning' },
+  { value: 'stripe_failed', label: 'Stripe falló', color: 'error' },
   { value: 'paypal_pending', label: 'PayPal pendiente', color: 'info' },
   { value: 'datafast_init', label: 'Tarjeta iniciada', color: 'info' },
   { value: 'datafast_pending', label: 'Tarjeta en revisión', color: 'warning' },
@@ -76,6 +78,7 @@ const STATUS_PRESETS: { value: string; label: string; color: ChipProps['color'] 
 const QUICK_VIEW_PRESETS = [
   { value: 'last7', label: 'Últimos 7 días' },
   { value: 'paid', label: 'Pagado' },
+  { value: 'stripe', label: 'Stripe' },
   { value: 'paypal', label: 'PayPal' },
   { value: 'card', label: 'Tarjeta pendiente' },
 ] as const;
@@ -680,7 +683,8 @@ export default function MarketplaceOrdersPage() {
     return window.confirm(`¿Confirmas cambiar el estado a "${nextStatus}"?`);
   };
 
-  const effectiveStatus = (statusInput.trim() || selectedOrder?.moStatus || '').trim();
+  const trimmedStatusInput = statusInput.trim();
+  const effectiveStatus = (trimmedStatusInput.length > 0 ? trimmedStatusInput : selectedOrder?.moStatus ?? '').trim();
   const effectiveProvider = (paymentProviderInput ?? selectedOrder?.moPaymentProvider ?? '').trim();
   const warnMissingProvider = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !effectiveProvider);
   const warnMissingPaidAt = Boolean(selectedOrder && isPaidOrderStatus(effectiveStatus) && !paidAtInput);
@@ -707,6 +711,12 @@ export default function MarketplaceOrdersPage() {
     if (!effectiveStatus) return null;
     if (effectiveStatus === 'datafast_pending') {
       return 'Pago con tarjeta en revisión. Espera confirmación o reintenta el cobro antes de marcar pagado.';
+    }
+    if (effectiveStatus === 'stripe_pending') {
+      return 'Pago Stripe iniciado. Espera el webhook de confirmación antes de intervenir manualmente.';
+    }
+    if (effectiveStatus === 'stripe_failed') {
+      return 'Pago Stripe fallido. Reintenta el cobro o cambia el estado a contactar.';
     }
     if (effectiveStatus === 'datafast_failed' || effectiveStatus === 'failed') {
       return 'Pago con tarjeta fallido. Reintenta el cobro o cambia el estado a contactar.';
@@ -865,6 +875,7 @@ export default function MarketplaceOrdersPage() {
                         onChange={(e) => setProviderFilter(e.target.value)}
                       >
                         <MenuItem value="all">Todos</MenuItem>
+                        <MenuItem value="stripe">Stripe</MenuItem>
                         <MenuItem value="paypal">PayPal</MenuItem>
                         <MenuItem value="datafast">Tarjeta (Datafast)</MenuItem>
                         <MenuItem value="contact">Manual/otros</MenuItem>
@@ -1428,7 +1439,7 @@ export default function MarketplaceOrdersPage() {
                           fullWidth
                           value={paymentProviderInput}
                           onChange={(e) => setPaymentProviderInput(e.target.value)}
-                          placeholder="paypal, transferencia, cash..."
+                          placeholder="stripe, paypal, transferencia, cash..."
                           helperText={paymentProviderHelperText}
                         />
                         {showPaymentTimestampInput && (
@@ -1449,7 +1460,7 @@ export default function MarketplaceOrdersPage() {
                           <>
                             {warnMissingProvider && (
                               <Alert severity="warning" variant="outlined">
-                                No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.
+                                No hay método de pago registrado. Ingresa stripe, paypal, datafast o manual para dejar trazabilidad.
                               </Alert>
                             )}
                             {warnMissingPaidAt && (

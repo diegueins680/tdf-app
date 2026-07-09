@@ -23,7 +23,6 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Base16 as Base16
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -31,8 +30,7 @@ import           Network.HTTP.Client
 import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
 import           Crypto.Hash.Algorithms (SHA256)
-import           Crypto.MAC.HMAC (HMAC, hmac)
-import           Data.ByteArray (convert)
+import           Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 
 -- | Configuration for Stripe API.
 --
@@ -664,8 +662,10 @@ verifyWebhookSignature cfg signatureHeader rawBody =
     matchesSignature (timestamp, signature) =
       let signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
           secret = TE.encodeUtf8 (stripeWebhookSecret cfg)
-          expectedSig = convert (hmac secret signedPayload :: HMAC SHA256)
-          expectedSigHex = Base16.encode expectedSig
+          expectedSigHex =
+            TE.encodeUtf8 $
+              T.pack $
+                show (hmacGetDigest (hmac secret signedPayload :: HMAC SHA256))
       in expectedSigHex == TE.encodeUtf8 signature
 
 -- | Parse the Stripe-Signature header

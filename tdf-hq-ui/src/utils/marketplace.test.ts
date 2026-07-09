@@ -21,6 +21,7 @@ describe('getOrderStatusMeta', () => {
     expect(isPaidOrderStatus('successful')).toBe(true);
     expect(isPaidOrderStatus('datafast_paid')).toBe(true);
     expect(isPaidOrderStatus('paypal_approved')).toBe(true);
+    expect(isPaidOrderStatus('stripe_paid')).toBe(true);
     expect(isPaidOrderStatus('datafast_pending')).toBe(false);
     expect(isPaidOrderStatus('delivered')).toBe(false);
   });
@@ -42,6 +43,12 @@ describe('getOrderStatusMeta', () => {
     expect(getOrderStatusMeta('paypal_failed').label.toLowerCase()).toContain('rechazado');
     expect(getOrderStatusMeta('paypal_declined').label.toLowerCase()).toContain('rechazado');
     expect(getOrderStatusMeta('paypal_refunded').label).toBe('Reembolsado');
+  });
+
+  it('classifies stripe statuses', () => {
+    expect(getOrderStatusMeta('stripe_pending').label).toBe('Pendiente');
+    expect(getOrderStatusMeta('stripe_failed').label.toLowerCase()).toContain('rechazado');
+    expect(getOrderStatusMeta('stripe_refunded').label).toBe('Reembolsado');
   });
 
   it('classifies datafast refunds as refunded instead of in-review', () => {
@@ -133,6 +140,14 @@ describe('applyMarketplaceOrderPreset', () => {
       search: '',
       paidOnly: false,
     });
+    expect(applyMarketplaceOrderPreset('stripe')).toEqual({
+      statusFilter: 'all',
+      providerFilter: 'stripe',
+      fromDate: '',
+      toDate: '',
+      search: '',
+      paidOnly: false,
+    });
     expect(applyMarketplaceOrderPreset('card')).toEqual({
       statusFilter: 'datafast_pending',
       providerFilter: 'datafast',
@@ -147,6 +162,7 @@ describe('applyMarketplaceOrderPreset', () => {
 describe('getMarketplacePaymentProviderLabel', () => {
   it('formats known provider names for human-readable filter chips', () => {
     expect(getMarketplacePaymentProviderLabel('paypal')).toBe('PayPal');
+    expect(getMarketplacePaymentProviderLabel('stripe')).toBe('Stripe');
     expect(getMarketplacePaymentProviderLabel('datafast')).toBe('Tarjeta (Datafast)');
     expect(getMarketplacePaymentProviderLabel('contact')).toBe('Manual/otros');
     expect(getMarketplacePaymentProviderLabel(' wire_transfer ')).toBe('wire_transfer');

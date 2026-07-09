@@ -137,9 +137,7 @@ import Database.Persist
 import Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 
 import Crypto.Hash.Algorithms (SHA256)
-import Crypto.MAC.HMAC (HMAC, hmac)
-import Data.ByteArray (convert)
-import qualified Data.ByteString.Base64 as B64
+import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
@@ -453,7 +451,7 @@ markArtistTipStatus now newStatus piId = do
                 (selectFirst [ME.ArtistTipStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mTip of
-        Nothing -> pure NoContent
+        Nothing -> markMarketplaceOrderStatus now (translateToMarketplaceOrderStatus newStatus) piId
         Just (Entity tipKey tip) -> do
             when (ME.artistTipStatus tip == "pending") $
                 liftIO $
@@ -467,6 +465,34 @@ markArtistTipStatus now newStatus piId = do
                         envPool
             pure NoContent
 
+{- | Webhook fallback for marketplace Stripe PaymentIntents. Idempotent: only
+acts on orders still waiting for Stripe confirmation.
+-}
+markMarketplaceOrderStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
+markMarketplaceOrderStatus now newStatus piId = do
+    Env{..} <- ask
+    mOrder <-
+        liftIO $
+            runSqlPool
+                (selectFirst [ME.MarketplaceOrderStripePaymentIntentId ==. Just piId] [])
+                envPool
+    case mOrder of
+        Nothing -> pure NoContent
+        Just (Entity orderKey order) -> do
+            when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
+                liftIO $
+                    runSqlPool
+                        ( update
+                            orderKey
+                            [ ME.MarketplaceOrderStatus =. newStatus
+                            , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
+                            , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
+                            , ME.MarketplaceOrderUpdatedAt =. now
+                            ]
+                        )
+                        envPool
+            pure NoContent
+
 {- | The course registration status enum uses @cancelled@ for the failure path;
 the artist_tip status enum uses @failed@. This mapping keeps both surfaces
 aligned with their own conventions while routing through one webhook.
@@ -474,6 +500,11 @@ aligned with their own conventions while routing through one webhook.
 translateToArtistTipStatus :: T.Text -> T.Text
 translateToArtistTipStatus "cancelled" = "failed"
 translateToArtistTipStatus s = s
+
+translateToMarketplaceOrderStatus :: T.Text -> T.Text
+translateToMarketplaceOrderStatus "cancelled" = "stripe_failed"
+translateToMarketplaceOrderStatus "failed" = "stripe_failed"
+translateToMarketplaceOrderStatus s = s
 
 {- | Webhook handler for `checkout.session.completed`. Records the
 subscription id on the course registration and flips it to @paid@. Looks up
@@ -3643,8 +3674,9 @@ socialEventsServer user =
                                 , timestamp
                                 ]
                         secret = "tdf-qr-secret-key"
-                        hmacHash = convert (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256)
-                        hmacHex = TE.decodeUtf8 (B64.encode hmacHash)
+                        hmacHex =
+                            T.pack $
+                                show (hmacGetDigest (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256))
                         qrDataValue = payload <> "|" <> hmacHex
                     liftIO $
                         runSqlPool
