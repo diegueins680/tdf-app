@@ -659,6 +659,7 @@ MarketplaceOrder
     currency        Text default='USD'
     status          Text default='pending'
     paymentProvider Text Maybe
+    stripePaymentIntentId Text Maybe
     paypalOrderId   Text Maybe
     paypalPayerEmail Text Maybe
     datafastCheckoutId Text Maybe
@@ -672,6 +673,7 @@ MarketplaceOrder
     paidAt          UTCTime Maybe
     createdAt       UTCTime default=now()
     updatedAt       UTCTime default=now()
+    UniqueMarketplaceOrderStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
 MarketplaceOrderItem

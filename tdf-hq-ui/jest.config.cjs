@@ -2,7 +2,7 @@ const path = require('path');
 
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: 'ts-jest/presets/default-esm',
+  preset: '<rootDir>/node_modules/ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {
     customExportConditions: ['node', 'node-addons'],

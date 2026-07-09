@@ -127,7 +127,6 @@ import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers
   ( socialEventsServer
   , eitherStripeServerError
-  , parseStripeCustomerId
   , parseStripeEphemeralKeySecret
   , parseStripePaymentIntentResponse
   , resolveStripeCustomerForBuyer
@@ -10083,13 +10082,13 @@ marketplaceOrderStatusErrorBody :: BL.ByteString
 marketplaceOrderStatusErrorBody =
   "status must be one of: pending, contact, paid, cancelled, failed, "
     <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
-    <> "paypal_failed"
+    <> "paypal_failed, stripe_pending, stripe_failed"
 
 marketplaceOptionalOrderStatusErrorBody :: BL.ByteString
 marketplaceOptionalOrderStatusErrorBody =
   "status must be omitted or one of: pending, contact, paid, cancelled, failed, "
     <> "datafast_init, datafast_pending, datafast_failed, paypal_pending, "
-    <> "paypal_failed"
+    <> "paypal_failed, stripe_pending, stripe_failed"
 
 parsePayPalCaptureOrderStatus :: Text -> Either ServerError Text
 parsePayPalCaptureOrderStatus rawStatus = do
@@ -10183,6 +10182,8 @@ normalizeMarketplaceOrderStatus rawStatus =
     Just ["datafast", "failed"] -> Just "datafast_failed"
     Just ["paypal", "pending"] -> Just "paypal_pending"
     Just ["paypal", "failed"] -> Just "paypal_failed"
+    Just ["stripe", "pending"] -> Just "stripe_pending"
+    Just ["stripe", "failed"] -> Just "stripe_failed"
     _ -> Nothing
 
 normalizePayPalCaptureOrderStatus :: Text -> Maybe Text
@@ -12835,6 +12836,7 @@ marketplacePublicServer =
   :<|> getCart
   :<|> upsertCartItem
   :<|> checkoutCart
+  :<|> createMarketplaceStripePaymentIntent
   :<|> createDatafastCheckout
   :<|> confirmDatafastPayment
   :<|> createPaypalOrder
@@ -13056,6 +13058,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
       , ME.marketplaceOrderCurrency      = currency
       , ME.marketplaceOrderStatus        = statusTxt
       , ME.marketplaceOrderPaymentProvider = Nothing
+      , ME.marketplaceOrderStripePaymentIntentId = Nothing
       , ME.marketplaceOrderPaypalOrderId = Nothing
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing
@@ -13100,6 +13103,111 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
     pure ()
   pure orderDto
 
+createMarketplaceStripePaymentIntent :: Text -> MarketplaceCheckoutReq -> AppM StripePaymentIntentDTO
+createMarketplaceStripePaymentIntent rawId payload = do
+  nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
+  emailTxt <- either throwError pure (validateMarketplaceBuyerEmail (mcrBuyerEmail payload))
+  phoneTxt <- either throwError pure (validateMarketplaceBuyerPhone (mcrBuyerPhone payload))
+  cartKey <- parseCartId rawId
+  now <- liftIO getCurrentTime
+  Env{..} <- ask
+  stripeCfg <- case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+    (Just secretKey, Just webhookSecret) ->
+      pure Stripe.StripeConfig
+        { Stripe.stripeSecretKey = secretKey
+        , Stripe.stripeWebhookSecret = webhookSecret
+        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+        }
+    _ -> throwError err500 { errBody = "Stripe is not configured" }
+  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+  (cartItems, totalCentsRaw, currency) <-
+    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
+  totalCents <-
+    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
+  orderKey <- liftIO $ flip runSqlPool envPool $ do
+    oid <- insert ME.MarketplaceOrder
+      { ME.marketplaceOrderCartId        = Just cartKey
+      , ME.marketplaceOrderBuyerName     = nameTxt
+      , ME.marketplaceOrderBuyerEmail    = emailTxt
+      , ME.marketplaceOrderBuyerPhone    = phoneTxt
+      , ME.marketplaceOrderTotalUsdCents = totalCents
+      , ME.marketplaceOrderCurrency      = currency
+      , ME.marketplaceOrderStatus        = "stripe_pending"
+      , ME.marketplaceOrderPaymentProvider = Just "stripe"
+      , ME.marketplaceOrderStripePaymentIntentId = Nothing
+      , ME.marketplaceOrderPaypalOrderId = Nothing
+      , ME.marketplaceOrderPaypalPayerEmail = Nothing
+      , ME.marketplaceOrderDatafastCheckoutId = Nothing
+      , ME.marketplaceOrderDatafastResourcePath = Nothing
+      , ME.marketplaceOrderDatafastPaymentId = Nothing
+      , ME.marketplaceOrderDatafastResultCode = Nothing
+      , ME.marketplaceOrderDatafastResultDescription = Nothing
+      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+      , ME.marketplaceOrderDatafastAuthCode = Nothing
+      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+      , ME.marketplaceOrderPaidAt        = Nothing
+      , ME.marketplaceOrderCreatedAt     = now
+      , ME.marketplaceOrderUpdatedAt     = now
+      }
+    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+      let listing   = entityVal listingEnt
+          unitPrice = ME.marketplaceListingPriceUsdCents listing
+          subtotal  = unitPrice * qty
+      void $ insert ME.MarketplaceOrderItem
+        { ME.marketplaceOrderItemOrderId           = oid
+        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+        , ME.marketplaceOrderItemQuantity          = qty
+        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+        }
+    pure oid
+  let orderIdText = toPathPiece orderKey
+      description = "Marketplace order " <> orderIdText
+      metadata =
+        object
+          [ "purpose" .= ("marketplace_order" :: Text)
+          , "marketplace_order_id" .= orderIdText
+          , "cart_id" .= toPathPiece cartKey
+          ]
+      metadataJson = Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
+      markFailed =
+        liftIO $
+          flip runSqlPool envPool $
+            update orderKey
+              [ ME.MarketplaceOrderStatus =. "stripe_failed"
+              , ME.MarketplaceOrderUpdatedAt =. now
+              ]
+  result <- liftIO $
+    Stripe.createPaymentIntent
+      stripeCfg
+      totalCents
+      currency
+      description
+      metadataJson
+  case result of
+    Left err -> do
+      markFailed
+      throwError err500
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe marketplace error: " <> err))
+        }
+    Right paymentIntent -> do
+      (piId, clientSecret) <- eitherStripeServerError $
+        parseStripePaymentIntentResponse paymentIntent
+      now2 <- liftIO getCurrentTime
+      liftIO $
+        flip runSqlPool envPool $
+          update orderKey
+            [ ME.MarketplaceOrderStripePaymentIntentId =. Just piId
+            , ME.MarketplaceOrderUpdatedAt =. now2
+            ]
+      pure StripePaymentIntentDTO
+        { spiClientSecret = clientSecret
+        , spiOrderId = orderIdText
+        , spiAmountCents = totalCents
+        , spiCurrency = currency
+        , spiPaymentSheet = Nothing
+        }
+
 createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId payload = do
   nameTxt <- either throwError pure (validateMarketplaceBuyerName (mcrBuyerName payload))
@@ -13123,6 +13231,7 @@ createDatafastCheckout rawId payload = do
       , ME.marketplaceOrderCurrency      = currency
       , ME.marketplaceOrderStatus        = "datafast_init"
       , ME.marketplaceOrderPaymentProvider = Just "datafast"
+      , ME.marketplaceOrderStripePaymentIntentId = Nothing
       , ME.marketplaceOrderPaypalOrderId = Nothing
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing
@@ -13258,6 +13367,7 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
       , ME.marketplaceOrderCurrency      = currency
       , ME.marketplaceOrderStatus        = "paypal_pending"
       , ME.marketplaceOrderPaymentProvider = Just "paypal"
+      , ME.marketplaceOrderStripePaymentIntentId = Nothing
       , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing

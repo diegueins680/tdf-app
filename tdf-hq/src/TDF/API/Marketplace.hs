@@ -17,6 +17,7 @@ import           TDF.API.Types
   , PaypalCreateDTO
   , PaypalCaptureReq
   )
+import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO)
 
 type MarketplaceAPI =
        Get '[JSON] [MarketplaceItemDTO]
@@ -25,6 +26,7 @@ type MarketplaceAPI =
   :<|> "cart" :> Capture "cartId" Text :> Get '[JSON] MarketplaceCartDTO
   :<|> "cart" :> Capture "cartId" Text :> "items" :> ReqBody '[JSON] MarketplaceCartItemUpdate :> Post '[JSON] MarketplaceCartDTO
   :<|> "cart" :> Capture "cartId" Text :> "checkout" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] MarketplaceOrderDTO
+  :<|> "cart" :> Capture "cartId" Text :> "stripe" :> "payment-intent" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] StripePaymentIntentDTO
   :<|> "cart" :> Capture "cartId" Text :> "datafast" :> "checkout" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] DatafastCheckoutDTO
   :<|> "datafast" :> "status" :> QueryParam "orderId" Text :> QueryParam "resourcePath" Text :> Get '[JSON] MarketplaceOrderDTO
   :<|> "cart" :> Capture "cartId" Text :> "paypal" :> "create" :> ReqBody '[JSON] MarketplaceCheckoutReq :> Post '[JSON] PaypalCreateDTO

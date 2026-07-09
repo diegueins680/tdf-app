@@ -252,6 +252,15 @@ export interface DatafastCheckoutDTO {
   dcCurrency: string;
 }
 
+export interface StripePaymentIntentDTO {
+  spiClientSecret: string;
+  spiPaymentIntentId?: string | null;
+  spiOrderId: string;
+  spiAmountCents: number;
+  spiCurrency: string;
+  spiPaymentSheet?: Record<string, unknown> | null;
+}
+
 export interface PaypalCreateDTO {
   pcOrderId: string;
   pcPaypalOrderId: string;

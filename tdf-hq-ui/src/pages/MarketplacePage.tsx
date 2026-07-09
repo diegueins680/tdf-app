@@ -41,6 +41,8 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type {
   MarketplaceCartDTO,
@@ -48,6 +50,7 @@ import type {
   MarketplaceItemDTO,
   MarketplaceOrderDTO,
   DatafastCheckoutDTO,
+  StripePaymentIntentDTO,
 } from '../api/types';
 import { Marketplace } from '../api/marketplace';
 import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
@@ -132,6 +135,38 @@ const CART_EVENT = 'tdf-cart-updated';
 const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
+
+type MarketplacePaymentMethod = 'stripe' | 'contact' | 'card' | 'paypal';
+
+const paymentMethodLabel = (method: MarketplacePaymentMethod) => {
+  switch (method) {
+    case 'stripe':
+      return 'Tarjeta (Stripe)';
+    case 'card':
+      return 'Tarjeta local (Datafast)';
+    case 'paypal':
+      return 'PayPal';
+    case 'contact':
+      return 'Coordinar por correo/WhatsApp';
+    default:
+      return assertNever(method, 'marketplace payment method');
+  }
+};
+
+const continuePaymentLabel = (method: MarketplacePaymentMethod) => {
+  switch (method) {
+    case 'stripe':
+      return 'Continuar con Stripe';
+    case 'card':
+      return 'Continuar con tarjeta local';
+    case 'paypal':
+      return 'Continuar con PayPal';
+    case 'contact':
+      return 'Confirmar pedido';
+    default:
+      return assertNever(method, 'marketplace payment method');
+  }
+};
 
 const parseCartQuantity = (value: string, fallback = 0): number => {
   const parsed = Number(value);
@@ -273,6 +308,64 @@ const readRuntimeEnv = (key: string): string => {
   return '';
 };
 
+interface MarketplaceStripePaymentFormProps {
+  orderId: string;
+  totalDisplay: string;
+  onSuccess: (orderId: string) => Promise<void> | void;
+  onError: (message: string) => void;
+}
+
+function MarketplaceStripePaymentForm({ orderId, totalDisplay, onSuccess, onError }: MarketplaceStripePaymentFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isSubmitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!stripe || !elements || isSubmitting) return;
+    setSubmitting(true);
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        onError(submitError.message ?? 'No pudimos validar los datos de pago.');
+        return;
+      }
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+      });
+      if (confirmError) {
+        onError(confirmError.message ?? 'Stripe no pudo confirmar el pago.');
+        return;
+      }
+      if (paymentIntent?.status === 'succeeded') {
+        await onSuccess(orderId);
+        return;
+      }
+      onError(`Stripe dejó el pago en estado ${paymentIntent?.status ?? 'desconocido'}.`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Typography variant="body2" color="text.secondary">
+        Total: {totalDisplay}
+      </Typography>
+      <PaymentElement />
+      <Button
+        variant="contained"
+        onClick={() => {
+          void handleSubmit();
+        }}
+        disabled={!stripe || !elements || isSubmitting}
+      >
+        {isSubmitting ? 'Confirmando pago...' : 'Confirmar pago'}
+      </Button>
+    </Stack>
+  );
+}
+
 const normalizeText = (value: string) =>
   value
     .toLowerCase()
@@ -306,6 +399,15 @@ export default function MarketplacePage() {
     const cleanedRuntime = runtimeVal.trim();
     return baked !== '' ? baked : cleanedRuntime;
   }, []);
+  const stripePublishableKey = useMemo<string>(() => {
+    const baked = String(IMPORT_META_ENV['VITE_STRIPE_PUBLISHABLE_KEY'] ?? '').trim();
+    const runtimeVal = readRuntimeEnv('VITE_STRIPE_PUBLISHABLE_KEY');
+    return baked !== '' ? baked : runtimeVal.trim();
+  }, []);
+  const stripePromise = useMemo(
+    () => (stripePublishableKey ? loadStripe(stripePublishableKey) : null),
+    [stripePublishableKey],
+  );
   const [initialViewState] = useState<MarketplaceInitialViewState>(() => {
     if (typeof window === 'undefined') return DEFAULT_MARKETPLACE_VIEW_STATE;
     return resolveMarketplaceInitialViewState(
@@ -340,10 +442,14 @@ export default function MarketplacePage() {
     hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot : null,
   );
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
+  const [stripeIntent, setStripeIntent] = useState<StripePaymentIntentDTO | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
   const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const showStripeOption = Boolean(stripePublishableKey);
   const paypalEnabled = Boolean(paypalClientId);
   const columnScrollHeight = { xs: 'auto', md: 'calc(100vh - 240px)' };
   const datafastFormRef = useRef<HTMLDivElement>(null);
@@ -354,10 +460,10 @@ export default function MarketplacePage() {
   const [datafastUnavailable, setDatafastUnavailable] = useState(false);
   const showPaypalOption = paypalEnabled;
   const showDatafastOption = !datafastUnavailable;
-  const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>(() => {
+  const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
     const saved = localStorage.getItem(PAYMENT_PREF_KEY);
-    return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
+    return saved === 'stripe' || saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
   });
   const [reviewOpen, setReviewOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -402,6 +508,15 @@ export default function MarketplacePage() {
     url.searchParams.set('orderId', datafastCheckout.dcOrderId);
     return url.toString();
   }, [datafastCheckout]);
+  const stripeElementsOptions = useMemo<StripeElementsOptions | null>(() => {
+    if (!stripeIntent) return null;
+    return {
+      clientSecret: stripeIntent.spiClientSecret,
+      appearance: {
+        theme: 'stripe',
+      },
+    };
+  }, [stripeIntent]);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
   const isValidPhone = useMemo(() => {
@@ -547,6 +662,18 @@ export default function MarketplacePage() {
     },
   });
 
+  const clearCheckoutCart = useCallback(() => {
+    qc.removeQueries({ queryKey: ['marketplace-cart'] });
+    setCartId(null);
+    setSavedCartMeta(null);
+    setShowRestoreBanner(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(CART_META_KEY);
+    }
+    fireCartMetaEvent();
+  }, [qc]);
+
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       const ensuredCart = await ensureCart();
@@ -573,6 +700,25 @@ export default function MarketplacePage() {
         } en menos de 24 h.`,
       );
       fireCartMetaEvent();
+    },
+  });
+
+  const stripePaymentIntentMutation = useMutation<StripePaymentIntentDTO, Error, void>({
+    mutationFn: async () => {
+      const ensuredCart = await ensureCart();
+      return Marketplace.stripePaymentIntent(ensuredCart, {
+        mcrBuyerName: buyerName,
+        mcrBuyerEmail: buyerEmail,
+        mcrBuyerPhone: normalizePhone(buyerPhone),
+      });
+    },
+    onSuccess: (dto) => {
+      setStripeIntent(dto);
+      setStripeDialogOpen(true);
+      setStripeError(null);
+    },
+    onError: () => {
+      setStripeError('No pudimos iniciar el pago con Stripe. Revisa tus datos.');
     },
   });
 
@@ -768,13 +914,16 @@ export default function MarketplacePage() {
   }, [condition, listingsQuery.isSuccess, resolvedCondition]);
 
   useEffect(() => {
+    if (paymentMethod === 'stripe' && !showStripeOption) {
+      setPaymentMethod('contact');
+    }
     if (paymentMethod === 'paypal' && !showPaypalOption) {
       setPaymentMethod('contact');
     }
     if (paymentMethod === 'card' && !showDatafastOption) {
       setPaymentMethod('contact');
     }
-  }, [paymentMethod, showDatafastOption, showPaypalOption]);
+  }, [paymentMethod, showDatafastOption, showPaypalOption, showStripeOption]);
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
@@ -905,7 +1054,7 @@ export default function MarketplacePage() {
 
   const clearCart = async () => {
     if (!hasCartItems) return;
-    const ensuredCart = await ensureCart();
+    await ensureCart();
     await Promise.all(
       cartItems.map((item) =>
         upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 }),
@@ -935,6 +1084,37 @@ export default function MarketplacePage() {
     datafastCheckoutMutation.mutate();
   };
 
+  const handleStripeCheckout = () => {
+    setStripeError(null);
+    if (!showStripeOption) {
+      setStripeError('Stripe no está configurado en este entorno.');
+      return;
+    }
+    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0 || (contactPref === 'phone' && !isValidPhone)) {
+      setStripeError(
+        contactPref === 'phone'
+          ? 'Completa tu nombre, correo y teléfono para pagar con Stripe.'
+          : 'Completa tu nombre y correo para pagar con Stripe.',
+      );
+      return;
+    }
+    stripePaymentIntentMutation.mutate();
+  };
+
+  const handleStripePaymentSuccess = async (orderId: string) => {
+    try {
+      const order = await Marketplace.getOrder(orderId);
+      setLastOrder(order);
+    } catch {
+      setLastOrder(null);
+    }
+    setStripeDialogOpen(false);
+    setStripeIntent(null);
+    setStripeError(null);
+    clearCheckoutCart();
+    setToast('Pago confirmado con Stripe. Gracias por tu compra.');
+  };
+
   const handlePaypalCheckout = () => {
     setPaypalError(null);
     if (!hasCartItems || !isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
@@ -949,7 +1129,9 @@ export default function MarketplacePage() {
   };
 
   const handleContinueCheckout = () => {
-    if (paymentMethod === 'card') {
+    if (paymentMethod === 'stripe') {
+      handleStripeCheckout();
+    } else if (paymentMethod === 'card') {
       handleDatafastCheckout();
     } else if (paymentMethod === 'paypal') {
       handlePaypalCheckout();
@@ -1918,15 +2100,24 @@ export default function MarketplacePage() {
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap">
                             <Chip
-                              label="Coordinar por correo/WhatsApp"
+                              label={paymentMethodLabel('contact')}
                               color={paymentMethod === 'contact' ? 'primary' : 'default'}
                               variant={paymentMethod === 'contact' ? 'filled' : 'outlined'}
                               onClick={() => setPaymentMethod('contact')}
                               size="small"
                             />
+                            {showStripeOption && (
+                              <Chip
+                                label={paymentMethodLabel('stripe')}
+                                color={paymentMethod === 'stripe' ? 'primary' : 'default'}
+                                variant={paymentMethod === 'stripe' ? 'filled' : 'outlined'}
+                                onClick={() => setPaymentMethod('stripe')}
+                                size="small"
+                              />
+                            )}
                             {showDatafastOption && (
                               <Chip
-                                label="Tarjeta (Datafast)"
+                                label={paymentMethodLabel('card')}
                                 color={paymentMethod === 'card' ? 'primary' : 'default'}
                                 variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
                                 onClick={() => setPaymentMethod('card')}
@@ -1951,16 +2142,17 @@ export default function MarketplacePage() {
                               </Typography>
                             </Stack>
                           )}
+                          {paymentMethod === 'stripe' && stripeError && (
+                            <Alert severity="warning" variant="outlined" onClose={() => setStripeError(null)}>
+                              {stripeError}
+                            </Alert>
+                          )}
                           <Button
                             variant="contained"
                             onClick={openReview}
                             disabled={Boolean(checkoutDisabledReason)}
                           >
-                            {paymentMethod === 'paypal'
-                              ? 'Continuar con PayPal'
-                              : paymentMethod === 'card'
-                                ? 'Continuar con tarjeta'
-                                : 'Confirmar pedido'}
+                            {continuePaymentLabel(paymentMethod)}
                           </Button>
                           {checkoutDisabledReason && (
                             <Alert severity="info" variant="outlined">
@@ -2145,6 +2337,53 @@ export default function MarketplacePage() {
         </DialogActions>
       </Dialog>
       <Dialog
+        open={stripeDialogOpen}
+        onClose={() => {
+          setStripeDialogOpen(false);
+          setStripeIntent(null);
+          setStripeError(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Pagar con Stripe</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            {stripeError && (
+              <Alert severity="warning" onClose={() => setStripeError(null)}>
+                {stripeError}
+              </Alert>
+            )}
+            {stripePromise && stripeElementsOptions && stripeIntent ? (
+              <Elements stripe={stripePromise} options={stripeElementsOptions}>
+                <MarketplaceStripePaymentForm
+                  orderId={stripeIntent.spiOrderId}
+                  totalDisplay={cartSubtotal}
+                  onSuccess={handleStripePaymentSuccess}
+                  onError={setStripeError}
+                />
+              </Elements>
+            ) : (
+              <Alert severity="info" variant="outlined">
+                Preparando el pago...
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setStripeDialogOpen(false);
+              setStripeIntent(null);
+              setStripeError(null);
+            }}
+            color="inherit"
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
         open={datafastDialogOpen}
         onClose={() => {
           setDatafastDialogOpen(false);
@@ -2223,7 +2462,7 @@ export default function MarketplacePage() {
               ))}
             </Stack>
             <Typography variant="body2" color="text.secondary">
-              Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
+              Método de pago: {paymentMethodLabel(paymentMethod)}
             </Typography>
           </Stack>
         </DialogContent>
@@ -2239,9 +2478,11 @@ export default function MarketplacePage() {
             }}
             disabled={
               checkoutMutation.isPending ||
+              stripePaymentIntentMutation.isPending ||
               datafastCheckoutMutation.isPending ||
               createPaypalOrderMutation.isPending ||
               capturePaypalMutation.isPending ||
+              (paymentMethod === 'stripe' && !showStripeOption) ||
               (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady)) ||
               !isValidName ||
               !isValidEmail ||
@@ -2250,19 +2491,23 @@ export default function MarketplacePage() {
               cartItemCount === 0
             }
           >
-            {paymentMethod === 'paypal'
-              ? capturePaypalMutation.isPending
-                ? 'Confirmando PayPal…'
-                : createPaypalOrderMutation.isPending
-                  ? 'Abriendo PayPal…'
-                  : 'Pagar con PayPal'
-              : paymentMethod === 'card'
-                ? datafastCheckoutMutation.isPending
-                  ? 'Abriendo pago con tarjeta…'
-                  : 'Pagar con tarjeta'
-                : checkoutMutation.isPending
-                  ? 'Enviando pedido…'
-                  : 'Confirmar pedido'}
+            {paymentMethod === 'stripe'
+              ? stripePaymentIntentMutation.isPending
+                ? 'Abriendo Stripe...'
+                : 'Pagar con Stripe'
+              : paymentMethod === 'paypal'
+                ? capturePaypalMutation.isPending
+                  ? 'Confirmando PayPal…'
+                  : createPaypalOrderMutation.isPending
+                    ? 'Abriendo PayPal…'
+                    : 'Pagar con PayPal'
+                : paymentMethod === 'card'
+                  ? datafastCheckoutMutation.isPending
+                    ? 'Abriendo pago con tarjeta…'
+                    : 'Pagar con tarjeta'
+                  : checkoutMutation.isPending
+                    ? 'Enviando pedido…'
+                    : 'Confirmar pedido'}
           </Button>
         </DialogActions>
       </Dialog>
