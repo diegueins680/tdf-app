@@ -2,9 +2,9 @@ import { logger } from '../utils/logger';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
 import { isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
-import { env } from '../utils/env';
+import { resolveApiBase } from '../config/apiBase';
 
-const API_BASE = env.read('VITE_API_BASE') ?? '';
+const API_BASE = resolveApiBase();
 export const API_BASE_URL = API_BASE;
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 

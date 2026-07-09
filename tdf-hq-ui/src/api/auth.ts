@@ -1,9 +1,9 @@
 import type { components } from './generated/types';
 import type { SignupRole } from '../constants/roles';
 import { extractErrorDetails } from './errorMessage';
-import { env } from '../utils/env';
+import { resolveApiBase } from '../config/apiBase';
 
-const API_BASE = env.read('VITE_API_BASE') ?? '';
+const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
 const AUTH_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
 const RETRYABLE_UNAVAILABLE_STATUS = 503;

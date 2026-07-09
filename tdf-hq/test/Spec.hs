@@ -2793,7 +2793,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "requires keyword target_session_attrs to be a standalone connection option" $
             withEnvOverrides
@@ -2815,7 +2815,8 @@ main = hspec $ do
                         `shouldBe`
                             "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret "
                                 <> "dbname=tdf_hq_target_session_attrs=debug "
-                                <> "target_session_attrs=read-write"
+                                <> "target_session_attrs=read-write "
+                                <> "options='-c default_transaction_read_only=off'"
 
         it "keeps fallback connection URL aliases from shaping complete DB_* settings" $
             withEnvOverrides
@@ -2833,7 +2834,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "ignores sslmode from DATABASE_URL when DB_* vars stay authoritative" $
             withEnvOverrides
@@ -2850,7 +2851,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "prefers explicit PGSSLMODE when DB_* vars stay authoritative" $
             withEnvOverrides
@@ -2867,7 +2868,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "rejects malformed keyword sslmode values before building ambiguous DB connection strings" $
             withEnvOverrides
@@ -2938,7 +2939,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "applies explicit DB sslmode to DATABASE_URL fallback connection strings" $ do
             let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
@@ -2966,7 +2967,7 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg
                         `shouldBe`
-                            baseUrl <> "?sslmode=require&target_session_attrs=read-write"
+                            baseUrl <> "?sslmode=require&target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
             withEnvOverrides
                 (withoutKeywordDb (baseUrl <> "?sslmode=require") (Just "disable"))
@@ -2995,7 +2996,7 @@ main = hspec $ do
                     cfg <- loadConfig
                     dbConnString cfg
                         `shouldBe`
-                            "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+                            "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "rejects conflicting connection URL aliases before choosing a DB fallback target" $
             withEnvOverrides
@@ -3039,7 +3040,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "falls back to standard PG* env vars when DB_* vars are not configured" $
             withEnvOverrides
@@ -3060,7 +3061,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "rejects conflicting keyword DB aliases instead of silently choosing a fallback" $ do
             let completeKeywordDb =
@@ -3120,7 +3121,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "requires target_session_attrs to be an actual non-blank URL query parameter" $ do
             let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
@@ -3151,6 +3152,7 @@ main = hspec $ do
                         `shouldBe` baseUrl
                             <> "?application_name=target_session_attrs=debug"
                             <> "&target_session_attrs=read-write"
+                            <> "&options=-c%20default_transaction_read_only%3Doff"
 
             withEnvOverrides
                 (withoutKeywordDb (baseUrl <> "?target_session_attrs="))

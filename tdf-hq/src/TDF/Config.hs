@@ -132,7 +132,8 @@ ragEmbeddingDim cfg = fromMaybe 1536 (openAiEmbedDimensions (openAiEmbedModel cf
 
 dbConnString :: AppConfig -> String
 dbConnString cfg =
-  ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
+  ensureReadWriteSessionOptions $
+    ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
   where
     keywordStyle =
       appendKeywordOption "sslmode" (dbSslMode cfg) $
@@ -515,6 +516,27 @@ ensureReadWriteTargetSession rawConn
         Nothing -> False
     hasTargetSessionAttrsKeyword conn =
       any ("target_session_attrs=" `isPrefixOf`) (words conn)
+    isPostgresUrl conn =
+      "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
+
+ensureReadWriteSessionOptions :: String -> String
+ensureReadWriteSessionOptions rawConn
+  | isPostgresUrl normalized && hasOptionsUrlParam rawConn = rawConn
+  | isPostgresUrl normalized =
+      rawConn
+        <> if '?' `elem` rawConn
+             then "&options=-c%20default_transaction_read_only%3Doff"
+             else "?options=-c%20default_transaction_read_only%3Doff"
+  | hasOptionsKeyword normalized = rawConn
+  | otherwise = rawConn <> " options='-c default_transaction_read_only=off'"
+  where
+    normalized = map toLower rawConn
+    hasOptionsUrlParam conn =
+      case extractConnUrlParam "options" conn of
+        Just _ -> True
+        Nothing -> False
+    hasOptionsKeyword conn =
+      any ("options=" `isPrefixOf`) (words conn)
     isPostgresUrl conn =
       "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
 

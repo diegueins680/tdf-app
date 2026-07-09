@@ -1,14 +1,14 @@
 // API client for user role management
 import type { components } from './types';
 import { buildAuthorizationHeader } from '../authHeader';
-import { env } from '../../utils/env';
+import { resolveApiBase } from '../../config/apiBase';
 
 export type Role = components['schemas']['Role'];
 export type UserSummary = components['schemas']['UserRoleSummary'];
 type RoleInput = Role | (string & Record<never, never>);
 export type UserRoleUpdate = { roles: RoleInput[] };
 
-const API_BASE = env.read('VITE_API_BASE') ?? '';
+const API_BASE = resolveApiBase();
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
 
 const isJsonContentType = (contentType: string): boolean => /[/+]json(?:;|$)/i.test(contentType);

@@ -1,4 +1,5 @@
 app = "tdf-hq"
+primary_region = "gru"
 
 [build]
   dockerfile = "tdf-hq/Dockerfile"
