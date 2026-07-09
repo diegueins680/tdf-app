@@ -1661,6 +1661,7 @@ seedHandlerFor user rawToken =
             :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1807,6 +1808,7 @@ logsHandlersFor user =
             :<|> _roles
             :<|> _artists
             :<|> logsRouter
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1827,6 +1829,7 @@ usersHandlersFor user =
             :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1848,6 +1851,7 @@ dropdownsHandlersFor category user =
             :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1870,6 +1874,7 @@ artistsHandlersFor user =
             :<|> _roles
             :<|> artistsRouter
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1891,6 +1896,7 @@ communicationsHandlersFor user =
             :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1911,6 +1917,7 @@ socialHandlersFor user =
             :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag

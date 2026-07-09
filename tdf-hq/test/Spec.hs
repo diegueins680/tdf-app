@@ -10,11 +10,9 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Crypto.Hash.Algorithms (SHA256)
-import Crypto.MAC.HMAC (HMAC, hmac)
+import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base16 as Base16
-import Data.ByteArray (convert)
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft)
@@ -496,9 +494,8 @@ stripeTestConfig webhookSecret =
 
 stripeV1Signature :: Text -> Text -> BS.ByteString -> Text
 stripeV1Signature webhookSecret timestamp rawBody =
-    TE.decodeUtf8 $
-        Base16.encode $
-            convert (hmac (TE.encodeUtf8 webhookSecret) signedPayload :: HMAC SHA256)
+    Data.Text.pack $
+        show (hmacGetDigest (hmac (TE.encodeUtf8 webhookSecret) signedPayload :: HMAC SHA256))
   where
     signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
 
