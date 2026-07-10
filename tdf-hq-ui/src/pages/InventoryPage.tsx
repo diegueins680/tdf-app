@@ -1155,14 +1155,16 @@ export default function InventoryPage() {
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={async () => {
+            onClick={() => {
               if (!qrShareUrl) return;
-              try {
-                await navigator.clipboard.writeText(qrShareUrl);
-                setFeedback('Enlace público copiado.');
-              } catch {
-                setFeedback(qrShareUrl);
-              }
+              void navigator.clipboard
+                .writeText(qrShareUrl)
+                .then(() => {
+                  setFeedback('Enlace público copiado.');
+                })
+                .catch(() => {
+                  setFeedback(qrShareUrl);
+                });
             }}
             disabled={!qrShareUrl}
           >

@@ -2339,7 +2339,7 @@ main = hspec $ do
                 , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/avatar\\copy.jpg")
                 ]
                 $ loadConfig `shouldThrow` \err ->
-                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR URL suffix must not start with // or contain backslashes"
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR path must not start with // or contain backslashes"
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides
@@ -7675,10 +7675,10 @@ main = hspec $ do
                                     <> show value
                                 )
             assertInvalid "https://instagram.com/p/post 42" "permalink must not contain whitespace"
-            assertInvalid "/p/post-42" "permalink must be an absolute public http(s) URL"
-            assertInvalid "javascript:alert(1)" "permalink must be an absolute public http(s) URL"
-            assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public http(s) URL"
-            assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public http(s) URL"
+            assertInvalid "/p/post-42" "permalink must be an absolute public https URL"
+            assertInvalid "javascript:alert(1)" "permalink must be an absolute public https URL"
+            assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public https URL"
+            assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public https URL"
             assertInvalid
                 ("https://instagram.com/p/" <> Data.Text.replicate 2049 "a")
                 "permalink must be 2048 characters or fewer"
@@ -7735,7 +7735,7 @@ main = hspec $ do
                     case validateSocialSyncMediaUrls (Just [raw]) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` "absolute public http(s) URLs"
+                            BL.unpack (errBody err) `shouldContain` "absolute public https URLs"
                         Right value ->
                             expectationFailure
                                 ( "Expected invalid social sync mediaUrl to be rejected, got "
@@ -9672,7 +9672,7 @@ main = hspec $ do
                 "country filter must be 80 characters or fewer"
             assertInvalid
                 (Just "EC\NUL")
-                "country filter must not contain control characters"
+                "country filter must not contain control or hidden formatting characters"
 
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
@@ -10119,7 +10119,7 @@ main = hspec $ do
                 "rtrName must be 160 characters or fewer"
             assertInvalid
                 (validateRadioOptionalMetadataField "rtrGenre" 120 (Just "ambient\ntechno"))
-                "rtrGenre must not contain control characters"
+                "rtrGenre must not contain control or hidden formatting characters"
 
     describe "validateRadioFetchedMetadata" $ do
         it "normalizes fetched ICY metadata before refresh persistence" $
@@ -10297,7 +10297,7 @@ main = hspec $ do
                                 ("Expected malformed now-playing metadata to fail, got " <> show value)
             assertInvalid
                 "Los Nin\nTarika"
-                "Now-playing metadata title must not contain control characters"
+                "Now-playing metadata title must not contain control or hidden formatting characters"
             assertInvalid
                 (Data.Text.replicate 513 "a")
                 "Now-playing metadata title must be 512 characters or fewer"
@@ -10566,7 +10566,7 @@ main = hspec $ do
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
                             BL.unpack (errBody err)
-                                `shouldContain` "rpuStationName must not contain control characters"
+                                `shouldContain` "rpuStationName must not contain control or hidden formatting characters"
                         Right value ->
                             expectationFailure
                                 ("Expected malformed radio presence metadata to be rejected, got " <> show value)
@@ -10616,8 +10616,6 @@ main = hspec $ do
         it "accepts exactly one normalized proposal content source" $ do
             validateProposalContentSource (Just "\\section*{Proposal}") Nothing
                 `shouldBe` Right (ProposalInlineLatex "\\section*{Proposal}")
-            validateProposalContentSource (Just "   ") (Just "  tdf_live_sessions  ")
-                `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
             validateProposalContentSource Nothing (Just "  TDF_Live_Sessions  ")
                 `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
 
@@ -10630,6 +10628,7 @@ main = hspec $ do
                         expectationFailure ("Expected invalid proposal content source to be rejected, got: " <> show value)
             assertInvalid Nothing Nothing "latex or templateKey required"
             assertInvalid (Just "\\section*{Proposal}") (Just "tdf_live_sessions") "Provide either latex or templateKey, not both"
+            assertInvalid (Just "   ") (Just "tdf_live_sessions") "latex must not be blank"
 
     describe "proposal status validation" $ do
         it "defaults omitted create status to draft and normalizes supported explicit statuses" $ do
@@ -11244,12 +11243,12 @@ main = hspec $ do
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
 
     describe "internship path identifier parsing" $ do
-        it "accepts positive persistent ids used by internship capture routes" $
-            case (parseKey @ME.InternProject "42" :: Either ServerError (Key ME.InternProject)) of
+        it "accepts UUID persistent ids used by internship capture routes" $
+            case (parseKey @ME.InternProject "00000000-0000-4000-8000-000000000042" :: Either ServerError (Key ME.InternProject)) of
                 Left err ->
-                    expectationFailure ("Expected positive internship path id to parse, got " <> show err)
+                    expectationFailure ("Expected UUID internship path id to parse, got " <> show err)
                 Right projectKey ->
-                    toPathPiece projectKey `shouldBe` "42"
+                    toPathPiece projectKey `shouldBe` "00000000-0000-4000-8000-000000000042"
 
         it "rejects zero, negative, or malformed ids before internship handlers hit the database" $ do
             let assertInvalid rawId expectedMessage =

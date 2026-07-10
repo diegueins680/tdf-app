@@ -22,7 +22,7 @@ import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Bits (xor)
 import           Data.Int (Int64)
-import           Data.List (find, foldl', nub, isInfixOf, sort, sortOn)
+import           Data.List (find, nub, isInfixOf, sort, sortOn)
 import           Data.Ord (Down(..))
 import           Data.Foldable (for_, toList)
 import           Data.Char
@@ -56,8 +56,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Scientific as Sci
 import           Data.Time
-  ( Day, UTCTime (..), addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
-  , getCurrentTime, secondsToDiffTime, toGregorian, utctDay
+  ( Day, UTCTime (..), ZonedTime, addDays, addUTCTime, diffTimeToPicoseconds, diffUTCTime, fromGregorian
+  , getCurrentTime, secondsToDiffTime, toGregorian, utctDay, zonedTimeToUTC
   )
 import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
@@ -546,7 +546,8 @@ validateGoogleCalendarDateToken fieldName expectedShape parseToken rawValue
     value = T.strip rawValue
 
 parseGoogleCalendarIsoTimestamp :: String -> Maybe UTCTime
-parseGoogleCalendarIsoTimestamp = iso8601ParseM
+parseGoogleCalendarIsoTimestamp raw =
+  iso8601ParseM raw <|> fmap zonedTimeToUTC (iso8601ParseM raw :: Maybe ZonedTime)
 
 parseGoogleCalendarDateOnly :: String -> Maybe Day
 parseGoogleCalendarDateOnly = iso8601ParseM
@@ -589,7 +590,7 @@ isGoogleCalendarHtmlLink rawUrl =
       host `elem` googleCalendarHtmlLinkHosts
         && (T.null portSuffix || portSuffix == ":443")
         && case drivePathSegments rawUrl of
-             "calendar" : _ -> True
+             ["calendar", "event"] -> hasSingleGoogleCalendarEid rawUrl
              _ -> False
     Nothing ->
       False
@@ -599,6 +600,17 @@ googleCalendarHtmlLinkHosts =
   [ "www.google.com"
   , "calendar.google.com"
   ]
+
+hasSingleGoogleCalendarEid :: Text -> Bool
+hasSingleGoogleCalendarEid rawUrl =
+  case [ rawParam
+       | rawParam <- queryParams rawUrl
+       , isNamedQueryParam "eid" rawParam
+       ] of
+    [rawParam] ->
+      maybe False (not . T.null . T.strip) (queryParamValue rawParam)
+    _ ->
+      False
 
 isUnsupportedGoogleCalendarPageTextChar :: Char -> Bool
 isUnsupportedGoogleCalendarPageTextChar ch =
@@ -801,6 +813,8 @@ validateMcpNameField fieldName rawName = do
       ( T.unpack fieldName
           <> " must use only ASCII lowercase letters, numbers, '/', '_' or '-'"
       )
+  when ("/" `T.isPrefixOf` name || "/" `T.isSuffixOf` name || "//" `T.isInfixOf` name) $
+    fail (T.unpack fieldName <> " must not contain empty path segments")
   pure name
 
 isMcpNameChar :: Char -> Bool
@@ -3352,6 +3366,8 @@ validateDriveRefreshTokenWith baseError fieldName rawToken
       invalid " must not contain hidden formatting characters"
   | T.any isSpace tokenVal =
       invalid " must not contain whitespace"
+  | T.any (not . isAscii) tokenVal =
+      invalid " must contain only ASCII characters"
   | T.length tokenVal > maxDriveOAuthTokenChars =
       invalid " must be 4096 characters or fewer"
   | otherwise =
@@ -3374,6 +3390,8 @@ validateDriveAuthorizationCode rawCode =
              then Left err400 { errBody = "code must not contain hidden formatting characters" }
            else if T.any isSpace codeVal
            then Left err400 { errBody = "code must not contain whitespace" }
+           else if T.any (not . isAscii) codeVal
+           then Left err400 { errBody = "code must contain only ASCII characters" }
            else if T.length codeVal > maxDriveOAuthTokenChars
            then Left err400 { errBody = "code must be 4096 characters or fewer" }
            else Right codeVal
@@ -3607,6 +3625,12 @@ validateOptionalDriveClientCredential envName rawCredential =
             { errBody =
                 BL.fromStrict . TE.encodeUtf8 $
                   envName <> " must not contain hidden formatting characters"
+            }
+      | T.any (not . isAscii) credential ->
+          Left err503
+            { errBody =
+                BL.fromStrict . TE.encodeUtf8 $
+                  envName <> " must contain only ASCII characters"
             }
       | T.length credential > maxDriveOAuthTokenChars ->
           Left err503
@@ -3860,7 +3884,11 @@ validateCalendarSyncWindow mSyncCursor mFrom mTo =
         { errBody =
             "Calendar sync range cannot be combined with an existing Google sync cursor"
         }
-    _ -> Right ()
+    (Right _, _) ->
+      case (mFrom, mTo) of
+        (Just fromTs, Just toTs) | toTs < fromTs ->
+          Left err400 { errBody = "from must be on or before to" }
+        _ -> Right ()
 
 validateGoogleCalendarSyncCursor :: Maybe Text -> Either ServerError (Maybe Text)
 validateGoogleCalendarSyncCursor Nothing = Right Nothing
@@ -3945,6 +3973,8 @@ validateGoogleCalendarEventStatus rawStatus
       Left "Google Calendar event status must not be blank"
   | T.any isControl statusVal =
       Left "Google Calendar event status must not contain control characters"
+  | T.any isHiddenDriveOAuthTokenChar statusVal =
+      Left "Google Calendar event status must not contain hidden formatting characters"
   | T.any isSpace statusVal =
       Left "Google Calendar event status must not contain whitespace"
   | statusVal `elem` calendarEventStatuses =
@@ -3966,6 +3996,8 @@ validateGoogleCalendarEventId rawEventId
       Left "Google Calendar event id must not contain hidden formatting characters"
   | T.any isSpace eventIdVal =
       Left "Google Calendar event id must not contain whitespace"
+  | T.any (not . isAscii) eventIdVal =
+      Left "Google Calendar event id must contain only ASCII characters"
   | otherwise =
       Right eventIdVal
   where
@@ -6414,6 +6446,9 @@ validateAdsInquiryContactChannels mEmail mPhone
 
 validateAdsInquiryChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsInquiryChannel Nothing = Right Nothing
+validateAdsInquiryChannel (Just rawChannel)
+  | T.null (T.strip rawChannel) =
+      Left err400 { errBody = "channel must be omitted instead of blank" }
 validateAdsInquiryChannel (Just rawChannel) =
   case normalizeOptionalInput (Just rawChannel) of
     Nothing -> Right Nothing
@@ -6529,6 +6564,8 @@ validateOptionalBookingServiceType (Just rawServiceType) =
     Just serviceTypeVal
       | T.length serviceTypeVal > 120 ->
           Left err400 { errBody = "serviceType must be 120 characters or fewer" }
+      | not (hasPublicBookingLabelContent serviceTypeVal) ->
+          Left err400 { errBody = "serviceType must include letters or numbers" }
       | T.any isAmbiguousPublicBookingSpace serviceTypeVal ->
           Left err400 { errBody = "serviceType must not contain Unicode separator spaces" }
       | T.any isUnsafePublicBookingLabelChar serviceTypeVal ->
@@ -7086,8 +7123,17 @@ validateRequiredCourseTextField fieldName maxLength rawValue =
 
 validateCourseTextListField :: Text -> Int -> [Text] -> Either ServerError (Maybe [Text])
 validateCourseTextListField _ _ [] = Right Nothing
-validateCourseTextListField fieldName maxLength rawValues =
-  Just <$> traverse validateIndexed (zip [1 :: Int ..] rawValues)
+validateCourseTextListField fieldName maxLength rawValues = do
+  values <- traverse validateIndexed (zip [1 :: Int ..] rawValues)
+  let foldedValues = map T.toCaseFold values
+  if length foldedValues /= Set.size (Set.fromList foldedValues)
+    then
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              fieldName <> " entries must be unique after trimming"
+        }
+    else Right (Just values)
   where
     validateIndexed (idx, rawValue) =
       validateRequiredCourseTextField
@@ -9777,9 +9823,21 @@ validateOptionalCmsPayload :: Maybe Value -> Either ServerError (Maybe Value)
 validateOptionalCmsPayload Nothing = Right Nothing
 validateOptionalCmsPayload (Just Null) =
   Left err400 { errBody = "payload must be omitted instead of JSON null" }
-validateOptionalCmsPayload payload@(Just (Object _)) = Right payload
+validateOptionalCmsPayload payload@(Just (Object _))
+  | BL.length (encode payload) > maxCmsPayloadBytes =
+      Left err400
+        { errBody =
+            BL.fromStrict . TE.encodeUtf8 $
+              "payload must be "
+                <> T.pack (show maxCmsPayloadBytes)
+                <> " bytes or fewer"
+        }
+  | otherwise = Right payload
 validateOptionalCmsPayload (Just _) =
   Left err400 { errBody = "payload must be a JSON object when present" }
+
+maxCmsPayloadBytes :: Int64
+maxCmsPayloadBytes = 262144
 
 validateCourseNonNegativeField :: Text -> Int -> Either ServerError Int
 validateCourseNonNegativeField fieldName value
@@ -10066,6 +10124,8 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Left err400 { errBody = "paymentProvider cannot be blank; use null to clear it" }
   | T.length normalized > 64 =
       Left err400 { errBody = "paymentProvider must be 64 characters or fewer" }
+  | not (T.any isPaymentProviderAtom normalized) =
+      Left err400 { errBody = "paymentProvider must contain at least one ASCII letter or digit" }
   | not (T.all isPaymentProviderSlugChar normalized) =
       Left err400
         { errBody =
@@ -10075,6 +10135,8 @@ validateOptionalMarketplacePaymentProviderUpdate (Just (Just rawProvider))
       Right (Just (Just normalized))
   where
     normalized = T.toLower (T.strip rawProvider)
+    isPaymentProviderAtom ch =
+      isAsciiLower ch || isDigit ch
     isPaymentProviderSlugChar ch =
       isAsciiLower ch || isDigit ch || ch == '-' || ch == '_'
 
@@ -10853,6 +10915,7 @@ createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
   either throwBadRequest pure (validateInvoiceLineItemCount ciLineItems)
   currency <- either throwError pure (validateCurrencyCode ciCurrency)
+  number <- either throwBadRequest pure (validateOptionalInvoiceNumber ciNumber)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
     Right vals -> pure vals
@@ -10875,7 +10938,6 @@ createInvoice user CreateInvoiceReq{..} = do
   now <- liftIO getCurrentTime
   let day      = utctDay now
       notes    = normalizeOptionalText ciNotes
-      number   = normalizeOptionalText ciNumber
       invoiceRecord = Invoice
         { invoiceCustomerId    = customerKey
         , invoiceIssueDate     = day
@@ -11007,6 +11069,25 @@ validateInvoiceLineItemCount lineItems
           <> " line items"
   | otherwise =
       Right ()
+
+validateOptionalInvoiceNumber :: Maybe Text -> Either Text (Maybe Text)
+validateOptionalInvoiceNumber Nothing = Right Nothing
+validateOptionalInvoiceNumber (Just rawNumber) =
+  case normalizeOptionalText (Just rawNumber) of
+    Nothing -> Right Nothing
+    Just number
+      | T.length number > 64 ->
+          Left "Invoice number must be 64 characters or fewer"
+      | T.any isControl number ->
+          Left "Invoice number must not contain control characters"
+      | T.any isHiddenInvoiceNumberChar number ->
+          Left "Invoice number must not contain control characters or Unicode formatting marks"
+      | otherwise ->
+          Right (Just number)
+
+isHiddenInvoiceNumberChar :: Char -> Bool
+isHiddenInvoiceNumberChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 prepareLine :: CreateInvoiceLineReq -> Either Text PreparedLine
 prepareLine CreateInvoiceLineReq{..} = do
@@ -11505,7 +11586,7 @@ validateAdsAssistRequest
   body <- validateMessage
   adKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "adId" aarAdId
   campaignKey <- fmap toSqlKey <$> validateOptionalPositiveIdField "campaignId" aarCampaignId
-  channel <- validateAdsAssistChannel aarChannel
+  channel <- validateAdsAssistRequestChannel aarChannel
   pure (body, adKey, campaignKey, channel)
   where
     validateMessage =
@@ -11530,6 +11611,9 @@ validatePublicAdsAssistPartyId (Just _) =
 
 validateAdsAssistChannel :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdsAssistChannel Nothing = Right Nothing
+validateAdsAssistChannel (Just rawChannel)
+  | T.null (T.strip rawChannel) =
+      Left err400 { errBody = "channel must be omitted instead of blank" }
 validateAdsAssistChannel (Just rawChannel) =
   case T.toLower <$> normalizeOptionalInput (Just rawChannel) of
     Nothing -> Right Nothing
@@ -11537,6 +11621,12 @@ validateAdsAssistChannel (Just rawChannel) =
     Just "facebook" -> Right (Just "facebook")
     Just "whatsapp" -> Right (Just "whatsapp")
     _ -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
+
+validateAdsAssistRequestChannel :: Maybe Text -> Either ServerError (Maybe Text)
+validateAdsAssistRequestChannel (Just rawChannel)
+  | T.null (T.strip rawChannel) = Right Nothing
+validateAdsAssistRequestChannel rawChannel =
+  validateAdsAssistChannel rawChannel
 
 validateAdCreativeLandingUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdCreativeLandingUrl = validateCoursePublicUrlField "landingUrl"
@@ -12524,13 +12614,18 @@ matchSensitiveApiErrorField previous textValue
 sensitiveApiErrorFields :: [Text]
 sensitiveApiErrorFields =
   [ "access_token"
+  , "accesstoken"
   , "api_key"
   , "api-key"
   , "apikey"
   , "authorization"
+  , "bearertoken"
   , "client_secret"
+  , "clientsecret"
   , "id_token"
   , "refresh_token"
+  , "refreshtoken"
+  , "x-api-key"
   ]
 
 parseSensitiveApiErrorField :: Text -> Text -> Text -> Maybe (Text, Text)
@@ -13759,12 +13854,16 @@ validateDatafastPaymentCurrencyField (Just rawCurrency) =
 
 parseDatafastAmountCents :: Text -> Maybe Int
 parseDatafastAmountCents rawAmount =
-  case T.splitOn "." amount of
-    [whole] -> parseParts whole "0"
-    [whole, fraction] -> parseParts whole fraction
-    _ -> Nothing
+  if T.length amount > maxDatafastAmountChars
+    then Nothing
+    else
+      case T.splitOn "." amount of
+        [whole] -> parseParts whole "0"
+        [whole, fraction] -> parseParts whole fraction
+        _ -> Nothing
   where
     amount = T.strip rawAmount
+    maxDatafastAmountChars = 16
 
     parseParts whole fraction
       | T.null whole = Nothing
@@ -14322,19 +14421,15 @@ validateOptionalDatafastCredential envName mRawCredential =
           Right (Just credential)
 
 validateOptionalDatafastVersionDf :: Maybe String -> Either ServerError Text
-validateOptionalDatafastVersionDf mRawVersion = do
-  mVersion <- validateOptionalDatafastCredential "DATAFAST_VERSIONDF" mRawVersion
-  case mVersion of
-    Nothing -> Right defaultDatafastVersionDf
-    Just versionDf
-      | T.length versionDf > 4 ->
-          invalidDatafastVersionDf
-      | not (T.all isAsciiDigitText versionDf) ->
-          invalidDatafastVersionDf
-      | T.isPrefixOf "0" versionDf ->
-          invalidDatafastVersionDf
-      | otherwise ->
-          Right versionDf
+validateOptionalDatafastVersionDf Nothing = Right defaultDatafastVersionDf
+validateOptionalDatafastVersionDf (Just rawVersion)
+  | T.null versionDf = Right defaultDatafastVersionDf
+  | T.length versionDf > 4 = invalidDatafastVersionDf
+  | not (T.all isAsciiDigitText versionDf) = invalidDatafastVersionDf
+  | T.isPrefixOf "0" versionDf = invalidDatafastVersionDf
+  | otherwise = Right versionDf
+  where
+    versionDf = T.strip (T.pack rawVersion)
 
 defaultDatafastVersionDf :: Text
 defaultDatafastVersionDf = "2"
@@ -14389,7 +14484,12 @@ validateDatafastBaseUrl mRawBase
       Right (T.unpack (canonicalDatafastBaseUrl cleanBase))
   where
     rawBase = maybe "https://test.oppwa.com" T.pack mRawBase
-    cleanBase = T.dropWhileEnd (== '/') (T.strip rawBase)
+    strippedBase = T.strip rawBase
+    cleanBase
+      | T.isSuffixOf "/" strippedBase && not (T.isSuffixOf "//" strippedBase) =
+          T.dropEnd 1 strippedBase
+      | otherwise =
+          strippedBase
 
     isHttpsOrigin rawUrl =
       T.all (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 rawUrl)
@@ -15044,7 +15144,7 @@ validateLabelTrackPathId :: Text -> Either ServerError (Key ME.LabelTrack)
 validateLabelTrackPathId rawId =
   let normalized = T.strip rawId
       invalid = Left err400 { errBody = "Invalid track id" }
-  in if T.null normalized || normalized /= rawId
+  in if T.null normalized
        then invalid
        else
          case fromPathPiece normalized of
@@ -15206,8 +15306,11 @@ cmsAdminServer user =
             updateWhere
               [ CMS.CmsContentSlug ==. CMS.cmsContentSlug ent
               , CMS.CmsContentLocale ==. CMS.cmsContentLocale ent
+              , CMS.CmsContentStatus ==. "published"
               ]
-              [ CMS.CmsContentStatus =. "archived" ]
+              [ CMS.CmsContentStatus =. "archived"
+              , CMS.CmsContentUpdatedAt =. now
+              ]
             update contentKey
               [ CMS.CmsContentStatus =. "published"
               , CMS.CmsContentPublishedAt =. Just now
@@ -15354,7 +15457,7 @@ instance FromJSON DriveMetaResp where
 
 decodeDriveMetaResourceKeyIfSuccessful :: Int -> BL.ByteString -> Maybe Text
 decodeDriveMetaResourceKeyIfSuccessful responseStatus responseBodyBytes
-  | responseStatus < 200 || responseStatus >= 300 = Nothing
+  | responseStatus /= 200 = Nothing
   | otherwise =
       case eitherDecode responseBodyBytes of
         Right (DriveMetaResp key) -> key
@@ -15535,6 +15638,11 @@ resolveDrivePublicUrlAfterPermission
   mWebContentLink
   mUploadResourceKey
   mMetaResourceKey
+  | hasConflictingDriveResourceKeys
+      [ sanitizeDriveResourceKey mUploadResourceKey
+      , sanitizeDriveResourceKey mMetaResourceKey
+      ] =
+      Nothing
   | permissionStatus >= 200 && permissionStatus < 300 =
       Just (resolveDrivePublicUrl fileId mWebContentLink mUploadResourceKey mMetaResourceKey)
   | otherwise =
@@ -15566,6 +15674,7 @@ sanitizeDriveWebContentLink expectedFileId mWebContentLink = do
       && TrialsServer.isValidHttpUrl url
       && isGoogleDriveDownloadHost url
       && not ("#" `T.isInfixOf` url)
+      && not (hasAmbiguousDrivePathSegments url)
       && extractDriveContentFileId url == Just expectedFileId
     then Just (normalizeDriveResourceKeyParams url)
     else Nothing
@@ -15602,6 +15711,21 @@ extractDriveContentFileId rawUrl =
           Just fileId
     _ ->
       Nothing
+
+hasAmbiguousDrivePathSegments :: Text -> Bool
+hasAmbiguousDrivePathSegments rawUrl =
+  any (\segment -> T.null segment || segment == "." || segment == "..") pathSegments
+  where
+    remainder = T.drop 8 rawUrl
+    afterAuthority =
+      T.dropWhile
+        (\c -> c /= '/' && c /= '?' && c /= '#')
+        remainder
+    path = T.takeWhile (\c -> c /= '?' && c /= '#') afterAuthority
+    pathSegments =
+      if T.null path
+        then []
+        else T.splitOn "/" (T.drop 1 path)
 
 extractDriveDownloadFileId :: Text -> Maybe Text
 extractDriveDownloadFileId rawUrl =

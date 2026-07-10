@@ -724,13 +724,13 @@ spec = do
                   )
 
       assertInvalid
-        "Asset upload name must not contain control characters or Unicode formatting marks"
+        "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
         (mkAssetUploadMultipart
           [("name", "front-room\x202Eshot.jpg")]
           [mkAssetUploadFile "camera.jpg"]
         )
       assertInvalid
-        "Uploaded file name must not contain control characters or Unicode formatting marks"
+        "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
         (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\x202Eshot.jpg"])
 
     it "rejects browser filenames with path separators instead of silently collapsing them into another stored asset name" $ do
@@ -921,11 +921,11 @@ spec = do
             )
 
     it "rejects overlong effective upload names before storage hits filesystem limits" $ do
-      let assertInvalid :: MultipartData Tmp -> Expectation
-          assertInvalid multipart =
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
             case fromMultipart multipart :: Either String AssetUploadForm of
               Left err ->
-                err `shouldContain` "Asset upload file name must be 218 characters or fewer"
+                err `shouldContain` expectedMessage
               Right payload ->
                 expectationFailure
                   ( "Expected overlong asset upload name to be rejected, got file: "
@@ -934,11 +934,13 @@ spec = do
           longName = T.replicate 215 "a" <> ".jpg"
 
       assertInvalid
+        "Asset upload file name must be 218 characters or fewer"
         (mkAssetUploadMultipart
           [("name", longName)]
           [mkAssetUploadFile "camera.jpg"]
         )
       assertInvalid
+        "Uploaded file name must be 218 characters or fewer"
         (mkAssetUploadMultipart [] [mkAssetUploadFile longName])
 
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do

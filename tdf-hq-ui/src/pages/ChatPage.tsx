@@ -56,9 +56,7 @@ interface FriendOption {
   subtitle: string;
 }
 
-interface DraftByThread {
-  [threadId: string]: string;
-}
+type DraftByThread = Record<string, string>;
 
 const SELECTED_THREAD_STORAGE_KEY = 'tdf-chat-selected-thread-v1';
 

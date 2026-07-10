@@ -643,7 +643,7 @@ async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') 
   };
 }
 
-async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
+export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
   const remoteName = config.pushRemote || 'origin';
   const baseBranch = 'main';
   const startedAt = new Date().toISOString();
@@ -1418,7 +1418,7 @@ async function waitForGreenCi(repoRoot, config, sha) {
   }
 }
 
-async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
+export async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
   const pushBranch = config.pushBranch || (await getCurrentBranch(repoRoot));
   if (!pushBranch) {
     throw new Error('Unable to determine current branch for latest-commit GitHub polling.');
@@ -1845,10 +1845,8 @@ export {
   discoverImprovementIdea,
   resolveLoopPushBranch,
   validateLoopConfig,
-  reconcileNonMainBranchesOntoMain,
   syncSubmodulesRecursively,
   waitForGreenCi,
-  syncAndPollLatestRemoteCi,
 };
 
 function isCliEntry() {

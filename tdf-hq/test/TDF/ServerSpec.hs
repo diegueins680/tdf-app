@@ -791,19 +791,18 @@ spec = describe "TDF.Server helpers" $ do
                 Right sources ->
                     sources `shouldBe` ["https://stations.example.com/streams.csv"]
 
-        it "rejects duplicate explicit import sources after canonicalization" $
+        it "de-duplicates duplicate explicit import sources after canonicalization" $
             case Radio.validateRadioImportSources
                 (Just
                     [ "https://github.com/mikepierce/internet-radio-streams"
                     , "https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"
                     ])
              of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "sources must not include duplicate entries"
-                Right value ->
+                Left err ->
                     expectationFailure
-                        ("Expected duplicate radio import sources to be rejected, got: " <> show value)
+                        ("Expected duplicate radio import sources to be de-duplicated, got: " <> show err)
+                Right value ->
+                    value `shouldBe` ["https://raw.githubusercontent.com/mikepierce/internet-radio-streams/master/streams.csv"]
 
         it "requires HTTPS for public radio transmission listen bases" $
             case Radio.validateRadioTransmissionPublicBase "http://radio.example.com/live" of
@@ -2950,8 +2949,8 @@ spec = describe "TDF.Server helpers" $ do
             omittedResult `shouldBe` Right Nothing
             resolvedResult `shouldBe` Right (Just expectedPipelineCardId)
 
-        it "treats blank or whitespace-wrapped proposal pipeline card ids like the rest of the optional payload" $ do
-            (expectedPipelineCardId, blankResult, trimmedResult) <- runAuthSqlite $ do
+        it "resolves whitespace-wrapped proposal pipeline card ids like the rest of the optional payload" $ do
+            (expectedPipelineCardId, trimmedResult) <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
                 let pipelineCardIdText = "00000000-0000-0000-0000-000000000702"
                 pipelineCardId <- case fromPathPiece pipelineCardIdText of
@@ -2967,17 +2966,25 @@ spec = describe "TDF.Server helpers" $ do
                     , ME.pipelineCardCreatedAt = now
                     , ME.pipelineCardUpdatedAt = now
                     }
-                blank <- resolveOptionalProposalPipelineCardReference (Just "   ")
                 trimmed <- resolveOptionalProposalPipelineCardReference
                     (Just ("  " <> toPathPiece pipelineCardId <> "  "))
-                pure (pipelineCardId, blank, trimmed)
+                pure (pipelineCardId, trimmed)
 
-            blankResult `shouldBe` Right Nothing
             trimmedResult `shouldBe` Right (Just expectedPipelineCardId)
 
         it "rejects invalid or unknown proposal pipeline card ids before proposals can persist dangling references" $ do
             invalidResult <- runAuthSqlite $
                 resolveOptionalProposalPipelineCardReference (Just "not-a-uuid")
+            blankResult <- runAuthSqlite $
+                resolveOptionalProposalPipelineCardReference (Just "   ")
+            case blankResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "pipelineCardId must be omitted or a valid identifier"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank proposal pipeline card id to be rejected, got: " <> show value)
             case invalidResult of
                 Left serverErr -> do
                     errHTTPCode serverErr `shouldBe` 400
@@ -3025,7 +3032,14 @@ spec = describe "TDF.Server helpers" $ do
 
             omittedResult `shouldBe` Right Nothing
             clearResult `shouldBe` Right (Just Nothing)
-            blankResult `shouldBe` Right (Just Nothing)
+            case blankResult of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr)
+                        `shouldContain` "pipelineCardId must be null to clear or a valid identifier"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank proposal pipeline card update to be rejected, got: " <> show value)
             resolvedResult `shouldBe` Right (Just (Just pipelineCardId))
 
     describe "PackagePurchaseReq FromJSON" $ do

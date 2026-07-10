@@ -36,7 +36,6 @@ import           Data.Char
   , isDigit
   )
 import           Data.Int                   (Int64)
-import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, maybeToList)
 import           Data.Text                  (Text)
@@ -367,9 +366,6 @@ proposalVersionToDTO proposalKey (Entity key v) = ProposalVersionDTO
 normalizeOptionalText :: Maybe Text -> Maybe Text
 normalizeOptionalText = (>>= normalizeText)
 
-normalizeOptionalUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
-normalizeOptionalUpdate = fmap normalizeOptionalText
-
 normalizeText :: Text -> Maybe Text
 normalizeText raw =
   let trimmed = T.strip raw
@@ -526,9 +522,7 @@ resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId) = do
   case T.strip rawPipelineCardId of
     trimmed
       | T.null trimmed ->
-          pure
-            (Left err400
-              { errBody = encodeUtf8Lazy "pipelineCardId must be omitted or a valid identifier" })
+          pure (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be omitted or a valid identifier" })
       | otherwise ->
           case fromPathPiece trimmed of
             Nothing ->
@@ -553,12 +547,7 @@ resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing) =
   pure (Right (Just Nothing))
 resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId))
   | T.null (T.strip rawPipelineCardId) =
-      pure
-        (Left err400
-          { errBody =
-              encodeUtf8Lazy
-                "pipelineCardId must be null to clear or a valid identifier"
-          })
+      pure (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be null to clear or a valid identifier" })
   | otherwise = do
   resolved <- resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId)
   pure (fmap Just resolved)
@@ -693,8 +682,8 @@ validateProposalContentSource mLatex mTemplateKey = do
   latex <- validateOptionalProposalLatex mLatex
   templateKey <- validateOptionalProposalTemplateKey mTemplateKey
   case (latex, templateKey) of
-    (Just latex, Nothing) ->
-      Right (ProposalInlineLatex latex)
+    (Just inlineLatex, Nothing) ->
+      Right (ProposalInlineLatex inlineLatex)
     (Nothing, Just rawKey) ->
       ProposalTemplateKey <$> validateTemplateKey rawKey
     (Nothing, Nothing) ->

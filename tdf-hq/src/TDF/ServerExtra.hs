@@ -914,9 +914,9 @@ normalizeCheckoutRequest req = do
   (mTargetParty, mRoom, mSession) <-
     validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey
   disposition <- parseCheckoutDisposition (coDisposition req)
-  termsAndConditions <- validateCheckoutTermsField "termsAndConditions" (coTermsAndConditions req)
   holderEmail <- validateCheckoutHolderEmail (coHolderEmail req)
   holderPhone <- validateCheckoutHolderPhone (coHolderPhone req)
+  termsAndConditions <- validateCheckoutTermsField "termsAndConditions" (coTermsAndConditions req)
   paymentType <- normalizeCheckoutPaymentType (coPaymentType req)
   paymentInstallments <- validateCheckoutInstallments (coPaymentInstallments req)
   paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
@@ -1023,26 +1023,27 @@ validatePublicQrCheckoutRequest normalized
       Right ()
 
 validatePublicQrCheckoutRequestFields :: AssetCheckoutRequest -> Either ServerError ()
-validatePublicQrCheckoutRequestFields req
-  | isRentalDisposition (coDisposition req)
-      && isNothing (normalizeOptionalTextField (coPaymentType req)) =
-      Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
-  | isRentalDisposition (coDisposition req)
-      && isNothing (normalizeOptionalTextField (coPaymentAmount req)) =
-      Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
-  | isRentalDisposition (coDisposition req)
-      && isNothing (normalizeOptionalTextField (coPaymentCurrency req)) =
-      Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
-  | isRentalDisposition (coDisposition req)
-      && isNothing (normalizeOptionalTextField (coPaymentOutstanding req)) =
-      Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
-  | otherwise =
-      Right ()
-  where
-    isRentalDisposition rawDisposition =
-      case parseCheckoutDisposition rawDisposition of
-        Right Rental -> True
-        _ -> False
+validatePublicQrCheckoutRequestFields req = do
+  targetKind <- parseCheckoutTargetKind (coTargetKind req)
+  when (targetKind /= TargetParty) $
+    Left err400 { errBody = "Public QR checkout only supports party targets" }
+  disposition <- parseCheckoutDisposition (coDisposition req)
+  when (disposition == Sale) $
+    Left err400 { errBody = "Public QR checkout does not allow sale disposition" }
+  when (disposition /= Loan && disposition /= Rental) $
+    Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
+  _ <- validateCheckoutHolderEmail (coHolderEmail req)
+  _ <- validateCheckoutHolderPhone (coHolderPhone req)
+  when (isNothing (normalizeOptionalTextField (coTermsAndConditions req))) $
+    Left err400 { errBody = "Public QR checkout requires coTermsAndConditions" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentType req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentAmount req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentCurrency req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentOutstanding req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
 
 validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
 validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
@@ -4097,13 +4098,36 @@ verifyMetaWebhook
   -> m Text
 verifyMetaWebhook channel mMode mToken mChallenge = do
   Env{envConfig} <- ask
-  either throwError pure $
-    validateMetaWebhookVerifyRequest
-      (metaChannelLabel channel)
-      mMode
-      mChallenge
-      mToken
-      (metaWebhookVerifyTokenCandidates channel envConfig)
+  either throwError pure (validateWithFallback envConfig)
+  where
+    validateWithFallback envConfig =
+      case channel of
+        MetaFacebook ->
+          let primary =
+                validateMetaWebhookVerifyRequest
+                  (metaChannelLabel channel)
+                  mMode
+                  mChallenge
+                  mToken
+                  [facebookMessagingToken envConfig]
+          in case primary of
+              Right challenge -> Right challenge
+              Left err
+                | errHTTPCode err == 403 ->
+                    validateMetaWebhookVerifyRequest
+                      (metaChannelLabel channel)
+                      mMode
+                      mChallenge
+                      mToken
+                      [instagramVerifyToken envConfig]
+                | otherwise -> Left err
+        MetaInstagram ->
+          validateMetaWebhookVerifyRequest
+            (metaChannelLabel channel)
+            mMode
+            mChallenge
+            mToken
+            (metaWebhookVerifyTokenCandidates channel envConfig)
 
 metaWebhookVerifyTokenCandidates :: MetaChannel -> AppConfig -> [Maybe Text]
 metaWebhookVerifyTokenCandidates channel cfg =
@@ -4124,7 +4148,7 @@ validateMetaWebhookVerifyRequest
   -> [Maybe Text]
   -> Either ServerError Text
 validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedCandidates =
-  case validateConfiguredMetaVerifyToken expectedCandidates of
+  case validateConfiguredMetaVerifyTokens expectedCandidates of
     Left err ->
       Left err
     Right expected ->
@@ -4152,7 +4176,7 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
                             { errBody =
                                 "hub.verify_token must not contain hidden formatting characters"
                             }
-                      | provided == expected -> Right challengeVal
+                      | provided `elem` expected -> Right challengeVal
                       | otherwise ->
                           Left err403
                             { errBody =
@@ -4162,17 +4186,17 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
         Just _ ->
           Left err400 { errBody = "hub.mode must be subscribe" }
   where
-    validateConfiguredMetaVerifyToken :: [Maybe Text] -> Either ServerError Text
-    validateConfiguredMetaVerifyToken candidates =
+    validateConfiguredMetaVerifyTokens :: [Maybe Text] -> Either ServerError [Text]
+    validateConfiguredMetaVerifyTokens candidates =
       case mapMaybe nonBlankText candidates of
         [] ->
           Left err403 { errBody = "Meta verify token not configured" }
-        expected : rest
-          | any (T.any isUnsafeMetaVerifyTokenChar) (expected : rest) ->
+        expected
+          | any (T.any isUnsafeMetaVerifyTokenChar) expected ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
-          | any (T.any isHiddenMetaWebhookTextChar) (expected : rest) ->
+          | any (T.any isHiddenMetaWebhookTextChar) expected ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
-          | any (/= expected) rest ->
+          | length (Set.fromList expected) > 1 ->
               Left err403 { errBody = "Meta verify token candidates conflict" }
           | otherwise ->
               Right expected

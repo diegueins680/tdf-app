@@ -53,9 +53,9 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
         ttcToEmail: recipientEmail,
         ttcToName: recipientName,
       }),
-    onSuccess: (transfer) => {
-      qc.invalidateQueries({ queryKey: ['tickets', eventId] });
-      qc.invalidateQueries({ queryKey: ['ticket-transfers', ticket.ticketId] });
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['tickets', eventId] });
+      void qc.invalidateQueries({ queryKey: ['ticket-transfers', ticket.ticketId] });
       onSuccess();
       handleClose();
     },
@@ -128,7 +128,7 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              The recipient will have {TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS} hours to accept the transfer. You can cancel the transfer at any time before it's accepted.
+              The recipient will have {TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS} hours to accept the transfer. You can cancel the transfer at any time before it&apos;s accepted.
             </Typography>
           </Alert>
 

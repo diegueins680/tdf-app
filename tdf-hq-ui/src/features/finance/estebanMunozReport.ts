@@ -330,7 +330,7 @@ interface PdfCell {
   bold?: boolean;
 }
 
-type PdfRow = Array<string | PdfCell>;
+type PdfRow = (string | PdfCell)[];
 
 const PDF = {
   pageWidth: 612,

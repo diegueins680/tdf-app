@@ -152,7 +152,7 @@ spec = do
                   ("Expected unsafe display name to be rejected, got " <> show partyId)
       assertRejected
         ("Ada" <> T.singleton '\x202E')
-        "displayName must not contain control characters or hidden formatting characters"
+        "displayName must not contain control characters, hidden formatting characters, or Unicode space lookalikes"
       assertRejected
         ("Ada" <> T.singleton '\x00A0' <> "Lovelace")
         "Unicode space lookalikes"
@@ -2369,6 +2369,7 @@ spec = do
         teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         privateScheduleHandler
           (TrialScheduleIn
@@ -2393,6 +2394,7 @@ spec = do
         studentPartyId <- insertPartyFixture "Student One" now
         nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         privateScheduleHandler
           (TrialScheduleIn
@@ -2418,6 +2420,7 @@ spec = do
         allowedRoomId <- insertRoomFixture "Sala Piano" "sala-piano"
         blockedRoomId <- insertRoomFixture "Sala Voces" "sala-voces"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         _ <- insert Trials.SubjectRoomPreference
           { Trials.subjectRoomPreferenceSubjectId = subjectKey
           , Trials.subjectRoomPreferenceRoomId = allowedRoomId
@@ -2448,6 +2451,7 @@ spec = do
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         _ <- insert Trials.ClassSession
           { Trials.classSessionStudentId = otherStudentPartyId
@@ -2487,6 +2491,7 @@ spec = do
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture scheduledTeacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         _ <- insert Trials.ClassSession
           { Trials.classSessionStudentId = otherStudentPartyId
@@ -2526,6 +2531,7 @@ spec = do
         studentPartyId <- insertPartyFixture "Student One" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey oldStart oldEnd now
         _ <- insert Trials.TrialAssignment
           { Trials.trialAssignmentRequestId = requestKey
@@ -3047,6 +3053,19 @@ initializePartySchema = do
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"lead_interest\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"interest_type\" VARCHAR NOT NULL,\
+    \\"subject_id\" INTEGER NULL,\
+    \\"details\" VARCHAR NULL,\
+    \\"source\" VARCHAR NOT NULL,\
+    \\"drive_link\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
   initializeArtistProfileSchema
 
 initializeArtistProfileSchema :: (MonadIO m) => SqlPersistT m ()
@@ -3131,6 +3150,16 @@ initializeTrialsSchema = do
     \)"
     []
   rawExecute
+    "CREATE TABLE IF NOT EXISTS \"teacher_subject\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"level_min\" INTEGER NULL,\
+    \\"level_max\" INTEGER NULL,\
+    \CONSTRAINT \"unique_teacher_subject\" UNIQUE (\"teacher_id\", \"subject_id\")\
+    \)"
+    []
+  rawExecute
     "CREATE TABLE IF NOT EXISTS \"subject_room_preference\" (\
     \\"id\" INTEGER PRIMARY KEY,\
     \\"subject_id\" INTEGER NOT NULL,\
@@ -3154,6 +3183,19 @@ initializeTrialsSchema = do
     \\"status\" VARCHAR NOT NULL,\
     \\"assigned_teacher_id\" INTEGER NULL,\
     \\"assigned_at\" TIMESTAMP NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"lead_interest\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"interest_type\" VARCHAR NOT NULL,\
+    \\"subject_id\" INTEGER NULL,\
+    \\"details\" VARCHAR NULL,\
+    \\"source\" VARCHAR NOT NULL,\
+    \\"drive_link\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -3442,6 +3484,16 @@ insertTeacherFixture displayName now = do
     , Models.partyRoleActive = True
     }
   pure partyId
+
+linkTeacherSubjectFixture :: Models.PartyId -> Trials.SubjectId -> SqlPersistT IO ()
+linkTeacherSubjectFixture teacherPartyId subjectKey = do
+  _ <- insert Trials.TeacherSubject
+    { Trials.teacherSubjectTeacherId = teacherPartyId
+    , Trials.teacherSubjectSubjectId = subjectKey
+    , Trials.teacherSubjectLevelMin = Nothing
+    , Trials.teacherSubjectLevelMax = Nothing
+    }
+  pure ()
 
 insertRoomFixture :: Text -> Text -> SqlPersistT IO Models.ResourceId
 insertRoomFixture name slug =

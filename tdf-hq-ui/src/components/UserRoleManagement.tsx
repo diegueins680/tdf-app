@@ -81,7 +81,6 @@ const ROLE_COLORS: Partial<Record<RoleValue, 'primary' | 'secondary' | 'success'
 };
 
 const getRoleColor = (role: RoleValue) => ROLE_COLORS[role] ?? 'default';
-const ROLES_COLUMN_LABEL = 'Roles';
 const EDITABLE_ROLES_LABEL = 'Roles editables';
 const EMPTY_ROLES_LABEL = 'Sin roles';
 const EMPTY_CONTACT_LABEL = 'Sin email ni teléfono';

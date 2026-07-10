@@ -7,10 +7,8 @@ import {
   Avatar, Tooltip, ImageList, ImageListItem, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import {
-  PushPin as PushPinIcon,
   PushPinOutlined as PushPinOutlinedIcon,
   VisibilityOff as VisibilityOffIcon,
-  Visibility as VisibilityIcon,
   HowToVote as HowToVoteIcon,
   CalendarMonth as CalendarMonthIcon,
   Forum as ForumIcon,
@@ -33,14 +31,13 @@ import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useLocalValue } from '../hooks/useLocalValue';
-import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubCandidacyDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
+import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
 
 export default function FanClubPage() {
   const { artistId } = useParams();
   const artistIdNum = parseInt(artistId || '0', 10);
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
-  const qc = useQueryClient();
   const [tab, setTab] = useLocalValue(0);
   const location = useLocation();
 
@@ -80,12 +77,6 @@ export default function FanClubPage() {
     queryKey: ['fan-club-elections', artistIdNum],
     queryFn: () => Fans.listClubElections(artistIdNum),
     enabled: artistIdNum > 0 && tab === 4 && isAuthenticated,
-  });
-
-  const memberProfilesQuery = useQuery({
-    queryKey: ['fan-club-member-profiles', artistIdNum],
-    queryFn: () => Fans.listClubMemberProfiles(artistIdNum),
-    enabled: artistIdNum > 0 && isAuthenticated,
   });
 
   const club = clubQuery.data;
@@ -180,7 +171,7 @@ export default function FanClubPage() {
           </Card>
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={tab} onChange={(_, v) => setTab(v)}>
+            <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value === 'number') setTab(value); }}>
               <Tab icon={<ForumIcon />} label="Feed" />
               <Tab icon={<ForumIcon />} label="Foro" />
               <Tab icon={<PhotoLibraryIcon />} label="Recuerdos" />
@@ -253,9 +244,9 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
     },
   });
 
@@ -268,7 +259,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
     },
   });
 
@@ -281,7 +272,9 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
       <ToggleButtonGroup
         value={sortMode}
         exclusive
-        onChange={(_, v) => { if (v) setSortMode(v); }}
+        onChange={(_, value: unknown) => {
+          if (value === 'new' || value === 'hot' || value === 'top') setSortMode(value);
+        }}
         size="small"
       >
         <ToggleButton value="new"><FiberNewIcon sx={{ mr: 0.5 }} fontSize="small" />Nuevo</ToggleButton>
@@ -365,7 +358,7 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
     mutationFn: ({ messageId, body }: { messageId: number; body: string }) =>
       Fans.replyClubInboxMessage(artistId, messageId, { fcirReqBody: body }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
       setReplyOpen(null);
       setReplyBody('');
     },
@@ -375,7 +368,7 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
     mutationFn: ({ messageId, status }: { messageId: number; status: string }) =>
       Fans.updateClubInboxStatus(artistId, messageId, { fcistReqStatus: status }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-inbox', artistId] });
     },
   });
 
@@ -509,8 +502,8 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
   const createPost = useMutation({
     mutationFn: () => Fans.createClubPost(artistId, { fcpReqTitle: title || null, fcpReqContent: content, fcpReqParentId: null, fcpReqMediaUrls: postMediaUrls }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
       setOpen(false);
       setTitle('');
       setContent('');
@@ -521,15 +514,17 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
   const pinMut = useMutation({
     mutationFn: ({ postId, pin }: { postId: number; pin: boolean }) =>
       pin ? Fans.pinClubPost(artistId, postId) : Fans.unpinClubPost(artistId, postId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+    },
   });
 
   const hideMut = useMutation({
     mutationFn: ({ postId, hide }: { postId: number; hide: boolean }) =>
       hide ? Fans.hideClubPost(artistId, postId) : Fans.unhideClubPost(artistId, postId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-posts', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
     },
   });
 
@@ -663,8 +658,8 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
       fcmReqMediaUrls: mediaUrls.split('\n').filter(u => u.trim()),
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
       setOpen(false);
       setTitle('');
       setDescription('');
@@ -676,16 +671,16 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
     mutationFn: ({ memoryId, hide }: { memoryId: number; hide: boolean }) =>
       hide ? Fans.hideClubMemory(artistId, memoryId) : Fans.unhideClubMemory(artistId, memoryId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
     },
   });
 
   const deleteMut = useMutation({
     mutationFn: (memoryId: number) => Fans.deleteClubMemory(artistId, memoryId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
-      qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-memories', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-feed', artistId] });
     },
   });
 
@@ -852,7 +847,7 @@ function ClubCalendar({ artistId, events, isOfficer, loading }: { artistId: numb
       fcevLocation: form.location || null,
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-events', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-events', artistId] });
       setOpen(false);
       setForm({ title: '', description: '', startsAt: '', endsAt: '', location: '' });
     },
@@ -945,7 +940,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
       fcelVotingEndsAt: form.votingEndsAt || null,
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
       setOpen(false);
     },
   });
@@ -953,7 +948,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
   const castVote = useMutation({
     mutationFn: (electionId: number) => Fans.castVote(artistId, electionId, { fcvCandidacyIds: selectedCands }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
+      void qc.invalidateQueries({ queryKey: ['fan-club-elections', artistId] });
       setVoteOpen(null);
       setSelectedCands([]);
     },

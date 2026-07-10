@@ -352,7 +352,16 @@ validateSignupInternshipTextField fieldName rawValue =
     Nothing -> Right ()
     Just cleanValue ->
       let sanitized = sanitizeSignupInternshipText cleanValue
-      in if T.length sanitized > maxSignupInternshipTextChars
+      in if sanitized /= cleanValue
+        then
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      (fieldName <> " must not contain control characters or hidden formatting characters")
+                  )
+            }
+        else if T.length sanitized > maxSignupInternshipTextChars
         then
           Left err400
             { errBody =

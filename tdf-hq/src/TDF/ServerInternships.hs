@@ -952,7 +952,7 @@ parseKey
 parseKey raw
   | isSignedNegativeInt || isNonPositiveDigits =
       throwError err400 { errBody = "identifier must be a positive integer" }
-  | raw /= trimmed || not (T.all isDigit trimmed) =
+  | raw /= trimmed =
       invalid
   | otherwise =
       case fromPathPiece trimmed of

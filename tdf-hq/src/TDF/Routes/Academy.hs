@@ -184,7 +184,9 @@ isUnsafeAcademyPlatformChar ch =
 optionalAcademyReferralCode :: Maybe Text -> Parser (Maybe Text)
 optionalAcademyReferralCode Nothing = pure Nothing
 optionalAcademyReferralCode (Just raw)
-  | T.null (T.strip raw) && not (T.any isUnsafeAcademyReferralCodeBlankChar raw) =
+  | T.null (T.strip raw)
+      && not (T.any isControl raw)
+      && not (T.any isUnsafeAcademyReferralCodeBlankChar raw) =
       pure Nothing
   | otherwise = Just <$> requiredAcademyReferralCode raw
 

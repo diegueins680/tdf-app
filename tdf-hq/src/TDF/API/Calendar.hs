@@ -90,9 +90,9 @@ optionalRedirectUri (Just raw) =
   let redirectUriVal = T.strip raw
   in if T.null redirectUriVal
        then fail "redirectUri must be omitted instead of blank"
-       else if T.any isControl redirectUriVal
+       else if T.any isControl raw
          then fail "redirectUri must not contain control characters"
-       else if T.any isHiddenCalendarIdChar redirectUriVal
+       else if T.any isHiddenCalendarIdChar raw
          then fail "redirectUri must not contain hidden formatting characters"
        else if T.any isSpace redirectUriVal
          then fail "redirectUri must not contain whitespace"

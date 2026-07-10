@@ -12,9 +12,11 @@ import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..), get, insert, selectList)
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
+import System.IO (hClose)
+import System.IO.Temp (withSystemTempFile)
 import Test.Hspec
 
 import TDF.API.Admin
@@ -1467,9 +1469,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure ("Expected malformed social unhold note to be rejected, got " <> show value)
 
-        it "rejects external-id unholds that only match outgoing WhatsApp messages" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "rejects external-id unholds that only match outgoing WhatsApp messages" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
@@ -1507,9 +1508,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageHoldReason stored `shouldBe` Just "should stay outbound"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "transport failure"
 
-        it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors =
@@ -1548,9 +1548,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageReplyStatus stored `shouldBe` "pending"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "previous transport error"
 
-        it "resets reply hold fields for matching incoming WhatsApp messages" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "resets reply hold fields for matching incoming WhatsApp messages" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
@@ -1688,6 +1687,14 @@ dummyEnv =
         { envPool = error "envPool should be unused in ServerAdminSpec"
         , envConfig = error "envConfig should be unused in ServerAdminSpec"
         }
+
+withWhatsAppAdminPool :: (ConnectionPool -> IO a) -> IO a
+withWhatsAppAdminPool action =
+    withSystemTempFile "tdf-admin-whatsapp.sqlite" $ \dbPath handle -> do
+        hClose handle
+        pool <- runStdoutLoggingT $ createSqlitePool (T.pack dbPath) 1
+        runSqlPool initializeWhatsAppAdminSchema pool
+        action pool
 
 initializeWhatsAppAdminSchema :: SqlPersistT IO ()
 initializeWhatsAppAdminSchema = do

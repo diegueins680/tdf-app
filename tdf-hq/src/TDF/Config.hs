@@ -177,8 +177,6 @@ validateFallbackConnUrl envName raw
           Left (envName <> " must not contain control characters")
       | T.any isHiddenConnectionUrlChar value =
           Left (envName <> " must not contain hidden formatting characters")
-      | hasPercentEncodedUnsafeConnectionUrlChar value =
-          Left (envName <> " must not contain percent-encoded whitespace or control bytes")
       | "#" `T.isInfixOf` value =
           Left (envName <> " must not include a fragment")
       | otherwise =
@@ -199,6 +197,7 @@ validateFallbackConnUrl envName raw
                    *> validateConnectionHostPort hostPort
                    *> validateConnectionDatabasePath databasePath
                    *> validateConnectionQueryParams databasePath
+                   *> rejectPercentEncodedUnsafeConnectionUrlChar value
                    *> Right (T.unpack value)
 
     validateConnectionUserInfo :: Text -> Either String ()
@@ -365,6 +364,12 @@ validateFallbackConnUrl envName raw
         || (ch >= 'A' && ch <= 'Z')
         || isAsciiDigit ch
         || ch == '_'
+
+    rejectPercentEncodedUnsafeConnectionUrlChar :: Text -> Either String ()
+    rejectPercentEncodedUnsafeConnectionUrlChar url =
+      if hasPercentEncodedUnsafeConnectionUrlChar url
+        then Left (envName <> " must not contain percent-encoded whitespace or control bytes")
+        else Right ()
 
 isValidConnectionSslMode :: Text -> Bool
 isValidConnectionSslMode rawMode =
@@ -1666,10 +1671,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
            then invalid
            else if not (validateHttpsPathCharacters pathSuffix)
              then
-               Left
-                 ( envName
-                     <> " URL suffix must not start with // or contain backslashes"
-                 )
+               Left (envName <> " path must not start with // or contain backslashes")
            else if hasAmbiguousUrlPathSuffix pathSuffix
              then Left (ambiguousUrlPathMessage envName)
              else Right (Just trimmed)

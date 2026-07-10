@@ -1185,7 +1185,7 @@ describe('AdminUsersPage', () => {
   });
 
   it('lets admins search by plural contact-state phrases from the compact header', async () => {
-    const contactStateUsers: Array<[string, string, string | null, string | null]> = [
+    const contactStateUsers: [string, string, string | null, string | null][] = [
       ['Ada Ready', 'ada-ready', 'ada@example.com', '+593999000111'],
       ['Bruno Ready', 'bruno-ready', 'bruno@example.com', '+593999000222'],
       ['Carla Email', 'carla-email', 'carla@example.com', null],

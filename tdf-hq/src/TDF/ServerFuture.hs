@@ -1276,6 +1276,15 @@ hasAmbiguousFutureStubPathSegments segments =
       leftSegment == rightSegment
         || leftSegment `T.isPrefixOf` rightSegment
         || rightSegment `T.isPrefixOf` leftSegment
+        || leftSegment <> "s" == rightSegment
+        || rightSegment <> "s" == leftSegment
+        || pluralizeY leftSegment == rightSegment
+        || pluralizeY rightSegment == leftSegment
+
+    pluralizeY segment =
+      case T.unsnoc segment of
+        Just (base, 'y') -> base <> "ies"
+        _ -> segment <> "s"
 
     segmentPairs [] = []
     segmentPairs (segment:remaining) =

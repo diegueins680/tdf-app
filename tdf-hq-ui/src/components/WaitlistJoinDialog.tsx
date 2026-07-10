@@ -58,7 +58,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
         wjQuantity: quantity,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['waitlist', eventId] });
+      void qc.invalidateQueries({ queryKey: ['waitlist', eventId] });
       onSuccess();
       handleClose();
     },
@@ -119,7 +119,7 @@ export function WaitlistJoinDialog({ open, onClose, eventId, eventTitle, tierNam
 
         <Alert severity="info" sx={{ my: 2 }}>
           <Typography variant="body2">
-            We'll notify you by email when tickets become available. You'll have {WAITLIST_PURCHASE_WINDOW_HOURS} hours to purchase your tickets.
+            We&apos;ll notify you by email when tickets become available. You&apos;ll have {WAITLIST_PURCHASE_WINDOW_HOURS} hours to purchase your tickets.
           </Typography>
         </Alert>
 

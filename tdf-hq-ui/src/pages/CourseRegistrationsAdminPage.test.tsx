@@ -222,6 +222,8 @@ const copyVisibleSearchCsvLabel = 'Copiar resultados';
 const staleCopyVisibleSearchCsvLabel = 'Copiar visibles como CSV';
 const cohortFilterLabel = 'Formulario público';
 const localSearchLabel = 'Buscar inscripciones';
+const registrationSortLabel = 'Ordenar por';
+const registrationSortDirectionLabel = 'Dirección';
 const localSearchCompactContextTitle = 'Otros datos: estado, curso, fuente, origen o nota cuando existan.';
 const loadLimitLabel = 'Límite de carga';
 const loadLimitHelperText = 'Máximo de inscripciones cargadas en esta vista.';
@@ -411,6 +413,11 @@ const REGISTRATION_PAGE_SIZE = 25;
 const getDossierTriggers = (root: ParentNode) =>
   Array.from(root.querySelectorAll<HTMLButtonElement>('button[aria-label^="Abrir expediente de "]'));
 
+const getDossierTargetLabels = (root: ParentNode) =>
+  getDossierTriggers(root).map((button) => (
+    button.getAttribute('aria-label') ?? ''
+  ).replace(/^Abrir expediente de /, ''));
+
 const getOnlyDossierTrigger = (root: ParentNode) => {
   const buttons = getDossierTriggers(root);
   if (buttons.length !== 1) {
@@ -424,6 +431,15 @@ const getMenuItemByText = (root: ParentNode, labelText: string) => {
   const item = items.find((el) => (el.textContent ?? '').trim() === labelText);
   if (!(item instanceof HTMLElement)) {
     throw new Error(`Menu item not found: ${labelText}`);
+  }
+  return item;
+};
+
+const getPopupOptionByText = (root: ParentNode, labelText: string) => {
+  const items = Array.from(root.querySelectorAll('[role="option"], [role="menuitem"]'));
+  const item = items.find((el) => (el.textContent ?? '').trim() === labelText);
+  if (!(item instanceof HTMLElement)) {
+    throw new Error(`Popup option not found: ${labelText}`);
   }
   return item;
 };
@@ -473,6 +489,20 @@ const getComboboxByLabel = (root: ParentNode, labelText: string) => {
   if (!combobox) throw new Error(`Combobox not found for label: ${labelText}`);
 
   return combobox;
+};
+
+const selectComboboxOption = async (root: ParentNode, labelText: string, optionText: string) => {
+  await act(async () => {
+    mouseDownElement(getComboboxByLabel(root, labelText));
+    await flushPromises();
+    await flushPromises();
+  });
+
+  await act(async () => {
+    clickElement(getPopupOptionByText(document.body, optionText));
+    await flushPromises();
+    await flushPromises();
+  });
 };
 
 const openDossierContextAction = async (labelText: string) => {
@@ -16353,6 +16383,110 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(searchUtilities!, copyVisibleSearchCsvLabel)).toBeTruthy();
       expect(countButtonsByText(container, 'Limpiar búsqueda')).toBe(0);
       expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+    });
+
+    await cleanup();
+  });
+
+  it('orders loaded registrations by name or registration date and exports the ordered rows', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listRegistrationsMock.mockResolvedValue([
+      buildRegistration({
+        crId: 101,
+        crFullName: 'Brenda Mora',
+        crEmail: 'brenda@example.com',
+        crCreatedAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildRegistration({
+        crId: 102,
+        crFullName: 'Ana Torres',
+        crEmail: 'ana@example.com',
+        crCreatedAt: '2030-01-03T03:04:05.000Z',
+      }),
+      buildRegistration({
+        crId: 103,
+        crFullName: 'Carlos Vega',
+        crEmail: 'carlos@example.com',
+        crCreatedAt: '2030-01-01T03:04:05.000Z',
+      }),
+      ...[
+        'Diego Paz',
+        'Elena Ruiz',
+        'Fabio Leon',
+        'Gabriela Sol',
+        'Hugo Luna',
+        'Iris Mar',
+      ].map((name, index) => buildRegistration({
+        crId: 104 + index,
+        crPartyId: 12 + index,
+        crFullName: name,
+        crEmail: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        crCreatedAt: `2030-01-${String(4 + index).padStart(2, '0')}T03:04:05.000Z`,
+      })),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/inscripciones-curso?limit=9');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, registrationSortLabel)).toBe(true);
+      expect(hasLabel(container, registrationSortDirectionLabel)).toBe(false);
+      expect(getDossierTargetLabels(container).slice(0, 3)).toEqual([
+        'Brenda Mora',
+        'Ana Torres',
+        'Carlos Vega',
+      ]);
+    });
+
+    await selectComboboxOption(container, registrationSortLabel, 'Nombre');
+
+    await waitForExpectation(() => {
+      expect(hasLabel(container, registrationSortDirectionLabel)).toBe(true);
+      expect(getDossierTargetLabels(container).slice(0, 3)).toEqual([
+        'Ana Torres',
+        'Brenda Mora',
+        'Carlos Vega',
+      ]);
+    });
+
+    await selectComboboxOption(container, registrationSortLabel, 'Fecha de registro');
+
+    await waitForExpectation(() => {
+      expect(getDossierTargetLabels(container).slice(0, 3)).toEqual([
+        'Iris Mar',
+        'Hugo Luna',
+        'Gabriela Sol',
+      ]);
+    });
+
+    await selectComboboxOption(container, registrationSortDirectionLabel, 'Ascendente');
+
+    await waitForExpectation(() => {
+      expect(getDossierTargetLabels(container).slice(0, 3)).toEqual([
+        'Carlos Vega',
+        'Brenda Mora',
+        'Ana Torres',
+      ]);
+      expect(getButtonByText(container, copyVisibleCsvLabel(9))).toBeTruthy();
+    });
+
+    await act(async () => {
+      clickButton(getButtonByText(container, copyVisibleCsvLabel(9)));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(writeTextMock).toHaveBeenCalledTimes(1);
+      const csvRows = (writeTextMock.mock.calls[0]?.[0] ?? '').split('\n');
+      expect(csvRows[1]).toContain('"Carlos Vega"');
+      expect(csvRows[2]).toContain('"Brenda Mora"');
+      expect(csvRows[3]).toContain('"Ana Torres"');
     });
 
     await cleanup();

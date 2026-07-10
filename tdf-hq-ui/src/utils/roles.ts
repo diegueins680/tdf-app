@@ -1,6 +1,16 @@
 import type { SignupPayload } from '../api/auth';
 import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 
+const codePointPattern = (codePoints: readonly number[]) =>
+  new RegExp(codePoints.map((codePoint) => String.fromCodePoint(codePoint)).join('|'), 'gu');
+
+const CONTROL_CHARACTER_PATTERN = new RegExp(
+  `[${String.fromCodePoint(0)}-${String.fromCodePoint(31)}${String.fromCodePoint(127)}-${String.fromCodePoint(159)}]`,
+  'gu',
+);
+const FORMAT_CHARACTER_PATTERN = codePointPattern([0x200B, 0x200C, 0x200D, 0x200E, 0x200F, 0xFEFF, 0x00AD, 0x2060, 0xFE0E, 0xFE0F]);
+const LINE_SEPARATOR_PATTERN = codePointPattern([0x2028, 0x2029]);
+
 export function normalizeRolesInput<T extends string>(
   value: string | string[],
   allowedRoles: readonly T[],
@@ -43,9 +53,9 @@ export interface SignupFormState {
 
 const stripControlAndFormatChars = (value: string): string => {
   return value
-    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
-    .replace(/[\u200B-\u200F\uFEFF\u00AD\u2060\uFE0E\uFE0F]/g, '')
-    .replace(/[\u2028\u2029]/g, '');
+    .replace(CONTROL_CHARACTER_PATTERN, '')
+    .replace(FORMAT_CHARACTER_PATTERN, '')
+    .replace(LINE_SEPARATOR_PATTERN, '');
 };
 
 const parseOptionalInt = (value: string): number | undefined => {

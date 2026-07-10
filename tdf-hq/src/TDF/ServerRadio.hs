@@ -31,7 +31,7 @@ import           Data.Char              (GeneralCategory(Format, LineSeparator, 
                                          digitToInt, generalCategory, isAlphaNum, isAscii, isControl, isDigit,
                                          isHexDigit, isSpace)
 import           Data.Int               (Int64)
-import           Data.List              (foldl', find, findIndex)
+import           Data.List              (find, findIndex)
 import qualified Data.Map.Strict        as Map
 import           Data.Maybe             (catMaybes, fromMaybe, isNothing)
 import qualified Data.ByteString        as BS
@@ -372,10 +372,8 @@ validateRadioImportSources Nothing = Right defaultRadioImportSources
 validateRadioImportSources (Just rawSources)
   | any (T.null . T.strip) rawSources =
       Left err400 { errBody = "sources must not include blank entries" }
-  | hasDuplicateCanonicalSource cleanedSources =
-      Left err400 { errBody = "sources must not include duplicate entries" }
   | otherwise =
-      case cleanedSources of
+      case dedupeCanonicalSources cleanedSources of
         [] ->
           Left err400 { errBody = "sources must include at least one public http(s) URL" }
         sources
@@ -401,18 +399,16 @@ validateRadioImportSources (Just rawSources)
     cleanedSources =
       map (T.strip . canonicalRadioImportSource) rawSources
 
-    hasDuplicateCanonicalSource =
-      fst
+    dedupeCanonicalSources =
+      reverse
+        . fst
         . foldl'
-            (\acc@(hasDuplicate, seen) source ->
-               if hasDuplicate
-                 then acc
-                 else
-                   let sourceKey = T.toLower source
-                   in if Map.member sourceKey seen
-                        then (True, seen)
-                        else (False, Map.insert sourceKey () seen))
-            (False, Map.empty)
+            (\(uniqueSources, seen) source ->
+               let sourceKey = T.toLower source
+               in if Map.member sourceKey seen
+                    then (uniqueSources, seen)
+                    else (source : uniqueSources, Map.insert sourceKey () seen))
+            ([], Map.empty)
 
 maxRadioImportSources :: Int
 maxRadioImportSources = 8

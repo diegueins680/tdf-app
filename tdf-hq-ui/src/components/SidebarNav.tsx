@@ -146,6 +146,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Servicios', path: '/estudio/servicios' },
       { label: 'Pipelines', path: '/estudio/pipelines' },
       { label: 'Sesiones en vivo', path: '/estudio/live-sessions' },
+      { label: 'Campaña Domo', path: '/estudio/campanas/tdf-sessions-domo' },
       { label: 'Reportes', path: '/estudio/reportes' },
       { label: 'Profesores', path: '/escuela/profesores' },
       { label: 'Clases', path: '/escuela/clases' },

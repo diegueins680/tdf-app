@@ -53,6 +53,7 @@ const SocialPageView = lazy(() => import('../pages/SocialPage'));
 const SystemPage = lazy(() => import('../pages/SystemPage'));
 const SystemStatusPage = lazy(() => import('../pages/SystemStatusPage'));
 const TeacherPortalPage = lazy(() => import('../pages/TeacherPortalPage'));
+const TdfDomoCampaignPage = lazy(() => import('../pages/TdfDomoCampaignPage'));
 const TeachersPage = lazy(() => import('../pages/TeachersPage'));
 const TidalAgentPage = lazy(() => import('../pages/TidalAgentPage'));
 const TrialLessonsPage = lazy(() => import('../pages/TrialLessonsPage'));
@@ -109,6 +110,7 @@ export function renderProtectedRoutes() {
           <Route path="servicios" element={<ServiceTypesPage />} />
           <Route path="pipelines" element={<KanbanPage />} />
           <Route path="live-sessions" element={<LiveSessionIntakePage />} />
+          <Route path="campanas/tdf-sessions-domo" element={<TdfDomoCampaignPage />} />
           <Route path="reportes" element={<ReportsPage />} />
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>

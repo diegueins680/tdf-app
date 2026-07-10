@@ -69,7 +69,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
       }
     };
 
-    generateQR();
+    void generateQR();
   }, [ticketQRQuery.data]);
 
   const handleDownload = () => {

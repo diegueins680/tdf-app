@@ -153,12 +153,12 @@ interface ClassColumnProps {
   title: string;
   count: number;
   sessions: readonly RelatedClassSession[];
-  role: 'student' | 'teacher';
+  classRole: 'student' | 'teacher';
   onGo: GoToPath;
 }
 
 function ClassColumn(props: ClassColumnProps) {
-  const { title, count, sessions, role, onGo } = props;
+  const { title, count, sessions, classRole, onGo } = props;
 
   if (count === 0) return null;
 
@@ -173,9 +173,9 @@ function ClassColumn(props: ClassColumnProps) {
         renderItems={(visibleClasses) => (
           <List dense disablePadding>
             {visibleClasses.map((session) => {
-              const partyParam = role === 'student' ? `studentId=${session.prcStudentId}` : `teacherId=${session.prcTeacherId}`;
+              const partyParam = classRole === 'student' ? `studentId=${session.prcStudentId}` : `teacherId=${session.prcTeacherId}`;
               const primary =
-                role === 'student'
+                classRole === 'student'
                   ? session.prcSubjectName ?? `Materia #${session.prcSubjectId}`
                   : `${session.prcSubjectName ?? `Materia #${session.prcSubjectId}`} · ${
                       session.prcStudentName ?? `Alumno #${session.prcStudentId}`
@@ -183,7 +183,7 @@ function ClassColumn(props: ClassColumnProps) {
 
               return (
                 <RelatedListItem
-                  key={`${role}-${session.prcClassSessionId}`}
+                  key={`${classRole}-${session.prcClassSessionId}`}
                   primary={primary}
                   secondary={`${fmtDateTime(session.prcStartAt)} · ${session.prcStatus}`}
                   path={`/escuela/clases?${partyParam}&classSessionId=${session.prcClassSessionId}&at=${encodeURIComponent(
@@ -219,8 +219,8 @@ function ClassesSection(props: ClassesSectionProps) {
         Clases
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-        <ClassColumn title="Estudiante" count={studentCount} sessions={studentClasses} role="student" onGo={onGo} />
-        <ClassColumn title="Profesor" count={teacherCount} sessions={teacherClasses} role="teacher" onGo={onGo} />
+        <ClassColumn title="Estudiante" count={studentCount} sessions={studentClasses} classRole="student" onGo={onGo} />
+        <ClassColumn title="Profesor" count={teacherCount} sessions={teacherClasses} classRole="teacher" onGo={onGo} />
       </Stack>
     </Box>
   );

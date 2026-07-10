@@ -6,14 +6,14 @@ import { MemoryRouter } from 'react-router-dom';
 import type { RoomDTO } from '../api/types';
 import type { ClassSessionDTO, StudentDTO, TeacherDTO, TrialSubject } from '../api/trials';
 
-type ClassSessionFilters = {
+interface ClassSessionFilters {
   subjectId?: number;
   teacherId?: number;
   studentId?: number;
   from?: string;
   to?: string;
   status?: string;
-};
+}
 
 const listSubjectsMock = jest.fn<() => Promise<TrialSubject[]>>();
 const listTeachersMock = jest.fn<() => Promise<TeacherDTO[]>>();

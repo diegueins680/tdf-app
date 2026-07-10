@@ -303,7 +303,7 @@ describe('UxOptionsPage', () => {
       await clickButton(getButtonsByText(container, 'Revertir')[0]!);
 
       await waitForExpectation(() => {
-        expect((labelInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('Rock');
+        expect((labelInput).value).toBe('Rock');
         expect(getButtonsByText(container, 'Guardar')).toHaveLength(0);
         expect(getButtonsByText(container, 'Revertir')).toHaveLength(0);
       });
@@ -351,7 +351,7 @@ describe('UxOptionsPage', () => {
       await clickButton(getButtonByAriaLabel(container, 'Limpiar filtro')!);
 
       await waitForExpectation(() => {
-        expect((filterInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('');
+        expect((filterInput).value).toBe('');
         expect(getButtonByAriaLabel(container, 'Limpiar filtro')).toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });

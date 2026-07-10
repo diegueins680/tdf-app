@@ -16,7 +16,7 @@ import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
-import           Data.List                  (find, foldl', nub)
+import           Data.List                  (find, nub)
 import qualified Data.Map.Strict         as Map
 import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
 import           Data.Text               (Text)

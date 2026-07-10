@@ -2,14 +2,14 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
-type UserSummary = {
+interface UserSummary {
   id?: number | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
   status?: 'Active' | 'Inactive' | null;
   roles?: string[] | null;
-};
+}
 
 const getUsersMock = jest.fn<() => Promise<UserSummary[]>>();
 const updateUserRolesMock = jest.fn<(userId: number, roles: string[]) => Promise<void>>();

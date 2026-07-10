@@ -16,6 +16,8 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   servicios: 'Servicios',
   pipelines: 'Pipelines',
   'live-sessions': 'Sesiones en vivo',
+  campanas: 'Campañas',
+  'tdf-sessions-domo': 'TDF Sessions x Domo',
   reportes: 'Reportes',
   escuela: 'Escuela',
   profesores: 'Profesores',
