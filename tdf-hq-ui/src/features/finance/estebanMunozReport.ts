@@ -38,13 +38,15 @@ export interface AccountPosition {
   detail: string;
 }
 
+export interface EstebanMunozReportOptions {
+  asOfDate?: Date | string;
+}
+
 export const ESTEBAN_MUNOZ_REPORT_SOURCE = {
   personName: 'Esteban Muñoz',
-  cutoffDate: '2026-06-23',
   rent: {
-    monthlyAmountCents: 25_000,
+    monthlyAmountCents: 20_000,
     lastPaidMonth: '2025-12' as YearMonth,
-    throughMonth: '2026-06' as YearMonth,
   },
   lastReceipt: {
     source: 'Comprobante Banco del Austro adjunto',
@@ -134,6 +136,22 @@ const monthFromIndex = (index: number): YearMonth => {
   return `${year}-${String(month).padStart(2, '0')}`;
 };
 
+const toLocalIsoDate = (date: Date) => {
+  if (Number.isNaN(date.getTime())) throw new Error('Invalid report date');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const normalizeReportDate = (date: Date | string = new Date()) => {
+  if (typeof date !== 'string') return toLocalIsoDate(date);
+  if (!/^(\d{4})-(\d{2})-(\d{2})$/.test(date)) throw new Error(`Invalid report date: ${date}`);
+  return date;
+};
+
+const yearMonthFromIsoDate = (isoDate: string): YearMonth => isoDate.slice(0, 7) as YearMonth;
+
 export const formatMonthLabel = (value: YearMonth) => {
   const { year, month } = parseYearMonth(value);
   return `${MONTH_NAMES[month - 1]} ${year}`;
@@ -161,8 +179,16 @@ export const listMonthsAfterThrough = (lastPaidMonth: YearMonth, throughMonth: Y
 const calculatePercentShareCents = (amountCents: number, percent: number) =>
   Math.round((amountCents * percent) / 100);
 
-export const buildEstebanMunozReport = () => {
-  const source = ESTEBAN_MUNOZ_REPORT_SOURCE;
+export const buildEstebanMunozReport = (options: EstebanMunozReportOptions = {}) => {
+  const cutoffDate = normalizeReportDate(options.asOfDate);
+  const source = {
+    ...ESTEBAN_MUNOZ_REPORT_SOURCE,
+    cutoffDate,
+    rent: {
+      ...ESTEBAN_MUNOZ_REPORT_SOURCE.rent,
+      throughMonth: yearMonthFromIsoDate(cutoffDate),
+    },
+  };
   const unpaidRentMonths = listMonthsAfterThrough(source.rent.lastPaidMonth, source.rent.throughMonth);
   const rentDueCents = unpaidRentMonths.length * source.rent.monthlyAmountCents;
   const courseRows = source.coursePayment.courses.map((course) => ({

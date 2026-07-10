@@ -7,9 +7,12 @@ import {
   listMonthsAfterThrough,
 } from './estebanMunozReport';
 
+const buildJuneReport = () => buildEstebanMunozReport({ asOfDate: '2026-06-23' });
+const buildJulyReport = () => buildEstebanMunozReport({ asOfDate: '2026-07-10' });
+
 describe('Esteban Muñoz account report', () => {
-  it('calculates rent due from January through June 2026', () => {
-    const report = buildEstebanMunozReport();
+  it('calculates corrected 200 dollar rent from January through June 2026', () => {
+    const report = buildJuneReport();
 
     expect(report.unpaidRentMonths).toEqual([
       '2026-01',
@@ -19,11 +22,29 @@ describe('Esteban Muñoz account report', () => {
       '2026-05',
       '2026-06',
     ]);
-    expect(report.rentDueCents).toBe(150_000);
+    expect(report.source.rent.monthlyAmountCents).toBe(20_000);
+    expect(report.rentDueCents).toBe(120_000);
+  });
+
+  it('advances the rent cutoff from the report date each month', () => {
+    const report = buildJulyReport();
+
+    expect(report.source.cutoffDate).toBe('2026-07-10');
+    expect(report.source.rent.throughMonth).toBe('2026-07');
+    expect(report.unpaidRentMonths).toEqual([
+      '2026-01',
+      '2026-02',
+      '2026-03',
+      '2026-04',
+      '2026-05',
+      '2026-06',
+      '2026-07',
+    ]);
+    expect(report.rentDueCents).toBe(140_000);
   });
 
   it('calculates two production courses at 16 hours each and 25 dollars per hour', () => {
-    const report = buildEstebanMunozReport();
+    const report = buildJulyReport();
 
     expect(report.courseRows).toHaveLength(2);
     expect(report.courseRows.map((course) => course.sessionDates)).toEqual([
@@ -35,7 +56,7 @@ describe('Esteban Muñoz account report', () => {
   });
 
   it('includes Paula Roman mastering work with Esteban receiving 40 percent', () => {
-    const report = buildEstebanMunozReport();
+    const report = buildJulyReport();
 
     expect(report.promotionShareRow).toMatchObject({
       payerName: 'Paula Roman',
@@ -53,7 +74,7 @@ describe('Esteban Muñoz account report', () => {
   });
 
   it('includes the previous 500 dollar payable TDF owed to Esteban', () => {
-    const report = buildEstebanMunozReport();
+    const report = buildJulyReport();
 
     expect(report.previousPayableCents).toBe(50_000);
     expect(report.payableToEstebanCents).toBe(138_000);
@@ -66,12 +87,12 @@ describe('Esteban Muñoz account report', () => {
   });
 
   it('shows the compensated net as an amount owed from Esteban to TDF', () => {
-    const report = buildEstebanMunozReport();
+    const report = buildJulyReport();
 
-    expect(report.netAfterOffsetCents).toBe(12_000);
+    expect(report.netAfterOffsetCents).toBe(2_000);
     expect(report.netDirection).toBe('esteban_owes_tdf');
     expect(report.accountPositions.find((item) => item.id === 'net')).toMatchObject({
-      amountCents: 12_000,
+      amountCents: 2_000,
       status: 'Saldo neto por cobrar',
     });
   });
@@ -83,8 +104,9 @@ describe('Esteban Muñoz account report', () => {
   });
 
   it('generates a downloadable PDF document with report totals', () => {
-    const pdf = buildEstebanMunozReportPdfBlob(buildEstebanMunozReport());
-    const source = buildEstebanMunozReportPdfSource(buildEstebanMunozReport());
+    const report = buildJulyReport();
+    const pdf = buildEstebanMunozReportPdfBlob(report);
+    const source = buildEstebanMunozReportPdfSource(report);
 
     expect(pdf.type).toBe('application/pdf');
     expect(source.startsWith('%PDF-1.4')).toBe(true);
@@ -93,9 +115,10 @@ describe('Esteban Muñoz account report', () => {
     expect(source).toContain('Participacion por realizacion de mastering');
     expect(source).toContain('Paula Roman');
     expect(source).toContain('$200.00');
+    expect(source).toContain('$1,400.00');
     expect(source).toContain('$80.00');
     expect(source).toContain('Saldo anterior');
     expect(source).toContain('$500.00');
-    expect(source).toContain('Esteban debe a TDF: $120.00');
+    expect(source).toContain('Esteban debe a TDF: $20.00');
   });
 });
