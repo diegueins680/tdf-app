@@ -38,6 +38,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
   Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
+const trimToUndefined = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? undefined : trimmed;
+};
 
 const formatCourseDate = (value?: string | null) => {
   if (!value) return '—';
@@ -172,8 +176,7 @@ export default function CourseProductionLandingPage() {
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
   }, []);
   const pathSlug = useMemo(() => {
-    const trimmed = routeSlug?.trim();
-    return trimmed || undefined;
+    return trimToUndefined(routeSlug);
   }, [routeSlug]);
   const availableSlugs = useMemo(() => {
     if (!pathSlug || pathSlug === 'produccion-musical') return productionSlugs;
@@ -247,8 +250,12 @@ export default function CourseProductionLandingPage() {
   const registrationMutation = useMutation({
     mutationFn: (payload: CourseRegistrationRequest) => Courses.register(selectedSlug, payload),
   });
+  const previousSelectedSlugRef = useRef(selectedSlug);
   useEffect(() => {
+    if (previousSelectedSlugRef.current === selectedSlug) return;
+    previousSelectedSlugRef.current = selectedSlug;
     registrationMutation.reset();
+    setShowSuccessDialog(false);
   }, [registrationMutation, selectedSlug]);
 
   const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
@@ -546,8 +553,8 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
       ? meta.includes
       : ['Material de apoyo', 'Seguimiento del instructor', 'Certificado de participación', 'Grupo de WhatsApp'];
   const focusLabel = meta?.daws?.length ? `Enfoque: ${meta.daws.join(', ')}` : 'Programa práctico';
-  const durationLabel = meta?.duration?.trim() || 'Duración por confirmar';
-  const formatLabel = meta?.format?.trim() || 'Curso TDF';
+  const durationLabel = trimToUndefined(meta?.duration) ?? 'Duración por confirmar';
+  const formatLabel = trimToUndefined(meta?.format) ?? 'Curso TDF';
   return (
     <Stack spacing={3}>
       <Card

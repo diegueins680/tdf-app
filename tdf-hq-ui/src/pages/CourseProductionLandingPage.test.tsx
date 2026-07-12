@@ -33,6 +33,16 @@ const { default: CourseProductionLandingPage } = await import('./CourseProductio
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+};
+
 const waitForExpectation = async (assertion: () => void, attempts = 14) => {
   let lastError: unknown;
   for (let index = 0; index < attempts; index += 1) {
@@ -206,6 +216,49 @@ describe('CourseProductionLandingPage', () => {
           howHeard: 'Instagram',
           utm: { source: 'ig', medium: undefined, campaign: undefined, content: undefined },
         });
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the completed registration state visible after a delayed submit resolves', async () => {
+    const pendingRegistration = createDeferred<{ id: number; status: string }>();
+    registerMock.mockReturnValueOnce(pendingRegistration.promise);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/curso/bateria-guillermo-diaz-abr-2026');
+
+    try {
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Reserva tu cupo');
+      });
+
+      const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'));
+      if (!inputs[0] || !inputs[1]) throw new Error('Expected registration inputs');
+      await setInputValue(inputs[0], 'Ana Torres');
+      await setInputValue(inputs[1], 'ana@example.com');
+
+      const form = container.querySelector('form');
+      if (!form) throw new Error('Registration form not found');
+
+      await act(async () => {
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(registerMock).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        pendingRegistration.resolve({ id: 7, status: 'pending_payment' });
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(text(container)).toContain('Inscripcion recibida');
+        expect(text(container)).toContain('Inscripción recibida');
       });
     } finally {
       await cleanup();
