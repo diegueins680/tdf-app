@@ -28,6 +28,7 @@ import Data.Word (Word8)
 import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
+import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
@@ -259,6 +260,8 @@ import TDF.Server
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateMarketplaceBuyerName,
+      isMarketplaceStripeRetryStale,
+      canReplayMarketplaceStripePost,
       validateLabelTrackPathId,
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
@@ -356,6 +359,7 @@ import TDF.Server.SocialEventsHandlers (
     parseStripeWebhookEventEnvelope,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
+    canRecoverMarketplaceStripeOrder,
     isImageUpload,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
@@ -901,6 +905,130 @@ main = hspec $ do
                 `shouldSatisfy` isNothing
 
     describe "Stripe response decoding" $ do
+        it "builds idempotent marketplace PaymentIntent requests with nested metadata" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "tdf-marketplace-order-order_123")
+                    2500
+                    "USD"
+                    "Marketplace order order_123"
+                    (Just "{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"order_123\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "tdf-marketplace-order-order_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22purpose%22%3a%22marketplace_order%22"
+                _ -> expectationFailure "Expected a strict PaymentIntent form body"
+
+        it "omits idempotency headers from legacy PaymentIntent requests" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    Nothing
+                    2500
+                    "USD"
+                    "Legacy payment"
+                    Nothing
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                "   "
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must not be blank"
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                (Data.Text.replicate 256 "a")
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must be 255 bytes or fewer"
+
+        it "retrieves persisted marketplace PaymentIntents without replaying POST" $ do
+            request <-
+                Stripe.buildRetrievePaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_marketplace_123"
+            HTTP.method request `shouldBe` "GET"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_marketplace_123"
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "stops ambiguous idempotent POST retries before Stripe may prune the key" $ do
+            let createdAt = UTCTime (fromGregorian 2026 7 12) (secondsToDiffTime 0)
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60 - 1) createdAt)
+                createdAt
+                `shouldBe` False
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                Nothing
+                `shouldBe` False
+            canReplayMarketplaceStripePost
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` False
+
+        it "allows only one stripe_pending order per marketplace cart" $ do
+            withSystemTempDirectory "marketplace-stripe-index" $ \tmpDir -> do
+                pool <-
+                    runNoLoggingT $
+                        createSqlitePool
+                            (Data.Text.pack (tmpDir </> "marketplace.sqlite"))
+                            1
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "CREATE TABLE marketplace_order (id TEXT PRIMARY KEY, cart_id TEXT, status TEXT NOT NULL)"
+                            []
+                        rawExecute
+                            "CREATE UNIQUE INDEX uq_marketplace_cart_active_stripe_payment \
+                            \ON marketplace_order(cart_id) \
+                            \WHERE cart_id IS NOT NULL AND status = 'stripe_pending'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_1', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+                runSqlPool
+                    ( rawExecute
+                        "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                        []
+                    )
+                    pool
+                    `shouldThrow` anyException
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "UPDATE marketplace_order SET status = 'stripe_failed' WHERE id = 'order_1'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+
         it "decodes successful JSON response bodies" $
             Stripe.decodeStripeResponse
                 200
@@ -1098,6 +1226,53 @@ main = hspec $ do
                     ]
                 )
                 `shouldBe` Nothing
+
+        it "requires the canonical marketplace purpose before recovering an order id" $ do
+            let webhookPayload contextJson =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object ["tdf_context" .= (contextJson :: Text)]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"purpose\":\"artist_tip\",\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata"
+                                        .= A.object
+                                            [ "purpose" .= ("marketplace_order" :: Text)
+                                            , "marketplace_order_id" .= ("order_123" :: Text)
+                                            ]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "only recovers unbound Stripe-pending marketplace orders" $ do
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") Nothing
+                `shouldBe` True
+            canRecoverMarketplaceStripeOrder "pending" (Just "stripe") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" Nothing Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "paypal") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") (Just "pi_other")
+                `shouldBe` False
 
         it "extracts checkout session course subscription fields only when complete" $ do
             let checkoutPayload regId subscriptionId =

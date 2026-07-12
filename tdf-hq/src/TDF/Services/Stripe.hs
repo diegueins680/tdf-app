@@ -9,8 +9,12 @@ module TDF.Services.Stripe
   , createCustomer
   , createEphemeralKey
   , createPaymentIntent
+  , createPaymentIntentWithIdempotencyKey
   , createPaymentIntentForCustomer
   , createPaymentIntentForTip
+  , buildPaymentIntentRequest
+  , buildRetrievePaymentIntentRequest
+  , retrievePaymentIntent
   , createRefund
   , decodeStripeResponse
   , verifyWebhookSignature
@@ -81,27 +85,49 @@ createPaymentIntent
   -> Text        -- ^ Description
   -> Maybe Text  -- ^ Optional metadata JSON string
   -> IO (Either Text Value)
-createPaymentIntent cfg amountCents currency description mMetadata =
+createPaymentIntent cfg =
+  createPaymentIntentRequest cfg Nothing
+
+-- | Create a PaymentIntent with a stable Stripe idempotency key. Callers must
+-- reuse the same key and request parameters when retrying an indeterminate POST.
+createPaymentIntentWithIdempotencyKey
+  :: StripeConfig
+  -> Text        -- ^ Stripe Idempotency-Key
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentWithIdempotencyKey cfg idempotencyKey amountCents currency description mMetadata =
+  case validateIdempotencyKey idempotencyKey of
+    Left validationError -> pure (Left validationError)
+    Right validKey ->
+      createPaymentIntentRequest
+        cfg
+        (Just validKey)
+        amountCents
+        currency
+        description
+        mMetadata
+
+createPaymentIntentRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata =
   withStripeManager $ \manager -> do
-    let url = "https://api.stripe.com/v1/payment_intents"
-        body = BS8.intercalate "&"
-          [ "amount=" <> BS8.pack (show amountCents)
-          , "currency=" <> TE.encodeUtf8 (T.toLower currency)
-          , "description=" <> urlEncode (TE.encodeUtf8 description)
-          , "automatic_payment_methods[enabled]=true"
-          ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
-
-    initialRequest <- parseRequest url
-    let request = initialRequest
-          { method = "POST"
-          , requestHeaders =
-              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-              , ("Content-Type", "application/x-www-form-urlencoded")
-              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-              ]
-          , requestBody = RequestBodyBS body
-          }
-
+    request <-
+      buildPaymentIntentRequest
+        cfg
+        mIdempotencyKey
+        amountCents
+        currency
+        description
+        mMetadata
     response <- httpLbs request manager
     let status = statusCode (responseStatus response)
         bodyLBS = responseBody response
@@ -112,6 +138,76 @@ createPaymentIntent cfg amountCents currency description mMetadata =
         bodyLBS
         "Failed to parse Stripe PaymentIntent response"
         "Stripe API error"
+
+-- | Construct the PaymentIntent POST without performing network I/O. Keeping
+-- this boundary explicit makes the idempotency and metadata wire contract
+-- testable.
+buildPaymentIntentRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO Request
+buildPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata = do
+  initialRequest <- parseRequest "https://api.stripe.com/v1/payment_intents"
+  let body = BS8.intercalate "&"
+        [ "amount=" <> BS8.pack (show amountCents)
+        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+        , "description=" <> urlEncode (TE.encodeUtf8 description)
+        , "automatic_payment_methods[enabled]=true"
+        ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+      idempotencyHeaders =
+        maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
+  pure initialRequest
+    { method = "POST"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Content-Type", "application/x-www-form-urlencoded")
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ] <> idempotencyHeaders
+    , requestBody = RequestBodyBS body
+    }
+
+validateIdempotencyKey :: Text -> Either Text Text
+validateIdempotencyKey key
+  | T.null (T.strip key) = Left "Stripe idempotency key must not be blank"
+  | BS.length (TE.encodeUtf8 key) > 255 =
+      Left "Stripe idempotency key must be 255 bytes or fewer"
+  | T.any (`elem` ['\r', '\n']) key =
+      Left "Stripe idempotency key must not contain line breaks"
+  | otherwise = Right key
+
+-- | Retrieve an existing PaymentIntent. Marketplace retries use this after an
+-- intent id has been persisted so a pruned idempotency key can never create a
+-- second intent for the same order.
+retrievePaymentIntent :: StripeConfig -> Text -> IO (Either Text Value)
+retrievePaymentIntent cfg paymentIntentId =
+  withStripeManager $ \manager -> do
+    request <- buildRetrievePaymentIntentRequest cfg paymentIntentId
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe PaymentIntent response"
+        "Stripe PaymentIntent retrieval error"
+
+buildRetrievePaymentIntentRequest :: StripeConfig -> Text -> IO Request
+buildRetrievePaymentIntentRequest cfg paymentIntentId = do
+  let encodedId = BS8.unpack (urlEncode (TE.encodeUtf8 paymentIntentId))
+  initialRequest <-
+    parseRequest ("https://api.stripe.com/v1/payment_intents/" <> encodedId)
+  pure initialRequest
+    { method = "GET"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ]
+    }
 
 -- | Create a Stripe Customer.
 --

@@ -84,6 +84,7 @@ module TDF.Server.SocialEventsHandlers (
     parseStripeWebhookEventEnvelope,
     parseStripeWebhookPaymentIntentId,
     parseStripeWebhookMarketplaceOrderId,
+    canRecoverMarketplaceStripeOrder,
     parseCheckoutSessionCourseSubscription,
     parseSubscriptionEvent,
     parseStripeRefundResponse,
@@ -102,8 +103,6 @@ import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Base64 as B64
-import Data.ByteArray (convert)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator),
     generalCategory,
@@ -130,6 +129,7 @@ import System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
 import System.Environment (lookupEnv)
 import System.FilePath (takeExtension, takeFileName, (</>))
 import Text.Read (readMaybe)
+import Web.PathPieces (fromPathPiece)
 
 import Servant
 import Servant.Multipart (FileData (..))
@@ -243,30 +243,31 @@ parseStripeWebhookPaymentIntentId =
             paymentIntentObject Aeson..: "id"
 
 parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text
-parseStripeWebhookMarketplaceOrderId payload =
-    parseDirectMetadata payload <|> parseContextMetadata payload
-  where
-    parseDirectMetadata =
-        parseMaybe $
-            Aeson.withObject "event" $ \eventObject -> do
+parseStripeWebhookMarketplaceOrderId payload = do
+    contextJson <-
+        parseMaybe
+            ( Aeson.withObject "event" $ \eventObject -> do
                 dataObject <- eventObject Aeson..: "data" :: Parser Object
                 paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
                 metadataObject <- paymentIntentObject Aeson..: "metadata" :: Parser Object
-                metadataObject Aeson..: "marketplace_order_id"
-    parseContextMetadata value = do
-        contextJson <-
-            parseMaybe
-                ( Aeson.withObject "event" $ \eventObject -> do
-                    dataObject <- eventObject Aeson..: "data" :: Parser Object
-                    paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
-                    metadataObject <- paymentIntentObject Aeson..: "metadata" :: Parser Object
-                    metadataObject Aeson..: "tdf_context"
-                )
-                value
-        contextValue <- Aeson.decodeStrict' (TE.encodeUtf8 contextJson)
-        parseMaybe
-            (Aeson.withObject "tdf_context" (Aeson..: "marketplace_order_id"))
-            contextValue
+                metadataObject Aeson..: "tdf_context"
+            )
+            payload
+    contextValue <- Aeson.decodeStrict' (TE.encodeUtf8 contextJson)
+    parseMaybe
+        ( Aeson.withObject "tdf_context" $ \contextObject -> do
+            purpose <- contextObject Aeson..: "purpose" :: Parser T.Text
+            unless (purpose == "marketplace_order") $
+                fail "Unexpected Stripe metadata purpose"
+            contextObject Aeson..: "marketplace_order_id"
+        )
+        contextValue
+
+canRecoverMarketplaceStripeOrder :: T.Text -> Maybe T.Text -> Maybe T.Text -> Bool
+canRecoverMarketplaceStripeOrder status provider paymentIntentId =
+    status == "stripe_pending"
+        && provider == Just "stripe"
+        && isNothing paymentIntentId
 
 parseStripeRefundResponse :: Aeson.Value -> Either T.Text T.Text
 parseStripeRefundResponse =
@@ -525,15 +526,7 @@ markMarketplaceOrderStatus now newStatus piId mOrderId = do
             runSqlPool
                 (selectFirst [ME.MarketplaceOrderStripePaymentIntentId ==. Just piId] [])
                 envPool
-    mOrderByMetadata <-
-        case mOrder of
-            Just order -> pure (Just order)
-            Nothing ->
-                case mOrderId >>= fromPathPiece of
-                    Nothing -> pure Nothing
-                    Just orderKey -> liftIO $ runSqlPool (getEntity orderKey) envPool
-    case mOrderByMetadata of
-        Nothing -> pure NoContent
+    case mOrder of
         Just (Entity orderKey order) -> do
             when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
                 liftIO $
@@ -548,6 +541,37 @@ markMarketplaceOrderStatus now newStatus piId mOrderId = do
                             ]
                         )
                         envPool
+            pure NoContent
+        Nothing -> do
+            mOrderByMetadata <-
+                case mOrderId >>= fromPathPiece of
+                    Nothing -> pure Nothing
+                    Just orderKey -> liftIO $ runSqlPool (getEntity orderKey) envPool
+            case mOrderByMetadata of
+                Just (Entity orderKey order)
+                    | canRecoverMarketplaceStripeOrder
+                        (ME.marketplaceOrderStatus order)
+                        (ME.marketplaceOrderPaymentProvider order)
+                        (ME.marketplaceOrderStripePaymentIntentId order) ->
+                            liftIO $
+                                runSqlPool
+                                    ( updateWhere
+                                        [ ME.MarketplaceOrderId ==. orderKey
+                                        , ME.MarketplaceOrderStatus ==. "stripe_pending"
+                                        , ME.MarketplaceOrderPaymentProvider ==. Just "stripe"
+                                        , ME.MarketplaceOrderStripePaymentIntentId ==. Nothing
+                                        ]
+                                        [ ME.MarketplaceOrderStatus =. newStatus
+                                        , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
+                                        , ME.MarketplaceOrderPaidAt =.
+                                            if newStatus == "paid"
+                                                then Just now
+                                                else ME.marketplaceOrderPaidAt order
+                                        , ME.MarketplaceOrderUpdatedAt =. now
+                                        ]
+                                    )
+                                    envPool
+                _ -> pure ()
             pure NoContent
 
 {- | The course registration status enum uses @cancelled@ for the failure path;
@@ -3731,10 +3755,10 @@ socialEventsServer user =
                                 , timestamp
                                 ]
                         secret = "tdf-qr-secret-key"
-                        hmacBytes =
-                            convert (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256)
-                        hmacBase64 = TE.decodeUtf8 (B64.encode hmacBytes)
-                        qrDataValue = payload <> "|" <> hmacBase64
+                        hmacHex =
+                            T.pack $
+                                show (hmacGetDigest (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256))
+                        qrDataValue = payload <> "|" <> hmacHex
                     liftIO $
                         runSqlPool
                             ( insert_

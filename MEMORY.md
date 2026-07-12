@@ -4,6 +4,7 @@
 
 - This repo uses `AGENTS.md`, `SOUL.md`, `USER.md`, daily `memory/YYYY-MM-DD.md`, and now `AI_WORKFLOW.md` as the main continuity and onboarding surface for AI work.
 - `scripts/continuous-improvement-loop.codex.json` currently targets `main`, so unattended loop runs should be treated as high-risk unless copied to a branch-scoped config first.
+- Marketplace Stripe deployments after `70792ad2b` require `tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql` before the new binary when `RUN_MIGRATIONS=false`. Quiesce old checkout writers and reconcile unbound `stripe_pending` rows during cutover.
 
 ## Preferences
 

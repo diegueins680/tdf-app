@@ -12,7 +12,7 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
-import           Control.Exception (SomeException, displayException, throwIO, try)
+import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
@@ -63,6 +63,7 @@ import           Data.Time.Format (defaultTimeLocale, formatTime)
 import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           GHC.Generics (Generic)
 import           Data.UUID (toText)
+import qualified Data.UUID as UUID
 import           Data.UUID.V4 (nextRandom)
 import           Data.Word (Word64)
 import           Numeric (showHex)
@@ -80,6 +81,7 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 import           Database.Persist
 import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Database.Persist.Postgresql ()
+import           Database.PostgreSQL.Simple (SqlError (..))
 
 import           TDF.API
 import           TDF.API.Types (RolePayload(..), UserRoleSummaryDTO(..), UserRoleUpdatePayload(..), AccountStatusDTO(..), MarketplaceItemDTO(..), MarketplaceCartDTO(..), MarketplaceCartItemUpdate(..), MarketplaceCartItemDTO(..), MarketplaceOrderDTO(..), MarketplaceOrderItemDTO(..), MarketplaceOrderUpdate(..), MarketplaceCheckoutReq(..), DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..), LabelTrackDTO(..), LabelTrackCreate(..), LabelTrackUpdate(..), DriveUploadDTO(..), DriveTokenExchangeRequest(..), DriveTokenRefreshRequest(..), DriveTokenResponse(..), PartyRelatedDTO(..), PartyRelatedBooking(..), PartyRelatedClassSession(..), PartyRelatedLabelTrack(..), verifyMetaWebhookSignature)
@@ -13154,6 +13156,7 @@ checkoutCart rawId MarketplaceCheckoutReq{..} = do
       , ME.marketplaceOrderStatus        = statusTxt
       , ME.marketplaceOrderPaymentProvider = Nothing
       , ME.marketplaceOrderStripePaymentIntentId = Nothing
+      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
       , ME.marketplaceOrderPaypalOrderId = Nothing
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing
@@ -13214,58 +13217,100 @@ createMarketplaceStripePaymentIntent rawId payload = do
         , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
         }
     _ -> throwError err500 { errBody = "Stripe is not configured" }
-  cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
-  (cartItems, totalCentsRaw, currency) <-
-    either throwError pure (requireMarketplaceCartTotals cartTotalsState)
-  totalCents <-
-    either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
   existingPendingOrder <- liftIO $ flip runSqlPool envPool $
     selectFirst
       [ ME.MarketplaceOrderCartId ==. Just cartKey
       , ME.MarketplaceOrderStatus ==. "stripe_pending"
       ]
       [Desc ME.MarketplaceOrderCreatedAt]
-  when (isJust existingPendingOrder) $
+  orderEntity <- case existingPendingOrder of
+    Just pendingOrder -> pure pendingOrder
+    Nothing -> do
+      cartTotalsState <- liftIO $ flip runSqlPool envPool $ loadCartTotals cartKey
+      (cartItems, totalCentsRaw, currency) <-
+        either throwError pure (requireMarketplaceCartTotals cartTotalsState)
+      totalCents <-
+        either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
+      let orderRecord = ME.MarketplaceOrder
+            { ME.marketplaceOrderCartId        = Just cartKey
+            , ME.marketplaceOrderBuyerName     = nameTxt
+            , ME.marketplaceOrderBuyerEmail    = emailTxt
+            , ME.marketplaceOrderBuyerPhone    = phoneTxt
+            , ME.marketplaceOrderTotalUsdCents = totalCents
+            , ME.marketplaceOrderCurrency      = currency
+            , ME.marketplaceOrderStatus        = "stripe_pending"
+            , ME.marketplaceOrderPaymentProvider = Just "stripe"
+            , ME.marketplaceOrderStripePaymentIntentId = Nothing
+            , ME.marketplaceOrderStripeIdempotencyKey = Nothing
+            , ME.marketplaceOrderPaypalOrderId = Nothing
+            , ME.marketplaceOrderPaypalPayerEmail = Nothing
+            , ME.marketplaceOrderDatafastCheckoutId = Nothing
+            , ME.marketplaceOrderDatafastResourcePath = Nothing
+            , ME.marketplaceOrderDatafastPaymentId = Nothing
+            , ME.marketplaceOrderDatafastResultCode = Nothing
+            , ME.marketplaceOrderDatafastResultDescription = Nothing
+            , ME.marketplaceOrderDatafastPaymentBrand = Nothing
+            , ME.marketplaceOrderDatafastAuthCode = Nothing
+            , ME.marketplaceOrderDatafastAcquirerCode = Nothing
+            , ME.marketplaceOrderPaidAt        = Nothing
+            , ME.marketplaceOrderCreatedAt     = now
+            , ME.marketplaceOrderUpdatedAt     = now
+            }
+          insertOrder = flip runSqlPool envPool $ do
+            oid <- insert orderRecord
+            let idempotencyKey = marketplaceStripeIdempotencyKey oid
+                persistedOrder =
+                  orderRecord
+                    { ME.marketplaceOrderStripeIdempotencyKey = Just idempotencyKey
+                    }
+            update oid [ME.MarketplaceOrderStripeIdempotencyKey =. Just idempotencyKey]
+            forM_ cartItems $ \(_, listingEnt, _, qty) -> do
+              let listing   = entityVal listingEnt
+                  unitPrice = ME.marketplaceListingPriceUsdCents listing
+                  subtotal  = unitPrice * qty
+              void $ insert ME.MarketplaceOrderItem
+                { ME.marketplaceOrderItemOrderId           = oid
+                , ME.marketplaceOrderItemListingId         = entityKey listingEnt
+                , ME.marketplaceOrderItemQuantity          = qty
+                , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
+                , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+                }
+            pure (Entity oid persistedOrder)
+      insertResult <- liftIO $
+        (try insertOrder :: IO (Either SomeException (Entity ME.MarketplaceOrder)))
+      case insertResult of
+        Right insertedOrder -> pure insertedOrder
+        Left insertErr -> do
+          case fromException insertErr :: Maybe SomeAsyncException of
+            Just _ -> liftIO (throwIO insertErr)
+            Nothing
+              | isMarketplaceActiveStripeOrderConflict insertErr -> do
+                  concurrentWinner <- liftIO $ flip runSqlPool envPool $
+                    selectFirst
+                      [ ME.MarketplaceOrderCartId ==. Just cartKey
+                      , ME.MarketplaceOrderStatus ==. "stripe_pending"
+                      ]
+                      [Desc ME.MarketplaceOrderCreatedAt]
+                  maybe (liftIO (throwIO insertErr)) pure concurrentWinner
+              | otherwise -> liftIO (throwIO insertErr)
+  let orderKey = entityKey orderEntity
+      order = entityVal orderEntity
+  unless (ME.marketplaceOrderPaymentProvider order == Just "stripe") $
     throwError err409
-      { errBody = "A Stripe payment is already pending for this cart"
+      { errBody = "Active marketplace payment is not a Stripe payment"
       }
-  orderKey <- liftIO $ flip runSqlPool envPool $ do
-    oid <- insert ME.MarketplaceOrder
-      { ME.marketplaceOrderCartId        = Just cartKey
-      , ME.marketplaceOrderBuyerName     = nameTxt
-      , ME.marketplaceOrderBuyerEmail    = emailTxt
-      , ME.marketplaceOrderBuyerPhone    = phoneTxt
-      , ME.marketplaceOrderTotalUsdCents = totalCents
-      , ME.marketplaceOrderCurrency      = currency
-      , ME.marketplaceOrderStatus        = "stripe_pending"
-      , ME.marketplaceOrderPaymentProvider = Just "stripe"
-      , ME.marketplaceOrderStripePaymentIntentId = Nothing
-      , ME.marketplaceOrderPaypalOrderId = Nothing
-      , ME.marketplaceOrderPaypalPayerEmail = Nothing
-      , ME.marketplaceOrderDatafastCheckoutId = Nothing
-      , ME.marketplaceOrderDatafastResourcePath = Nothing
-      , ME.marketplaceOrderDatafastPaymentId = Nothing
-      , ME.marketplaceOrderDatafastResultCode = Nothing
-      , ME.marketplaceOrderDatafastResultDescription = Nothing
-      , ME.marketplaceOrderDatafastPaymentBrand = Nothing
-      , ME.marketplaceOrderDatafastAuthCode = Nothing
-      , ME.marketplaceOrderDatafastAcquirerCode = Nothing
-      , ME.marketplaceOrderPaidAt        = Nothing
-      , ME.marketplaceOrderCreatedAt     = now
-      , ME.marketplaceOrderUpdatedAt     = now
-      }
-    forM_ cartItems $ \(_, listingEnt, _, qty) -> do
-      let listing   = entityVal listingEnt
-          unitPrice = ME.marketplaceListingPriceUsdCents listing
-          subtotal  = unitPrice * qty
-      void $ insert ME.MarketplaceOrderItem
-        { ME.marketplaceOrderItemOrderId           = oid
-        , ME.marketplaceOrderItemListingId         = entityKey listingEnt
-        , ME.marketplaceOrderItemQuantity          = qty
-        , ME.marketplaceOrderItemUnitPriceUsdCents = unitPrice
-        , ME.marketplaceOrderItemSubtotalUsdCents  = subtotal
+  unless
+    ( ME.marketplaceOrderBuyerName order == nameTxt
+        && ME.marketplaceOrderBuyerEmail order == emailTxt
+        && ME.marketplaceOrderBuyerPhone order == phoneTxt
+    ) $
+      throwError err409
+        { errBody = "A Stripe payment is already pending for different buyer details"
         }
-    pure oid
+  totalCents <- either throwError pure $
+    validateMarketplaceOnlinePaymentTotal (ME.marketplaceOrderTotalUsdCents order)
+  currency <- either throwError pure $
+    validateStoredMarketplaceOrderCurrency (ME.marketplaceOrderCurrency order)
   let orderIdText = toPathPiece orderKey
       description = "Marketplace order " <> orderIdText
       metadata =
@@ -13275,43 +13320,110 @@ createMarketplaceStripePaymentIntent rawId payload = do
           , "cart_id" .= toPathPiece cartKey
           ]
       metadataJson = Just (TE.decodeUtf8 (BL.toStrict (encode metadata)))
-      markFailed =
-        liftIO $
-          flip runSqlPool envPool $
-            update orderKey
-              [ ME.MarketplaceOrderStatus =. "stripe_failed"
-              , ME.MarketplaceOrderUpdatedAt =. now
-              ]
-  result <- liftIO $
-    Stripe.createPaymentIntent
-      stripeCfg
-      totalCents
-      currency
-      description
-      metadataJson
-  case result of
-    Left err -> do
-      markFailed
-      throwError err500
+      expectedIdempotencyKey = marketplaceStripeIdempotencyKey orderKey
+      storedIdempotencyKey = ME.marketplaceOrderStripeIdempotencyKey order
+      storedPaymentIntentId = ME.marketplaceOrderStripePaymentIntentId order
+      stripeRequest =
+        case storedPaymentIntentId of
+          Just paymentIntentId ->
+            Stripe.retrievePaymentIntent stripeCfg paymentIntentId
+          Nothing ->
+            Stripe.createPaymentIntentWithIdempotencyKey
+              stripeCfg
+              expectedIdempotencyKey
+              totalCents
+              currency
+              description
+              metadataJson
+  when (isNothing storedPaymentIntentId) $
+    unless
+      ( canReplayMarketplaceStripePost
+          now
+          (ME.marketplaceOrderCreatedAt order)
+          expectedIdempotencyKey
+          storedIdempotencyKey
+      ) $
+      throwError err409
+        { errBody = "Stripe payment attempt requires manual reconciliation"
+        }
+  requestResult <- liftIO $
+    (try stripeRequest :: IO (Either SomeException (Either Text Value)))
+  stripeResult <- case requestResult of
+    Right result -> pure result
+    Left requestErr ->
+      case fromException requestErr :: Maybe SomeAsyncException of
+        Just _ -> liftIO (throwIO requestErr)
+        Nothing ->
+          throwError err502
+            { errBody = "Stripe marketplace request failed"
+            }
+  paymentIntent <- case stripeResult of
+    Left err ->
+      throwError err502
         { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe marketplace error: " <> err))
         }
-    Right paymentIntent -> do
-      (piId, clientSecret) <- eitherStripeServerError $
-        parseStripePaymentIntentResponse paymentIntent
+    Right value -> pure value
+  (piId, clientSecret) <-
+    case parseStripePaymentIntentResponse paymentIntent of
+      Left parseErr ->
+        throwError err502
+          { errBody = BL.fromStrict (TE.encodeUtf8 parseErr)
+          }
+      Right parsed -> pure parsed
+  case storedPaymentIntentId of
+    Just storedPiId ->
+      unless (piId == storedPiId) $
+        throwError err502
+          { errBody = "Stripe returned an unexpected PaymentIntent"
+          }
+    Nothing -> do
       now2 <- liftIO getCurrentTime
-      liftIO $
-        flip runSqlPool envPool $
-          update orderKey
+      persistedOrder <- liftIO $
+        flip runSqlPool envPool $ do
+          updateWhere
+            [ ME.MarketplaceOrderId ==. orderKey
+            , ME.MarketplaceOrderStatus ==. "stripe_pending"
+            , ME.MarketplaceOrderPaymentProvider ==. Just "stripe"
+            , ME.MarketplaceOrderStripePaymentIntentId ==. Nothing
+            ]
             [ ME.MarketplaceOrderStripePaymentIntentId =. Just piId
             , ME.MarketplaceOrderUpdatedAt =. now2
             ]
-      pure StripePaymentIntentDTO
-        { spiClientSecret = clientSecret
-        , spiOrderId = orderIdText
-        , spiAmountCents = totalCents
-        , spiCurrency = currency
-        , spiPaymentSheet = Nothing
-        }
+          get orderKey
+      unless
+        ((ME.marketplaceOrderStripePaymentIntentId <$> persistedOrder) == Just (Just piId)) $
+          throwError err409
+            { errBody = "Stripe payment state changed while creating the PaymentIntent"
+            }
+  pure StripePaymentIntentDTO
+    { spiClientSecret = clientSecret
+    , spiOrderId = orderIdText
+    , spiAmountCents = totalCents
+    , spiCurrency = currency
+    , spiPaymentSheet = Nothing
+    }
+
+isMarketplaceStripeRetryStale :: UTCTime -> UTCTime -> Bool
+isMarketplaceStripeRetryStale currentTime createdAt =
+  diffUTCTime currentTime createdAt >= 23 * 60 * 60
+
+canReplayMarketplaceStripePost :: UTCTime -> UTCTime -> Text -> Maybe Text -> Bool
+canReplayMarketplaceStripePost currentTime createdAt expectedKey storedKey =
+  storedKey == Just expectedKey
+    && not (isMarketplaceStripeRetryStale currentTime createdAt)
+
+marketplaceStripeIdempotencyKey :: Key ME.MarketplaceOrder -> Text
+marketplaceStripeIdempotencyKey orderKey =
+  "tdf-marketplace-order-" <> toPathPiece orderKey
+
+isMarketplaceActiveStripeOrderConflict :: SomeException -> Bool
+isMarketplaceActiveStripeOrderConflict exception =
+  case fromException exception of
+    Just sqlErr ->
+      sqlState sqlErr == "23505"
+        && "uq_marketplace_cart_active_stripe_payment"
+          `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
+    Nothing -> False
 
 createDatafastCheckout :: Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
 createDatafastCheckout rawId payload = do
@@ -13337,6 +13449,7 @@ createDatafastCheckout rawId payload = do
       , ME.marketplaceOrderStatus        = "datafast_init"
       , ME.marketplaceOrderPaymentProvider = Just "datafast"
       , ME.marketplaceOrderStripePaymentIntentId = Nothing
+      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
       , ME.marketplaceOrderPaypalOrderId = Nothing
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing
@@ -13473,6 +13586,7 @@ createPaypalOrder rawId MarketplaceCheckoutReq{..} = do
       , ME.marketplaceOrderStatus        = "paypal_pending"
       , ME.marketplaceOrderPaymentProvider = Just "paypal"
       , ME.marketplaceOrderStripePaymentIntentId = Nothing
+      , ME.marketplaceOrderStripeIdempotencyKey = Nothing
       , ME.marketplaceOrderPaypalOrderId = Just ppOrderId
       , ME.marketplaceOrderPaypalPayerEmail = Nothing
       , ME.marketplaceOrderDatafastCheckoutId = Nothing
@@ -13930,6 +14044,13 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
     case mOrder of
       Nothing -> pure Nothing
       Just order -> do
+        case validateMarketplaceStripeAdminUpdate
+          (ME.marketplaceOrderStatus order)
+          (ME.marketplaceOrderPaymentProvider order)
+          nextStatus
+          nextProvider of
+            Left err -> liftIO $ throwIO err
+            Right () -> pure ()
         paidAtFinal <-
           case resolveMarketplaceOrderPaidAtForStatus
             now
@@ -13954,6 +14075,27 @@ updateMarketplaceOrder user rawId MarketplaceOrderUpdate{..} = do
         loadOrderDTO orderKey
   either throwError pure (requireMarketplaceOrderLookupResult mDto)
 
+validateMarketplaceStripeAdminUpdate
+  :: Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe (Maybe Text)
+  -> Either ServerError ()
+validateMarketplaceStripeAdminUpdate currentStatus currentProvider nextStatus nextProvider
+  | finalStatus /= "stripe_pending" = Right ()
+  | currentStatus /= "stripe_pending" =
+      Left err409
+        { errBody = "stripe_pending is managed by the Stripe checkout flow"
+        }
+  | finalProvider /= Just "stripe" =
+      Left err409
+        { errBody = "stripe_pending orders must keep the Stripe payment provider"
+        }
+  | otherwise = Right ()
+  where
+    finalStatus = fromMaybe currentStatus nextStatus
+    finalProvider = fromMaybe currentProvider nextProvider
+
 getOrder :: Text -> AppM MarketplaceOrderDTO
 getOrder rawId = do
   orderKey <- parseOrderId rawId
@@ -13975,26 +14117,26 @@ redactMarketplaceOrderForPublicLookup orderDto =
 
 parseOrderId :: Text -> AppM (Key ME.MarketplaceOrder)
 parseOrderId rawId = do
-  _ <- either throwError pure (validateMarketplacePathId "order" rawId)
-  case fromPathPiece (T.strip rawId) of
+  normalizedId <- either throwError pure (validateMarketplacePathId "order" rawId)
+  case fromPathPiece normalizedId of
     Nothing -> throwBadRequest "Invalid order id"
     Just k -> pure k
 
 parseCartId :: Text -> AppM (Key ME.MarketplaceCart)
 parseCartId rawId = do
-  _ <- either throwError pure (validateMarketplacePathId "cart" rawId)
-  case fromPathPiece (T.strip rawId) of
+  normalizedId <- either throwError pure (validateMarketplacePathId "cart" rawId)
+  case fromPathPiece normalizedId of
     Nothing -> throwBadRequest "Invalid cart id"
     Just k -> pure k
 
 parseListingId :: Text -> AppM (Key ME.MarketplaceListing)
 parseListingId rawId = do
-  _ <- either throwError pure (validateMarketplacePathId "listing" rawId)
-  case fromPathPiece (T.strip rawId) of
+  normalizedId <- either throwError pure (validateMarketplacePathId "listing" rawId)
+  case fromPathPiece normalizedId of
     Nothing -> throwBadRequest "Invalid listing id"
     Just k -> pure k
 
-validateMarketplacePathId :: Text -> Text -> Either ServerError Int64
+validateMarketplacePathId :: Text -> Text -> Either ServerError Text
 validateMarketplacePathId label rawId =
   let normalized = T.strip rawId
       invalid =
@@ -14003,15 +14145,9 @@ validateMarketplacePathId label rawId =
               BL.fromStrict (TE.encodeUtf8 ("Invalid " <> label <> " id"))
           }
   in
-    if T.null normalized || not (T.all isDigit normalized) || hasLeadingZero normalized
-      then invalid
-      else
-        case readMaybe (T.unpack normalized) of
-          Just pathId | pathId > 0 -> Right pathId
-          _ -> invalid
-  where
-    hasLeadingZero value =
-      T.length value > 1 && T.head value == '0'
+    case UUID.fromText normalized of
+      Nothing -> invalid
+      Just pathId -> Right (UUID.toText pathId)
 
 marketplaceCartNotFound :: ServerError
 marketplaceCartNotFound =
