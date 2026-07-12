@@ -13219,6 +13219,16 @@ createMarketplaceStripePaymentIntent rawId payload = do
     either throwError pure (requireMarketplaceCartTotals cartTotalsState)
   totalCents <-
     either throwError pure (validateMarketplaceOnlinePaymentTotal totalCentsRaw)
+  existingPendingOrder <- liftIO $ flip runSqlPool envPool $
+    selectFirst
+      [ ME.MarketplaceOrderCartId ==. Just cartKey
+      , ME.MarketplaceOrderStatus ==. "stripe_pending"
+      ]
+      [Desc ME.MarketplaceOrderCreatedAt]
+  when (isJust existingPendingOrder) $
+    throwError err409
+      { errBody = "A Stripe payment is already pending for this cart"
+      }
   orderKey <- liftIO $ flip runSqlPool envPool $ do
     oid <- insert ME.MarketplaceOrder
       { ME.marketplaceOrderCartId        = Just cartKey

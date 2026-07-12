@@ -83,6 +83,7 @@ module TDF.Server.SocialEventsHandlers (
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     parseStripeWebhookPaymentIntentId,
+    parseStripeWebhookMarketplaceOrderId,
     parseCheckoutSessionCourseSubscription,
     parseSubscriptionEvent,
     parseStripeRefundResponse,
@@ -101,6 +102,8 @@ import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Base64 as B64
+import Data.ByteArray (convert)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator),
     generalCategory,
@@ -239,6 +242,32 @@ parseStripeWebhookPaymentIntentId =
             paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
             paymentIntentObject Aeson..: "id"
 
+parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text
+parseStripeWebhookMarketplaceOrderId payload =
+    parseDirectMetadata payload <|> parseContextMetadata payload
+  where
+    parseDirectMetadata =
+        parseMaybe $
+            Aeson.withObject "event" $ \eventObject -> do
+                dataObject <- eventObject Aeson..: "data" :: Parser Object
+                paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
+                metadataObject <- paymentIntentObject Aeson..: "metadata" :: Parser Object
+                metadataObject Aeson..: "marketplace_order_id"
+    parseContextMetadata value = do
+        contextJson <-
+            parseMaybe
+                ( Aeson.withObject "event" $ \eventObject -> do
+                    dataObject <- eventObject Aeson..: "data" :: Parser Object
+                    paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
+                    metadataObject <- paymentIntentObject Aeson..: "metadata" :: Parser Object
+                    metadataObject Aeson..: "tdf_context"
+                )
+                value
+        contextValue <- Aeson.decodeStrict' (TE.encodeUtf8 contextJson)
+        parseMaybe
+            (Aeson.withObject "tdf_context" (Aeson..: "marketplace_order_id"))
+            contextValue
+
 parseStripeRefundResponse :: Aeson.Value -> Either T.Text T.Text
 parseStripeRefundResponse =
     parseStripeRequiredText
@@ -343,7 +372,12 @@ handleStripePaymentIntentSucceeded now payload =
                     (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                     envPool
         case mOrder of
-            Nothing -> markCourseRegistrationStatus now "paid" piId
+            Nothing ->
+                markCourseRegistrationStatus
+                    now
+                    "paid"
+                    piId
+                    (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
                 when (eventTicketOrderStatus order == "pending") $ do
                     _ <-
@@ -391,7 +425,12 @@ handleStripePaymentIntentFailed now payload =
                     (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                     envPool
         case mOrder of
-            Nothing -> markCourseRegistrationStatus now "cancelled" piId
+            Nothing ->
+                markCourseRegistrationStatus
+                    now
+                    "cancelled"
+                    piId
+                    (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
                 when (eventTicketOrderStatus order == "pending") $ do
                     liftIO $
@@ -415,8 +454,8 @@ Falls through to 'markArtistTipStatus' when no matching course registration
 exists, so a single webhook handler can route both course payments and
 artist tips.
 -}
-markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markCourseRegistrationStatus now newStatus piId = do
+markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markCourseRegistrationStatus now newStatus piId mMarketplaceOrderId = do
     Env{..} <- ask
     mReg <-
         liftIO $
@@ -424,7 +463,12 @@ markCourseRegistrationStatus now newStatus piId = do
                 (selectFirst [ME.CourseRegistrationStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mReg of
-        Nothing -> markArtistTipStatus now (translateToArtistTipStatus newStatus) piId
+        Nothing ->
+            markArtistTipStatus
+                now
+                (translateToArtistTipStatus newStatus)
+                piId
+                mMarketplaceOrderId
         Just (Entity regKey reg) -> do
             when (ME.courseRegistrationStatus reg == "pending_payment") $
                 liftIO $
@@ -442,8 +486,8 @@ markCourseRegistrationStatus now newStatus piId = do
 'markCourseRegistrationStatus' but operates on the @artist_tip@ table.
 Idempotent: only acts on tips still in @pending@.
 -}
-markArtistTipStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markArtistTipStatus now newStatus piId = do
+markArtistTipStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markArtistTipStatus now newStatus piId mMarketplaceOrderId = do
     Env{..} <- ask
     mTip <-
         liftIO $
@@ -451,7 +495,12 @@ markArtistTipStatus now newStatus piId = do
                 (selectFirst [ME.ArtistTipStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mTip of
-        Nothing -> markMarketplaceOrderStatus now (translateToMarketplaceOrderStatus newStatus) piId
+        Nothing ->
+            markMarketplaceOrderStatus
+                now
+                (translateToMarketplaceOrderStatus newStatus)
+                piId
+                mMarketplaceOrderId
         Just (Entity tipKey tip) -> do
             when (ME.artistTipStatus tip == "pending") $
                 liftIO $
@@ -468,15 +517,22 @@ markArtistTipStatus now newStatus piId = do
 {- | Webhook fallback for marketplace Stripe PaymentIntents. Idempotent: only
 acts on orders still waiting for Stripe confirmation.
 -}
-markMarketplaceOrderStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markMarketplaceOrderStatus now newStatus piId = do
+markMarketplaceOrderStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markMarketplaceOrderStatus now newStatus piId mOrderId = do
     Env{..} <- ask
     mOrder <-
         liftIO $
             runSqlPool
                 (selectFirst [ME.MarketplaceOrderStripePaymentIntentId ==. Just piId] [])
                 envPool
-    case mOrder of
+    mOrderByMetadata <-
+        case mOrder of
+            Just order -> pure (Just order)
+            Nothing ->
+                case mOrderId >>= fromPathPiece of
+                    Nothing -> pure Nothing
+                    Just orderKey -> liftIO $ runSqlPool (getEntity orderKey) envPool
+    case mOrderByMetadata of
         Nothing -> pure NoContent
         Just (Entity orderKey order) -> do
             when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
@@ -486,6 +542,7 @@ markMarketplaceOrderStatus now newStatus piId = do
                             orderKey
                             [ ME.MarketplaceOrderStatus =. newStatus
                             , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
+                            , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
                             , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
                             , ME.MarketplaceOrderUpdatedAt =. now
                             ]
@@ -3674,10 +3731,10 @@ socialEventsServer user =
                                 , timestamp
                                 ]
                         secret = "tdf-qr-secret-key"
-                        hmacHex =
-                            T.pack $
-                                show (hmacGetDigest (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256))
-                        qrDataValue = payload <> "|" <> hmacHex
+                        hmacBytes =
+                            convert (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256)
+                        hmacBase64 = TE.decodeUtf8 (B64.encode hmacBytes)
+                        qrDataValue = payload <> "|" <> hmacBase64
                     liftIO $
                         runSqlPool
                             ( insert_

@@ -354,6 +354,7 @@ import TDF.Server.SocialEventsHandlers (
     parseStripePaymentIntentResponse,
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
+    parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     isImageUpload,
     TicketCheckInLookup (..),
@@ -1065,6 +1066,38 @@ main = hspec $ do
                 `shouldBe` Right ("evt_123", "payment_intent.succeeded")
             parseStripeWebhookPaymentIntentId webhookPayload
                 `shouldBe` Just "pi_123"
+
+        it "recovers marketplace order ids from Stripe metadata context" $ do
+            let webhookPayload =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ("{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"9bb34967-6f48-47b8-976f-17c79f276913\"}" :: Text)
+                                                ]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId webhookPayload
+                `shouldBe` Just "9bb34967-6f48-47b8-976f-17c79f276913"
+
+        it "ignores malformed marketplace metadata context" $
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata" .= A.object ["tdf_context" .= ("not-json" :: Text)]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
 
         it "extracts checkout session course subscription fields only when complete" $ do
             let checkoutPayload regId subscriptionId =

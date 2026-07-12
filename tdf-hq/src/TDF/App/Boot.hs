@@ -240,6 +240,11 @@ runAllMigrations cfg = do
   dropLegacyPartyColumns
   runMigration migrateAll
   runMigration migrateExtra
+  rawExecute
+    "CREATE UNIQUE INDEX IF NOT EXISTS uq_marketplace_cart_active_stripe_payment \
+    \ON marketplace_order (cart_id) \
+    \WHERE cart_id IS NOT NULL AND status = 'stripe_pending'"
+    []
   runMigration CMS.migrateCMS
   ensureBrainTagsArray
   runMigration migrateSocialEvents

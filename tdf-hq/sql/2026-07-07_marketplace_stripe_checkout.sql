@@ -21,4 +21,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_marketplace_order_stripe_payment_intent
     ON marketplace_order(stripe_payment_intent_id)
     WHERE stripe_payment_intent_id IS NOT NULL;
 
+-- Prevent double-clicks and concurrent retries from creating two active
+-- PaymentIntents for the same cart. A failed or completed order releases the
+-- cart for a deliberate new attempt.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_marketplace_cart_active_stripe_payment
+    ON marketplace_order(cart_id)
+    WHERE cart_id IS NOT NULL AND status = 'stripe_pending';
+
 COMMIT;

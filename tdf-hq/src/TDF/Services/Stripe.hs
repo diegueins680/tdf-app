@@ -89,7 +89,7 @@ createPaymentIntent cfg amountCents currency description mMetadata =
           , "currency=" <> TE.encodeUtf8 (T.toLower currency)
           , "description=" <> urlEncode (TE.encodeUtf8 description)
           , "automatic_payment_methods[enabled]=true"
-          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+          ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
 
     initialRequest <- parseRequest url
     let request = initialRequest
