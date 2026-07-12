@@ -33,6 +33,8 @@ const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
 export function renderPublicRoutes() {
   return (
     <>
+      <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
+      <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />
       <Route path="/sobre-tdf" element={<Navigate to="/tdf" replace />} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />

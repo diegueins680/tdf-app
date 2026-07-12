@@ -2,10 +2,16 @@ import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typ
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import InstagramEntryLinks from './InstagramEntryLinks';
+import {
+  hasInstagramTrafficSignal,
+  readStoredInstagramTraffic,
+  rememberInstagramTraffic,
+} from '../utils/instagramTraffic';
 
 const PUBLIC_NAV_ITEMS = [
   { label: 'TDF', to: '/tdf' },
@@ -34,6 +40,10 @@ export default function PublicBranding({
 }) {
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const location = useLocation();
+  const [showInstagramEntryLinks, setShowInstagramEntryLinks] = useState(() => {
+    const referrer = typeof document === 'undefined' ? '' : document.referrer;
+    return hasInstagramTrafficSignal({ search: location.search, referrer }) || readStoredInstagramTraffic();
+  });
   const open = Boolean(menuAnchor);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -81,6 +91,16 @@ export default function PublicBranding({
     }
     return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
   }, [contextualLoginPath, location.pathname]);
+
+  useEffect(() => {
+    const referrer = typeof document === 'undefined' ? '' : document.referrer;
+    if (hasInstagramTrafficSignal({ search: location.search, referrer })) {
+      rememberInstagramTraffic();
+      setShowInstagramEntryLinks(true);
+      return;
+    }
+    setShowInstagramEntryLinks(readStoredInstagramTraffic());
+  }, [location.search]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -185,6 +205,7 @@ export default function PublicBranding({
         </Box>
       )}
       <Container maxWidth="xl" sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 } }}>
+        {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
       </Container>
       <Box
