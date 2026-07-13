@@ -64,6 +64,19 @@ spec = do
       requestUrl `shouldContain` "includeTBA=no"
       requestUrl `shouldContain` "sort=date%2Casc"
 
+    it "omits the country filter for a multi-country user base" $ do
+      let requestUrl =
+            buildTicketmasterRequestUrl
+              "https://app.ticketmaster.com/discovery/v2"
+              Nothing
+              "test-key"
+              "Helsinki"
+              (fixtureTime 12 0)
+              (fixtureTime 15 0)
+              0
+      requestUrl `shouldContain` "city=Helsinki"
+      requestUrl `shouldNotContain` "countryCode="
+
   describe "Ticketmaster event normalization" $ do
     it "creates a complete event graph and filters responses outside the requested city" $ do
       case eitherDecode ticketmasterFixture of

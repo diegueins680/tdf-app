@@ -521,9 +521,9 @@ validateTicketmasterApiKey (Just rawValue)
     value = T.strip (T.pack rawValue)
 
 validateEventDiscoveryCountryCode :: Maybe String -> IO (Maybe Text)
-validateEventDiscoveryCountryCode Nothing = pure (Just "EC")
+validateEventDiscoveryCountryCode Nothing = pure Nothing
 validateEventDiscoveryCountryCode (Just rawValue)
-  | T.null value = pure (Just "EC")
+  | T.null value = pure Nothing
   | T.length value == 2 && T.all isAsciiLetter value = pure (Just (T.toUpper value))
   | otherwise = fail "EVENT_DISCOVERY_COUNTRY_CODE must be a two-letter ISO country code"
   where

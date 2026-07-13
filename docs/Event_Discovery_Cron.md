@@ -34,10 +34,10 @@ TICKETMASTER_API_BASE=https://app.ticketmaster.com/discovery/v2
 EVENT_DISCOVERY_LOOKAHEAD_DAYS=90
 EVENT_DISCOVERY_MAX_PAGES_PER_CITY=5
 EVENT_DISCOVERY_HOUR_LOCAL=3
-EVENT_DISCOVERY_COUNTRY_CODE=EC
+EVENT_DISCOVERY_COUNTRY_CODE=
 ```
 
-`EVENT_DISCOVERY_COUNTRY_CODE` defaults to `EC`. User profiles currently store a city but not a country, so the importer intentionally keeps one deployment-wide country scope to avoid matching a same-named city elsewhere.
+`EVENT_DISCOVERY_COUNTRY_CODE` is optional and defaults to no country restriction because active users may live in different countries. The importer still requires the returned venue city to exactly match the requested profile city after normalization. Set a two-letter code only when every user city should be restricted to one deployment-wide country.
 
 The API key is never written to application logs. One city or event failure is logged and does not stop other cities from syncing. Past imported events are completed automatically; future imports are cancelled and removed from the public feed when their city no longer has an active user.
 
