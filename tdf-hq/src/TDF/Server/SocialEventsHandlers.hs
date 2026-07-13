@@ -6,6 +6,7 @@
 
 module TDF.Server.SocialEventsHandlers (
     socialEventsServer,
+    stripeWebhookServer,
     validateRsvpStatus,
     validateInvitationToPartyId,
     validateInvitationFromPartyId,
@@ -19,6 +20,9 @@ module TDF.Server.SocialEventsHandlers (
     parseNearQueryEither,
     followArtistDb,
     normalizeTicketOrderStatus,
+    ticketOrderInventoryAdjustment,
+    validateDirectTicketOrderPricing,
+    validateTicketPurchaseEventEligibility,
     normalizeTicketStatus,
     normalizeEventType,
     normalizeEventStatus,
@@ -76,13 +80,17 @@ module TDF.Server.SocialEventsHandlers (
     validatePromoCodeMinimumPurchaseParam,
     validatePromoCodeMinimumPurchaseCents,
     promoCodeDiscountAmountEither,
+    validateTicketCheckoutAmount,
     isImageUpload,
     validateEventImageUploadSize,
     validateEventTitleInput,
     validateArtistName,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
+    verifyAndDecodeStripeWebhook,
     parseStripeWebhookPaymentIntentId,
+    parseStripeWebhookMarketplaceOrderId,
+    canRecoverMarketplaceStripeOrder,
     parseCheckoutSessionCourseSubscription,
     parseSubscriptionEvent,
     parseStripeRefundResponse,
@@ -93,13 +101,16 @@ module TDF.Server.SocialEventsHandlers (
 ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (filterM, forM, forM_, replicateM, unless, when)
+import Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import Control.Monad (filterM, forM, forM_, unless, when)
+import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator),
@@ -112,7 +123,7 @@ import Data.Char (
     isHexDigit,
  )
 import Data.Int (Int64)
-import Data.List (foldl', sortOn)
+import Data.List (sortOn)
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
 import Data.Ord (Down (..))
 import qualified Data.Set as Set
@@ -120,13 +131,17 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
 import System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
 import System.Environment (lookupEnv)
 import System.FilePath (takeExtension, takeFileName, (</>))
+import System.IO (hPutStrLn, stderr)
+import Text.Printf (printf)
 import Text.Read (readMaybe)
+import Web.PathPieces (fromPathPiece)
 
 import Servant
 import Servant.Multipart (FileData (..))
@@ -134,7 +149,8 @@ import Servant.Multipart (FileData (..))
 -- Pull in full Persistent surface so TH-generated field constructors
 -- (EventRsvpEventId, SocialEventStartTime, etc.) are available.
 import Database.Persist
-import Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, SqlBackend, SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, updateWhereCount)
+import Database.PostgreSQL.Simple (SqlError (..))
 
 import Crypto.Hash.Algorithms (SHA256)
 import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
@@ -142,7 +158,7 @@ import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
 import TDF.Auth (AuthedUser (..))
-import TDF.Config (AppConfig (..), assetsRootDir, resolveConfiguredAssetsBase)
+import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
@@ -192,6 +208,7 @@ import TDF.DTO.SocialEventsDTO (
     WaitlistEntryDTO (..),
     WaitlistJoinDTO (..),
  )
+import qualified TDF.Email as Email
 import TDF.Models (EntityField (PartyStripeCustomerId), Party (..), PartyId)
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
@@ -231,6 +248,24 @@ parseStripeWebhookEventEnvelope payload =
             (Aeson.withObject "event" (Aeson..: "type"))
             payload
 
+{- | Verify the signature against the exact request bytes before decoding JSON.
+Re-encoding an Aeson 'Value' changes insignificant whitespace and can make a
+legitimate Stripe signature fail.
+-}
+verifyAndDecodeStripeWebhook ::
+    UTCTime ->
+    Stripe.StripeConfig ->
+    Maybe T.Text ->
+    BL.ByteString ->
+    Either T.Text Aeson.Value
+verifyAndDecodeStripeWebhook now stripeCfg mSignature rawBody = do
+    signature <- maybe (Left "Missing Stripe-Signature header") Right mSignature
+    unless (Stripe.verifyWebhookSignatureAt now stripeCfg signature (BL.toStrict rawBody)) $
+        Left "Invalid webhook signature"
+    case Aeson.eitherDecode rawBody of
+        Left _ -> Left "Invalid webhook JSON"
+        Right payload -> Right payload
+
 parseStripeWebhookPaymentIntentId :: Aeson.Value -> Maybe T.Text
 parseStripeWebhookPaymentIntentId =
     parseMaybe $
@@ -238,6 +273,33 @@ parseStripeWebhookPaymentIntentId =
             dataObject <- eventObject Aeson..: "data" :: Parser Object
             paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
             paymentIntentObject Aeson..: "id"
+
+parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text
+parseStripeWebhookMarketplaceOrderId payload = do
+    contextJson <-
+        parseMaybe
+            ( Aeson.withObject "event" $ \eventObject -> do
+                dataObject <- eventObject Aeson..: "data" :: Parser Object
+                paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
+                metadataObject <- paymentIntentObject Aeson..: "metadata" :: Parser Object
+                metadataObject Aeson..: "tdf_context"
+            )
+            payload
+    contextValue <- Aeson.decodeStrict' (TE.encodeUtf8 contextJson)
+    parseMaybe
+        ( Aeson.withObject "tdf_context" $ \contextObject -> do
+            purpose <- contextObject Aeson..: "purpose" :: Parser T.Text
+            unless (purpose == "marketplace_order") $
+                fail "Unexpected Stripe metadata purpose"
+            contextObject Aeson..: "marketplace_order_id"
+        )
+        contextValue
+
+canRecoverMarketplaceStripeOrder :: T.Text -> Maybe T.Text -> Maybe T.Text -> Bool
+canRecoverMarketplaceStripeOrder status provider paymentIntentId =
+    status == "stripe_pending"
+        && provider == Just "stripe"
+        && isNothing paymentIntentId
 
 parseStripeRefundResponse :: Aeson.Value -> Either T.Text T.Text
 parseStripeRefundResponse =
@@ -304,7 +366,8 @@ resolveStripeCustomerForBuyer stripeCfg pid mBuyerEmail mBuyerName = do
             nameForCustomer = mBuyerName <|> Just (partyDisplayName party)
         result <-
             liftIO $
-                Stripe.createCustomer stripeCfg emailForCustomer nameForCustomer Nothing
+                runStripeRequestSafely $
+                    Stripe.createCustomer stripeCfg emailForCustomer nameForCustomer Nothing
         customerJson <-
             either
                 ( \err ->
@@ -331,6 +394,84 @@ eitherPromoCodeBadRequest =
 textErrBody :: T.Text -> BL.ByteString
 textErrBody = BL.fromStrict . TE.encodeUtf8
 
+runStripeRequestSafely :: IO (Either T.Text a) -> IO (Either T.Text a)
+runStripeRequestSafely action = do
+    result <- try action
+    case result of
+        Right stripeResult -> pure stripeResult
+        Left err ->
+            case fromException err :: Maybe SomeAsyncException of
+                Just _ -> throwIO (err :: SomeException)
+                Nothing -> pure (Left "Stripe request failed")
+
+tryAny :: IO a -> IO (Either SomeException a)
+tryAny = try
+
+isEventTicketCheckoutConflict :: SomeException -> Bool
+isEventTicketCheckoutConflict exception =
+    case fromException exception of
+        Just sqlErr ->
+            sqlState sqlErr == "23505"
+                && "unique_event_ticket_checkout"
+                    `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
+        Nothing -> False
+
+{- | Public Stripe webhook handler. Stripe authenticates this endpoint with
+its signature header, so it intentionally has no 'AuthedUser' dependency.
+-}
+stripeWebhookServer :: Maybe T.Text -> BL.ByteString -> AppM NoContent
+stripeWebhookServer mSignature rawBody = do
+    Env{..} <- ask
+    now <- liftIO getCurrentTime
+    case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+        (Just secretKey, Just webhookSecret) -> do
+            let stripeCfg =
+                    Stripe.StripeConfig
+                        { Stripe.stripeSecretKey = secretKey
+                        , Stripe.stripeWebhookSecret = webhookSecret
+                        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                        }
+            payload <-
+                eitherStripeWebhookError $
+                    verifyAndDecodeStripeWebhook now stripeCfg mSignature rawBody
+            (eventId, eventType) <-
+                eitherStripeWebhookError $
+                    parseStripeWebhookEventEnvelope payload
+            mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
+            case mExisting of
+                Just _ -> pure NoContent
+                Nothing -> do
+                    dispatchResult <- case eventType of
+                        "payment_intent.succeeded" ->
+                            handleStripePaymentIntentSucceeded now payload
+                        -- A failed attempt can be retried on the same intent.
+                        "payment_intent.payment_failed" -> pure NoContent
+                        "payment_intent.canceled" ->
+                            handleStripePaymentIntentCanceled now payload
+                        "charge.refunded" -> pure NoContent
+                        "checkout.session.completed" ->
+                            handleStripeCheckoutSessionCompleted now payload
+                        "customer.subscription.updated" ->
+                            handleStripeSubscriptionUpdated now payload
+                        "customer.subscription.deleted" ->
+                            handleStripeSubscriptionDeleted now payload
+                        "invoice.paid" -> pure NoContent
+                        _ -> pure NoContent
+                    _ <-
+                        liftIO $
+                            runSqlPool
+                                ( insertUnique
+                                    StripeWebhookEvent
+                                        { stripeWebhookEventStripeEventId = eventId
+                                        , stripeWebhookEventEventType = eventType
+                                        , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict rawBody)
+                                        , stripeWebhookEventProcessedAt = now
+                                        }
+                                )
+                                envPool
+                    pure dispatchResult
+        _ -> throwError err500{errBody = "Stripe is not configured"}
+
 handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent
 handleStripePaymentIntentSucceeded now payload =
     maybe (pure NoContent) markOrderPaid (parseStripeWebhookPaymentIntentId payload)
@@ -343,44 +484,275 @@ handleStripePaymentIntentSucceeded now payload =
                     (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                     envPool
         case mOrder of
-            Nothing -> markCourseRegistrationStatus now "paid" piId
+            Nothing ->
+                markCourseRegistrationStatus
+                    now
+                    "paid"
+                    piId
+                    (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
-                when (eventTicketOrderStatus order == "pending") $ do
-                    _ <-
-                        liftIO $
-                            runSqlPool
-                                ( do
-                                    update orderKey [EventTicketOrderStatus =. "paid", EventTicketOrderUpdatedAt =. now]
-                                    tickets <- replicateM (eventTicketOrderQuantity order) $ do
-                                        ticketCodeValue <- generateUniqueTicketCode
-                                        ticketKey <-
-                                            insert
-                                                EventTicket
-                                                    { eventTicketEventId = eventTicketOrderEventId order
-                                                    , eventTicketTierRefId = eventTicketOrderTierId order
-                                                    , eventTicketOrderRefId = orderKey
-                                                    , eventTicketHolderName = eventTicketOrderBuyerName order
-                                                    , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
-                                                    , eventTicketCode = ticketCodeValue
-                                                    , eventTicketStatus = "issued"
-                                                    , eventTicketCheckedInAt = Nothing
-                                                    , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
-                                                    , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
-                                                    , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
-                                                    , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
-                                                    , eventTicketTransferHistory = Nothing
-                                                    , eventTicketCreatedAt = now
-                                                    , eventTicketUpdatedAt = now
-                                                    }
-                                        pure ticketKey
-                                    pure tickets
-                                )
-                                envPool
-                    pure ()
+                (statusChanged, ticketCodes) <-
+                    liftIO $
+                        runSqlPool
+                            ( do
+                                changedCount <-
+                                    updateWhereCount
+                                        [ EventTicketOrderId ==. orderKey
+                                        , EventTicketOrderStatus ==. "pending"
+                                        ]
+                                        [ EventTicketOrderStatus =. "paid"
+                                        , EventTicketOrderUpdatedAt =. now
+                                        ]
+                                if changedCount > 0
+                                    then do
+                                        codes <- issueMissingTicketsForOrder now orderKey order
+                                        pure (True, codes)
+                                    else pure (False, [])
+                            )
+                            envPool
+                when statusChanged $
+                    sendTicketConfirmationForOrder order ticketCodes
                 pure NoContent
 
-handleStripePaymentIntentFailed :: UTCTime -> Aeson.Value -> AppM NoContent
-handleStripePaymentIntentFailed now payload =
+issueMissingTicketsForOrder ::
+    UTCTime ->
+    EventTicketOrderId ->
+    EventTicketOrder ->
+    SqlPersistT IO [T.Text]
+issueMissingTicketsForOrder now orderKey order = do
+    existingTickets <-
+        selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
+    let missingCount =
+            max 0 (eventTicketOrderQuantity order - length existingTickets)
+    forM_ [1 .. missingCount] $ \_ -> do
+        ticketCodeValue <- generateUniqueTicketCode
+        insert_
+            EventTicket
+                { eventTicketEventId = eventTicketOrderEventId order
+                , eventTicketTierRefId = eventTicketOrderTierId order
+                , eventTicketOrderRefId = orderKey
+                , eventTicketHolderName = eventTicketOrderBuyerName order
+                , eventTicketHolderEmail = eventTicketOrderBuyerEmail order
+                , eventTicketCode = ticketCodeValue
+                , eventTicketStatus = "issued"
+                , eventTicketCheckedInAt = Nothing
+                , eventTicketCurrentHolderPartyId = eventTicketOrderBuyerPartyId order
+                , eventTicketCurrentHolderEmail = eventTicketOrderBuyerEmail order
+                , eventTicketCurrentHolderName = eventTicketOrderBuyerName order
+                , eventTicketOriginalHolderPartyId = eventTicketOrderBuyerPartyId order
+                , eventTicketTransferHistory = Nothing
+                , eventTicketCreatedAt = now
+                , eventTicketUpdatedAt = now
+                }
+    allTickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
+    pure (map (eventTicketCode . entityVal) allTickets)
+
+sendTicketConfirmationForOrder :: EventTicketOrder -> [T.Text] -> AppM ()
+sendTicketConfirmationForOrder order ticketCodes = do
+    Env{..} <- ask
+    (mEvent, mTier, mParty) <-
+        liftIO $
+            runSqlPool
+                ( do
+                    eventRow <- get (eventTicketOrderEventId order)
+                    tierRow <- get (eventTicketOrderTierId order)
+                    partyRow <- case partyKey of
+                        Nothing -> pure Nothing
+                        Just key -> get key
+                    pure (eventRow, tierRow, partyRow)
+                )
+                envPool
+    case (mEvent, mTier, recipientEmail mParty) of
+        (Just eventRow, Just tierRow, Just emailAddress) ->
+            liftIO $
+                sendTicketConfirmationEmailBestEffort
+                    (emailConfig envConfig)
+                    (recipientName mParty)
+                    emailAddress
+                    (socialEventTitle eventRow)
+                    (formatTicketEventDate (socialEventStartTime eventRow))
+                    (eventTicketOrderQuantity order)
+                    (eventTicketTierName tierRow)
+                    (formatTicketOrderTotal order)
+                    ticketCodes
+                    (Just ticketMobileUrl)
+        _ -> pure ()
+  where
+    partyKey =
+        eventTicketOrderBuyerPartyId order
+            >>= (fromPathPiece :: T.Text -> Maybe PartyId)
+    recipientName mParty =
+        fromMaybe
+            "Invitado TDF"
+            ( cleanMaybeText (eventTicketOrderBuyerName order)
+                <|> cleanMaybeText (partyDisplayName <$> mParty)
+            )
+    recipientEmail mParty =
+        cleanMaybeText (eventTicketOrderBuyerEmail order)
+            <|> cleanMaybeText (mParty >>= partyPrimaryEmail)
+
+sendTicketConfirmationEmailBestEffort ::
+    Maybe EmailConfig ->
+    T.Text ->
+    T.Text ->
+    T.Text ->
+    T.Text ->
+    Int ->
+    T.Text ->
+    T.Text ->
+    [T.Text] ->
+    Maybe T.Text ->
+    IO ()
+sendTicketConfirmationEmailBestEffort
+    smtpConfig
+    buyerName
+    buyerEmail
+    eventTitle
+    eventDate
+    quantity
+    tierName
+    total
+    ticketCodes
+    ticketAppUrl = do
+        result <-
+            ( try
+                    ( Email.sendTicketConfirmationEmail
+                        smtpConfig
+                        buyerName
+                        buyerEmail
+                        eventTitle
+                        eventDate
+                        quantity
+                        tierName
+                        total
+                        ticketCodes
+                        ticketAppUrl
+                    ) ::
+                    IO (Either SomeException ())
+                )
+        case result of
+            Left err ->
+                hPutStrLn
+                    stderr
+                    ( "[TicketConfirmation] Email delivery failed after ticket issuance: "
+                        <> displayException err
+                    )
+            Right () -> pure ()
+
+formatTicketEventDate :: UTCTime -> T.Text
+formatTicketEventDate =
+    T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC"
+
+ticketMobileUrl :: T.Text
+ticketMobileUrl = "tdf://tickets"
+
+formatTicketOrderTotal :: EventTicketOrder -> T.Text
+formatTicketOrderTotal order =
+    T.pack (printf "%.2f" amount) <> " " <> T.toUpper (eventTicketOrderCurrency order)
+  where
+    amount = fromIntegral (eventTicketOrderAmountCents order) / 100 :: Double
+
+encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text
+encodeTicketCheckoutMetadata Nothing _ = Nothing
+encodeTicketCheckoutMetadata (Just idempotencyKey) mPromoCode =
+    Just . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+        Aeson.object
+            [ "checkout_idempotency_key" Aeson..= idempotencyKey
+            , "promo_code" Aeson..= mPromoCode
+            ]
+
+decodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe (T.Text, Maybe T.Text)
+decodeTicketCheckoutMetadata mRawMetadata = do
+    rawMetadata <- mRawMetadata
+    metadata <- Aeson.decodeStrict' (TE.encodeUtf8 rawMetadata)
+    parseMaybe
+        ( Aeson.withObject "ticket_checkout_metadata" $ \obj ->
+            (,)
+                <$> obj Aeson..: "checkout_idempotency_key"
+                <*> obj Aeson..:? "promo_code"
+        )
+        metadata
+
+reuseStripeTicketCheckout ::
+    Maybe T.Text ->
+    EventTicketOrderId ->
+    EventTicketOrder ->
+    AppM StripePaymentIntentDTO
+reuseStripeTicketCheckout mMobileSdkVersion orderKey order = do
+    Env{..} <- ask
+    stripeCfg <-
+        case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+            (Just secretKey, Just webhookSecret) ->
+                pure
+                    Stripe.StripeConfig
+                        { Stripe.stripeSecretKey = secretKey
+                        , Stripe.stripeWebhookSecret = webhookSecret
+                        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                        }
+            _ -> throwError err500{errBody = "Stripe is not configured"}
+    paymentIntentId <-
+        maybe
+            (throwError err409{errBody = "Ticket checkout is still initializing; retry shortly"})
+            pure
+            (eventTicketOrderStripePaymentIntentId order)
+    retrieved <-
+        liftIO $
+            runStripeRequestSafely $
+                Stripe.retrievePaymentIntent stripeCfg paymentIntentId
+    paymentIntent <-
+        either
+            (\err -> throwError err502{errBody = textErrBody ("Stripe retrieval error: " <> err)})
+            pure
+            retrieved
+    (_, clientSecret) <- eitherStripeServerError $ parseStripePaymentIntentResponse paymentIntent
+    paymentSheet <- case mMobileSdkVersion of
+        Nothing -> pure Nothing
+        Just mobileSdkVersion -> do
+            publishableKey <-
+                maybe
+                    (throwError err500{errBody = "Stripe publishable key not configured"})
+                    pure
+                    (stripePublishableKey envConfig)
+            buyerKey <-
+                maybe
+                    (throwError err500{errBody = "Ticket order buyer is invalid"})
+                    pure
+                    ( eventTicketOrderBuyerPartyId order
+                        >>= (fromPathPiece :: T.Text -> Maybe PartyId)
+                    )
+            customerId <-
+                resolveStripeCustomerForBuyer
+                    stripeCfg
+                    buyerKey
+                    (eventTicketOrderBuyerEmail order)
+                    (eventTicketOrderBuyerName order)
+            ephemeralResult <-
+                liftIO $
+                    runStripeRequestSafely $
+                        Stripe.createEphemeralKey stripeCfg customerId mobileSdkVersion
+            ephemeralSecret <-
+                either
+                    (\err -> throwError err502{errBody = textErrBody ("Stripe ephemeral key error: " <> err)})
+                    (eitherStripeServerError . parseStripeEphemeralKeySecret)
+                    ephemeralResult
+            pure . Just $
+                PaymentSheetParamsDTO
+                    { psCustomerId = customerId
+                    , psEphemeralKeySecret = ephemeralSecret
+                    , psPaymentIntentClientSecret = clientSecret
+                    , psPublishableKey = publishableKey
+                    }
+    pure
+        StripePaymentIntentDTO
+            { spiClientSecret = clientSecret
+            , spiOrderId = renderKeyText orderKey
+            , spiAmountCents = eventTicketOrderAmountCents order
+            , spiCurrency = eventTicketOrderCurrency order
+            , spiPaymentSheet = paymentSheet
+            }
+
+handleStripePaymentIntentCanceled :: UTCTime -> Aeson.Value -> AppM NoContent
+handleStripePaymentIntentCanceled now payload =
     maybe (pure NoContent) cancelOrder (parseStripeWebhookPaymentIntentId payload)
   where
     cancelOrder piId = do
@@ -391,21 +763,33 @@ handleStripePaymentIntentFailed now payload =
                     (selectFirst [EventTicketOrderStripePaymentIntentId ==. Just piId] [])
                     envPool
         case mOrder of
-            Nothing -> markCourseRegistrationStatus now "cancelled" piId
+            Nothing ->
+                markCourseRegistrationStatus
+                    now
+                    "cancelled"
+                    piId
+                    (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
-                when (eventTicketOrderStatus order == "pending") $ do
-                    liftIO $
-                        runSqlPool
-                            ( do
-                                update orderKey [EventTicketOrderStatus =. "cancelled", EventTicketOrderUpdatedAt =. now]
+                liftIO $
+                    runSqlPool
+                        ( do
+                            changedCount <-
+                                updateWhereCount
+                                    [ EventTicketOrderId ==. orderKey
+                                    , EventTicketOrderStatus ==. "pending"
+                                    ]
+                                    [ EventTicketOrderStatus =. "cancelled"
+                                    , EventTicketOrderUpdatedAt =. now
+                                    ]
+                            when (changedCount > 0) $ do
                                 update
                                     (eventTicketOrderTierId order)
                                     [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
                                 case eventTicketOrderPromoCodeId order of
                                     Nothing -> pure ()
                                     Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
-                            )
-                            envPool
+                        )
+                        envPool
                 pure NoContent
 
 {- | Webhook fallback that flips a course registration to @newStatus@ when its
@@ -415,8 +799,8 @@ Falls through to 'markArtistTipStatus' when no matching course registration
 exists, so a single webhook handler can route both course payments and
 artist tips.
 -}
-markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markCourseRegistrationStatus now newStatus piId = do
+markCourseRegistrationStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markCourseRegistrationStatus now newStatus piId mMarketplaceOrderId = do
     Env{..} <- ask
     mReg <-
         liftIO $
@@ -424,7 +808,12 @@ markCourseRegistrationStatus now newStatus piId = do
                 (selectFirst [ME.CourseRegistrationStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mReg of
-        Nothing -> markArtistTipStatus now (translateToArtistTipStatus newStatus) piId
+        Nothing ->
+            markArtistTipStatus
+                now
+                (translateToArtistTipStatus newStatus)
+                piId
+                mMarketplaceOrderId
         Just (Entity regKey reg) -> do
             when (ME.courseRegistrationStatus reg == "pending_payment") $
                 liftIO $
@@ -442,8 +831,8 @@ markCourseRegistrationStatus now newStatus piId = do
 'markCourseRegistrationStatus' but operates on the @artist_tip@ table.
 Idempotent: only acts on tips still in @pending@.
 -}
-markArtistTipStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markArtistTipStatus now newStatus piId = do
+markArtistTipStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markArtistTipStatus now newStatus piId mMarketplaceOrderId = do
     Env{..} <- ask
     mTip <-
         liftIO $
@@ -451,7 +840,12 @@ markArtistTipStatus now newStatus piId = do
                 (selectFirst [ME.ArtistTipStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mTip of
-        Nothing -> markMarketplaceOrderStatus now (translateToMarketplaceOrderStatus newStatus) piId
+        Nothing ->
+            markMarketplaceOrderStatus
+                now
+                (translateToMarketplaceOrderStatus newStatus)
+                piId
+                mMarketplaceOrderId
         Just (Entity tipKey tip) -> do
             when (ME.artistTipStatus tip == "pending") $
                 liftIO $
@@ -468,8 +862,8 @@ markArtistTipStatus now newStatus piId = do
 {- | Webhook fallback for marketplace Stripe PaymentIntents. Idempotent: only
 acts on orders still waiting for Stripe confirmation.
 -}
-markMarketplaceOrderStatus :: UTCTime -> T.Text -> T.Text -> AppM NoContent
-markMarketplaceOrderStatus now newStatus piId = do
+markMarketplaceOrderStatus :: UTCTime -> T.Text -> T.Text -> Maybe T.Text -> AppM NoContent
+markMarketplaceOrderStatus now newStatus piId mOrderId = do
     Env{..} <- ask
     mOrder <-
         liftIO $
@@ -477,7 +871,6 @@ markMarketplaceOrderStatus now newStatus piId = do
                 (selectFirst [ME.MarketplaceOrderStripePaymentIntentId ==. Just piId] [])
                 envPool
     case mOrder of
-        Nothing -> pure NoContent
         Just (Entity orderKey order) -> do
             when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
                 liftIO $
@@ -486,11 +879,43 @@ markMarketplaceOrderStatus now newStatus piId = do
                             orderKey
                             [ ME.MarketplaceOrderStatus =. newStatus
                             , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
+                            , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
                             , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
                             , ME.MarketplaceOrderUpdatedAt =. now
                             ]
                         )
                         envPool
+            pure NoContent
+        Nothing -> do
+            mOrderByMetadata <-
+                case mOrderId >>= fromPathPiece of
+                    Nothing -> pure Nothing
+                    Just orderKey -> liftIO $ runSqlPool (getEntity orderKey) envPool
+            case mOrderByMetadata of
+                Just (Entity orderKey order)
+                    | canRecoverMarketplaceStripeOrder
+                        (ME.marketplaceOrderStatus order)
+                        (ME.marketplaceOrderPaymentProvider order)
+                        (ME.marketplaceOrderStripePaymentIntentId order) ->
+                        liftIO $
+                            runSqlPool
+                                ( updateWhere
+                                    [ ME.MarketplaceOrderId ==. orderKey
+                                    , ME.MarketplaceOrderStatus ==. "stripe_pending"
+                                    , ME.MarketplaceOrderPaymentProvider ==. Just "stripe"
+                                    , ME.MarketplaceOrderStripePaymentIntentId ==. Nothing
+                                    ]
+                                    [ ME.MarketplaceOrderStatus =. newStatus
+                                    , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
+                                    , ME.MarketplaceOrderPaidAt
+                                        =. if newStatus == "paid"
+                                            then Just now
+                                            else ME.marketplaceOrderPaidAt order
+                                    , ME.MarketplaceOrderUpdatedAt =. now
+                                    ]
+                                )
+                                envPool
+                _ -> pure ()
             pure NoContent
 
 {- | The course registration status enum uses @cancelled@ for the failure path;
@@ -1146,7 +1571,11 @@ socialEventsServer user =
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
         let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
-        rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
+        let dateOrder =
+                case mStartAfter of
+                    Just _ -> Asc SocialEventStartTime
+                    Nothing -> Desc SocialEventStartTime
+        rows <- liftIO $ runSqlPool (selectList filters [dateOrder, LimitTo limit, OffsetBy offset]) envPool
         let matchesMeta (Entity _ eventRow) = do
                 meta <-
                     either (throwError . storedEventMetadataServerError) pure $
@@ -1370,7 +1799,8 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseKeyOr400 "event" rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mExisting) $ throwError err404{errBody = "Event not found"}
+        existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
+        _ <- claimOrRequireEventManager currentPartyId envPool eventKey existing
         liftIO $
             runSqlPool
                 ( do
@@ -1387,6 +1817,7 @@ socialEventsServer user =
                     deleteWhere [EventTicketTierEventId ==. eventKey]
                     deleteWhere [EventFinanceEntryEventId ==. eventKey]
                     deleteWhere [EventBudgetLineEventId ==. eventKey]
+                    deleteWhere [ExternalEventRefEventId ==. eventKey]
                     delete eventKey
                 )
                 envPool
@@ -1744,6 +2175,13 @@ socialEventsServer user =
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
         mExisting <- liftIO $ runSqlPool (get artistKey) envPool
         existing <- maybe (throwError err404{errBody = "Artist not found"}) pure mExisting
+        importedRef <-
+            liftIO $
+                runSqlPool
+                    (selectFirst [ExternalArtistRefArtistId ==. artistKey] [])
+                    envPool
+        when (isJust importedRef) $
+            throwError err403{errBody = "Imported artists are managed automatically"}
         let genreList = normalizeArtistGenres (artistGenres dto)
         let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
         liftIO $
@@ -2288,6 +2726,7 @@ socialEventsServer user =
         listTicketTiers
             :<|> createTicketTier
             :<|> updateTicketTier
+            :<|> listCurrentPartyTicketOrders
             :<|> listTicketOrders
             :<|> createTicketOrder
             :<|> updateTicketOrderStatus
@@ -2300,7 +2739,6 @@ socialEventsServer user =
             :<|> validatePromoCode
             -- Stripe Payment
             :<|> createStripePaymentIntent
-            :<|> stripeWebhook
             -- Refunds
             :<|> createRefundRequest
             :<|> listRefunds
@@ -2451,6 +2889,41 @@ socialEventsServer user =
             (pure . ticketTierEntityToDTO eventKey)
             mUpdated
 
+    listCurrentPartyTicketOrders :: Maybe T.Text -> AppM [TicketOrderDTO]
+    listCurrentPartyTicketOrders mStatus = do
+        Env{..} <- ask
+        statusFilters <- case cleanMaybeText mStatus of
+            Nothing -> pure []
+            Just raw -> case parseTicketOrderStatus raw of
+                Nothing -> throwError err400{errBody = "Invalid ticket order status"}
+                Just statusVal -> pure [EventTicketOrderStatus ==. statusVal]
+        let filters =
+                [EventTicketOrderBuyerPartyId ==. Just currentPartyId]
+                    ++ statusFilters
+        rows <-
+            liftIO $
+                runSqlPool
+                    ( selectList
+                        filters
+                        [ Desc EventTicketOrderPurchasedAt
+                        , Desc EventTicketOrderId
+                        , LimitTo 500
+                        ]
+                    )
+                    envPool
+        forM rows $ \orderEnt@(Entity orderKey orderRow) -> do
+            _ <-
+                either
+                    throwError
+                    pure
+                    (validateStoredTicketOrderStatus (Just (eventTicketOrderStatus orderRow)))
+            tickets <-
+                liftIO $
+                    runSqlPool
+                        (selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId])
+                        envPool
+            pure (ticketOrderEntityToDTO orderEnt tickets)
+
     listTicketOrders :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketOrderDTO]
     listTicketOrders eventIdStr mBuyerPartyId mStatus = do
         Env{..} <- ask
@@ -2495,6 +2968,8 @@ socialEventsServer user =
         tierKey <- parseKeyOr400 "ticket tier" ticketPurchaseTierId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        either throwError pure $
+            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal)
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         when (eventTicketTierEventId tier /= eventKey) $ throwError err400{errBody = "Ticket tier does not belong to this event"}
@@ -2502,6 +2977,8 @@ socialEventsServer user =
         when (not (isTicketTierSaleOpen now tier)) $ throwError err400{errBody = "Ticket sales are closed for this tier"}
 
         let manager = isEventManager currentPartyId eventVal
+        either throwError pure $
+            validateDirectTicketOrderPricing manager (eventTicketTierPriceCents tier)
         requestedBuyer <-
             either
                 throwError
@@ -2514,20 +2991,14 @@ socialEventsServer user =
                 | manager -> pure (Just buyer)
                 | otherwise -> throwError err403{errBody = "Cannot assign tickets to another buyer"}
 
-        soldAcross <-
-            liftIO $
-                runSqlPool
-                    (selectList [EventTicketTierEventId ==. eventKey] [])
-                    envPool
-        let soldCount = sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-            availableInTier = ticketTierAvailability tier
+        let availableInTier = ticketTierAvailability tier
         when (ticketPurchaseQuantity > availableInTier) $ throwError err409{errBody = "Not enough tickets available"}
-        case socialEventCapacity eventVal of
-            Nothing -> pure ()
-            Just cap ->
-                when (soldCount + ticketPurchaseQuantity > cap) $ throwError err409{errBody = "Event capacity reached"}
 
-        let orderAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
+        orderAmountCents <-
+            either throwError pure $
+                validateTicketCheckoutAmount
+                    ticketPurchaseQuantity
+                    (eventTicketTierPriceCents tier)
         buyerName <-
             either
                 throwError
@@ -2536,63 +3007,84 @@ socialEventsServer user =
         buyerEmail <-
             either throwError pure (validateTicketPurchaseBuyerEmail ticketPurchaseBuyerEmail)
         when (orderAmountCents < 0) $ throwError err400{errBody = "Invalid amount"}
+        let orderRecord =
+                EventTicketOrder
+                    { eventTicketOrderEventId = eventKey
+                    , eventTicketOrderTierId = tierKey
+                    , eventTicketOrderBuyerPartyId = buyerParty
+                    , eventTicketOrderBuyerName = buyerName
+                    , eventTicketOrderBuyerEmail = buyerEmail
+                    , eventTicketOrderQuantity = ticketPurchaseQuantity
+                    , eventTicketOrderAmountCents = orderAmountCents
+                    , eventTicketOrderCurrency = eventTicketTierCurrency tier
+                    , eventTicketOrderStatus = "paid"
+                    , eventTicketOrderMetadata = Nothing
+                    , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                    , eventTicketOrderPurchasedAt = now
+                    , eventTicketOrderStripePaymentIntentId = Nothing
+                    , eventTicketOrderPromoCodeId = Nothing
+                    , eventTicketOrderOriginalAmountCents = Nothing
+                    , eventTicketOrderPaymentMethod = Nothing
+                    , eventTicketOrderCreatedAt = now
+                    , eventTicketOrderUpdatedAt = now
+                    }
 
-        orderDto <-
+        createdOrder <-
             liftIO $
                 runSqlPool
                     ( do
-                        update
-                            tierKey
-                            [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                            , EventTicketTierUpdatedAt =. now
-                            ]
-                        let orderRecord =
-                                EventTicketOrder
-                                    { eventTicketOrderEventId = eventKey
-                                    , eventTicketOrderTierId = tierKey
-                                    , eventTicketOrderBuyerPartyId = buyerParty
-                                    , eventTicketOrderBuyerName = buyerName
-                                    , eventTicketOrderBuyerEmail = buyerEmail
-                                    , eventTicketOrderQuantity = ticketPurchaseQuantity
-                                    , eventTicketOrderAmountCents = orderAmountCents
-                                    , eventTicketOrderCurrency = eventTicketTierCurrency tier
-                                    , eventTicketOrderStatus = "paid"
-                                    , eventTicketOrderMetadata = Nothing
-                                    , eventTicketOrderPurchasedAt = now
-                                    , eventTicketOrderStripePaymentIntentId = Nothing
-                                    , eventTicketOrderPromoCodeId = Nothing
-                                    , eventTicketOrderOriginalAmountCents = Nothing
-                                    , eventTicketOrderPaymentMethod = Nothing
-                                    , eventTicketOrderCreatedAt = now
-                                    , eventTicketOrderUpdatedAt = now
-                                    }
-                        orderKey <- insert orderRecord
-                        tickets <- replicateM ticketPurchaseQuantity $ do
-                            ticketCodeValue <- generateUniqueTicketCode
-                            ticketKey <-
-                                insert
-                                    EventTicket
-                                        { eventTicketEventId = eventKey
-                                        , eventTicketTierRefId = tierKey
-                                        , eventTicketOrderRefId = orderKey
-                                        , eventTicketHolderName = buyerName
-                                        , eventTicketHolderEmail = buyerEmail
-                                        , eventTicketCode = ticketCodeValue
-                                        , eventTicketStatus = "issued"
-                                        , eventTicketCheckedInAt = Nothing
-                                        , eventTicketCurrentHolderPartyId = buyerParty
-                                        , eventTicketCurrentHolderEmail = buyerEmail
-                                        , eventTicketCurrentHolderName = buyerName
-                                        , eventTicketOriginalHolderPartyId = buyerParty
-                                        , eventTicketTransferHistory = Nothing
-                                        , eventTicketCreatedAt = now
-                                        , eventTicketUpdatedAt = now
-                                        }
-                            getJustEntity ticketKey
-                        pure (ticketOrderEntityToDTO (Entity orderKey orderRecord) tickets)
+                        lockedEvents <-
+                            rawSql
+                                "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                                [toPersistValue eventKey]
+                        when (null (lockedEvents :: [Entity SocialEvent])) $
+                            fail "Event not found while reserving tickets"
+                        soldAcross <- selectList [EventTicketTierEventId ==. eventKey] []
+                        let soldCount =
+                                sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
+                            capacityAvailable =
+                                maybe
+                                    True
+                                    (\cap -> soldCount + ticketPurchaseQuantity <= cap)
+                                    (socialEventCapacity eventVal)
+                        if not capacityAvailable
+                            then pure Nothing
+                            else do
+                                reservedCount <-
+                                    updateWhereCount
+                                        [ EventTicketTierId ==. tierKey
+                                        , EventTicketTierIsActive ==. True
+                                        , EventTicketTierQuantitySold
+                                            <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
+                                        ]
+                                        [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
+                                        , EventTicketTierUpdatedAt =. now
+                                        ]
+                                if reservedCount == 0
+                                    then pure Nothing
+                                    else do
+                                        orderKey <- insert orderRecord
+                                        codes <-
+                                            issueMissingTicketsForOrder now orderKey orderRecord
+                                        tickets <-
+                                            selectList
+                                                [EventTicketOrderRefId ==. orderKey]
+                                                [Asc EventTicketId]
+                                        pure . Just $
+                                            ( ticketOrderEntityToDTO
+                                                (Entity orderKey orderRecord)
+                                                tickets
+                                            , orderRecord
+                                            , codes
+                                            )
                     )
                     envPool
-
+        (orderDto, orderRecord, ticketCodes) <-
+            maybe
+                (throwError err409{errBody = "Not enough tickets available"})
+                pure
+                createdOrder
+        sendTicketConfirmationForOrder orderRecord ticketCodes
         pure orderDto
 
     updateTicketOrderStatus :: T.Text -> T.Text -> TicketOrderStatusUpdateDTO -> AppM TicketOrderDTO
@@ -2626,15 +3118,39 @@ socialEventsServer user =
             _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
             pure ()
 
+        when (oldStatus == "pending" && newStatus == "cancelled") $
+            forM_ (eventTicketOrderStripePaymentIntentId order) $ \paymentIntentId -> do
+                stripeCfg <-
+                    case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+                        (Just secretKey, Just webhookSecret) ->
+                            pure
+                                Stripe.StripeConfig
+                                    { Stripe.stripeSecretKey = secretKey
+                                    , Stripe.stripeWebhookSecret = webhookSecret
+                                    , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                                    }
+                        _ ->
+                            throwError
+                                err500{errBody = "Stripe is not configured; order remains pending"}
+                cancelResult <-
+                    liftIO $
+                        runStripeRequestSafely $
+                            Stripe.cancelPaymentIntent stripeCfg paymentIntentId
+                case cancelResult of
+                    Left _ ->
+                        throwError
+                            err502
+                                { errBody =
+                                    "Could not cancel Stripe payment; order remains pending"
+                                }
+                    Right _ -> pure ()
+
         mTier <- liftIO $ runSqlPool (get (eventTicketOrderTierId order)) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         let qty = eventTicketOrderQuantity order
             tierAvailable = ticketTierAvailability tier
             capacity = socialEventCapacity eventVal
-            soldAdjust
-                | oldStatus == "paid" && newStatus /= "paid" = negate qty
-                | oldStatus /= "paid" && newStatus == "paid" = qty
-                | otherwise = 0
+            soldAdjust = ticketOrderInventoryAdjustment qty oldStatus newStatus
         when (soldAdjust > 0 && soldAdjust > tierAvailable) $ throwError err409{errBody = "Not enough ticket inventory to mark as paid"}
         when (soldAdjust > 0) $ do
             soldAcross <-
@@ -2654,39 +3170,59 @@ socialEventsServer user =
                 "cancelled" -> "cancelled"
                 "refunded" -> "refunded"
                 _ -> "issued"
-        orderDto <-
+        (statusChanged, orderDto) <-
             liftIO $
                 runSqlPool
                     ( do
-                        when (soldAdjust /= 0) $
-                            update
-                                (eventTicketOrderTierId order)
-                                [ EventTicketTierQuantitySold +=. soldAdjust
-                                , EventTicketTierUpdatedAt =. now
+                        changedCount <-
+                            updateWhereCount
+                                [ EventTicketOrderId ==. orderKey
+                                , EventTicketOrderStatus ==. eventTicketOrderStatus order
                                 ]
-                        update
-                            orderKey
-                            [ EventTicketOrderStatus =. newStatus
-                            , EventTicketOrderUpdatedAt =. now
-                            ]
-                        let ticketUpdates =
-                                [ EventTicketStatus =. nextTicketStatus
-                                , EventTicketUpdatedAt =. now
+                                [ EventTicketOrderStatus =. newStatus
+                                , EventTicketOrderUpdatedAt =. now
                                 ]
-                                    ++ if nextTicketStatus == "issued"
-                                        then [EventTicketCheckedInAt =. Nothing]
-                                        else []
-                        updateWhere [EventTicketOrderRefId ==. orderKey] ticketUpdates
+                        let changed = changedCount > 0
+                        when changed $ do
+                            when (soldAdjust /= 0) $
+                                update
+                                    (eventTicketOrderTierId order)
+                                    [ EventTicketTierQuantitySold +=. soldAdjust
+                                    , EventTicketTierUpdatedAt =. now
+                                    ]
+                            when (oldStatus == "pending" && newStatus == "paid") $ do
+                                _ <- issueMissingTicketsForOrder now orderKey order
+                                pure ()
+                            let ticketUpdates =
+                                    [ EventTicketStatus =. nextTicketStatus
+                                    , EventTicketUpdatedAt =. now
+                                    ]
+                                        ++ if nextTicketStatus == "issued"
+                                            then [EventTicketCheckedInAt =. Nothing]
+                                            else []
+                            updateWhere [EventTicketOrderRefId ==. orderKey] ticketUpdates
+                            when
+                                ( oldStatus == "pending"
+                                    && newStatus `elem` ["cancelled", "refunded"]
+                                )
+                                $ forM_ (eventTicketOrderPromoCodeId order)
+                                $ \promoKey ->
+                                    update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
                         mOrderEnt <- getEntity orderKey
                         case mOrderEnt of
-                            Nothing -> pure Nothing
+                            Nothing -> pure (changed, Nothing)
                             Just orderEnt -> do
                                 tickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
-                                pure (Just (ticketOrderEntityToDTO orderEnt tickets))
+                                pure (changed, Just (ticketOrderEntityToDTO orderEnt tickets))
                     )
                     envPool
 
-        maybe (throwError err500{errBody = "Could not update ticket order"}) pure orderDto
+        case orderDto of
+            Nothing -> throwError err500{errBody = "Could not update ticket order"}
+            Just dto
+                | statusChanged -> pure dto
+                | ticketOrderStatusValue dto == newStatus -> pure dto
+                | otherwise -> throwError err409{errBody = "Ticket order status changed; refresh and retry"}
 
     listTickets :: T.Text -> Maybe T.Text -> Maybe T.Text -> AppM [TicketDTO]
     listTickets eventIdStr mOrderId mStatus = do
@@ -2798,10 +3334,10 @@ socialEventsServer user =
         let code = T.toUpper (T.strip promoCodeCode)
         when (T.null code) $ throwError err400{errBody = "Promo code is required"}
         when (promoCodeDiscountValue < 0) $ throwError err400{errBody = "Discount value must be >= 0"}
-        when (promoCodeDiscountType `notElem` ["percentage", "fixed"]) $
+        when (promoCodeDiscountType `notElem` ["percentage", "fixed", "fixed_amount"]) $
             throwError err400{errBody = "Discount type must be 'percentage' or 'fixed'"}
-        when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 100) $
-            throwError err400{errBody = "Percentage discount cannot exceed 100"}
+        when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 10000) $
+            throwError err400{errBody = "Percentage discount cannot exceed 100% (10000 basis points)"}
         let tierIdsJson = encodePromoCodeTierIds promoCodeTierIds
         mInserted <-
             liftIO $
@@ -2845,10 +3381,10 @@ socialEventsServer user =
         when (SM.promoCodeEventId codeRow /= Just eventKey) $
             throwError err400{errBody = "Promo code does not belong to this event"}
         when (promoCodeDiscountValue < 0) $ throwError err400{errBody = "Discount value must be >= 0"}
-        when (promoCodeDiscountType `notElem` ["percentage", "fixed"]) $
+        when (promoCodeDiscountType `notElem` ["percentage", "fixed", "fixed_amount"]) $
             throwError err400{errBody = "Discount type must be 'percentage' or 'fixed'"}
-        when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 100) $
-            throwError err400{errBody = "Percentage discount cannot exceed 100"}
+        when (promoCodeDiscountType == "percentage" && promoCodeDiscountValue > 10000) $
+            throwError err400{errBody = "Percentage discount cannot exceed 100% (10000 basis points)"}
         let tierIdsJson = encodePromoCodeTierIds promoCodeTierIds
         liftIO $
             runSqlPool
@@ -2875,13 +3411,16 @@ socialEventsServer user =
             mUpdated
 
     validatePromoCode :: T.Text -> T.Text -> Maybe T.Text -> Maybe T.Text -> AppM PromoCodeDTO
-    validatePromoCode eventIdStr codeStr mTierId mAmountStr = do
+    validatePromoCode eventIdStr codeStr mQueryCode mTierId = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseKeyOr400 "event" eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         _ <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let cleanCode = T.toUpper (T.strip codeStr)
+        forM_ (cleanMaybeText mQueryCode) $ \queryCode ->
+            when (T.toUpper queryCode /= cleanCode) $
+                throwError err400{errBody = "Promo code query must match the promo code path"}
         mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
         codeEnt <- maybe (throwError err404{errBody = "Promo code not found"}) pure mCodeEnt
         let code = entityVal codeEnt
@@ -2900,10 +3439,6 @@ socialEventsServer user =
                 (SM.promoCodeMaxRedemptions code)
         eitherPromoCodeBadRequest $
             validatePromoCodeTierEligibility (SM.promoCodeTierIds code) mTierId
-        eitherPromoCodeBadRequest $
-            validatePromoCodeMinimumPurchaseParam
-                (SM.promoCodeMinPurchaseAmountCents code)
-                mAmountStr
         pure (promoCodeEntityToDTO codeEnt)
 
     -- Stripe Payment
@@ -2918,6 +3453,8 @@ socialEventsServer user =
         let eventKey = eventTicketTierEventId tier
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        either throwError pure $
+            validateTicketPurchaseEventEligibility (socialEventMetadata eventVal)
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $
             throwError err400{errBody = "Ticket sales are closed for this tier"}
@@ -2943,255 +3480,437 @@ socialEventsServer user =
                 throwError
                 pure
                 (validateTicketPurchaseBuyerEmail ticketPurchaseBuyerEmail)
-        let baseAmountCents = ticketPurchaseQuantity * eventTicketTierPriceCents tier
-        (finalAmountCents, mPromoCodeKey, _mPromoCodeEnt) <- case tpwpPromoCode of
-            Nothing -> pure (baseAmountCents, Nothing, Nothing)
-            Just promoCodeStr -> do
-                let cleanCode = T.toUpper (T.strip promoCodeStr)
-                mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
-                codeEnt <- maybe (throwError err404{errBody = "Promo code not found"}) pure mCodeEnt
-                let code = entityVal codeEnt
-                when (SM.promoCodeEventId code /= Just eventKey) $
-                    throwError err400{errBody = "Promo code does not belong to this event"}
-                when (not (SM.promoCodeIsActive code)) $
-                    throwError err400{errBody = "Promo code is not active"}
-                eitherPromoCodeBadRequest $
-                    validatePromoCodeDateWindow
-                        now
-                        (SM.promoCodeValidFrom code)
-                        (SM.promoCodeValidUntil code)
-                eitherPromoCodeBadRequest $
-                    validatePromoCodeRedemptionLimit
-                        (SM.promoCodeCurrentRedemptions code)
-                        (SM.promoCodeMaxRedemptions code)
-                eitherPromoCodeBadRequest $
-                    validatePromoCodeTierEligibility
-                        (SM.promoCodeTierIds code)
-                        (Just ticketPurchaseTierId)
-                eitherPromoCodeBadRequest $
-                    validatePromoCodeMinimumPurchaseCents
-                        (SM.promoCodeMinPurchaseAmountCents code)
-                        baseAmountCents
-                discountAmount <-
-                    eitherPromoCodeBadRequest $
-                        promoCodeDiscountAmountEither
-                            baseAmountCents
-                            (SM.promoCodeDiscountType code)
-                            (SM.promoCodeDiscountValue code)
-                let discountedAmount = max 0 (baseAmountCents - discountAmount)
-                pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
-        orderDto <-
-            liftIO $
-                runSqlPool
-                    ( do
-                        mTierForUpdate <- getEntity tierKey
-                        tierForUpdate <- maybe (fail "Ticket tier not found") pure mTierForUpdate
-                        let tierVal = entityVal tierForUpdate
-                            availableInTier = ticketTierAvailability tierVal
-                        when (ticketPurchaseQuantity > availableInTier) $
-                            fail "Not enough tickets available"
-                        soldAcross <- selectList [EventTicketTierEventId ==. eventKey] []
-                        let soldCount = sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-                        case socialEventCapacity eventVal of
-                            Nothing -> pure ()
-                            Just cap ->
-                                when (soldCount + ticketPurchaseQuantity > cap) $
-                                    fail "Event capacity reached"
-                        update
-                            tierKey
-                            [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                            , EventTicketTierUpdatedAt =. now
-                            ]
-                        let orderRecord =
-                                EventTicketOrder
-                                    { eventTicketOrderEventId = eventKey
-                                    , eventTicketOrderTierId = tierKey
-                                    , eventTicketOrderBuyerPartyId = buyerParty
-                                    , eventTicketOrderBuyerName = buyerName
-                                    , eventTicketOrderBuyerEmail = buyerEmail
-                                    , eventTicketOrderQuantity = ticketPurchaseQuantity
-                                    , eventTicketOrderAmountCents = finalAmountCents
-                                    , eventTicketOrderCurrency = eventTicketTierCurrency tier
-                                    , eventTicketOrderStatus = "pending"
-                                    , eventTicketOrderMetadata = Nothing
-                                    , eventTicketOrderPurchasedAt = now
-                                    , eventTicketOrderStripePaymentIntentId = Nothing
-                                    , eventTicketOrderPromoCodeId = mPromoCodeKey
-                                    , eventTicketOrderOriginalAmountCents = if isJust mPromoCodeKey then Just baseAmountCents else Nothing
-                                    , eventTicketOrderPaymentMethod = Just "stripe"
-                                    , eventTicketOrderCreatedAt = now
-                                    , eventTicketOrderUpdatedAt = now
-                                    }
-                        orderKey <- insert orderRecord
-                        case mPromoCodeKey of
-                            Nothing -> pure ()
-                            Just promoKey -> do
-                                update promoKey [PromoCodeCurrentRedemptions +=. 1]
-                                pure ()
-                        pure (orderKey, orderRecord)
+        mExistingCheckout <- case tpwpIdempotencyKey of
+            Nothing -> pure Nothing
+            Just idempotencyKey ->
+                liftIO $
+                    runSqlPool
+                        ( getBy
+                            ( UniqueEventTicketCheckout
+                                buyerParty
+                                (Just idempotencyKey)
+                            )
+                        )
+                        envPool
+        forM_ mExistingCheckout $ \(Entity _ existingOrder) -> do
+            let storedPromoCode =
+                    decodeTicketCheckoutMetadata (eventTicketOrderMetadata existingOrder)
+                        >>= snd
+                requestMatches =
+                    eventTicketOrderEventId existingOrder == eventKey
+                        && eventTicketOrderTierId existingOrder == tierKey
+                        && eventTicketOrderQuantity existingOrder == ticketPurchaseQuantity
+                        && eventTicketOrderBuyerPartyId existingOrder == buyerParty
+                        && eventTicketOrderBuyerName existingOrder == buyerName
+                        && eventTicketOrderBuyerEmail existingOrder == buyerEmail
+                        && eventTicketOrderCheckoutIdempotencyKey existingOrder
+                            == tpwpIdempotencyKey
+                        && storedPromoCode == tpwpPromoCode
+            unless requestMatches $
+                throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+        baseAmountCents <-
+            either throwError pure $
+                validateTicketCheckoutAmount
+                    ticketPurchaseQuantity
+                    (eventTicketTierPriceCents tier)
+        (finalAmountCents, mPromoCodeKey, mPromoCodeEnt) <- case mExistingCheckout of
+            Just (Entity _ existingOrder) ->
+                pure
+                    ( eventTicketOrderAmountCents existingOrder
+                    , eventTicketOrderPromoCodeId existingOrder
+                    , Nothing
                     )
-                    envPool
-        let (orderKey, orderRecord) = orderDto
-        case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-            (Just secretKey, Just webhookSecret) -> do
-                let stripeCfg =
-                        Stripe.StripeConfig
-                            { Stripe.stripeSecretKey = secretKey
-                            , Stripe.stripeWebhookSecret = webhookSecret
-                            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-                            }
-                    description = "Tickets for event " <> renderKeyText eventKey
-                    metadata =
-                        Aeson.object
-                            [ "order_id" Aeson..= renderKeyText orderKey
-                            , "event_id" Aeson..= renderKeyText eventKey
-                            ]
-                    metadataJson = Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode metadata)))
-                    currency = eventTicketOrderCurrency orderRecord
-                    -- Roll the order back to a state where the caller can retry without
-                    -- double-selling tickets or double-counting promo redemptions.
-                    rollbackOrder errText = do
-                        liftIO $
-                            runSqlPool
-                                ( do
-                                    update orderKey [EventTicketOrderStatus =. "cancelled"]
-                                    update tierKey [EventTicketTierQuantitySold +=. (negate ticketPurchaseQuantity)]
-                                    case mPromoCodeKey of
-                                        Nothing -> pure ()
-                                        Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
-                                )
-                                envPool
-                        throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> errText))}
-                    persistPaymentIntentId piId =
-                        liftIO $
-                            runSqlPool
-                                (update orderKey [EventTicketOrderStripePaymentIntentId =. Just piId])
-                                envPool
-                    createLegacyPaymentIntent = do
-                        result <-
-                            liftIO $
-                                Stripe.createPaymentIntent
-                                    stripeCfg
-                                    finalAmountCents
-                                    currency
-                                    description
-                                    metadataJson
-                        either rollbackOrder handleLegacyPaymentIntent result
-                    handleLegacyPaymentIntent paymentIntent = do
-                        (piId, clientSecret) <-
-                            eitherStripeServerError $
-                                parseStripePaymentIntentResponse paymentIntent
-                        persistPaymentIntentId piId
-                        pure
-                            StripePaymentIntentDTO
-                                { spiClientSecret = clientSecret
-                                , spiOrderId = renderKeyText orderKey
-                                , spiAmountCents = finalAmountCents
-                                , spiCurrency = currency
-                                , spiPaymentSheet = Nothing
-                                }
-                    createMobilePaymentSheetIntent mobileSdkVer = do
-                        publishableKey <-
-                            maybe
-                                (rollbackOrder "Stripe publishable key not configured")
-                                pure
-                                (stripePublishableKey envConfig)
-                        -- Order: customer -> ephemeral key -> PI. Failing fast on
-                        -- ephemeral key creation avoids orphaning a PI we cannot return
-                        -- to the mobile client.
-                        buyerKey <- parseKeyOr400 "buyer party" currentPartyId
-                        customerId <- resolveStripeCustomerForBuyer stripeCfg buyerKey buyerEmail buyerName
-                        ephResult <- liftIO $ Stripe.createEphemeralKey stripeCfg customerId mobileSdkVer
-                        ephemeralKeySecret <-
-                            either
-                                (\err -> rollbackOrder ("ephemeral key: " <> err))
-                                (eitherStripeServerError . parseStripeEphemeralKeySecret)
-                                ephResult
-                        piResult <-
-                            liftIO $
-                                Stripe.createPaymentIntentForCustomer
-                                    stripeCfg
-                                    customerId
-                                    finalAmountCents
-                                    currency
-                                    description
-                                    metadataJson
-                        either
-                            rollbackOrder
-                            (handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey)
-                            piResult
-                    handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey paymentIntent = do
-                        (piId, clientSecret) <-
-                            eitherStripeServerError $
-                                parseStripePaymentIntentResponse paymentIntent
-                        persistPaymentIntentId piId
-                        pure
-                            StripePaymentIntentDTO
-                                { spiClientSecret = clientSecret
-                                , spiOrderId = renderKeyText orderKey
-                                , spiAmountCents = finalAmountCents
-                                , spiCurrency = currency
-                                , spiPaymentSheet =
-                                    Just
-                                        PaymentSheetParamsDTO
-                                            { psCustomerId = customerId
-                                            , psEphemeralKeySecret = ephemeralKeySecret
-                                            , psPaymentIntentClientSecret = clientSecret
-                                            , psPublishableKey = publishableKey
+            Nothing -> case tpwpPromoCode of
+                Nothing -> pure (baseAmountCents, Nothing, Nothing)
+                Just promoCodeStr -> do
+                    let cleanCode = T.toUpper (T.strip promoCodeStr)
+                    mCodeEnt <- liftIO $ runSqlPool (getBy (UniquePromoCode cleanCode)) envPool
+                    codeEnt <- maybe (throwError err404{errBody = "Promo code not found"}) pure mCodeEnt
+                    let code = entityVal codeEnt
+                    when (SM.promoCodeEventId code /= Just eventKey) $
+                        throwError err400{errBody = "Promo code does not belong to this event"}
+                    when (not (SM.promoCodeIsActive code)) $
+                        throwError err400{errBody = "Promo code is not active"}
+                    eitherPromoCodeBadRequest $
+                        validatePromoCodeDateWindow
+                            now
+                            (SM.promoCodeValidFrom code)
+                            (SM.promoCodeValidUntil code)
+                    eitherPromoCodeBadRequest $
+                        validatePromoCodeRedemptionLimit
+                            (SM.promoCodeCurrentRedemptions code)
+                            (SM.promoCodeMaxRedemptions code)
+                    eitherPromoCodeBadRequest $
+                        validatePromoCodeTierEligibility
+                            (SM.promoCodeTierIds code)
+                            (Just ticketPurchaseTierId)
+                    eitherPromoCodeBadRequest $
+                        validatePromoCodeMinimumPurchaseCents
+                            (SM.promoCodeMinPurchaseAmountCents code)
+                            baseAmountCents
+                    when
+                        ( SM.promoCodeDiscountType code `elem` ["fixed_amount", "fixed"]
+                            && normalizeCurrency (SM.promoCodeCurrency code)
+                                /= normalizeCurrency (eventTicketTierCurrency tier)
+                        )
+                        $ throwError err400{errBody = "Fixed promo code currency does not match the ticket tier"}
+                    discountAmount <-
+                        eitherPromoCodeBadRequest $
+                            promoCodeDiscountAmountEither
+                                baseAmountCents
+                                (SM.promoCodeDiscountType code)
+                                (SM.promoCodeDiscountValue code)
+                    let discountedAmount = max 0 (baseAmountCents - discountAmount)
+                    pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
+        createdOrder <- case mExistingCheckout of
+            Just (Entity existingOrderKey existingOrder) -> do
+                existingTickets <-
+                    liftIO $
+                        runSqlPool
+                            (selectList [EventTicketOrderRefId ==. existingOrderKey] [Asc EventTicketId])
+                            envPool
+                pure . Just $
+                    ( existingOrderKey
+                    , existingOrder
+                    , map (eventTicketCode . entityVal) existingTickets
+                    , True
+                    )
+            Nothing -> do
+                let createReservedOrder = do
+                        promoClaimed <- case mPromoCodeEnt of
+                            Nothing -> pure True
+                            Just (Entity promoKey promo) -> do
+                                let redemptionFilters =
+                                        [ PromoCodeId ==. promoKey
+                                        , PromoCodeIsActive ==. True
+                                        ]
+                                            ++ maybe
+                                                []
+                                                (\limit -> [PromoCodeCurrentRedemptions <. limit])
+                                                (SM.promoCodeMaxRedemptions promo)
+                                (> 0)
+                                    <$> updateWhereCount
+                                        redemptionFilters
+                                        [PromoCodeCurrentRedemptions +=. 1]
+                        if not promoClaimed
+                            then do
+                                update
+                                    tierKey
+                                    [ EventTicketTierQuantitySold +=. negate ticketPurchaseQuantity
+                                    , EventTicketTierUpdatedAt =. now
+                                    ]
+                                pure Nothing
+                            else do
+                                let zeroTotal = finalAmountCents == 0
+                                    orderRecord =
+                                        EventTicketOrder
+                                            { eventTicketOrderEventId = eventKey
+                                            , eventTicketOrderTierId = tierKey
+                                            , eventTicketOrderBuyerPartyId = buyerParty
+                                            , eventTicketOrderBuyerName = buyerName
+                                            , eventTicketOrderBuyerEmail = buyerEmail
+                                            , eventTicketOrderQuantity = ticketPurchaseQuantity
+                                            , eventTicketOrderAmountCents = finalAmountCents
+                                            , eventTicketOrderCurrency = eventTicketTierCurrency tier
+                                            , eventTicketOrderStatus = if zeroTotal then "paid" else "pending"
+                                            , eventTicketOrderMetadata =
+                                                encodeTicketCheckoutMetadata
+                                                    tpwpIdempotencyKey
+                                                    tpwpPromoCode
+                                            , eventTicketOrderCheckoutIdempotencyKey = tpwpIdempotencyKey
+                                            , eventTicketOrderPurchasedAt = now
+                                            , eventTicketOrderStripePaymentIntentId = Nothing
+                                            , eventTicketOrderPromoCodeId = mPromoCodeKey
+                                            , eventTicketOrderOriginalAmountCents =
+                                                if isJust mPromoCodeKey then Just baseAmountCents else Nothing
+                                            , eventTicketOrderPaymentMethod =
+                                                Just
+                                                    ( if zeroTotal
+                                                        then if isJust mPromoCodeKey then "promo" else "free"
+                                                        else "stripe"
+                                                    )
+                                            , eventTicketOrderCreatedAt = now
+                                            , eventTicketOrderUpdatedAt = now
                                             }
-                                }
-                maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
-            _ -> throwError err500{errBody = "Stripe is not configured"}
-
-    stripeWebhook :: Aeson.Value -> Maybe T.Text -> AppM NoContent
-    stripeWebhook payload mSignature = do
-        Env{..} <- ask
-        now <- liftIO getCurrentTime
-        case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
-            (Just secretKey, Just webhookSecret) -> do
-                let stripeCfg =
-                        Stripe.StripeConfig
-                            { Stripe.stripeSecretKey = secretKey
-                            , Stripe.stripeWebhookSecret = webhookSecret
-                            , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
-                            }
-                signature <- maybe (throwError err400{errBody = "Missing Stripe-Signature header"}) pure mSignature
-                let rawBody = BL.toStrict (Aeson.encode payload)
-                when (not (Stripe.verifyWebhookSignature stripeCfg signature rawBody)) $
-                    throwError err400{errBody = "Invalid webhook signature"}
-                (eventId, eventType) <-
-                    eitherStripeWebhookError $
-                        parseStripeWebhookEventEnvelope payload
-                mExisting <- liftIO $ runSqlPool (getBy (UniqueStripeWebhookEvent eventId)) envPool
-                case mExisting of
-                    Just _ -> pure NoContent
-                    Nothing -> do
-                        liftIO $
-                            runSqlPool
-                                ( insert_
-                                    StripeWebhookEvent
-                                        { stripeWebhookEventStripeEventId = eventId
-                                        , stripeWebhookEventEventType = eventType
-                                        , stripeWebhookEventPayload = TE.decodeUtf8 (BL.toStrict (Aeson.encode payload))
-                                        , stripeWebhookEventProcessedAt = now
+                                orderKey <- insert orderRecord
+                                issuedCodes <-
+                                    if zeroTotal
+                                        then issueMissingTicketsForOrder now orderKey orderRecord
+                                        else pure []
+                                pure (Just (orderKey, orderRecord, issuedCodes, False))
+                    createOrder =
+                        runSqlPool
+                            ( do
+                                lockedEvents <-
+                                    rawSql
+                                        "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                                        [toPersistValue eventKey]
+                                when (null (lockedEvents :: [Entity SocialEvent])) $
+                                    fail "Event not found while reserving tickets"
+                                soldAcross <-
+                                    selectList [EventTicketTierEventId ==. eventKey] []
+                                let soldCount =
+                                        sum
+                                            (map (eventTicketTierQuantitySold . entityVal) soldAcross)
+                                    capacityAvailable =
+                                        maybe
+                                            True
+                                            (\cap -> soldCount + ticketPurchaseQuantity <= cap)
+                                            (socialEventCapacity eventVal)
+                                if not capacityAvailable
+                                    then pure Nothing
+                                    else do
+                                        reservedCount <-
+                                            updateWhereCount
+                                                [ EventTicketTierId ==. tierKey
+                                                , EventTicketTierIsActive ==. True
+                                                , EventTicketTierQuantitySold
+                                                    <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
+                                                ]
+                                                [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
+                                                , EventTicketTierUpdatedAt =. now
+                                                ]
+                                        if reservedCount == 0
+                                            then pure Nothing
+                                            else createReservedOrder
+                            )
+                            envPool
+                createResult <- liftIO (tryAny createOrder)
+                case createResult of
+                    Right result -> pure result
+                    Left createErr ->
+                        case fromException createErr :: Maybe SomeAsyncException of
+                            Just _ -> liftIO (throwIO createErr)
+                            Nothing
+                                | isEventTicketCheckoutConflict createErr ->
+                                    case tpwpIdempotencyKey of
+                                        Nothing -> liftIO (throwIO createErr)
+                                        Just idempotencyKey -> do
+                                            concurrentWinner <-
+                                                liftIO $
+                                                    runSqlPool
+                                                        ( getBy
+                                                            ( UniqueEventTicketCheckout
+                                                                buyerParty
+                                                                (Just idempotencyKey)
+                                                            )
+                                                        )
+                                                        envPool
+                                            case concurrentWinner of
+                                                Nothing -> liftIO (throwIO createErr)
+                                                Just (Entity winnerKey winnerOrder) -> do
+                                                    winnerTickets <-
+                                                        liftIO $
+                                                            runSqlPool
+                                                                ( selectList
+                                                                    [EventTicketOrderRefId ==. winnerKey]
+                                                                    [Asc EventTicketId]
+                                                                )
+                                                                envPool
+                                                    pure . Just $
+                                                        ( winnerKey
+                                                        , winnerOrder
+                                                        , map (eventTicketCode . entityVal) winnerTickets
+                                                        , True
+                                                        )
+                                | otherwise -> liftIO (throwIO createErr)
+        (orderKey, orderRecord, issuedCodes, reusedCheckout) <-
+            maybe
+                (throwError err409{errBody = "Tickets or promo code are no longer available"})
+                pure
+                createdOrder
+        let
+            currency = eventTicketOrderCurrency orderRecord
+            -- Roll the order back to a state where the caller can retry without
+            -- double-selling tickets or double-counting promo redemptions.
+            rollbackOrder errText = do
+                unless reusedCheckout $
+                    liftIO $
+                        runSqlPool
+                            ( do
+                                update
+                                    orderKey
+                                    [ EventTicketOrderStatus =. "cancelled"
+                                    , EventTicketOrderUpdatedAt =. now
+                                    ]
+                                update tierKey [EventTicketTierQuantitySold +=. (negate ticketPurchaseQuantity)]
+                                case mPromoCodeKey of
+                                    Nothing -> pure ()
+                                    Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+                            )
+                            envPool
+                throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> errText))}
+            storedPromoCode =
+                decodeTicketCheckoutMetadata (eventTicketOrderMetadata orderRecord)
+                    >>= snd
+            canonicalRequestMatches =
+                eventTicketOrderEventId orderRecord == eventKey
+                    && eventTicketOrderTierId orderRecord == tierKey
+                    && eventTicketOrderQuantity orderRecord == ticketPurchaseQuantity
+                    && eventTicketOrderBuyerPartyId orderRecord == buyerParty
+                    && eventTicketOrderBuyerName orderRecord == buyerName
+                    && eventTicketOrderBuyerEmail orderRecord == buyerEmail
+                    && eventTicketOrderCheckoutIdempotencyKey orderRecord
+                        == tpwpIdempotencyKey
+                    && storedPromoCode == tpwpPromoCode
+        when (reusedCheckout && not canonicalRequestMatches) $
+            throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+        when
+            ( reusedCheckout
+                && eventTicketOrderStatus orderRecord `elem` ["cancelled", "refunded"]
+            )
+            $ throwError err409{errBody = "Ticket checkout is already closed; start a new checkout"}
+        when
+            ( reusedCheckout
+                && eventTicketOrderStatus orderRecord == "paid"
+                && finalAmountCents > 0
+                && isNothing (eventTicketOrderStripePaymentIntentId orderRecord)
+            )
+            $ throwError err409{errBody = "Ticket checkout is already paid"}
+        if finalAmountCents == 0
+            then do
+                unless reusedCheckout $
+                    sendTicketConfirmationForOrder orderRecord issuedCodes
+                pure
+                    StripePaymentIntentDTO
+                        { spiClientSecret = ""
+                        , spiOrderId = renderKeyText orderKey
+                        , spiAmountCents = 0
+                        , spiCurrency = currency
+                        , spiPaymentSheet = Nothing
+                        }
+            else
+                if reusedCheckout && isJust (eventTicketOrderStripePaymentIntentId orderRecord)
+                    then reuseStripeTicketCheckout tpwpMobileSdkStripeVersion orderKey orderRecord
+                    else do
+                        (secretKey, webhookSecret) <-
+                            case (stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
+                                (Just configuredSecretKey, Just configuredWebhookSecret) ->
+                                    pure (configuredSecretKey, configuredWebhookSecret)
+                                _ -> rollbackOrder "Stripe is not configured"
+                        let stripeCfg =
+                                Stripe.StripeConfig
+                                    { Stripe.stripeSecretKey = secretKey
+                                    , Stripe.stripeWebhookSecret = webhookSecret
+                                    , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                                    }
+                            description = "Tickets for event " <> renderKeyText eventKey
+                            metadata =
+                                Aeson.object
+                                    [ "order_id" Aeson..= renderKeyText orderKey
+                                    , "event_id" Aeson..= renderKeyText eventKey
+                                    ]
+                            metadataJson = Just (TE.decodeUtf8 (BL.toStrict (Aeson.encode metadata)))
+                            stripeIdempotencyKey =
+                                (\key -> "ticket-order-" <> currentPartyId <> "-" <> key)
+                                    <$> tpwpIdempotencyKey
+                            persistPaymentIntentId piId =
+                                liftIO $
+                                    runSqlPool
+                                        (update orderKey [EventTicketOrderStripePaymentIntentId =. Just piId])
+                                        envPool
+                            createLegacyPaymentIntent = do
+                                result <-
+                                    liftIO $
+                                        runStripeRequestSafely $
+                                            case stripeIdempotencyKey of
+                                                Nothing ->
+                                                    Stripe.createPaymentIntent
+                                                        stripeCfg
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                                Just idempotencyKey ->
+                                                    Stripe.createPaymentIntentWithIdempotencyKey
+                                                        stripeCfg
+                                                        idempotencyKey
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                either rollbackOrder handleLegacyPaymentIntent result
+                            handleLegacyPaymentIntent paymentIntent = do
+                                (piId, clientSecret) <-
+                                    eitherStripeServerError $
+                                        parseStripePaymentIntentResponse paymentIntent
+                                persistPaymentIntentId piId
+                                pure
+                                    StripePaymentIntentDTO
+                                        { spiClientSecret = clientSecret
+                                        , spiOrderId = renderKeyText orderKey
+                                        , spiAmountCents = finalAmountCents
+                                        , spiCurrency = currency
+                                        , spiPaymentSheet = Nothing
                                         }
-                                )
-                                envPool
-                        case eventType of
-                            "payment_intent.succeeded" ->
-                                handleStripePaymentIntentSucceeded now payload
-                            "payment_intent.payment_failed" ->
-                                handleStripePaymentIntentFailed now payload
-                            "charge.refunded" -> pure NoContent
-                            "checkout.session.completed" ->
-                                handleStripeCheckoutSessionCompleted now payload
-                            "customer.subscription.updated" ->
-                                handleStripeSubscriptionUpdated now payload
-                            "customer.subscription.deleted" ->
-                                handleStripeSubscriptionDeleted now payload
-                            "invoice.paid" -> pure NoContent
-                            _ -> pure NoContent
-            _ -> throwError err500{errBody = "Stripe is not configured"}
+                            createMobilePaymentSheetIntent mobileSdkVer = do
+                                publishableKey <-
+                                    maybe
+                                        (rollbackOrder "Stripe publishable key not configured")
+                                        pure
+                                        (stripePublishableKey envConfig)
+                                -- Order: customer -> ephemeral key -> PI. Failing fast on
+                                -- ephemeral key creation avoids orphaning a PI we cannot return
+                                -- to the mobile client.
+                                buyerKey <- parseKeyOr400 "buyer party" currentPartyId
+                                customerId <-
+                                    resolveStripeCustomerForBuyer stripeCfg buyerKey buyerEmail buyerName
+                                        `catchError` const (rollbackOrder "customer setup failed")
+                                ephResult <-
+                                    liftIO $
+                                        runStripeRequestSafely $
+                                            Stripe.createEphemeralKey stripeCfg customerId mobileSdkVer
+                                ephemeralKeySecret <-
+                                    either
+                                        (\err -> rollbackOrder ("ephemeral key: " <> err))
+                                        (eitherStripeServerError . parseStripeEphemeralKeySecret)
+                                        ephResult
+                                piResult <-
+                                    liftIO $
+                                        runStripeRequestSafely $
+                                            case stripeIdempotencyKey of
+                                                Nothing ->
+                                                    Stripe.createPaymentIntentForCustomer
+                                                        stripeCfg
+                                                        customerId
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                                Just idempotencyKey ->
+                                                    Stripe.createPaymentIntentForCustomerWithIdempotencyKey
+                                                        stripeCfg
+                                                        idempotencyKey
+                                                        customerId
+                                                        finalAmountCents
+                                                        currency
+                                                        description
+                                                        metadataJson
+                                either
+                                    rollbackOrder
+                                    (handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey)
+                                    piResult
+                            handleMobilePaymentIntent customerId ephemeralKeySecret publishableKey paymentIntent = do
+                                (piId, clientSecret) <-
+                                    eitherStripeServerError $
+                                        parseStripePaymentIntentResponse paymentIntent
+                                persistPaymentIntentId piId
+                                pure
+                                    StripePaymentIntentDTO
+                                        { spiClientSecret = clientSecret
+                                        , spiOrderId = renderKeyText orderKey
+                                        , spiAmountCents = finalAmountCents
+                                        , spiCurrency = currency
+                                        , spiPaymentSheet =
+                                            Just
+                                                PaymentSheetParamsDTO
+                                                    { psCustomerId = customerId
+                                                    , psEphemeralKeySecret = ephemeralKeySecret
+                                                    , psPaymentIntentClientSecret = clientSecret
+                                                    , psPublishableKey = publishableKey
+                                                    }
+                                        }
+                        maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
 
     -- Refunds
     createRefundRequest :: T.Text -> T.Text -> RefundRequestDTO -> AppM RefundDTO
@@ -4435,6 +5154,41 @@ normalizeTicketOrderStatus mStatus =
         Just rawStatus ->
             fromMaybe (T.toLower rawStatus) (parseTicketOrderStatus rawStatus)
 
+{- | Both pending Stripe orders and paid orders reserve inventory. Closed
+orders consume none, so status retries naturally produce a zero delta.
+-}
+ticketOrderInventoryAdjustment :: Int -> T.Text -> T.Text -> Int
+ticketOrderInventoryAdjustment quantity oldStatus newStatus =
+    reservedQuantity newStatus - reservedQuantity oldStatus
+  where
+    reservedQuantity rawStatus =
+        case parseTicketOrderStatus rawStatus of
+            Just "pending" -> quantity
+            Just "paid" -> quantity
+            _ -> 0
+
+{- | Buyers can directly issue only tiers whose persisted price is exactly
+zero. Event managers retain manual paid issuance for box-office workflows.
+-}
+validateDirectTicketOrderPricing :: Bool -> Int -> Either ServerError ()
+validateDirectTicketOrderPricing isManager authoritativeTierPriceCents
+    | authoritativeTierPriceCents < 0 =
+        Left err500{errBody = "Stored ticket tier price is invalid"}
+    | not isManager && authoritativeTierPriceCents > 0 =
+        Left err403{errBody = "Paid ticket tiers must be purchased through Stripe"}
+    | otherwise = Right ()
+
+validateTicketPurchaseEventEligibility :: Maybe T.Text -> Either ServerError ()
+validateTicketPurchaseEventEligibility rawMetadata = do
+    metadata <-
+        either (Left . storedEventMetadataServerError) Right $
+            decodeStoredEventMetadata rawMetadata
+    when (emIsPublic metadata == Just False) $
+        Left err403{errBody = "Tickets are not available for private events"}
+    let eventStatusValue = fromMaybe "planning" (emStatus metadata)
+    unless (eventStatusValue `elem` ["announced", "on_sale", "live"]) $
+        Left err409{errBody = "Tickets are not on sale for this event"}
+
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =
     case mStatus >>= parseTicketStatus of
@@ -5463,15 +6217,28 @@ validatePromoCodeMinimumPurchaseCents mMinimumAmount amountCents =
         )
         mMinimumAmount
 
+validateTicketCheckoutAmount :: Int -> Int -> Either ServerError Int
+validateTicketCheckoutAmount quantity unitPriceCents
+    | quantity <= 0 = Left err400{errBody = "Quantity must be > 0"}
+    | unitPriceCents < 0 =
+        Left err500{errBody = "Stored ticket tier price is invalid"}
+    | total > 99999999 =
+        Left err400{errBody = "Ticket checkout amount exceeds Stripe's supported limit"}
+    | otherwise = Right (fromInteger total)
+  where
+    total = toInteger quantity * toInteger unitPriceCents
+
 promoCodeDiscountAmountEither :: Int -> T.Text -> Int -> Either T.Text Int
 promoCodeDiscountAmountEither baseAmountCents discountType discountValue
     | discountValue < 0 =
         Left "Promo code discount value is invalid"
     | discountType == "percentage" =
-        if discountValue > 100
+        if discountValue > 10000
             then Left "Promo code percentage discount is invalid"
-            else Right ((baseAmountCents * discountValue) `div` 100)
-    | discountType == "fixed" =
+            else
+                Right . fromInteger $
+                    (toInteger baseAmountCents * toInteger discountValue) `div` 10000
+    | discountType `elem` ["fixed_amount", "fixed"] =
         Right (min discountValue baseAmountCents)
     | otherwise =
         Left "Promo code discount type is invalid"
@@ -5889,7 +6656,7 @@ promoCodeEntityToDTO (Entity codeKey codeRow) =
         , promoCodeEventId = fmap renderKeyText (SM.promoCodeEventId codeRow)
         , promoCodeCode = SM.promoCodeCode codeRow
         , promoCodeDescription = SM.promoCodeDescription codeRow
-        , promoCodeDiscountType = SM.promoCodeDiscountType codeRow
+        , promoCodeDiscountType = normalizeStoredPromoCodeDiscountType (SM.promoCodeDiscountType codeRow)
         , promoCodeDiscountValue = SM.promoCodeDiscountValue codeRow
         , promoCodeCurrency = SM.promoCodeCurrency codeRow
         , promoCodeMaxRedemptions = SM.promoCodeMaxRedemptions codeRow
@@ -5902,6 +6669,10 @@ promoCodeEntityToDTO (Entity codeKey codeRow) =
         , promoCodeCreatedAt = Just (SM.promoCodeCreatedAt codeRow)
         , promoCodeUpdatedAt = Just (SM.promoCodeUpdatedAt codeRow)
         }
+
+normalizeStoredPromoCodeDiscountType :: T.Text -> T.Text
+normalizeStoredPromoCodeDiscountType "fixed_amount" = "fixed"
+normalizeStoredPromoCodeDiscountType discountType = discountType
 
 refundEntityToDTO :: Entity TicketRefundRequest -> RefundDTO
 refundEntityToDTO (Entity refundKey refundRow) =

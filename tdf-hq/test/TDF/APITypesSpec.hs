@@ -2582,6 +2582,31 @@ spec = do
                     SocialEvents.ticketPurchaseBuyerName payload `shouldBe` Just "Ada Lovelace"
                     SocialEvents.ticketPurchaseBuyerEmail payload `shouldBe` Just "ada@example.com"
 
+            case decodeTicketPurchaseWithPromo
+                ( BL8.concat
+                    [ "{\"ticketPurchaseTierId\":\"42\""
+                    , ",\"ticketPurchaseQuantity\":2"
+                    , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
+                    , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\""
+                    , ",\"ticketPurchasePromoCode\":null"
+                    , ",\"ticketPurchaseMobileSdkStripeVersion\":\"2025-04-30.basil\""
+                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\"}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected mobile Stripe purchase payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketPurchaseTierId (SocialEvents.tpwpPurchase payload)
+                        `shouldBe` "42"
+                    SocialEvents.ticketPurchaseQuantity (SocialEvents.tpwpPurchase payload)
+                        `shouldBe` 2
+                    SocialEvents.tpwpPromoCode payload `shouldBe` Nothing
+                    SocialEvents.tpwpMobileSdkStripeVersion payload
+                        `shouldBe` Just "2025-04-30.basil"
+                    SocialEvents.tpwpIdempotencyKey payload
+                        `shouldBe` Just "ticket-checkout-123"
+
             case decodeTicketOrderStatus "{\"ticketOrderStatus\":\"paid\"}" of
                 Left err ->
                     expectationFailure
@@ -3198,6 +3223,8 @@ spec = do
     decodeTicketTier = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
+    decodeTicketPurchaseWithPromo :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseWithPromoDTO
+    decodeTicketPurchaseWithPromo = eitherDecode
     ticketPurchaseJson :: Int -> BL8.ByteString
     ticketPurchaseJson quantity =
         BL8.pack ("{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":" <> show quantity <> "}")

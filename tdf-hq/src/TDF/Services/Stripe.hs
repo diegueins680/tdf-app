@@ -9,11 +9,19 @@ module TDF.Services.Stripe
   , createCustomer
   , createEphemeralKey
   , createPaymentIntent
+  , createPaymentIntentWithIdempotencyKey
   , createPaymentIntentForCustomer
+  , createPaymentIntentForCustomerWithIdempotencyKey
   , createPaymentIntentForTip
+  , buildPaymentIntentRequest
+  , buildRetrievePaymentIntentRequest
+  , retrievePaymentIntent
+  , cancelPaymentIntent
+  , buildCancelPaymentIntentRequest
   , createRefund
   , decodeStripeResponse
   , verifyWebhookSignature
+  , verifyWebhookSignatureAt
   ) where
 
 import           Control.Exception (bracket)
@@ -31,6 +39,10 @@ import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.Status (statusCode)
 import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
+import           Data.ByteArray (constEq)
+import           Data.Time (UTCTime)
+import           Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import           Text.Read (readMaybe)
 
 -- | Configuration for Stripe API.
 --
@@ -81,27 +93,49 @@ createPaymentIntent
   -> Text        -- ^ Description
   -> Maybe Text  -- ^ Optional metadata JSON string
   -> IO (Either Text Value)
-createPaymentIntent cfg amountCents currency description mMetadata =
+createPaymentIntent cfg =
+  createPaymentIntentRequest cfg Nothing
+
+-- | Create a PaymentIntent with a stable Stripe idempotency key. Callers must
+-- reuse the same key and request parameters when retrying an indeterminate POST.
+createPaymentIntentWithIdempotencyKey
+  :: StripeConfig
+  -> Text        -- ^ Stripe Idempotency-Key
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentWithIdempotencyKey cfg idempotencyKey amountCents currency description mMetadata =
+  case validateIdempotencyKey idempotencyKey of
+    Left validationError -> pure (Left validationError)
+    Right validKey ->
+      createPaymentIntentRequest
+        cfg
+        (Just validKey)
+        amountCents
+        currency
+        description
+        mMetadata
+
+createPaymentIntentRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata =
   withStripeManager $ \manager -> do
-    let url = "https://api.stripe.com/v1/payment_intents"
-        body = BS8.intercalate "&"
-          [ "amount=" <> BS8.pack (show amountCents)
-          , "currency=" <> TE.encodeUtf8 (T.toLower currency)
-          , "description=" <> urlEncode (TE.encodeUtf8 description)
-          , "automatic_payment_methods[enabled]=true"
-          ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
-
-    initialRequest <- parseRequest url
-    let request = initialRequest
-          { method = "POST"
-          , requestHeaders =
-              [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
-              , ("Content-Type", "application/x-www-form-urlencoded")
-              , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-              ]
-          , requestBody = RequestBodyBS body
-          }
-
+    request <-
+      buildPaymentIntentRequest
+        cfg
+        mIdempotencyKey
+        amountCents
+        currency
+        description
+        mMetadata
     response <- httpLbs request manager
     let status = statusCode (responseStatus response)
         bodyLBS = responseBody response
@@ -112,6 +146,102 @@ createPaymentIntent cfg amountCents currency description mMetadata =
         bodyLBS
         "Failed to parse Stripe PaymentIntent response"
         "Stripe API error"
+
+-- | Construct the PaymentIntent POST without performing network I/O. Keeping
+-- this boundary explicit makes the idempotency and metadata wire contract
+-- testable.
+buildPaymentIntentRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO Request
+buildPaymentIntentRequest cfg mIdempotencyKey amountCents currency description mMetadata = do
+  initialRequest <- parseRequest "https://api.stripe.com/v1/payment_intents"
+  let body = BS8.intercalate "&"
+        [ "amount=" <> BS8.pack (show amountCents)
+        , "currency=" <> TE.encodeUtf8 (T.toLower currency)
+        , "description=" <> urlEncode (TE.encodeUtf8 description)
+        , "automatic_payment_methods[enabled]=true"
+        ] <> maybe "" (\meta -> "&metadata[tdf_context]=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
+      idempotencyHeaders =
+        maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
+  pure initialRequest
+    { method = "POST"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Content-Type", "application/x-www-form-urlencoded")
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ] <> idempotencyHeaders
+    , requestBody = RequestBodyBS body
+    }
+
+validateIdempotencyKey :: Text -> Either Text Text
+validateIdempotencyKey key
+  | T.null (T.strip key) = Left "Stripe idempotency key must not be blank"
+  | BS.length (TE.encodeUtf8 key) > 255 =
+      Left "Stripe idempotency key must be 255 bytes or fewer"
+  | T.any (`elem` ['\r', '\n']) key =
+      Left "Stripe idempotency key must not contain line breaks"
+  | otherwise = Right key
+
+-- | Retrieve an existing PaymentIntent. Marketplace retries use this after an
+-- intent id has been persisted so a pruned idempotency key can never create a
+-- second intent for the same order.
+retrievePaymentIntent :: StripeConfig -> Text -> IO (Either Text Value)
+retrievePaymentIntent cfg paymentIntentId =
+  withStripeManager $ \manager -> do
+    request <- buildRetrievePaymentIntentRequest cfg paymentIntentId
+    response <- httpLbs request manager
+    let status = statusCode (responseStatus response)
+        bodyLBS = responseBody response
+    pure $
+      decodeStripeResponse
+        status
+        bodyLBS
+        "Failed to parse Stripe PaymentIntent response"
+        "Stripe PaymentIntent retrieval error"
+
+buildRetrievePaymentIntentRequest :: StripeConfig -> Text -> IO Request
+buildRetrievePaymentIntentRequest cfg paymentIntentId = do
+  let encodedId = BS8.unpack (urlEncode (TE.encodeUtf8 paymentIntentId))
+  initialRequest <-
+    parseRequest ("https://api.stripe.com/v1/payment_intents/" <> encodedId)
+  pure initialRequest
+    { method = "GET"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ]
+    }
+
+cancelPaymentIntent :: StripeConfig -> Text -> IO (Either Text Value)
+cancelPaymentIntent cfg paymentIntentId =
+  withStripeManager $ \manager -> do
+    request <- buildCancelPaymentIntentRequest cfg paymentIntentId
+    response <- httpLbs request manager
+    pure $
+      decodeStripeResponse
+        (statusCode (responseStatus response))
+        (responseBody response)
+        "Failed to parse Stripe PaymentIntent cancellation response"
+        "Stripe PaymentIntent cancellation error"
+
+buildCancelPaymentIntentRequest :: StripeConfig -> Text -> IO Request
+buildCancelPaymentIntentRequest cfg paymentIntentId = do
+  let encodedId = BS8.unpack (urlEncode (TE.encodeUtf8 paymentIntentId))
+  initialRequest <-
+    parseRequest
+      ("https://api.stripe.com/v1/payment_intents/" <> encodedId <> "/cancel")
+  pure initialRequest
+    { method = "POST"
+    , requestHeaders =
+        [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
+        , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
+        ]
+    }
 
 -- | Create a Stripe Customer.
 --
@@ -184,6 +314,47 @@ createPaymentIntentForCustomer
   -> Maybe Text  -- ^ Optional metadata JSON string
   -> IO (Either Text Value)
 createPaymentIntentForCustomer cfg customerId amountCents currency description mMetadata =
+  createPaymentIntentForCustomerRequest
+    cfg
+    Nothing
+    customerId
+    amountCents
+    currency
+    description
+    mMetadata
+
+createPaymentIntentForCustomerWithIdempotencyKey
+  :: StripeConfig
+  -> Text        -- ^ Stripe idempotency key
+  -> Text        -- ^ Stripe Customer ID (cus_*)
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentForCustomerWithIdempotencyKey cfg idempotencyKey customerId amountCents currency description mMetadata =
+  case validateIdempotencyKey idempotencyKey of
+    Left validationError -> pure (Left validationError)
+    Right validKey ->
+      createPaymentIntentForCustomerRequest
+        cfg
+        (Just validKey)
+        customerId
+        amountCents
+        currency
+        description
+        mMetadata
+
+createPaymentIntentForCustomerRequest
+  :: StripeConfig
+  -> Maybe Text
+  -> Text
+  -> Int
+  -> Text
+  -> Text
+  -> Maybe Text
+  -> IO (Either Text Value)
+createPaymentIntentForCustomerRequest cfg mIdempotencyKey customerId amountCents currency description mMetadata =
   withStripeManager $ \manager -> do
     let url = "https://api.stripe.com/v1/payment_intents"
         body = BS8.intercalate "&"
@@ -195,13 +366,15 @@ createPaymentIntentForCustomer cfg customerId amountCents currency description m
           ] <> maybe "" (\meta -> "&metadata=" <> urlEncode (TE.encodeUtf8 meta)) mMetadata
 
     initialRequest <- parseRequest url
-    let request = initialRequest
+    let idempotencyHeaders =
+          maybe [] (\key -> [("Idempotency-Key", TE.encodeUtf8 key)]) mIdempotencyKey
+        request = initialRequest
           { method = "POST"
           , requestHeaders =
               [ ("Authorization", "Bearer " <> TE.encodeUtf8 (stripeSecretKey cfg))
               , ("Content-Type", "application/x-www-form-urlencoded")
               , ("Stripe-Version", TE.encodeUtf8 (stripeApiVersion cfg))
-              ]
+              ] <> idempotencyHeaders
           , requestBody = RequestBodyBS body
           }
 
@@ -659,25 +832,52 @@ verifyWebhookSignature
 verifyWebhookSignature cfg signatureHeader rawBody =
   maybe False matchesSignature (parseSignatureHeader signatureHeader)
   where
-    matchesSignature (timestamp, signature) =
+    matchesSignature (timestamp, signatures) =
       let signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
           secret = TE.encodeUtf8 (stripeWebhookSecret cfg)
           expectedSigHex =
             TE.encodeUtf8 $
               T.pack $
                 show (hmacGetDigest (hmac secret signedPayload :: HMAC SHA256))
-      in expectedSigHex == TE.encodeUtf8 signature
+      in any (constEq expectedSigHex . TE.encodeUtf8) signatures
+
+-- | Require both a valid signature and Stripe's default five-minute replay window.
+verifyWebhookSignatureAt
+  :: UTCTime
+  -> StripeConfig
+  -> Text
+  -> ByteString
+  -> Bool
+verifyWebhookSignatureAt now cfg signatureHeader rawBody =
+  case parseSignatureHeader signatureHeader of
+    Just (timestampText, _) ->
+      case readMaybe (T.unpack timestampText) :: Maybe Integer of
+        Just timestampSeconds ->
+          abs (currentSeconds - timestampSeconds) <= 300
+            && verifyWebhookSignature cfg signatureHeader rawBody
+        Nothing -> False
+    Nothing -> False
+  where
+    currentSeconds = floor (utcTimeToPOSIXSeconds now)
 
 -- | Parse the Stripe-Signature header
 -- Format: "t=1492774577,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd"
-parseSignatureHeader :: Text -> Maybe (Text, Text)
+parseSignatureHeader :: Text -> Maybe (Text, [Text])
 parseSignatureHeader header =
-  (,) <$> findValue "t" <*> findValue "v1"
+  case (findValue "t", findValues "v1") of
+    (Just timestamp, signatures@(_ : _)) -> Just (timestamp, signatures)
+    _ -> Nothing
   where
     parts = T.splitOn "," header
     pairs = map (T.breakOn "=") parts
     findValue key =
       lookup key [(T.strip k, T.drop 1 v) | (k, v) <- pairs, not (T.null v)]
+    findValues key =
+      [ T.drop 1 v
+      | (k, v) <- pairs
+      , T.strip k == key
+      , not (T.null v)
+      ]
 
 -- | URL-encode a ByteString (simple implementation for form data)
 urlEncode :: ByteString -> ByteString

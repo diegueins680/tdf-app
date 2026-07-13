@@ -98,6 +98,7 @@ RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-
 FROM debian:bookworm-slim
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
+ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
 # Runtime libs for Postgres + CA certs for Neon TLS
@@ -105,7 +106,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
-    libpq5 ca-certificates && \
+    libpq5 ca-certificates tzdata && \
     rm -rf /var/lib/apt/lists/*
 
 ARG SOURCE_COMMIT=UNKNOWN

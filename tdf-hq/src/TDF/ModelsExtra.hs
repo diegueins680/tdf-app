@@ -660,6 +660,7 @@ MarketplaceOrder
     status          Text default='pending'
     paymentProvider Text Maybe
     stripePaymentIntentId Text Maybe
+    stripeIdempotencyKey Text Maybe
     paypalOrderId   Text Maybe
     paypalPayerEmail Text Maybe
     datafastCheckoutId Text Maybe

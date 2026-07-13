@@ -214,6 +214,7 @@ import TDF.Server
     , validateMarketplaceOrderPaidAtUpdate
     , resolveMarketplaceOrderPaidAtForStatus
     , validateOptionalMarketplacePaymentProviderUpdate
+    , validateMarketplaceStripeAdminUpdate
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
     , resolveCourseRegistrationAttachmentName
@@ -8712,11 +8713,17 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (T.replicate 65 "a") "64 characters or fewer"
 
     describe "validateMarketplacePathId" $ do
-        it "accepts positive decimal marketplace path ids before DB lookup" $ do
-            validateMarketplacePathId "cart" "42" `shouldBe` Right 42
-            validateMarketplacePathId "order" "  7  " `shouldBe` Right 7
+        it "accepts canonical UUID marketplace path ids before DB lookup" $ do
+            validateMarketplacePathId
+                "cart"
+                "9bb34967-6f48-47b8-976f-17c79f276913"
+                `shouldBe` Right "9bb34967-6f48-47b8-976f-17c79f276913"
+            validateMarketplacePathId
+                "order"
+                "  1c4d4578-9e8f-4bb3-bf19-33301f4599db  "
+                `shouldBe` Right "1c4d4578-9e8f-4bb3-bf19-33301f4599db"
 
-        it "rejects malformed or non-positive marketplace path ids as bad requests" $ do
+        it "rejects malformed or non-UUID marketplace path ids as bad requests" $ do
             let assertInvalid entityLabel rawId =
                     case validateMarketplacePathId entityLabel rawId of
                         Left serverErr -> do
@@ -8728,11 +8735,43 @@ spec = describe "TDF.Server helpers" $ do
                                 ( "Expected invalid marketplace path id to be rejected, got: "
                                     <> show pathId
                                 )
-            assertInvalid "cart" "0"
+            assertInvalid "cart" "42"
             assertInvalid "cart" "-1"
             assertInvalid "listing" "007"
             assertInvalid "listing" "+1"
             assertInvalid "order" "abc"
+            assertInvalid "order" "9bb34967-6f48-47b8-976f-17c79f27691z"
+
+    describe "validateMarketplaceStripeAdminUpdate" $ do
+        it "keeps active Stripe checkout state system-managed and provider-consistent" $ do
+            let assertConflict result =
+                    case result of
+                        Left serverErr -> errHTTPCode serverErr `shouldBe` 409
+                        Right () -> expectationFailure "Expected unsafe Stripe admin update to fail"
+            validateMarketplaceStripeAdminUpdate
+                "stripe_pending"
+                (Just "stripe")
+                Nothing
+                Nothing
+                `shouldBe` Right ()
+            validateMarketplaceStripeAdminUpdate
+                "stripe_pending"
+                (Just "stripe")
+                (Just "stripe_failed")
+                (Just (Just "manual"))
+                `shouldBe` Right ()
+            assertConflict $
+                validateMarketplaceStripeAdminUpdate
+                    "pending"
+                    Nothing
+                    (Just "stripe_pending")
+                    (Just (Just "stripe"))
+            assertConflict $
+                validateMarketplaceStripeAdminUpdate
+                    "stripe_pending"
+                    (Just "stripe")
+                    Nothing
+                    (Just (Just "paypal"))
 
     describe "validateMarketplacePublicListingActive" $ do
         it "rejects inactive listings before public item lookups or cart writes expose them" $ do
@@ -14373,6 +14412,16 @@ marketplaceTestConfig seedFlag =
         , sessionCookieSecure = False
         , sessionCookieSameSite = "Lax"
         , sessionCookieMaxAgeSeconds = Nothing
+        , stripeSecretKey = Nothing
+        , stripePublishableKey = Nothing
+        , stripeWebhookSecret = Nothing
+        , eventDiscoveryEnabled = False
+        , ticketmasterApiKey = Nothing
+        , ticketmasterApiBase = "https://app.ticketmaster.com/discovery/v2"
+        , eventDiscoveryLookaheadDays = 90
+        , eventDiscoveryMaxPagesPerCity = 5
+        , eventDiscoveryHourLocal = 3
+        , eventDiscoveryCountryCode = Nothing
         }
 
 initializeMarketplaceListingSchema :: SqlPersistT IO ()

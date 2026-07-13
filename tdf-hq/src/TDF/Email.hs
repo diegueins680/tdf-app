@@ -395,11 +395,9 @@ sendTicketConfirmationEmail (Just cfg) name email eventTitle eventDate quantity 
   let subject   = "Tus entradas para " <> eventTitle
       preheader = "Confirmación de compra - " <> T.pack (show quantity) <> " entrada(s) para " <> eventTitle
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
-      baseUrl   = resolveAppBase mAppUrl
-      sanitized =
-        let trimmed = T.dropWhileEnd (== '/') baseUrl
-        in if T.null trimmed then baseUrl else trimmed
-      ticketsUrl = sanitized <> "/tickets"
+      ticketsUrl = case T.strip <$> mAppUrl of
+        Just exactUrl | "tdf://" `T.isPrefixOf` T.toLower exactUrl -> exactUrl
+        _ -> T.dropWhileEnd (== '/') (resolveAppBase mAppUrl) <> "/tickets"
       bodyLines =
         [ "¡Gracias por tu compra! Aquí están los detalles de tus entradas:"
         , ""

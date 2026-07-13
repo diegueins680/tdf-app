@@ -4,6 +4,8 @@
 
 - This repo uses `AGENTS.md`, `SOUL.md`, `USER.md`, daily `memory/YYYY-MM-DD.md`, and now `AI_WORKFLOW.md` as the main continuity and onboarding surface for AI work.
 - `scripts/continuous-improvement-loop.codex.json` currently targets `main`, so unattended loop runs should be treated as high-risk unless copied to a branch-scoped config first.
+- Marketplace Stripe safety commit `876413b721049da71d66a8d67c0162f97c72bef8` was deployed to production as Fly release `v2049` on 2026-07-12 after applying the 2026-07-07 and 2026-07-12 marketplace migrations with old writers quiesced. Production keeps `RUN_MIGRATIONS=false`; the `tdf-hq-db` volume was expanded from 3 GB to 5 GB during the cutover.
+- Production still has unrelated schema drift for the missing `notification` relation. Audit and apply the broader `tdf-hq/sql/2026-05-25_content_engagement.sql` separately; do not treat it as part of the completed Stripe migration.
 
 ## Preferences
 

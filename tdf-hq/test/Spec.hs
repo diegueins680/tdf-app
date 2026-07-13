@@ -15,7 +15,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString as BS
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
@@ -24,10 +24,12 @@ import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
 import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
+import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
@@ -89,6 +91,7 @@ import TDF.Cors
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
+import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
@@ -259,6 +262,8 @@ import TDF.Server
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
       validateMarketplaceBuyerName,
+      isMarketplaceStripeRetryStale,
+      canReplayMarketplaceStripePost,
       validateLabelTrackPathId,
       validateDatafastCheckoutId,
       validateOptionalDatafastPaymentIdField,
@@ -346,6 +351,10 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateVenueCreateUpdateFields,
     normalizeTicketOrderStatus,
+    ticketOrderInventoryAdjustment,
+    validateDirectTicketOrderPricing,
+    validateTicketCheckoutAmount,
+    validateTicketPurchaseEventEligibility,
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
@@ -354,7 +363,10 @@ import TDF.Server.SocialEventsHandlers (
     parseStripePaymentIntentResponse,
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
+    verifyAndDecodeStripeWebhook,
+    parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
+    canRecoverMarketplaceStripeOrder,
     isImageUpload,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
@@ -626,6 +638,7 @@ initializeTicketCheckInSchema = do
         \currency VARCHAR NOT NULL,\
         \status VARCHAR NOT NULL,\
         \metadata VARCHAR NULL,\
+        \checkout_idempotency_key VARCHAR NULL,\
         \purchased_at TIMESTAMP NOT NULL,\
         \stripe_payment_intent_id VARCHAR NULL,\
         \promo_code_id INTEGER NULL,\
@@ -900,6 +913,138 @@ main = hspec $ do
                 `shouldSatisfy` isNothing
 
     describe "Stripe response decoding" $ do
+        it "builds idempotent marketplace PaymentIntent requests with nested metadata" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "tdf-marketplace-order-order_123")
+                    2500
+                    "USD"
+                    "Marketplace order order_123"
+                    (Just "{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"order_123\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "tdf-marketplace-order-order_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22purpose%22%3a%22marketplace_order%22"
+                _ -> expectationFailure "Expected a strict PaymentIntent form body"
+
+        it "omits idempotency headers from legacy PaymentIntent requests" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    Nothing
+                    2500
+                    "USD"
+                    "Legacy payment"
+                    Nothing
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                "   "
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must not be blank"
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                (Data.Text.replicate 256 "a")
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must be 255 bytes or fewer"
+
+        it "retrieves persisted marketplace PaymentIntents without replaying POST" $ do
+            request <-
+                Stripe.buildRetrievePaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_marketplace_123"
+            HTTP.method request `shouldBe` "GET"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_marketplace_123"
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "cancels bound ticket PaymentIntents before releasing reservations" $ do
+            request <-
+                Stripe.buildCancelPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_ticket_123"
+            HTTP.method request `shouldBe` "POST"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_ticket_123/cancel"
+
+        it "stops ambiguous idempotent POST retries before Stripe may prune the key" $ do
+            let createdAt = UTCTime (fromGregorian 2026 7 12) (secondsToDiffTime 0)
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60 - 1) createdAt)
+                createdAt
+                `shouldBe` False
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                Nothing
+                `shouldBe` False
+            canReplayMarketplaceStripePost
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` False
+
+        it "allows only one stripe_pending order per marketplace cart" $ do
+            withSystemTempDirectory "marketplace-stripe-index" $ \tmpDir -> do
+                pool <-
+                    runNoLoggingT $
+                        createSqlitePool
+                            (Data.Text.pack (tmpDir </> "marketplace.sqlite"))
+                            1
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "CREATE TABLE marketplace_order (id TEXT PRIMARY KEY, cart_id TEXT, status TEXT NOT NULL)"
+                            []
+                        rawExecute
+                            "CREATE UNIQUE INDEX uq_marketplace_cart_active_stripe_payment \
+                            \ON marketplace_order(cart_id) \
+                            \WHERE cart_id IS NOT NULL AND status = 'stripe_pending'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_1', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+                runSqlPool
+                    ( rawExecute
+                        "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                        []
+                    )
+                    pool
+                    `shouldThrow` anyException
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "UPDATE marketplace_order SET status = 'stripe_failed' WHERE id = 'order_1'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+
         it "decodes successful JSON response bodies" $
             Stripe.decodeStripeResponse
                 200
@@ -1011,6 +1156,63 @@ main = hspec $ do
             Stripe.verifyWebhookSignature cfg ("t=" <> timestamp) rawBody `shouldBe` False
             Stripe.verifyWebhookSignature cfg ("v1=" <> signature) rawBody `shouldBe` False
 
+        it "verifies Stripe signatures against exact raw JSON bytes before decoding" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody =
+                    BL.pack
+                        "{\n  \"id\": \"evt_raw_123\", \"type\": \"payment_intent.succeeded\"\n}"
+                strictBody = BL.toStrict rawBody
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp strictBody
+                cfg = stripeTestConfig secret
+            case verifyAndDecodeStripeWebhook now cfg (Just header) rawBody of
+                Left err -> expectationFailure ("Expected raw webhook to verify: " <> Data.Text.unpack err)
+                Right payload ->
+                    parseStripeWebhookEventEnvelope payload
+                        `shouldBe` Right ("evt_raw_123", "payment_intent.succeeded")
+            verifyAndDecodeStripeWebhook
+                now
+                cfg
+                (Just header)
+                "{\"id\":\"evt_raw_123\",\"type\":\"payment_intent.succeeded\"}"
+                `shouldBe` Left "Invalid webhook signature"
+
+        it "rejects missing signatures and malformed raw Stripe JSON deterministically" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                malformedBody = "{"
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp (BL.toStrict malformedBody)
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg Nothing "{}"
+                `shouldBe` Left "Missing Stripe-Signature header"
+            verifyAndDecodeStripeWebhook now cfg (Just header) malformedBody
+                `shouldBe` Left "Invalid webhook JSON"
+
+        it "accepts rotated v1 signatures and rejects stale signed deliveries" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody = "{\"id\":\"evt_rotated\",\"type\":\"invoice.paid\"}"
+                validSignature = stripeV1Signature secret timestamp (BL.toStrict rawBody)
+                rotatedHeader =
+                    "t=" <> timestamp
+                        <> ",v1=0000000000000000000000000000000000000000000000000000000000000000"
+                        <> ",v1=" <> validSignature
+                staleNow = addUTCTime 301 now
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg (Just rotatedHeader) rawBody
+                `shouldSatisfy` isRight
+            verifyAndDecodeStripeWebhook staleNow cfg (Just rotatedHeader) rawBody
+                `shouldBe` Left "Invalid webhook signature"
+
         it "extracts required PaymentIntent fields from explicit object payloads" $
             parseStripePaymentIntentResponse
                 ( A.object
@@ -1065,6 +1267,85 @@ main = hspec $ do
                 `shouldBe` Right ("evt_123", "payment_intent.succeeded")
             parseStripeWebhookPaymentIntentId webhookPayload
                 `shouldBe` Just "pi_123"
+
+        it "recovers marketplace order ids from Stripe metadata context" $ do
+            let webhookPayload =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ("{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"9bb34967-6f48-47b8-976f-17c79f276913\"}" :: Text)
+                                                ]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId webhookPayload
+                `shouldBe` Just "9bb34967-6f48-47b8-976f-17c79f276913"
+
+        it "ignores malformed marketplace metadata context" $
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata" .= A.object ["tdf_context" .= ("not-json" :: Text)]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "requires the canonical marketplace purpose before recovering an order id" $ do
+            let webhookPayload contextJson =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object ["tdf_context" .= (contextJson :: Text)]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"purpose\":\"artist_tip\",\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata"
+                                        .= A.object
+                                            [ "purpose" .= ("marketplace_order" :: Text)
+                                            , "marketplace_order_id" .= ("order_123" :: Text)
+                                            ]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "only recovers unbound Stripe-pending marketplace orders" $ do
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") Nothing
+                `shouldBe` True
+            canRecoverMarketplaceStripeOrder "pending" (Just "stripe") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" Nothing Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "paypal") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") (Just "pi_other")
+                `shouldBe` False
 
         it "extracts checkout session course subscription fields only when complete" $ do
             let checkoutPayload regId subscriptionId =
@@ -9229,6 +9510,75 @@ main = hspec $ do
         it "does not mask unsupported persisted statuses as pending" $
             normalizeTicketOrderStatus (Just " Unknown ") `shouldBe` "unknown"
 
+    describe "ticket order inventory transitions" $ do
+        it "keeps the existing reservation when a pending Stripe order becomes paid" $
+            ticketOrderInventoryAdjustment 3 "pending" "paid" `shouldBe` 0
+
+        it "releases pending reservations exactly once when an order closes" $ do
+            ticketOrderInventoryAdjustment 3 "pending" "cancelled" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "pending" "refunded" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "cancelled" "cancelled" `shouldBe` 0
+            ticketOrderInventoryAdjustment 3 "refunded" "refunded" `shouldBe` 0
+
+        it "releases paid inventory once and treats equivalent status spellings canonically" $ do
+            ticketOrderInventoryAdjustment 2 "paid" "refunded" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "pending" "CANCELED" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "paid" "paid" `shouldBe` 0
+
+    describe "direct ticket order pricing policy" $ do
+        it "allows buyers to claim free tiers and managers to issue paid tiers" $ do
+            case validateDirectTicketOrderPricing False 0 of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected free tier to be allowed: " <> show err)
+            case validateDirectTicketOrderPricing True 2500 of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected manager issuance to be allowed: " <> show err)
+
+        it "requires non-managers to buy paid tiers through Stripe" $
+            case validateDirectTicketOrderPricing False 1 of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err) `shouldContain` "must be purchased through Stripe"
+                Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "ticket purchase event eligibility" $ do
+        it "allows only public events in buyer-facing sale states" $ do
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"on_sale\"}") of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected on-sale public event: " <> show err)
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":false,\"eventStatus\":\"on_sale\"}") of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right () -> expectationFailure "Expected private event purchase to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"completed\"}") of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected completed event purchase to be rejected"
+
+        it "treats missing sale status as planning and rejects malformed stored metadata" $ do
+            case validateTicketPurchaseEventEligibility Nothing of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected planning event purchase to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "not-json") of
+                Left err -> errHTTPCode err `shouldBe` 500
+                Right () -> expectationFailure "Expected malformed metadata to be rejected"
+
+    describe "ticket checkout amount validation" $ do
+        it "uses checked arithmetic before deciding whether a checkout is free" $ do
+            validateTicketCheckoutAmount 2 2500 `shouldBe` Right 5000
+            case validateTicketCheckoutAmount 4 (maxBound `div` 2 + 1) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "supported limit"
+                Right amount ->
+                    expectationFailure
+                        ("Expected overflowing checkout amount to be rejected, got " <> show amount)
+
+        it "rejects totals above Stripe's eight-digit amount contract" $
+            case validateTicketCheckoutAmount 2 50000000 of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right amount ->
+                    expectationFailure
+                        ("Expected oversized Stripe amount to be rejected, got " <> show amount)
+
     describe "normalizeTicketStatus" $ do
         it "defaults to issued when missing" $ do
             normalizeTicketStatus Nothing `shouldBe` "issued"
@@ -9288,13 +9638,14 @@ main = hspec $ do
             validatePromoCodeMinimumPurchaseCents (Just 1000) 1000 `shouldBe` Right ()
 
         it "calculates promo discounts only for supported stored discount types" $ do
-            promoCodeDiscountAmountEither 1500 "percentage" 20 `shouldBe` Right 300
-            promoCodeDiscountAmountEither 1500 "fixed" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "percentage" 2000 `shouldBe` Right 300
+            promoCodeDiscountAmountEither 1500 "fixed_amount" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "fixed" 200 `shouldBe` Right 200
             promoCodeDiscountAmountEither 1500 "bogus" 20
                 `shouldBe` Left "Promo code discount type is invalid"
-            promoCodeDiscountAmountEither 1500 "fixed" (-1)
+            promoCodeDiscountAmountEither 1500 "fixed_amount" (-1)
                 `shouldBe` Left "Promo code discount value is invalid"
-            promoCodeDiscountAmountEither 1500 "percentage" 101
+            promoCodeDiscountAmountEither 1500 "percentage" 10001
                 `shouldBe` Left "Promo code percentage discount is invalid"
 
     describe "validateTicketPurchaseBuyerName" $ do
@@ -9487,6 +9838,7 @@ main = hspec $ do
                         , eventTicketOrderPurchasedAt = now
                         , eventTicketOrderStripePaymentIntentId = Nothing
                         , eventTicketOrderPromoCodeId = Nothing
+                        , eventTicketOrderCheckoutIdempotencyKey = Nothing
                         , eventTicketOrderOriginalAmountCents = Nothing
                         , eventTicketOrderPaymentMethod = Nothing
                         , eventTicketOrderCreatedAt = now
@@ -9606,6 +9958,7 @@ main = hspec $ do
                                 , eventTicketOrderCurrency = "USD"
                                 , eventTicketOrderStatus = "paid"
                                 , eventTicketOrderMetadata = Nothing
+                                , eventTicketOrderCheckoutIdempotencyKey = Nothing
                                 , eventTicketOrderPurchasedAt = now
                                 , eventTicketOrderStripePaymentIntentId = Nothing
                                 , eventTicketOrderPromoCodeId = Nothing
@@ -14024,6 +14377,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec

@@ -3,6 +3,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module TDF.Cron
   ( startCoursePaymentReminderJob
+  , startEventDiscoveryJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
   , Directive(..)
@@ -11,7 +12,15 @@ module TDF.Cron
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
-import           Control.Exception       (SomeException, displayException, try)
+import           Control.Exception
+  ( SomeAsyncException
+  , SomeException
+  , displayException
+  , finally
+  , fromException
+  , throwIO
+  , try
+  )
 import           Control.Applicative    ((<|>))
 import           Control.Monad           (forever, void, when, foldM)
 import           Control.Monad.IO.Class  (liftIO)
@@ -19,10 +28,12 @@ import           Data.Foldable           (for_)
 import           Data.List                  (find, nub)
 import qualified Data.Map.Strict         as Map
 import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
+import           Data.Pool               (withResource)
 import           Data.Text               (Text)
 import qualified Data.Text               as T
 import           Data.Time               ( LocalTime(..)
                                          , TimeOfDay(..)
+                                         , Day
                                          , UTCTime
                                          , ZonedTime(..)
                                          , addUTCTime
@@ -30,6 +41,7 @@ import           Data.Time               ( LocalTime(..)
                                          , diffUTCTime
                                          , getCurrentTime
                                          , getZonedTime
+                                         , toModifiedJulianDay
                                          , zonedTimeToUTC
                                          )
 import           Database.Persist        ( (!=.)
@@ -48,7 +60,7 @@ import           Database.Persist        ( (!=.)
                                          , update
                                          , (=.)
                                           )
-import           Database.Persist.Sql    (SqlPersistT, runSqlPool)
+import           Database.Persist.Sql    (Single(..), SqlPersistT, rawSql, runSqlConn, runSqlPool)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
@@ -60,6 +72,16 @@ import           TDF.Models
 import           TDF.Services.InstagramMessaging (sendInstagramText)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Services.InstagramSync (InstagramMedia(..), fetchUserMedia)
+import           TDF.Services.EventDiscovery
+  ( DiscoverySyncStats(..)
+  , beginEventDiscoveryRun
+  , failEventDiscoveryRun
+  , fetchTicketmasterEvents
+  , finishEventDiscoveryRun
+  , loadActiveUserCities
+  , reconcileImportedEvents
+  , syncDiscoveredEvent
+  )
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
                                          , loadAdExamples
@@ -73,7 +95,13 @@ import           TDF.Server              ( buildLandingUrl
                                          )
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
-import           TDF.Config              (AppConfig, instagramAppToken)
+import           TDF.Config
+  ( AppConfig
+  , eventDiscoveryEnabled
+  , eventDiscoveryHourLocal
+  , instagramAppToken
+  , ticketmasterApiKey
+  )
 import           TDF.WhatsApp.Client     (SendTextResult)
 import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
 import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
@@ -172,6 +200,225 @@ waitUntil targetUtc = do
   let diffSeconds = diffUTCTime targetUtc now
       waitMicros = max 0 (ceiling (realToFrac diffSeconds * (1e6 :: Double)) :: Int)
   when (waitMicros > 0) (threadDelay waitMicros)
+
+-- | Discover upcoming Ticketmaster events only for cities attached to active
+-- TDF user accounts. The first pass runs shortly after boot; later passes run
+-- daily at the configured local hour. A PostgreSQL advisory lock makes the
+-- job single-leader even when every API replica starts the cron thread.
+startEventDiscoveryJob :: Env -> IO ()
+startEventDiscoveryJob env@Env{envConfig}
+  | not (eventDiscoveryEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][EventDiscovery] Disabled by configuration."
+  | otherwise =
+      case ticketmasterApiKey envConfig of
+        Nothing ->
+          LogBuf.addLog
+            LogBuf.LogWarning
+            "[Cron][EventDiscovery] TICKETMASTER_API_KEY is not configured; job is idle."
+        Just apiKey -> do
+          void (forkIO (eventDiscoveryLoop env apiKey))
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] Scheduled daily at local hour "
+                <> T.pack (show (eventDiscoveryHourLocal envConfig))
+                <> ":00."
+            )
+
+eventDiscoveryLoop :: Env -> Text -> IO ()
+eventDiscoveryLoop env@Env{envConfig} apiKey = do
+  threadDelay (30 * 1000000)
+  forever $ do
+    runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env apiKey)
+    case runResult of
+      Left err -> do
+        let message =
+              "[Cron][EventDiscovery] Job failed: "
+                <> T.pack (displayException err)
+        hPutStrLn stderr (T.unpack message)
+        LogBuf.addLog LogBuf.LogError message
+      Right () -> pure ()
+    nextRun <-
+      nextLocalTimeUtc
+        (TimeOfDay (eventDiscoveryHourLocal envConfig) 0 0)
+    waitUntil nextRun
+
+runEventDiscoveryWithLeaderLock :: Env -> Text -> IO ()
+runEventDiscoveryWithLeaderLock env@Env{envPool} apiKey = do
+  lockResult <- withEventDiscoveryLeaderLock envPool (runEventDiscoveryOnce env apiKey)
+  case lockResult of
+    Nothing ->
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] Another API replica owns this run; skipping."
+    Just () -> pure ()
+
+withEventDiscoveryLeaderLock :: ConnectionPool -> IO a -> IO (Maybe a)
+withEventDiscoveryLeaderLock pool action =
+  withResource pool $ \backend -> do
+    acquiredRows <-
+      runSqlConn
+        (rawSql "SELECT pg_try_advisory_lock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
+        backend
+    case acquiredRows of
+      [Single True] ->
+        Just
+          <$> ( action
+                  `finally` void
+                    ( runSqlConn
+                        (rawSql "SELECT pg_advisory_unlock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
+                        backend
+                    )
+              )
+      _ -> pure Nothing
+
+runEventDiscoveryOnce :: Env -> Text -> IO ()
+runEventDiscoveryOnce Env{..} apiKey = do
+  now <- getCurrentTime
+  ZonedTime (LocalTime runDate _) _ <- getZonedTime
+  runHandle <- beginEventDiscoveryRun envPool runDate now
+  case runHandle of
+    Nothing ->
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] Today's import already ran or is running; skipping."
+    Just handle -> do
+      outcome <- tryNonAsync (runClaimedDiscovery now runDate)
+      finishedAt <- getCurrentTime
+      case outcome of
+        Left err -> do
+          failEventDiscoveryRun
+            envPool
+            handle
+            finishedAt
+            (T.pack (displayException err))
+          throwIO err
+        Right (cityCount, totals) -> do
+          finishEventDiscoveryRun envPool handle finishedAt cityCount totals
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] Finished: seen "
+                <> showCount (discoveryEventsSeen totals)
+                <> ", created "
+                <> showCount (discoveryEventsCreated totals)
+                <> ", updated "
+                <> showCount (discoveryEventsUpdated totals)
+                <> ", venues created "
+                <> showCount (discoveryVenuesCreated totals)
+                <> ", artists created "
+                <> showCount (discoveryArtistsCreated totals)
+                <> "."
+            )
+  where
+    runClaimedDiscovery now runDate = do
+      allCities <- loadActiveUserCities envPool
+      let cities = selectEventDiscoveryCities runDate allCities
+      lifecycleChanges <- reconcileImportedEvents envPool now allCities
+      when (lifecycleChanges > 0) $
+        LogBuf.addLog
+          LogBuf.LogInfo
+          ( "[Cron][EventDiscovery] Reconciled "
+              <> showCount lifecycleChanges
+              <> " completed or out-of-scope events."
+          )
+      when (length allCities > length cities) $
+        LogBuf.addLog
+          LogBuf.LogWarning
+          ( "[Cron][EventDiscovery] Daily city budget selected "
+              <> showCount (length cities)
+              <> " of "
+              <> showCount (length allCities)
+              <> " active cities."
+          )
+      if null cities
+        then do
+          LogBuf.addLog
+            LogBuf.LogInfo
+            "[Cron][EventDiscovery] No active users have a usable city; nothing to import."
+          pure (0, zeroDiscoverySyncStats)
+        else do
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] Searching "
+                <> showCount (length cities)
+                <> " user cities."
+            )
+          totals <- foldM (syncCity now) zeroDiscoverySyncStats cities
+          pure (length cities, totals)
+
+    syncCity now totals city = do
+      fetched <- fetchTicketmasterEvents envConfig apiKey city now
+      case fetched of
+        Left err -> do
+          LogBuf.addLog
+            LogBuf.LogError
+            ("[Cron][EventDiscovery] " <> city <> ": " <> err)
+          pure totals
+        Right events -> do
+          cityStats <- foldM (syncOne now city) zeroDiscoverySyncStats events
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] "
+                <> city
+                <> ": processed "
+                <> showCount (discoveryEventsSeen cityStats)
+                <> " events."
+            )
+          pure (addDiscoveryStats totals cityStats)
+
+    syncOne now city totals event = do
+      synced <- tryNonAsync (syncDiscoveredEvent envPool now event)
+      case synced of
+        Left err -> do
+          LogBuf.addLog
+            LogBuf.LogError
+            ( "[Cron][EventDiscovery] Failed to persist an event for "
+                <> city
+                <> ": "
+                <> T.pack (displayException err)
+            )
+          pure totals
+        Right stats -> pure (addDiscoveryStats totals stats)
+
+    showCount = T.pack . show
+
+maxEventDiscoveryCitiesPerRun :: Int
+maxEventDiscoveryCitiesPerRun = 500
+
+selectEventDiscoveryCities :: Day -> [Text] -> [Text]
+selectEventDiscoveryCities _ [] = []
+selectEventDiscoveryCities runDate cities =
+  take maxEventDiscoveryCitiesPerRun rotated
+  where
+    cityCount = length cities
+    offset =
+      fromIntegral
+        ( (toModifiedJulianDay runDate * fromIntegral maxEventDiscoveryCitiesPerRun)
+            `mod` fromIntegral cityCount
+        )
+    rotated = drop offset cities ++ take offset cities
+
+tryNonAsync :: IO a -> IO (Either SomeException a)
+tryNonAsync action = do
+  result <- try action
+  case result of
+    Left err ->
+      case fromException err :: Maybe SomeAsyncException of
+        Just asyncError -> throwIO asyncError
+        Nothing -> pure (Left err)
+    Right value -> pure (Right value)
+
+zeroDiscoverySyncStats :: DiscoverySyncStats
+zeroDiscoverySyncStats = DiscoverySyncStats 0 0 0 0 0
+
+addDiscoveryStats :: DiscoverySyncStats -> DiscoverySyncStats -> DiscoverySyncStats
+addDiscoveryStats left right =
+  DiscoverySyncStats
+    { discoveryEventsSeen = discoveryEventsSeen left + discoveryEventsSeen right
+    , discoveryEventsCreated = discoveryEventsCreated left + discoveryEventsCreated right
+    , discoveryEventsUpdated = discoveryEventsUpdated left + discoveryEventsUpdated right
+    , discoveryVenuesCreated = discoveryVenuesCreated left + discoveryVenuesCreated right
+    , discoveryArtistsCreated = discoveryArtistsCreated left + discoveryArtistsCreated right
+    }
 
 sendCoursePaymentReminders :: Env -> IO ()
 sendCoursePaymentReminders Env{..} = do
