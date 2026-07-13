@@ -83,6 +83,13 @@ data AppConfig = AppConfig
   , stripeSecretKey :: Maybe Text
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
+  , eventDiscoveryEnabled :: Bool
+  , ticketmasterApiKey :: Maybe Text
+  , ticketmasterApiBase :: Text
+  , eventDiscoveryLookaheadDays :: Int
+  , eventDiscoveryMaxPagesPerCity :: Int
+  , eventDiscoveryHourLocal :: Int
+  , eventDiscoveryCountryCode :: Maybe Text
   } deriving (Show)
 
 data LlmProviderConfig = LlmProviderConfig
@@ -480,6 +487,50 @@ validateNonNegativeIntEnv envName defaultValue (Just rawValue)
   where
     normalized = T.strip (T.pack rawValue)
 
+validateBoundedIntEnv :: String -> Int -> Int -> Int -> Maybe String -> IO Int
+validateBoundedIntEnv _ defaultValue _ _ Nothing = pure defaultValue
+validateBoundedIntEnv envName defaultValue minimumValue maximumValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case readMaybe (T.unpack normalized) of
+        Just parsed | parsed >= minimumValue && parsed <= maximumValue -> pure parsed
+        _ ->
+          fail
+            ( envName
+                <> " must be an integer between "
+                <> show minimumValue
+                <> " and "
+                <> show maximumValue
+            )
+  where
+    normalized = T.strip (T.pack rawValue)
+
+validateTicketmasterApiKey :: Maybe String -> IO (Maybe Text)
+validateTicketmasterApiKey Nothing = pure Nothing
+validateTicketmasterApiKey (Just rawValue)
+  | T.null value = pure Nothing
+  | T.length value > 512 = fail "TICKETMASTER_API_KEY must be 512 characters or fewer"
+  | T.any (\ch -> isSpace ch || isControl ch) value =
+      fail "TICKETMASTER_API_KEY must not contain whitespace or control characters"
+  | T.any isHiddenConnectionUrlChar value =
+      fail "TICKETMASTER_API_KEY must not contain hidden formatting characters"
+  | T.any (\ch -> ch < '!' || ch > '~') value =
+      fail "TICKETMASTER_API_KEY must contain visible ASCII characters only"
+  | otherwise = pure (Just value)
+  where
+    value = T.strip (T.pack rawValue)
+
+validateEventDiscoveryCountryCode :: Maybe String -> IO (Maybe Text)
+validateEventDiscoveryCountryCode Nothing = pure (Just "EC")
+validateEventDiscoveryCountryCode (Just rawValue)
+  | T.null value = pure (Just "EC")
+  | T.length value == 2 && T.all isAsciiLetter value = pure (Just (T.toUpper value))
+  | otherwise = fail "EVENT_DISCOVERY_COUNTRY_CODE must be a two-letter ISO country code"
+  where
+    value = T.strip (T.pack rawValue)
+    isAsciiLetter ch =
+      (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -638,6 +689,13 @@ loadConfig = do
   stripeSecretKeyEnv <- lookupEnv "STRIPE_SECRET_KEY"
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
+  eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
+  ticketmasterApiKeyEnv <- lookupEnv "TICKETMASTER_API_KEY"
+  ticketmasterApiBaseEnv <- lookupEnv "TICKETMASTER_API_BASE"
+  eventDiscoveryLookaheadDaysEnv <- lookupEnv "EVENT_DISCOVERY_LOOKAHEAD_DAYS"
+  eventDiscoveryMaxPagesEnv <- lookupEnv "EVENT_DISCOVERY_MAX_PAGES_PER_CITY"
+  eventDiscoveryHourEnv <- lookupEnv "EVENT_DISCOVERY_HOUR_LOCAL"
+  eventDiscoveryCountryCodeEnv <- lookupEnv "EVENT_DISCOVERY_COUNTRY_CODE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
   assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
@@ -678,6 +736,40 @@ loadConfig = do
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
+  eventDiscoveryEnabledVal <-
+    validateStartupBooleanFlag
+      "EVENT_DISCOVERY_ENABLED"
+      True
+      eventDiscoveryEnabledEnv
+  ticketmasterApiKeyVal <- validateTicketmasterApiKey ticketmasterApiKeyEnv
+  ticketmasterApiBaseVal <-
+    validateConfiguredApiBaseUrl
+      "TICKETMASTER_API_BASE"
+      "https://app.ticketmaster.com/discovery/v2"
+      ticketmasterApiBaseEnv
+  eventDiscoveryLookaheadDaysVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_LOOKAHEAD_DAYS"
+      90
+      1
+      365
+      eventDiscoveryLookaheadDaysEnv
+  eventDiscoveryMaxPagesVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_MAX_PAGES_PER_CITY"
+      5
+      1
+      10
+      eventDiscoveryMaxPagesEnv
+  eventDiscoveryHourVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_HOUR_LOCAL"
+      3
+      0
+      23
+      eventDiscoveryHourEnv
+  eventDiscoveryCountryCodeVal <-
+    validateEventDiscoveryCountryCode eventDiscoveryCountryCodeEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -781,6 +873,13 @@ loadConfig = do
     , stripeSecretKey = fmap T.pack stripeSecretKeyEnv
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
+    , eventDiscoveryEnabled = eventDiscoveryEnabledVal
+    , ticketmasterApiKey = ticketmasterApiKeyVal
+    , ticketmasterApiBase = ticketmasterApiBaseVal
+    , eventDiscoveryLookaheadDays = eventDiscoveryLookaheadDaysVal
+    , eventDiscoveryMaxPagesPerCity = eventDiscoveryMaxPagesVal
+    , eventDiscoveryHourLocal = eventDiscoveryHourVal
+    , eventDiscoveryCountryCode = eventDiscoveryCountryCodeVal
     }
   where
     getWithFallback requireUnique keys def =

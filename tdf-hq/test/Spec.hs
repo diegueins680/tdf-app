@@ -91,6 +91,7 @@ import TDF.Cors
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
+import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
@@ -14376,6 +14377,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
     ServerSpec.spec

@@ -16,7 +16,7 @@
 module TDF.Models.SocialEventsModels where
 
 import Data.Text (Text)
-import Data.Time (UTCTime)
+import Data.Time (Day, UTCTime)
 import Database.Persist.TH
 import GHC.Generics (Generic)
 
@@ -59,6 +59,49 @@ SocialEvent
     metadata Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
+    deriving Show Generic
+
+ExternalVenueRef sql=external_venue_ref
+    provider Text
+    externalId Text
+    venueId VenueId
+    lastSeenAt UTCTime
+    UniqueExternalVenueRef provider externalId
+    deriving Show Generic
+
+ExternalArtistRef sql=external_artist_ref
+    provider Text
+    externalId Text
+    artistId ArtistProfileId
+    lastSeenAt UTCTime
+    UniqueExternalArtistRef provider externalId
+    deriving Show Generic
+
+ExternalEventRef sql=external_event_ref
+    provider Text
+    externalId Text
+    eventId SocialEventId
+    city Text
+    sourceUrl Text Maybe
+    lastSeenAt UTCTime
+    UniqueExternalEventRef provider externalId
+    UniqueExternalEventLocal eventId
+    deriving Show Generic
+
+ExternalEventDiscoveryRun sql=external_event_discovery_run
+    provider Text
+    runDate Day
+    status Text
+    citiesCount Int
+    eventsSeen Int
+    eventsCreated Int
+    eventsUpdated Int
+    venuesCreated Int
+    artistsCreated Int
+    errorMessage Text Maybe
+    startedAt UTCTime
+    finishedAt UTCTime Maybe
+    UniqueExternalEventDiscoveryRun provider runDate
     deriving Show Generic
 
 EventArtist

@@ -57,6 +57,7 @@ import TDF.Cors (corsPolicy)
 import qualified TDF.CMS.Models as CMS
 import TDF.Cron (
     startCoursePaymentReminderJob,
+    startEventDiscoveryJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
@@ -155,6 +156,7 @@ runBootServer = do
         let env = Env{envPool = pool, envConfig = cfg}
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
+        startEventDiscoveryJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
 

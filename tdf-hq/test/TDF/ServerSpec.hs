@@ -14412,6 +14412,16 @@ marketplaceTestConfig seedFlag =
         , sessionCookieSecure = False
         , sessionCookieSameSite = "Lax"
         , sessionCookieMaxAgeSeconds = Nothing
+        , stripeSecretKey = Nothing
+        , stripePublishableKey = Nothing
+        , stripeWebhookSecret = Nothing
+        , eventDiscoveryEnabled = False
+        , ticketmasterApiKey = Nothing
+        , ticketmasterApiBase = "https://app.ticketmaster.com/discovery/v2"
+        , eventDiscoveryLookaheadDays = 90
+        , eventDiscoveryMaxPagesPerCity = 5
+        , eventDiscoveryHourLocal = 3
+        , eventDiscoveryCountryCode = Nothing
         }
 
 initializeMarketplaceListingSchema :: SqlPersistT IO ()

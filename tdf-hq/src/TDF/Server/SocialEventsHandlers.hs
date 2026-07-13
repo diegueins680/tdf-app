@@ -1571,7 +1571,11 @@ socialEventsServer user =
                     then pure [SocialEventId ==. toSqlKey 0]
                     else pure [SocialEventId <-. eventIds]
         let filters = startFilter ++ cityFilter ++ venueFilter ++ artistFilter
-        rows <- liftIO $ runSqlPool (selectList filters [Desc SocialEventStartTime, LimitTo limit, OffsetBy offset]) envPool
+        let dateOrder =
+                case mStartAfter of
+                    Just _ -> Asc SocialEventStartTime
+                    Nothing -> Desc SocialEventStartTime
+        rows <- liftIO $ runSqlPool (selectList filters [dateOrder, LimitTo limit, OffsetBy offset]) envPool
         let matchesMeta (Entity _ eventRow) = do
                 meta <-
                     either (throwError . storedEventMetadataServerError) pure $
@@ -1795,7 +1799,8 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseKeyOr400 "event" rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mExisting) $ throwError err404{errBody = "Event not found"}
+        existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
+        _ <- claimOrRequireEventManager currentPartyId envPool eventKey existing
         liftIO $
             runSqlPool
                 ( do
@@ -1812,6 +1817,7 @@ socialEventsServer user =
                     deleteWhere [EventTicketTierEventId ==. eventKey]
                     deleteWhere [EventFinanceEntryEventId ==. eventKey]
                     deleteWhere [EventBudgetLineEventId ==. eventKey]
+                    deleteWhere [ExternalEventRefEventId ==. eventKey]
                     delete eventKey
                 )
                 envPool
@@ -2169,6 +2175,13 @@ socialEventsServer user =
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
         mExisting <- liftIO $ runSqlPool (get artistKey) envPool
         existing <- maybe (throwError err404{errBody = "Artist not found"}) pure mExisting
+        importedRef <-
+            liftIO $
+                runSqlPool
+                    (selectFirst [ExternalArtistRefArtistId ==. artistKey] [])
+                    envPool
+        when (isJust importedRef) $
+            throwError err403{errBody = "Imported artists are managed automatically"}
         let genreList = normalizeArtistGenres (artistGenres dto)
         let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
         liftIO $
