@@ -10,7 +10,9 @@ env/
 venv/
 ENV/
 
-# Version metadata needs to reach backend builds, so keep .git in context
+# Version metadata is injected with Docker build args; Git history is not
+# needed by the image build.
+.git/
 .gitignore
 
 # Ignore Docker-related files (keep Dockerfiles in the build context)
@@ -54,6 +56,8 @@ Thumbs.db
 /archives/
 /data/
 /docs/
+/screencast/
+/tmp/
 /streaming/
 /tdf-hq-ui/
 /tdf-hq-ui.backup.*/
@@ -63,3 +67,15 @@ Thumbs.db
 # Ignore SQL and DB init scripts (mounted as volumes, no need to include in build context)
 sql/
 db/
+
+# Local Haskell and JavaScript build caches can exceed several gigabytes.
+/.stack/
+/.stack-root/
+/node_modules/
+/tdf-mobile/node_modules/
+/tdf-hq-ui.backup.1762434604/node_modules/
+/tdf-hq/.stack-root-local/
+/tdf-hq/.stack-work/
+/tdf-hq/dist-newstyle/
+/tdf-hq/dist-newstyle-fno/
+/tdf-hq-ui/node_modules/
