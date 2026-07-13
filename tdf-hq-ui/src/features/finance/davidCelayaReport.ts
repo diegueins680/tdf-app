@@ -12,6 +12,15 @@ export interface WorkBlockSource {
   discountReason: string;
 }
 
+export type CustomFieldValueType = 'text' | 'number' | 'date' | 'currency';
+
+export interface CustomFieldSource {
+  id: string;
+  label: string;
+  value: string;
+  type?: CustomFieldValueType;
+}
+
 export interface DavidCelayaReportOptions {
   asOfDate?: Date | string;
 }
@@ -22,6 +31,7 @@ export interface WorkAccountReportSource {
   periodLabel: string;
   hourlyRateCents: number;
   notes: string;
+  customFields?: CustomFieldSource[];
   workBlocks: WorkBlockSource[];
 }
 
@@ -36,6 +46,7 @@ export const DAVID_CELAYA_REPORT_SOURCE: WorkAccountReportSource = {
   hourlyRateCents: 2_500,
   notes:
     'Los bloques se tomaron de los timestamps visibles en las capturas compartidas. La tarifa aplicada es de USD 25 por hora; cada bloque se redondea al entero más cercano y además registra un descuento explícito.',
+  customFields: [],
   workBlocks: [
     {
       id: 'work-block-1',
@@ -164,6 +175,10 @@ export interface WorkBlockRow extends WorkBlockSource {
   discountLabel: string;
 }
 
+export interface CustomFieldRow extends Omit<CustomFieldSource, 'type'> {
+  type: CustomFieldValueType;
+}
+
 const calculateBillableHours = (durationSeconds: number) => Math.round(durationSeconds / 3600);
 
 const calculateBillableCents = (billableHours: number, hourlyRateCents: number) => billableHours * hourlyRateCents;
@@ -209,6 +224,10 @@ export const buildWorkAccountReport = (
   const evidenceCount = workBlocks.length * 2;
   const firstStart = workBlocks[0]?.startDateTime ?? null;
   const lastEnd = workBlocks[workBlocks.length - 1]?.endDateTime ?? null;
+  const customFields = (source.customFields ?? []).map((field) => ({
+    ...field,
+    type: field.type ?? 'text',
+  })) satisfies CustomFieldRow[];
 
   return {
     source: {
@@ -216,6 +235,7 @@ export const buildWorkAccountReport = (
       cutoffDate,
     },
     workBlocks,
+    customFields,
     totalDurationSeconds,
     totalBillableCents,
     totalBillableHours,
@@ -556,6 +576,20 @@ const buildPdfContentStream = (report: ReturnType<typeof buildWorkAccountReport>
     wrapped(lineText, PDF.marginX, y, PDF.contentWidth, { size: 10, maxLines: 2 });
     y -= 18;
   });
+
+  if ((report.customFields?.length ?? 0) > 0) {
+    sectionTitle('Campos personalizados');
+    table(
+      [
+        { label: 'Campo', width: 190 },
+        { label: 'Valor', width: 338 },
+      ],
+      report.customFields.map((field): PdfRow => [
+        { text: field.label, bold: true },
+        field.value,
+      ]),
+    );
+  }
 
   pages.push(commands);
   return pages.map((pageCommands) => pageCommands.join('\n'));
