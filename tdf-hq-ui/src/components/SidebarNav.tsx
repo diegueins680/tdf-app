@@ -198,6 +198,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
       { label: 'Pagos', path: '/finanzas/pagos' },
       { label: 'Reporte Esteban', path: '/finanzas/reporte-esteban-munoz' },
+      { label: 'Reporte David', path: '/finanzas/reporte-david-celaya' },
     ],
   },
   {

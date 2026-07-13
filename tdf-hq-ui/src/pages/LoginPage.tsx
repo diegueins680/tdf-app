@@ -69,6 +69,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
   '/finanzas/reporte-esteban-munoz': 'Finanzas / Reporte Esteban',
+  '/finanzas/reporte-david-celaya': 'Finanzas / Reporte David',
   '/practicas': 'Prácticas',
   '/inicio': 'Inicio',
 };

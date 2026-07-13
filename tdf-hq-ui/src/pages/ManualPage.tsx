@@ -31,6 +31,7 @@ const sectionsByModule: Record<string, ManualItem[]> = {
   invoicing: [
     { title: 'Finanzas / Pagos', path: '/finanzas/pagos', description: 'Registro de pagos, comprobantes y facturas por sesión. Soporta concepto, monto, referencia, adjuntos y emisión SRI.' },
     { title: 'Finanzas / Reporte Esteban Muñoz', path: '/finanzas/reporte-esteban-munoz', description: 'Reporte consolidado de arriendo, comprobante base, honorarios por cursos de producción y saldo neto de cuentas con TDF.' },
+    { title: 'Finanzas / Reporte David Celaya', path: '/finanzas/reporte-david-celaya', description: 'Estado de cuenta basado en capturas de cámara con bloques de trabajo, tiempos de inicio/cierre y evidencia visual.' },
   ],
   admin: [
     { title: 'Configuración / Usuarios admin', path: '/configuracion/usuarios-admin', description: 'Altas, bajas y reseteo de accesos administrativos.' },

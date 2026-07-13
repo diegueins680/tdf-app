@@ -58,6 +58,8 @@ const FRIENDLY_SEGMENTS: Record<string, string> = {
   facturas: 'Facturas',
   cobros: 'Cobros',
   pagos: 'Pagos',
+  'reporte-esteban-munoz': 'Reporte Esteban Muñoz',
+  'reporte-david-celaya': 'Reporte David Celaya',
   recibos: 'Recibos',
   regalias: 'Regalías',
   docs: 'Documentación',
