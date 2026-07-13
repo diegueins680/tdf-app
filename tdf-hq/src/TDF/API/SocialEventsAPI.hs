@@ -22,7 +22,7 @@ module TDF.API.SocialEventsAPI (
     validateEventImageUploadForm,
 ) where
 
-import Data.Aeson (FromJSON, ToJSON, Value)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space),
     generalCategory,
@@ -407,6 +407,7 @@ type TicketsRoutes =
     "events" :> Capture "eventId" Text :> "ticket-tiers" :> Get '[JSON] [TicketTierDTO]
         :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> ReqBody '[JSON] TicketTierDTO :> Post '[JSON] TicketTierDTO
         :<|> "events" :> Capture "eventId" Text :> "ticket-tiers" :> Capture "tierId" Text :> ReqBody '[JSON] TicketTierDTO :> Put '[JSON] TicketTierDTO
+        :<|> "ticket-orders" :> QueryParam "status" Text :> Get '[JSON] [TicketOrderDTO]
         :<|> "events"
             :> Capture "eventId" Text
             :> "ticket-orders"
@@ -436,7 +437,6 @@ type TicketsRoutes =
             :> Get '[JSON] PromoCodeDTO
         -- Stripe Payment
         :<|> "stripe" :> "create-payment-intent" :> ReqBody '[JSON] TicketPurchaseWithPromoDTO :> Post '[JSON] StripePaymentIntentDTO
-        :<|> "stripe" :> "webhook" :> ReqBody '[JSON] Value :> Header "Stripe-Signature" Text :> Post '[JSON] NoContent
         -- Refunds
         :<|> "events"
             :> Capture "eventId" Text

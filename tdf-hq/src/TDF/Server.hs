@@ -128,6 +128,7 @@ import           TDF.ServerAdmin (adminServer)
 import qualified TDF.LogBuffer as LogBuf
 import           TDF.Server.SocialEventsHandlers
   ( socialEventsServer
+  , stripeWebhookServer
   , eitherStripeServerError
   , parseStripeEphemeralKeySecret
   , parseStripePaymentIntentResponse
@@ -697,6 +698,7 @@ server env =
   :<|> bookingPublicServer
   :<|> inventoryStaticServer assetsRoot
   :<|> assetsServeServer assetsRoot
+  :<|> stripeWebhookServer
   :<|> protectedServer
 
 versionServer :: ServerT Api.VersionAPI AppM

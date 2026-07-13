@@ -42,7 +42,7 @@ import           TDF.API.Proposals (ProposalsAPI)
 import           TDF.API.Rooms     (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions  (SessionsAPI)
 import           TDF.API.Drive     (DriveAPI)
-import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, LooseJSON, PartyRelatedDTO, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
+import           TDF.API.Types     (ArtistTipRequest, ArtistTipResponse, LooseJSON, PartyRelatedDTO, RawJSON, RolePayload, UserRoleSummaryDTO, UserRoleUpdatePayload)
 import           TDF.API.Radio     (RadioAPI)
 import           TDF.Models        (RoleEnum)
 import           TDF.DTO
@@ -463,6 +463,14 @@ type SessionAPI =
        Header "Authorization" Text :> Header "Cookie" Text :> "session" :> Get '[JSON] (Maybe SessionResponse)
   :<|> "session" :> "logout" :> Post '[JSON] (SessionCookieHeaders NoContent)
 
+-- Stripe must be able to deliver this endpoint without an application bearer
+-- token. RawJSON preserves the exact bytes covered by Stripe's signature.
+type StripeWebhookAPI =
+       "social-events" :> "stripe" :> "webhook"
+         :> Header "Stripe-Signature" Text
+         :> ReqBody '[RawJSON] BL.ByteString
+         :> Post '[JSON] NoContent
+
 type ProtectedAPI =
        "parties"  :> PartyAPI
   :<|> "bookings" :> BookingAPI
@@ -543,6 +551,7 @@ type API =
   :<|> BookingPublicAPI
   :<|> AssetsAPI
   :<|> AssetsServeAPI
+  :<|> StripeWebhookAPI
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }

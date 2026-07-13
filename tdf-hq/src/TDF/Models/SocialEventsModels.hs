@@ -184,6 +184,7 @@ EventTicketOrder
     currency Text
     status Text
     metadata Text Maybe
+    checkoutIdempotencyKey Text Maybe
     purchasedAt UTCTime
     stripePaymentIntentId Text Maybe
     promoCodeId PromoCodeId Maybe
@@ -191,6 +192,7 @@ EventTicketOrder
     paymentMethod Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
+    UniqueEventTicketCheckout buyerPartyId checkoutIdempotencyKey !force
     deriving Show Generic
 
 EventTicket

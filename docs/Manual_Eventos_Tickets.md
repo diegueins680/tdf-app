@@ -1,7 +1,7 @@
 # Manual de Eventos y Tickets — TDF Records
 
 **Guía de uso: crear eventos, crear tickets, vender y comprar**
-Versión 1.0 | Mayo 2026
+Versión 1.1 | Julio 2026
 
 ---
 
@@ -27,14 +27,14 @@ Versión 1.0 | Mayo 2026
 El módulo **Eventos sociales** permite organizar fiestas, conciertos, festivales y showcases, y gestionar su venta de tickets de principio a fin:
 
 - **Organizadores** crean el evento, definen los tipos de ticket (*tiers*), venden, hacen check-in y gestionan reembolsos.
-- **Asistentes** navegan los eventos, compran tickets y reciben su entrada por correo.
+- **Asistentes** navegan eventos próximos en la app, compran en un checkout dedicado y conservan el QR en **Mis entradas**; también reciben una confirmación por correo.
 
 Hay dos roles principales en este manual:
 
 | Rol | Qué puede hacer |
 |-----|-----------------|
 | **Organizador** (creador del evento) | Crear el evento, crear tiers, ver todas las órdenes, hacer check-in, cancelar y reembolsar. |
-| **Asistente** (cualquier usuario con sesión) | Ver el evento, comprar tickets y consultar *Mis órdenes*. |
+| **Asistente** (cualquier usuario con sesión) | Ver eventos, comprar tickets y consultar sus QR en *Mis entradas*. |
 
 > Las herramientas de organizador solo aparecen para quien creó el evento.
 
@@ -148,24 +148,36 @@ En las órdenes con estado **`paid`** el organizador ve dos botones (ver [Reembo
 
 ## Guía para comprar tickets (asistente)
 
-Cualquier usuario con sesión iniciada puede comprar entradas desde la tarjeta del evento, en la sección **Tickets**.
+La compra para asistentes se realiza en la app móvil de TDF Records. Si todavía no tiene una cuenta, **Crear cuenta** le permite registrarse y volver al evento sin perder el recorrido.
 
-1. Abra el evento y ubique la sección **Tickets**.
-2. Complete el formulario de compra:
+1. Abra la pestaña **Eventos**. Los próximos eventos aparecen primero; puede buscar por evento, artista, sala o ciudad.
+2. Pulse **Ver entradas** en la tarjeta o abra el evento y pulse **Elegir entradas**.
+3. Complete el checkout:
 
 | Campo | Descripción |
 |-------|-------------|
 | **Tipo** | Seleccione el tier. Cada opción muestra el nombre y el precio; los tiers inactivos o agotados aparecen deshabilitados. |
-| **Cantidad** | Número de entradas a comprar (por defecto `1`). |
-| **Nombre comprador** | Su nombre. |
-| **Email comprador** | Correo donde recibirá las entradas. |
+| **Cantidad** | Use los botones `−` y `+`. El límite se ajusta al cupo disponible. |
+| **Nombre para las entradas** | Se completa desde su perfil y puede corregirlo antes de pagar. |
+| **Correo electrónico** | Se completa desde su perfil; sirve para confirmar y recuperar las entradas. |
+| **Código promocional** | Opcional. El servidor valida el código y el total final antes de abrir el pago. |
 
-3. Haga clic en **Comprar**.
-4. Complete el **pago con Stripe** (datos de la tarjeta). Si dispone de un **código promocional**, ingréselo para aplicar el descuento antes de pagar.
-5. Al confirmarse el pago, recibe la confirmación y **las entradas se envían al correo indicado** (con su código/QR).
+4. Revise el total fijo en la parte inferior y pulse **Pagar**. Para una entrada gratis, pulse **Confirmar entrada gratis**; no se solicitan datos de tarjeta.
+5. Complete el pago seguro de **Stripe**. El total mostrado en Stripe es el total definitivo calculado por el servidor, incluidos descuentos.
+6. Cuando Stripe confirme el pago, la app mostrará la orden y emitirá un QR por entrada. Si la confirmación tarda unos segundos, la orden permanece visible como **Procesando pago** y se actualiza automáticamente.
+
+> Si cancela la hoja de pago, la app libera la reserva. Si pierde conexión después de pagar, consulte **Mis entradas** antes de volver a intentarlo para evitar una compra duplicada.
 
 ### Revisar sus entradas
-La sección **Mis órdenes** de cada evento muestra sus órdenes, con la cantidad, el estado (`paid`) y los códigos de cada ticket.
+
+Abra **Perfil → Mis entradas** para ver todas sus compras, incluso si ya no recuerda desde qué evento las hizo. Cada entrada emitida muestra:
+
+- Evento, cantidad, total y estado en lenguaje claro.
+- QR listo para presentar en la puerta.
+- Código seleccionable como alternativa al QR.
+- Acceso para volver al detalle del evento.
+
+También puede desplegar **Mis compras para este evento** dentro del checkout. Las órdenes pendientes se actualizan automáticamente cuando llega la confirmación del pago.
 
 > Si el tier que quiere está agotado, no podrá seleccionarlo. Pregunte al organizador si habilitará más cupo o lista de espera.
 
@@ -211,13 +223,13 @@ Los precios se ingresan **en centavos**. Para $50.00 escriba `5000`, no `50`.
 El tier está **inactivo** o **agotado** (sin disponibilidad). Elija otro tier o consulte al organizador.
 
 **¿Dónde recibe el comprador su entrada?**
-En el **correo (Email comprador)** indicado en la compra, una vez que Stripe confirma el pago.
+En la app, en **Perfil → Mis entradas**, una vez que Stripe confirma el pago. También se envía una confirmación al correo indicado.
 
 **¿Puedo crear más de un tipo de entrada?**
 Sí. Cree tantos **tiers** como necesite (preventa, general, VIP), cada uno con su precio y cantidad.
 
 **¿Cómo aplico un descuento?**
-Durante el pago, el comprador puede ingresar un **código promocional** válido para aplicar el descuento antes de confirmar.
+En el checkout pulse **¿Tienes un código promocional?** e ingrese el código. El precio definitivo aparece en la hoja segura de Stripe; si el descuento cubre el 100 %, las entradas se emiten sin pedir tarjeta.
 
 **Aparece "Inicia sesión para crear eventos."**
 Debe **iniciar sesión** para crear o gestionar eventos y tickets.

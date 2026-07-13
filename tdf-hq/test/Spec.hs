@@ -15,7 +15,7 @@ import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString as BS
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
 import Data.List (isInfixOf)
 import qualified Data.Map.Strict as Map
@@ -24,6 +24,7 @@ import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Word (Word8)
 import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
@@ -349,6 +350,10 @@ import TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateVenueCreateUpdateFields,
     normalizeTicketOrderStatus,
+    ticketOrderInventoryAdjustment,
+    validateDirectTicketOrderPricing,
+    validateTicketCheckoutAmount,
+    validateTicketPurchaseEventEligibility,
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
@@ -357,6 +362,7 @@ import TDF.Server.SocialEventsHandlers (
     parseStripePaymentIntentResponse,
     parseStripeRefundResponse,
     parseStripeWebhookEventEnvelope,
+    verifyAndDecodeStripeWebhook,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -631,6 +637,7 @@ initializeTicketCheckInSchema = do
         \currency VARCHAR NOT NULL,\
         \status VARCHAR NOT NULL,\
         \metadata VARCHAR NULL,\
+        \checkout_idempotency_key VARCHAR NULL,\
         \purchased_at TIMESTAMP NOT NULL,\
         \stripe_payment_intent_id VARCHAR NULL,\
         \promo_code_id INTEGER NULL,\
@@ -960,6 +967,14 @@ main = hspec $ do
             HTTP.path request `shouldBe` "/v1/payment_intents/pi_marketplace_123"
             lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
 
+        it "cancels bound ticket PaymentIntents before releasing reservations" $ do
+            request <-
+                Stripe.buildCancelPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_ticket_123"
+            HTTP.method request `shouldBe` "POST"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_ticket_123/cancel"
+
         it "stops ambiguous idempotent POST retries before Stripe may prune the key" $ do
             let createdAt = UTCTime (fromGregorian 2026 7 12) (secondsToDiffTime 0)
             isMarketplaceStripeRetryStale
@@ -1139,6 +1154,63 @@ main = hspec $ do
             Stripe.verifyWebhookSignature cfg "" rawBody `shouldBe` False
             Stripe.verifyWebhookSignature cfg ("t=" <> timestamp) rawBody `shouldBe` False
             Stripe.verifyWebhookSignature cfg ("v1=" <> signature) rawBody `shouldBe` False
+
+        it "verifies Stripe signatures against exact raw JSON bytes before decoding" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody =
+                    BL.pack
+                        "{\n  \"id\": \"evt_raw_123\", \"type\": \"payment_intent.succeeded\"\n}"
+                strictBody = BL.toStrict rawBody
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp strictBody
+                cfg = stripeTestConfig secret
+            case verifyAndDecodeStripeWebhook now cfg (Just header) rawBody of
+                Left err -> expectationFailure ("Expected raw webhook to verify: " <> Data.Text.unpack err)
+                Right payload ->
+                    parseStripeWebhookEventEnvelope payload
+                        `shouldBe` Right ("evt_raw_123", "payment_intent.succeeded")
+            verifyAndDecodeStripeWebhook
+                now
+                cfg
+                (Just header)
+                "{\"id\":\"evt_raw_123\",\"type\":\"payment_intent.succeeded\"}"
+                `shouldBe` Left "Invalid webhook signature"
+
+        it "rejects missing signatures and malformed raw Stripe JSON deterministically" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                malformedBody = "{"
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp (BL.toStrict malformedBody)
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg Nothing "{}"
+                `shouldBe` Left "Missing Stripe-Signature header"
+            verifyAndDecodeStripeWebhook now cfg (Just header) malformedBody
+                `shouldBe` Left "Invalid webhook JSON"
+
+        it "accepts rotated v1 signatures and rejects stale signed deliveries" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody = "{\"id\":\"evt_rotated\",\"type\":\"invoice.paid\"}"
+                validSignature = stripeV1Signature secret timestamp (BL.toStrict rawBody)
+                rotatedHeader =
+                    "t=" <> timestamp
+                        <> ",v1=0000000000000000000000000000000000000000000000000000000000000000"
+                        <> ",v1=" <> validSignature
+                staleNow = addUTCTime 301 now
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg (Just rotatedHeader) rawBody
+                `shouldSatisfy` isRight
+            verifyAndDecodeStripeWebhook staleNow cfg (Just rotatedHeader) rawBody
+                `shouldBe` Left "Invalid webhook signature"
 
         it "extracts required PaymentIntent fields from explicit object payloads" $
             parseStripePaymentIntentResponse
@@ -9437,6 +9509,75 @@ main = hspec $ do
         it "does not mask unsupported persisted statuses as pending" $
             normalizeTicketOrderStatus (Just " Unknown ") `shouldBe` "unknown"
 
+    describe "ticket order inventory transitions" $ do
+        it "keeps the existing reservation when a pending Stripe order becomes paid" $
+            ticketOrderInventoryAdjustment 3 "pending" "paid" `shouldBe` 0
+
+        it "releases pending reservations exactly once when an order closes" $ do
+            ticketOrderInventoryAdjustment 3 "pending" "cancelled" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "pending" "refunded" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "cancelled" "cancelled" `shouldBe` 0
+            ticketOrderInventoryAdjustment 3 "refunded" "refunded" `shouldBe` 0
+
+        it "releases paid inventory once and treats equivalent status spellings canonically" $ do
+            ticketOrderInventoryAdjustment 2 "paid" "refunded" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "pending" "CANCELED" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "paid" "paid" `shouldBe` 0
+
+    describe "direct ticket order pricing policy" $ do
+        it "allows buyers to claim free tiers and managers to issue paid tiers" $ do
+            case validateDirectTicketOrderPricing False 0 of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected free tier to be allowed: " <> show err)
+            case validateDirectTicketOrderPricing True 2500 of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected manager issuance to be allowed: " <> show err)
+
+        it "requires non-managers to buy paid tiers through Stripe" $
+            case validateDirectTicketOrderPricing False 1 of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err) `shouldContain` "must be purchased through Stripe"
+                Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "ticket purchase event eligibility" $ do
+        it "allows only public events in buyer-facing sale states" $ do
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"on_sale\"}") of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected on-sale public event: " <> show err)
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":false,\"eventStatus\":\"on_sale\"}") of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right () -> expectationFailure "Expected private event purchase to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true,\"eventStatus\":\"completed\"}") of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected completed event purchase to be rejected"
+
+        it "treats missing sale status as planning and rejects malformed stored metadata" $ do
+            case validateTicketPurchaseEventEligibility Nothing of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected planning event purchase to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "not-json") of
+                Left err -> errHTTPCode err `shouldBe` 500
+                Right () -> expectationFailure "Expected malformed metadata to be rejected"
+
+    describe "ticket checkout amount validation" $ do
+        it "uses checked arithmetic before deciding whether a checkout is free" $ do
+            validateTicketCheckoutAmount 2 2500 `shouldBe` Right 5000
+            case validateTicketCheckoutAmount 4 (maxBound `div` 2 + 1) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "supported limit"
+                Right amount ->
+                    expectationFailure
+                        ("Expected overflowing checkout amount to be rejected, got " <> show amount)
+
+        it "rejects totals above Stripe's eight-digit amount contract" $
+            case validateTicketCheckoutAmount 2 50000000 of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right amount ->
+                    expectationFailure
+                        ("Expected oversized Stripe amount to be rejected, got " <> show amount)
+
     describe "normalizeTicketStatus" $ do
         it "defaults to issued when missing" $ do
             normalizeTicketStatus Nothing `shouldBe` "issued"
@@ -9496,13 +9637,14 @@ main = hspec $ do
             validatePromoCodeMinimumPurchaseCents (Just 1000) 1000 `shouldBe` Right ()
 
         it "calculates promo discounts only for supported stored discount types" $ do
-            promoCodeDiscountAmountEither 1500 "percentage" 20 `shouldBe` Right 300
-            promoCodeDiscountAmountEither 1500 "fixed" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "percentage" 2000 `shouldBe` Right 300
+            promoCodeDiscountAmountEither 1500 "fixed_amount" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "fixed" 200 `shouldBe` Right 200
             promoCodeDiscountAmountEither 1500 "bogus" 20
                 `shouldBe` Left "Promo code discount type is invalid"
-            promoCodeDiscountAmountEither 1500 "fixed" (-1)
+            promoCodeDiscountAmountEither 1500 "fixed_amount" (-1)
                 `shouldBe` Left "Promo code discount value is invalid"
-            promoCodeDiscountAmountEither 1500 "percentage" 101
+            promoCodeDiscountAmountEither 1500 "percentage" 10001
                 `shouldBe` Left "Promo code percentage discount is invalid"
 
     describe "validateTicketPurchaseBuyerName" $ do
@@ -9695,6 +9837,7 @@ main = hspec $ do
                         , eventTicketOrderPurchasedAt = now
                         , eventTicketOrderStripePaymentIntentId = Nothing
                         , eventTicketOrderPromoCodeId = Nothing
+                        , eventTicketOrderCheckoutIdempotencyKey = Nothing
                         , eventTicketOrderOriginalAmountCents = Nothing
                         , eventTicketOrderPaymentMethod = Nothing
                         , eventTicketOrderCreatedAt = now
@@ -9814,6 +9957,7 @@ main = hspec $ do
                                 , eventTicketOrderCurrency = "USD"
                                 , eventTicketOrderStatus = "paid"
                                 , eventTicketOrderMetadata = Nothing
+                                , eventTicketOrderCheckoutIdempotencyKey = Nothing
                                 , eventTicketOrderPurchasedAt = now
                                 , eventTicketOrderStripePaymentIntentId = Nothing
                                 , eventTicketOrderPromoCodeId = Nothing

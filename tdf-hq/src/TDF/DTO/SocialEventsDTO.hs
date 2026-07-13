@@ -57,6 +57,7 @@ import Data.Aeson (FromJSON, ToJSON, Value (..), defaultOptions, genericParseJSO
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser)
+import Data.Char (isAscii, isControl, isSpace)
 import Data.Int (Int64)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -833,26 +834,30 @@ instance FromJSON TicketPurchaseRequestDTO where
             , "ticketPurchaseBuyerEmail"
             ]
             o
-        rejectNullObjectFields
-            [ "ticketPurchaseBuyerPartyId"
-            , "ticketPurchaseBuyerName"
-            , "ticketPurchaseBuyerEmail"
-            ]
-            o
-        tierId <-
-            o .: "ticketPurchaseTierId"
-                >>= normalizePositiveIdText "ticketPurchaseTierId"
-        quantity <- o .: "ticketPurchaseQuantity"
-        if quantity <= (0 :: Int)
-            then fail "ticketPurchaseQuantity must be greater than 0"
-            else
-                if quantity > maxTicketPurchaseQuantity
-                    then fail "ticketPurchaseQuantity exceeds the per-order limit"
-                    else
-                        TicketPurchaseRequestDTO tierId quantity
-                            <$> o .:? "ticketPurchaseBuyerPartyId"
-                            <*> o .:? "ticketPurchaseBuyerName"
-                            <*> o .:? "ticketPurchaseBuyerEmail"
+        parseTicketPurchaseRequestObject o
+
+parseTicketPurchaseRequestObject :: Object -> Parser TicketPurchaseRequestDTO
+parseTicketPurchaseRequestObject o = do
+    rejectNullObjectFields
+        [ "ticketPurchaseBuyerPartyId"
+        , "ticketPurchaseBuyerName"
+        , "ticketPurchaseBuyerEmail"
+        ]
+        o
+    tierId <-
+        o .: "ticketPurchaseTierId"
+            >>= normalizePositiveIdText "ticketPurchaseTierId"
+    quantity <- o .: "ticketPurchaseQuantity"
+    if quantity <= (0 :: Int)
+        then fail "ticketPurchaseQuantity must be greater than 0"
+        else
+            if quantity > maxTicketPurchaseQuantity
+                then fail "ticketPurchaseQuantity exceeds the per-order limit"
+                else
+                    TicketPurchaseRequestDTO tierId quantity
+                        <$> o .:? "ticketPurchaseBuyerPartyId"
+                        <*> o .:? "ticketPurchaseBuyerName"
+                        <*> o .:? "ticketPurchaseBuyerEmail"
 
 normalizePositiveIdText :: String -> Text -> Parser Text
 normalizePositiveIdText fieldName rawValue =
@@ -1073,6 +1078,7 @@ data TicketPurchaseWithPromoDTO = TicketPurchaseWithPromoDTO
     { tpwpPurchase :: TicketPurchaseRequestDTO
     , tpwpPromoCode :: Maybe Text
     , tpwpMobileSdkStripeVersion :: Maybe Text
+    , tpwpIdempotencyKey :: Maybe Text
     -- ^ When present, signals the request originates from a mobile PaymentSheet
     -- and carries the Stripe-Version the mobile SDK was built against. The server
     -- creates an attached Customer + ephemeral key and returns 'spiPaymentSheet'.
@@ -1089,17 +1095,21 @@ instance ToJSON TicketPurchaseWithPromoDTO where
             , "ticketPurchaseBuyerEmail" .= ticketPurchaseBuyerEmail tpwpPurchase
             , "ticketPurchasePromoCode" .= tpwpPromoCode
             , "ticketPurchaseMobileSdkStripeVersion" .= tpwpMobileSdkStripeVersion
+            , "ticketPurchaseIdempotencyKey" .= tpwpIdempotencyKey
             ]
 
 instance FromJSON TicketPurchaseWithPromoDTO where
-    parseJSON value@(Object o) = do
+    parseJSON (Object o) = do
         rejectUnknownObjectFields "TicketPurchaseWithPromoDTO" ticketPurchaseWithPromoKeys o
-        purchase <- parseJSON value
+        purchase <- parseTicketPurchaseRequestObject o
         promoCode <- o .:? "ticketPurchasePromoCode" >>= traverse validateOptionalPromoCode
         mobileSdkVer <-
             o .:? "ticketPurchaseMobileSdkStripeVersion"
                 >>= traverse validateOptionalStripeVersion
-        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer
+        idempotencyKey <-
+            o .:? "ticketPurchaseIdempotencyKey"
+                >>= traverse validateTicketPurchaseIdempotencyKey
+        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer idempotencyKey
     parseJSON _ = fail "TicketPurchaseWithPromoDTO must be an object"
 
 ticketPurchaseWithPromoKeys :: [Text]
@@ -1111,7 +1121,18 @@ ticketPurchaseWithPromoKeys =
     , "ticketPurchaseBuyerEmail"
     , "ticketPurchasePromoCode"
     , "ticketPurchaseMobileSdkStripeVersion"
+    , "ticketPurchaseIdempotencyKey"
     ]
+
+validateTicketPurchaseIdempotencyKey :: Text -> Parser Text
+validateTicketPurchaseIdempotencyKey rawKey =
+    let key = T.strip rawKey
+     in if T.length key < 8 || T.length key > 128
+            then fail "ticketPurchaseIdempotencyKey must be between 8 and 128 characters"
+            else
+                if T.any (\ch -> not (isAscii ch) || isControl ch || isSpace ch) key
+                    then fail "ticketPurchaseIdempotencyKey must use visible ASCII characters without whitespace"
+                    else pure key
 
 {- | Reject empty/whitespace values; we use this as a feature flag for the
 PaymentSheet branch so it must be unambiguous when set.
