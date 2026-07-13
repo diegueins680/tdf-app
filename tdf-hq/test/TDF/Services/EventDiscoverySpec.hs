@@ -78,7 +78,7 @@ spec = do
       requestUrl `shouldNotContain` "countryCode="
 
   describe "Ticketmaster event normalization" $ do
-    it "creates a complete event graph and filters responses outside the requested city" $ do
+    it "creates a complete graph while ignoring malformed provider records and other cities" $ do
       case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err)
         Right response -> do
@@ -224,7 +224,11 @@ ticketmasterFixture = ticketmasterFixtureWithStatus "onsale"
 
 ticketmasterFixtureWithStatus :: BL8.ByteString -> BL8.ByteString
 ticketmasterFixtureWithStatus sourceStatus =
-  "{\"_embedded\":{\"events\":[{"
+  "{\"_embedded\":{\"events\":["
+    <> "{\"id\":\"tm-malformed-event\",\"name\":\"Malformed venue event\","
+    <> "\"dates\":{\"start\":{\"dateTime\":\"2026-08-01T19:00:00Z\"}},"
+    <> "\"_embedded\":{\"venues\":[{\"id\":\"tm-malformed-only-venue\",\"city\":{\"name\":\"Quito\"}}]}},"
+    <> "{"
     <> "\"id\":\"tm-event-1\",\"name\":\"Festival Sonoro\","
     <> "\"url\":\"http://ticketmaster.example/event/1\","
     <> "\"info\":\"Musica en vivo\","
@@ -239,6 +243,7 @@ ticketmasterFixtureWithStatus sourceStatus =
     <> "\"priceRanges\":[{\"currency\":\"USD\",\"min\":40},{\"currency\":\"USD\",\"min\":25.5}],"
     <> "\"classifications\":[{\"segment\":{\"name\":\"Music\"},\"genre\":{\"name\":\"Latin\"},\"subGenre\":{\"name\":\"Latin Pop\"}}],"
     <> "\"_embedded\":{\"venues\":["
+    <> "{\"id\":\"tm-malformed-extra-venue\",\"city\":{\"name\":\"Quito\"}},"
     <> "{\"id\":\"tm-venue-outside\",\"name\":\"Arena Bogota\",\"city\":{\"name\":\"Bogota\"}},"
     <> "{\"id\":\"tm-venue-1\",\"name\":\"Teatro Nacional\","
     <> "\"url\":\"https://ticketmaster.example/venue/1\",\"address\":{\"line1\":\"Av. Patria\"},"

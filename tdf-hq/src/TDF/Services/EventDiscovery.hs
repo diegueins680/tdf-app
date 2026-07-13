@@ -35,6 +35,7 @@ import Data.Aeson
   , (.!=)
   , (.=)
   )
+import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson.KeyMap as AesonKeyMap
@@ -312,7 +313,7 @@ instance FromJSON TicketmasterVenue where
       <*> o .:? "postalCode"
       <*> o .:? "location"
       <*> o .:? "boxOfficeInfo"
-      <*> (o .:? "images" .!= [])
+      <*> (decodeValidProviderItems <$> (o .:? "images" .!= []))
 
 data TicketmasterAttraction = TicketmasterAttraction
   { ticketmasterAttractionId :: Text
@@ -326,8 +327,8 @@ instance FromJSON TicketmasterAttraction where
     TicketmasterAttraction
       <$> o .: "id"
       <*> o .: "name"
-      <*> (o .:? "images" .!= [])
-      <*> (o .:? "classifications" .!= [])
+      <*> (decodeValidProviderItems <$> (o .:? "images" .!= []))
+      <*> (decodeValidProviderItems <$> (o .:? "classifications" .!= []))
 
 data TicketmasterEmbedded = TicketmasterEmbedded
   { ticketmasterVenues :: [TicketmasterVenue]
@@ -337,8 +338,8 @@ data TicketmasterEmbedded = TicketmasterEmbedded
 instance FromJSON TicketmasterEmbedded where
   parseJSON = withObject "TicketmasterEmbedded" $ \o ->
     TicketmasterEmbedded
-      <$> (o .:? "venues" .!= [])
-      <*> (o .:? "attractions" .!= [])
+      <$> (decodeValidProviderItems <$> (o .:? "venues" .!= []))
+      <*> (decodeValidProviderItems <$> (o .:? "attractions" .!= []))
 
 data TicketmasterStart = TicketmasterStart
   { ticketmasterStartDateTime :: Maybe Text
@@ -430,18 +431,26 @@ instance FromJSON TicketmasterEvent where
       <*> o .:? "url"
       <*> o .:? "info"
       <*> o .:? "pleaseNote"
-      <*> (o .:? "images" .!= [])
+      <*> (decodeValidProviderItems <$> (o .:? "images" .!= []))
       <*> o .: "dates"
       <*> o .:? "sales"
-      <*> (o .:? "priceRanges" .!= [])
-      <*> (o .:? "classifications" .!= [])
+      <*> (decodeValidProviderItems <$> (o .:? "priceRanges" .!= []))
+      <*> (decodeValidProviderItems <$> (o .:? "classifications" .!= []))
       <*> o .:? "_embedded"
 
-newtype TicketmasterEvents = TicketmasterEvents { ticketmasterEvents :: [TicketmasterEvent] }
+data TicketmasterEvents = TicketmasterEvents
+  { ticketmasterEvents :: [TicketmasterEvent]
+  , ticketmasterRawEventCount :: Int
+  }
 
 instance FromJSON TicketmasterEvents where
-  parseJSON = withObject "TicketmasterEvents" $ \o ->
-    TicketmasterEvents <$> (o .:? "events" .!= [])
+  parseJSON = withObject "TicketmasterEvents" $ \o -> do
+    rawEvents <- o .:? "events" .!= []
+    pure
+      TicketmasterEvents
+        { ticketmasterEvents = decodeValidProviderItems rawEvents
+        , ticketmasterRawEventCount = length rawEvents
+        }
 
 newtype TicketmasterPage = TicketmasterPage { ticketmasterTotalPages :: Int }
 
@@ -452,6 +461,7 @@ instance FromJSON TicketmasterPage where
 data TicketmasterResponse = TicketmasterResponse
   { ticketmasterResponseEvents :: [TicketmasterEvent]
   , ticketmasterResponseTotalPages :: Int
+  , ticketmasterResponseRawEventCount :: Int
   }
 
 instance FromJSON TicketmasterResponse where
@@ -462,7 +472,15 @@ instance FromJSON TicketmasterResponse where
       TicketmasterResponse
         { ticketmasterResponseEvents = maybe [] ticketmasterEvents embedded
         , ticketmasterResponseTotalPages = maybe 0 ticketmasterTotalPages page
+        , ticketmasterResponseRawEventCount = maybe 0 ticketmasterRawEventCount embedded
         }
+
+-- Ticketmaster occasionally includes an incomplete item inside an otherwise
+-- valid page (for example, a venue without a name). Decode provider arrays
+-- item-by-item so one malformed record cannot discard every usable event in
+-- the city response.
+decodeValidProviderItems :: FromJSON a => [Value] -> [a]
+decodeValidProviderItems = mapMaybe (parseMaybe parseJSON)
 
 normalizeUserCities :: [Text] -> [Text]
 normalizeUserCities rawCities =
@@ -573,12 +591,16 @@ fetchTicketmasterEvents cfg apiKey city now =
                           else case eitherDecode body of
                             Left _ -> pure (Left "Ticketmaster returned an invalid event response")
                             Right decoded -> do
-                              let normalized = normalizeTicketmasterResponse city now decoded
+                              let decodedEvents = ticketmasterResponseEvents decoded
+                                  normalized = normalizeTicketmasterResponse city now decoded
                                   nextCollected = collected ++ normalized
                                   totalPages = ticketmasterResponseTotalPages decoded
-                              if pageNumber + 1 >= totalPages
-                                then pure (Right nextCollected)
-                                else fetchPage (pageNumber + 1) nextCollected
+                              if ticketmasterResponseRawEventCount decoded > 0 && null decodedEvents
+                                then pure (Left "Ticketmaster returned no usable event records")
+                                else
+                                  if pageNumber + 1 >= totalPages
+                                    then pure (Right nextCollected)
+                                    else fetchPage (pageNumber + 1) nextCollected
 
 requestTicketmasterPage ::
   Request ->
