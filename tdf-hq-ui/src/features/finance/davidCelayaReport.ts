@@ -16,7 +16,20 @@ export interface DavidCelayaReportOptions {
   asOfDate?: Date | string;
 }
 
-export const DAVID_CELAYA_REPORT_SOURCE = {
+export interface WorkAccountReportSource {
+  personName: string;
+  reportTitle: string;
+  periodLabel: string;
+  hourlyRateCents: number;
+  notes: string;
+  workBlocks: WorkBlockSource[];
+}
+
+export interface WorkAccountReportOptions {
+  asOfDate?: Date | string;
+}
+
+export const DAVID_CELAYA_REPORT_SOURCE: WorkAccountReportSource = {
   personName: 'David Celaya',
   reportTitle: 'Reporte de cuenta',
   periodLabel: '9 y 10 de julio de 2026',
@@ -47,7 +60,7 @@ export const DAVID_CELAYA_REPORT_SOURCE = {
       discountReason: 'Descuento explícito de 2 horas en el segundo bloque.',
     },
   ] satisfies WorkBlockSource[],
-} as const;
+};
 
 const MONTH_NAMES = [
   'enero',
@@ -155,10 +168,13 @@ const calculateBillableHours = (durationSeconds: number) => Math.round(durationS
 
 const calculateBillableCents = (billableHours: number, hourlyRateCents: number) => billableHours * hourlyRateCents;
 
-export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) => {
-  const lastWorkBlock = DAVID_CELAYA_REPORT_SOURCE.workBlocks[DAVID_CELAYA_REPORT_SOURCE.workBlocks.length - 1]!;
+export const buildWorkAccountReport = (
+  source: WorkAccountReportSource,
+  options: WorkAccountReportOptions = {},
+) => {
+  const lastWorkBlock = source.workBlocks[source.workBlocks.length - 1]!;
   const cutoffDate = normalizeReportDate(options.asOfDate ?? lastWorkBlock.date);
-  const workBlocks = DAVID_CELAYA_REPORT_SOURCE.workBlocks.map((block) => {
+  const workBlocks = source.workBlocks.map((block) => {
     const startDateTime = parseLocalDateTime(block.date, block.startTime);
     const endDateTime = parseLocalDateTime(block.date, block.endTime);
     if (Number.isNaN(startDateTime.getTime()) || Number.isNaN(endDateTime.getTime())) {
@@ -167,7 +183,7 @@ export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) =
     const durationSeconds = Math.max(0, Math.round((endDateTime.getTime() - startDateTime.getTime()) / 1000));
     const billableHours = calculateBillableHours(durationSeconds);
     const netBillableHours = Math.max(0, billableHours - block.discountHours);
-    const billableCents = calculateBillableCents(netBillableHours, DAVID_CELAYA_REPORT_SOURCE.hourlyRateCents);
+    const billableCents = calculateBillableCents(netBillableHours, source.hourlyRateCents);
     return {
       ...block,
       startDateTime,
@@ -188,7 +204,7 @@ export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) =
   const totalBillableCents = workBlocks.reduce((total, block) => total + block.billableCents, 0);
   const totalBillableHours = workBlocks.reduce((total, block) => total + block.netBillableHours, 0);
   const totalDiscountHours = workBlocks.reduce((total, block) => total + block.discountHours, 0);
-  const totalDiscountCents = totalDiscountHours * DAVID_CELAYA_REPORT_SOURCE.hourlyRateCents;
+  const totalDiscountCents = totalDiscountHours * source.hourlyRateCents;
   const averageDurationSeconds = workBlocks.length > 0 ? Math.round(totalDurationSeconds / workBlocks.length) : 0;
   const evidenceCount = workBlocks.length * 2;
   const firstStart = workBlocks[0]?.startDateTime ?? null;
@@ -196,7 +212,7 @@ export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) =
 
   return {
     source: {
-      ...DAVID_CELAYA_REPORT_SOURCE,
+      ...source,
       cutoffDate,
     },
     workBlocks,
@@ -211,6 +227,9 @@ export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) =
     lastEnd,
   };
 };
+
+export const buildDavidCelayaReport = (options: DavidCelayaReportOptions = {}) =>
+  buildWorkAccountReport(DAVID_CELAYA_REPORT_SOURCE, options);
 
 export type DavidCelayaReport = ReturnType<typeof buildDavidCelayaReport>;
 
@@ -294,7 +313,7 @@ const color = (rgb: readonly number[]) => rgb.join(' ');
 const textWidthEstimate = (value: string, fontSize: number, bold = false) =>
   escapePdfStringForWidth(value).length * fontSize * (bold ? 0.55 : 0.5);
 
-const buildPdfContentStream = (report: DavidCelayaReport) => {
+const buildPdfContentStream = (report: ReturnType<typeof buildWorkAccountReport>) => {
   const pages: string[][] = [];
   let commands: string[] = [];
   let y: number = PDF.headerTop;
@@ -580,8 +599,14 @@ const buildPdfDocument = (contentStreams: string[]) => {
   return pdf;
 };
 
-export const buildDavidCelayaReportPdfSource = (report: DavidCelayaReport = buildDavidCelayaReport()) =>
+export const buildWorkAccountReportPdfSource = (report: ReturnType<typeof buildWorkAccountReport>) =>
   buildPdfDocument(buildPdfContentStream(report));
 
+export const buildWorkAccountReportPdfBlob = (report: ReturnType<typeof buildWorkAccountReport>) =>
+  new Blob([buildWorkAccountReportPdfSource(report)], { type: 'application/pdf' });
+
+export const buildDavidCelayaReportPdfSource = (report: DavidCelayaReport = buildDavidCelayaReport()) =>
+  buildWorkAccountReportPdfSource(report);
+
 export const buildDavidCelayaReportPdfBlob = (report: DavidCelayaReport = buildDavidCelayaReport()) =>
-  new Blob([buildDavidCelayaReportPdfSource(report)], { type: 'application/pdf' });
+  buildWorkAccountReportPdfBlob(report);

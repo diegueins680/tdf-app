@@ -68,6 +68,7 @@ const LANDING_LABELS: Record<string, string> = {
   '/label/artistas': 'Sello / Artistas',
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
+  '/finanzas/creador-reporte-cuenta': 'Finanzas / Creador de reportes',
   '/finanzas/reporte-esteban-munoz': 'Finanzas / Reporte Esteban',
   '/finanzas/reporte-david-celaya': 'Finanzas / Reporte David',
   '/practicas': 'Prácticas',
