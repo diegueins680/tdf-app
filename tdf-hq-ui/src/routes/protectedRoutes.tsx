@@ -20,6 +20,8 @@ const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
+const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
+const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfilePage'));
@@ -134,7 +136,9 @@ export function renderProtectedRoutes() {
 
         <Route path="/finanzas" element={<Outlet />}>
           <Route path="pagos" element={<PaymentsPage />} />
+          <Route path="creador-reporte-cuenta" element={<WorkAccountReportBuilderPage />} />
           <Route path="reporte-esteban-munoz" element={<EstebanMunozReportPage />} />
+          <Route path="reporte-david-celaya" element={<DavidCelayaReportPage />} />
           <Route index element={<Navigate to="pagos" replace />} />
         </Route>
 
