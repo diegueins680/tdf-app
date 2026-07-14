@@ -2789,6 +2789,7 @@ describe('CourseRegistrationsAdminPage', () => {
     listRegistrationsMock.mockResolvedValue(buildRegistrations(8, (index) => ({
       crAdminNotes: index < 2 ? 'Beca aprobada por coordinación.' : null,
     })));
+    const sharedCreatedAtLabel = formatTimestampForDisplay('2030-01-02T03:04:05.000Z', '-');
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -2810,7 +2811,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(container.querySelector('[data-testid="course-registration-current-view-summary"]')).toBeNull();
       expect(container.textContent).not.toContain('Vista actual');
       expect(container.textContent).toContain(
-        'Beatmaking 101 · Pendiente de pago. Misma fecha de registro: 1/1/2030, 10:04:05 PM. Mostrando 2 de 8 inscripciones cargadas.',
+        `Beatmaking 101 · Pendiente de pago. Misma fecha de registro: ${sharedCreatedAtLabel}. Mostrando 2 de 8 inscripciones cargadas.`,
       );
       expect(countOccurrences(container, 'Beatmaking 101 · Pendiente de pago')).toBe(1);
       expect(container.textContent).toContain('Mostrando 2 de 8 inscripciones cargadas.');

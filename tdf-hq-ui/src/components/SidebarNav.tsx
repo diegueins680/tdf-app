@@ -197,7 +197,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Órdenes tienda', path: '/operacion/ordenes-marketplace' },
       { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
       { label: 'Pagos', path: '/finanzas/pagos' },
+      { label: 'Creador de reportes', path: '/finanzas/creador-reporte-cuenta' },
       { label: 'Reporte Esteban', path: '/finanzas/reporte-esteban-munoz' },
+      { label: 'Reporte David', path: '/finanzas/reporte-david-celaya' },
     ],
   },
   {
