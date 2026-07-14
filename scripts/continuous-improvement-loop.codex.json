@@ -13,5 +13,5 @@
   "ciTimeoutMinutes": 45,
   "stopOnNoChanges": false,
   "iterationDelaySeconds": 20,
-  "allowPushToMain": true
+  "allowPushToMain": false
 }

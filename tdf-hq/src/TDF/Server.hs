@@ -690,6 +690,7 @@ server env =
   :<|> cmsPublicServer
   :<|> whatsappConsentPublicServer
   :<|> inventoryPublicServer
+  :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
   :<|> roomsPublicServer
@@ -699,7 +700,6 @@ server env =
   :<|> inventoryStaticServer assetsRoot
   :<|> assetsServeServer assetsRoot
   :<|> stripeWebhookServer
-  :<|> protectedServer
 
 versionServer :: ServerT Api.VersionAPI AppM
 versionServer = liftIO getVersionInfo

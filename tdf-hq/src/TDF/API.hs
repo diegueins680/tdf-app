@@ -543,6 +543,9 @@ type API =
   :<|> CmsPublicAPI
   :<|> WhatsAppConsentPublicAPI
   :<|> InventoryPublicAPI
+  -- Keep the authenticated marketplace branch ahead of the public one so
+  -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
+  :<|> AuthProtect "bearer-token" :> ProtectedAPI
   :<|> "marketplace" :> MarketplaceAPI
   :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
@@ -552,7 +555,6 @@ type API =
   :<|> AssetsAPI
   :<|> AssetsServeAPI
   :<|> StripeWebhookAPI
-  :<|> AuthProtect "bearer-token" :> ProtectedAPI
 
 data HealthStatus = HealthStatus { status :: String, db :: String }
 
