@@ -84,6 +84,8 @@ DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
 SEED_DB=false
+RUN_MIGRATIONS=false
+EVENT_DISCOVERY_ENABLED=false
 
 # Web UI URL (for CORS)
 HQ_APP_URL=https://your-frontend-url.pages.dev
@@ -184,22 +186,39 @@ server {
 
 ## Backend Deployment (Fly.io)
 
-Fly powers the production `tdf-hq` API. Deployments must inject the git SHA so `/version` returns the running commit.
+Fly powers the production `tdf-hq` API. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
-The deployment flow is:
+Application startup never owns production schema changes. Both `RUN_MIGRATIONS` and `EVENT_DISCOVERY_ENABLED` remain `false` in `fly.toml` during a release. The release lane applies the reviewed, additive SQL migrations once before updating any API Machine, deploys an image pinned to the requested full git SHA, and verifies the running image digest, version payload, and healthy response.
 
-1. Build and push `diegueins680/tdf-hq:<commit-sha>` to Docker Hub with the helper script.
-2. Tell Fly to deploy that prebuilt image (`fly deploy --image ...`).
+### Guarded release commands
 
-Steps:
+Run these commands from the repository root. Use the same 40-character commit SHA throughout:
 
-1. Install Docker (with Buildx) and authenticate to Docker Hub (`docker login`). CI does this via `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets.
-2. Install and authenticate Fly CLI (`fly auth login`).
-3. Run `scripts/fly-deploy.sh [fly deploy flags]` from the repo root. The script:
-   - Captures `git rev-parse HEAD`.
-   - Builds and pushes `diegueins680/tdf-hq:<sha>` (override via `DOCKER_IMAGE_REPO`/`DOCKER_IMAGE_TAG`).
-   - Calls `fly deploy --image ... --env SOURCE_COMMIT=... --env GIT_SHA=...`.
-4. For manual Fly commands, pass the same env vars (`--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)`) and reference the pushed Docker Hub image to avoid re-building inside Fly.
+```bash
+# Local-only: show the immutable image and ordered release sequence.
+npm run release:backend:plan -- --sha <full-sha>
+
+# Read-only: verify production schema/data, image availability, and Fly state.
+npm run release:backend:preflight -- --sha <full-sha>
+
+# Mutating: apply pending migrations once and perform the rolling deployment.
+npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+```
+
+The execute command deliberately requires both `--execute` and an exact SHA confirmation. A failed preflight blocks migration and deployment. Do not bypass that refusal with direct Fly commands.
+
+For the ticket checkout and event-discovery release, the required order is:
+
+1. Verify the already repaired notification schema.
+2. Apply `tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql` to repair the previously unapplied ticketing base schema.
+3. Apply `tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql`.
+4. Apply `tdf-hq/sql/2026-07-12_event_discovery_imports.sql`.
+5. Roll out the pinned backend image with discovery still disabled.
+6. Verify each started API Machine, the public `/health` and `/version` endpoints, and logs before enabling any new background job.
+
+Before this release can execute, Fly must have `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set. The lane also requires every running Machine to have effective `RUN_MIGRATIONS=false` and `EVENT_DISCOVERY_ENABLED=false`. Disable any main-branch auto-deploy path before pushing this release work; schema application must happen only through the guarded lane.
+
+These migrations are additive. If application rollback is required, restore the previous pinned image and leave the new nullable columns/tables in place.
 
 ### Setting Secrets in Fly
 
@@ -211,6 +230,9 @@ flyctl secrets set VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 
 # Set live sessions token
 flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=your-token
+
+# Ticketmaster may be stored before rollout, but discovery stays disabled in fly.toml
+flyctl secrets set TICKETMASTER_API_KEY=your-consumer-key
 
 # List current secrets
 flyctl secrets list
@@ -242,10 +264,15 @@ flyctl status
 flyctl logs
 ```
 
+During application boot, `/health` can temporarily report a `starting` payload. Release verification must wait for `status: "ok"` and `db: "ok"`; an HTTP 200 alone is not sufficient. Fly uses the endpoint for rolling Machine health checks, while the release lane verifies the response body and exact `/version` SHA.
+
 The service is configured to:
+
 - Listen on `0.0.0.0:8080` (accepts connections from Fly's proxy)
 - Use `internal_port = 8080` in fly.toml for service binding
 - Expose ports 80 (HTTP) and 443 (HTTPS) via Fly's proxy
+- Roll Machines gradually and require the `/health` HTTP check
+- Keep startup migrations and Ticketmaster discovery disabled by default
 
 ## Frontend Deployment
 
