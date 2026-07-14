@@ -115,7 +115,7 @@ jobs:
 
       - name: Apply the authoritative migration batch twice
         env:
-          SOURCE_COMMIT: 0000000000000000000000000000000000000000
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
         run: |
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
@@ -131,7 +131,7 @@ jobs:
 
       - name: Reject a changed applied migration
         env:
-          SOURCE_COMMIT: 0000000000000000000000000000000000000000
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -c "UPDATE public.tdf_schema_migration SET checksum = repeat('f', 64) WHERE migration_id = '2026-07-12_ticketing_runtime_schema'"
           if node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1; then
