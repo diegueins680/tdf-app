@@ -962,6 +962,9 @@ data TicketOrderDTO = TicketOrderDTO
     , ticketOrderBuyerName :: Maybe Text
     , ticketOrderBuyerEmail :: Maybe Text
     , ticketOrderQuantity :: Int
+    , ticketOrderFaceValueCents :: Int
+    , ticketOrderBuyerPlatformFeeCents :: Int
+    , ticketOrderOrganizerPlatformFeeCents :: Int
     , ticketOrderAmountCents :: Int
     , ticketOrderCurrency :: Text
     , ticketOrderStatusValue :: Text

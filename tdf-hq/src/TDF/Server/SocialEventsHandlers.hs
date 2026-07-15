@@ -652,13 +652,37 @@ formatTicketOrderTotal order =
   where
     amount = fromIntegral (eventTicketOrderAmountCents order) / 100 :: Double
 
-encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text
-encodeTicketCheckoutMetadata Nothing _ = Nothing
-encodeTicketCheckoutMetadata (Just idempotencyKey) mPromoCode =
+data TicketPlatformFeeBreakdown = TicketPlatformFeeBreakdown
+    { ticketFaceValueCents :: Int
+    , ticketBuyerPlatformFeeCents :: Int
+    , ticketOrganizerPlatformFeeCents :: Int
+    , ticketCheckoutTotalCents :: Int
+    }
+
+ticketPlatformFeeBps :: Int
+ticketPlatformFeeBps = 1000
+
+ticketPlatformFeeBreakdown :: Int -> TicketPlatformFeeBreakdown
+ticketPlatformFeeBreakdown faceValue =
+    let totalFee = max 0 (faceValue * ticketPlatformFeeBps `div` 10000)
+        buyerFee = (totalFee + 1) `div` 2
+        organizerFee = totalFee - buyerFee
+     in TicketPlatformFeeBreakdown
+            { ticketFaceValueCents = faceValue
+            , ticketBuyerPlatformFeeCents = buyerFee
+            , ticketOrganizerPlatformFeeCents = organizerFee
+            , ticketCheckoutTotalCents = faceValue + buyerFee
+            }
+
+encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> TicketPlatformFeeBreakdown -> Maybe T.Text
+encodeTicketCheckoutMetadata mIdempotencyKey mPromoCode TicketPlatformFeeBreakdown{..} =
     Just . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
         Aeson.object
-            [ "checkout_idempotency_key" Aeson..= idempotencyKey
+            [ "checkout_idempotency_key" Aeson..= mIdempotencyKey
             , "promo_code" Aeson..= mPromoCode
+            , "face_value_cents" Aeson..= ticketFaceValueCents
+            , "buyer_platform_fee_cents" Aeson..= ticketBuyerPlatformFeeCents
+            , "organizer_platform_fee_cents" Aeson..= ticketOrganizerPlatformFeeCents
             ]
 
 decodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe (T.Text, Maybe T.Text)
@@ -672,6 +696,24 @@ decodeTicketCheckoutMetadata mRawMetadata = do
                 <*> obj Aeson..:? "promo_code"
         )
         metadata
+
+decodeTicketPlatformFeeBreakdown :: EventTicketOrder -> TicketPlatformFeeBreakdown
+decodeTicketPlatformFeeBreakdown order =
+    fromMaybe fallback $ do
+        rawMetadata <- eventTicketOrderMetadata order
+        metadata <- Aeson.decodeStrict' (TE.encodeUtf8 rawMetadata)
+        parseMaybe
+            ( Aeson.withObject "ticket_fee_metadata" $ \obj ->
+                TicketPlatformFeeBreakdown
+                    <$> obj Aeson..: "face_value_cents"
+                    <*> obj Aeson..: "buyer_platform_fee_cents"
+                    <*> obj Aeson..: "organizer_platform_fee_cents"
+                    <*> pure (eventTicketOrderAmountCents order)
+            )
+            metadata
+  where
+    -- Orders created before the platform-fee rollout retain their historical totals.
+    fallback = TicketPlatformFeeBreakdown (eventTicketOrderAmountCents order) 0 0 (eventTicketOrderAmountCents order)
 
 reuseStripeTicketCheckout ::
     Maybe T.Text ->
@@ -3550,7 +3592,7 @@ socialEventsServer user =
                 validateTicketCheckoutAmount
                     ticketPurchaseQuantity
                     (eventTicketTierPriceCents tier)
-        (finalAmountCents, mPromoCodeKey, mPromoCodeEnt) <- case mExistingCheckout of
+        (faceValueCents, mPromoCodeKey, mPromoCodeEnt) <- case mExistingCheckout of
             Just (Entity _ existingOrder) ->
                 pure
                     ( eventTicketOrderAmountCents existingOrder
@@ -3599,6 +3641,10 @@ socialEventsServer user =
                                 (SM.promoCodeDiscountValue code)
                     let discountedAmount = max 0 (baseAmountCents - discountAmount)
                     pure (discountedAmount, Just (entityKey codeEnt), Just codeEnt)
+        let feeBreakdown = case mExistingCheckout of
+                Just (Entity _ existingOrder) -> decodeTicketPlatformFeeBreakdown existingOrder
+                Nothing -> ticketPlatformFeeBreakdown faceValueCents
+            finalAmountCents = ticketCheckoutTotalCents feeBreakdown
         createdOrder <- case mExistingCheckout of
             Just (Entity existingOrderKey existingOrder) -> do
                 existingTickets <-
@@ -3654,12 +3700,12 @@ socialEventsServer user =
                                                 encodeTicketCheckoutMetadata
                                                     tpwpIdempotencyKey
                                                     tpwpPromoCode
+                                                    feeBreakdown
                                             , eventTicketOrderCheckoutIdempotencyKey = tpwpIdempotencyKey
                                             , eventTicketOrderPurchasedAt = now
                                             , eventTicketOrderStripePaymentIntentId = Nothing
                                             , eventTicketOrderPromoCodeId = mPromoCodeKey
-                                            , eventTicketOrderOriginalAmountCents =
-                                                if isJust mPromoCodeKey then Just baseAmountCents else Nothing
+                                            , eventTicketOrderOriginalAmountCents = Just baseAmountCents
                                             , eventTicketOrderPaymentMethod =
                                                 Just
                                                     ( if zeroTotal
@@ -6677,7 +6723,8 @@ ticketEntityToDTO (Entity ticketKey ticketRow) =
 
 ticketOrderEntityToDTO :: Entity EventTicketOrder -> [Entity EventTicket] -> TicketOrderDTO
 ticketOrderEntityToDTO (Entity orderKey orderRow) tickets =
-    TicketOrderDTO
+    let feeBreakdown = decodeTicketPlatformFeeBreakdown orderRow
+     in TicketOrderDTO
         { ticketOrderId = Just (renderKeyText orderKey)
         , ticketOrderEventId = Just (renderKeyText (eventTicketOrderEventId orderRow))
         , ticketOrderTierId = Just (renderKeyText (eventTicketOrderTierId orderRow))
@@ -6685,6 +6732,9 @@ ticketOrderEntityToDTO (Entity orderKey orderRow) tickets =
         , ticketOrderBuyerName = eventTicketOrderBuyerName orderRow
         , ticketOrderBuyerEmail = eventTicketOrderBuyerEmail orderRow
         , ticketOrderQuantity = eventTicketOrderQuantity orderRow
+        , ticketOrderFaceValueCents = ticketFaceValueCents feeBreakdown
+        , ticketOrderBuyerPlatformFeeCents = ticketBuyerPlatformFeeCents feeBreakdown
+        , ticketOrderOrganizerPlatformFeeCents = ticketOrganizerPlatformFeeCents feeBreakdown
         , ticketOrderAmountCents = eventTicketOrderAmountCents orderRow
         , ticketOrderCurrency = eventTicketOrderCurrency orderRow
         , ticketOrderStatusValue = normalizeTicketOrderStatus (Just (eventTicketOrderStatus orderRow))
@@ -6858,6 +6908,8 @@ ticketOrderAccountingEntriesWithStatus eventKey (Entity orderKey orderRec) statu
         _ -> []
   where
     orderIdTxt = renderKeyText orderKey
+    feeBreakdown = decodeTicketPlatformFeeBreakdown orderRec
+    organizerNetCents = max 0 (ticketFaceValueCents feeBreakdown - ticketOrganizerPlatformFeeCents feeBreakdown)
     mkEntry suffix direction source statusLabel conceptPrefix =
         EventFinanceEntryDTO
             { efeId = Just ("ticket-order-" <> orderIdTxt <> "-" <> suffix)
@@ -6867,7 +6919,10 @@ ticketOrderAccountingEntriesWithStatus eventKey (Entity orderKey orderRec) statu
             , efeSource = source
             , efeCategory = "tickets"
             , efeConcept = conceptPrefix <> " #" <> orderIdTxt
-            , efeAmountCents = eventTicketOrderAmountCents orderRec
+            , efeAmountCents =
+                if source == "ticket_sale"
+                    then organizerNetCents
+                    else eventTicketOrderAmountCents orderRec
             , efeCurrency = normalizeCurrency (eventTicketOrderCurrency orderRec)
             , efeStatus = statusLabel
             , efeExternalRef = Just orderIdTxt

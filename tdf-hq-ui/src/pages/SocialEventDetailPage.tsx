@@ -6,7 +6,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
-import { SocialEventsAPI, type SocialEventMomentCreateDTO } from '../api/socialEvents';
+import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { useSession } from '../session/SessionContext';
 
 const formatDate = (value?: string | null) => {
@@ -17,6 +17,14 @@ const formatDate = (value?: string | null) => {
 
 const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';
 
+const ticketFee = (faceValueCents: number) => {
+  const total = Math.max(0, Math.floor((faceValueCents * 1000) / 10000));
+  const buyer = Math.ceil(total / 2);
+  return { buyer, organizer: total - buyer, checkout: faceValueCents + buyer };
+};
+
+const money = (cents: number, currency = 'USD') => `${currency.toUpperCase()} ${(cents / 100).toFixed(2)}`;
+
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
   const { session } = useSession();
@@ -25,6 +33,9 @@ export default function SocialEventDetailPage() {
   const [caption, setCaption] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [ticketName, setTicketName] = useState('General');
+  const [ticketPrice, setTicketPrice] = useState('');
+  const [ticketQuantity, setTicketQuantity] = useState('100');
   const eventQuery = useQuery({
     queryKey: ['social-event', eventId],
     queryFn: () => SocialEventsAPI.getEvent(eventId),
@@ -33,6 +44,11 @@ export default function SocialEventDetailPage() {
   const momentsQuery = useQuery({
     queryKey: ['social-event-moments', eventId],
     queryFn: () => SocialEventsAPI.listMoments(eventId),
+    enabled: Boolean(eventId),
+  });
+  const tiersQuery = useQuery({
+    queryKey: ['social-event-ticket-tiers', eventId],
+    queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
     enabled: Boolean(eventId),
   });
   const postMutation = useMutation({
@@ -59,8 +75,34 @@ export default function SocialEventDetailPage() {
       void queryClient.invalidateQueries({ queryKey: ['social-event-moments', eventId] });
     },
   });
+  const ticketTierMutation = useMutation({
+    mutationFn: () => {
+      const price = Number(ticketPrice);
+      const quantity = Number(ticketQuantity);
+      if (!Number.isFinite(price) || price < 0) throw new Error('Ingresa un precio válido.');
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Ingresa una cantidad válida.');
+      const name = ticketName.trim();
+      if (!name) throw new Error('El nombre del ticket es obligatorio.');
+      const payload: SocialTicketTierDTO = {
+        ticketTierCode: name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL',
+        ticketTierName: name,
+        ticketTierPriceCents: Math.round(price * 100),
+        ticketTierCurrency: event?.eventCurrency ?? 'USD',
+        ticketTierQuantityTotal: quantity,
+        ticketTierQuantitySold: 0,
+        ticketTierActive: true,
+      };
+      return SocialEventsAPI.createTicketTier(eventId, payload);
+    },
+    onSuccess: () => {
+      setTicketName('General');
+      setTicketPrice('');
+      void queryClient.invalidateQueries({ queryKey: ['social-event-ticket-tiers', eventId] });
+    },
+  });
 
   const event = eventQuery.data;
+  const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
   const error = eventQuery.error ?? momentsQuery.error ?? postMutation.error;
 
   return (
@@ -87,6 +129,37 @@ export default function SocialEventDetailPage() {
             </CardContent>
           </Card>
         )}
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Typography variant="h6">Tickets</Typography>
+              <Alert severity="info">TDF cobra una comisión del 10%: la mitad se suma al checkout y la otra mitad se descuenta del pago al organizador.</Alert>
+              {tiersQuery.isLoading ? <CircularProgress size={22} /> : tiersQuery.data?.length ? (
+                <Stack spacing={1}>
+                  {tiersQuery.data.map((tier) => {
+                    const fee = ticketFee(tier.ticketTierPriceCents);
+                    return <Stack key={tier.ticketTierId ?? tier.ticketTierCode} direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                      <Box><Typography fontWeight={700}>{tier.ticketTierName}</Typography><Typography variant="body2" color="text.secondary">{Math.max(0, tier.ticketTierQuantityTotal - tier.ticketTierQuantitySold)} disponibles</Typography></Box>
+                      <Box sx={{ textAlign: { sm: 'right' } }}><Typography>{money(tier.ticketTierPriceCents, tier.ticketTierCurrency)}</Typography><Typography variant="caption" color="text.secondary">Checkout: {money(fee.checkout, tier.ticketTierCurrency)} (incluye {money(fee.buyer, tier.ticketTierCurrency)} de tarifa)</Typography></Box>
+                    </Stack>;
+                  })}
+                </Stack>
+              ) : <Typography color="text.secondary">Aún no hay tickets para este evento.</Typography>}
+              {isOrganizer && <>
+                <Divider />
+                <Typography variant="subtitle1" fontWeight={700}>Crear tipo de ticket</Typography>
+                {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo crear el ticket.'}</Alert>}
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                  <TextField label="Nombre" value={ticketName} onChange={(event) => setTicketName(event.target.value)} sx={{ flex: 1 }} />
+                  <TextField label="Precio" type="number" value={ticketPrice} onChange={(event) => setTicketPrice(event.target.value)} inputProps={{ min: 0, step: '0.01' }} />
+                  <TextField label="Cantidad" type="number" value={ticketQuantity} onChange={(event) => setTicketQuantity(event.target.value)} inputProps={{ min: 1, step: 1 }} />
+                  <Button variant="contained" onClick={() => ticketTierMutation.mutate()} disabled={ticketTierMutation.isPending}>{ticketTierMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Crear tickets'}</Button>
+                </Stack>
+              </>}
+            </Stack>
+          </CardContent>
+        </Card>
 
         <Card variant="outlined">
           <CardContent>

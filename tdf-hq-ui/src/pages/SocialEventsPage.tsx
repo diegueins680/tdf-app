@@ -202,6 +202,11 @@ const formatMoney = (amountCents?: number | null, currency?: string | null) => {
   return `${code} ${(amountCents / 100).toFixed(2)}`;
 };
 
+const ticketCheckoutTotal = (faceValueCents: number) => {
+  const platformFee = Math.max(0, Math.floor((faceValueCents * 1000) / 10000));
+  return faceValueCents + Math.ceil(platformFee / 2);
+};
+
 const formatPercent = (value?: number | null) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return 'n/a';
   return `${value.toFixed(1)}%`;
@@ -1041,6 +1046,11 @@ export default function SocialEventsPage() {
                 <Typography variant="body2" color="text.secondary">
                   {formatMoney(order.ticketOrderAmountCents, order.ticketOrderCurrency)}
                 </Typography>
+                {order.ticketOrderBuyerPlatformFeeCents > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    Tarifa TDF: {formatMoney(order.ticketOrderBuyerPlatformFeeCents + order.ticketOrderOrganizerPlatformFeeCents, order.ticketOrderCurrency)}
+                  </Typography>
+                )}
               </Stack>
               {order.ticketOrderTickets.length > 0 && (
                 <Stack direction="row" spacing={0.75} flexWrap="wrap" sx={{ mt: 1 }}>
@@ -1722,7 +1732,7 @@ export default function SocialEventsPage() {
                                     value={tier.ticketTierId ?? ''}
                                     disabled={!tier.ticketTierActive || tierAvailability(tier) <= 0}
                                   >
-                                    {tier.ticketTierName} ({formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)})
+                                    {tier.ticketTierName} ({formatMoney(ticketCheckoutTotal(tier.ticketTierPriceCents), tier.ticketTierCurrency)} final)
                                   </MenuItem>
                                 ))}
                               </TextField>

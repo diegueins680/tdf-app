@@ -134,6 +134,9 @@ export interface SocialTicketOrderDTO {
   ticketOrderBuyerName?: string | null;
   ticketOrderBuyerEmail?: string | null;
   ticketOrderQuantity: number;
+  ticketOrderFaceValueCents: number;
+  ticketOrderBuyerPlatformFeeCents: number;
+  ticketOrderOrganizerPlatformFeeCents: number;
   ticketOrderAmountCents: number;
   ticketOrderCurrency: string;
   ticketOrderStatusValue: string;
