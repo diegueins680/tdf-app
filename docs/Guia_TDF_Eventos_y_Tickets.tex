@@ -18,6 +18,7 @@
 \tcbuselibrary{skins,breakable}
 \usepackage{microtype}
 \usepackage{amssymb}
+\usepackage{eso-pic}
 
 \definecolor{TDFPurple}{HTML}{8B5CF6}
 \definecolor{TDFViolet}{HTML}{6D28D9}
@@ -50,15 +51,17 @@
 \renewcommand{\headrulewidth}{0pt}
 
 \begin{document}
-\begin{titlepage}
-\thispagestyle{empty}
+\AddToShipoutPictureBG*{%
 \begin{tikzpicture}[remember picture,overlay]
   \fill[TDFInk] (current page.south west) rectangle (current page.north east);
   \fill[TDFViolet] ($(current page.north east)+(-1.9in,-0.1in)$) circle (2.25in);
   \fill[TDFPink] ($(current page.south east)+(-0.15in,1.0in)$) circle (1.45in);
   \fill[TDFPurple,opacity=.35] ($(current page.south west)+(0.6in,0.25in)$) circle (1.5in);
   \draw[white,opacity=.12,line width=0.5pt] ($(current page.south west)+(0.55in,1.35in)$) -- ($(current page.north east)+(-0.55in,-1.35in)$);
-\end{tikzpicture}
+\end{tikzpicture}%
+}
+\begin{titlepage}
+\thispagestyle{empty}
 \vspace*{0.6in}
 \includegraphics[width=2.65in]{docs/assets/tdf_logo_alt_nobg_render.png}\par
 \vfill
@@ -84,7 +87,7 @@ en un evento que sucede.\par}
 \end{tabularx}
 
 \begin{tcolorbox}[enhanced,breakable,colback=white,colframe=TDFLine,boxrule=.8pt,arc=10pt,left=14pt,right=14pt,top=10pt,bottom=11pt,title=Ruta rápida,coltitle=TDFViolet,fonttitle=\bfseries]
-Desde el menú lateral entra a \textbf{Social → Eventos sociales}. También puedes abrir directamente \href{https://tdf-app.pages.dev/social/eventos}{tdf-app.pages.dev/social/eventos}. El creador del evento queda como organizador y ve los controles de tickets y órdenes.
+Desde el menú lateral entra a \textbf{Social → Eventos sociales}. También puedes abrir directamente \href{https://tdf-app.pages.dev/social/eventos}{\texttt{https://tdf-app.pages.dev/social/eventos}}. Si aún no has iniciado sesión, TDF te llevará al acceso y luego podrás continuar. El creador del evento queda como organizador y ve los controles de tickets y órdenes.
 \end{tcolorbox}
 
 \section*{El flujo, de un vistazo}
@@ -200,6 +203,31 @@ TDF aplica una comisión de plataforma competitiva de \textbf{4\% por ticket ven
 \item[$\square$] Hay una persona responsable de check-in y soporte.
 \end{itemize}
 \end{multicols}
+\end{tcolorbox}
+
+\clearpage
+\section*{Capturas y enlaces reales}
+\begin{tcolorbox}[enhanced,colback=TDFMist,colframe=TDFLine,boxrule=.8pt,arc=10pt,left=14pt,right=14pt,top=10pt,bottom=10pt]
+\textbf{Eventos sociales}\quad \href{https://tdf-app.pages.dev/social/eventos}{\texttt{https://tdf-app.pages.dev/social/eventos}}\\
+\textbf{Iniciar sesión}\quad \href{https://tdf-app.pages.dev/login}{\texttt{https://tdf-app.pages.dev/login}}\\
+\textbf{TDF Records}\quad \href{https://tdf-app.pages.dev}{\texttt{https://tdf-app.pages.dev}}
+\end{tcolorbox}
+
+\begin{tcolorbox}[enhanced,breakable,colback=white,colframe=TDFLine,boxrule=.8pt,arc=10pt,left=11pt,right=11pt,top=10pt,bottom=10pt]
+\begin{minipage}[t]{0.61\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=2.9in,keepaspectratio]{docs/assets/guide-screenshots/eventos-sociales-web.png}\\[4pt]
+{\small\textcolor{TDFSlate}{\textbf{Acceso real.} La ruta de Eventos sociales solicita iniciar sesión cuando aún no hay una sesión activa.}}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.34\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=2.9in,keepaspectratio]{docs/assets/guide-screenshots/panel-eventos-descubiertos-top.png}\\[4pt]
+{\small\textcolor{TDFSlate}{\textbf{Panel de eventos.} Ejemplo real de tarjetas y acciones disponibles en TDF.}}
+\end{minipage}
+\end{tcolorbox}
+
+\begin{tcolorbox}[enhanced,colback=white,colframe=TDFLine,boxrule=.8pt,arc=10pt,left=14pt,right=14pt,top=9pt,bottom=9pt]
+\textcolor{TDFViolet}{\bfseries Consejo de navegación}\quad Después de crear el evento, pulsa \textbf{Abrir página del evento}. Esa ficha contiene su enlace propio, la sección para añadir media y, para el organizador, la gestión de tipos de ticket y órdenes.
 \end{tcolorbox}
 
 \vfill
