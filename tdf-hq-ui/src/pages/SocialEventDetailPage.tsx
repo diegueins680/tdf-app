@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
-import { Alert, Avatar, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO } from '../api/socialEvents';
@@ -122,13 +122,29 @@ export default function SocialEventDetailPage() {
             <Card key={moment.emId ?? `${moment.emAuthorPartyId}-${moment.emCreatedAt}`} variant="outlined">
               <CardContent>
                 <Stack spacing={1.25}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
-                    <Box>
-                      <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
-                      <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt)}</Typography>
-                    </Box>
-                  </Stack>
+                  {moment.emAuthorPartyId ? (
+                    <ButtonBase
+                      component={RouterLink}
+                      to={`/perfil/${encodeURIComponent(moment.emAuthorPartyId)}`}
+                      sx={{ alignSelf: 'flex-start', borderRadius: 2, textAlign: 'left' }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
+                        <Box>
+                          <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
+                          <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt)}</Typography>
+                        </Box>
+                      </Stack>
+                    </ButtonBase>
+                  ) : (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
+                      <Box>
+                        <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
+                        <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt)}</Typography>
+                      </Box>
+                    </Stack>
+                  )}
                   {moment.emMediaType === 'video' ? <Box component="video" src={moment.emMediaUrl} controls sx={{ width: '100%', maxHeight: 520, borderRadius: 2, bgcolor: 'black' }} /> : <Box component="img" src={moment.emMediaUrl} alt={moment.emCaption ?? `Publicación de ${moment.emAuthorName}`} sx={{ width: '100%', maxHeight: 520, objectFit: 'contain', borderRadius: 2, bgcolor: 'action.hover' }} />}
                   {moment.emCaption && <><Divider /><Typography sx={{ whiteSpace: 'pre-wrap' }}>{moment.emCaption}</Typography></>}
                 </Stack>
