@@ -382,11 +382,11 @@ async function smokeMachine(context, machineId, expectedSha = context.sha) {
   let proxyError = '';
   proxy.stderr.on('data', (chunk) => { proxyError += chunk.toString(); });
   try {
-    const health = await waitForJson(`http://127.0.0.1:${port}/health`, 15_000);
+    const health = await waitForJson(`http://127.0.0.1:${port}/health`, 3_000);
     if (health.status !== 'ok' || health.db !== 'ok') {
       throw new Error(`Machine ${machineId} health payload is not ready.`);
     }
-    const version = await waitForJson(`http://127.0.0.1:${port}/version`, 15_000);
+    const version = await waitForJson(`http://127.0.0.1:${port}/version`, 3_000);
     let runningSha;
     try {
       runningSha = normalizeFullSha(version.commit);
