@@ -203,7 +203,7 @@ const formatMoney = (amountCents?: number | null, currency?: string | null) => {
 };
 
 const ticketCheckoutTotal = (faceValueCents: number) => {
-  const platformFee = Math.max(0, Math.floor((faceValueCents * 1000) / 10000));
+  const platformFee = Math.max(0, Math.floor((faceValueCents * 400) / 10000));
   return faceValueCents + Math.ceil(platformFee / 2);
 };
 

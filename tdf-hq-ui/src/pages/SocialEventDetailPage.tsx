@@ -18,7 +18,7 @@ const formatDate = (value?: string | null) => {
 const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';
 
 const ticketFee = (faceValueCents: number) => {
-  const total = Math.max(0, Math.floor((faceValueCents * 1000) / 10000));
+  const total = Math.max(0, Math.floor((faceValueCents * 400) / 10000));
   const buyer = Math.ceil(total / 2);
   return { buyer, organizer: total - buyer, checkout: faceValueCents + buyer };
 };
@@ -134,7 +134,7 @@ export default function SocialEventDetailPage() {
           <CardContent>
             <Stack spacing={1.5}>
               <Typography variant="h6">Tickets</Typography>
-              <Alert severity="info">TDF cobra una comisión del 10%: la mitad se suma al checkout y la otra mitad se descuenta del pago al organizador.</Alert>
+              <Alert severity="info">TDF cobra una comisión del 4%: la mitad se suma al checkout y la otra mitad se descuenta del pago al organizador.</Alert>
               {tiersQuery.isLoading ? <CircularProgress size={22} /> : tiersQuery.data?.length ? (
                 <Stack spacing={1}>
                   {tiersQuery.data.map((tier) => {

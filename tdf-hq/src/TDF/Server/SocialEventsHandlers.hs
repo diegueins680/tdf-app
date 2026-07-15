@@ -660,7 +660,10 @@ data TicketPlatformFeeBreakdown = TicketPlatformFeeBreakdown
     }
 
 ticketPlatformFeeBps :: Int
-ticketPlatformFeeBps = 1000
+-- 4% total is competitive with Ecuador's published self-service ticketing
+-- rates while still covering TDF's platform operations. It is split evenly
+-- between buyer checkout and organizer proceeds.
+ticketPlatformFeeBps = 400
 
 ticketPlatformFeeBreakdown :: Int -> TicketPlatformFeeBreakdown
 ticketPlatformFeeBreakdown faceValue =
