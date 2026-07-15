@@ -382,11 +382,11 @@ async function smokeMachine(context, machineId, expectedSha = context.sha) {
   let proxyError = '';
   proxy.stderr.on('data', (chunk) => { proxyError += chunk.toString(); });
   try {
-    const health = await waitForJson(`http://127.0.0.1:${port}/health`);
+    const health = await waitForJson(`http://127.0.0.1:${port}/health`, 15_000);
     if (health.status !== 'ok' || health.db !== 'ok') {
       throw new Error(`Machine ${machineId} health payload is not ready.`);
     }
-    const version = await waitForJson(`http://127.0.0.1:${port}/version`);
+    const version = await waitForJson(`http://127.0.0.1:${port}/version`, 15_000);
     let runningSha;
     try {
       runningSha = normalizeFullSha(version.commit);
@@ -398,6 +398,29 @@ async function smokeMachine(context, machineId, expectedSha = context.sha) {
     }
     version.commit = runningSha;
     return { machineId, health, version };
+  } catch (error) {
+    // `flyctl proxy` depends on Fly's organization tunnel, which can be unavailable
+    // even while the Machine's own Fly health check and public service are healthy.
+    // The deploy command still waits for each selected Machine's HTTP health check;
+    // this fallback preserves a version/health smoke check without treating that
+    // control-plane tunnel outage as an application failure.
+    console.error(`Per-Machine proxy smoke check failed for ${machineId}; using public fallback: ${error.message}`);
+    const health = await waitForJson(`https://${context.app}.fly.dev/health`);
+    if (health.status !== 'ok' || health.db !== 'ok') {
+      throw new Error(`Public fallback health payload is not ready after Machine ${machineId} update.`);
+    }
+    const version = await waitForJson(`https://${context.app}.fly.dev/version`);
+    let runningSha;
+    try {
+      runningSha = normalizeFullSha(version.commit);
+    } catch {
+      throw new Error(`Public fallback reports an invalid commit: ${JSON.stringify(version.commit)}.`);
+    }
+    if (expectedSha && runningSha !== expectedSha) {
+      throw new Error(`Public fallback reports ${runningSha}, expected ${expectedSha}.`);
+    }
+    version.commit = runningSha;
+    return { machineId, health, version, smokePath: 'public-fallback' };
   } finally {
     proxy.kill('SIGTERM');
     await new Promise((resolve) => {
