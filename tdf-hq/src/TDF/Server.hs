@@ -145,6 +145,7 @@ import qualified TDF.ServerAuth as AuthServer
 import           TDF.ServerInstagramOAuth (instagramOAuthServer)
 import           TDF.ServerInternships (internshipsServer)
 import           TDF.Server.SocialSync (socialSyncServer)
+import           TDF.Server.SocialDiscovery (socialDiscoveryServer)
 import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
@@ -3705,6 +3706,7 @@ protectedServer user =
   :<|> chatkitSessionServer user
   :<|> tidalAgentServer user
   :<|> socialSyncServer user
+  :<|> socialDiscoveryServer user
   :<|> metaBackfillServer user
   :<|> socialEventsServer user
   :<|> contractsServer user

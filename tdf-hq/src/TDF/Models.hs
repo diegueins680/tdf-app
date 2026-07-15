@@ -604,6 +604,16 @@ SocialSyncPost
     updatedAt        UTCTime
     UniqueSocialSyncPost platform externalPostId
     deriving Show Generic
+SocialDiscoveryReview
+    socialSyncPostId  SocialSyncPostId
+    status            Text
+    reviewNotes       Text Maybe
+    reviewedByPartyId PartyId Maybe
+    reviewedAt        UTCTime Maybe
+    createdAt         UTCTime
+    updatedAt         UTCTime
+    UniqueSocialDiscoveryReview socialSyncPostId
+    deriving Show Generic
 SocialSyncRun
     platform         Text
     ingestSource     Text

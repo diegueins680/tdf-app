@@ -59,6 +59,7 @@ import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
 import           TDF.API.SocialSyncAPI (SocialSyncAPI)
+import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
 
 type InventoryItem = ME.Asset
@@ -504,6 +505,7 @@ type ProtectedAPI =
   :<|> ChatKitSessionAPI
   :<|> TidalAgentAPI
   :<|> "social-sync" :> SocialSyncAPI
+  :<|> SocialDiscoveryAPI
   :<|> MetaBackfillAPI
   :<|> "social-events" :> SocialEventsAPI
   :<|> ContractsAPI
