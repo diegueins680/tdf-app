@@ -654,12 +654,32 @@ async function writeReport(context, report) {
   return path.relative(rootDir, absolute);
 }
 
+async function assertReleaseCheckout(context) {
+  const { stdout: headOutput } = await run(['git', 'rev-parse', 'HEAD'], { log: false });
+  const head = normalizeFullSha(headOutput);
+  if (head === context.sha) return;
+
+  try {
+    await run(['git', 'merge-base', '--is-ancestor', context.sha, head], { log: false });
+  } catch {
+    throw new Error('Release SHA must equal the checked-out HEAD or be its ancestor.');
+  }
+
+  const { stdout: changedFiles } = await run(['git', 'diff', '--name-only', `${context.sha}..${head}`], { log: false });
+  const unsupported = changedFiles.split('\n').filter(Boolean).filter((file) => (
+    file !== 'scripts/production-release.mjs' && !file.startsWith('memory/')
+  ));
+  if (unsupported.length > 0) {
+    throw new Error(`Release SHA is behind HEAD and application-affecting files changed: ${unsupported.join(', ')}.`);
+  }
+  console.error(`Releasing ${context.sha} from tooling-only checkout ${head}.`);
+}
+
 async function executeRelease(context) {
   if (!context.execute || normalizeFullSha(context.confirm) !== context.sha) {
     throw new Error('Mutating release requires --execute and --confirm <exact-full-sha>.');
   }
-  const { stdout: head } = await run(['git', 'rev-parse', 'HEAD'], { log: false });
-  if (normalizeFullSha(head) !== context.sha) throw new Error('Release SHA must equal the checked-out HEAD.');
+  await assertReleaseCheckout(context);
   const { stdout: status } = await run(['git', 'status', '--porcelain'], { log: false });
   if (status.trim()) throw new Error('Release execution requires a clean worktree.');
 
