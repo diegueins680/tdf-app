@@ -7,7 +7,7 @@ SET LOCAL lock_timeout = '10s';
 SET LOCAL statement_timeout = '5min';
 
 ALTER TABLE event_ticket_order
-    ADD COLUMN IF NOT EXISTS checkout_idempotency_key TEXT;
+    ADD COLUMN IF NOT EXISTS checkout_idempotency_key VARCHAR;
 
 DO $$
 BEGIN

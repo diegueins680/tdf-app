@@ -173,6 +173,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Chat', path: '/chat' },
       { label: 'Inbox social', path: '/social/inbox' },
       { label: 'Eventos sociales', path: '/social/eventos' },
+      { label: 'Eventos descubiertos', path: '/social/eventos-descubiertos' },
       { label: 'Contactos', path: '/crm/contactos' },
       { label: 'Empresas', path: '/crm/empresas' },
       { label: 'Leads', path: '/crm/leads' },

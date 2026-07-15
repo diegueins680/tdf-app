@@ -34,6 +34,7 @@ executable tdf-hq-exe
     TDF.API.Services
     TDF.API.Sessions
     TDF.API.Radio
+    TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.Contracts.API
     TDF.Contracts.Server
@@ -49,6 +50,7 @@ executable tdf-hq-exe
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Email
     TDF.Handlers.InputList
@@ -75,6 +77,7 @@ executable tdf-hq-exe
     TDF.Server
     TDF.ServerAuth
     TDF.ServerAdmin
+    TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.ServerExtra
     TDF.ServerInstagramOAuth
@@ -178,6 +181,7 @@ test-suite tdf-hq-test
     TDF.API.Instagram
     TDF.API.InstagramOAuth
     TDF.API.Internships
+    TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.API.Calendar
     TDF.API.Label
@@ -206,6 +210,7 @@ test-suite tdf-hq-test
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Email
     TDF.Email.Service
@@ -233,6 +238,7 @@ test-suite tdf-hq-test
     TDF.ServerInstagramOAuth
     TDF.ServerInternships
     TDF.ServerProposals
+    TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
     TDF.ServerFuture

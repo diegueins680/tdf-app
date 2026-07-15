@@ -29,11 +29,15 @@ on:
         required: true
 
 env:
-  DOCKER_IMAGE_REPO: ${{ github.event.inputs.image_repo || 'diegueins680/tdf-hq' }}
-  DOCKER_IMAGE_TAG: ${{ github.event.inputs.image_tag || github.sha }}
+  DOCKER_IMAGE_REPO: ${{ inputs.image_repo || github.event.inputs.image_repo || 'diegueins680/tdf-hq' }}
+  DOCKER_IMAGE_TAG: ${{ inputs.image_tag || github.event.inputs.image_tag || github.sha }}
 
 jobs:
+  required-tests:
+    uses: ./.github/workflows/ci.yml
+
   docker:
+    needs: required-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

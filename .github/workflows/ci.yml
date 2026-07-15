@@ -12,7 +12,9 @@ on:
       - 'package-lock.json'
       - '.npmrc'
       - '.github/workflows/**'
+      - 'fly.toml'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   quality:
@@ -73,3 +75,66 @@ jobs:
 
       - name: Verify generated clients are committed
         run: git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
+
+  production-migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: tdf_hq_migration_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tdf_hq_migration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_hq_migration_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test the production release contract
+        run: npm run test:production-release
+
+      - name: Create production baseline fixture
+        run: psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-ticketing-base.sql
+
+      - name: Verify pristine production preflight
+        run: |
+          node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+
+      - name: Apply the authoritative migration batch twice
+        env:
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
+        run: |
+          node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "3"
+
+      - name: Verify raw migration idempotency and the release schema contract
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_event_discovery_imports.sql
+          node scripts/render-production-schema-verification.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+
+      - name: Reject a changed applied migration
+        env:
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c "UPDATE public.tdf_schema_migration SET checksum = repeat('f', 64) WHERE migration_id = '2026-07-12_ticketing_runtime_schema'"
+          if node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1; then
+            echo "checksum mismatch was accepted" >&2
+            exit 1
+          fi

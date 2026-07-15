@@ -28,7 +28,7 @@ Each run processes at most 500 cities, rotating the starting point daily when th
 ## Configuration
 
 ```env
-EVENT_DISCOVERY_ENABLED=true
+EVENT_DISCOVERY_ENABLED=false
 TICKETMASTER_API_KEY=your-consumer-key
 TICKETMASTER_API_BASE=https://app.ticketmaster.com/discovery/v2
 EVENT_DISCOVERY_LOOKAHEAD_DAYS=90
@@ -37,13 +37,25 @@ EVENT_DISCOVERY_HOUR_LOCAL=3
 EVENT_DISCOVERY_COUNTRY_CODE=
 ```
 
+Production intentionally defaults `EVENT_DISCOVERY_ENABLED` to `false`. Setting a Ticketmaster secret does not authorize or start imports. Enable the job only as a separate operation after the discovery migration, backend rollout, health/version checks, and log review have succeeded.
+
 `EVENT_DISCOVERY_COUNTRY_CODE` is optional and defaults to no country restriction because active users may live in different countries. The importer still requires the returned venue city to exactly match the requested profile city after normalization. Set a two-letter code only when every user city should be restricted to one deployment-wide country.
 
 The API key is never written to application logs. One city or event failure is logged and does not stop other cities from syncing. Past imported events are completed automatically; future imports are cancelled and removed from the public feed when their city no longer has an active user.
 
 ## Deployment
 
-When `RUN_MIGRATIONS=false`, apply `tdf-hq/sql/2026-07-12_event_discovery_imports.sql` before enabling the job or deploying the new backend binary.
+Production keeps `RUN_MIGRATIONS=false`. The new backend also uses provider-reference tables from ordinary event and artist handlers, so `tdf-hq/sql/2026-07-12_event_discovery_imports.sql` must be applied before deploying the binary, even when the cron remains disabled.
+
+Use the guarded backend release lane rather than invoking Fly directly:
+
+```bash
+npm run release:backend:plan -- --sha <full-sha>
+npm run release:backend:preflight -- --sha <full-sha>
+npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+```
+
+After rollout, confirm the exact `/version` SHA, a healthy response, direct Machine checks, and clean logs before changing `EVENT_DISCOVERY_ENABLED`. Enabling the job targets the normalized union of all eligible active-user cities; there is currently no production city allowlist or single-city canary setting.
 
 Useful log tags:
 

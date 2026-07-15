@@ -13,12 +13,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   MenuItem,
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -39,7 +33,6 @@ import {
   buildWorkAccountReportPdfBlob,
   formatCurrency,
   formatDateLabel,
-  formatDuration,
   type CustomFieldSource,
   type WorkAccountReportSource,
   type WorkBlockSource,
@@ -128,7 +121,7 @@ const cloneFields = (fields: CustomFieldSource[]) =>
 
 const hasWindow = () => typeof window !== 'undefined';
 
-const fieldTypeOptions: Array<{ value: CustomFieldType; label: string; helper: string }> = [
+const fieldTypeOptions: { value: CustomFieldType; label: string; helper: string }[] = [
   { value: 'text', label: 'Texto', helper: 'Etiqueta libre.' },
   { value: 'number', label: 'Número', helper: 'Cifra o cantidad.' },
   { value: 'date', label: 'Fecha', helper: 'Dato de calendario.' },

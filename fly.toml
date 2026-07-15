@@ -6,7 +6,10 @@ primary_region = "gru"
 
 [env]
   APP_PORT = "8080"
-  RUN_MIGRATIONS = "true"
+  # Production schema changes are applied once by the guarded release lane.
+  RUN_MIGRATIONS = "false"
+  # Enable only after the discovery schema and release have been verified.
+  EVENT_DISCOVERY_ENABLED = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TZ = "America/Guayaquil"
   # TICKETMASTER_API_KEY is set as a Fly secret (flyctl secrets set TICKETMASTER_API_KEY=...)
@@ -36,3 +39,15 @@ primary_region = "gru"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1

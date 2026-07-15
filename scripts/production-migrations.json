@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "migrations": [
+    {
+      "id": "2026-07-12_ticketing_runtime_schema",
+      "path": "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
+      "introducedBy": "4ec247f222ec6b6b6e91a7fb0829b1ebbd463d32"
+    },
+    {
+      "id": "2026-07-12_ticket_checkout_idempotency",
+      "path": "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
+      "introducedBy": "4ec247f222ec6b6b6e91a7fb0829b1ebbd463d32"
+    },
+    {
+      "id": "2026-07-12_event_discovery_imports",
+      "path": "tdf-hq/sql/2026-07-12_event_discovery_imports.sql",
+      "introducedBy": "4d1f1fe1a7736b967001fc02b2c21d59ced343ce"
+    },
+    {
+      "id": "2026-07-15_social_discovery_reviews",
+      "path": "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
+      "introducedBy": "f4805f72b4749029741373798da659566b5c4ea5"
+    }
+  ]
+}
