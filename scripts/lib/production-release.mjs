@@ -616,6 +616,41 @@ BEGIN
   ) <> 3 THEN
     RAISE EXCEPTION 'A discovery foreign key is missing or invalid';
   END IF;
+
+  -- Inventory handlers select the full custody/payment/evidence shape even when
+  -- no checkout rows exist. Keep legacy databases from failing at request time.
+  IF to_regclass('public.asset') IS NULL OR to_regclass('public.asset_checkout') IS NULL THEN
+    RAISE EXCEPTION 'Inventory relation public.asset or public.asset_checkout is missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('asset_checkout', 'disposition', 'character varying', 'NO'),
+        ('asset_checkout', 'terms_and_conditions', 'character varying', 'YES'),
+        ('asset_checkout', 'holder_email', 'character varying', 'YES'),
+        ('asset_checkout', 'holder_phone', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_type', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_installments', 'bigint', 'YES'),
+        ('asset_checkout', 'payment_reference', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_amount_cents', 'bigint', 'YES'),
+        ('asset_checkout', 'payment_currency', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_outstanding_cents', 'bigint', 'YES'),
+        ('asset_checkout', 'photo_out_url', 'character varying', 'YES'),
+        ('asset_checkout', 'photo_in_url', 'character varying', 'YES')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Inventory checkout schema is missing required custody/payment/evidence columns';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM (
