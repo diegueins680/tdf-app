@@ -44,6 +44,30 @@ export interface SocialEventImageUploadDTO {
   eiuImageUrl: string;
 }
 
+export interface SocialEventMomentDTO {
+  emId?: string | null;
+  emEventId?: string | null;
+  emAuthorPartyId?: string | null;
+  emAuthorName: string;
+  emCaption?: string | null;
+  emMediaUrl: string;
+  emMediaType: 'image' | 'video' | string;
+  emMediaWidth?: number | null;
+  emMediaHeight?: number | null;
+  emMediaDurationMs?: number | null;
+  emCreatedAt?: string | null;
+}
+
+export interface SocialEventMomentCreateDTO {
+  emCreateAuthorName?: string;
+  emCreateCaption?: string;
+  emCreateMediaUrl: string;
+  emCreateMediaType: 'image' | 'video';
+  emCreateMediaWidth?: number;
+  emCreateMediaHeight?: number;
+  emCreateMediaDurationMs?: number;
+}
+
 export interface SocialInvitationDTO {
   invitationId?: string | null;
   invitationEventId?: string | null;
@@ -360,6 +384,17 @@ export const SocialEventsAPI = {
     const trimmed = name?.trim() ?? '';
     if (trimmed) form.append('name', trimmed);
     return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/image`, form) as SocialEventImageUploadDTO;
+  },
+  listMoments: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`) as SocialEventMomentDTO[],
+  createMoment: async (eventId: string, payload: SocialEventMomentCreateDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload) as SocialEventMomentDTO,
+  uploadMomentImage: async (eventId: string, file: File, name?: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    const trimmed = name?.trim() ?? '';
+    if (trimmed) form.append('name', trimmed);
+    return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments/image`, form) as SocialEventImageUploadDTO;
   },
   getEvent: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}`) as SocialEventDTO,

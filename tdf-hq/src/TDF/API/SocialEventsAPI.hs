@@ -393,6 +393,7 @@ type InvitationsRoutes =
 type MomentsRoutes =
     "events" :> Capture "eventId" Text :> "moments" :> Get '[JSON] [EventMomentDTO]
         :<|> "events" :> Capture "eventId" Text :> "moments" :> ReqBody '[JSON] EventMomentCreateDTO :> Post '[JSON] EventMomentDTO
+        :<|> "events" :> Capture "eventId" Text :> "moments" :> "image" :> MultipartForm Tmp EventImageUploadForm :> Post '[JSON] EventImageUploadDTO
         :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "reactions" :> ReqBody '[JSON] EventMomentReactionRequestDTO :> Post '[JSON] EventMomentDTO
         :<|> "events" :> Capture "eventId" Text :> "moments" :> Capture "momentId" Text :> "comments" :> ReqBody '[JSON] EventMomentCommentCreateDTO :> Post '[JSON] EventMomentCommentDTO
 

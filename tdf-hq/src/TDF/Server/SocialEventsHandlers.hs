@@ -2344,6 +2344,7 @@ socialEventsServer user =
     momentsServer =
         listMoments
             :<|> createMoment
+            :<|> uploadMomentImage
             :<|> reactToMoment
             :<|> commentOnMoment
 
@@ -2493,7 +2494,9 @@ socialEventsServer user =
                 throwError
                 pure
                 (validateMomentMediaDuration emCreateMediaDurationMs)
-        let authorName = resolveMomentAuthorName currentPartyId emCreateAuthorName
+        -- Attribution is derived from the authenticated Party, never from a
+        -- client-supplied display name.
+        authorName <- liftIO $ loadAuthenticatedPartyDisplayName envPool currentPartyId
         momentKey <-
             liftIO $
                 runSqlPool
@@ -2514,6 +2517,40 @@ socialEventsServer user =
                     )
                     envPool
         liftIO $ loadMomentDTO envPool momentKey
+
+    uploadMomentImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
+    uploadMomentImage rawId rawUploadForm = do
+        EventImageUploadForm{..} <-
+            either (throwError . eventImageUploadFormServerError) pure $
+                validateEventImageUploadForm rawUploadForm
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" rawId
+        _ <- requireExistingEvent envPool eventKey
+        let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
+            fallbackName = nonEmptyText (fdFileName eiuFile)
+            requestedName = eiuName >>= nonEmptyText
+            nameWithExt = applyUploadExtension (requestedName <|> fallbackName) fallbackName
+            safeName = sanitizeUploadFileName nameWithExt
+        unless (isImageUpload mimeTypeVal safeName) $
+            throwError err400 { errBody = "Only raster image uploads with matching MIME type and extension are allowed" }
+        fileSize <- liftIO (getFileSize (fdPayload eiuFile))
+        either throwError pure (validateEventImageUploadSize fileSize)
+        uuid <- liftIO UUIDV4.nextRandom
+        let eventIdTxt = renderKeyText eventKey
+            storedName = UUID.toText uuid <> "-" <> safeName
+            relPath = T.intercalate "/" ["social-events", "events", eventIdTxt, "moments", storedName]
+            targetDir = assetsRootDir envConfig </> "social-events" </> "events" </> T.unpack eventIdTxt </> "moments"
+            targetPath = targetDir </> T.unpack storedName
+            publicUrl = buildUploadAssetUrl (resolveConfiguredAssetsBase envConfig) relPath
+        liftIO $ createDirectoryIfMissing True targetDir
+        liftIO $ copyFile (fdPayload eiuFile) targetPath
+        pure EventImageUploadDTO
+            { eiuEventId = eventIdTxt
+            , eiuFileName = storedName
+            , eiuPath = relPath
+            , eiuPublicUrl = publicUrl
+            , eiuImageUrl = publicUrl
+            }
 
     reactToMoment :: T.Text -> T.Text -> EventMomentReactionRequestDTO -> AppM EventMomentDTO
     reactToMoment eventIdStr momentIdStr EventMomentReactionRequestDTO{..} = do
@@ -5463,6 +5500,14 @@ validateMomentMediaDuration (Just value)
 resolveMomentAuthorName :: T.Text -> Maybe T.Text -> T.Text
 resolveMomentAuthorName currentParty mAuthorName =
     fromMaybe ("Party " <> currentParty) (cleanMaybeText mAuthorName)
+
+loadAuthenticatedPartyDisplayName :: ConnectionPool -> T.Text -> IO T.Text
+loadAuthenticatedPartyDisplayName pool currentParty =
+    case readMaybe (T.unpack currentParty) :: Maybe Int64 of
+        Nothing -> pure ("Party " <> currentParty)
+        Just partyId -> do
+            mParty <- runSqlPool (get (toSqlKey partyId)) pool
+            pure $ maybe ("Party " <> currentParty) partyDisplayName mParty
 
 validateLiveBroadcastBroadcaster :: T.Text -> Maybe T.Text -> AppM ()
 validateLiveBroadcastBroadcaster currentPartyId mRawBroadcaster =

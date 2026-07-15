@@ -30,6 +30,7 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { DateTime } from 'luxon';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   SocialEventsAPI,
   type SocialEventDTO,
@@ -1496,6 +1497,11 @@ export default function SocialEventsPage() {
                     </Stack>
 
                     <Typography variant="h6" fontWeight={800}>{ev.eventTitle}</Typography>
+                    {eventId && (
+                      <Button component={RouterLink} to={`/social/eventos/${eventId}`} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
+                        Abrir página del evento
+                      </Button>
+                    )}
                     {ev.eventVenueId && (
                       <Typography variant="body2" color="text.secondary">
                         {venueById.get(ev.eventVenueId) ?? 'Venue por definir'}

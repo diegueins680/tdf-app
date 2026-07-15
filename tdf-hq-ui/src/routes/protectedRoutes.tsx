@@ -50,6 +50,7 @@ const RoomsPage = lazy(() => import('../pages/RoomsPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
+const SocialEventDetailPage = lazy(() => import('../pages/SocialEventDetailPage'));
 const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));
 const SocialPageView = lazy(() => import('../pages/SocialPage'));
@@ -86,6 +87,7 @@ export function renderProtectedRoutes() {
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />
         <Route path="/social/eventos" element={<SocialEventsPage />} />
+        <Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} />
         <Route path="/social/eventos-descubiertos" element={<RecentlyDiscoveredEventsPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/docs" element={<DocsPage />} />
