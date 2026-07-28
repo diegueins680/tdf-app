@@ -128,9 +128,7 @@ export function buildCollaborativeEventPayload(
     throw new Error('Selecciona una duración válida.');
   }
 
-  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT, {
-    zone: 'local',
-  });
+  const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
   if (!start.isValid) throw new Error('Selecciona una fecha y hora válidas.');
   const end = start.plus({ minutes: draft.durationMinutes });
   const startIso = start.toUTC().toISO();
