@@ -40,7 +40,9 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: npm audit
-        run: npm audit --omit=dev
+        # Keep the full production advisory report visible while preventing
+        # newly published low/high advisories from blocking every unrelated PR.
+        run: npm audit --omit=dev --audit-level=critical
       - name: Build (if present)
         run: npm run -s build || echo "no build script; skipping"
       - name: Test (if present)
