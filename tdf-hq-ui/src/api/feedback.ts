@@ -1,4 +1,5 @@
 import { buildAuthorizationHeader } from './authHeader';
+import { resolveApiBase } from '../config/apiBase';
 
 export interface FeedbackPayload {
   title: string;
@@ -11,7 +12,7 @@ export interface FeedbackPayload {
 }
 
 export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
-  const base = import.meta.env.VITE_API_BASE ?? '';
+  const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 
   const form = new FormData();
@@ -29,6 +30,7 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
     method: 'POST',
     body: form,
     headers: authHeader ? { Authorization: authHeader } : undefined,
+    credentials: 'include',
   });
 
   if (!res.ok) {

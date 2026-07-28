@@ -49,7 +49,10 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.UUID                  (toText)
 
 import           TDF.API.Feedback
-import           TDF.Auth                   (AuthedUser(..))
+import           TDF.Auth                   ( AuthedUser(..)
+                                            , extractTokenFromHeaders
+                                            , loadAuthedUser
+                                            )
 import           TDF.DB                     (Env(..))
 import           TDF.ModelsExtra            (Feedback(..))
 import qualified TDF.Email.Service          as EmailSvc
@@ -60,9 +63,8 @@ feedbackServer
      , MonadIO m
      , MonadError ServerError m
      )
-  => AuthedUser
-  -> ServerT FeedbackAPI m
-feedbackServer user = submitFeedback
+  => ServerT FeedbackAPI m
+feedbackServer authorizationHeader cookieHeader = submitFeedback
   where
     submitFeedback :: FeedbackPayload -> m NoContent
     submitFeedback FeedbackPayload{..} = do
@@ -78,6 +80,11 @@ feedbackServer user = submitFeedback
 
       Env{..} <- ask
       let emailSvc = EmailSvc.mkEmailService envConfig
+      creator <- case extractTokenFromHeaders envConfig authorizationHeader cookieHeader of
+        Left _ ->
+          pure Nothing
+        Right token ->
+          liftIO $ runSqlPool (loadAuthedUser token) envPool
 
       _ <- liftIO $ runSqlPool
         (insert Feedback
@@ -88,7 +95,7 @@ feedbackServer user = submitFeedback
           , feedbackContactEmail = contactEmail
           , feedbackAttachment   = fmap T.pack attachmentPath
           , feedbackConsent      = fpConsent
-          , feedbackCreatedBy    = Just (auPartyId user)
+          , feedbackCreatedBy    = auPartyId <$> creator
           , feedbackCreatedAt    = now
           })
         envPool
