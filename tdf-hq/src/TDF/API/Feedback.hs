@@ -24,10 +24,8 @@ import           Servant.Multipart        ( FileData
                                           )
 
 type FeedbackAPI =
-  Header "Authorization" Text :>
-    Header "Cookie" Text :>
-      "feedback" :>
-        ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent )
+  "feedback" :>
+    ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent )
 
 data FeedbackPayload = FeedbackPayload
   { fpTitle        :: Text

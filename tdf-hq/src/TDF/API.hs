@@ -491,6 +491,7 @@ type ProtectedAPI =
   :<|> PipelinesAPI
   :<|> RoomsAPI
   :<|> LiveSessionsAPI
+  :<|> FeedbackAPI
   :<|> "marketplace" :> MarketplaceAdminAPI
   :<|> "payments" :> PaymentsAPI
   :<|> InstagramAPI
@@ -544,7 +545,6 @@ type API =
   :<|> CmsPublicAPI
   :<|> WhatsAppConsentPublicAPI
   :<|> InventoryPublicAPI
-  :<|> FeedbackAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

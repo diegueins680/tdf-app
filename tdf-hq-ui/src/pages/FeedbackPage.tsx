@@ -32,16 +32,13 @@ const severities = [
   { value: 'P4', label: 'P4 - Bajo' },
 ];
 
-export const contactEmailFromSessionUsername = (username?: string): string =>
-  username?.includes('@') ? username : '';
-
 export default function FeedbackPage() {
   const { session } = useSession();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('bug');
   const [severity, setSeverity] = useState('P2');
-  const [contactEmail, setContactEmail] = useState(contactEmailFromSessionUsername(session?.username));
+  const [contactEmail, setContactEmail] = useState(session?.username ?? '');
   const [consent, setConsent] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
 
