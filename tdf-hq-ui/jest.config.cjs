@@ -12,6 +12,7 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: path.join(__dirname, 'tsconfig.jest.json'), useESM: true }],
   },
   modulePaths: ['<rootDir>/node_modules', '<rootDir>/../node_modules'],
+  setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   moduleNameMapper: {
     '^@mui/icons-material/(.*)$': '<rootDir>/src/__mocks__/muiIconMock.tsx',
     '^react$': '<rootDir>/node_modules/react',

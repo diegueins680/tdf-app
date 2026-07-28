@@ -58,7 +58,6 @@ const renderPage = async (container: HTMLElement) => {
     root?.render(
       <MemoryRouter
         initialEntries={['/configuracion/usuarios-admin']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <AdminUsersPage />

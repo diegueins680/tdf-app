@@ -317,7 +317,6 @@ const renderPage = async (container: HTMLElement, initialEntry = '/inscripciones
     root?.render(
       <MemoryRouter
         initialEntries={[initialEntry]}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <CourseRegistrationsAdminPage />

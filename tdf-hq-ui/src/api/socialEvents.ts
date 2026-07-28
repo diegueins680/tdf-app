@@ -51,7 +51,7 @@ export interface SocialEventMomentDTO {
   emAuthorName: string;
   emCaption?: string | null;
   emMediaUrl: string;
-  emMediaType: 'image' | 'video' | string;
+  emMediaType: string;
   emMediaWidth?: number | null;
   emMediaHeight?: number | null;
   emMediaDurationMs?: number | null;

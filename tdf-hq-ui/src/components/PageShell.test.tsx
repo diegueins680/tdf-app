@@ -10,7 +10,7 @@ const render = async (mountNode: HTMLElement, node: React.ReactNode) => {
   let root: Root | null = createRoot(mountNode);
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         {node}
       </MemoryRouter>,
     );

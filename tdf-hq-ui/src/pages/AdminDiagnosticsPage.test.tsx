@@ -47,7 +47,6 @@ const renderPage = async (container: HTMLElement) => {
     root?.render(
       <MemoryRouter
         initialEntries={['/admin/diagnosticos']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <AdminDiagnosticsPage />
