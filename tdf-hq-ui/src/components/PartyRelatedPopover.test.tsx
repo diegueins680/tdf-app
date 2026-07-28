@@ -82,7 +82,7 @@ const renderPopover = async (related: PartyRelatedDTO) => {
 
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         <QueryClientProvider client={queryClient}>
           <PartyRelatedPopover party={buildParty()} anchorEl={anchor} onClose={() => undefined} />
         </QueryClientProvider>

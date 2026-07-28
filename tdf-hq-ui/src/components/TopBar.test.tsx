@@ -50,7 +50,6 @@ const renderTopBar = async (container: HTMLElement) => {
     root?.render(
       <MemoryRouter
         initialEntries={['/inicio']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <TopBar />
       </MemoryRouter>,

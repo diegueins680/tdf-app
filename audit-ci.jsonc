@@ -1,0 +1,24 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "package-manager": "npm",
+  "low": true,
+  "skip-dev": true,
+  "show-found": true,
+  "show-not-found": true,
+  "allowlist": [
+    {
+      "GHSA-2p57-rm9w-gvfp|webtorrent>torrent-discovery>bittorrent-tracker>ip": {
+        "active": true,
+        "notes": "WebTorrent is bundled only for the browser. bittorrent-tracker excludes its server and HTTP/UDP tracker modules from browser builds; the vulnerable ip import is confined to lib/server/parse-udp.js. Re-evaluate upstream before expiry.",
+        "expiry": "2026-10-31"
+      }
+    },
+    {
+      "GHSA-qwww-vcr4-c8h2|react-router-dom>react-router": {
+        "active": true,
+        "notes": "The advisory affects React Router RSC mode. This UI is a declarative BrowserRouter SPA and does not use React Server Components, framework mode, or server actions. Re-evaluate upstream before expiry.",
+        "expiry": "2026-09-30"
+      }
+    }
+  ]
+}

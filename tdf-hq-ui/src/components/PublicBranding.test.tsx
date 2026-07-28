@@ -15,7 +15,7 @@ const renderBranding = async (container: HTMLElement, route: string) => {
   let root: Root | null = createRoot(container);
   await act(async () => {
     root?.render(
-      <MemoryRouter initialEntries={[route]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter initialEntries={[route]}>
         <PublicBranding>
           <main>Contenido publico</main>
         </PublicBranding>

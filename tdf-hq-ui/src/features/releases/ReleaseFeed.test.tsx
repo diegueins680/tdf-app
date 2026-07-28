@@ -54,7 +54,7 @@ const renderReleaseFeed = (overrides: Partial<Parameters<typeof ReleaseFeed>[0]>
   };
 
   render(
-    <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+    <MemoryRouter>
       <ReleaseFeed {...props} />
     </MemoryRouter>,
   );

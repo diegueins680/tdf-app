@@ -112,7 +112,7 @@ const renderDialog = async (container: HTMLElement, user = buildUser()) => {
 
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         <QueryClientProvider client={qc}>
           <AdminUserCommunicationDialog open user={user} onClose={() => undefined} />
         </QueryClientProvider>

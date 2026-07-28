@@ -17,7 +17,7 @@ const club = (overrides: Partial<FanClubDTO> = {}): FanClubDTO => ({
 describe('FanClubPreview', () => {
   it('renders fan club cards linked to their club page', () => {
     render(
-      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <MemoryRouter>
         <FanClubPreview clubs={[club()]} loading={false} />
       </MemoryRouter>,
     );
