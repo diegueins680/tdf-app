@@ -202,7 +202,7 @@ test('buildMigrationBatchSql validates every path before rendering psql input', 
   );
 });
 
-test('buildSchemaVerificationSql fails closed over the ticketing and discovery schema contract', () => {
+test('buildSchemaVerificationSql fails closed over the ticketing, discovery, and social schema contract', () => {
   const sql = buildSchemaVerificationSql();
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
@@ -216,18 +216,26 @@ test('buildSchemaVerificationSql fails closed over the ticketing and discovery s
     'external_event_ref',
     'external_event_discovery_run',
     'idx_external_event_ref_city',
+    'social_sync_account',
+    'social_sync_post',
+    'social_sync_run',
+    'social_discovery_review',
+    'unique_social_sync_account',
+    'unique_social_sync_post',
+    'unique_social_discovery_review',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
 });
 
-test('buildSchemaPreflightSql is read-only and accepts an unapplied ticket idempotency column', () => {
+test('buildSchemaPreflightSql is read-only and accepts unapplied release tables', () => {
   const sql = buildSchemaPreflightSql();
 
   assert.match(sql, /BEGIN READ ONLY/i);
   assert.match(sql, /default_transaction_read_only/i);
   assert.match(sql, /information_schema\.columns[\s\S]*checkout_idempotency_key/i);
+  assert.match(sql, /social_sync_account[\s\S]*social_sync_post[\s\S]*social_sync_run/i);
   assert.match(sql, /ROLLBACK/i);
   assert.doesNotMatch(sql, /ALTER\s+TABLE|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM/i);
 });
