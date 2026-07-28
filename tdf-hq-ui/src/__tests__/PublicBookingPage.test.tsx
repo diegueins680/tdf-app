@@ -81,7 +81,6 @@ const renderPage = async (
     root?.render(
       <MemoryRouter
         initialEntries={[options.route ?? '/reservar']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <PublicBookingPage {...options.props} />
