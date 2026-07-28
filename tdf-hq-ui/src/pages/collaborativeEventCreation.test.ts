@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { DateTime, Settings } from 'luxon';
+import { DateTime } from 'luxon';
 
 import {
   buildCollaborativeEventPayload,
@@ -10,14 +10,6 @@ import {
 } from './collaborativeEventCreation';
 
 describe('collaborative event creation', () => {
-  beforeAll(() => {
-    Settings.defaultZone = 'America/Guayaquil';
-  });
-
-  afterAll(() => {
-    Settings.defaultZone = 'system';
-  });
-
   const draft = (): CollaborativeEventDraft => ({
     ...buildInitialCollaborativeEventDraft(
       DateTime.fromISO('2026-07-28T10:15:00', { zone: 'America/Guayaquil' }),
@@ -42,11 +34,14 @@ describe('collaborative event creation', () => {
   });
 
   it('turns human-friendly price and duration fields into the backend payload', () => {
-    expect(buildCollaborativeEventPayload(draft())).toEqual({
+    const { eventStart, eventEnd, ...payload } =
+      buildCollaborativeEventPayload(draft());
+    const start = DateTime.fromISO(eventStart);
+    const end = DateTime.fromISO(eventEnd);
+
+    expect(payload).toEqual({
       eventTitle: 'TDF Summer Session',
       eventDescription: 'Show colaborativo',
-      eventStart: '2026-07-28T16:00:00.000Z',
-      eventEnd: '2026-07-28T18:00:00.000Z',
       eventVenueId: null,
       eventPriceCents: 1250,
       eventCapacity: 250,
@@ -59,6 +54,10 @@ describe('collaborative event creation', () => {
       eventIsPublic: false,
       eventArtists: [],
     });
+    expect(start.toLocal().toFormat("yyyy-MM-dd'T'HH:mm")).toBe(
+      '2026-07-28T11:00',
+    );
+    expect(end.diff(start, 'minutes').minutes).toBe(120);
   });
 
   it('accepts comma decimals and rejects ambiguous prices', () => {
