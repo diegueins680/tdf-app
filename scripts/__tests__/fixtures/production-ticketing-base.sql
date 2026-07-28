@@ -33,6 +33,10 @@ CREATE TABLE social_artist_profile (
     id BIGSERIAL PRIMARY KEY
 );
 
+CREATE TABLE artist_profile (
+    id BIGSERIAL PRIMARY KEY
+);
+
 CREATE TABLE event_ticket_tier (
     id BIGSERIAL PRIMARY KEY,
     event_id BIGINT NOT NULL REFERENCES social_event(id),

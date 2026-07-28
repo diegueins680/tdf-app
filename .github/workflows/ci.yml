@@ -119,13 +119,16 @@ jobs:
         run: |
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
-          test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "3"
+          expected_migrations="$(node -p "require('./scripts/production-migrations.json').migrations.length")"
+          test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "$expected_migrations"
 
       - name: Verify raw migration idempotency and the release schema contract
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_event_discovery_imports.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_discovery_reviews.sql
           node scripts/render-production-schema-verification.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
 

@@ -249,8 +249,9 @@ BEGIN
   IF to_regclass('public.event_ticket_order') IS NULL
      OR to_regclass('public.venue') IS NULL
      OR to_regclass('public.social_artist_profile') IS NULL
+     OR to_regclass('public.artist_profile') IS NULL
      OR to_regclass('public.social_event') IS NULL THEN
-    RAISE EXCEPTION 'Required ticketing/event base tables are missing';
+    RAISE EXCEPTION 'Required ticketing/event/social base tables are missing';
   END IF;
   IF to_regclass('public.notification') IS NULL OR (
     SELECT COUNT(*) FROM information_schema.columns
@@ -306,6 +307,15 @@ BEGIN
   ) NOT IN (0, 4) THEN
     RAISE EXCEPTION 'Event discovery tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'social_sync_account', 'social_sync_post', 'social_sync_run'
+      )
+  ) NOT IN (0, 3) THEN
+    RAISE EXCEPTION 'Social-sync runtime tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -317,6 +327,7 @@ export function buildSchemaVerificationSql(options = {}) {
   return `${header}DO $verify$
 DECLARE
   discovery_table TEXT;
+  social_table TEXT;
   ticketing_table TEXT;
 BEGIN
   IF NOT EXISTS (
@@ -686,6 +697,103 @@ BEGIN
       AND indexdef ILIKE '%lower(city)%'
   ) THEN
     RAISE EXCEPTION 'idx_external_event_ref_city is missing or invalid';
+  END IF;
+
+  FOREACH social_table IN ARRAY ARRAY[
+    'social_sync_account',
+    'social_sync_post',
+    'social_sync_run',
+    'social_discovery_review'
+  ] LOOP
+    IF to_regclass('public.' || social_table) IS NULL THEN
+      RAISE EXCEPTION 'Social-sync relation public.% is missing', social_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_account'
+  ) <> 12 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_post'
+  ) <> 20 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_run'
+  ) <> 9 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_discovery_review'
+  ) <> 8 THEN
+    RAISE EXCEPTION 'A social-sync relation has an unexpected column count';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('social_sync_account', 'party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
+        ('social_sync_account', 'platform', 'character varying', 'NO'),
+        ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'account_id', 'bigint', 'YES'),
+        ('social_sync_post', 'platform', 'character varying', 'NO'),
+        ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
+        ('social_sync_post', 'artist_party_id', 'bigint', 'YES'),
+        ('social_sync_post', 'artist_profile_id', 'bigint', 'YES'),
+        ('social_sync_post', 'fetched_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'ingest_source', 'character varying', 'NO'),
+        ('social_sync_post', 'like_count', 'bigint', 'YES'),
+        ('social_sync_post', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_run', 'platform', 'character varying', 'NO'),
+        ('social_sync_run', 'new_posts', 'bigint', 'NO'),
+        ('social_discovery_review', 'social_sync_post_id', 'bigint', 'NO'),
+        ('social_discovery_review', 'status', 'text', 'NO'),
+        ('social_discovery_review', 'reviewed_by_party_id', 'bigint', 'YES'),
+        ('social_discovery_review', 'created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Social-sync columns do not match the runtime schema';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_sync_account'::regclass
+      AND conname = 'unique_social_sync_account'
+      AND contype = 'u'
+      AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_sync_post'::regclass
+      AND conname = 'unique_social_sync_post'
+      AND contype = 'u'
+      AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_discovery_review'::regclass
+      AND conname = 'unique_social_discovery_review'
+      AND contype = 'u'
+      AND convalidated
+  ) THEN
+    RAISE EXCEPTION 'A social-sync uniqueness constraint is missing or invalid';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.social_sync_account'::regclass,
+      'public.social_sync_post'::regclass,
+      'public.social_discovery_review'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 7 THEN
+    RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 END
 $verify$;`;
