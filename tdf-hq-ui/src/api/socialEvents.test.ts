@@ -84,6 +84,23 @@ describe('SocialEventsAPI', () => {
     expect(getMock).toHaveBeenCalledWith(WAITLIST_TIER_QUERY_PATH);
   });
 
+  it('uses encoded event and activity identifiers for logistics route verification', async () => {
+    await SocialEventsAPI.verifyLogisticsRoute('event 7', 'travel/12');
+
+    expect(postMock).toHaveBeenCalledWith(
+      '/social-events/events/event%207/logistics/activities/travel%2F12/verify-route',
+      {},
+    );
+  });
+
+  it('uses the logistics aggregate and delete endpoints', async () => {
+    await SocialEventsAPI.getLogisticsPlan('event 7');
+    await SocialEventsAPI.deleteLogisticsPlace('event 7', 'place/3');
+
+    expect(getMock).toHaveBeenCalledWith('/social-events/events/event%207/logistics');
+    expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207/logistics/places/place%2F3');
+  });
+
   it('respondInvitation includes invitationToPartyId required by backend schema', async () => {
     getMock.mockResolvedValueOnce([
       {

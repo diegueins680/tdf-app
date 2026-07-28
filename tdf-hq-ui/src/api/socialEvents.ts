@@ -14,6 +14,17 @@ export interface SocialVenueDTO {
   venueAddress?: string | null;
   venueCity?: string | null;
   venueCountry?: string | null;
+  venueLat?: number | null;
+  venueLng?: number | null;
+  venueCapacity?: number | null;
+  venueContact?: string | null;
+  venuePhone?: string | null;
+  venueWebsite?: string | null;
+  venueState?: string | null;
+  venueZipCode?: string | null;
+  venueImageUrl?: string | null;
+  venueCreatedAt?: string | null;
+  venueUpdatedAt?: string | null;
 }
 
 export interface SocialEventDTO {
@@ -51,7 +62,7 @@ export interface SocialEventMomentDTO {
   emAuthorName: string;
   emCaption?: string | null;
   emMediaUrl: string;
-  emMediaType: 'image' | 'video' | string;
+  emMediaType: string;
   emMediaWidth?: number | null;
   emMediaHeight?: number | null;
   emMediaDurationMs?: number | null;
@@ -202,6 +213,104 @@ export interface SocialEventFinanceSummaryDTO {
   efsBudgetVarianceCents?: number | null;
   efsBudgetUtilizationPct?: number | null;
   efsGeneratedAt: string;
+}
+
+export type LogisticsAccessRole = 'owner' | 'editor' | 'viewer';
+export type LogisticsActivityType = 'task' | 'milestone' | 'wait' | 'travel';
+export type LogisticsTravelMode = 'drive' | 'walk' | 'bicycle' | 'two_wheeler' | 'transit';
+
+export interface EventLogisticsSettingsDTO {
+  elsTimezone: string;
+  elsDefaultTravelMode: LogisticsTravelMode;
+}
+
+export interface EventLogisticsMemberDTO {
+  elmPartyId: string;
+  elmDisplayName?: string | null;
+  elmEmail?: string | null;
+  elmRole: 'editor' | 'viewer';
+  elmCreatedAt?: string | null;
+}
+
+export interface EventLogisticsPlaceDTO {
+  elpId?: string | null;
+  elpVenueId?: string | null;
+  elpLabel: string;
+  elpType: 'venue' | 'hotel' | 'airport' | 'pickup' | 'custom';
+  elpAddress?: string | null;
+  elpGooglePlaceId?: string | null;
+  elpLatitude: number;
+  elpLongitude: number;
+  elpInstructions?: string | null;
+  elpContactName?: string | null;
+  elpContactPhone?: string | null;
+  elpCreatedAt?: string | null;
+  elpUpdatedAt?: string | null;
+}
+
+export interface EventLogisticsAssignmentDTO {
+  elaPartyId?: string | null;
+  elaDisplayName?: string | null;
+  elaExternalName?: string | null;
+  elaExternalPhone?: string | null;
+  elaExternalEmail?: string | null;
+}
+
+export interface EventRouteVerificationDTO {
+  ervId?: string | null;
+  ervActivityVersion: number;
+  ervProvider: string;
+  ervTravelMode: LogisticsTravelMode;
+  ervDepartureTime: string;
+  ervDurationSeconds?: number | null;
+  ervStaticDurationSeconds?: number | null;
+  ervDistanceMeters?: number | null;
+  ervBufferSeconds: number;
+  ervAllocatedSeconds: number;
+  ervVerdict: 'feasible' | 'tight' | 'infeasible' | 'provisional' | 'unavailable' | 'stale';
+  ervEncodedPolyline?: string | null;
+  ervErrorMessage?: string | null;
+  ervCheckpoint?: string | null;
+  ervVerifiedAt: string;
+}
+
+export interface EventLogisticsActivityDTO {
+  eacId?: string | null;
+  eacType: LogisticsActivityType;
+  eacTitle: string;
+  eacNotes?: string | null;
+  eacStart: string;
+  eacEnd?: string | null;
+  eacPlaceId?: string | null;
+  eacOriginPlaceId?: string | null;
+  eacDestinationPlaceId?: string | null;
+  eacTravelMode?: LogisticsTravelMode | null;
+  eacBufferMinutes?: number | null;
+  eacPriority: 'low' | 'normal' | 'high' | 'critical';
+  eacStatus: 'planned' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  eacVersion?: number | null;
+  eacAssignments: EventLogisticsAssignmentDTO[];
+  eacDependencyIds: string[];
+  eacLatestVerification?: EventRouteVerificationDTO | null;
+  eacCreatedAt?: string | null;
+  eacUpdatedAt?: string | null;
+}
+
+export interface EventScheduleIssueDTO {
+  esiCode: string;
+  esiSeverity: 'warning' | 'error';
+  esiActivityId?: string | null;
+  esiMessage: string;
+}
+
+export interface EventLogisticsPlanDTO {
+  elgEventId: string;
+  elgAccessRole: LogisticsAccessRole;
+  elgSettings: EventLogisticsSettingsDTO;
+  elgMembers: EventLogisticsMemberDTO[];
+  elgPlaces: EventLogisticsPlaceDTO[];
+  elgActivities: EventLogisticsActivityDTO[];
+  elgIssues: EventScheduleIssueDTO[];
 }
 
 // Promo Codes
@@ -487,6 +596,32 @@ export const SocialEventsAPI = {
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload) as SocialEventFinanceEntryDTO,
   getFinanceSummary: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO,
+  getLogisticsPlan: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics`) as EventLogisticsPlanDTO,
+  updateLogisticsSettings: async (eventId: string, payload: EventLogisticsSettingsDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/settings`, payload) as EventLogisticsSettingsDTO,
+  createLogisticsMember: async (eventId: string, payload: EventLogisticsMemberDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members`, payload) as EventLogisticsMemberDTO,
+  updateLogisticsMember: async (eventId: string, partyId: string, payload: EventLogisticsMemberDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members/${encodeURIComponent(partyId)}`, payload) as EventLogisticsMemberDTO,
+  deleteLogisticsMember: async (eventId: string, partyId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members/${encodeURIComponent(partyId)}`),
+  createLogisticsPlace: async (eventId: string, payload: EventLogisticsPlaceDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places`, payload) as EventLogisticsPlaceDTO,
+  updateLogisticsPlace: async (eventId: string, placeId: string, payload: EventLogisticsPlaceDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places/${encodeURIComponent(placeId)}`, payload) as EventLogisticsPlaceDTO,
+  deleteLogisticsPlace: async (eventId: string, placeId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places/${encodeURIComponent(placeId)}`),
+  createLogisticsActivity: async (eventId: string, payload: EventLogisticsActivityDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities`, payload) as EventLogisticsActivityDTO,
+  updateLogisticsActivity: async (eventId: string, activityId: string, payload: EventLogisticsActivityDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}`, payload) as EventLogisticsActivityDTO,
+  deleteLogisticsActivity: async (eventId: string, activityId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}`),
+  verifyLogisticsRoute: async (eventId: string, activityId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}/verify-route`, {}) as EventRouteVerificationDTO,
+  verifyAllLogisticsRoutes: async (eventId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/verify-routes`, {}) as EventRouteVerificationDTO[],
   rsvp: async (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
       rsvpEventId: eventId,

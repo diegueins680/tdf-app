@@ -116,3 +116,6 @@ export const STUDIO_MAP_URL =
 export const STUDIO_WHATSAPP_URL =
   envTrimmedOrUndefined(envString('VITE_STUDIO_WHATSAPP_URL')) ??
   'https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records';
+
+export const GOOGLE_MAPS_BROWSER_API_KEY =
+  envTrimmedOrUndefined(envString('VITE_GOOGLE_MAPS_BROWSER_API_KEY')) ?? '';

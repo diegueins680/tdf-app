@@ -289,6 +289,104 @@ EventFinanceEntry
     updatedAt UTCTime default=now()
     deriving Show Generic
 
+EventLogisticsPlan
+    eventId SocialEventId
+    timezone Text default='America/Guayaquil'
+    defaultTravelMode Text default='drive'
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventLogisticsPlan eventId
+    deriving Show Generic
+
+EventLogisticsMember
+    eventId SocialEventId
+    partyId Text
+    memberRole Text
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventLogisticsMember eventId partyId
+    deriving Show Generic
+
+EventLogisticsPlace
+    eventId SocialEventId
+    venueId VenueId Maybe
+    label Text
+    placeType Text
+    address Text Maybe
+    googlePlaceId Text Maybe
+    latitude Double
+    longitude Double
+    instructions Text Maybe
+    contactName Text Maybe
+    contactPhone Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+EventLogisticsActivity
+    eventId SocialEventId
+    activityType Text
+    title Text
+    notes Text Maybe
+    startTime UTCTime
+    endTime UTCTime Maybe
+    placeId EventLogisticsPlaceId Maybe
+    originPlaceId EventLogisticsPlaceId Maybe
+    destinationPlaceId EventLogisticsPlaceId Maybe
+    travelMode Text Maybe
+    bufferMinutes Int Maybe
+    priority Text
+    status Text
+    version Int default=1
+    createdByPartyId Text
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    deriving Show Generic
+
+EventLogisticsAssignment
+    activityId EventLogisticsActivityId
+    partyId Text Maybe
+    externalName Text Maybe
+    externalPhone Text Maybe
+    externalEmail Text Maybe
+    createdAt UTCTime default=now()
+    deriving Show Generic
+
+EventLogisticsDependency
+    activityId EventLogisticsActivityId
+    dependsOnActivityId EventLogisticsActivityId
+    createdAt UTCTime default=now()
+    UniqueEventLogisticsDependency activityId dependsOnActivityId
+    deriving Show Generic
+
+EventRouteVerification
+    activityId EventLogisticsActivityId
+    activityVersion Int
+    provider Text
+    travelMode Text
+    departureTime UTCTime
+    durationSeconds Int Maybe
+    staticDurationSeconds Int Maybe
+    distanceMeters Int Maybe
+    bufferSeconds Int
+    allocatedSeconds Int
+    verdict Text
+    encodedPolyline Text Maybe
+    errorMessage Text Maybe
+    checkpoint Text Maybe
+    verifiedAt UTCTime
+    deriving Show Generic
+
+EventLogisticsAlertDelivery
+    activityId EventLogisticsActivityId
+    activityVersion Int
+    checkpoint Text
+    recipientPartyId Text
+    channel Text
+    deliveredAt UTCTime
+    UniqueEventLogisticsAlert activityId activityVersion checkpoint recipientPartyId channel
+    deriving Show Generic
+
 PromoCode sql=promo_code
     eventId SocialEventId Maybe
     code Text

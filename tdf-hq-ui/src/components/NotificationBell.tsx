@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Notifications as NotificationsIcon, DoneAll as DoneAllIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
 import LazyPaginatedList from './LazyPaginatedList';
@@ -30,6 +31,7 @@ function focusSoon(getTarget: () => HTMLElement | null): void {
 
 export default function NotificationBell() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState(null as HTMLElement | null);
   const triggerRef = useRef(null as HTMLButtonElement | null);
@@ -108,11 +110,28 @@ export default function NotificationBell() {
   };
 
   const focusAfterMarkRead = (notification: NotificationDTO, target: HTMLElement) => {
+    const logisticsPath = notification.nTargetType === 'event_logistics' && notification.nTargetId != null
+      ? `/social/eventos/${notification.nTargetId}/logistica`
+      : null;
     if (notification.nIsRead || markReadMut.isPending) {
-      focusSoon(() => target);
+      if (logisticsPath) {
+        setAnchorEl(null);
+        navigate(logisticsPath);
+      } else {
+        focusSoon(() => target);
+      }
       return;
     }
-    markReadMut.mutate(notification.nId, { onSettled: () => focusSoon(() => target) });
+    markReadMut.mutate(notification.nId, {
+      onSettled: () => {
+        if (logisticsPath) {
+          setAnchorEl(null);
+          navigate(logisticsPath);
+        } else {
+          focusSoon(() => target);
+        }
+      },
+    });
   };
 
   const focusAfterMarkReadKeyDown = (event: KeyboardTargetEvent, notification: NotificationDTO) => {

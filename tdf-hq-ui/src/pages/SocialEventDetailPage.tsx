@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
+import RouteIcon from '@mui/icons-material/Route';
 import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
@@ -110,7 +111,10 @@ export default function SocialEventDetailPage() {
       title={event?.eventTitle ?? 'Evento'}
       subtitle={event ? `${formatDate(event.eventStart)} · ${event.eventType ?? 'Evento'}` : undefined}
       loading={eventQuery.isLoading}
-      actions={<Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>}
+      actions={<Stack direction="row" spacing={1}>
+        <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
+        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+      </Stack>}
     >
       <Stack spacing={2.5}>
         {error && <Alert severity="error">{error instanceof Error ? error.message : 'No se pudo cargar el evento.'}</Alert>}

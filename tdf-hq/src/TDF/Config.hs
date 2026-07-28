@@ -90,6 +90,9 @@ data AppConfig = AppConfig
   , eventDiscoveryMaxPagesPerCity :: Int
   , eventDiscoveryHourLocal :: Int
   , eventDiscoveryCountryCode :: Maybe Text
+  , googleRoutesApiKey :: Maybe Text
+  , googleRoutesApiBase :: Text
+  , eventLogisticsRecheckEnabled :: Bool
   } deriving (Show)
 
 data LlmProviderConfig = LlmProviderConfig
@@ -696,6 +699,9 @@ loadConfig = do
   eventDiscoveryMaxPagesEnv <- lookupEnv "EVENT_DISCOVERY_MAX_PAGES_PER_CITY"
   eventDiscoveryHourEnv <- lookupEnv "EVENT_DISCOVERY_HOUR_LOCAL"
   eventDiscoveryCountryCodeEnv <- lookupEnv "EVENT_DISCOVERY_COUNTRY_CODE"
+  googleRoutesApiKeyEnv <- lookupEnv "GOOGLE_ROUTES_API_KEY"
+  googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
+  eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
   assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
@@ -770,6 +776,18 @@ loadConfig = do
       eventDiscoveryHourEnv
   eventDiscoveryCountryCodeVal <-
     validateEventDiscoveryCountryCode eventDiscoveryCountryCodeEnv
+  googleRoutesApiKeyVal <-
+    either fail pure (normalizeConfiguredOpenAiApiKey "GOOGLE_ROUTES_API_KEY" (fromMaybe "" googleRoutesApiKeyEnv))
+  googleRoutesApiBaseVal <-
+    validateConfiguredApiBaseUrl
+      "GOOGLE_ROUTES_API_BASE"
+      "https://routes.googleapis.com"
+      googleRoutesApiBaseEnv
+  eventLogisticsRecheckEnabledVal <-
+    validateStartupBooleanFlag
+      "EVENT_LOGISTICS_RECHECK_ENABLED"
+      False
+      eventLogisticsRecheckEnabledEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -880,6 +898,9 @@ loadConfig = do
     , eventDiscoveryMaxPagesPerCity = eventDiscoveryMaxPagesVal
     , eventDiscoveryHourLocal = eventDiscoveryHourVal
     , eventDiscoveryCountryCode = eventDiscoveryCountryCodeVal
+    , googleRoutesApiKey = googleRoutesApiKeyVal
+    , googleRoutesApiBase = googleRoutesApiBaseVal
+    , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
     }
   where
     getWithFallback requireUnique keys def =
