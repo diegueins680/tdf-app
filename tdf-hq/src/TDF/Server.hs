@@ -691,6 +691,7 @@ server env =
   :<|> cmsPublicServer
   :<|> whatsappConsentPublicServer
   :<|> inventoryPublicServer
+  :<|> feedbackServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3692,7 +3693,6 @@ protectedServer user =
   :<|> pipelinesServer user
   :<|> roomsServer user
   :<|> liveSessionsServer user
-  :<|> feedbackServer user
   :<|> marketplaceAdminServer user
   :<|> paymentsServer user
   :<|> instagramServer user
