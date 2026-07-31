@@ -17,7 +17,7 @@ import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
 import Data.Either (isLeft, isRight)
 import Data.Int (Int64)
-import Data.List (isInfixOf)
+import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
 import Data.Text (Text)
@@ -88,6 +88,13 @@ import TDF.Cors
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
+import TDF.CampaignAutomation
+    ( campaignAutomationTemplatesDTO,
+      isWhatsAppCampaignOptOutMessage,
+      renderCampaignMessage,
+      validateCampaignAutomationActivation,
+      validateCampaignAutomationDailyLimit,
+      validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
@@ -694,6 +701,72 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "campaign automation templates" $ do
+        it "ships the four revenue campaigns with bounded, unique WhatsApp steps" $ do
+            let templates = campaignAutomationTemplatesDTO
+                steps = concatMap DTO.catSteps templates
+                providerNames = map DTO.casProviderTemplateName steps
+            map DTO.catKey templates
+                `shouldMatchList`
+                    [ "music-services"
+                    , "domo-bookings"
+                    , "managed-operations"
+                    , "marketplace-validation"
+                    ]
+            map (length . DTO.catSteps) templates `shouldBe` replicate 4 3
+            length providerNames `shouldBe` length (nub providerNames)
+            forM_ steps $ \step -> do
+                DTO.casPosition step `shouldSatisfy` (> 0)
+                DTO.casDelayDays step `shouldSatisfy` (>= 0)
+                DTO.casBody step `shouldSatisfy` Data.Text.isInfixOf "{{name}}"
+                DTO.casBody step `shouldSatisfy` Data.Text.isInfixOf "{{url}}"
+                WhatsAppClient.normalizeWhatsAppTemplateName
+                    (DTO.casProviderTemplateName step)
+                    `shouldBe` Right (DTO.casProviderTemplateName step)
+                WhatsAppClient.normalizeWhatsAppTemplateLanguage
+                    (DTO.casLanguageCode step)
+                    `shouldBe` Right (DTO.casLanguageCode step)
+
+        it "renders the only two approved personalization variables" $
+            renderCampaignMessage
+                "Ada"
+                "https://example.test/oferta"
+                "Hola {{name}}. Revisa {{url}}."
+                `shouldBe`
+                    "Hola Ada. Revisa https://example.test/oferta."
+
+        it "recognizes explicit inbound opt-out commands without matching normal conversation" $ do
+            map isWhatsAppCampaignOptOutMessage ["SALIR", " salir! ", "STOP", "cancelar.", "BAJA"]
+                `shouldBe` replicate 5 True
+            map isWhatsAppCampaignOptOutMessage ["quiero salir mañana", "no", "listo", ""]
+                `shouldBe` replicate 4 False
+
+        it "bounds activation statuses and daily send caps" $ do
+            validateCampaignAutomationDailyLimit Nothing `shouldBe` Right 20
+            validateCampaignAutomationDailyLimit (Just 1) `shouldBe` Right 1
+            validateCampaignAutomationDailyLimit (Just 100) `shouldBe` Right 100
+            validateCampaignAutomationDailyLimit (Just 0) `shouldSatisfy` isLeft
+            validateCampaignAutomationDailyLimit (Just 101) `shouldSatisfy` isLeft
+            validateCampaignAutomationStatus " Active " `shouldBe` Right "active"
+            validateCampaignAutomationStatus "sending" `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" Nothing `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" (Just False) `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" (Just True) `shouldBe` Right "active"
+            validateCampaignAutomationActivation "paused" Nothing `shouldBe` Right "paused"
+
+    describe "WhatsApp campaign template validation" $ do
+        it "rejects unsafe template names and malformed language codes" $ do
+            WhatsAppClient.normalizeWhatsAppTemplateName "tdf_campaign_intro_v1"
+                `shouldBe` Right "tdf_campaign_intro_v1"
+            WhatsAppClient.normalizeWhatsAppTemplateName "TDF Campaign"
+                `shouldSatisfy` isLeft
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es"
+                `shouldBe` Right "es"
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es_MX"
+                `shouldBe` Right "es_MX"
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es-mx"
+                `shouldSatisfy` isLeft
+
     describe "resolveRefundTimelineMessage" $ do
         it "uses the default refund timeline when none is provided" $
             resolveRefundTimelineMessage Nothing

@@ -218,6 +218,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
       { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
       { label: 'CMS', path: '/configuracion/cms' },
+      { label: 'Campañas automáticas', path: '/configuracion/campanas-automaticas' },
+      { label: 'Fuentes de eventos', path: '/configuracion/fuentes-eventos' },
       { label: 'WhatsApp consentimiento', path: '/configuracion/whatsapp-consentimiento' },
       { label: 'Opciones UX', path: '/configuracion/opciones-ux' },
       { label: 'Preferencias', path: '/configuracion/preferencias' },

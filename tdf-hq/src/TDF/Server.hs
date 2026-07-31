@@ -107,6 +107,7 @@ import           TDF.Config ( AppConfig(..)
                             , resolveConfiguredAssetsBase
                             )
 import           TDF.DB
+import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
@@ -1657,6 +1658,12 @@ whatsappWebhookServer =
             , iwrTransportPayload = Nothing
             , iwrSource = Just "whatsapp_webhook"
             }
+        when (CampaignAutomation.isWhatsAppCampaignOptOutMessage waInboundText) $
+          liftIO $ flip runSqlPool envPool $
+            CampaignAutomation.applyWhatsAppCampaignOptOut
+              now
+              waInboundSenderId
+              (ME.whatsAppMessagePartyId (entityVal incomingEntity))
         let lowerBody = T.toLower (T.strip waInboundText)
         when ("inscribirme" `T.isInfixOf` lowerBody) $ do
           case normalizePhone waInboundSenderId of
@@ -11825,6 +11832,14 @@ adsAdminServer user =
   :<|> adsListAdsForCampaign user
   :<|> adsListExamples user
   :<|> adsCreateExample user
+  :<|> adsListAutomationTemplates user
+  :<|> adsListAutomations user
+  :<|> adsInstallAutomation user
+  :<|> adsEnrollAutomation user
+  :<|> adsListAutomationEnrollments user
+  :<|> adsPreviewAutomation user
+  :<|> adsUpdateAutomationStatus user
+  :<|> adsUpdateAutomationEnrollmentStatus user
 
 adsListInquiries :: AuthedUser -> AppM [AdsInquiryDTO]
 adsListInquiries user = do
@@ -11994,6 +12009,119 @@ adsCreateExample user adId AdConversationExampleCreate{..} = do
     }
   row <- runDB $ getJust exId
   pure (adExampleToDTO (Entity exId row))
+
+adsListAutomationTemplates
+  :: AuthedUser
+  -> AppM [CampaignAutomationTemplateDTO]
+adsListAutomationTemplates user = do
+  requireModule user ModuleAdmin
+  pure CampaignAutomation.campaignAutomationTemplatesDTO
+
+adsListAutomations
+  :: AuthedUser
+  -> AppM [CampaignAutomationDTO]
+adsListAutomations user = do
+  requireModule user ModuleAdmin
+  runDB CampaignAutomation.listCampaignAutomations
+
+adsInstallAutomation
+  :: AuthedUser
+  -> CampaignAutomationInstall
+  -> AppM CampaignAutomationDTO
+adsInstallAutomation user request = do
+  requireModule user ModuleAdmin
+  now <- liftIO getCurrentTime
+  result <- runDB (CampaignAutomation.installCampaignAutomation now request)
+  either throwBadRequest pure result
+
+adsEnrollAutomation
+  :: AuthedUser
+  -> Int64
+  -> CampaignAutomationEnroll
+  -> AppM CampaignAutomationEnrollResultDTO
+adsEnrollAutomation user rawAutomationId request = do
+  requireModule user ModuleAdmin
+  automationId <-
+    either throwError pure
+      (validatePositiveIdField "automationId" rawAutomationId)
+  now <- liftIO getCurrentTime
+  result <-
+    runDB
+      (CampaignAutomation.enrollCampaignParties now automationId request)
+  either throwBadRequest pure result
+
+adsListAutomationEnrollments
+  :: AuthedUser
+  -> Int64
+  -> AppM [CampaignEnrollmentDTO]
+adsListAutomationEnrollments user rawAutomationId = do
+  requireModule user ModuleAdmin
+  automationId <-
+    either throwError pure
+      (validatePositiveIdField "automationId" rawAutomationId)
+  result <-
+    runDB (CampaignAutomation.listCampaignEnrollments automationId)
+  either throwBadRequest pure result
+
+adsPreviewAutomation
+  :: AuthedUser
+  -> Int64
+  -> AppM [CampaignPreviewDTO]
+adsPreviewAutomation user rawAutomationId = do
+  requireModule user ModuleAdmin
+  automationId <-
+    either throwError pure
+      (validatePositiveIdField "automationId" rawAutomationId)
+  Env{envConfig} <- ask
+  result <-
+    runDB
+      (CampaignAutomation.previewCampaignAutomation envConfig automationId)
+  either throwBadRequest pure result
+
+adsUpdateAutomationStatus
+  :: AuthedUser
+  -> Int64
+  -> CampaignAutomationStatusUpdate
+  -> AppM CampaignAutomationDTO
+adsUpdateAutomationStatus user rawAutomationId request = do
+  requireModule user ModuleAdmin
+  automationId <-
+    either throwError pure
+      (validatePositiveIdField "automationId" rawAutomationId)
+  now <- liftIO getCurrentTime
+  result <-
+    runDB
+      (CampaignAutomation.updateCampaignAutomationStatus now automationId request)
+  either throwBadRequest pure result
+
+adsUpdateAutomationEnrollmentStatus
+  :: AuthedUser
+  -> Int64
+  -> Int64
+  -> CampaignEnrollmentStatusUpdate
+  -> AppM CampaignEnrollmentDTO
+adsUpdateAutomationEnrollmentStatus
+  user
+  rawAutomationId
+  rawEnrollmentId
+  request = do
+    requireModule user ModuleAdmin
+    automationId <-
+      either throwError pure
+        (validatePositiveIdField "automationId" rawAutomationId)
+    enrollmentId <-
+      either throwError pure
+        (validatePositiveIdField "enrollmentId" rawEnrollmentId)
+    now <- liftIO getCurrentTime
+    result <-
+      runDB
+        ( CampaignAutomation.updateCampaignEnrollmentStatus
+            now
+            automationId
+            enrollmentId
+            request
+        )
+    either throwBadRequest pure result
 
 loadAdExamples :: Bool -> [ME.AdCreativeId] -> SqlPersistT IO [Entity ME.AdConversationExample]
 loadAdExamples hasScope adIds

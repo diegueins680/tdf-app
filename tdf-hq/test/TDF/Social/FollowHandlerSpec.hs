@@ -571,6 +571,8 @@ socialEventUpdateHandlerFor
 socialEventUpdateHandlerFor user =
     case socialEventsServer user of
         eventsServer
+            :<|> _cities
+            :<|> _sources
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -595,6 +597,8 @@ socialEventGetHandlerFor
 socialEventGetHandlerFor user =
     case socialEventsServer user of
         eventsServer
+            :<|> _cities
+            :<|> _sources
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -619,6 +623,8 @@ artistGetHandlerFor
 artistGetHandlerFor user =
     case socialEventsServer user of
         _events
+            :<|> _cities
+            :<|> _sources
             :<|> _venues
             :<|> artistsServer
             :<|> _rsvps
@@ -645,6 +651,8 @@ socialEventInvitationCreateHandlerFor
 socialEventInvitationCreateHandlerFor user eventIdText =
     case socialEventsServer user of
         _events
+            :<|> _cities
+            :<|> _sources
             :<|> _venues
             :<|> _artists
             :<|> _rsvps
@@ -710,6 +718,7 @@ socialEventUpdatePayload title =
                 , eventStatus = Nothing
                 , eventCurrency = Nothing
                 , eventBudgetCents = Nothing
+                , eventSources = Nothing
                 , eventCreatedAt = Nothing
                 , eventUpdatedAt = Nothing
                 , eventArtists = []

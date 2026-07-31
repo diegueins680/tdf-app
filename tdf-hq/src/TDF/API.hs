@@ -97,6 +97,14 @@ type AdsAdminAPI =
   :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> "ads" :> Get '[JSON] [AdCreativeDTO]
   :<|> "ads" :> Capture "adId" Int64 :> "examples" :> Get '[JSON] [AdConversationExampleDTO]
   :<|> "ads" :> Capture "adId" Int64 :> "examples" :> ReqBody '[JSON] AdConversationExampleCreate :> Post '[JSON] AdConversationExampleDTO
+  :<|> "ads" :> "automation-templates" :> Get '[JSON] [CampaignAutomationTemplateDTO]
+  :<|> "ads" :> "automations" :> Get '[JSON] [CampaignAutomationDTO]
+  :<|> "ads" :> "automations" :> ReqBody '[JSON] CampaignAutomationInstall :> Post '[JSON] CampaignAutomationDTO
+  :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "enroll" :> ReqBody '[JSON] CampaignAutomationEnroll :> Post '[JSON] CampaignAutomationEnrollResultDTO
+  :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "enrollments" :> Get '[JSON] [CampaignEnrollmentDTO]
+  :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "preview" :> Get '[JSON] [CampaignPreviewDTO]
+  :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "status" :> ReqBody '[JSON] CampaignAutomationStatusUpdate :> Post '[JSON] CampaignAutomationDTO
+  :<|> "ads" :> "automations" :> Capture "automationId" Int64 :> "enrollments" :> Capture "enrollmentId" Int64 :> "status" :> ReqBody '[JSON] CampaignEnrollmentStatusUpdate :> Post '[JSON] CampaignEnrollmentDTO
 
 type CmsPublicAPI =
        "cms" :> "content" :> QueryParam "slug" Text :> QueryParam "locale" Text :> Get '[JSON] CmsContentDTO

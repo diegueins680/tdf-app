@@ -7,7 +7,10 @@ module TDF.WhatsApp.Client
   , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
   , normalizeWhatsAppRecipientPhone
+  , normalizeWhatsAppTemplateLanguage
+  , normalizeWhatsAppTemplateName
   , normalizeWhatsAppVerifyToken
+  , sendTemplate
   , sendText
   ) where
 
@@ -52,61 +55,153 @@ sendText mgr apiVersion token phoneId to body = do
                 Right recipientPhone ->
                   case normalizeWhatsAppMessageBody body of
                     Left err -> pure (Left err)
-                    Right messageBody -> do
-                      initReq <-
-                        parseRequest $
-                          "https://graph.facebook.com/"
-                            <> T.unpack version
-                            <> "/"
-                            <> T.unpack normalizedPhoneId
-                            <> "/messages"
-                      let payload = object
+                    Right messageBody ->
+                      sendMessagePayload
+                        mgr
+                        version
+                        accessToken
+                        normalizedPhoneId
+                        ( object
                             [ "messaging_product" .= ("whatsapp" :: Text)
-                            , "to"   .= recipientPhone
+                            , "to" .= recipientPhone
                             , "type" .= ("text" :: Text)
-                            , "text" .= object [ "body" .= messageBody ]
+                            , "text" .= object ["body" .= messageBody]
                             ]
-                          req = initReq
-                              { method = "POST"
-                              , requestHeaders =
-                                  [ ("Content-Type", "application/json")
-                                  , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
-                                  ]
-                              , requestBody = RequestBodyLBS (encode payload)
-                              }
-                      res <-
-                        (try (httpLbs req mgr) ::
-                          IO (Either SomeException (Response LBS.ByteString)))
-                      pure $ case res of
-                        Left e   -> Left (show e)
-                        Right ok ->
-                          let status = statusCode (responseStatus ok)
-                              rawBody = responseBody ok
-                          in case eitherDecode' rawBody of
-                               Left err ->
-                                 let rendered =
-                                       TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
-                                 in Left
-                                      ( "Failed to decode WhatsApp API response ("
-                                          <> show status
-                                          <> "): "
-                                          <> err
-                                          <> " | "
-                                          <> T.unpack rendered
-                                      )
-                               Right parsed ->
-                                 if status >= 200 && status < 300
-                                   then Right SendTextResult
-                                     { sendTextPayload = parsed
-                                     , sendTextMessageId = extractMessageId parsed
-                                     }
-                                   else
-                                     Left
-                                       ( "HTTP "
-                                           <> show status
-                                           <> ": "
-                                           <> T.unpack (renderValue parsed)
-                                       )
+                        )
+
+sendTemplate
+  :: Manager
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> [Text]
+  -> IO (Either String SendTextResult)
+sendTemplate mgr apiVersion token phoneId to templateName languageCode parameters =
+  case normalizeGraphApiVersion apiVersion of
+    Left err -> pure (Left err)
+    Right version ->
+      case normalizeWhatsAppAccessToken token of
+        Left err -> pure (Left err)
+        Right accessToken ->
+          case normalizeWhatsAppPhoneNumberId phoneId of
+            Left err -> pure (Left err)
+            Right normalizedPhoneId ->
+              case normalizeWhatsAppRecipientPhone to of
+                Left err -> pure (Left err)
+                Right recipientPhone ->
+                  case normalizeWhatsAppTemplateName templateName of
+                    Left err -> pure (Left err)
+                    Right normalizedTemplateName ->
+                      case normalizeWhatsAppTemplateLanguage languageCode of
+                        Left err -> pure (Left err)
+                        Right normalizedLanguage ->
+                          case traverse normalizeWhatsAppTemplateParameter parameters of
+                            Left err -> pure (Left err)
+                            Right normalizedParameters ->
+                              sendMessagePayload
+                                mgr
+                                version
+                                accessToken
+                                normalizedPhoneId
+                                ( templatePayload
+                                    recipientPhone
+                                    normalizedTemplateName
+                                    normalizedLanguage
+                                    normalizedParameters
+                                )
+
+templatePayload :: Text -> Text -> Text -> [Text] -> Value
+templatePayload recipientPhone templateName languageCode parameters =
+  object
+    [ "messaging_product" .= ("whatsapp" :: Text)
+    , "to" .= recipientPhone
+    , "type" .= ("template" :: Text)
+    , "template" .=
+        object
+          ( [ "name" .= templateName
+            , "language" .= object ["code" .= languageCode]
+            ]
+              <> if null parameters
+                   then []
+                   else
+                     [ "components" .=
+                         [ object
+                             [ "type" .= ("body" :: Text)
+                             , "parameters" .=
+                                 map
+                                   (\value ->
+                                     object
+                                       [ "type" .= ("text" :: Text)
+                                       , "text" .= value
+                                       ]
+                                   )
+                                   parameters
+                             ]
+                         ]
+                     ]
+          )
+    ]
+
+sendMessagePayload
+  :: Manager
+  -> Text
+  -> Text
+  -> Text
+  -> Value
+  -> IO (Either String SendTextResult)
+sendMessagePayload mgr version accessToken normalizedPhoneId payload = do
+  initReq <-
+    parseRequest $
+      "https://graph.facebook.com/"
+        <> T.unpack version
+        <> "/"
+        <> T.unpack normalizedPhoneId
+        <> "/messages"
+  let req =
+        initReq
+          { method = "POST"
+          , requestHeaders =
+              [ ("Content-Type", "application/json")
+              , (hAuthorization, BS.pack $ "Bearer " <> T.unpack accessToken)
+              ]
+          , requestBody = RequestBodyLBS (encode payload)
+          }
+  res <-
+    (try (httpLbs req mgr) ::
+      IO (Either SomeException (Response LBS.ByteString)))
+  pure $ case res of
+    Left err -> Left (show err)
+    Right ok ->
+      let status = statusCode (responseStatus ok)
+          rawBody = responseBody ok
+      in case eitherDecode' rawBody of
+           Left decodeError ->
+             let rendered =
+                   TE.decodeUtf8With lenientDecode (LBS.toStrict rawBody)
+             in Left
+                  ( "Failed to decode WhatsApp API response ("
+                      <> show status
+                      <> "): "
+                      <> decodeError
+                      <> " | "
+                      <> T.unpack rendered
+                  )
+           Right parsed ->
+             if status >= 200 && status < 300
+               then Right SendTextResult
+                 { sendTextPayload = parsed
+                 , sendTextMessageId = extractMessageId parsed
+                 }
+               else
+                 Left
+                   ( "HTTP "
+                       <> show status
+                       <> ": "
+                       <> T.unpack (renderValue parsed)
+                   )
 
 normalizeGraphApiVersion :: Text -> Either String Text
 normalizeGraphApiVersion rawVersion
@@ -260,6 +355,59 @@ invalidWhatsAppMessageBodyFormatMessage :: String
 invalidWhatsAppMessageBodyFormatMessage =
   "Invalid WhatsApp message body: message must not contain "
     <> "hidden formatting or separator characters"
+
+normalizeWhatsAppTemplateName :: Text -> Either String Text
+normalizeWhatsAppTemplateName rawName
+  | T.null templateName =
+      Left "Invalid WhatsApp template name: name is required"
+  | T.length templateName > 512 =
+      Left "Invalid WhatsApp template name: name must be 512 characters or fewer"
+  | T.all isTemplateNameChar templateName =
+      Right templateName
+  | otherwise =
+      Left
+        "Invalid WhatsApp template name: use lowercase ASCII letters, numbers, and underscores"
+  where
+    templateName = T.strip rawName
+    isTemplateNameChar ch =
+      (ch >= 'a' && ch <= 'z') || isAsciiDigit ch || ch == '_'
+
+normalizeWhatsAppTemplateLanguage :: Text -> Either String Text
+normalizeWhatsAppTemplateLanguage rawLanguage
+  | validLanguage languageCode =
+      Right languageCode
+  | otherwise =
+      Left
+        "Invalid WhatsApp template language: expected a code such as es, en, or es_MX"
+  where
+    languageCode = T.strip rawLanguage
+    validLanguage value =
+      case T.splitOn "_" value of
+        [language] -> validLanguagePart language
+        [language, region] ->
+          validLanguagePart language
+            && T.length region == 2
+            && T.all (\ch -> ch >= 'A' && ch <= 'Z') region
+        _ -> False
+    validLanguagePart value =
+      T.length value >= 2
+        && T.length value <= 3
+        && T.all (\ch -> ch >= 'a' && ch <= 'z') value
+
+normalizeWhatsAppTemplateParameter :: Text -> Either String Text
+normalizeWhatsAppTemplateParameter rawValue
+  | T.null value =
+      Left "Invalid WhatsApp template parameter: value is required"
+  | T.length value > 1024 =
+      Left "Invalid WhatsApp template parameter: value must be 1024 characters or fewer"
+  | T.any invalidMessageBodyControlChar value =
+      Left "Invalid WhatsApp template parameter: unsupported control character"
+  | T.any invalidMessageBodyFormatChar value =
+      Left "Invalid WhatsApp template parameter: hidden formatting character"
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
 
 isAsciiDigit :: Char -> Bool
 isAsciiDigit ch = ch >= '0' && ch <= '9'

@@ -102,7 +102,7 @@ module TDF.Server.SocialEventsHandlers (
 
 import Control.Applicative ((<|>))
 import Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
-import Control.Monad (filterM, forM, forM_, unless, when)
+import Control.Monad (filterM, forM, forM_, join, unless, when)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (ReaderT, ask)
@@ -157,7 +157,7 @@ import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
-import TDF.Auth (AuthedUser (..))
+import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (
@@ -166,6 +166,11 @@ import TDF.DTO.SocialEventsDTO (
     ArtistFollowerDTO (..),
     ArtistSocialLinksDTO (..),
     EventBudgetLineDTO (..),
+    EventCityDTO (..),
+    EventCityInputDTO (..),
+    EventCitySubscriptionUpdateDTO (..),
+    DiscoverySourceDTO (..),
+    DiscoverySourceWriteDTO (..),
     EventDTO (..),
     EventFinanceEntryDTO (..),
     EventFinanceSummaryDTO (..),
@@ -180,6 +185,7 @@ import TDF.DTO.SocialEventsDTO (
     EventMomentDTO (..),
     EventMomentReactionDTO (..),
     EventMomentReactionRequestDTO (..),
+    EventSourceDTO (..),
     EventUpdateDTO (..),
     InvitationDTO (..),
     InvitationUpdateDTO (..),
@@ -1545,9 +1551,219 @@ isUnsafeSocialEventsListFilterChar :: Char -> Bool
 isUnsafeSocialEventsListFilterChar ch =
     isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
+validateEventListScope :: Maybe T.Text -> Either ServerError T.Text
+validateEventListScope Nothing = Right "all"
+validateEventListScope (Just rawScope) =
+    case T.toCaseFold (T.strip rawScope) of
+        "" -> Right "all"
+        "all" -> Right "all"
+        "subscribed" -> Right "subscribed"
+        _ -> Left err400{errBody = "scope must be one of: all, subscribed"}
+
+validateEventCountryCode :: T.Text -> Either ServerError T.Text
+validateEventCountryCode rawCountry =
+    let country = T.toUpper (T.strip rawCountry)
+     in if T.length country == 2 && T.all isAsciiUpper country
+            then Right country
+            else Left err400{errBody = "country code must use two ISO-2 letters"}
+
+validateEventCityInputs ::
+    [EventCityInputDTO] ->
+    Either ServerError [(T.Text, T.Text, T.Text, Maybe T.Text)]
+validateEventCityInputs rawCities
+    | length rawCities > maxEventCitySubscriptions =
+        Left err400{errBody = "A user may subscribe to at most 20 cities"}
+    | otherwise =
+        fmap reverse (go Set.empty [] rawCities)
+  where
+    go _ acc [] = Right acc
+    go seen acc (EventCityInputDTO{..} : remaining) = do
+        let name = T.unwords (T.words (T.strip eventCityInputName))
+            normalizedName = normalizeEventCityName name
+        whenEither
+            ( T.null name
+                || T.length name > maxSocialEventsListFilterChars
+                || T.any isUnsafeSocialEventsListFilterChar eventCityInputName
+            )
+            err400{errBody = "city name must be a safe value between 1 and 120 characters"}
+        countryCode <- validateEventCountryCode eventCityInputCountryCode
+        timeZone <- traverse validateEventTimeZone eventCityInputTimeZone
+        let cityKey = (normalizedName, countryCode)
+        if Set.member cityKey seen
+            then go seen acc remaining
+            else
+                go
+                    (Set.insert cityKey seen)
+                    ((name, normalizedName, countryCode, timeZone) : acc)
+                    remaining
+
+    whenEither True err = Left err
+    whenEither False _ = Right ()
+
+maxEventCitySubscriptions :: Int
+maxEventCitySubscriptions = 20
+
+validateEventTimeZone :: T.Text -> Either ServerError T.Text
+validateEventTimeZone rawTimeZone =
+    let timeZone = T.strip rawTimeZone
+        allowed ch = isAlphaNum ch || ch `elem` ("_+-/" :: String)
+     in if T.null timeZone
+            then Left err400{errBody = "time zone must be omitted instead of blank"}
+            else
+                if T.length timeZone <= 64 && T.all allowed timeZone
+                    then Right timeZone
+                    else Left err400{errBody = "time zone must be a valid IANA-style identifier"}
+
+normalizeEventCityName :: T.Text -> T.Text
+normalizeEventCityName = T.toCaseFold . T.unwords . T.words . T.strip
+
+loadSubscribedEventCities ::
+    ConnectionPool ->
+    T.Text ->
+    IO [Entity EventCity]
+loadSubscribedEventCities pool partyId = do
+    subscriptions <-
+        runSqlPool
+            (selectList [EventCitySubscriptionPartyId ==. partyId] [])
+            pool
+    let cityKeys = map (eventCitySubscriptionCityId . entityVal) subscriptions
+    if null cityKeys
+        then pure []
+        else runSqlPool (selectList [EventCityId <-. cityKeys] [Asc EventCityName]) pool
+
+eventCityEntityToDTO :: Bool -> Entity EventCity -> EventCityDTO
+eventCityEntityToDTO subscribed (Entity cityKey city) =
+    EventCityDTO
+        { eventCityId = renderKeyText cityKey
+        , eventCityName = SM.eventCityName city
+        , eventCityCountryCode = SM.eventCityCountryCode city
+        , eventCityTimeZone = SM.eventCityTimeZone city
+        , eventCitySubscribed = subscribed
+        }
+
+type ValidatedDiscoverySourceWrite =
+    (T.Text, T.Text, T.Text, Maybe T.Text, Maybe EventCityId, Bool, Int)
+
+validateDiscoverySourceWrite ::
+    DiscoverySourceWriteDTO ->
+    Either ServerError ValidatedDiscoverySourceWrite
+validateDiscoverySourceWrite DiscoverySourceWriteDTO{..} = do
+    let sourceKey = T.toLower (T.strip discoverySourceWriteKey)
+        sourceName = T.unwords (T.words (T.strip discoverySourceWriteName))
+        sourceType = T.toLower (T.strip discoverySourceWriteType)
+        feedUrl = cleanMaybeText discoverySourceWriteFeedUrl
+    unlessEither
+        ( not (T.null sourceKey)
+            && T.length sourceKey <= 80
+            && T.all (\ch -> isAsciiLower ch || ch `elem` ("0123456789_-" :: String)) sourceKey
+        )
+        "source key must use lowercase letters, digits, underscores, or hyphens"
+    unlessEither
+        ( not (T.null sourceName)
+            && T.length sourceName <= 160
+            && not (T.any isUnsafeSocialEventsListFilterChar discoverySourceWriteName)
+        )
+        "source name must be a safe value between 1 and 160 characters"
+    unlessEither
+        (sourceType `elem` ["ticketmaster", "buenplan", "ical", "json"])
+        "source type must be one of: ticketmaster, buenplan, ical, json"
+    unlessEither
+        (discoverySourceWritePriority >= 0 && discoverySourceWritePriority <= 10000)
+        "source priority must be between 0 and 10000"
+    cityKey <-
+        traverse
+            (fmap toSqlKey . parseInt64Either "event city")
+            (cleanMaybeText discoverySourceWriteCityId)
+    case sourceType of
+        "ticketmaster" -> do
+            unlessEither (sourceKey == "ticketmaster") "Ticketmaster must use the ticketmaster source key"
+            unlessEither (isNothing feedUrl && isNothing cityKey) "Ticketmaster does not accept a feed URL or city"
+        "buenplan" -> do
+            unlessEither (sourceKey == "buenplan") "Buen Plan must use the buenplan source key"
+            unlessEither (isNothing feedUrl && isNothing cityKey) "Buen Plan does not accept a feed URL or city"
+        _ -> do
+            url <-
+                maybe
+                    (Left err400{errBody = "Venue feeds require an HTTPS feed URL"})
+                    Right
+                    feedUrl
+            unlessEither
+                ( T.length url <= 2048
+                    && "https://" `T.isPrefixOf` T.toLower url
+                    && TrialsServer.isValidHttpUrl url
+                )
+                "Venue feed URL must be a valid HTTPS URL"
+            unlessEither (isJust cityKey) "Venue feeds require an event city"
+    pure
+        ( sourceKey
+        , sourceName
+        , sourceType
+        , feedUrl
+        , cityKey
+        , discoverySourceWriteEnabled
+        , discoverySourceWritePriority
+        )
+  where
+    unlessEither True _ = Right ()
+    unlessEither False message =
+        Left err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
+
+resolveDiscoverySourceCity ::
+    ConnectionPool ->
+    ValidatedDiscoverySourceWrite ->
+    IO (Either ServerError ValidatedDiscoverySourceWrite)
+resolveDiscoverySourceCity pool validated@(_, _, _, _, cityKey, _, _) =
+    case cityKey of
+        Nothing -> pure (Right validated)
+        Just key -> do
+            city <- runSqlPool (get key) pool
+            pure $
+                case city of
+                    Nothing -> Left err400{errBody = "Configured event city does not exist"}
+                    Just _ -> Right validated
+
+discoverySourceEntityToDTO ::
+    Entity EventDiscoverySource ->
+    SqlPersistT IO DiscoverySourceDTO
+discoverySourceEntityToDTO (Entity sourceKey source) = do
+    city <- traverse get (eventDiscoverySourceCityId source)
+    pure
+        DiscoverySourceDTO
+            { discoverySourceId = renderKeyText sourceKey
+            , discoverySourceKey = eventDiscoverySourceSourceKey source
+            , discoverySourceName = eventDiscoverySourceName source
+            , discoverySourceType = eventDiscoverySourceSourceType source
+            , discoverySourceFeedUrl = eventDiscoverySourceFeedUrl source
+            , discoverySourceCityId = renderKeyText <$> eventDiscoverySourceCityId source
+            , discoverySourceCityName = SM.eventCityName <$> join city
+            , discoverySourceCountryCode = SM.eventCityCountryCode <$> join city
+            , discoverySourceEnabled = eventDiscoverySourceEnabled source
+            , discoverySourcePriority = eventDiscoverySourcePriority source
+            , discoverySourceConsecutiveFailures =
+                eventDiscoverySourceConsecutiveFailures source
+            , discoverySourceLastSuccessAt = eventDiscoverySourceLastSuccessAt source
+            , discoverySourceLastError = eventDiscoverySourceLastError source
+            , discoverySourceUpdatedAt = eventDiscoverySourceUpdatedAt source
+            }
+
+venueMatchesEventCity :: Venue -> Entity EventCity -> Bool
+venueMatchesEventCity venue (Entity _ city) =
+    maybe False ((== SM.eventCityNormalizedName city) . normalizeEventCityName) (SM.venueCity venue)
+        && countryMatches
+  where
+    countryMatches =
+        case fmap (T.toUpper . T.strip) (SM.venueCountry venue) of
+            Nothing -> True
+            Just "" -> True
+            Just country
+                | T.length country == 2 -> country == SM.eventCityCountryCode city
+                | otherwise -> True
+
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
 socialEventsServer user =
     eventsServer
+        :<|> eventCitiesServer
+        :<|> eventDiscoverySourcesServer
         :<|> venuesServer
         :<|> artistsServer
         :<|> rsvpsServer
@@ -1571,11 +1787,12 @@ socialEventsServer user =
             :<|> uploadEventImage
             :<|> deleteEvent
 
-    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
-    listEvents mCity mStartAfter mType mStatus mArtistId mVenueId mLimit mOffset = do
+    listEvents :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [EventDTO]
+    listEvents mCity mScope mStartAfter mType mStatus mArtistId mVenueId mLimit mOffset = do
         Env{..} <- ask
         limit <- resolveLimit 200 500 mLimit
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
+        scope <- either throwError pure (validateEventListScope mScope)
         typeNeedle <- either throwError pure (parseEventTypeQueryParamEither mType)
         statusNeedle <- either throwError pure (parseEventStatusQueryParamEither mStatus)
         cityFilterText <-
@@ -1587,18 +1804,42 @@ socialEventsServer user =
                 case iso8601ParseM (T.unpack raw) of
                     Just t -> pure [SocialEventStartTime >=. t]
                     Nothing -> throwError err400{errBody = "Invalid start_after value (expected ISO-8601 datetime)"}
-        cityFilter <- case T.toCaseFold <$> cityFilterText of
-            Nothing -> pure []
-            Just cityNeedle -> do
-                venueRows <- liftIO $ runSqlPool (selectList [] [LimitTo 2000]) envPool
-                let ids =
-                        [ entityKey venueRow
-                        | venueRow@(Entity _ v) <- venueRows
-                        , maybe False (\cityVal -> T.isInfixOf cityNeedle (T.toCaseFold cityVal)) (SM.venueCity v)
-                        ]
-                if null ids
-                    then pure [SocialEventId ==. toSqlKey 0] -- force empty result set
-                    else pure [SocialEventVenueId <-. map Just ids]
+        cityFilter <- do
+            venueRows <- liftIO $ runSqlPool (selectList [] [LimitTo 5000]) envPool
+            subscribedCities <-
+                if scope == "subscribed"
+                    then liftIO (loadSubscribedEventCities envPool currentPartyId)
+                    else pure []
+            let cityNeedle = T.toCaseFold <$> cityFilterText
+                matchesRequestedCity venue =
+                    case cityNeedle of
+                        Nothing -> True
+                        Just needle ->
+                            maybe
+                                False
+                                (T.isInfixOf needle . T.toCaseFold)
+                                (SM.venueCity venue)
+                requestedVenueIds =
+                    [ entityKey venueRow
+                    | venueRow@(Entity _ venue) <- venueRows
+                    , matchesRequestedCity venue
+                    ]
+                subscribedVenueIds =
+                    [ entityKey venueRow
+                    | venueRow@(Entity _ venue) <- venueRows
+                    , any (venueMatchesEventCity venue) subscribedCities
+                    ]
+            subscribedEventIds <-
+                if scope /= "subscribed"
+                    then pure []
+                    else liftIO $ runSqlPool (resolveSubscribedEventIds subscribedCities subscribedVenueIds) envPool
+            if (isJust cityFilterText && null requestedVenueIds)
+                || (scope == "subscribed" && null subscribedEventIds)
+                then pure [SocialEventId ==. toSqlKey 0]
+                else
+                    pure $
+                        (if isJust cityFilterText then [SocialEventVenueId <-. map Just requestedVenueIds] else [])
+                            ++ (if scope == "subscribed" then [SocialEventId <-. subscribedEventIds] else [])
         venueFilter <- case fmap T.strip mVenueId of
             Nothing -> pure []
             Just "" -> pure []
@@ -1631,7 +1872,254 @@ socialEventsServer user =
         filteredRows <- filterM matchesMeta rows
         forM filteredRows $ \(Entity eid eventRow) -> do
             artists <- loadEventArtists envPool eid
-            either throwError pure (eventEntityToDTO eid eventRow artists)
+            sources <- liftIO (loadExternalEventSources envPool eid)
+            dto <- either throwError pure (eventEntityToDTO eid eventRow artists)
+            pure dto{eventSources = Just sources}
+
+    resolveSubscribedEventIds ::
+        [Entity EventCity] ->
+        [VenueId] ->
+        SqlPersistT IO [SocialEventId]
+    resolveSubscribedEventIds subscribedCities subscribedVenueIds = do
+        refs <- selectList [] []
+        let referencedEventIds =
+                Set.fromList (map (externalEventRefEventId . entityVal) refs)
+            importedMatches =
+                [ externalEventRefEventId ref
+                | Entity _ ref <- refs
+                , any (externalRefMatchesCity ref . entityVal) subscribedCities
+                ]
+        localEvents <-
+            if null subscribedVenueIds
+                then pure []
+                else selectList [SocialEventVenueId <-. map Just subscribedVenueIds] [LimitTo 10000]
+        let localMatches =
+                [ eventKey
+                | Entity eventKey _ <- localEvents
+                , Set.notMember eventKey referencedEventIds
+                ]
+        pure (Set.toList (Set.fromList (importedMatches ++ localMatches)))
+
+    externalRefMatchesCity :: ExternalEventRef -> EventCity -> Bool
+    externalRefMatchesCity ref city =
+        normalizeEventCityName (externalEventRefCity ref) == SM.eventCityNormalizedName city
+            && maybe
+                True
+                ((== SM.eventCityCountryCode city) . T.toUpper . T.strip)
+                (externalEventRefCountryCode ref)
+
+    eventCitiesServer :: ServerT EventCitiesRoutes AppM
+    eventCitiesServer =
+        listEventCities
+            :<|> getCitySubscriptions
+            :<|> replaceCitySubscriptions
+
+    eventDiscoverySourcesServer :: ServerT EventDiscoverySourcesRoutes AppM
+    eventDiscoverySourcesServer =
+        listDiscoverySources
+            :<|> createDiscoverySource
+            :<|> updateDiscoverySource
+
+    requireDiscoverySourceAdmin :: AppM ()
+    requireDiscoverySourceAdmin =
+        unless (hasStrictAdminAccess user) $
+            throwError err403{errBody = "Strict admin access required"}
+
+    listDiscoverySources :: AppM [DiscoverySourceDTO]
+    listDiscoverySources = do
+        requireDiscoverySourceAdmin
+        Env{..} <- ask
+        liftIO $
+            runSqlPool
+                (do
+                    rows <- selectList [] [Desc EventDiscoverySourcePriority, Asc EventDiscoverySourceName]
+                    mapM discoverySourceEntityToDTO rows
+                )
+                envPool
+
+    createDiscoverySource :: DiscoverySourceWriteDTO -> AppM DiscoverySourceDTO
+    createDiscoverySource payload = do
+        requireDiscoverySourceAdmin
+        Env{..} <- ask
+        validated <- either throwError pure (validateDiscoverySourceWrite payload)
+        resolved <-
+            liftIO (resolveDiscoverySourceCity envPool validated)
+                >>= either throwError pure
+        now <- liftIO getCurrentTime
+        result <-
+            liftIO $
+                runSqlPool
+                    (do
+                        let (sourceKey, sourceName, sourceType, feedUrl, cityKey, enabled, priority) =
+                                resolved
+                        existing <- getBy (UniqueEventDiscoverySource sourceKey)
+                        case existing of
+                            Just _ -> pure (Left err409{errBody = "Event source key already exists"})
+                            Nothing -> do
+                                let newRow =
+                                        EventDiscoverySource
+                                            { eventDiscoverySourceSourceKey = sourceKey
+                                            , eventDiscoverySourceName = sourceName
+                                            , eventDiscoverySourceSourceType = sourceType
+                                            , eventDiscoverySourceFeedUrl = feedUrl
+                                            , eventDiscoverySourceCityId = cityKey
+                                            , eventDiscoverySourceEnabled = enabled
+                                            , eventDiscoverySourcePriority = priority
+                                            , eventDiscoverySourceConfiguration = Nothing
+                                            , eventDiscoverySourceEtag = Nothing
+                                            , eventDiscoverySourceLastModified = Nothing
+                                            , eventDiscoverySourceConsecutiveFailures = 0
+                                            , eventDiscoverySourceLastSuccessAt = Nothing
+                                            , eventDiscoverySourceLastError = Nothing
+                                            , eventDiscoverySourceCreatedAt = now
+                                            , eventDiscoverySourceUpdatedAt = now
+                                            }
+                                key <- insert newRow
+                                Right <$> discoverySourceEntityToDTO (Entity key newRow)
+                    )
+                    envPool
+        either throwError pure result
+
+    updateDiscoverySource :: T.Text -> DiscoverySourceWriteDTO -> AppM DiscoverySourceDTO
+    updateDiscoverySource rawSourceId payload = do
+        requireDiscoverySourceAdmin
+        Env{..} <- ask
+        sourceKeyId <-
+            either throwError pure $
+                fmap toSqlKey (parseInt64Either "event source" rawSourceId)
+        validated <- either throwError pure (validateDiscoverySourceWrite payload)
+        resolved <-
+            liftIO (resolveDiscoverySourceCity envPool validated)
+                >>= either throwError pure
+        now <- liftIO getCurrentTime
+        result <-
+            liftIO $
+                runSqlPool
+                    (do
+                        existing <- get sourceKeyId
+                        case existing of
+                            Nothing -> pure (Left err404)
+                            Just existingRow -> do
+                                let (sourceKey, sourceName, sourceType, feedUrl, cityKey, enabled, priority) =
+                                        resolved
+                                if eventDiscoverySourceSourceType existingRow
+                                    `elem` ["ticketmaster", "buenplan"]
+                                    && ( sourceKey /= eventDiscoverySourceSourceKey existingRow
+                                            || sourceType /= eventDiscoverySourceSourceType existingRow
+                                       )
+                                    then
+                                        pure
+                                            ( Left
+                                                err400
+                                                    { errBody =
+                                                        "Built-in source identity cannot be changed"
+                                                    }
+                                            )
+                                    else do
+                                        conflicting <- getBy (UniqueEventDiscoverySource sourceKey)
+                                        case conflicting of
+                                            Just (Entity conflictingKey _)
+                                                | conflictingKey /= sourceKeyId ->
+                                                    pure (Left err409{errBody = "Event source key already exists"})
+                                            _ -> do
+                                                update
+                                                    sourceKeyId
+                                                    [ EventDiscoverySourceSourceKey =. sourceKey
+                                                    , EventDiscoverySourceName =. sourceName
+                                                    , EventDiscoverySourceSourceType =. sourceType
+                                                    , EventDiscoverySourceFeedUrl =. feedUrl
+                                                    , EventDiscoverySourceCityId =. cityKey
+                                                    , EventDiscoverySourceEnabled =. enabled
+                                                    , EventDiscoverySourcePriority =. priority
+                                                    , EventDiscoverySourceConsecutiveFailures =. 0
+                                                    , EventDiscoverySourceLastError =. Nothing
+                                                    , EventDiscoverySourceUpdatedAt =. now
+                                                    ]
+                                                refreshed <- get sourceKeyId
+                                                case refreshed of
+                                                    Nothing -> pure (Left err404)
+                                                    Just row ->
+                                                        Right <$> discoverySourceEntityToDTO (Entity sourceKeyId row)
+                    )
+                    envPool
+        either throwError pure result
+
+    listEventCities :: Maybe T.Text -> Maybe T.Text -> AppM [EventCityDTO]
+    listEventCities rawQuery rawCountry = do
+        Env{..} <- ask
+        query <-
+            either throwError pure $
+                validateSocialEventsListFilter "q" rawQuery
+        country <- traverse (either throwError pure . validateEventCountryCode) rawCountry
+        liftIO $ do
+            cities <- runSqlPool (selectList [] [Asc EventCityName, LimitTo 500]) envPool
+            subscribed <- loadSubscribedEventCities envPool currentPartyId
+            let subscribedIds = Set.fromList (map entityKey subscribed)
+                matchesQuery city =
+                    maybe
+                        True
+                        (\needle -> T.toCaseFold needle `T.isInfixOf` T.toCaseFold (SM.eventCityName city))
+                        query
+                matchesCountry city =
+                    maybe True (== SM.eventCityCountryCode city) country
+            pure
+                [ eventCityEntityToDTO (Set.member cityKey subscribedIds) cityEntity
+                | cityEntity@(Entity cityKey city) <- cities
+                , matchesQuery city
+                , matchesCountry city
+                ]
+
+    getCitySubscriptions :: AppM [EventCityDTO]
+    getCitySubscriptions = do
+        Env{..} <- ask
+        liftIO $ do
+            cities <- loadSubscribedEventCities envPool currentPartyId
+            pure (map (eventCityEntityToDTO True) cities)
+
+    replaceCitySubscriptions :: EventCitySubscriptionUpdateDTO -> AppM [EventCityDTO]
+    replaceCitySubscriptions EventCitySubscriptionUpdateDTO{eventCities = requestedCities} = do
+        Env{..} <- ask
+        validated <- either throwError pure (validateEventCityInputs requestedCities)
+        now <- liftIO getCurrentTime
+        liftIO $
+            runSqlPool
+                (do
+                    cityKeys <-
+                        forM validated $ \(name, normalizedName, countryCode, timeZone) -> do
+                            existing <- getBy (UniqueEventCity normalizedName countryCode)
+                            case existing of
+                                Just (Entity cityKey _) -> do
+                                    update
+                                        cityKey
+                                        [ EventCityName =. name
+                                        , EventCityTimeZone =. timeZone
+                                        , EventCityUpdatedAt =. now
+                                        ]
+                                    pure cityKey
+                                Nothing ->
+                                    insert
+                                        EventCity
+                                            { eventCityName = name
+                                            , eventCityNormalizedName = normalizedName
+                                            , eventCityCountryCode = countryCode
+                                            , eventCityTimeZone = timeZone
+                                            , eventCityCreatedAt = now
+                                            , eventCityUpdatedAt = now
+                                            }
+                    deleteWhere [EventCitySubscriptionPartyId ==. currentPartyId]
+                    forM_ cityKeys $ \cityKey -> do
+                        _ <-
+                            insertUnique
+                                EventCitySubscription
+                                    { eventCitySubscriptionPartyId = currentPartyId
+                                    , eventCitySubscriptionCityId = cityKey
+                                    , eventCitySubscriptionCreatedAt = now
+                                    }
+                        pure ()
+                    rows <- selectList [EventCityId <-. cityKeys] [Asc EventCityName]
+                    pure (map (eventCityEntityToDTO True) rows)
+                )
+                envPool
 
     createEvent :: EventDTO -> AppM EventDTO
     createEvent dto = do
@@ -1705,6 +2193,7 @@ socialEventsServer user =
                 , eventStatus = emStatus createdMetadata
                 , eventCurrency = emCurrency createdMetadata
                 , eventBudgetCents = emBudgetCents createdMetadata
+                , eventSources = Nothing
                 , eventCreatedAt = Just now
                 , eventUpdatedAt = Just now
                 }
@@ -1718,7 +2207,9 @@ socialEventsServer user =
             Nothing -> throwError err404{errBody = "Event not found"}
             Just eventRow -> do
                 artists <- loadEventArtists envPool eventKey
-                either throwError pure (eventEntityToDTO eventKey eventRow artists)
+                sources <- liftIO (loadExternalEventSources envPool eventKey)
+                dto <- either throwError pure (eventEntityToDTO eventKey eventRow artists)
+                pure dto{eventSources = Just sources}
 
     updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
     updateEvent rawId EventUpdateDTO{..} = do
@@ -1780,6 +2271,7 @@ socialEventsServer user =
                 , eventStatus = emStatus mergedMetadata
                 , eventCurrency = emCurrency mergedMetadata
                 , eventBudgetCents = emBudgetCents mergedMetadata
+                , eventSources = Nothing
                 , eventCreatedAt = Just (socialEventCreatedAt managedEvent)
                 , eventUpdatedAt = Just now
                 }
@@ -6662,6 +7154,39 @@ canAccessLiveBroadcast pool partyId broadcastRow =
                     pool
             pure (isJust mFollow)
 
+loadExternalEventSources ::
+    ConnectionPool ->
+    SocialEventId ->
+    IO [EventSourceDTO]
+loadExternalEventSources pool eventKey =
+    runSqlPool
+        (do
+            refs <- selectList [ExternalEventRefEventId ==. eventKey] []
+            ranked <-
+                forM refs $ \(Entity _ ref) -> do
+                    source <- getBy (UniqueEventDiscoverySource (externalEventRefProvider ref))
+                    let (priority, label) =
+                            case source of
+                                Just (Entity _ sourceRow) ->
+                                    ( eventDiscoverySourcePriority sourceRow
+                                    , eventDiscoverySourceName sourceRow
+                                    )
+                                Nothing -> (1000, externalEventRefProvider ref)
+                    pure
+                        ( priority
+                        , EventSourceDTO
+                            { eventSourceProvider = externalEventRefProvider ref
+                            , eventSourceLabel = label
+                            , eventSourceUrl = externalEventRefSourceUrl ref
+                            , eventSourcePriceCents = externalEventRefPriceCents ref
+                            , eventSourceCurrency = externalEventRefCurrency ref
+                            , eventSourceStatus = externalEventRefSourceStatus ref
+                            }
+                        )
+            pure (map snd (sortOn (negate . fst) ranked))
+        )
+        pool
+
 eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
 eventEntityToDTO eid eventRow artists = do
     metadata <-
@@ -6685,6 +7210,7 @@ eventEntityToDTO eid eventRow artists = do
             , eventStatus = emStatus metadata <|> Just "planning"
             , eventCurrency = emCurrency metadata <|> Just "USD"
             , eventBudgetCents = emBudgetCents metadata
+            , eventSources = Nothing
             , eventCreatedAt = Just (socialEventCreatedAt eventRow)
             , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
             , eventArtists = artists

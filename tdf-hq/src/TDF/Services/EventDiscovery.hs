@@ -6,19 +6,26 @@ module TDF.Services.EventDiscovery
   , DiscoveredEvent(..)
   , DiscoveredVenue(..)
   , DiscoverySyncStats(..)
+  , EventDiscoveryCity(..)
   , EventDiscoveryRunHandle
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
+  , fetchBuenPlanEvents
+  , fetchStructuredFeedEvents
   , fetchTicketmasterEvents
+  , fetchTicketmasterEventsForCity
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
   , loadActiveUserCities
+  , loadSubscribedDiscoveryCities
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , reconcileImportedEvents
+  , reconcileProviderEvents
   , syncDiscoveredEvent
   ) where
 
+import Control.Applicative ((<|>))
 import Control.Exception (try)
 import Control.Monad (forM, forM_)
 import Control.Concurrent (threadDelay)
@@ -39,7 +46,12 @@ import Data.Aeson.Types (parseMaybe)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Aeson.KeyMap as AesonKeyMap
-import Data.Char (GeneralCategory(Format, LineSeparator, ParagraphSeparator), generalCategory, isControl)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isControl
+  )
 import Data.Function (on)
 import Data.List (maximumBy, nubBy, sortOn)
 import qualified Data.Map.Strict as Map
@@ -48,10 +60,12 @@ import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (Day, UTCTime, addUTCTime)
+import Data.Time (UTCTime, addUTCTime, diffUTCTime, utctDay)
+import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Data.Time.Format.ISO8601 (iso8601ParseM, iso8601Show)
 import Database.Persist
   ( Entity(..)
+  , SelectOpt(LimitTo)
   , deleteWhere
   , get
   , getBy
@@ -69,6 +83,7 @@ import Network.HTTP.Client
   , Response
   , httpLbs
   , parseRequest
+  , redirectCount
   , requestHeaders
   , responseBody
   , responseHeaders
@@ -99,6 +114,7 @@ data DiscoveredVenue = DiscoveredVenue
   , discoveredVenueAddress :: Maybe Text
   , discoveredVenueCity :: Text
   , discoveredVenueCountry :: Maybe Text
+  , discoveredVenueCountryCode :: Maybe Text
   , discoveredVenueLatitude :: Maybe Double
   , discoveredVenueLongitude :: Maybe Double
   , discoveredVenuePhone :: Maybe Text
@@ -116,7 +132,8 @@ data DiscoveredArtist = DiscoveredArtist
   } deriving (Eq, Show)
 
 data DiscoveredEvent = DiscoveredEvent
-  { discoveredEventExternalId :: Text
+  { discoveredEventProvider :: Text
+  , discoveredEventExternalId :: Text
   , discoveredEventTitle :: Text
   , discoveredEventDescription :: Maybe Text
   , discoveredEventStart :: UTCTime
@@ -139,6 +156,12 @@ data DiscoverySyncStats = DiscoverySyncStats
   , discoveryArtistsCreated :: Int
   } deriving (Eq, Show)
 
+data EventDiscoveryCity = EventDiscoveryCity
+  { eventDiscoveryCityName :: Text
+  , eventDiscoveryCityCountryCode :: Text
+  , eventDiscoveryCityTimeZone :: Maybe Text
+  } deriving (Eq, Show)
+
 emptyDiscoverySyncStats :: DiscoverySyncStats
 emptyDiscoverySyncStats = DiscoverySyncStats 0 0 0 0 0
 
@@ -147,22 +170,25 @@ newtype EventDiscoveryRunHandle =
 
 beginEventDiscoveryRun ::
   ConnectionPool ->
-  Day ->
+  Text ->
+  UTCTime ->
   UTCTime ->
   IO (Maybe EventDiscoveryRunHandle)
-beginEventDiscoveryRun pool runDate now =
+beginEventDiscoveryRun pool provider scheduledFor now =
   runSqlPool claim pool
   where
+    runDate = utctDay scheduledFor
     claim = do
       existing <-
         getBy
-          (Social.UniqueExternalEventDiscoveryRun providerName runDate)
+          (Social.UniqueExternalEventDiscoverySlot provider (Just scheduledFor))
       case existing of
         Just (Entity runKey runRow)
           | shouldReclaim runRow -> do
               update
                 runKey
                 [ Social.ExternalEventDiscoveryRunStatus =. "running"
+                , Social.ExternalEventDiscoveryRunScheduledFor =. Just scheduledFor
                 , Social.ExternalEventDiscoveryRunCitiesCount =. 0
                 , Social.ExternalEventDiscoveryRunEventsSeen =. 0
                 , Social.ExternalEventDiscoveryRunEventsCreated =. 0
@@ -179,8 +205,9 @@ beginEventDiscoveryRun pool runDate now =
           inserted <-
             insertUnique
               Social.ExternalEventDiscoveryRun
-                { Social.externalEventDiscoveryRunProvider = providerName
+                { Social.externalEventDiscoveryRunProvider = provider
                 , Social.externalEventDiscoveryRunRunDate = runDate
+                , Social.externalEventDiscoveryRunScheduledFor = Just scheduledFor
                 , Social.externalEventDiscoveryRunStatus = "running"
                 , Social.externalEventDiscoveryRunCitiesCount = 0
                 , Social.externalEventDiscoveryRunEventsSeen = 0
@@ -482,6 +509,596 @@ instance FromJSON TicketmasterResponse where
 decodeValidProviderItems :: FromJSON a => [Value] -> [a]
 decodeValidProviderItems = mapMaybe (parseMaybe parseJSON)
 
+data BuenPlanImage = BuenPlanImage
+  { buenPlanImageUrl :: Text
+  }
+
+instance FromJSON BuenPlanImage where
+  parseJSON = withObject "BuenPlanImage" $ \o ->
+    BuenPlanImage <$> o .: "url"
+
+data BuenPlanEvent = BuenPlanEvent
+  { buenPlanEventId :: Text
+  , buenPlanEventTitle :: Text
+  , buenPlanEventDescription :: Maybe Text
+  , buenPlanEventSlug :: Text
+  , buenPlanEventStart :: UTCTime
+  , buenPlanEventTimeZone :: Maybe Text
+  , buenPlanEventCover :: Maybe BuenPlanImage
+  , buenPlanEventPoster :: Maybe BuenPlanImage
+  , buenPlanEventCurrency :: Maybe Text
+  , buenPlanEventSellActive :: Bool
+  }
+
+instance FromJSON BuenPlanEvent where
+  parseJSON = withObject "BuenPlanEvent" $ \o ->
+    BuenPlanEvent
+      <$> o .: "id"
+      <*> o .: "title"
+      <*> o .:? "description"
+      <*> o .: "url"
+      <*> o .: "startDate"
+      <*> o .:? "timeZone"
+      <*> o .:? "cover"
+      <*> o .:? "poster"
+      <*> o .:? "currency"
+      <*> (o .:? "sellActive" .!= False)
+
+data BuenPlanMeta = BuenPlanMeta
+  { buenPlanPageCount :: Int
+  }
+
+instance FromJSON BuenPlanMeta where
+  parseJSON = withObject "BuenPlanMeta" $ \o ->
+    BuenPlanMeta <$> (o .:? "pageCount" .!= 1)
+
+data BuenPlanResponse = BuenPlanResponse
+  { buenPlanEvents :: [BuenPlanEvent]
+  , buenPlanMeta :: BuenPlanMeta
+  }
+
+instance FromJSON BuenPlanResponse where
+  parseJSON = withObject "BuenPlanResponse" $ \o ->
+    BuenPlanResponse
+      <$> (decodeValidProviderItems <$> (o .:? "data" .!= []))
+      <*> o .: "meta"
+
+buenPlanApiBase :: Text
+buenPlanApiBase = "https://api.buenplan.com.ec"
+
+buenPlanWebBase :: Text
+buenPlanWebBase = "https://www.buenplan.com.ec"
+
+fetchBuenPlanEvents ::
+  AppConfig ->
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  IO (Either Text [DiscoveredEvent])
+fetchBuenPlanEvents cfg cities now
+  | null ecuadorCities = pure (Right [])
+  | otherwise = fetchPage 1 []
+  where
+    ecuadorCities =
+      filter ((== "EC") . eventDiscoveryCityCountryCode) cities
+    endTime =
+      addUTCTime
+        (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
+        now
+    fetchPage pageNumber collected
+      | pageNumber > 10 = pure (Right collected)
+      | otherwise = do
+          requestResult <-
+            try (parseRequest (buildBuenPlanRequestUrl pageNumber)) ::
+              IO (Either HttpException Request)
+          case requestResult of
+            Left _ -> pure (Left "Could not build the Buen Plan event request")
+            Right rawRequest -> do
+              let request =
+                    rawRequest
+                      { requestHeaders =
+                          [ ("Accept", "application/json")
+                          , ("User-Agent", "TDF-Records-Event-Discovery/1.0")
+                          ]
+                      , responseTimeout = responseTimeoutMicro (20 * 1000000)
+                      }
+              threadDelay 1000000
+              responseResult <- requestTicketmasterPage request 0
+              case responseResult of
+                Left _ -> pure (Left "Buen Plan request failed")
+                Right response ->
+                  let httpStatus = statusCode (responseStatus response)
+                      body = responseBody response
+                   in if httpStatus < 200 || httpStatus >= 300
+                        then pure (Left ("Buen Plan returned HTTP " <> T.pack (show httpStatus)))
+                        else
+                          if BL.length body > 25 * 1024 * 1024
+                            then pure (Left "Buen Plan response exceeded the 25 MB safety limit")
+                            else
+                              case eitherDecode body of
+                                Left _ -> pure (Left "Buen Plan returned an invalid event response")
+                                Right decoded -> do
+                                  let normalized =
+                                        mapMaybe
+                                          (normalizeBuenPlanEvent ecuadorCities now endTime)
+                                          (buenPlanEvents decoded)
+                                      nextCollected = collected ++ normalized
+                                      pageCount = buenPlanPageCount (buenPlanMeta decoded)
+                                  if pageNumber >= pageCount
+                                    then pure (Right nextCollected)
+                                    else fetchPage (pageNumber + 1) nextCollected
+
+    buildBuenPlanRequestUrl pageNumber =
+      T.unpack
+        ( buenPlanApiBase
+            <> "/v2/events/search"
+            <> TE.decodeUtf8
+              ( renderSimpleQuery
+                  True
+                  [ ("take", "100")
+                  , ("page", BS8.pack (show pageNumber))
+                  , ("order", "asc")
+                  , ("sort", "startDate")
+                  ]
+              )
+        )
+
+normalizeBuenPlanEvent ::
+  [EventDiscoveryCity] ->
+  UTCTime ->
+  UTCTime ->
+  BuenPlanEvent ->
+  Maybe DiscoveredEvent
+normalizeBuenPlanEvent cities now endTime BuenPlanEvent{..} = do
+  externalId <- cleanIdentifier buenPlanEventId
+  title <- cleanSingleLine 160 buenPlanEventTitle
+  whenMaybe (buenPlanEventStart < now || buenPlanEventStart > endTime) Nothing
+  city <- matchBuenPlanCity cities title buenPlanEventDescription
+  slug <- cleanIdentifier buenPlanEventSlug
+  let description = buenPlanEventDescription >>= cleanMultiline 5000
+      venueName =
+        fromMaybe
+          ("Ubicación publicada en Buen Plan · " <> eventDiscoveryCityName city)
+          (description >>= extractBuenPlanVenueName)
+      venueExternalId =
+        eventDiscoveryCityCountryCode city
+          <> ":"
+          <> normalizeTokenText venueName
+      imageUrl =
+        (buenPlanEventPoster <|> buenPlanEventCover)
+          >>= normalizeHttpsUrl "Buen Plan event image" . buenPlanImageUrl
+      currency =
+        fromMaybe "USD"
+          ( buenPlanEventCurrency
+              >>= normalizeCurrencyCode
+          )
+      status = if buenPlanEventSellActive then "on_sale" else "announced"
+  pure
+    DiscoveredEvent
+      { discoveredEventProvider = "buenplan"
+      , discoveredEventExternalId = externalId
+      , discoveredEventTitle = title
+      , discoveredEventDescription = description
+      , discoveredEventStart = buenPlanEventStart
+      , discoveredEventEnd = addUTCTime (3 * 60 * 60) buenPlanEventStart
+      , discoveredEventVenue =
+          DiscoveredVenue
+            { discoveredVenueExternalId = venueExternalId
+            , discoveredVenueName = venueName
+            , discoveredVenueAddress = Nothing
+            , discoveredVenueCity = eventDiscoveryCityName city
+            , discoveredVenueCountry = Nothing
+            , discoveredVenueCountryCode =
+                Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueLatitude = Nothing
+            , discoveredVenueLongitude = Nothing
+            , discoveredVenuePhone = Nothing
+            , discoveredVenueWebsite = Nothing
+            , discoveredVenueState = Nothing
+            , discoveredVenuePostalCode = Nothing
+            , discoveredVenueImageUrl = Nothing
+            }
+      , discoveredEventArtists = []
+      , discoveredEventPriceCents = Nothing
+      , discoveredEventCurrency = currency
+      , discoveredEventTicketUrl =
+          normalizeHttpsUrl
+            "Buen Plan ticket URL"
+            (buenPlanWebBase <> "/event/" <> slug)
+      , discoveredEventImageUrl = imageUrl
+      , discoveredEventType = "event"
+      , discoveredEventStatus = status
+      }
+
+matchBuenPlanCity ::
+  [EventDiscoveryCity] ->
+  Text ->
+  Maybe Text ->
+  Maybe EventDiscoveryCity
+matchBuenPlanCity cities title description =
+  listToMaybe
+    ( sortOn
+        (negate . T.length . eventDiscoveryCityName)
+        [ city
+        | city <- cities
+        , normalizeEventText (eventDiscoveryCityName city)
+            `T.isInfixOf` searchable
+        ]
+    )
+  where
+    searchable = normalizeEventText (title <> " " <> fromMaybe "" description)
+    normalizeEventText =
+      T.unwords
+        . T.words
+        . T.map (\ch -> if isAlphaNum ch then ch else ' ')
+        . T.toCaseFold
+
+extractBuenPlanVenueName :: Text -> Maybe Text
+extractBuenPlanVenueName description =
+  listToMaybe
+    [ venue
+    | rawLine <- T.lines description
+    , let (_, suffix) = T.breakOn "📍" rawLine
+    , not (T.null suffix)
+    , let venue = T.strip (T.drop 1 suffix)
+    , not (T.null venue)
+    , T.length venue <= 300
+    ]
+
+normalizeCurrencyCode :: Text -> Maybe Text
+normalizeCurrencyCode rawCurrency =
+  let currency = T.toUpper (T.strip rawCurrency)
+   in if T.length currency == 3
+        && T.all (\ch -> ch >= 'A' && ch <= 'Z') currency
+        then Just currency
+        else Nothing
+
+data StructuredFeedEvent = StructuredFeedEvent
+  { structuredEventId :: Text
+  , structuredEventTitle :: Text
+  , structuredEventDescription :: Maybe Text
+  , structuredEventStart :: UTCTime
+  , structuredEventEnd :: Maybe UTCTime
+  , structuredEventVenue :: Text
+  , structuredEventAddress :: Maybe Text
+  , structuredEventTicketUrl :: Maybe Text
+  , structuredEventImageUrl :: Maybe Text
+  , structuredEventPriceCents :: Maybe Int
+  , structuredEventCurrency :: Maybe Text
+  , structuredEventStatus :: Maybe Text
+  , structuredEventType :: Maybe Text
+  , structuredEventArtists :: [Text]
+  }
+
+instance FromJSON StructuredFeedEvent where
+  parseJSON = withObject "StructuredFeedEvent" $ \o ->
+    StructuredFeedEvent
+      <$> o .: "id"
+      <*> o .: "title"
+      <*> o .:? "description"
+      <*> o .: "start"
+      <*> o .:? "end"
+      <*> o .: "venue"
+      <*> o .:? "address"
+      <*> o .:? "ticketUrl"
+      <*> o .:? "imageUrl"
+      <*> o .:? "priceCents"
+      <*> o .:? "currency"
+      <*> o .:? "status"
+      <*> o .:? "type"
+      <*> (o .:? "artists" .!= [])
+
+newtype StructuredFeedResponse =
+  StructuredFeedResponse { structuredFeedEvents :: [StructuredFeedEvent] }
+
+instance FromJSON StructuredFeedResponse where
+  parseJSON value@(Array _) =
+    StructuredFeedResponse <$> parseJSON value
+  parseJSON value =
+    withObject
+      "StructuredFeedResponse"
+      (\o -> StructuredFeedResponse <$> (o .:? "events" .!= []))
+      value
+
+fetchStructuredFeedEvents ::
+  AppConfig ->
+  Text ->
+  Text ->
+  Text ->
+  EventDiscoveryCity ->
+  UTCTime ->
+  IO (Either Text [DiscoveredEvent])
+fetchStructuredFeedEvents cfg sourceKey sourceType feedUrl city now =
+  case validatePublicFeedUrl feedUrl of
+    Left err -> pure (Left err)
+    Right validatedUrl -> do
+      requestResult <- try (parseRequest (T.unpack validatedUrl)) :: IO (Either HttpException Request)
+      case requestResult of
+        Left _ -> pure (Left "Could not build the venue feed request")
+        Right rawRequest -> do
+          let request =
+                rawRequest
+                  { requestHeaders =
+                      [ ("Accept", structuredAcceptHeader sourceType)
+                      , ("User-Agent", "TDF-Records-Event-Discovery/1.0")
+                      ]
+                  , redirectCount = 0
+                  , responseTimeout = responseTimeoutMicro (20 * 1000000)
+                  }
+          responseResult <- requestTicketmasterPage request 0
+          case responseResult of
+            Left _ -> pure (Left "Venue feed request failed")
+            Right response ->
+              let httpStatus = statusCode (responseStatus response)
+                  body = responseBody response
+               in if httpStatus < 200 || httpStatus >= 300
+                    then pure (Left ("Venue feed returned HTTP " <> T.pack (show httpStatus)))
+                    else
+                      if BL.length body > 10 * 1024 * 1024
+                        then pure (Left "Venue feed exceeded the 10 MB safety limit")
+                        else
+                          pure
+                            ( parseStructuredFeed
+                                cfg
+                                sourceKey
+                                sourceType
+                                city
+                                now
+                                body
+                            )
+
+structuredAcceptHeader :: Text -> BS8.ByteString
+structuredAcceptHeader sourceType
+  | T.toCaseFold sourceType == "ical" = "text/calendar"
+  | otherwise = "application/json"
+
+validatePublicFeedUrl :: Text -> Either Text Text
+validatePublicFeedUrl rawUrl
+  | not ("https://" `T.isPrefixOf` lowerUrl) =
+      Left "Venue feed URL must use HTTPS"
+  | isForbiddenFeedHost hostPart =
+      Left "Venue feed URL must resolve to a public host"
+  | otherwise =
+      case normalizeConfiguredHttpsUrl "Venue feed URL" (T.unpack stripped) of
+        Right (Just normalized) -> Right normalized
+        _ -> Left "Venue feed URL is invalid"
+  where
+    stripped = T.strip rawUrl
+    lowerUrl = T.toCaseFold stripped
+    hostPart = T.takeWhile (/= '/') (T.drop 8 lowerUrl)
+
+isForbiddenFeedHost :: Text -> Bool
+isForbiddenFeedHost rawHost =
+  host == "localhost"
+    || host == "0.0.0.0"
+    || host == "[::1]"
+    || ".local" `T.isSuffixOf` host
+    || any (`T.isPrefixOf` host) ["127.", "10.", "192.168.", "169.254."]
+    || isPrivate172 host
+    || any (`T.isPrefixOf` host) ["[fc", "[fd", "[fe8", "[fe9", "[fea", "[feb"]
+  where
+    host =
+      case T.breakOn ":" rawHost of
+        (plainHost, portSuffix)
+          | not (T.null portSuffix) && not ("[" `T.isPrefixOf` rawHost) ->
+              plainHost
+        _ -> rawHost
+    isPrivate172 value =
+      case T.splitOn "." value of
+        "172" : secondOctet : _ ->
+          maybe False (\octet -> octet >= (16 :: Int) && octet <= 31) $
+            readMaybe (T.unpack secondOctet)
+        _ -> False
+
+parseStructuredFeed ::
+  AppConfig ->
+  Text ->
+  Text ->
+  EventDiscoveryCity ->
+  UTCTime ->
+  BL.ByteString ->
+  Either Text [DiscoveredEvent]
+parseStructuredFeed cfg sourceKey sourceType city now body
+  | T.toCaseFold sourceType == "json" =
+      case eitherDecode body of
+        Left _ -> Left "Venue JSON feed is invalid"
+        Right response ->
+          Right
+            ( mapMaybe
+                (normalizeStructuredEvent cfg sourceKey city now)
+                (structuredFeedEvents response)
+            )
+  | T.toCaseFold sourceType == "ical" =
+      case TE.decodeUtf8' (BL.toStrict body) of
+        Left _ -> Left "Venue iCalendar feed is not valid UTF-8"
+        Right calendarText ->
+          Right
+            ( mapMaybe
+                (normalizeStructuredEvent cfg sourceKey city now)
+                (parseIcsEvents calendarText)
+            )
+  | otherwise = Left "Unsupported venue feed type"
+
+normalizeStructuredEvent ::
+  AppConfig ->
+  Text ->
+  EventDiscoveryCity ->
+  UTCTime ->
+  StructuredFeedEvent ->
+  Maybe DiscoveredEvent
+normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
+  externalId <- cleanIdentifier structuredEventId
+  title <- cleanSingleLine 160 structuredEventTitle
+  venueName <- cleanSingleLine 300 structuredEventVenue
+  let endTime =
+        case structuredEventEnd of
+          Just candidate | candidate > structuredEventStart -> candidate
+          _ -> addUTCTime (3 * 60 * 60) structuredEventStart
+      lookaheadEnd =
+        addUTCTime
+          (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
+          now
+  whenMaybe (structuredEventStart < now || structuredEventStart > lookaheadEnd) Nothing
+  let currency =
+        fromMaybe "USD" (structuredEventCurrency >>= normalizeCurrencyCode)
+      status =
+        normalizeStructuredStatus now structuredEventStart endTime structuredEventStatus
+      artists =
+        mapMaybe (normalizeStructuredArtist sourceKey) structuredEventArtists
+  pure
+    DiscoveredEvent
+      { discoveredEventProvider = sourceKey
+      , discoveredEventExternalId = externalId
+      , discoveredEventTitle = title
+      , discoveredEventDescription =
+          structuredEventDescription >>= cleanMultiline 5000
+      , discoveredEventStart = structuredEventStart
+      , discoveredEventEnd = endTime
+      , discoveredEventVenue =
+          DiscoveredVenue
+            { discoveredVenueExternalId =
+                sourceKey <> ":" <> normalizeTokenText venueName
+            , discoveredVenueName = venueName
+            , discoveredVenueAddress =
+                structuredEventAddress >>= cleanSingleLine 500
+            , discoveredVenueCity = eventDiscoveryCityName city
+            , discoveredVenueCountry = Nothing
+            , discoveredVenueCountryCode =
+                Just (eventDiscoveryCityCountryCode city)
+            , discoveredVenueLatitude = Nothing
+            , discoveredVenueLongitude = Nothing
+            , discoveredVenuePhone = Nothing
+            , discoveredVenueWebsite = Nothing
+            , discoveredVenueState = Nothing
+            , discoveredVenuePostalCode = Nothing
+            , discoveredVenueImageUrl = Nothing
+            }
+      , discoveredEventArtists = artists
+      , discoveredEventPriceCents =
+          structuredEventPriceCents >>= nonNegativePrice
+      , discoveredEventCurrency = currency
+      , discoveredEventTicketUrl =
+          structuredEventTicketUrl >>= normalizeHttpsUrl "Venue event URL"
+      , discoveredEventImageUrl =
+          structuredEventImageUrl >>= normalizeHttpsUrl "Venue event image"
+      , discoveredEventType =
+          fromMaybe "event" (structuredEventType >>= cleanSingleLine 80)
+      , discoveredEventStatus = status
+      }
+  where
+    nonNegativePrice price
+      | price >= 0 = Just price
+      | otherwise = Nothing
+
+normalizeStructuredArtist :: Text -> Text -> Maybe DiscoveredArtist
+normalizeStructuredArtist sourceKey rawName = do
+  name <- cleanSingleLine 300 rawName
+  pure
+    DiscoveredArtist
+      { discoveredArtistExternalId = sourceKey <> ":" <> normalizeTokenText name
+      , discoveredArtistName = name
+      , discoveredArtistGenres = []
+      , discoveredArtistImageUrl = Nothing
+      }
+
+normalizeStructuredStatus ::
+  UTCTime ->
+  UTCTime ->
+  UTCTime ->
+  Maybe Text ->
+  Text
+normalizeStructuredStatus now startsAt endsAt rawStatus
+  | endsAt < now = "completed"
+  | startsAt <= now && endsAt >= now = "live"
+  | normalized `elem` ["cancelled", "canceled"] = "cancelled"
+  | normalized `elem` ["on_sale", "onsale", "confirmed"] = "on_sale"
+  | otherwise = "announced"
+  where
+    normalized = maybe "" (T.toCaseFold . T.strip) rawStatus
+
+parseIcsEvents :: Text -> [StructuredFeedEvent]
+parseIcsEvents =
+  mapMaybe eventFromProperties
+    . splitIcsEvents
+    . unfoldIcsLines
+    . T.lines
+
+unfoldIcsLines :: [Text] -> [Text]
+unfoldIcsLines = reverse . foldl step []
+  where
+    step [] line = [T.dropWhileEnd (== '\r') line]
+    step (previous : rest) line
+      | " " `T.isPrefixOf` line || "\t" `T.isPrefixOf` line =
+          (previous <> T.drop 1 (T.dropWhileEnd (== '\r') line)) : rest
+      | otherwise = T.dropWhileEnd (== '\r') line : previous : rest
+
+splitIcsEvents :: [Text] -> [[Text]]
+splitIcsEvents = go False [] []
+  where
+    go _ current acc [] =
+      reverse (if null current then acc else reverse current : acc)
+    go False _ acc (line : remaining)
+      | T.toUpper line == "BEGIN:VEVENT" = go True [] acc remaining
+      | otherwise = go False [] acc remaining
+    go True current acc (line : remaining)
+      | T.toUpper line == "END:VEVENT" =
+          go False [] (reverse current : acc) remaining
+      | otherwise = go True (line : current) acc remaining
+
+eventFromProperties :: [Text] -> Maybe StructuredFeedEvent
+eventFromProperties properties = do
+  eventId <- lookupIcsProperty "UID" properties >>= cleanIdentifier
+  title <- lookupIcsProperty "SUMMARY" properties
+  startsAt <- lookupIcsProperty "DTSTART" properties >>= parseIcsTime
+  let endsAt = lookupIcsProperty "DTEND" properties >>= parseIcsTime
+      location = fromMaybe "Venue" (lookupIcsProperty "LOCATION" properties)
+  pure
+    StructuredFeedEvent
+      { structuredEventId = eventId
+      , structuredEventTitle = unescapeIcsText title
+      , structuredEventDescription =
+          unescapeIcsText <$> lookupIcsProperty "DESCRIPTION" properties
+      , structuredEventStart = startsAt
+      , structuredEventEnd = endsAt
+      , structuredEventVenue =
+          T.strip (listToMaybe (T.splitOn "," (unescapeIcsText location)) `orText` location)
+      , structuredEventAddress = Just (unescapeIcsText location)
+      , structuredEventTicketUrl = lookupIcsProperty "URL" properties
+      , structuredEventImageUrl = lookupIcsProperty "IMAGE" properties
+      , structuredEventPriceCents = Nothing
+      , structuredEventCurrency = Nothing
+      , structuredEventStatus = lookupIcsProperty "STATUS" properties
+      , structuredEventType = lookupIcsProperty "CATEGORIES" properties
+      , structuredEventArtists = []
+      }
+  where
+    orText (Just value) _ = value
+    orText Nothing fallback = fallback
+
+lookupIcsProperty :: Text -> [Text] -> Maybe Text
+lookupIcsProperty wanted =
+  listToMaybe
+    . mapMaybe propertyValue
+  where
+    propertyValue line =
+      let (rawKey, rawValueWithColon) = T.breakOn ":" line
+          key = T.toUpper (T.takeWhile (/= ';') rawKey)
+       in if key == wanted && not (T.null rawValueWithColon)
+            then Just (T.drop 1 rawValueWithColon)
+            else Nothing
+
+parseIcsTime :: Text -> Maybe UTCTime
+parseIcsTime rawValue =
+  iso8601ParseM (T.unpack rawValue)
+    <|> parseTimeM True defaultTimeLocale "%Y%m%dT%H%M%SZ" (T.unpack rawValue)
+
+unescapeIcsText :: Text -> Text
+unescapeIcsText =
+  T.replace "\\n" "\n"
+    . T.replace "\\N" "\n"
+    . T.replace "\\," ","
+    . T.replace "\\;" ";"
+    . T.replace "\\\\" "\\"
+
 normalizeUserCities :: [Text] -> [Text]
 normalizeUserCities rawCities =
   map snd . sortOn fst . Map.toList $
@@ -496,25 +1113,36 @@ normalizeCityKey :: Text -> Text
 normalizeCityKey = T.toCaseFold . T.unwords . T.words . T.strip
 
 loadActiveUserCities :: ConnectionPool -> IO [Text]
-loadActiveUserCities pool = do
+loadActiveUserCities pool =
+  map eventDiscoveryCityName <$> loadSubscribedDiscoveryCities pool
+
+loadSubscribedDiscoveryCities :: ConnectionPool -> IO [EventDiscoveryCity]
+loadSubscribedDiscoveryCities pool = do
   rows <-
     runSqlPool
       ( rawSql
-          "SELECT city FROM (\
-          \ SELECT trim(fp.city) AS city\
-          \ FROM fan_profile fp\
-          \ INNER JOIN user_credential uc ON uc.party_id = fp.fan_party_id\
-          \ WHERE uc.active = TRUE AND fp.city IS NOT NULL AND trim(fp.city) <> ''\
-          \ UNION\
-          \ SELECT trim(ap.city) AS city\
-          \ FROM artist_profile ap\
-          \ INNER JOIN user_credential uc ON uc.party_id = ap.artist_party_id\
-          \ WHERE uc.active = TRUE AND ap.city IS NOT NULL AND trim(ap.city) <> ''\
-          \ ) user_cities"
-          [] :: SqlPersistT IO [Single Text]
+          "SELECT DISTINCT city.name, city.country_code, city.time_zone\
+          \ FROM event_city_subscription subscription\
+          \ INNER JOIN event_city city ON city.id = subscription.city_id\
+          \ INNER JOIN user_credential credential\
+          \   ON credential.party_id::text = subscription.party_id\
+          \ WHERE credential.active = TRUE\
+          \ ORDER BY city.country_code, city.name"
+          [] ::
+          SqlPersistT
+            IO
+            [(Single Text, Single Text, Single (Maybe Text))]
       )
       pool
-  pure (normalizeUserCities [city | Single city <- rows])
+  pure
+    [ EventDiscoveryCity
+        { eventDiscoveryCityName = city
+        , eventDiscoveryCityCountryCode = T.toUpper countryCode
+        , eventDiscoveryCityTimeZone = timeZone
+        }
+    | (Single city, Single countryCode, Single timeZone) <- rows
+    , city `elem` normalizeUserCities [city]
+    ]
 
 buildTicketmasterRequestUrl ::
   Text ->
@@ -551,6 +1179,50 @@ fetchTicketmasterEvents ::
   UTCTime ->
   IO (Either Text [DiscoveredEvent])
 fetchTicketmasterEvents cfg apiKey city now =
+  fetchTicketmasterEventsWithCountry
+    cfg
+    (eventDiscoveryCountryCode cfg)
+    apiKey
+    city
+    now
+
+fetchTicketmasterEventsForCity ::
+  AppConfig ->
+  Text ->
+  EventDiscoveryCity ->
+  UTCTime ->
+  IO (Either Text [DiscoveredEvent])
+fetchTicketmasterEventsForCity cfg apiKey city now =
+  fmap
+    ( fmap
+        ( map
+            ( \event ->
+                event
+                  { discoveredEventVenue =
+                      (discoveredEventVenue event)
+                        { discoveredVenueCountryCode =
+                            Just (eventDiscoveryCityCountryCode city)
+                        }
+                  }
+            )
+        )
+    )
+    ( fetchTicketmasterEventsWithCountry
+        cfg
+        (Just (eventDiscoveryCityCountryCode city))
+        apiKey
+        (eventDiscoveryCityName city)
+        now
+    )
+
+fetchTicketmasterEventsWithCountry ::
+  AppConfig ->
+  Maybe Text ->
+  Text ->
+  Text ->
+  UTCTime ->
+  IO (Either Text [DiscoveredEvent])
+fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
   fetchPage 0 []
   where
     endTime = addUTCTime (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400)) now
@@ -560,7 +1232,7 @@ fetchTicketmasterEvents cfg apiKey city now =
           let url =
                 buildTicketmasterRequestUrl
                   (ticketmasterApiBase cfg)
-                  (eventDiscoveryCountryCode cfg)
+                  countryCode
                   apiKey
                   city
                   now
@@ -683,7 +1355,8 @@ normalizeTicketmasterEvent requestedCity now TicketmasterEvent{..} = do
           ]
   pure
     DiscoveredEvent
-      { discoveredEventExternalId = externalId
+      { discoveredEventProvider = providerName
+      , discoveredEventExternalId = externalId
       , discoveredEventTitle = title
       , discoveredEventDescription = description
       , discoveredEventStart = start
@@ -719,6 +1392,7 @@ normalizeTicketmasterVenue requestedCity TicketmasterVenue{..} = do
       , discoveredVenueCity = city
       , discoveredVenueCountry =
           ticketmasterVenueCountry >>= cleanSingleLine 120 . namedValue
+      , discoveredVenueCountryCode = Nothing
       , discoveredVenueLatitude = latitude
       , discoveredVenueLongitude = longitude
       , discoveredVenuePhone =
@@ -890,42 +1564,153 @@ syncDiscoveredEvent :: ConnectionPool -> UTCTime -> DiscoveredEvent -> IO Discov
 syncDiscoveredEvent pool now event =
   runSqlPool (syncDiscoveredEventDb now event) pool
 
--- | Keep provider-owned lifecycle state aligned with the current user-city
--- scope. Past imports complete automatically; future imports leave the public
--- feed as soon as their city no longer has an active user.
-reconcileImportedEvents :: ConnectionPool -> UTCTime -> [Text] -> IO Int
+-- | Keep imported lifecycle state aligned with the current subscription scope.
+-- Past imports complete automatically; future imports leave the public feed as
+-- soon as no active subscription covers any of their source references.
+reconcileImportedEvents ::
+  ConnectionPool ->
+  UTCTime ->
+  [EventDiscoveryCity] ->
+  IO Int
 reconcileImportedEvents pool now activeCities =
   runSqlPool reconcile pool
   where
-    activeCityKeys = Map.fromList [(normalizeCityKey city, ()) | city <- activeCities]
+    activeCityKeys =
+      Map.fromList
+        [ ( ( normalizeCityKey (eventDiscoveryCityName city)
+            , T.toUpper (eventDiscoveryCityCountryCode city)
+            )
+          , ()
+          )
+        | city <- activeCities
+        ]
     reconcile = do
-      refs <- selectList [Social.ExternalEventRefProvider ==. providerName] []
-      changes <- forM refs $ \(Entity _ ref) -> do
-        maybeEvent <- get (Social.externalEventRefEventId ref)
+      refs <- selectList [] []
+      let eventKeys =
+            Map.keys
+              ( Map.fromList
+                  [ (Social.externalEventRefEventId ref, ())
+                  | Entity _ ref <- refs
+                  ]
+              )
+      changes <- forM eventKeys $ \eventKey -> do
+        maybeEvent <- get eventKey
         case maybeEvent of
           Nothing -> pure 0
           Just eventRow
             | Social.socialEventEndTime eventRow < now -> do
-                updateImportedLifecycle eventRow ref "completed" True
+                updateImportedLifecycle eventKey eventRow "completed" False
                 pure 1
-            | Map.notMember
-                (normalizeCityKey (Social.externalEventRefCity ref))
-                activeCityKeys -> do
-                updateImportedLifecycle eventRow ref "cancelled" False
+            | not (eventCoveredBySubscription eventKey refs) -> do
+                updateImportedLifecycle eventKey eventRow "out_of_scope" False
                 pure 1
-            | otherwise -> pure 0
+            | otherwise -> do
+                refreshCanonicalVisibility now eventKey
+                pure 0
       pure (sum changes)
 
-    updateImportedLifecycle eventRow ref status isPublic =
+    eventCoveredBySubscription eventKey refs =
+      any
+        ( \ref ->
+            Social.externalEventRefEventId ref == eventKey
+              && refCityIsActive ref
+        )
+        (map entityVal refs)
+
+    refCityIsActive ref =
+      let cityKey = normalizeCityKey (Social.externalEventRefCity ref)
+       in case Social.externalEventRefCountryCode ref of
+            Just country ->
+              Map.member (cityKey, T.toUpper country) activeCityKeys
+            Nothing ->
+              any
+                (\((candidateCity, _), _) -> candidateCity == cityKey)
+                (Map.toList activeCityKeys)
+
+    updateImportedLifecycle eventKey eventRow status isPublic =
       update
-        (Social.externalEventRefEventId ref)
+        eventKey
         [ Social.SocialEventMetadata =.
             updateImportedEventMetadata status isPublic (Social.socialEventMetadata eventRow)
         , Social.SocialEventUpdatedAt =. now
         ]
 
+-- | Mark provider records that disappeared from a successful full run. A
+-- record remains usable for one missed run to absorb transient upstream
+-- omissions; the second consecutive miss removes only that source option.
+reconcileProviderEvents ::
+  ConnectionPool ->
+  UTCTime ->
+  Text ->
+  [EventDiscoveryCity] ->
+  [Text] ->
+  IO Int
+reconcileProviderEvents pool now provider targetCities seenExternalIds =
+  runSqlPool reconcile pool
+  where
+    seen =
+      Map.fromList
+        [ (externalId, ())
+        | externalId <- seenExternalIds
+        ]
+    reconcile = do
+      allProviderRefs <-
+        selectList [Social.ExternalEventRefProvider ==. provider] []
+      let refs =
+            filter
+              (refMatchesTargetCity . entityVal)
+              allProviderRefs
+      changed <- forM refs $ \(Entity refKey ref) ->
+        if Map.member (Social.externalEventRefExternalId ref) seen
+          then pure 0
+          else do
+            let nextMissing = Social.externalEventRefMissingRuns ref + 1
+                nextStatus =
+                  if nextMissing >= 2
+                    then "missing"
+                    else Social.externalEventRefSourceStatus ref
+            update
+              refKey
+              [ Social.ExternalEventRefMissingRuns =. nextMissing
+              , Social.ExternalEventRefSourceStatus =. nextStatus
+              ]
+            pure 1
+      let touchedEventKeys =
+            Map.keys
+              ( Map.fromList
+                  [ (Social.externalEventRefEventId ref, ())
+                  | Entity _ ref <- refs
+                  ]
+              )
+      forM_ touchedEventKeys (refreshCanonicalVisibility now)
+      pure (sum changed)
+
+    refMatchesTargetCity ref =
+      any
+        ( \city ->
+            normalizeCityKey (Social.externalEventRefCity ref)
+              == normalizeCityKey (eventDiscoveryCityName city)
+              && maybe
+                True
+                ( (== T.toUpper (eventDiscoveryCityCountryCode city))
+                    . T.toUpper
+                    . T.strip
+                )
+                (Social.externalEventRefCountryCode ref)
+        )
+        targetCities
+
 updateImportedEventMetadata :: Text -> Bool -> Maybe Text -> Maybe Text
 updateImportedEventMetadata status isPublic rawMetadata =
+  updateImportedEventMetadataWithTicket status isPublic Nothing rawMetadata
+
+updateImportedEventMetadataWithTicket ::
+  Text ->
+  Bool ->
+  Maybe Text ->
+  Maybe Text ->
+  Maybe Text
+updateImportedEventMetadataWithTicket status isPublic replacementTicketUrl rawMetadata =
   Just . TE.decodeUtf8 . BL.toStrict . encode $
     Object
       ( AesonKeyMap.insert "ticketUrl" ticketUrlValue
@@ -940,69 +1725,183 @@ updateImportedEventMetadata status isPublic rawMetadata =
         _ -> AesonKeyMap.empty
     ticketUrlValue =
       if isPublic
-        then fromMaybe Null (AesonKeyMap.lookup "ticketUrl" originalObject)
+        then
+          maybe
+            (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" originalObject))
+            String
+            replacementTicketUrl
         else Null
+
+refreshCanonicalVisibility ::
+  UTCTime ->
+  Social.SocialEventId ->
+  SqlPersistT IO ()
+refreshCanonicalVisibility now eventKey = do
+  maybeEvent <- get eventKey
+  case maybeEvent of
+    Nothing -> pure ()
+    Just eventRow -> do
+      refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+      rankedRefs <-
+        forM refs $ \entity@(Entity _ ref) -> do
+          priority <- eventSourcePriority (Social.externalEventRefProvider ref)
+          pure (priority, entity)
+      let activeRefs =
+            [ (priority, ref)
+            | (priority, Entity _ ref) <- rankedRefs
+            , sourceRefIsActive ref
+            ]
+          bestActiveRef =
+            case sortOn (negate . fst) activeRefs of
+              (_, ref) : _ -> Just ref
+              [] -> Nothing
+          ended = Social.socialEventEndTime eventRow < now
+          isPublic = not ended && maybe False (const True) bestActiveRef
+          status
+            | ended = "completed"
+            | otherwise =
+                maybe
+                  "unavailable"
+                  (normalizeImportedSourceStatus . Social.externalEventRefSourceStatus)
+                  bestActiveRef
+          ticketUrl = bestActiveRef >>= Social.externalEventRefSourceUrl
+      update
+        eventKey
+        [ Social.SocialEventMetadata =.
+            updateImportedEventMetadataWithTicket
+              status
+              isPublic
+              ticketUrl
+              (Social.socialEventMetadata eventRow)
+        , Social.SocialEventUpdatedAt =. now
+        ]
+
+sourceRefIsActive :: Social.ExternalEventRef -> Bool
+sourceRefIsActive ref =
+  Social.externalEventRefMissingRuns ref < 2
+    && normalizedStatus
+      `notElem`
+        [ "cancelled"
+        , "canceled"
+        , "completed"
+        , "missing"
+        , "removed"
+        , "unavailable"
+        ]
+  where
+    normalizedStatus =
+      T.toCaseFold (T.strip (Social.externalEventRefSourceStatus ref))
+
+normalizeImportedSourceStatus :: Text -> Text
+normalizeImportedSourceStatus rawStatus
+  | normalized `elem` ["onsale", "on_sale", "confirmed"] = "on_sale"
+  | normalized `elem` ["live", "announced", "postponed"] = normalized
+  | otherwise = "announced"
+  where
+    normalized = T.toCaseFold (T.strip rawStatus)
 
 syncDiscoveredEventDb :: UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb now DiscoveredEvent{..} = do
-  (venueKey, venueCreated) <- upsertDiscoveredVenue now discoveredEventVenue
-  artistResults <- forM discoveredEventArtists (upsertDiscoveredArtist now)
+  (venueKey, venueCreated) <-
+    upsertDiscoveredVenue discoveredEventProvider now discoveredEventVenue
+  artistResults <-
+    forM
+      discoveredEventArtists
+      (upsertDiscoveredArtist discoveredEventProvider now)
   let artistKeys = map fst artistResults
       artistsCreated = length (filter snd artistResults)
       metadata = encodeEventMetadataForImport DiscoveredEvent{..}
   existingRef <-
     getBy
-      (Social.UniqueExternalEventRef providerName discoveredEventExternalId)
+      (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
   (eventKey, eventCreated) <-
     case existingRef of
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
-        update
-          existingEventKey
-          [ Social.SocialEventTitle =. discoveredEventTitle
-          , Social.SocialEventDescription =. discoveredEventDescription
-          , Social.SocialEventVenueId =. Just venueKey
-          , Social.SocialEventStartTime =. discoveredEventStart
-          , Social.SocialEventEndTime =. discoveredEventEnd
-          , Social.SocialEventPriceCents =. discoveredEventPriceCents
-          , Social.SocialEventMetadata =. metadata
-          , Social.SocialEventUpdatedAt =. now
-          ]
+        shouldReplace <-
+          providerShouldReplaceCanonical discoveredEventProvider existingEventKey
+        if shouldReplace
+          then
+            update
+              existingEventKey
+              [ Social.SocialEventTitle =. discoveredEventTitle
+              , Social.SocialEventDescription =. discoveredEventDescription
+              , Social.SocialEventVenueId =. Just venueKey
+              , Social.SocialEventStartTime =. discoveredEventStart
+              , Social.SocialEventEndTime =. discoveredEventEnd
+              , Social.SocialEventPriceCents =. discoveredEventPriceCents
+              , Social.SocialEventMetadata =. metadata
+              , Social.SocialEventUpdatedAt =. now
+              ]
+          else pure ()
         update
           refKey
           [ Social.ExternalEventRefCity =. discoveredVenueCity discoveredEventVenue
+          , Social.ExternalEventRefCountryCode =.
+              discoveredVenueCountryCode discoveredEventVenue
           , Social.ExternalEventRefSourceUrl =. discoveredEventTicketUrl
+          , Social.ExternalEventRefPriceCents =. discoveredEventPriceCents
+          , Social.ExternalEventRefCurrency =. Just discoveredEventCurrency
           , Social.ExternalEventRefLastSeenAt =. now
+          , Social.ExternalEventRefMissingRuns =. 0
+          , Social.ExternalEventRefSourceStatus =. discoveredEventStatus
           ]
         pure (existingEventKey, False)
       Nothing -> do
-        newEventKey <-
-          insert
-            Social.SocialEvent
-              { Social.socialEventOrganizerPartyId = Just systemOrganizerId
-              , Social.socialEventTitle = discoveredEventTitle
-              , Social.socialEventDescription = discoveredEventDescription
-              , Social.socialEventVenueId = Just venueKey
-              , Social.socialEventStartTime = discoveredEventStart
-              , Social.socialEventEndTime = discoveredEventEnd
-              , Social.socialEventPriceCents = discoveredEventPriceCents
-              , Social.socialEventCapacity = Nothing
-              , Social.socialEventMetadata = metadata
-              , Social.socialEventCreatedAt = now
-              , Social.socialEventUpdatedAt = now
-              }
+        mergeCandidate <- findCanonicalEventCandidate DiscoveredEvent{..}
+        (newEventKey, created) <-
+          case mergeCandidate of
+            Just candidateKey -> do
+              shouldReplace <- providerShouldReplaceCanonical discoveredEventProvider candidateKey
+              if shouldReplace
+                then
+                  update
+                    candidateKey
+                    [ Social.SocialEventTitle =. discoveredEventTitle
+                    , Social.SocialEventDescription =. discoveredEventDescription
+                    , Social.SocialEventVenueId =. Just venueKey
+                    , Social.SocialEventStartTime =. discoveredEventStart
+                    , Social.SocialEventEndTime =. discoveredEventEnd
+                    , Social.SocialEventPriceCents =. discoveredEventPriceCents
+                    , Social.SocialEventMetadata =. metadata
+                    , Social.SocialEventUpdatedAt =. now
+                    ]
+                else pure ()
+              pure (candidateKey, False)
+            Nothing -> do
+              inserted <-
+                insert
+                  Social.SocialEvent
+                    { Social.socialEventOrganizerPartyId = Just systemOrganizerId
+                    , Social.socialEventTitle = discoveredEventTitle
+                    , Social.socialEventDescription = discoveredEventDescription
+                    , Social.socialEventVenueId = Just venueKey
+                    , Social.socialEventStartTime = discoveredEventStart
+                    , Social.socialEventEndTime = discoveredEventEnd
+                    , Social.socialEventPriceCents = discoveredEventPriceCents
+                    , Social.socialEventCapacity = Nothing
+                    , Social.socialEventMetadata = metadata
+                    , Social.socialEventCreatedAt = now
+                    , Social.socialEventUpdatedAt = now
+                    }
+              pure (inserted, True)
         _ <-
           insert
             Social.ExternalEventRef
-              { Social.externalEventRefProvider = providerName
+              { Social.externalEventRefProvider = discoveredEventProvider
               , Social.externalEventRefExternalId = discoveredEventExternalId
               , Social.externalEventRefEventId = newEventKey
               , Social.externalEventRefCity = discoveredVenueCity discoveredEventVenue
+              , Social.externalEventRefCountryCode =
+                  discoveredVenueCountryCode discoveredEventVenue
               , Social.externalEventRefSourceUrl = discoveredEventTicketUrl
+              , Social.externalEventRefPriceCents = discoveredEventPriceCents
+              , Social.externalEventRefCurrency = Just discoveredEventCurrency
               , Social.externalEventRefLastSeenAt = now
+              , Social.externalEventRefMissingRuns = 0
+              , Social.externalEventRefSourceStatus = discoveredEventStatus
               }
-        pure (newEventKey, True)
-  deleteWhere [Social.EventArtistEventId ==. eventKey]
+        pure (newEventKey, created)
   forM_ artistKeys $ \artistKey -> do
     _ <- insertUnique (Social.EventArtist eventKey artistKey Nothing)
     pure ()
@@ -1015,14 +1914,138 @@ syncDiscoveredEventDb now DiscoveredEvent{..} = do
       , discoveryArtistsCreated = artistsCreated
       }
 
+findCanonicalEventCandidate ::
+  DiscoveredEvent ->
+  SqlPersistT IO (Maybe Social.SocialEventId)
+findCanonicalEventCandidate discovered = do
+  refs <- selectList [] [LimitTo 5000]
+  matches <- fmap catMaybes . forM refs $ \(Entity _ ref) -> do
+    eventRow <- get (Social.externalEventRefEventId ref)
+    case eventRow of
+      Nothing -> pure Nothing
+      Just existing
+        | normalizeCityKey (Social.externalEventRefCity ref)
+            /= normalizeCityKey
+              (discoveredVenueCity (discoveredEventVenue discovered)) ->
+            pure Nothing
+        | abs
+            ( diffUTCTime
+                (Social.socialEventStartTime existing)
+                (discoveredEventStart discovered)
+            )
+            > 90 * 60 ->
+            pure Nothing
+        | otherwise -> do
+            venueMatches <- canonicalVenueMatches existing
+            artistMatches <- canonicalArtistMatches (Social.externalEventRefEventId ref)
+            let titleScore =
+                  normalizedTokenSimilarity
+                    (Social.socialEventTitle existing)
+                    (discoveredEventTitle discovered)
+                veryClose =
+                  abs
+                    ( diffUTCTime
+                        (Social.socialEventStartTime existing)
+                        (discoveredEventStart discovered)
+                    )
+                    <= 15 * 60
+                highConfidence =
+                  (titleScore >= 0.92 && veryClose)
+                    || (titleScore >= 0.80 && (venueMatches || artistMatches))
+            pure
+              ( if highConfidence
+                  then Just (Social.externalEventRefEventId ref)
+                  else Nothing
+              )
+  pure (listToMaybe matches)
+  where
+    canonicalVenueMatches existing =
+      case Social.socialEventVenueId existing of
+        Nothing -> pure False
+        Just venueKey -> do
+          venue <- get venueKey
+          pure $
+            maybe
+              False
+              ( \venueRow ->
+                  normalizedTokenSimilarity
+                    (Social.venueName venueRow)
+                    (discoveredVenueName (discoveredEventVenue discovered))
+                    >= 0.85
+              )
+              venue
+
+    canonicalArtistMatches eventKey = do
+      links <- selectList [Social.EventArtistEventId ==. eventKey] []
+      names <-
+        fmap catMaybes . forM links $ \(Entity _ link) ->
+          fmap Social.artistProfileName <$> get (Social.eventArtistArtistId link)
+      let importedNames =
+            map (normalizeTokenText . discoveredArtistName)
+              (discoveredEventArtists discovered)
+          existingNames = map normalizeTokenText names
+      pure (any (`elem` existingNames) importedNames)
+
+providerShouldReplaceCanonical ::
+  Text ->
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+providerShouldReplaceCanonical provider eventKey = do
+  newPriority <- eventSourcePriority provider
+  refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+  existingPriorities <-
+    forM refs (eventSourcePriority . Social.externalEventRefProvider . entityVal)
+  pure (null existingPriorities || newPriority >= maximum existingPriorities)
+
+eventSourcePriority :: Text -> SqlPersistT IO Int
+eventSourcePriority provider = do
+  source <- getBy (Social.UniqueEventDiscoverySource provider)
+  pure $
+    case source of
+      Just (Entity _ row) -> Social.eventDiscoverySourcePriority row
+      Nothing
+        | provider == "buenplan" -> 200
+        | provider == "ticketmaster" -> 300
+        | otherwise -> 100
+
+normalizedTokenSimilarity :: Text -> Text -> Double
+normalizedTokenSimilarity left right
+  | Map.null leftTokens && Map.null rightTokens = 1
+  | Map.null unionTokens = 0
+  | otherwise =
+      fromIntegral (Map.size intersectionTokens)
+        / fromIntegral (Map.size unionTokens)
+  where
+    leftTokens = tokenMap left
+    rightTokens = tokenMap right
+    intersectionTokens = Map.intersection leftTokens rightTokens
+    unionTokens = Map.union leftTokens rightTokens
+
+tokenMap :: Text -> Map.Map Text ()
+tokenMap =
+  Map.fromList
+    . map (\token -> (token, ()))
+    . filter (not . T.null)
+    . T.words
+    . normalizeTokenText
+
+normalizeTokenText :: Text -> Text
+normalizeTokenText =
+  T.unwords
+    . T.words
+    . T.map (\ch -> if isAlphaNum ch then ch else ' ')
+    . T.toCaseFold
+    . T.strip
+
 upsertDiscoveredVenue ::
+  Text ->
   UTCTime ->
   DiscoveredVenue ->
   SqlPersistT IO (Social.VenueId, Bool)
-upsertDiscoveredVenue now DiscoveredVenue{..} = do
+upsertDiscoveredVenue provider now DiscoveredVenue{..} = do
   existingRef <-
     getBy
-      (Social.UniqueExternalVenueRef providerName discoveredVenueExternalId)
+      (Social.UniqueExternalVenueRef provider discoveredVenueExternalId)
   let contact =
         encodeVenueContact
           discoveredVenuePhone
@@ -1063,8 +2086,8 @@ upsertDiscoveredVenue now DiscoveredVenue{..} = do
             }
       _ <-
         insert
-          Social.ExternalVenueRef
-            { Social.externalVenueRefProvider = providerName
+            Social.ExternalVenueRef
+              { Social.externalVenueRefProvider = provider
             , Social.externalVenueRefExternalId = discoveredVenueExternalId
             , Social.externalVenueRefVenueId = venueKey
             , Social.externalVenueRefLastSeenAt = now
@@ -1072,13 +2095,14 @@ upsertDiscoveredVenue now DiscoveredVenue{..} = do
       pure (venueKey, True)
 
 upsertDiscoveredArtist ::
+  Text ->
   UTCTime ->
   DiscoveredArtist ->
   SqlPersistT IO (Social.ArtistProfileId, Bool)
-upsertDiscoveredArtist now DiscoveredArtist{..} = do
+upsertDiscoveredArtist provider now DiscoveredArtist{..} = do
   existingRef <-
     getBy
-      (Social.UniqueExternalArtistRef providerName discoveredArtistExternalId)
+      (Social.UniqueExternalArtistRef provider discoveredArtistExternalId)
   (artistKey, created) <-
     case existingRef of
       Just (Entity refKey ref) -> do
@@ -1111,7 +2135,7 @@ upsertDiscoveredArtist now DiscoveredArtist{..} = do
         _ <-
           insert
             Social.ExternalArtistRef
-              { Social.externalArtistRefProvider = providerName
+              { Social.externalArtistRefProvider = provider
               , Social.externalArtistRefExternalId = discoveredArtistExternalId
               , Social.externalArtistRefArtistId = newArtistKey
               , Social.externalArtistRefLastSeenAt = now
@@ -1142,7 +2166,10 @@ encodeEventMetadataForImport DiscoveredEvent{..} =
     object
       [ "ticketUrl" .= discoveredEventTicketUrl
       , "imageUrl" .= discoveredEventImageUrl
-      , "isPublic" .= True
+      , "isPublic" .=
+          ( discoveredEventStatus
+              `notElem` ["cancelled", "canceled", "completed", "missing"]
+          )
       , "eventType" .= discoveredEventType
       , "eventStatus" .= discoveredEventStatus
       , "currency" .= discoveredEventCurrency

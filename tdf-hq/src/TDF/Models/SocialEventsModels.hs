@@ -82,15 +82,20 @@ ExternalEventRef sql=external_event_ref
     externalId Text
     eventId SocialEventId
     city Text
+    countryCode Text Maybe
     sourceUrl Text Maybe
+    priceCents Int Maybe
+    currency Text Maybe
     lastSeenAt UTCTime
+    missingRuns Int default=0
+    sourceStatus Text default='active'
     UniqueExternalEventRef provider externalId
-    UniqueExternalEventLocal eventId
     deriving Show Generic
 
 ExternalEventDiscoveryRun sql=external_event_discovery_run
     provider Text
     runDate Day
+    scheduledFor UTCTime Maybe
     status Text
     citiesCount Int
     eventsSeen Int
@@ -101,7 +106,43 @@ ExternalEventDiscoveryRun sql=external_event_discovery_run
     errorMessage Text Maybe
     startedAt UTCTime
     finishedAt UTCTime Maybe
-    UniqueExternalEventDiscoveryRun provider runDate
+    UniqueExternalEventDiscoverySlot provider scheduledFor !force
+    deriving Show Generic
+
+EventCity sql=event_city
+    name Text
+    normalizedName Text
+    countryCode Text
+    timeZone Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventCity normalizedName countryCode
+    deriving Show Generic
+
+EventCitySubscription sql=event_city_subscription
+    partyId Text
+    cityId EventCityId
+    createdAt UTCTime default=now()
+    UniqueEventCitySubscription partyId cityId
+    deriving Show Generic
+
+EventDiscoverySource sql=event_discovery_source
+    sourceKey Text
+    name Text
+    sourceType Text
+    feedUrl Text Maybe
+    cityId EventCityId Maybe
+    enabled Bool default=TRUE
+    priority Int default=100
+    configuration Text Maybe
+    etag Text Maybe
+    lastModified Text Maybe
+    consecutiveFailures Int default=0
+    lastSuccessAt UTCTime Maybe
+    lastError Text Maybe
+    createdAt UTCTime default=now()
+    updatedAt UTCTime default=now()
+    UniqueEventDiscoverySource sourceKey
     deriving Show Generic
 
 EventArtist

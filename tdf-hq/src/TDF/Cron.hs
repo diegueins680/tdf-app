@@ -22,7 +22,7 @@ import           Control.Exception
   , try
   )
 import           Control.Applicative    ((<|>))
-import           Control.Monad           (forever, void, when, foldM)
+import           Control.Monad           (foldM, forM_, forever, void, when)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
 import           Data.List                  (find, nub)
@@ -33,15 +33,18 @@ import           Data.Text               (Text)
 import qualified Data.Text               as T
 import           Data.Time               ( LocalTime(..)
                                          , TimeOfDay(..)
-                                         , Day
-                                         , UTCTime
+                                         , NominalDiffTime
+                                         , UTCTime(..)
                                          , ZonedTime(..)
                                          , addUTCTime
                                          , addDays
                                          , diffUTCTime
                                          , getCurrentTime
                                          , getZonedTime
+                                         , secondsToDiffTime
                                          , toModifiedJulianDay
+                                         , utctDay
+                                         , utctDayTime
                                          , zonedTimeToUTC
                                          )
 import           Database.Persist        ( (!=.)
@@ -57,8 +60,10 @@ import           Database.Persist        ( (!=.)
                                          , insert
                                          , insert_
                                          , insertEntity
+                                         , insertUnique
                                          , update
                                          , (=.)
+                                         , (+=.)
                                           )
 import           Database.Persist.Sql    (Single(..), SqlPersistT, rawSql, runSqlConn, runSqlPool)
 import           System.Random           (randomRIO)
@@ -74,14 +79,21 @@ import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Services.InstagramSync (InstagramMedia(..), fetchUserMedia)
 import           TDF.Services.EventDiscovery
   ( DiscoverySyncStats(..)
+  , DiscoveredEvent(..)
+  , DiscoveredVenue(..)
+  , EventDiscoveryCity(..)
   , beginEventDiscoveryRun
   , failEventDiscoveryRun
-  , fetchTicketmasterEvents
+  , fetchBuenPlanEvents
+  , fetchStructuredFeedEvents
+  , fetchTicketmasterEventsForCity
   , finishEventDiscoveryRun
-  , loadActiveUserCities
+  , loadSubscribedDiscoveryCities
+  , reconcileProviderEvents
   , reconcileImportedEvents
   , syncDiscoveredEvent
   )
+import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
                                          , loadAdExamples
@@ -98,7 +110,6 @@ import qualified TDF.Trials.Models       as Trials
 import           TDF.Config
   ( AppConfig
   , eventDiscoveryEnabled
-  , eventDiscoveryHourLocal
   , instagramAppToken
   , ticketmasterApiKey
   )
@@ -201,34 +212,24 @@ waitUntil targetUtc = do
       waitMicros = max 0 (ceiling (realToFrac diffSeconds * (1e6 :: Double)) :: Int)
   when (waitMicros > 0) (threadDelay waitMicros)
 
--- | Discover upcoming Ticketmaster events only for cities attached to active
--- TDF user accounts. The first pass runs shortly after boot; later passes run
--- daily at the configured local hour. A PostgreSQL advisory lock makes the
--- job single-leader even when every API replica starts the cron thread.
+-- | Import external events for cities with active subscriptions. Every API
+-- replica starts the loop, while a PostgreSQL advisory lock and per-source
+-- slot ledger ensure that only one replica performs each six-hour run.
 startEventDiscoveryJob :: Env -> IO ()
 startEventDiscoveryJob env@Env{envConfig}
   | not (eventDiscoveryEnabled envConfig) =
       LogBuf.addLog LogBuf.LogInfo "[Cron][EventDiscovery] Disabled by configuration."
-  | otherwise =
-      case ticketmasterApiKey envConfig of
-        Nothing ->
-          LogBuf.addLog
-            LogBuf.LogWarning
-            "[Cron][EventDiscovery] TICKETMASTER_API_KEY is not configured; job is idle."
-        Just apiKey -> do
-          void (forkIO (eventDiscoveryLoop env apiKey))
-          LogBuf.addLog
-            LogBuf.LogInfo
-            ( "[Cron][EventDiscovery] Scheduled daily at local hour "
-                <> T.pack (show (eventDiscoveryHourLocal envConfig))
-                <> ":00."
-            )
+  | otherwise = do
+      void (forkIO (eventDiscoveryLoop env))
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] Scheduled every six hours at UTC slot boundaries."
 
-eventDiscoveryLoop :: Env -> Text -> IO ()
-eventDiscoveryLoop env@Env{envConfig} apiKey = do
+eventDiscoveryLoop :: Env -> IO ()
+eventDiscoveryLoop env = do
   threadDelay (30 * 1000000)
   forever $ do
-    runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env apiKey)
+    runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env)
     case runResult of
       Left err -> do
         let message =
@@ -237,14 +238,27 @@ eventDiscoveryLoop env@Env{envConfig} apiKey = do
         hPutStrLn stderr (T.unpack message)
         LogBuf.addLog LogBuf.LogError message
       Right () -> pure ()
-    nextRun <-
-      nextLocalTimeUtc
-        (TimeOfDay (eventDiscoveryHourLocal envConfig) 0 0)
-    waitUntil nextRun
+    now <- getCurrentTime
+    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoverySlot now))
 
-runEventDiscoveryWithLeaderLock :: Env -> Text -> IO ()
-runEventDiscoveryWithLeaderLock env@Env{envPool} apiKey = do
-  lockResult <- withEventDiscoveryLeaderLock envPool (runEventDiscoveryOnce env apiKey)
+discoverySlotSeconds :: NominalDiffTime
+discoverySlotSeconds = 6 * 60 * 60
+
+eventDiscoverySlot :: UTCTime -> UTCTime
+eventDiscoverySlot now =
+  UTCTime
+    (utctDay now)
+    ( secondsToDiffTime
+        ( (floor (toRational (utctDayTime now)) `div` slotSeconds)
+            * slotSeconds
+        )
+    )
+  where
+    slotSeconds = 6 * 60 * 60
+
+runEventDiscoveryWithLeaderLock :: Env -> IO ()
+runEventDiscoveryWithLeaderLock env@Env{envPool} = do
+  lockResult <- withEventDiscoveryLeaderLock envPool (runEventDiscoveryOnce env)
   case lockResult of
     Nothing ->
       LogBuf.addLog
@@ -271,128 +285,271 @@ withEventDiscoveryLeaderLock pool action =
               )
       _ -> pure Nothing
 
-runEventDiscoveryOnce :: Env -> Text -> IO ()
-runEventDiscoveryOnce Env{..} apiKey = do
+runEventDiscoveryOnce :: Env -> IO ()
+runEventDiscoveryOnce Env{..} = do
   now <- getCurrentTime
-  ZonedTime (LocalTime runDate _) _ <- getZonedTime
-  runHandle <- beginEventDiscoveryRun envPool runDate now
-  case runHandle of
-    Nothing ->
+  ensureDefaultEventDiscoverySources now
+  let slot = eventDiscoverySlot now
+  allCities <- loadSubscribedDiscoveryCities envPool
+  let cities = selectEventDiscoveryCities slot allCities
+  lifecycleChanges <- reconcileImportedEvents envPool now allCities
+  when (lifecycleChanges > 0) $
+    LogBuf.addLog
+      LogBuf.LogInfo
+      ( "[Cron][EventDiscovery] Reconciled "
+          <> showCount lifecycleChanges
+          <> " completed or out-of-scope events."
+      )
+  sources <-
+    runSqlPool
+      ( selectList
+          [Social.EventDiscoverySourceEnabled ==. True]
+          [Asc Social.EventDiscoverySourcePriority]
+      )
+      envPool
+  if null cities
+    then
       LogBuf.addLog
         LogBuf.LogInfo
-        "[Cron][EventDiscovery] Today's import already ran or is running; skipping."
-    Just handle -> do
-      outcome <- tryNonAsync (runClaimedDiscovery now runDate)
-      finishedAt <- getCurrentTime
-      case outcome of
-        Left err -> do
-          failEventDiscoveryRun
-            envPool
-            handle
-            finishedAt
-            (T.pack (displayException err))
-          throwIO err
-        Right (cityCount, totals) -> do
-          finishEventDiscoveryRun envPool handle finishedAt cityCount totals
+        "[Cron][EventDiscovery] No active city subscriptions; nothing to import."
+    else forM_ sources $ \sourceEntity@(Entity _ source) ->
+      if sourceCircuitOpen now source
+        then
           LogBuf.addLog
-            LogBuf.LogInfo
-            ( "[Cron][EventDiscovery] Finished: seen "
-                <> showCount (discoveryEventsSeen totals)
-                <> ", created "
-                <> showCount (discoveryEventsCreated totals)
-                <> ", updated "
-                <> showCount (discoveryEventsUpdated totals)
-                <> ", venues created "
-                <> showCount (discoveryVenuesCreated totals)
-                <> ", artists created "
-                <> showCount (discoveryArtistsCreated totals)
-                <> "."
+            LogBuf.LogWarning
+            ( "[Cron][EventDiscovery]["
+                <> Social.eventDiscoverySourceSourceKey source
+                <> "] Circuit open after repeated failures; retry deferred."
             )
+        else runDiscoverySource now slot cities sourceEntity
   where
-    runClaimedDiscovery now runDate = do
-      allCities <- loadActiveUserCities envPool
-      let cities = selectEventDiscoveryCities runDate allCities
-      lifecycleChanges <- reconcileImportedEvents envPool now allCities
-      when (lifecycleChanges > 0) $
-        LogBuf.addLog
-          LogBuf.LogInfo
-          ( "[Cron][EventDiscovery] Reconciled "
-              <> showCount lifecycleChanges
-              <> " completed or out-of-scope events."
-          )
-      when (length allCities > length cities) $
-        LogBuf.addLog
-          LogBuf.LogWarning
-          ( "[Cron][EventDiscovery] Daily city budget selected "
-              <> showCount (length cities)
-              <> " of "
-              <> showCount (length allCities)
-              <> " active cities."
-          )
-      if null cities
-        then do
-          LogBuf.addLog
-            LogBuf.LogInfo
-            "[Cron][EventDiscovery] No active users have a usable city; nothing to import."
-          pure (0, zeroDiscoverySyncStats)
-        else do
-          LogBuf.addLog
-            LogBuf.LogInfo
-            ( "[Cron][EventDiscovery] Searching "
-                <> showCount (length cities)
-                <> " user cities."
-            )
-          totals <- foldM (syncCity now) zeroDiscoverySyncStats cities
-          pure (length cities, totals)
+    sourceCircuitOpen now source =
+      Social.eventDiscoverySourceConsecutiveFailures source >= 3
+        && diffUTCTime now (Social.eventDiscoverySourceUpdatedAt source)
+          < 24 * 60 * 60
 
-    syncCity now totals city = do
-      fetched <- fetchTicketmasterEvents envConfig apiKey city now
+    runDiscoverySource now slot cities (Entity sourceKey source) = do
+      let provider = Social.eventDiscoverySourceSourceKey source
+      runHandle <- beginEventDiscoveryRun envPool provider slot now
+      case runHandle of
+        Nothing ->
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ("[Cron][EventDiscovery][" <> provider <> "] Slot already claimed; skipping.")
+        Just handle -> do
+          outcome <- tryNonAsync (fetchAndSyncSource now cities source)
+          finishedAt <- getCurrentTime
+          case outcome of
+            Left err -> do
+              let errText = T.pack (displayException err)
+              failEventDiscoveryRun envPool handle finishedAt errText
+              markSourceFailure sourceKey finishedAt errText
+              LogBuf.addLog
+                LogBuf.LogError
+                ("[Cron][EventDiscovery][" <> provider <> "] " <> errText)
+            Right (Left errText) -> do
+              failEventDiscoveryRun envPool handle finishedAt errText
+              markSourceFailure sourceKey finishedAt errText
+              LogBuf.addLog
+                LogBuf.LogError
+                ("[Cron][EventDiscovery][" <> provider <> "] " <> errText)
+            Right (Right (processedCities, events, totals)) -> do
+              _ <-
+                reconcileProviderEvents
+                  envPool
+                  finishedAt
+                  provider
+                  processedCities
+                  (map discoveredEventExternalId events)
+              finishEventDiscoveryRun envPool handle finishedAt (length processedCities) totals
+              markSourceSuccess sourceKey finishedAt
+              LogBuf.addLog
+                LogBuf.LogInfo
+                ( "[Cron][EventDiscovery]["
+                    <> provider
+                    <> "] Finished: seen "
+                    <> showCount (discoveryEventsSeen totals)
+                    <> ", created "
+                    <> showCount (discoveryEventsCreated totals)
+                    <> ", updated "
+                    <> showCount (discoveryEventsUpdated totals)
+                    <> "."
+                )
+
+    fetchAndSyncSource now cities source = do
+      fetched <-
+        case T.toCaseFold (Social.eventDiscoverySourceSourceType source) of
+          "ticketmaster" ->
+            case ticketmasterApiKey envConfig of
+              Nothing -> pure (Left "TICKETMASTER_API_KEY is not configured")
+              Just apiKey -> fetchTicketmasterCities apiKey cities
+          "buenplan" -> do
+            result <- fetchBuenPlanEvents envConfig cities now
+            pure $
+              case result of
+                Left err -> Left err
+                Right events ->
+                  Right
+                    ( filter ((== "EC") . eventDiscoveryCityCountryCode) cities
+                    , events
+                    )
+          "ical" -> fetchConfiguredFeed "ical"
+          "json" -> fetchConfiguredFeed "json"
+          _ -> pure (Left "Unsupported event discovery source type")
       case fetched of
-        Left err -> do
-          LogBuf.addLog
-            LogBuf.LogError
-            ("[Cron][EventDiscovery] " <> city <> ": " <> err)
-          pure totals
-        Right events -> do
-          cityStats <- foldM (syncOne now city) zeroDiscoverySyncStats events
-          LogBuf.addLog
-            LogBuf.LogInfo
-            ( "[Cron][EventDiscovery] "
-                <> city
-                <> ": processed "
-                <> showCount (discoveryEventsSeen cityStats)
-                <> " events."
-            )
-          pure (addDiscoveryStats totals cityStats)
+        Left err -> pure (Left err)
+        Right (processedCities, events) -> do
+          totals <- foldM (syncOne now) zeroDiscoverySyncStats events
+          pure (Right (processedCities, events, totals))
+      where
+        fetchTicketmasterCities apiKey requestedCities = do
+          (processedCities, events, errors) <-
+            foldM
+              ( \(successfulCities, collected, failures) city -> do
+                fetched <- fetchTicketmasterEventsForCity envConfig apiKey city now
+                case fetched of
+                  Left err -> do
+                    LogBuf.addLog
+                      LogBuf.LogError
+                      ( "[Cron][EventDiscovery][ticketmaster]["
+                          <> eventDiscoveryCityCountryCode city
+                          <> ":"
+                          <> eventDiscoveryCityName city
+                          <> "] "
+                          <> err
+                      )
+                    pure (successfulCities, collected, err : failures)
+                  Right cityEvents ->
+                    pure (city : successfulCities, collected ++ cityEvents, failures)
+              )
+              ([], [], [])
+              requestedCities
+          pure $
+            if null processedCities && not (null errors)
+              then Left (T.intercalate "; " (take 3 (reverse errors)))
+              else Right (reverse processedCities, events)
 
-    syncOne now city totals event = do
+        fetchConfiguredFeed sourceType =
+          case
+              ( Social.eventDiscoverySourceFeedUrl source
+              , Social.eventDiscoverySourceCityId source
+              ) of
+            (Just feedUrl, Just cityKey) -> do
+              cityRow <- runSqlPool (get cityKey) envPool
+              case cityRow of
+                Nothing -> pure (Left "Configured venue feed city does not exist")
+                Just city ->
+                  let target =
+                        EventDiscoveryCity
+                          { eventDiscoveryCityName = Social.eventCityName city
+                          , eventDiscoveryCityCountryCode =
+                              Social.eventCityCountryCode city
+                          , eventDiscoveryCityTimeZone =
+                              Social.eventCityTimeZone city
+                          }
+                   in if target `elem` cities
+                        then
+                          fmap
+                            ( \result ->
+                                case result of
+                                  Left err -> Left err
+                                  Right events -> Right ([target], events)
+                            )
+                            ( fetchStructuredFeedEvents
+                                envConfig
+                                (Social.eventDiscoverySourceSourceKey source)
+                                sourceType
+                                feedUrl
+                                target
+                                now
+                            )
+                        else pure (Right ([], []))
+            _ -> pure (Left "Venue feed requires both feed URL and city")
+
+    syncOne now totals event = do
       synced <- tryNonAsync (syncDiscoveredEvent envPool now event)
       case synced of
         Left err -> do
           LogBuf.addLog
             LogBuf.LogError
             ( "[Cron][EventDiscovery] Failed to persist an event for "
-                <> city
+                <> discoveredVenueCity (discoveredEventVenue event)
                 <> ": "
                 <> T.pack (displayException err)
             )
           pure totals
         Right stats -> pure (addDiscoveryStats totals stats)
 
+    markSourceFailure sourceKey finishedAt errText =
+      runSqlPool
+        ( update
+            sourceKey
+            [ Social.EventDiscoverySourceConsecutiveFailures +=. 1
+            , Social.EventDiscoverySourceLastError =. Just (T.take 2000 errText)
+            , Social.EventDiscoverySourceUpdatedAt =. finishedAt
+            ]
+        )
+        envPool
+
+    markSourceSuccess sourceKey finishedAt =
+      runSqlPool
+        ( update
+            sourceKey
+            [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+            , Social.EventDiscoverySourceLastSuccessAt =. Just finishedAt
+            , Social.EventDiscoverySourceLastError =. Nothing
+            , Social.EventDiscoverySourceUpdatedAt =. finishedAt
+            ]
+        )
+        envPool
+
     showCount = T.pack . show
+
+    ensureDefaultEventDiscoverySources now =
+      runSqlPool
+        (forM_ defaultSources $ \(sourceKey, sourceName, sourceType, priority) -> do
+          _ <-
+            insertUnique
+              Social.EventDiscoverySource
+                { Social.eventDiscoverySourceSourceKey = sourceKey
+                , Social.eventDiscoverySourceName = sourceName
+                , Social.eventDiscoverySourceSourceType = sourceType
+                , Social.eventDiscoverySourceFeedUrl = Nothing
+                , Social.eventDiscoverySourceCityId = Nothing
+                , Social.eventDiscoverySourceEnabled = True
+                , Social.eventDiscoverySourcePriority = priority
+                , Social.eventDiscoverySourceConfiguration = Nothing
+                , Social.eventDiscoverySourceEtag = Nothing
+                , Social.eventDiscoverySourceLastModified = Nothing
+                , Social.eventDiscoverySourceConsecutiveFailures = 0
+                , Social.eventDiscoverySourceLastSuccessAt = Nothing
+                , Social.eventDiscoverySourceLastError = Nothing
+                , Social.eventDiscoverySourceCreatedAt = now
+                , Social.eventDiscoverySourceUpdatedAt = now
+                }
+          pure ())
+        envPool
+      where
+        defaultSources =
+          [ ("ticketmaster", "Ticketmaster", "ticketmaster", 300)
+          , ("buenplan", "Buen Plan", "buenplan", 200)
+          ]
 
 maxEventDiscoveryCitiesPerRun :: Int
 maxEventDiscoveryCitiesPerRun = 500
 
-selectEventDiscoveryCities :: Day -> [Text] -> [Text]
+selectEventDiscoveryCities :: UTCTime -> [a] -> [a]
 selectEventDiscoveryCities _ [] = []
-selectEventDiscoveryCities runDate cities =
+selectEventDiscoveryCities slot cities =
   take maxEventDiscoveryCitiesPerRun rotated
   where
     cityCount = length cities
+    slotOfDay =
+      floor (toRational (utctDayTime slot)) `div` (6 * 60 * 60)
     offset =
       fromIntegral
-        ( (toModifiedJulianDay runDate * fromIntegral maxEventDiscoveryCitiesPerRun)
+        ( ((toModifiedJulianDay (utctDay slot) * 4 + slotOfDay)
+              * fromIntegral maxEventDiscoveryCitiesPerRun)
             `mod` fromIntegral cityCount
         )
     rotated = drop offset cities ++ take offset cities
