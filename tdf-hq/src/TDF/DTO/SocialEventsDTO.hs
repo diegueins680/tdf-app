@@ -12,6 +12,12 @@ module TDF.DTO.SocialEventsDTO (
     VenueDTO (..),
     VenueContactUpdateDTO (..),
     VenueUpdateDTO (..),
+    EventCityDTO (..),
+    EventCityInputDTO (..),
+    EventCitySubscriptionUpdateDTO (..),
+    EventSourceDTO (..),
+    DiscoverySourceDTO (..),
+    DiscoverySourceWriteDTO (..),
     EventDTO (..),
     EventMetadataUpdateDTO (..),
     EventUpdateDTO (..),
@@ -342,6 +348,99 @@ venueUpdateAllowedKeys =
     , "venueUpdatedAt"
     ]
 
+data EventCityDTO = EventCityDTO
+    { eventCityId :: Text
+    , eventCityName :: Text
+    , eventCityCountryCode :: Text
+    , eventCityTimeZone :: Maybe Text
+    , eventCitySubscribed :: Bool
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventCityDTO
+instance FromJSON EventCityDTO
+
+data EventCityInputDTO = EventCityInputDTO
+    { eventCityInputName :: Text
+    , eventCityInputCountryCode :: Text
+    , eventCityInputTimeZone :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventCityInputDTO
+instance FromJSON EventCityInputDTO where
+    parseJSON =
+        genericParseJSON
+            defaultOptions
+                { rejectUnknownFields = True
+                }
+
+newtype EventCitySubscriptionUpdateDTO = EventCitySubscriptionUpdateDTO
+    { eventCities :: [EventCityInputDTO]
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventCitySubscriptionUpdateDTO
+instance FromJSON EventCitySubscriptionUpdateDTO where
+    parseJSON =
+        genericParseJSON
+            defaultOptions
+                { rejectUnknownFields = True
+                }
+
+data EventSourceDTO = EventSourceDTO
+    { eventSourceProvider :: Text
+    , eventSourceLabel :: Text
+    , eventSourceUrl :: Maybe Text
+    , eventSourcePriceCents :: Maybe Int
+    , eventSourceCurrency :: Maybe Text
+    , eventSourceStatus :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON EventSourceDTO
+instance FromJSON EventSourceDTO
+
+data DiscoverySourceDTO = DiscoverySourceDTO
+    { discoverySourceId :: Text
+    , discoverySourceKey :: Text
+    , discoverySourceName :: Text
+    , discoverySourceType :: Text
+    , discoverySourceFeedUrl :: Maybe Text
+    , discoverySourceCityId :: Maybe Text
+    , discoverySourceCityName :: Maybe Text
+    , discoverySourceCountryCode :: Maybe Text
+    , discoverySourceEnabled :: Bool
+    , discoverySourcePriority :: Int
+    , discoverySourceConsecutiveFailures :: Int
+    , discoverySourceLastSuccessAt :: Maybe UTCTime
+    , discoverySourceLastError :: Maybe Text
+    , discoverySourceUpdatedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON DiscoverySourceDTO
+instance FromJSON DiscoverySourceDTO
+
+data DiscoverySourceWriteDTO = DiscoverySourceWriteDTO
+    { discoverySourceWriteKey :: Text
+    , discoverySourceWriteName :: Text
+    , discoverySourceWriteType :: Text
+    , discoverySourceWriteFeedUrl :: Maybe Text
+    , discoverySourceWriteCityId :: Maybe Text
+    , discoverySourceWriteEnabled :: Bool
+    , discoverySourceWritePriority :: Int
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON DiscoverySourceWriteDTO
+instance FromJSON DiscoverySourceWriteDTO where
+    parseJSON =
+        genericParseJSON
+            defaultOptions
+                { rejectUnknownFields = True
+                }
+
 data EventDTO = EventDTO
     { eventId :: Maybe Text
     , eventOrganizerPartyId :: Maybe Text
@@ -359,6 +458,7 @@ data EventDTO = EventDTO
     , eventStatus :: Maybe Text
     , eventCurrency :: Maybe Text
     , eventBudgetCents :: Maybe Int
+    , eventSources :: Maybe [EventSourceDTO]
     , eventCreatedAt :: Maybe UTCTime
     , eventUpdatedAt :: Maybe UTCTime
     , eventArtists :: [ArtistDTO]

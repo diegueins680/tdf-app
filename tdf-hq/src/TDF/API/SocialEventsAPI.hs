@@ -7,6 +7,8 @@
 module TDF.API.SocialEventsAPI (
     SocialEventsAPI,
     EventsRoutes,
+    EventCitiesRoutes,
+    EventDiscoverySourcesRoutes,
     VenuesRoutes,
     ArtistsRoutes,
     RsvpRoutes,
@@ -52,6 +54,10 @@ import TDF.DTO.SocialEventsDTO (
     ArtistFollowRequest,
     ArtistFollowerDTO,
     EventBudgetLineDTO,
+    EventCityDTO,
+    EventCitySubscriptionUpdateDTO,
+    DiscoverySourceDTO,
+    DiscoverySourceWriteDTO,
     EventDTO,
     EventFinanceEntryDTO,
     EventFinanceSummaryDTO,
@@ -348,6 +354,7 @@ instance FromJSON EventImageUploadDTO
 type EventsRoutes =
     "events"
         :> QueryParam "city" Text
+        :> QueryParam "scope" Text
         :> QueryParam "start_after" Text
         :> QueryParam "event_type" Text
         :> QueryParam "event_status" Text
@@ -361,6 +368,27 @@ type EventsRoutes =
         :<|> "events" :> IdParam :> ReqBody '[JSON] EventUpdateDTO :> Put '[JSON] EventDTO
         :<|> "events" :> IdParam :> "image" :> MultipartForm Tmp EventImageUploadForm :> Post '[JSON] EventImageUploadDTO
         :<|> "events" :> IdParam :> DeleteNoContent
+
+type EventCitiesRoutes =
+    "cities"
+        :> QueryParam "q" Text
+        :> QueryParam "country" Text
+        :> Get '[JSON] [EventCityDTO]
+        :<|> "me" :> "city-subscriptions" :> Get '[JSON] [EventCityDTO]
+        :<|> "me"
+            :> "city-subscriptions"
+            :> ReqBody '[JSON] EventCitySubscriptionUpdateDTO
+            :> Put '[JSON] [EventCityDTO]
+
+type EventDiscoverySourcesRoutes =
+    "event-sources" :> Get '[JSON] [DiscoverySourceDTO]
+        :<|> "event-sources"
+            :> ReqBody '[JSON] DiscoverySourceWriteDTO
+            :> Post '[JSON] DiscoverySourceDTO
+        :<|> "event-sources"
+            :> IdParam
+            :> ReqBody '[JSON] DiscoverySourceWriteDTO
+            :> Put '[JSON] DiscoverySourceDTO
 
 type VenuesRoutes =
     "venues" :> QueryParam "city" Text :> QueryParam "near" Text :> QueryParam "q" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [VenueDTO]
@@ -497,6 +525,8 @@ type FinanceRoutes =
 
 type SocialEventsAPI =
     EventsRoutes
+        :<|> EventCitiesRoutes
+        :<|> EventDiscoverySourcesRoutes
         :<|> VenuesRoutes
         :<|> ArtistsRoutes
         :<|> RsvpRoutes

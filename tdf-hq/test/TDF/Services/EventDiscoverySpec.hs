@@ -18,6 +18,7 @@ import TDF.Services.EventDiscovery
   , DiscoveredEvent(..)
   , DiscoveredVenue(..)
   , DiscoverySyncStats(..)
+  , EventDiscoveryCity(..)
   , beginEventDiscoveryRun
   , buildTicketmasterRequestUrl
   , normalizeTicketmasterResponse
@@ -25,6 +26,7 @@ import TDF.Services.EventDiscovery
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
   , reconcileImportedEvents
+  , reconcileProviderEvents
   , syncDiscoveredEvent
   )
 import qualified TDF.Models.SocialEventsModels as Social
@@ -133,6 +135,21 @@ spec = do
             , discoveredEventArtists =
                 [artist{discoveredArtistGenres = []} | artist <- discoveredEventArtists event]
             }
+      _ <-
+        syncDiscoveredEvent
+          pool
+          (fixtureTime 10 12)
+          event
+            { discoveredEventProvider = "buenplan"
+            , discoveredEventExternalId = "bp-event-1"
+            , discoveredEventTitle = "Festival Sonoro Actualizado"
+            , discoveredEventVenue =
+                (discoveredEventVenue event)
+                  { discoveredVenueExternalId = "bp-venue-1"
+                  }
+            , discoveredEventArtists = []
+            , discoveredEventTicketUrl = Just "https://www.buenplan.com.ec/event/festival-sonoro"
+            }
 
       discoveryEventsCreated firstStats `shouldBe` 1
       discoveryVenuesCreated firstStats `shouldBe` 1
@@ -150,7 +167,7 @@ spec = do
               <*> count ([] :: [Filter Social.ExternalEventRef])
           )
           pool
-      (venueCount, artistCount, eventCount, eventRefCount) `shouldBe` (1, 1, 1, 1)
+      (venueCount, artistCount, eventCount, eventRefCount) `shouldBe` (2, 1, 1, 2)
 
       importedRef <-
         runSqlPool
@@ -175,7 +192,26 @@ spec = do
           pool
           (fixtureTime 10 15)
           event{discoveredEventArtists = []}
-      runSqlPool (count ([] :: [Filter Social.EventArtist])) pool `shouldReturn` 0
+      -- A provider refresh may omit its lineup temporarily. Preserve artists
+      -- already linked by this or another source.
+      runSqlPool (count ([] :: [Filter Social.EventArtist])) pool `shouldReturn` 1
+
+      -- Missing from Ticketmaster once keeps both the canonical event and its
+      -- Buen Plan purchase option alive.
+      _ <-
+        reconcileProviderEvents
+          pool
+          (fixtureTime 10 30)
+          "ticketmaster"
+          [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+          []
+      importedEventAfterOneMiss <-
+        case importedRef of
+          Nothing -> pure Nothing
+          Just (Entity _ ref) -> runSqlPool (get (Social.externalEventRefEventId ref)) pool
+      case Social.socialEventMetadata =<< importedEventAfterOneMiss of
+        Nothing -> expectationFailure "Expected metadata after source reconciliation"
+        Just metadata -> metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":true"
 
       lifecycleChanges <- reconcileImportedEvents pool (fixtureTime 11 0) []
       lifecycleChanges `shouldBe` 1
@@ -186,31 +222,31 @@ spec = do
       case Social.socialEventMetadata =<< importedEventAfterReconcile of
         Nothing -> expectationFailure "Expected imported event metadata after reconciliation"
         Just metadata -> do
-          metadata `shouldSatisfy` T.isInfixOf "\"eventStatus\":\"cancelled\""
+          metadata `shouldSatisfy` T.isInfixOf "\"eventStatus\":\"out_of_scope\""
           metadata `shouldSatisfy` T.isInfixOf "\"isPublic\":false"
 
-    it "claims at most one run per local day and permits retry after failure" $ do
+    it "claims at most one run per provider slot and permits retry after failure" $ do
       pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
       runSqlPool initializeEventDiscoverySchema pool
-      let runDate = fromGregorian 2026 8 1
-          nextDate = fromGregorian 2026 8 2
+      let runSlot = fixtureTime 6 0
+          nextSlot = fixtureTime 12 0
           now = fixtureTime 10 0
-      first <- beginEventDiscoveryRun pool runDate now
-      duplicate <- beginEventDiscoveryRun pool runDate now
+      first <- beginEventDiscoveryRun pool "ticketmaster" runSlot now
+      duplicate <- beginEventDiscoveryRun pool "ticketmaster" runSlot now
       isJust first `shouldBe` True
       isNothing duplicate `shouldBe` True
       case first of
         Nothing -> expectationFailure "Expected the first daily run claim"
         Just handle ->
           finishEventDiscoveryRun pool handle now 1 (DiscoverySyncStats 2 1 1 1 1)
-      completedClaim <- beginEventDiscoveryRun pool runDate now
+      completedClaim <- beginEventDiscoveryRun pool "ticketmaster" runSlot now
       isNothing completedClaim `shouldBe` True
 
-      failedClaim <- beginEventDiscoveryRun pool nextDate now
+      failedClaim <- beginEventDiscoveryRun pool "ticketmaster" nextSlot now
       case failedClaim of
         Nothing -> expectationFailure "Expected the next day's run claim"
         Just handle -> failEventDiscoveryRun pool handle now "temporary provider failure"
-      retriedClaim <- beginEventDiscoveryRun pool nextDate now
+      retriedClaim <- beginEventDiscoveryRun pool "ticketmaster" nextSlot now
       isJust retriedClaim `shouldBe` True
 
 fixtureTime :: Integer -> Integer -> UTCTime
@@ -271,10 +307,13 @@ initializeEventDiscoverySchema = do
     "CREATE TABLE external_artist_ref (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, artist_id INTEGER NOT NULL, last_seen_at TIMESTAMP NOT NULL, UNIQUE(provider, external_id))"
     []
   rawExecute
-    "CREATE TABLE external_event_ref (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, event_id INTEGER NOT NULL UNIQUE, city TEXT NOT NULL, source_url TEXT NULL, last_seen_at TIMESTAMP NOT NULL, UNIQUE(provider, external_id))"
+    "CREATE TABLE external_event_ref (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, event_id INTEGER NOT NULL, city TEXT NOT NULL, country_code TEXT NULL, source_url TEXT NULL, price_cents INTEGER NULL, currency TEXT NULL, last_seen_at TIMESTAMP NOT NULL, missing_runs INTEGER NOT NULL DEFAULT 0, source_status TEXT NOT NULL DEFAULT 'active', UNIQUE(provider, external_id))"
     []
   rawExecute
-    "CREATE TABLE external_event_discovery_run (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, run_date DATE NOT NULL, status TEXT NOT NULL, cities_count INTEGER NOT NULL, events_seen INTEGER NOT NULL, events_created INTEGER NOT NULL, events_updated INTEGER NOT NULL, venues_created INTEGER NOT NULL, artists_created INTEGER NOT NULL, error_message TEXT NULL, started_at TIMESTAMP NOT NULL, finished_at TIMESTAMP NULL, UNIQUE(provider, run_date))"
+    "CREATE TABLE external_event_discovery_run (id INTEGER PRIMARY KEY, provider TEXT NOT NULL, run_date DATE NOT NULL, scheduled_for TIMESTAMP NULL, status TEXT NOT NULL, cities_count INTEGER NOT NULL, events_seen INTEGER NOT NULL, events_created INTEGER NOT NULL, events_updated INTEGER NOT NULL, venues_created INTEGER NOT NULL, artists_created INTEGER NOT NULL, error_message TEXT NULL, started_at TIMESTAMP NOT NULL, finished_at TIMESTAMP NULL, UNIQUE(provider, scheduled_for))"
+    []
+  rawExecute
+    "CREATE TABLE event_discovery_source (id INTEGER PRIMARY KEY, source_key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, source_type TEXT NOT NULL, feed_url TEXT NULL, city_id INTEGER NULL, enabled BOOLEAN NOT NULL DEFAULT 1, priority INTEGER NOT NULL DEFAULT 100, configuration TEXT NULL, etag TEXT NULL, last_modified TEXT NULL, consecutive_failures INTEGER NOT NULL DEFAULT 0, last_success_at TIMESTAMP NULL, last_error TEXT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     []
   rawExecute
     "CREATE TABLE event_artist (event_id INTEGER NOT NULL, artist_id INTEGER NOT NULL, role TEXT NULL, PRIMARY KEY(event_id, artist_id))"

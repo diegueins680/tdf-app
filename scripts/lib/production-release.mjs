@@ -311,6 +311,15 @@ BEGIN
     SELECT COUNT(*) FROM information_schema.tables
     WHERE table_schema = 'public'
       AND table_name IN (
+        'event_city', 'event_city_subscription', 'event_discovery_source'
+      )
+  ) NOT IN (0, 3) THEN
+    RAISE EXCEPTION 'Event city subscription tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
         'social_sync_account', 'social_sync_post', 'social_sync_run'
       )
   ) NOT IN (0, 3) THEN
@@ -525,7 +534,10 @@ BEGIN
     'external_venue_ref',
     'external_artist_ref',
     'external_event_ref',
-    'external_event_discovery_run'
+    'external_event_discovery_run',
+    'event_city',
+    'event_city_subscription',
+    'event_discovery_source'
   ] LOOP
     IF to_regclass('public.' || discovery_table) IS NULL THEN
       RAISE EXCEPTION 'Discovery relation public.% is missing', discovery_table;
@@ -541,10 +553,19 @@ BEGIN
   ) <> 5 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'external_event_ref'
-  ) <> 7 OR (
+  ) <> 12 OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'external_event_discovery_run'
-  ) <> 13 THEN
+  ) <> 14 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_city'
+  ) <> 7 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_city_subscription'
+  ) <> 4 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_discovery_source'
+  ) <> 16 THEN
     RAISE EXCEPTION 'A discovery relation has an unexpected column count';
   END IF;
 
@@ -567,11 +588,17 @@ BEGIN
         ('external_event_ref', 'external_id', 'text', 'NO'),
         ('external_event_ref', 'event_id', 'bigint', 'NO'),
         ('external_event_ref', 'city', 'text', 'NO'),
+        ('external_event_ref', 'country_code', 'text', 'YES'),
         ('external_event_ref', 'source_url', 'text', 'YES'),
+        ('external_event_ref', 'price_cents', 'integer', 'YES'),
+        ('external_event_ref', 'currency', 'text', 'YES'),
         ('external_event_ref', 'last_seen_at', 'timestamp with time zone', 'NO'),
+        ('external_event_ref', 'missing_runs', 'integer', 'NO'),
+        ('external_event_ref', 'source_status', 'text', 'NO'),
         ('external_event_discovery_run', 'id', 'bigint', 'NO'),
         ('external_event_discovery_run', 'provider', 'text', 'NO'),
         ('external_event_discovery_run', 'run_date', 'date', 'NO'),
+        ('external_event_discovery_run', 'scheduled_for', 'timestamp with time zone', 'YES'),
         ('external_event_discovery_run', 'status', 'text', 'NO'),
         ('external_event_discovery_run', 'cities_count', 'integer', 'NO'),
         ('external_event_discovery_run', 'events_seen', 'integer', 'NO'),
@@ -581,7 +608,34 @@ BEGIN
         ('external_event_discovery_run', 'artists_created', 'integer', 'NO'),
         ('external_event_discovery_run', 'error_message', 'text', 'YES'),
         ('external_event_discovery_run', 'started_at', 'timestamp with time zone', 'NO'),
-        ('external_event_discovery_run', 'finished_at', 'timestamp with time zone', 'YES')
+        ('external_event_discovery_run', 'finished_at', 'timestamp with time zone', 'YES'),
+        ('event_city', 'id', 'bigint', 'NO'),
+        ('event_city', 'name', 'text', 'NO'),
+        ('event_city', 'normalized_name', 'text', 'NO'),
+        ('event_city', 'country_code', 'text', 'NO'),
+        ('event_city', 'time_zone', 'text', 'YES'),
+        ('event_city', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_city', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('event_city_subscription', 'id', 'bigint', 'NO'),
+        ('event_city_subscription', 'party_id', 'text', 'NO'),
+        ('event_city_subscription', 'city_id', 'bigint', 'NO'),
+        ('event_city_subscription', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_discovery_source', 'id', 'bigint', 'NO'),
+        ('event_discovery_source', 'source_key', 'text', 'NO'),
+        ('event_discovery_source', 'name', 'text', 'NO'),
+        ('event_discovery_source', 'source_type', 'text', 'NO'),
+        ('event_discovery_source', 'feed_url', 'text', 'YES'),
+        ('event_discovery_source', 'city_id', 'bigint', 'YES'),
+        ('event_discovery_source', 'enabled', 'boolean', 'NO'),
+        ('event_discovery_source', 'priority', 'integer', 'NO'),
+        ('event_discovery_source', 'configuration', 'text', 'YES'),
+        ('event_discovery_source', 'etag', 'text', 'YES'),
+        ('event_discovery_source', 'last_modified', 'text', 'YES'),
+        ('event_discovery_source', 'consecutive_failures', 'integer', 'NO'),
+        ('event_discovery_source', 'last_success_at', 'timestamp with time zone', 'YES'),
+        ('event_discovery_source', 'last_error', 'text', 'YES'),
+        ('event_discovery_source', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_discovery_source', 'updated_at', 'timestamp with time zone', 'NO')
     ) AS expected(table_name, column_name, data_type, is_nullable)
     LEFT JOIN information_schema.columns AS actual
       ON actual.table_schema = 'public'
@@ -608,12 +662,16 @@ BEGIN
       AND conname = 'unique_external_event_ref' AND contype = 'u'
   ) OR NOT EXISTS (
     SELECT 1 FROM pg_constraint
-    WHERE conrelid = 'public.external_event_ref'::regclass
-      AND conname = 'unique_external_event_local' AND contype = 'u'
+    WHERE conrelid = 'public.event_city'::regclass
+      AND conname = 'unique_event_city' AND contype = 'u'
   ) OR NOT EXISTS (
     SELECT 1 FROM pg_constraint
-    WHERE conrelid = 'public.external_event_discovery_run'::regclass
-      AND conname = 'unique_external_event_discovery_run' AND contype = 'u'
+    WHERE conrelid = 'public.event_city_subscription'::regclass
+      AND conname = 'unique_event_city_subscription' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.event_discovery_source'::regclass
+      AND conname = 'unique_event_discovery_source' AND contype = 'u'
   ) THEN
     RAISE EXCEPTION 'A discovery uniqueness constraint is missing';
   END IF;
@@ -622,9 +680,11 @@ BEGIN
     WHERE conrelid IN (
       'public.external_venue_ref'::regclass,
       'public.external_artist_ref'::regclass,
-      'public.external_event_ref'::regclass
+      'public.external_event_ref'::regclass,
+      'public.event_city_subscription'::regclass,
+      'public.event_discovery_source'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 3 THEN
+  ) <> 5 THEN
     RAISE EXCEPTION 'A discovery foreign key is missing or invalid';
   END IF;
 
@@ -675,9 +735,12 @@ BEGIN
         ('external_artist_ref', 'unique_external_artist_ref', 'u', 'UNIQUE (provider, external_id)'),
         ('external_artist_ref', 'external_artist_ref_artist_id_fkey', 'f', 'FOREIGN KEY (artist_id) REFERENCES social_artist_profile(id)'),
         ('external_event_ref', 'unique_external_event_ref', 'u', 'UNIQUE (provider, external_id)'),
-        ('external_event_ref', 'unique_external_event_local', 'u', 'UNIQUE (event_id)'),
         ('external_event_ref', 'external_event_ref_event_id_fkey', 'f', 'FOREIGN KEY (event_id) REFERENCES social_event(id)'),
-        ('external_event_discovery_run', 'unique_external_event_discovery_run', 'u', 'UNIQUE (provider, run_date)')
+        ('event_city', 'unique_event_city', 'u', 'UNIQUE (normalized_name, country_code)'),
+        ('event_city_subscription', 'unique_event_city_subscription', 'u', 'UNIQUE (party_id, city_id)'),
+        ('event_city_subscription', 'event_city_subscription_city_id_fkey', 'f', 'FOREIGN KEY (city_id) REFERENCES event_city(id) ON DELETE CASCADE'),
+        ('event_discovery_source', 'unique_event_discovery_source', 'u', 'UNIQUE (source_key)'),
+        ('event_discovery_source', 'event_discovery_source_city_id_fkey', 'f', 'FOREIGN KEY (city_id) REFERENCES event_city(id)')
     ) AS expected(table_name, constraint_name, constraint_type, definition)
     LEFT JOIN pg_constraint AS actual
       ON actual.conrelid = ('public.' || expected.table_name)::regclass
@@ -697,6 +760,26 @@ BEGIN
       AND indexdef ILIKE '%lower(city)%'
   ) THEN
     RAISE EXCEPTION 'idx_external_event_ref_city is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'external_event_ref'
+      AND indexname = 'idx_external_event_ref_event_id'
+      AND indexdef ILIKE '%(event_id)%'
+  ) THEN
+    RAISE EXCEPTION 'idx_external_event_ref_event_id is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'external_event_discovery_run'
+      AND indexname = 'unique_external_event_discovery_slot'
+      AND indexdef ILIKE '%UNIQUE%'
+      AND indexdef ILIKE '%(provider, scheduled_for)%'
+      AND indexdef ILIKE '%WHERE (scheduled_for IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'unique_external_event_discovery_slot is missing or invalid';
   END IF;
 
   FOREACH social_table IN ARRAY ARRAY[
