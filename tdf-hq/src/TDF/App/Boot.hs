@@ -54,6 +54,7 @@ import TDF.Config (
     seedDatabase,
   )
 import TDF.Cors (corsPolicy)
+import TDF.CampaignAutomation (startCampaignAutomationJob)
 import qualified TDF.CMS.Models as CMS
 import TDF.Cron (
     startCoursePaymentReminderJob,
@@ -159,6 +160,7 @@ runBootServer = do
         startEventDiscoveryJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
+        startCampaignAutomationJob env
 
   _ <-
     forkFinally

@@ -78,6 +78,71 @@ Campaign
     updatedAt   UTCTime default=now()
     deriving Show Generic
 
+CampaignAutomation
+    campaignId  CampaignId
+    templateKey Text
+    status      Text default='draft'
+    startAt     UTCTime
+    dailyLimit  Int default=20
+    lastRunAt   UTCTime Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    UniqueCampaignAutomationCampaign campaignId
+    UniqueCampaignAutomationTemplate templateKey
+    IndexCampaignAutomationStatus status startAt !force
+    deriving Show Generic
+
+CampaignAutomationStep
+    automationId        CampaignAutomationId
+    position            Int
+    delayDays           Int
+    channel             Text default='whatsapp'
+    providerTemplateName Text
+    languageCode        Text default='es'
+    body                 Text
+    ctaPath              Text
+    active               Bool default=True
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueCampaignAutomationStep automationId position
+    IndexCampaignAutomationStepActive automationId active position !force
+    deriving Show Generic
+
+CampaignEnrollment
+    automationId   CampaignAutomationId
+    partyId        PartyId
+    status         Text default='scheduled'
+    nextStepPosition Int default=1
+    nextRunAt      UTCTime
+    lastSentAt     UTCTime Maybe
+    stoppedAt      UTCTime Maybe
+    stopReason     Text Maybe
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    UniqueCampaignEnrollment automationId partyId
+    IndexCampaignEnrollmentDue automationId status nextRunAt !force
+    IndexCampaignEnrollmentParty partyId createdAt !force
+    deriving Show Generic
+
+CampaignDelivery
+    automationId     CampaignAutomationId
+    enrollmentId     CampaignEnrollmentId
+    stepId           CampaignAutomationStepId
+    partyId          PartyId
+    channel          Text
+    status           Text default='pending'
+    scheduledAt      UTCTime
+    attemptedAt      UTCTime Maybe
+    sentAt           UTCTime Maybe
+    providerMessageId Text Maybe
+    error             Text Maybe
+    bodySnapshot      Text
+    createdAt         UTCTime default=now()
+    updatedAt         UTCTime default=now()
+    UniqueCampaignDelivery enrollmentId stepId
+    IndexCampaignDeliveryAutomation automationId status createdAt !force
+    deriving Show Generic
+
 AdCreative
     campaignId  CampaignId Maybe
     externalId  Text Maybe

@@ -265,6 +265,157 @@ data CampaignUpsert = CampaignUpsert
 instance FromJSON CampaignUpsert where
   parseJSON = genericParseJSON strictDecodeOptions
 
+data CampaignAutomationStepDTO = CampaignAutomationStepDTO
+  { casPosition             :: Int
+  , casDelayDays            :: Int
+  , casChannel              :: Text
+  , casProviderTemplateName :: Text
+  , casLanguageCode         :: Text
+  , casBody                 :: Text
+  , casCtaPath              :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationStepDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationTemplateDTO = CampaignAutomationTemplateDTO
+  { catKey         :: Text
+  , catName        :: Text
+  , catObjective   :: Text
+  , catAudience    :: Text
+  , catOffer       :: Text
+  , catLandingPath :: Text
+  , catSteps       :: [CampaignAutomationStepDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationTemplateDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationDTO = CampaignAutomationDTO
+  { caaId              :: Int64
+  , caaCampaignId      :: Int64
+  , caaTemplateKey     :: Text
+  , caaName            :: Text
+  , caaObjective       :: Maybe Text
+  , caaStatus          :: Text
+  , caaStartAt         :: UTCTime
+  , caaDailyLimit      :: Int
+  , caaLastRunAt       :: Maybe UTCTime
+  , caaEnrollmentCount :: Int
+  , caaScheduledCount  :: Int
+  , caaSentCount       :: Int
+  , caaConvertedCount  :: Int
+  , caaStoppedCount    :: Int
+  , caaFailedCount     :: Int
+  , caaSteps           :: [CampaignAutomationStepDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationInstall = CampaignAutomationInstall
+  { caiTemplateKey :: Text
+  , caiStartAt     :: Maybe UTCTime
+  , caiDailyLimit  :: Maybe Int
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationInstall where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignAutomationEnroll = CampaignAutomationEnroll
+  { caePartyIds :: [Int64]
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationEnroll where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentRejectedDTO = CampaignEnrollmentRejectedDTO
+  { cerPartyId :: Int64
+  , cerReason  :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignEnrollmentRejectedDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationEnrollResultDTO = CampaignAutomationEnrollResultDTO
+  { carAcceptedPartyIds :: [Int64]
+  , carRejected         :: [CampaignEnrollmentRejectedDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationEnrollResultDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationStatusUpdate = CampaignAutomationStatusUpdate
+  { cauStatus            :: Text
+  , cauTemplatesApproved :: Maybe Bool
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationStatusUpdate where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentStatusUpdate = CampaignEnrollmentStatusUpdate
+  { cesStatus :: Text
+  , cesReason :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON CampaignEnrollmentStatusUpdate where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentDTO = CampaignEnrollmentDTO
+  { cedId               :: Int64
+  , cedPartyId          :: Int64
+  , cedPartyName        :: Text
+  , cedPhoneE164        :: Maybe Text
+  , cedConsentActive    :: Bool
+  , cedStatus           :: Text
+  , cedNextStepPosition :: Int
+  , cedNextRunAt        :: UTCTime
+  , cedLastSentAt       :: Maybe UTCTime
+  , cedStopReason       :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignEnrollmentDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignPreviewDTO = CampaignPreviewDTO
+  { cpdPartyId          :: Int64
+  , cpdPartyName        :: Text
+  , cpdStepPosition     :: Int
+  , cpdProviderTemplateName :: Text
+  , cpdLanguageCode     :: Text
+  , cpdRenderedBody     :: Text
+  , cpdCtaUrl           :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignPreviewDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
 data AdCreativeDTO = AdCreativeDTO
   { adId        :: Int64
   , adCampaignId :: Maybe Int64

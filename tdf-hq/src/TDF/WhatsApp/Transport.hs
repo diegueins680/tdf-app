@@ -4,6 +4,7 @@
 module TDF.WhatsApp.Transport
   ( WhatsAppEnv(..)
   , loadWhatsAppEnv
+  , sendWhatsAppTemplateIO
   , sendWhatsAppTextIO
   ) where
 
@@ -22,6 +23,7 @@ import           TDF.WhatsApp.Client
   , normalizeWhatsAppPhoneNumberId
   , normalizeWhatsAppRecipientPhone
   , normalizeWhatsAppVerifyToken
+  , sendTemplate
   , sendText
   )
 
@@ -103,6 +105,36 @@ sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} 
               pure (either (Left . T.pack) Right result)
             _ ->
               pure (Left (missingConfigMessage env))
+
+sendWhatsAppTemplateIO
+  :: WhatsAppEnv
+  -> Text
+  -> Text
+  -> Text
+  -> [Text]
+  -> IO (Either Text SendTextResult)
+sendWhatsAppTemplateIO
+  env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion}
+  phone
+  templateName
+  languageCode
+  parameters =
+    case (waToken, waPhoneId) of
+      (Just tok, Just pid) -> do
+        let version = fromMaybe "v20.0" waApiVersion
+        result <-
+          sendTemplate
+            waManager
+            version
+            tok
+            pid
+            phone
+            templateName
+            languageCode
+            parameters
+        pure (either (Left . T.pack) Right result)
+      _ ->
+        pure (Left (missingConfigMessage env))
 
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
