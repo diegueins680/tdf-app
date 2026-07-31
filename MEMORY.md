@@ -8,6 +8,7 @@
 - On 2026-07-14, the marketplace orders admin route in `tdf-hq` had to be moved ahead of the public marketplace capture so `/marketplace/orders` would not be mistaken for a listing id. The corresponding server composition order in `tdf-hq/src/TDF/Server.hs` must stay aligned with `tdf-hq/src/TDF/API.hs`.
 - Production notification schema drift was repaired on 2026-07-12 with the narrow `tdf-hq/sql/2026-07-12_notification_table.sql` migration. Do not apply the broader `tdf-hq/sql/2026-05-25_content_engagement.sql` as part of Stripe or ticketing work.
 - The 2026-07-13 ticketing/event-discovery release lane is intentionally guarded and commit-based. Production is currently a partial release: discovery schema exists and ran once with zero imported records, but ticket runtime schema and Stripe Fly secrets are still missing. Do not push/release until main-branch auto-deploy risk is resolved, `EVENT_DISCOVERY_ENABLED=false` is effective, and `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` are set.
+- Event discovery was expanded on 2026-07-30 to explicit country-aware city subscriptions, six-hour per-source runs, Ticketmaster + Buen Plan + structured venue feeds, and canonical multi-source purchase options. Production additionally requires `tdf-hq/sql/2026-07-30_event_city_subscriptions.sql`; keep the master switch off through the guarded migration/backend rollout, and treat Buen Plan as independently disableable because its public endpoint is undocumented.
 
 ## Preferences
 
