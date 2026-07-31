@@ -92,44 +92,121 @@ CREATE INDEX IF NOT EXISTS idx_event_discovery_source_enabled_priority
     ON event_discovery_source (enabled, priority);
 
 -- Existing profiles predate country-aware city selection. The product's
--- historical default is Ecuador, so migrate those values once as EC.
-INSERT INTO event_city
-    (name, normalized_name, country_code, created_at, updated_at)
-SELECT DISTINCT
-    trim(profile_city),
-    lower(regexp_replace(trim(profile_city), '\s+', ' ', 'g')),
-    'EC',
-    now(),
-    now()
-FROM (
-    SELECT city AS profile_city FROM fan_profile
-    UNION ALL
-    SELECT city AS profile_city FROM artist_profile
-) profile_cities
-WHERE profile_city IS NOT NULL
-  AND trim(profile_city) <> ''
-  AND length(trim(profile_city)) <= 120
-ON CONFLICT (normalized_name, country_code) DO NOTHING;
+-- historical default is Ecuador, so migrate those values once as EC. Older
+-- production baselines may not contain both profile tables (or all current
+-- columns), so each optional backfill is guarded independently.
+DO $$
+BEGIN
+    IF to_regclass('public.fan_profile') IS NOT NULL
+       AND EXISTS (
+           SELECT 1
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'fan_profile'
+             AND column_name = 'city'
+       ) THEN
+        INSERT INTO event_city
+            (name, normalized_name, country_code, created_at, updated_at)
+        SELECT DISTINCT
+            trim(city),
+            lower(regexp_replace(trim(city), '\s+', ' ', 'g')),
+            'EC',
+            now(),
+            now()
+        FROM fan_profile
+        WHERE city IS NOT NULL
+          AND trim(city) <> ''
+          AND length(trim(city)) <= 120
+        ON CONFLICT (normalized_name, country_code) DO NOTHING;
+    END IF;
 
-INSERT INTO event_city_subscription (party_id, city_id, created_at)
-SELECT DISTINCT profile_party_id::text, city.id, now()
-FROM (
-    SELECT fp.fan_party_id AS profile_party_id, fp.city AS profile_city
-    FROM fan_profile fp
-    INNER JOIN user_credential uc ON uc.party_id = fp.fan_party_id
-    WHERE uc.active = TRUE
-    UNION ALL
-    SELECT ap.artist_party_id AS profile_party_id, ap.city AS profile_city
-    FROM artist_profile ap
-    INNER JOIN user_credential uc ON uc.party_id = ap.artist_party_id
-    WHERE uc.active = TRUE
-) profiles
-INNER JOIN event_city city
-    ON city.country_code = 'EC'
-   AND city.normalized_name =
-       lower(regexp_replace(trim(profiles.profile_city), '\s+', ' ', 'g'))
-WHERE profiles.profile_city IS NOT NULL
-  AND trim(profiles.profile_city) <> ''
-ON CONFLICT (party_id, city_id) DO NOTHING;
+    IF to_regclass('public.artist_profile') IS NOT NULL
+       AND EXISTS (
+           SELECT 1
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'artist_profile'
+             AND column_name = 'city'
+       ) THEN
+        INSERT INTO event_city
+            (name, normalized_name, country_code, created_at, updated_at)
+        SELECT DISTINCT
+            trim(city),
+            lower(regexp_replace(trim(city), '\s+', ' ', 'g')),
+            'EC',
+            now(),
+            now()
+        FROM artist_profile
+        WHERE city IS NOT NULL
+          AND trim(city) <> ''
+          AND length(trim(city)) <= 120
+        ON CONFLICT (normalized_name, country_code) DO NOTHING;
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
+    IF to_regclass('public.user_credential') IS NOT NULL
+       AND to_regclass('public.fan_profile') IS NOT NULL
+       AND (
+           SELECT count(*) = 2
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'fan_profile'
+             AND column_name IN ('fan_party_id', 'city')
+       )
+       AND (
+           SELECT count(*) = 2
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'user_credential'
+             AND column_name IN ('party_id', 'active')
+       ) THEN
+        INSERT INTO event_city_subscription (party_id, city_id, created_at)
+        SELECT DISTINCT fp.fan_party_id::text, city.id, now()
+        FROM fan_profile fp
+        INNER JOIN user_credential uc ON uc.party_id = fp.fan_party_id
+        INNER JOIN event_city city
+            ON city.country_code = 'EC'
+           AND city.normalized_name =
+               lower(regexp_replace(trim(fp.city), '\s+', ' ', 'g'))
+        WHERE uc.active = TRUE
+          AND fp.city IS NOT NULL
+          AND trim(fp.city) <> ''
+        ON CONFLICT (party_id, city_id) DO NOTHING;
+    END IF;
+
+    IF to_regclass('public.user_credential') IS NOT NULL
+       AND to_regclass('public.artist_profile') IS NOT NULL
+       AND (
+           SELECT count(*) = 2
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'artist_profile'
+             AND column_name IN ('artist_party_id', 'city')
+       )
+       AND (
+           SELECT count(*) = 2
+           FROM information_schema.columns
+           WHERE table_schema = 'public'
+             AND table_name = 'user_credential'
+             AND column_name IN ('party_id', 'active')
+       ) THEN
+        INSERT INTO event_city_subscription (party_id, city_id, created_at)
+        SELECT DISTINCT ap.artist_party_id::text, city.id, now()
+        FROM artist_profile ap
+        INNER JOIN user_credential uc ON uc.party_id = ap.artist_party_id
+        INNER JOIN event_city city
+            ON city.country_code = 'EC'
+           AND city.normalized_name =
+               lower(regexp_replace(trim(ap.city), '\s+', ' ', 'g'))
+        WHERE uc.active = TRUE
+          AND ap.city IS NOT NULL
+          AND trim(ap.city) <> ''
+        ON CONFLICT (party_id, city_id) DO NOTHING;
+    END IF;
+END
+$$;
 
 COMMIT;
