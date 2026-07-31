@@ -809,6 +809,24 @@ initializeSocialSchema = do
         \)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"external_event_ref\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"provider\" VARCHAR NOT NULL,\
+        \\"external_id\" VARCHAR NOT NULL,\
+        \\"event_id\" INTEGER NOT NULL,\
+        \\"city\" VARCHAR NOT NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"source_url\" VARCHAR NULL,\
+        \\"price_cents\" INTEGER NULL,\
+        \\"currency\" VARCHAR NULL,\
+        \\"last_seen_at\" TIMESTAMP NOT NULL,\
+        \\"missing_runs\" INTEGER NOT NULL DEFAULT 0,\
+        \\"source_status\" VARCHAR NOT NULL DEFAULT 'active',\
+        \UNIQUE (\"provider\", \"external_id\"),\
+        \FOREIGN KEY(\"event_id\") REFERENCES \"social_event\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_artist\" (\
         \\"event_id\" INTEGER NOT NULL,\
         \\"artist_id\" INTEGER NOT NULL,\
