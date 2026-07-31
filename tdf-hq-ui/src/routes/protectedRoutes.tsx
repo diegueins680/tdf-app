@@ -11,6 +11,7 @@ const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
+const CampaignAutomationsPage = lazy(() => import('../pages/CampaignAutomationsPage'));
 const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
 const ClassesPage = lazy(() => import('../pages/ClassesPage'));
@@ -20,6 +21,7 @@ const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
 const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
+const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
 const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
 const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
@@ -164,6 +166,8 @@ export function renderProtectedRoutes() {
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
           <Route path="cms" element={<CmsAdminPage />} />
+          <Route path="campanas-automaticas" element={<CampaignAutomationsPage />} />
+          <Route path="fuentes-eventos" element={<EventDiscoverySourcesPage />} />
           <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
           <Route path="opciones-ux" element={<UxOptionsPage />} />
           <Route path="preferencias" element={<SystemPage />} />
