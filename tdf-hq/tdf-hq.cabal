@@ -110,6 +110,11 @@ executable tdf-hq-exe
     TDF.DDEX.Security
     TDF.DDEX.Validation
     TDF.DDEX.Jobs
+    TDF.DDEX.ERN.V432.Types
+    TDF.DDEX.ERN.V432.Parse
+    TDF.DDEX.ERN.V432.Normalize
+    TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ImportPlan
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -169,6 +174,7 @@ executable tdf-hq-exe
     , bcrypt
     , path-pieces
     , uuid
+    , xml
     , template-haskell
     , file-embed
     , smtp-mail
@@ -340,6 +346,7 @@ test-suite tdf-hq-test
     , bcrypt
     , path-pieces
     , uuid
+    , xml
     , template-haskell
     , file-embed
     , hspec                >=2.7
