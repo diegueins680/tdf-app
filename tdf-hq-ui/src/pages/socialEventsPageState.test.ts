@@ -54,25 +54,23 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: true,
       eventCount: 0,
       filtersActive: false,
-      createFormOpen: false,
     })).toEqual({
-      createFormDescription:
-        'Crea el primer evento aqui; cuando exista al menos uno, apareceran los filtros y el calendario.',
-      showCreateForm: true,
+      createWelcomeDescription:
+        'Empieza con el nombre y la fecha. Podrás sumar colaboradores, venue y detalles sin salir del flujo.',
+      showCreateWelcome: true,
       showCreateToolbarAction: false,
     });
   });
 
-  it('collapses the create form into one toolbar action after events exist', () => {
+  it('uses one toolbar action after events exist', () => {
     expect(getSocialEventsCreateUiState({
       canCreateEvent: true,
       eventCount: 2,
       filtersActive: false,
-      createFormOpen: false,
     })).toEqual({
-      createFormDescription:
-        'Completa solo los campos necesarios para registrar otro evento. La lista actual se mantiene debajo.',
-      showCreateForm: false,
+      createWelcomeDescription:
+        'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
+      showCreateWelcome: false,
       showCreateToolbarAction: true,
     });
   });
@@ -82,11 +80,10 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: true,
       eventCount: 0,
       filtersActive: true,
-      createFormOpen: false,
     })).toEqual({
-      createFormDescription:
-        'Completa solo los campos necesarios para registrar otro evento. La lista actual se mantiene debajo.',
-      showCreateForm: false,
+      createWelcomeDescription:
+        'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
+      showCreateWelcome: false,
       showCreateToolbarAction: true,
     });
   });
@@ -96,11 +93,10 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: false,
       eventCount: 2,
       filtersActive: false,
-      createFormOpen: true,
     })).toEqual({
-      createFormDescription:
-        'Completa solo los campos necesarios para registrar otro evento. La lista actual se mantiene debajo.',
-      showCreateForm: false,
+      createWelcomeDescription:
+        'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
+      showCreateWelcome: false,
       showCreateToolbarAction: false,
     });
   });

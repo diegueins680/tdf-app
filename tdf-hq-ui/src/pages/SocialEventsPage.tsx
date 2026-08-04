@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
   Alert,
-  Checkbox,
   Box,
   Button,
   Card,
@@ -107,21 +106,6 @@ interface ContractDraftState {
   currency: string;
   status: 'draft' | 'pending' | 'posted';
   notes: string;
-}
-
-interface EventDraftState {
-  title: string;
-  description: string;
-  startAt: string;
-  endAt: string;
-  venueId: string;
-  eventType: string;
-  eventStatus: string;
-  priceCents: string;
-  capacity: string;
-  currency: string;
-  ticketUrl: string;
-  isPublic: boolean;
 }
 
 const BUDGET_CATEGORY_OPTIONS = [
@@ -234,25 +218,6 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
 };
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
-
-const buildInitialEventDraft = (): EventDraftState => {
-  const startAt = DateTime.local().plus({ hours: 1 }).startOf('hour');
-  const endAt = startAt.plus({ hours: 2 });
-  return {
-    title: '',
-    description: '',
-    startAt: startAt.toFormat("yyyy-LL-dd'T'HH:mm"),
-    endAt: endAt.toFormat("yyyy-LL-dd'T'HH:mm"),
-    venueId: '',
-    eventType: 'party',
-    eventStatus: 'planning',
-    priceCents: '',
-    capacity: '',
-    currency: 'USD',
-    ticketUrl: '',
-    isPublic: true,
-  };
-};
 
 const csvEscape = (value: string | number | boolean | null | undefined) =>
   `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -436,8 +401,6 @@ export default function SocialEventsPage() {
   const [contractDrafts, setContractDrafts] = useState<Record<string, ContractDraftState>>({});
   const [checkInCodes, setCheckInCodes] = useState<Record<string, string>>({});
   const [eventPosterFiles, setEventPosterFiles] = useState<Record<string, File | null>>({});
-  const [eventDraft, setEventDraft] = useState<EventDraftState>(() => buildInitialEventDraft());
-  const [createEventFormOpen, setCreateEventFormOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => DateTime.local().toISODate() ?? '');
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
@@ -479,7 +442,6 @@ export default function SocialEventsPage() {
     canCreateEvent: hasSession,
     eventCount: events.length,
     filtersActive: eventFiltersActive,
-    createFormOpen: createEventFormOpen,
   });
   const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
 
@@ -618,65 +580,6 @@ export default function SocialEventsPage() {
             };
           })
         : [],
-  });
-
-  const createEventMutation = useMutation({
-    mutationFn: () => {
-      if (!hasSession) throw new Error('Inicia sesión para crear eventos.');
-      const title = eventDraft.title.trim();
-      if (!title) throw new Error('Título del evento requerido.');
-      const startIso = toUtcIso(eventDraft.startAt);
-      const endIso = toUtcIso(eventDraft.endAt);
-      const startAt = DateTime.fromISO(startIso);
-      const endAt = DateTime.fromISO(endIso);
-      if (!startAt.isValid || !endAt.isValid || startAt >= endAt) {
-        throw new Error('La fecha de fin debe ser posterior al inicio.');
-      }
-      const priceRaw = eventDraft.priceCents.trim();
-      const priceCents = parseOptionalUnsignedInt(priceRaw);
-      if (priceRaw !== '' && priceCents === null) {
-        throw new Error('Precio inválido (usa centavos).');
-      }
-      const capacityRaw = eventDraft.capacity.trim();
-      const capacity = parseOptionalUnsignedInt(capacityRaw);
-      if (capacityRaw !== '' && capacity === null) {
-        throw new Error('Capacidad inválida.');
-      }
-      const payload: SocialEventDTO = {
-        eventTitle: title,
-        eventDescription: eventDraft.description.trim() || null,
-        eventStart: startIso,
-        eventEnd: endIso,
-        eventVenueId: eventDraft.venueId.trim() || null,
-        eventPriceCents: priceCents,
-        eventCapacity: capacity,
-        eventType: eventDraft.eventType || null,
-        eventStatus: eventDraft.eventStatus || null,
-        eventCurrency: eventDraft.currency.trim().toUpperCase() || 'USD',
-        eventBudgetCents: null,
-        eventTicketUrl: eventDraft.ticketUrl.trim() || null,
-        eventImageUrl: null,
-        eventIsPublic: eventDraft.isPublic,
-        eventArtists: [],
-      };
-      return SocialEventsAPI.createEvent(payload);
-    },
-    onSuccess: (createdEvent) => {
-      const nextCalendarDate = dateKeyFromIso(createdEvent.eventStart);
-      if (nextCalendarDate) setSelectedCalendarDate(nextCalendarDate);
-      setEventDraft(buildInitialEventDraft());
-      setCreateEventFormOpen(false);
-      qc.setQueryData<SocialEventDTO[]>(eventsQueryKey, (prev = []) => {
-        const createdId = createdEvent.eventId != null ? String(createdEvent.eventId) : null;
-        const withoutCreated = createdId
-          ? prev.filter((event) => String(event.eventId ?? '') !== createdId)
-          : prev;
-        return [createdEvent, ...withoutCreated];
-      });
-      void qc.invalidateQueries({ queryKey: ['social-events'] });
-      setFeedback({ kind: 'success', message: 'Evento creado y agregado al calendario.' });
-    },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
   const rsvpMutation = useMutation({
@@ -1161,9 +1064,10 @@ export default function SocialEventsPage() {
           )}
           {eventCreateUiState.showCreateToolbarAction && (
             <Button
+              component={RouterLink}
+              to="/social/eventos/nuevo"
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => setCreateEventFormOpen(true)}
             >
               Nuevo evento
             </Button>
@@ -1174,149 +1078,39 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
-        {hasSession && eventCreateUiState.showCreateForm && (
-          <Card variant="outlined">
+        {eventCreateUiState.showCreateWelcome && (
+          <Card
+            variant="outlined"
+            sx={{
+              borderColor: 'primary.main',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}12, transparent 65%)`,
+            }}
+          >
             <CardContent>
-              <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={700}>Crear evento</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {eventCreateUiState.createFormDescription}
-                </Typography>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField
-                    label="Título"
-                    size="small"
-                    value={eventDraft.title}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, title: e.target.value }))}
-                    sx={{ flex: 2 }}
-                  />
-                  <TextField
-                    label="Venue"
-                    size="small"
-                    select
-                    value={eventDraft.venueId}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, venueId: e.target.value }))}
-                    sx={{ flex: 1 }}
-                  >
-                    <MenuItem value="">Sin venue</MenuItem>
-                    {(venuesQuery.data ?? []).map((venue) => (
-                      <MenuItem key={venue.venueId ?? venue.venueName} value={venue.venueId ?? ''}>
-                        {venue.venueName}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    select
-                    label="Tipo"
-                    size="small"
-                    value={eventDraft.eventType}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, eventType: e.target.value }))}
-                    sx={{ width: 150 }}
-                  >
-                    <MenuItem value="party">Party</MenuItem>
-                    <MenuItem value="concert">Concert</MenuItem>
-                    <MenuItem value="festival">Festival</MenuItem>
-                    <MenuItem value="showcase">Showcase</MenuItem>
-                  </TextField>
-                  <TextField
-                    select
-                    label="Estado"
-                    size="small"
-                    value={eventDraft.eventStatus}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, eventStatus: e.target.value }))}
-                    sx={{ width: 150 }}
-                  >
-                    <MenuItem value="planning">Planning</MenuItem>
-                    <MenuItem value="announced">Announced</MenuItem>
-                    <MenuItem value="on_sale">On Sale</MenuItem>
-                    <MenuItem value="live">Live</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                  </TextField>
-                </Stack>
-                <TextField
-                  label="Descripción"
-                  size="small"
-                  value={eventDraft.description}
-                  onChange={(e) => setEventDraft((prev) => ({ ...prev, description: e.target.value }))}
-                  multiline
-                  minRows={2}
-                />
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField
-                    label="Inicio"
-                    size="small"
-                    type="datetime-local"
-                    value={eventDraft.startAt}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, startAt: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 220 }}
-                  />
-                  <TextField
-                    label="Fin"
-                    size="small"
-                    type="datetime-local"
-                    value={eventDraft.endAt}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, endAt: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 220 }}
-                  />
-                  <TextField
-                    label="Precio (centavos)"
-                    size="small"
-                    type="number"
-                    value={eventDraft.priceCents}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, priceCents: e.target.value }))}
-                    sx={{ width: 170 }}
-                  />
-                  <TextField
-                    label="Capacidad"
-                    size="small"
-                    type="number"
-                    value={eventDraft.capacity}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, capacity: e.target.value }))}
-                    sx={{ width: 130 }}
-                  />
-                  <TextField
-                    label="Moneda"
-                    size="small"
-                    value={eventDraft.currency}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, currency: e.target.value.toUpperCase() }))}
-                    sx={{ width: 110 }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-                  <TextField
-                    label="Ticket URL"
-                    size="small"
-                    value={eventDraft.ticketUrl}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, ticketUrl: e.target.value }))}
-                    sx={{ flex: 1 }}
-                  />
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Checkbox
-                      size="small"
-                      checked={eventDraft.isPublic}
-                      onChange={(_, checked) => setEventDraft((prev) => ({ ...prev, isPublic: checked }))}
-                    />
-                    <Typography variant="body2" color="text.secondary">Evento público</Typography>
-                  </Stack>
-                  {events.length > 0 && (
-                    <Button
-                      variant="text"
-                      onClick={() => setCreateEventFormOpen(false)}
-                    >
-                      Cerrar
-                    </Button>
-                  )}
-                  <Button
-                    variant="contained"
-                    onClick={() => createEventMutation.mutate()}
-                    disabled={createEventMutation.isPending || !hasSession}
-                  >
-                    Crear evento
-                  </Button>
-                </Stack>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems={{ md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Box>
+                  <Typography variant="h5" fontWeight={800}>
+                    Crea el primer evento con tu equipo
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {eventCreateUiState.createWelcomeDescription}
+                  </Typography>
+                </Box>
+                <Button
+                  component={RouterLink}
+                  to="/social/eventos/nuevo"
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  sx={{ flexShrink: 0 }}
+                >
+                  Empezar
+                </Button>
               </Stack>
             </CardContent>
           </Card>

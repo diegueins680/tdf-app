@@ -18,6 +18,7 @@ module TDF.API.SocialEventsAPI (
     TicketsRoutes,
     BudgetRoutes,
     FinanceRoutes,
+    LogisticsRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventImageUploadDTO (..),
@@ -61,6 +62,12 @@ import TDF.DTO.SocialEventsDTO (
     EventDTO,
     EventFinanceEntryDTO,
     EventFinanceSummaryDTO,
+    EventLogisticsActivityDTO,
+    EventLogisticsMemberDTO,
+    EventLogisticsPlaceDTO,
+    EventLogisticsPlanDTO,
+    EventLogisticsSettingsDTO,
+    EventRouteVerificationDTO,
     EventLiveBroadcastCreateDTO,
     EventLiveBroadcastDTO,
     EventLiveBroadcastEndDTO,
@@ -523,6 +530,25 @@ type FinanceRoutes =
         :<|> "events" :> Capture "eventId" Text :> "finance-entries" :> Capture "entryId" Text :> ReqBody '[JSON] EventFinanceEntryDTO :> Put '[JSON] EventFinanceEntryDTO
         :<|> "events" :> Capture "eventId" Text :> "finance-summary" :> Get '[JSON] EventFinanceSummaryDTO
 
+type LogisticsRoutes =
+    "events"
+        :> Capture "eventId" Text
+        :> "logistics"
+        :> ( Get '[JSON] EventLogisticsPlanDTO
+                :<|> "settings" :> ReqBody '[JSON] EventLogisticsSettingsDTO :> Put '[JSON] EventLogisticsSettingsDTO
+                :<|> "members" :> ReqBody '[JSON] EventLogisticsMemberDTO :> Post '[JSON] EventLogisticsMemberDTO
+                :<|> "members" :> Capture "partyId" Text :> ReqBody '[JSON] EventLogisticsMemberDTO :> Put '[JSON] EventLogisticsMemberDTO
+                :<|> "members" :> Capture "partyId" Text :> DeleteNoContent
+                :<|> "places" :> ReqBody '[JSON] EventLogisticsPlaceDTO :> Post '[JSON] EventLogisticsPlaceDTO
+                :<|> "places" :> Capture "placeId" Text :> ReqBody '[JSON] EventLogisticsPlaceDTO :> Put '[JSON] EventLogisticsPlaceDTO
+                :<|> "places" :> Capture "placeId" Text :> DeleteNoContent
+                :<|> "activities" :> ReqBody '[JSON] EventLogisticsActivityDTO :> Post '[JSON] EventLogisticsActivityDTO
+                :<|> "activities" :> Capture "activityId" Text :> ReqBody '[JSON] EventLogisticsActivityDTO :> Put '[JSON] EventLogisticsActivityDTO
+                :<|> "activities" :> Capture "activityId" Text :> DeleteNoContent
+                :<|> "activities" :> Capture "activityId" Text :> "verify-route" :> Post '[JSON] EventRouteVerificationDTO
+                :<|> "verify-routes" :> Post '[JSON] [EventRouteVerificationDTO]
+           )
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -536,3 +562,4 @@ type SocialEventsAPI =
         :<|> TicketsRoutes
         :<|> BudgetRoutes
         :<|> FinanceRoutes
+        :<|> LogisticsRoutes

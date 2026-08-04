@@ -14422,6 +14422,9 @@ marketplaceTestConfig seedFlag =
         , eventDiscoveryMaxPagesPerCity = 5
         , eventDiscoveryHourLocal = 3
         , eventDiscoveryCountryCode = Nothing
+        , googleRoutesApiKey = Nothing
+        , googleRoutesApiBase = "https://routes.googleapis.com"
+        , eventLogisticsRecheckEnabled = False
         }
 
 initializeMarketplaceListingSchema :: SqlPersistT IO ()

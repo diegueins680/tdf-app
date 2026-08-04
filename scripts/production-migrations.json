@@ -27,6 +27,11 @@
       "introducedBy": "f4805f72b4749029741373798da659566b5c4ea5"
     },
     {
+      "id": "2026-07-21_event_logistics",
+      "path": "tdf-hq/sql/2026-07-21_event_logistics.sql",
+      "introducedBy": "5121f69a7d4535db89d2f6bba432061fc6063190"
+    },
+    {
       "id": "2026-07-30_event_city_subscriptions",
       "path": "tdf-hq/sql/2026-07-30_event_city_subscriptions.sql",
       "introducedBy": "54009732c8ac9d2a4e7b6912b5ec1ed9dd5d945e"

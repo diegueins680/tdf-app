@@ -99,6 +99,7 @@ import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.Email (resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
@@ -701,6 +702,25 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "event logistics route parsing" $ do
+        it "parses Google durations including fractional seconds" $ do
+            parseGoogleDurationSeconds "901s" `shouldBe` Just 901
+            parseGoogleDurationSeconds "1.2s" `shouldBe` Just 2
+            parseGoogleDurationSeconds "invalid" `shouldBe` Nothing
+
+        it "extracts the selected route metrics without retaining provider payloads" $
+            parseGoogleRouteResponse
+                "{\"routes\":[{\"duration\":\"1200s\",\"staticDuration\":\"900s\",\"distanceMeters\":12500,\"polyline\":{\"encodedPolyline\":\"abc123\"}}]}"
+                `shouldBe` Right RouteEstimateResult
+                    { rerDurationSeconds = 1200
+                    , rerStaticDurationSeconds = Just 900
+                    , rerDistanceMeters = 12500
+                    , rerEncodedPolyline = Just "abc123"
+                    }
+
+        it "rejects route responses with no usable route" $
+            parseGoogleRouteResponse "{\"routes\":[]}" `shouldSatisfy` isLeft
+
     describe "campaign automation templates" $ do
         it "ships the four revenue campaigns with bounded, unique WhatsApp steps" $ do
             let templates = campaignAutomationTemplatesDTO

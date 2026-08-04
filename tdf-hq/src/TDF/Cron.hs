@@ -6,6 +6,7 @@ module TDF.Cron
   , startEventDiscoveryJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
+  , startEventLogisticsRecheckJob
   , Directive(..)
   , parseDirective
   , selectInstagramSyncAccessToken
@@ -27,7 +28,7 @@ import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
 import           Data.List                  (find, nub)
 import qualified Data.Map.Strict         as Map
-import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
+import           Data.Maybe              (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import           Data.Pool               (withResource)
 import           Data.Text               (Text)
 import qualified Data.Text               as T
@@ -61,11 +62,12 @@ import           Database.Persist        ( (!=.)
                                          , insert_
                                          , insertEntity
                                          , insertUnique
+                                         , delete
                                          , update
                                          , (=.)
                                          , (+=.)
                                           )
-import           Database.Persist.Sql    (Single(..), SqlPersistT, rawSql, runSqlConn, runSqlPool)
+import           Database.Persist.Sql    (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlConn, runSqlPool)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
@@ -93,6 +95,11 @@ import           TDF.Services.EventDiscovery
   , reconcileImportedEvents
   , syncDiscoveredEvent
   )
+import           TDF.Services.EventLogisticsRoutes
+  ( RouteEstimateInput(..)
+  , RouteEstimateResult(..)
+  , computeGoogleRoute
+  )
 import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
@@ -112,7 +119,11 @@ import           TDF.Config
   , eventDiscoveryEnabled
   , instagramAppToken
   , ticketmasterApiKey
+  , eventLogisticsRecheckEnabled
+  , googleRoutesApiBase
+  , googleRoutesApiKey
   )
+import           Web.PathPieces          (fromPathPiece)
 import           TDF.WhatsApp.Client     (SendTextResult)
 import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
 import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
@@ -265,6 +276,196 @@ runEventDiscoveryWithLeaderLock env@Env{envPool} = do
         LogBuf.LogInfo
         "[Cron][EventDiscovery] Another API replica owns this run; skipping."
     Just () -> pure ()
+
+-- | Recheck upcoming event travel at the 24-hour and 2-hour operational gates.
+-- A database advisory lock and per-activity checkpoint rows keep this safe when
+-- multiple API replicas are running.
+startEventLogisticsRecheckJob :: Env -> IO ()
+startEventLogisticsRecheckJob env@Env{envConfig}
+  | not (eventLogisticsRecheckEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Disabled by configuration."
+  | otherwise = case googleRoutesApiKey envConfig of
+      Nothing -> LogBuf.addLog LogBuf.LogWarning "[Cron][EventLogistics] GOOGLE_ROUTES_API_KEY is missing; job is idle."
+      Just apiKey -> do
+        void (forkIO (eventLogisticsLoop env apiKey))
+        LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Scheduled route checks every 15 minutes."
+
+eventLogisticsLoop :: Env -> Text -> IO ()
+eventLogisticsLoop env apiKey = do
+  threadDelay (45 * 1000000)
+  forever $ do
+    result <- tryNonAsync (runEventLogisticsWithLeaderLock env apiKey)
+    case result of
+      Left err -> LogBuf.addLog LogBuf.LogError ("[Cron][EventLogistics] Recheck failed: " <> T.pack (displayException err))
+      Right () -> pure ()
+    threadDelay (15 * 60 * 1000000)
+
+runEventLogisticsWithLeaderLock :: Env -> Text -> IO ()
+runEventLogisticsWithLeaderLock env@Env{envPool} apiKey =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320250713)" [] :: SqlPersistT IO [Single Bool]) backend
+    case lockRows of
+      [Single True] -> runEventLogisticsRechecks env apiKey
+        `finally` void (runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320250713)" [] :: SqlPersistT IO [Single Bool]) backend)
+      _ -> LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Another API replica owns this tick; skipping."
+
+runEventLogisticsRechecks :: Env -> Text -> IO ()
+runEventLogisticsRechecks env@Env{envPool} apiKey = do
+  now <- getCurrentTime
+  rows <- runSqlPool
+    (selectList
+      [ Social.EventLogisticsActivityActivityType ==. "travel"
+      , Social.EventLogisticsActivityStatus !=. "completed"
+      , Social.EventLogisticsActivityStatus !=. "cancelled"
+      , Social.EventLogisticsActivityStartTime >=. now
+      ]
+      [Asc Social.EventLogisticsActivityStartTime, LimitTo 500])
+    envPool
+  for_ rows $ \row@(Entity activityKey activity) ->
+    for_ (logisticsCheckpoint now (Social.eventLogisticsActivityStartTime activity)) $ \checkpoint -> do
+      alreadyChecked <- runSqlPool
+        (selectFirst
+          [ Social.EventRouteVerificationActivityId ==. activityKey
+          , Social.EventRouteVerificationActivityVersion ==. Social.eventLogisticsActivityVersion activity
+          , Social.EventRouteVerificationCheckpoint ==. Just checkpoint
+          ] [])
+        envPool
+      when (isNothing alreadyChecked) $ recheckLogisticsActivity env apiKey checkpoint row
+
+logisticsCheckpoint :: UTCTime -> UTCTime -> Maybe Text
+logisticsCheckpoint now departure
+  | secondsUntil < 0 = Nothing
+  | secondsUntil <= 2 * 60 * 60 + 15 * 60 = Just "2h"
+  | secondsUntil <= 24 * 60 * 60 + 15 * 60 = Just "24h"
+  | otherwise = Nothing
+  where
+    secondsUntil = realToFrac (diffUTCTime departure now) :: Double
+
+recheckLogisticsActivity :: Env -> Text -> Text -> Entity Social.EventLogisticsActivity -> IO ()
+recheckLogisticsActivity Env{envPool, envConfig} apiKey checkpoint (Entity activityKey activity) = do
+  now <- getCurrentTime
+  previous <- runSqlPool
+    (selectFirst [Social.EventRouteVerificationActivityId ==. activityKey] [Desc Social.EventRouteVerificationVerifiedAt])
+    envPool
+  routeResult <- case (Social.eventLogisticsActivityOriginPlaceId activity, Social.eventLogisticsActivityDestinationPlaceId activity, Social.eventLogisticsActivityEndTime activity) of
+    (Just originKey, Just destinationKey, Just endTime) -> do
+      mOrigin <- runSqlPool (get originKey) envPool
+      mDestination <- runSqlPool (get destinationKey) envPool
+      case (mOrigin, mDestination) of
+        (Just origin, Just destination) -> do
+          let mode = fromMaybe "drive" (Social.eventLogisticsActivityTravelMode activity)
+              input = RouteEstimateInput
+                { reiOriginLatitude = Social.eventLogisticsPlaceLatitude origin
+                , reiOriginLongitude = Social.eventLogisticsPlaceLongitude origin
+                , reiDestinationLatitude = Social.eventLogisticsPlaceLatitude destination
+                , reiDestinationLongitude = Social.eventLogisticsPlaceLongitude destination
+                , reiTravelMode = mode
+                , reiDepartureTime = Social.eventLogisticsActivityStartTime activity
+                }
+          result <- computeGoogleRoute apiKey (googleRoutesApiBase envConfig) input
+          pure (mode, endTime, result)
+        _ -> pure ("drive", endTime, Left "El origen o destino ya no existe.")
+    _ -> pure ("drive", Social.eventLogisticsActivityStartTime activity, Left "El traslado está incompleto.")
+  let (mode, endTime, estimate) = routeResult
+      allocatedSeconds = max 0 (floor (diffUTCTime endTime (Social.eventLogisticsActivityStartTime activity)))
+      (durationValue, staticValue, distanceValue, bufferSeconds, verdict, polyline, errorMessage) =
+        cronRouteVerificationValues activity allocatedSeconds estimate
+  _ <- runSqlPool (insert Social.EventRouteVerification
+    { Social.eventRouteVerificationActivityId = activityKey
+    , Social.eventRouteVerificationActivityVersion = Social.eventLogisticsActivityVersion activity
+    , Social.eventRouteVerificationProvider = "google_routes"
+    , Social.eventRouteVerificationTravelMode = mode
+    , Social.eventRouteVerificationDepartureTime = Social.eventLogisticsActivityStartTime activity
+    , Social.eventRouteVerificationDurationSeconds = durationValue
+    , Social.eventRouteVerificationStaticDurationSeconds = staticValue
+    , Social.eventRouteVerificationDistanceMeters = distanceValue
+    , Social.eventRouteVerificationBufferSeconds = bufferSeconds
+    , Social.eventRouteVerificationAllocatedSeconds = allocatedSeconds
+    , Social.eventRouteVerificationVerdict = verdict
+    , Social.eventRouteVerificationEncodedPolyline = polyline
+    , Social.eventRouteVerificationErrorMessage = errorMessage
+    , Social.eventRouteVerificationCheckpoint = Just checkpoint
+    , Social.eventRouteVerificationVerifiedAt = now
+    }) envPool
+  let previousDuration = previous >>= Social.eventRouteVerificationDurationSeconds . entityVal
+      materiallyIncreased = case (previousDuration, durationValue) of
+        (Just old, Just new) -> new - old >= max 600 (ceiling (fromIntegral old * (0.15 :: Double)))
+        _ -> False
+      shouldAlert = verdict `elem` ["tight", "infeasible", "unavailable"] || materiallyIncreased
+  when shouldAlert $ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey activity verdict durationValue bufferSeconds
+
+cronRouteVerificationValues :: Social.EventLogisticsActivity -> Int -> Either Text RouteEstimateResult -> (Maybe Int, Maybe Int, Maybe Int, Int, Text, Maybe Text, Maybe Text)
+cronRouteVerificationValues activity allocated result = case result of
+  Left message -> (Nothing, Nothing, Nothing, maybe 900 (* 60) (Social.eventLogisticsActivityBufferMinutes activity), "unavailable", Nothing, Just message)
+  Right RouteEstimateResult{..} ->
+    let automaticBuffer = max 900 (ceiling (fromIntegral rerDurationSeconds * (0.2 :: Double)))
+        bufferSeconds = maybe automaticBuffer (* 60) (Social.eventLogisticsActivityBufferMinutes activity)
+        verdict
+          | allocated < rerDurationSeconds = "infeasible"
+          | allocated < rerDurationSeconds + bufferSeconds = "tight"
+          | otherwise = "feasible"
+     in (Just rerDurationSeconds, rerStaticDurationSeconds, Just rerDistanceMeters, bufferSeconds, verdict, rerEncodedPolyline, Nothing)
+
+notifyLogisticsRouteRecipients :: Env -> Text -> Social.EventLogisticsActivityId -> Social.EventLogisticsActivity -> Text -> Maybe Int -> Int -> IO ()
+notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey activity verdict durationValue bufferSeconds = do
+  now <- getCurrentTime
+  mEvent <- runSqlPool (get (Social.eventLogisticsActivityEventId activity)) envPool
+  members <- runSqlPool
+    (selectList
+      [ Social.EventLogisticsMemberEventId ==. Social.eventLogisticsActivityEventId activity
+      , Social.EventLogisticsMemberMemberRole ==. "editor"
+      ] []) envPool
+  assignments <- runSqlPool (selectList [Social.EventLogisticsAssignmentActivityId ==. activityKey] []) envPool
+  let organizer = mEvent >>= Social.socialEventOrganizerPartyId
+      memberIds = map (Social.eventLogisticsMemberPartyId . entityVal) members
+      assigneeIds = catMaybes (map (Social.eventLogisticsAssignmentPartyId . entityVal) assignments)
+      recipientTexts = nub (catMaybes [organizer] <> memberIds <> assigneeIds)
+      recipientKeys = catMaybes (map (fromPathPiece :: Text -> Maybe PartyId) recipientTexts)
+      eventTitle = maybe "Evento" Social.socialEventTitle mEvent
+      title = "Alerta de ruta · " <> eventTitle
+      estimateLabel = maybe "sin estimación" (\seconds -> T.pack (show (ceiling (fromIntegral seconds / (60 :: Double)) :: Int)) <> " min") durationValue
+      body = Social.eventLogisticsActivityTitle activity <> ": " <> verdict <> ", estimado " <> estimateLabel <> ", holgura " <> T.pack (show (ceiling (fromIntegral bufferSeconds / (60 :: Double)) :: Int)) <> " min."
+      emailSvc = EmailSvc.mkEmailService envConfig
+      targetId = fromIntegral (fromSqlKey (Social.eventLogisticsActivityEventId activity))
+      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica") (EmailSvc.esAppBase emailSvc)
+  for_ recipientKeys $ \partyKey -> do
+    inAppClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
+      { Social.eventLogisticsAlertDeliveryActivityId = activityKey
+      , Social.eventLogisticsAlertDeliveryActivityVersion = Social.eventLogisticsActivityVersion activity
+      , Social.eventLogisticsAlertDeliveryCheckpoint = checkpoint
+      , Social.eventLogisticsAlertDeliveryRecipientPartyId = T.pack (show (fromSqlKey partyKey))
+      , Social.eventLogisticsAlertDeliveryChannel = "in_app"
+      , Social.eventLogisticsAlertDeliveryDeliveredAt = now
+      }) envPool
+    for_ inAppClaim $ \_ -> runSqlPool (insert_ Notification
+      { notificationRecipientPartyId = partyKey
+      , notificationNotifType = "event_logistics_route"
+      , notificationTitle = title
+      , notificationBody = body
+      , notificationTargetType = Just "event_logistics"
+      , notificationTargetId = Just targetId
+      , notificationIsRead = False
+      , notificationCreatedAt = now
+      }) envPool
+    mParty <- runSqlPool (get partyKey) envPool
+    case (EmailSvc.esConfig emailSvc, mParty >>= partyPrimaryEmail) of
+      (Just _, Just emailAddress) -> do
+        emailClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
+          { Social.eventLogisticsAlertDeliveryActivityId = activityKey
+          , Social.eventLogisticsAlertDeliveryActivityVersion = Social.eventLogisticsActivityVersion activity
+          , Social.eventLogisticsAlertDeliveryCheckpoint = checkpoint
+          , Social.eventLogisticsAlertDeliveryRecipientPartyId = T.pack (show (fromSqlKey partyKey))
+          , Social.eventLogisticsAlertDeliveryChannel = "email"
+          , Social.eventLogisticsAlertDeliveryDeliveredAt = now
+          }) envPool
+        for_ emailClaim $ \deliveryKey -> do
+          sendResult <- try (EmailSvc.sendTestEmail emailSvc (maybe "Equipo" partyDisplayName mParty) emailAddress title [body, "Revisa el cronograma antes de confirmar el traslado."] logisticsUrl) :: IO (Either SomeException ())
+          case sendResult of
+            Left err -> do
+              runSqlPool (delete deliveryKey) envPool
+              LogBuf.addLog LogBuf.LogError ("[Cron][EventLogistics] Email failed: " <> T.pack (displayException err))
+            Right () -> pure ()
+      _ -> pure ()
 
 withEventDiscoveryLeaderLock :: ConnectionPool -> IO a -> IO (Maybe a)
 withEventDiscoveryLeaderLock pool action =

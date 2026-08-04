@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_INSTAGRAM_REDIRECT_URI?: string;
   readonly VITE_INSTAGRAM_OAUTH_PROVIDER?: string;
   readonly VITE_INSTAGRAM_SCOPES?: string;
+  readonly VITE_GOOGLE_MAPS_BROWSER_API_KEY?: string;
 }
 
 interface ImportMeta {

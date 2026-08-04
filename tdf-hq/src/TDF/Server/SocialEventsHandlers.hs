@@ -102,7 +102,7 @@ module TDF.Server.SocialEventsHandlers (
 
 import Control.Applicative ((<|>))
 import Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
-import Control.Monad (filterM, forM, forM_, join, unless, when)
+import Control.Monad (filterM, forM, forM_, join, unless, void, when)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (ReaderT, ask)
@@ -124,12 +124,12 @@ import Data.Char (
  )
 import Data.Int (Int64)
 import Data.List (sortOn)
-import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing)
+import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import Data.Ord (Down (..))
 import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
@@ -174,6 +174,14 @@ import TDF.DTO.SocialEventsDTO (
     EventDTO (..),
     EventFinanceEntryDTO (..),
     EventFinanceSummaryDTO (..),
+    EventLogisticsActivityDTO (..),
+    EventLogisticsAssignmentDTO (..),
+    EventLogisticsMemberDTO (..),
+    EventLogisticsPlaceDTO (..),
+    EventLogisticsPlanDTO (..),
+    EventLogisticsSettingsDTO (..),
+    EventRouteVerificationDTO (..),
+    EventScheduleIssueDTO (..),
     EventLiveBroadcastCreateDTO (..),
     EventLiveBroadcastDTO (..),
     EventLiveBroadcastEndDTO (..),
@@ -226,6 +234,11 @@ import TDF.ServerRadio (
     validateRadioTransmissionWhipBase,
  )
 import qualified TDF.Services.Stripe as Stripe
+import TDF.Services.EventLogisticsRoutes
+    ( RouteEstimateInput (..)
+    , RouteEstimateResult (..)
+    , computeGoogleRoute
+    )
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
@@ -1773,6 +1786,7 @@ socialEventsServer user =
         :<|> ticketsServer
         :<|> budgetServer
         :<|> financeServer
+        :<|> logisticsServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
@@ -2354,6 +2368,21 @@ socialEventsServer user =
                     deleteWhere [EventTicketTierEventId ==. eventKey]
                     deleteWhere [EventFinanceEntryEventId ==. eventKey]
                     deleteWhere [EventBudgetLineEventId ==. eventKey]
+                    logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
+                    unless (null logisticsActivityKeys) $ do
+                        deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
+                        deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
+                        deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
+                        deleteWhere
+                            [ FilterOr
+                                [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
+                                , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
+                                ]
+                            ]
+                    deleteWhere [EventLogisticsActivityEventId ==. eventKey]
+                    deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
+                    deleteWhere [EventLogisticsMemberEventId ==. eventKey]
+                    deleteWhere [EventLogisticsPlanEventId ==. eventKey]
                     deleteWhere [ExternalEventRefEventId ==. eventKey]
                     delete eventKey
                 )
@@ -5470,6 +5499,449 @@ socialEventsServer user =
                 , efsGeneratedAt = now
                 }
 
+    -- Event logistics
+    logisticsServer :: ServerT LogisticsRoutes AppM
+    logisticsServer eventIdStr =
+        getLogisticsPlan eventIdStr
+            :<|> updateLogisticsSettings eventIdStr
+            :<|> createLogisticsMember eventIdStr
+            :<|> updateLogisticsMember eventIdStr
+            :<|> deleteLogisticsMember eventIdStr
+            :<|> createLogisticsPlace eventIdStr
+            :<|> updateLogisticsPlace eventIdStr
+            :<|> deleteLogisticsPlace eventIdStr
+            :<|> createLogisticsActivity eventIdStr
+            :<|> updateLogisticsActivity eventIdStr
+            :<|> deleteLogisticsActivity eventIdStr
+            :<|> verifyLogisticsRoute eventIdStr
+            :<|> verifyAllLogisticsRoutes eventIdStr
+
+    getLogisticsPlan :: T.Text -> AppM EventLogisticsPlanDTO
+    getLogisticsPlan eventIdStr = do
+        Env{..} <- ask
+        (eventKey, _, accessRole) <- requireLogisticsAccess eventIdStr False
+        settings <- loadLogisticsSettings envPool eventKey
+        memberRows <- liftIO $ runSqlPool (selectList [EventLogisticsMemberEventId ==. eventKey] [Asc EventLogisticsMemberCreatedAt]) envPool
+        members <- mapM (logisticsMemberEntityToDTO envPool) memberRows
+        placeRows <- liftIO $ runSqlPool (selectList [EventLogisticsPlaceEventId ==. eventKey] [Asc EventLogisticsPlaceLabel]) envPool
+        activityRows <- liftIO $ runSqlPool (selectList [EventLogisticsActivityEventId ==. eventKey] [Asc EventLogisticsActivityStartTime, Asc EventLogisticsActivityId]) envPool
+        activities <- mapM (logisticsActivityEntityToDTO envPool) activityRows
+        pure
+            EventLogisticsPlanDTO
+                { elgEventId = renderKeyText eventKey
+                , elgAccessRole = accessRole
+                , elgSettings = settings
+                , elgMembers = members
+                , elgPlaces = map logisticsPlaceEntityToDTO placeRows
+                , elgActivities = activities
+                , elgIssues = buildLogisticsIssues activities
+                }
+
+    updateLogisticsSettings :: T.Text -> EventLogisticsSettingsDTO -> AppM EventLogisticsSettingsDTO
+    updateLogisticsSettings eventIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsOwner eventIdStr
+        now <- liftIO getCurrentTime
+        timezoneVal <- validateLogisticsTimezone (elsTimezone dto)
+        modeVal <- validateLogisticsTravelMode (elsDefaultTravelMode dto)
+        mExisting <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsPlan eventKey)) envPool
+        liftIO $ runSqlPool
+            (case mExisting of
+                Nothing -> insert_ EventLogisticsPlan
+                    { eventLogisticsPlanEventId = eventKey
+                    , eventLogisticsPlanTimezone = timezoneVal
+                    , eventLogisticsPlanDefaultTravelMode = modeVal
+                    , eventLogisticsPlanCreatedAt = now
+                    , eventLogisticsPlanUpdatedAt = now
+                    }
+                Just (Entity planKey _) -> update planKey
+                    [ EventLogisticsPlanTimezone =. timezoneVal
+                    , EventLogisticsPlanDefaultTravelMode =. modeVal
+                    , EventLogisticsPlanUpdatedAt =. now
+                    ]) envPool
+        pure EventLogisticsSettingsDTO{elsTimezone = timezoneVal, elsDefaultTravelMode = modeVal}
+
+    createLogisticsMember :: T.Text -> EventLogisticsMemberDTO -> AppM EventLogisticsMemberDTO
+    createLogisticsMember eventIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsOwner eventIdStr
+        partyIdVal <- validateLogisticsParty envPool (elmPartyId dto)
+        roleVal <- validateLogisticsMemberRole (elmRole dto)
+        now <- liftIO getCurrentTime
+        inserted <- liftIO $ runSqlPool
+            (insertUnique EventLogisticsMember
+                { eventLogisticsMemberEventId = eventKey
+                , eventLogisticsMemberPartyId = partyIdVal
+                , eventLogisticsMemberMemberRole = roleVal
+                , eventLogisticsMemberCreatedAt = now
+                , eventLogisticsMemberUpdatedAt = now
+                }) envPool
+        memberKey <- maybe (throwError err409{errBody = "This person is already on the logistics team"}) pure inserted
+        mCreated <- liftIO $ runSqlPool (getEntity memberKey) envPool
+        maybe (throwError err500{errBody = "Could not create logistics member"}) (logisticsMemberEntityToDTO envPool) mCreated
+
+    updateLogisticsMember :: T.Text -> T.Text -> EventLogisticsMemberDTO -> AppM EventLogisticsMemberDTO
+    updateLogisticsMember eventIdStr rawPartyId dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsOwner eventIdStr
+        partyIdVal <- validateLogisticsParty envPool rawPartyId
+        when (T.strip (elmPartyId dto) /= partyIdVal) $ throwError err400{errBody = "member party id does not match URL"}
+        roleVal <- validateLogisticsMemberRole (elmRole dto)
+        now <- liftIO getCurrentTime
+        mMember <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsMember eventKey partyIdVal)) envPool
+        (memberKey, memberRow) <- maybe (throwError err404{errBody = "Logistics member not found"}) (pure . (\(Entity k v) -> (k, v))) mMember
+        liftIO $ runSqlPool (update memberKey [EventLogisticsMemberMemberRole =. roleVal, EventLogisticsMemberUpdatedAt =. now]) envPool
+        logisticsMemberEntityToDTO envPool (Entity memberKey memberRow{eventLogisticsMemberMemberRole = roleVal, eventLogisticsMemberUpdatedAt = now})
+
+    deleteLogisticsMember :: T.Text -> T.Text -> AppM NoContent
+    deleteLogisticsMember eventIdStr rawPartyId = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsOwner eventIdStr
+        partyIdVal <- pure (T.strip rawPartyId)
+        liftIO $ runSqlPool (deleteBy (UniqueEventLogisticsMember eventKey partyIdVal)) envPool
+        pure NoContent
+
+    createLogisticsPlace :: T.Text -> EventLogisticsPlaceDTO -> AppM EventLogisticsPlaceDTO
+    createLogisticsPlace eventIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        now <- liftIO getCurrentTime
+        (labelVal, typeVal, venueKey) <- validateLogisticsPlaceInput envPool eventKey dto
+        key <- liftIO $ runSqlPool
+            (insert EventLogisticsPlace
+                { eventLogisticsPlaceEventId = eventKey
+                , eventLogisticsPlaceVenueId = venueKey
+                , eventLogisticsPlaceLabel = labelVal
+                , eventLogisticsPlacePlaceType = typeVal
+                , eventLogisticsPlaceAddress = cleanMaybeText (elpAddress dto)
+                , eventLogisticsPlaceGooglePlaceId = cleanMaybeText (elpGooglePlaceId dto)
+                , eventLogisticsPlaceLatitude = elpLatitude dto
+                , eventLogisticsPlaceLongitude = elpLongitude dto
+                , eventLogisticsPlaceInstructions = cleanMaybeText (elpInstructions dto)
+                , eventLogisticsPlaceContactName = cleanMaybeText (elpContactName dto)
+                , eventLogisticsPlaceContactPhone = cleanMaybeText (elpContactPhone dto)
+                , eventLogisticsPlaceCreatedAt = now
+                , eventLogisticsPlaceUpdatedAt = now
+                }) envPool
+        mCreated <- liftIO $ runSqlPool (getEntity key) envPool
+        maybe (throwError err500{errBody = "Could not create logistics place"}) (pure . logisticsPlaceEntityToDTO) mCreated
+
+    updateLogisticsPlace :: T.Text -> T.Text -> EventLogisticsPlaceDTO -> AppM EventLogisticsPlaceDTO
+    updateLogisticsPlace eventIdStr placeIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        placeKey <- parseKeyOr400 "logistics place" placeIdStr
+        existing <- requireLogisticsPlace envPool eventKey placeKey
+        now <- liftIO getCurrentTime
+        (labelVal, typeVal, venueKey) <- validateLogisticsPlaceInput envPool eventKey dto
+        liftIO $ runSqlPool (update placeKey
+            [ EventLogisticsPlaceVenueId =. venueKey
+            , EventLogisticsPlaceLabel =. labelVal
+            , EventLogisticsPlacePlaceType =. typeVal
+            , EventLogisticsPlaceAddress =. cleanMaybeText (elpAddress dto)
+            , EventLogisticsPlaceGooglePlaceId =. cleanMaybeText (elpGooglePlaceId dto)
+            , EventLogisticsPlaceLatitude =. elpLatitude dto
+            , EventLogisticsPlaceLongitude =. elpLongitude dto
+            , EventLogisticsPlaceInstructions =. cleanMaybeText (elpInstructions dto)
+            , EventLogisticsPlaceContactName =. cleanMaybeText (elpContactName dto)
+            , EventLogisticsPlaceContactPhone =. cleanMaybeText (elpContactPhone dto)
+            , EventLogisticsPlaceUpdatedAt =. now
+            ]) envPool
+        pure $ logisticsPlaceEntityToDTO (Entity placeKey existing
+            { eventLogisticsPlaceVenueId = venueKey
+            , eventLogisticsPlaceLabel = labelVal
+            , eventLogisticsPlacePlaceType = typeVal
+            , eventLogisticsPlaceAddress = cleanMaybeText (elpAddress dto)
+            , eventLogisticsPlaceGooglePlaceId = cleanMaybeText (elpGooglePlaceId dto)
+            , eventLogisticsPlaceLatitude = elpLatitude dto
+            , eventLogisticsPlaceLongitude = elpLongitude dto
+            , eventLogisticsPlaceInstructions = cleanMaybeText (elpInstructions dto)
+            , eventLogisticsPlaceContactName = cleanMaybeText (elpContactName dto)
+            , eventLogisticsPlaceContactPhone = cleanMaybeText (elpContactPhone dto)
+            , eventLogisticsPlaceUpdatedAt = now
+            })
+
+    deleteLogisticsPlace :: T.Text -> T.Text -> AppM NoContent
+    deleteLogisticsPlace eventIdStr placeIdStr = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        placeKey <- parseKeyOr400 "logistics place" placeIdStr
+        _ <- requireLogisticsPlace envPool eventKey placeKey
+        referenceCount <- liftIO $ runSqlPool (count
+            [ FilterOr
+                [ EventLogisticsActivityPlaceId ==. Just placeKey
+                , EventLogisticsActivityOriginPlaceId ==. Just placeKey
+                , EventLogisticsActivityDestinationPlaceId ==. Just placeKey
+                ]
+            ]) envPool
+        when (referenceCount > 0) $ throwError err409{errBody = "Place is used by one or more logistics activities"}
+        liftIO $ runSqlPool (delete placeKey) envPool
+        pure NoContent
+
+    createLogisticsActivity :: T.Text -> EventLogisticsActivityDTO -> AppM EventLogisticsActivityDTO
+    createLogisticsActivity eventIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        now <- liftIO getCurrentTime
+        validated <- validateLogisticsActivityInput envPool eventKey Nothing dto
+        let (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys) = validated
+        modeToStore <- if typeVal == "travel" && isNothing modeVal
+            then Just . elsDefaultTravelMode <$> loadLogisticsSettings envPool eventKey
+            else pure modeVal
+        key <- liftIO $ runSqlPool (insert EventLogisticsActivity
+            { eventLogisticsActivityEventId = eventKey
+            , eventLogisticsActivityActivityType = typeVal
+            , eventLogisticsActivityTitle = titleVal
+            , eventLogisticsActivityNotes = cleanMaybeText (eacNotes dto)
+            , eventLogisticsActivityStartTime = eacStart dto
+            , eventLogisticsActivityEndTime = endVal
+            , eventLogisticsActivityPlaceId = placeKey
+            , eventLogisticsActivityOriginPlaceId = originKey
+            , eventLogisticsActivityDestinationPlaceId = destinationKey
+            , eventLogisticsActivityTravelMode = modeToStore
+            , eventLogisticsActivityBufferMinutes = bufferVal
+            , eventLogisticsActivityPriority = priorityVal
+            , eventLogisticsActivityStatus = statusVal
+            , eventLogisticsActivityVersion = 1
+            , eventLogisticsActivityCreatedByPartyId = currentPartyId
+            , eventLogisticsActivityCreatedAt = now
+            , eventLogisticsActivityUpdatedAt = now
+            }) envPool
+        replaceLogisticsActivityRelations envPool key (eacAssignments dto) dependencyKeys now
+        when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig key Nothing)
+        mCreated <- liftIO $ runSqlPool (getEntity key) envPool
+        maybe (throwError err500{errBody = "Could not create logistics activity"}) (logisticsActivityEntityToDTO envPool) mCreated
+
+    updateLogisticsActivity :: T.Text -> T.Text -> EventLogisticsActivityDTO -> AppM EventLogisticsActivityDTO
+    updateLogisticsActivity eventIdStr activityIdStr dto = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        activityKey <- parseKeyOr400 "logistics activity" activityIdStr
+        existing <- requireLogisticsActivity envPool eventKey activityKey
+        expectedVersion <- maybe (throwError err400{errBody = "activity version is required"}) pure (eacVersion dto)
+        when (expectedVersion /= eventLogisticsActivityVersion existing) $ throwError err409{errBody = "This activity was changed by another collaborator. Reload and try again."}
+        validated <- validateLogisticsActivityInput envPool eventKey (Just activityKey) dto
+        let (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys) = validated
+            nextVersion = expectedVersion + 1
+        modeToStore <- if typeVal == "travel" && isNothing modeVal
+            then Just . elsDefaultTravelMode <$> loadLogisticsSettings envPool eventKey
+            else pure modeVal
+        now <- liftIO getCurrentTime
+        updatedRows <- liftIO $ runSqlPool (updateWhereCount
+            [ EventLogisticsActivityId ==. activityKey
+            , EventLogisticsActivityVersion ==. expectedVersion
+            ]
+            [ EventLogisticsActivityActivityType =. typeVal
+            , EventLogisticsActivityTitle =. titleVal
+            , EventLogisticsActivityNotes =. cleanMaybeText (eacNotes dto)
+            , EventLogisticsActivityStartTime =. eacStart dto
+            , EventLogisticsActivityEndTime =. endVal
+            , EventLogisticsActivityPlaceId =. placeKey
+            , EventLogisticsActivityOriginPlaceId =. originKey
+            , EventLogisticsActivityDestinationPlaceId =. destinationKey
+            , EventLogisticsActivityTravelMode =. modeToStore
+            , EventLogisticsActivityBufferMinutes =. bufferVal
+            , EventLogisticsActivityPriority =. priorityVal
+            , EventLogisticsActivityStatus =. statusVal
+            , EventLogisticsActivityVersion =. nextVersion
+            , EventLogisticsActivityUpdatedAt =. now
+            ]) envPool
+        when (updatedRows == 0) $ throwError err409{errBody = "This activity was changed by another collaborator. Reload and try again."}
+        replaceLogisticsActivityRelations envPool activityKey (eacAssignments dto) dependencyKeys now
+        when (typeVal == "travel") $ void (verifyLogisticsActivityInternal envPool envConfig activityKey Nothing)
+        mUpdated <- liftIO $ runSqlPool (getEntity activityKey) envPool
+        maybe (throwError err500{errBody = "Could not update logistics activity"}) (logisticsActivityEntityToDTO envPool) mUpdated
+
+    deleteLogisticsActivity :: T.Text -> T.Text -> AppM NoContent
+    deleteLogisticsActivity eventIdStr activityIdStr = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        activityKey <- parseKeyOr400 "logistics activity" activityIdStr
+        _ <- requireLogisticsActivity envPool eventKey activityKey
+        liftIO $ runSqlPool (do
+            deleteWhere [EventLogisticsAlertDeliveryActivityId ==. activityKey]
+            deleteWhere [EventRouteVerificationActivityId ==. activityKey]
+            deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
+            deleteWhere [FilterOr [EventLogisticsDependencyActivityId ==. activityKey, EventLogisticsDependencyDependsOnActivityId ==. activityKey]]
+            delete activityKey) envPool
+        pure NoContent
+
+    verifyLogisticsRoute :: T.Text -> T.Text -> AppM EventRouteVerificationDTO
+    verifyLogisticsRoute eventIdStr activityIdStr = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        activityKey <- parseKeyOr400 "logistics activity" activityIdStr
+        _ <- requireLogisticsActivity envPool eventKey activityKey
+        verifyLogisticsActivityInternal envPool envConfig activityKey Nothing
+
+    verifyAllLogisticsRoutes :: T.Text -> AppM [EventRouteVerificationDTO]
+    verifyAllLogisticsRoutes eventIdStr = do
+        Env{..} <- ask
+        (eventKey, _, _) <- requireLogisticsAccess eventIdStr True
+        rows <- liftIO $ runSqlPool (selectList
+            [ EventLogisticsActivityEventId ==. eventKey
+            , EventLogisticsActivityActivityType ==. "travel"
+            , EventLogisticsActivityStatus !=. "cancelled"
+            ] [Asc EventLogisticsActivityStartTime]) envPool
+        mapM (\(Entity key _) -> verifyLogisticsActivityInternal envPool envConfig key Nothing) rows
+
+    requireLogisticsOwner :: T.Text -> AppM (SocialEventId, SocialEvent, T.Text)
+    requireLogisticsOwner rawEventId = do
+        result@(_, _, role) <- requireLogisticsAccess rawEventId False
+        when (role /= "owner") $ throwError err403{errBody = "Only the event organizer can manage the logistics team and settings"}
+        pure result
+
+    requireLogisticsAccess :: T.Text -> Bool -> AppM (SocialEventId, SocialEvent, T.Text)
+    requireLogisticsAccess rawEventId requireEdit = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" rawEventId
+        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
+        role <- case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+            Nothing -> do
+                managed <- claimOrRequireEventManager currentPartyId envPool eventKey eventRow
+                pure (if socialEventOrganizerPartyId managed == Just currentPartyId then "owner" else "viewer")
+            Just owner | owner == currentPartyId -> pure "owner"
+            Just _ -> do
+                mMember <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsMember eventKey currentPartyId)) envPool
+                maybe (throwError err403{errBody = "You are not on this event's logistics team"}) (pure . eventLogisticsMemberMemberRole . entityVal) mMember
+        when (requireEdit && role == "viewer") $ throwError err403{errBody = "This logistics team role is read-only"}
+        pure (eventKey, eventRow, role)
+
+    validateLogisticsPlaceInput :: ConnectionPool -> SocialEventId -> EventLogisticsPlaceDTO -> AppM (T.Text, T.Text, Maybe VenueId)
+    validateLogisticsPlaceInput pool _eventKey dto = do
+        let labelVal = T.strip (elpLabel dto)
+            typeVal = T.toCaseFold (T.strip (elpType dto))
+        when (T.null labelVal || T.length labelVal > 160) $ throwError err400{errBody = "place label is required and must be 160 characters or fewer"}
+        unless (typeVal `elem` ["venue", "hotel", "airport", "pickup", "custom"]) $ throwError err400{errBody = "invalid logistics place type"}
+        validateFiniteCoordinates (elpLatitude dto) (elpLongitude dto)
+        venueKey <- case elpVenueId dto >>= cleanMaybeText . Just of
+            Nothing -> pure Nothing
+            Just raw -> do
+                key <- parseKeyOr400 "venue" raw
+                mVenue <- liftIO $ runSqlPool (get key) pool
+                when (isNothing mVenue) $ throwError err400{errBody = "venue does not exist"}
+                pure (Just key)
+        pure (labelVal, typeVal, venueKey)
+
+    validateLogisticsActivityInput :: ConnectionPool -> SocialEventId -> Maybe EventLogisticsActivityId -> EventLogisticsActivityDTO -> AppM (T.Text, T.Text, Maybe UTCTime, Maybe EventLogisticsPlaceId, Maybe EventLogisticsPlaceId, Maybe EventLogisticsPlaceId, Maybe T.Text, Maybe Int, T.Text, T.Text, [EventLogisticsActivityId])
+    validateLogisticsActivityInput pool eventKey mActivityKey dto = do
+        let typeVal = T.toCaseFold (T.strip (eacType dto))
+            titleVal = T.strip (eacTitle dto)
+            priorityVal = T.toCaseFold (T.strip (eacPriority dto))
+            statusVal = T.toCaseFold (T.strip (eacStatus dto))
+        unless (typeVal `elem` ["task", "milestone", "wait", "travel"]) $ throwError err400{errBody = "invalid logistics activity type"}
+        when (T.null titleVal || T.length titleVal > 200) $ throwError err400{errBody = "activity title is required and must be 200 characters or fewer"}
+        unless (priorityVal `elem` ["low", "normal", "high", "critical"]) $ throwError err400{errBody = "invalid logistics priority"}
+        unless (statusVal `elem` ["planned", "confirmed", "in_progress", "completed", "cancelled"]) $ throwError err400{errBody = "invalid logistics status"}
+        endVal <- if typeVal == "milestone"
+            then pure Nothing
+            else case eacEnd dto of
+                Just value | value > eacStart dto -> pure (Just value)
+                _ -> throwError err400{errBody = "non-milestone activities require an end after the start"}
+        placeKey <- traverse (requirePlaceReference pool eventKey) (eacPlaceId dto >>= cleanMaybeText . Just)
+        originKey <- traverse (requirePlaceReference pool eventKey) (eacOriginPlaceId dto >>= cleanMaybeText . Just)
+        destinationKey <- traverse (requirePlaceReference pool eventKey) (eacDestinationPlaceId dto >>= cleanMaybeText . Just)
+        modeVal <- traverse validateLogisticsTravelMode (eacTravelMode dto >>= cleanMaybeText . Just)
+        when (typeVal == "travel" && (isNothing originKey || isNothing destinationKey)) $ throwError err400{errBody = "travel activities require origin and destination places"}
+        when (typeVal == "travel" && originKey == destinationKey) $ throwError err400{errBody = "travel origin and destination must be different"}
+        when (typeVal == "travel" && isJust placeKey) $ throwError err400{errBody = "travel activities use origin and destination instead of a single place"}
+        when (typeVal /= "travel" && (isJust originKey || isJust destinationKey)) $ throwError err400{errBody = "origin and destination are only valid for travel activities"}
+        when (typeVal /= "travel" && isJust modeVal) $ throwError err400{errBody = "travel mode is only valid for travel activities"}
+        bufferVal <- case eacBufferMinutes dto of
+            Just value | value < 0 || value > 1440 -> throwError err400{errBody = "buffer minutes must be between 0 and 1440"}
+            value -> pure value
+        dependencyKeys <- mapM (parseKeyOr400 "logistics dependency") (eacDependencyIds dto)
+        forM_ dependencyKeys $ \dependencyKey -> do
+            when (Just dependencyKey == mActivityKey) $ throwError err400{errBody = "an activity cannot depend on itself"}
+            _ <- requireLogisticsActivity pool eventKey dependencyKey
+            case mActivityKey of
+                Nothing -> pure ()
+                Just activityKey -> do
+                    cyclic <- liftIO (logisticsDependencyReaches pool dependencyKey activityKey Set.empty)
+                    when cyclic $ throwError err400{errBody = "logistics dependencies must not contain cycles"}
+        validateLogisticsAssignments pool (eacAssignments dto)
+        pure (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys)
+
+    replaceLogisticsActivityRelations :: ConnectionPool -> EventLogisticsActivityId -> [EventLogisticsAssignmentDTO] -> [EventLogisticsActivityId] -> UTCTime -> AppM ()
+    replaceLogisticsActivityRelations pool activityKey assignments dependencyKeys now =
+        liftIO $ runSqlPool (do
+            deleteWhere [EventLogisticsAssignmentActivityId ==. activityKey]
+            deleteWhere [EventLogisticsDependencyActivityId ==. activityKey]
+            forM_ assignments $ \assignment -> insert_ EventLogisticsAssignment
+                { eventLogisticsAssignmentActivityId = activityKey
+                , eventLogisticsAssignmentPartyId = cleanMaybeText (elaPartyId assignment)
+                , eventLogisticsAssignmentExternalName = cleanMaybeText (elaExternalName assignment)
+                , eventLogisticsAssignmentExternalPhone = cleanMaybeText (elaExternalPhone assignment)
+                , eventLogisticsAssignmentExternalEmail = cleanMaybeText (elaExternalEmail assignment)
+                , eventLogisticsAssignmentCreatedAt = now
+                }
+            forM_ dependencyKeys $ \dependencyKey -> insert_ EventLogisticsDependency
+                { eventLogisticsDependencyActivityId = activityKey
+                , eventLogisticsDependencyDependsOnActivityId = dependencyKey
+                , eventLogisticsDependencyCreatedAt = now
+                }) pool
+
+    verifyLogisticsActivityInternal :: ConnectionPool -> AppConfig -> EventLogisticsActivityId -> Maybe T.Text -> AppM EventRouteVerificationDTO
+    verifyLogisticsActivityInternal pool config activityKey checkpoint = do
+        activity <- maybe (throwError err404{errBody = "Logistics activity not found"}) pure =<< liftIO (runSqlPool (get activityKey) pool)
+        when (eventLogisticsActivityActivityType activity /= "travel") $ throwError err400{errBody = "Only travel activities can be route-verified"}
+        endTime <- maybe (throwError err400{errBody = "Travel activity requires an end time"}) pure (eventLogisticsActivityEndTime activity)
+        originKey <- maybe (throwError err400{errBody = "Travel activity requires an origin"}) pure (eventLogisticsActivityOriginPlaceId activity)
+        destinationKey <- maybe (throwError err400{errBody = "Travel activity requires a destination"}) pure (eventLogisticsActivityDestinationPlaceId activity)
+        origin <- maybe (throwError err400{errBody = "Travel origin no longer exists"}) pure =<< liftIO (runSqlPool (get originKey) pool)
+        destination <- maybe (throwError err400{errBody = "Travel destination no longer exists"}) pure =<< liftIO (runSqlPool (get destinationKey) pool)
+        let modeVal = fromMaybe "drive" (eventLogisticsActivityTravelMode activity)
+            allocatedSeconds = max 0 (floor (diffUTCTime endTime (eventLogisticsActivityStartTime activity)))
+            input = RouteEstimateInput
+                { reiOriginLatitude = eventLogisticsPlaceLatitude origin
+                , reiOriginLongitude = eventLogisticsPlaceLongitude origin
+                , reiDestinationLatitude = eventLogisticsPlaceLatitude destination
+                , reiDestinationLongitude = eventLogisticsPlaceLongitude destination
+                , reiTravelMode = modeVal
+                , reiDepartureTime = eventLogisticsActivityStartTime activity
+                }
+        result <- case googleRoutesApiKey config of
+            Nothing -> pure (Left "GOOGLE_ROUTES_API_KEY no está configurada.")
+            Just apiKey -> liftIO (computeGoogleRoute apiKey (googleRoutesApiBase config) input)
+        now <- liftIO getCurrentTime
+        let computed = routeVerificationValues activity allocatedSeconds result
+            (durationVal, staticVal, distanceVal, bufferSeconds, verdictVal, polylineVal, errorVal) = computed
+        key <- liftIO $ runSqlPool (insert EventRouteVerification
+            { eventRouteVerificationActivityId = activityKey
+            , eventRouteVerificationActivityVersion = eventLogisticsActivityVersion activity
+            , eventRouteVerificationProvider = "google_routes"
+            , eventRouteVerificationTravelMode = modeVal
+            , eventRouteVerificationDepartureTime = eventLogisticsActivityStartTime activity
+            , eventRouteVerificationDurationSeconds = durationVal
+            , eventRouteVerificationStaticDurationSeconds = staticVal
+            , eventRouteVerificationDistanceMeters = distanceVal
+            , eventRouteVerificationBufferSeconds = bufferSeconds
+            , eventRouteVerificationAllocatedSeconds = allocatedSeconds
+            , eventRouteVerificationVerdict = verdictVal
+            , eventRouteVerificationEncodedPolyline = polylineVal
+            , eventRouteVerificationErrorMessage = errorVal
+            , eventRouteVerificationCheckpoint = checkpoint
+            , eventRouteVerificationVerifiedAt = now
+            }) pool
+        pure EventRouteVerificationDTO
+            { ervId = Just (renderKeyText key)
+            , ervActivityVersion = eventLogisticsActivityVersion activity
+            , ervProvider = "google_routes"
+            , ervTravelMode = modeVal
+            , ervDepartureTime = eventLogisticsActivityStartTime activity
+            , ervDurationSeconds = durationVal
+            , ervStaticDurationSeconds = staticVal
+            , ervDistanceMeters = distanceVal
+            , ervBufferSeconds = bufferSeconds
+            , ervAllocatedSeconds = allocatedSeconds
+            , ervVerdict = verdictVal
+            , ervEncodedPolyline = polylineVal
+            , ervErrorMessage = errorVal
+            , ervCheckpoint = checkpoint
+            , ervVerifiedAt = now
+            }
+
     requireManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
     requireManagedEvent rawEventId = do
         Env{..} <- ask
@@ -5531,6 +6003,308 @@ socialEventsServer user =
 
     parseArtistId :: T.Text -> AppM ArtistProfileId
     parseArtistId = parseKeyOr400 "artist"
+
+validateLogisticsTimezone :: T.Text -> AppM T.Text
+validateLogisticsTimezone raw =
+    let value = T.strip raw
+     in if T.null value || T.length value > 80 || T.any isUnsafeSocialEventsListFilterChar value
+            then throwError err400{errBody = "timezone is required and must be a valid IANA name"}
+            else
+                if value /= "UTC" && not ("/" `T.isInfixOf` value)
+                    then throwError err400{errBody = "timezone must be UTC or an IANA area/location name"}
+                    else pure value
+
+validateLogisticsTravelMode :: T.Text -> AppM T.Text
+validateLogisticsTravelMode raw =
+    let value = T.toCaseFold (T.strip raw)
+     in if value `elem` ["drive", "walk", "bicycle", "two_wheeler", "transit"]
+            then pure value
+            else throwError err400{errBody = "invalid logistics travel mode"}
+
+validateLogisticsMemberRole :: T.Text -> AppM T.Text
+validateLogisticsMemberRole raw =
+    let value = T.toCaseFold (T.strip raw)
+     in if value `elem` ["viewer", "editor"]
+            then pure value
+            else throwError err400{errBody = "logistics member role must be viewer or editor"}
+
+validateLogisticsParty :: ConnectionPool -> T.Text -> AppM T.Text
+validateLogisticsParty pool rawPartyId = do
+    let normalized = T.strip rawPartyId
+    partyKey <- parseKeyOr400 "party" normalized :: AppM PartyId
+    mParty <- liftIO $ runSqlPool (get partyKey) pool
+    when (isNothing mParty) $ throwError err400{errBody = "party does not exist"}
+    pure (renderKeyText partyKey)
+
+validateFiniteCoordinates :: Double -> Double -> AppM ()
+validateFiniteCoordinates latitude longitude
+    | isNaN latitude || isInfinite latitude = throwError err400{errBody = "latitude must be finite"}
+    | isNaN longitude || isInfinite longitude = throwError err400{errBody = "longitude must be finite"}
+    | latitude < (-90) || latitude > 90 = throwError err400{errBody = "latitude must be between -90 and 90"}
+    | longitude < (-180) || longitude > 180 = throwError err400{errBody = "longitude must be between -180 and 180"}
+    | otherwise = pure ()
+
+requirePlaceReference :: ConnectionPool -> SocialEventId -> T.Text -> AppM EventLogisticsPlaceId
+requirePlaceReference pool eventKey rawPlaceId = do
+    placeKey <- parseKeyOr400 "logistics place" rawPlaceId
+    _ <- requireLogisticsPlace pool eventKey placeKey
+    pure placeKey
+
+requireLogisticsPlace :: ConnectionPool -> SocialEventId -> EventLogisticsPlaceId -> AppM EventLogisticsPlace
+requireLogisticsPlace pool eventKey placeKey = do
+    row <- maybe (throwError err404{errBody = "Logistics place not found"}) pure =<< liftIO (runSqlPool (get placeKey) pool)
+    when (eventLogisticsPlaceEventId row /= eventKey) $ throwError err400{errBody = "Logistics place does not belong to this event"}
+    pure row
+
+requireLogisticsActivity :: ConnectionPool -> SocialEventId -> EventLogisticsActivityId -> AppM EventLogisticsActivity
+requireLogisticsActivity pool eventKey activityKey = do
+    row <- maybe (throwError err404{errBody = "Logistics activity not found"}) pure =<< liftIO (runSqlPool (get activityKey) pool)
+    when (eventLogisticsActivityEventId row /= eventKey) $ throwError err400{errBody = "Logistics activity does not belong to this event"}
+    pure row
+
+validateLogisticsAssignments :: ConnectionPool -> [EventLogisticsAssignmentDTO] -> AppM ()
+validateLogisticsAssignments pool assignments = forM_ assignments $ \assignment -> do
+    let partyIdVal = cleanMaybeText (elaPartyId assignment)
+        externalNameVal = cleanMaybeText (elaExternalName assignment)
+    when (isJust partyIdVal == isJust externalNameVal) $
+        throwError err400{errBody = "each assignment must identify either one TDF user or one external person"}
+    forM_ partyIdVal $ \partyId -> void (validateLogisticsParty pool partyId)
+    forM_ externalNameVal $ \name ->
+        when (T.length name > 160) $ throwError err400{errBody = "external assignee name must be 160 characters or fewer"}
+    forM_ (cleanMaybeText (elaExternalEmail assignment)) $ \email ->
+        when (T.length email > 320 || not ("@" `T.isInfixOf` email)) $
+            throwError err400{errBody = "external assignee email is invalid"}
+
+loadLogisticsSettings :: ConnectionPool -> SocialEventId -> AppM EventLogisticsSettingsDTO
+loadLogisticsSettings pool eventKey = do
+    row <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsPlan eventKey)) pool
+    pure $ case row of
+        Nothing -> EventLogisticsSettingsDTO "America/Guayaquil" "drive"
+        Just (Entity _ value) -> EventLogisticsSettingsDTO
+            { elsTimezone = eventLogisticsPlanTimezone value
+            , elsDefaultTravelMode = eventLogisticsPlanDefaultTravelMode value
+            }
+
+logisticsMemberEntityToDTO :: ConnectionPool -> Entity EventLogisticsMember -> AppM EventLogisticsMemberDTO
+logisticsMemberEntityToDTO pool (Entity _ member) = do
+    let partyIdVal = eventLogisticsMemberPartyId member
+        mPartyKey = fromPathPiece partyIdVal :: Maybe PartyId
+    mParty <- case mPartyKey of
+        Nothing -> pure Nothing
+        Just partyKey -> liftIO $ runSqlPool (get partyKey) pool
+    pure EventLogisticsMemberDTO
+        { elmPartyId = partyIdVal
+        , elmDisplayName = partyDisplayName <$> mParty
+        , elmEmail = mParty >>= partyPrimaryEmail
+        , elmRole = eventLogisticsMemberMemberRole member
+        , elmCreatedAt = Just (eventLogisticsMemberCreatedAt member)
+        }
+
+logisticsPlaceEntityToDTO :: Entity EventLogisticsPlace -> EventLogisticsPlaceDTO
+logisticsPlaceEntityToDTO (Entity key place) = EventLogisticsPlaceDTO
+    { elpId = Just (renderKeyText key)
+    , elpVenueId = renderKeyText <$> eventLogisticsPlaceVenueId place
+    , elpLabel = eventLogisticsPlaceLabel place
+    , elpType = eventLogisticsPlacePlaceType place
+    , elpAddress = eventLogisticsPlaceAddress place
+    , elpGooglePlaceId = eventLogisticsPlaceGooglePlaceId place
+    , elpLatitude = eventLogisticsPlaceLatitude place
+    , elpLongitude = eventLogisticsPlaceLongitude place
+    , elpInstructions = eventLogisticsPlaceInstructions place
+    , elpContactName = eventLogisticsPlaceContactName place
+    , elpContactPhone = eventLogisticsPlaceContactPhone place
+    , elpCreatedAt = Just (eventLogisticsPlaceCreatedAt place)
+    , elpUpdatedAt = Just (eventLogisticsPlaceUpdatedAt place)
+    }
+
+logisticsActivityEntityToDTO :: ConnectionPool -> Entity EventLogisticsActivity -> AppM EventLogisticsActivityDTO
+logisticsActivityEntityToDTO pool (Entity key activity) = do
+    assignmentRows <- liftIO $ runSqlPool (selectList [EventLogisticsAssignmentActivityId ==. key] [Asc EventLogisticsAssignmentId]) pool
+    dependencyRows <- liftIO $ runSqlPool (selectList [EventLogisticsDependencyActivityId ==. key] [Asc EventLogisticsDependencyDependsOnActivityId]) pool
+    latestRoute <- liftIO $ runSqlPool (selectFirst [EventRouteVerificationActivityId ==. key] [Desc EventRouteVerificationVerifiedAt, Desc EventRouteVerificationId]) pool
+    assignments <- mapM assignmentToDTO assignmentRows
+    pure EventLogisticsActivityDTO
+        { eacId = Just (renderKeyText key)
+        , eacType = eventLogisticsActivityActivityType activity
+        , eacTitle = eventLogisticsActivityTitle activity
+        , eacNotes = eventLogisticsActivityNotes activity
+        , eacStart = eventLogisticsActivityStartTime activity
+        , eacEnd = eventLogisticsActivityEndTime activity
+        , eacPlaceId = renderKeyText <$> eventLogisticsActivityPlaceId activity
+        , eacOriginPlaceId = renderKeyText <$> eventLogisticsActivityOriginPlaceId activity
+        , eacDestinationPlaceId = renderKeyText <$> eventLogisticsActivityDestinationPlaceId activity
+        , eacTravelMode = eventLogisticsActivityTravelMode activity
+        , eacBufferMinutes = eventLogisticsActivityBufferMinutes activity
+        , eacPriority = eventLogisticsActivityPriority activity
+        , eacStatus = eventLogisticsActivityStatus activity
+        , eacVersion = Just (eventLogisticsActivityVersion activity)
+        , eacAssignments = assignments
+        , eacDependencyIds = map (renderKeyText . eventLogisticsDependencyDependsOnActivityId . entityVal) dependencyRows
+        , eacLatestVerification = routeVerificationEntityToDTO <$> latestRoute
+        , eacCreatedAt = Just (eventLogisticsActivityCreatedAt activity)
+        , eacUpdatedAt = Just (eventLogisticsActivityUpdatedAt activity)
+        }
+  where
+    assignmentToDTO (Entity _ assignment) = do
+        let partyIdVal = eventLogisticsAssignmentPartyId assignment
+        displayName <- case partyIdVal >>= (fromPathPiece :: T.Text -> Maybe PartyId) of
+            Nothing -> pure Nothing
+            Just partyKey -> fmap partyDisplayName <$> liftIO (runSqlPool (get partyKey) pool)
+        pure EventLogisticsAssignmentDTO
+            { elaPartyId = partyIdVal
+            , elaDisplayName = displayName
+            , elaExternalName = eventLogisticsAssignmentExternalName assignment
+            , elaExternalPhone = eventLogisticsAssignmentExternalPhone assignment
+            , elaExternalEmail = eventLogisticsAssignmentExternalEmail assignment
+            }
+
+routeVerificationEntityToDTO :: Entity EventRouteVerification -> EventRouteVerificationDTO
+routeVerificationEntityToDTO (Entity key verification) = EventRouteVerificationDTO
+    { ervId = Just (renderKeyText key)
+    , ervActivityVersion = eventRouteVerificationActivityVersion verification
+    , ervProvider = eventRouteVerificationProvider verification
+    , ervTravelMode = eventRouteVerificationTravelMode verification
+    , ervDepartureTime = eventRouteVerificationDepartureTime verification
+    , ervDurationSeconds = eventRouteVerificationDurationSeconds verification
+    , ervStaticDurationSeconds = eventRouteVerificationStaticDurationSeconds verification
+    , ervDistanceMeters = eventRouteVerificationDistanceMeters verification
+    , ervBufferSeconds = eventRouteVerificationBufferSeconds verification
+    , ervAllocatedSeconds = eventRouteVerificationAllocatedSeconds verification
+    , ervVerdict = eventRouteVerificationVerdict verification
+    , ervEncodedPolyline = eventRouteVerificationEncodedPolyline verification
+    , ervErrorMessage = eventRouteVerificationErrorMessage verification
+    , ervCheckpoint = eventRouteVerificationCheckpoint verification
+    , ervVerifiedAt = eventRouteVerificationVerifiedAt verification
+    }
+
+routeVerificationValues :: EventLogisticsActivity -> Int -> Either T.Text RouteEstimateResult -> (Maybe Int, Maybe Int, Maybe Int, Int, T.Text, Maybe T.Text, Maybe T.Text)
+routeVerificationValues activity allocatedSeconds result = case result of
+    Left message ->
+        let bufferSeconds = maybe 900 (* 60) (eventLogisticsActivityBufferMinutes activity)
+         in (Nothing, Nothing, Nothing, bufferSeconds, "unavailable", Nothing, Just message)
+    Right RouteEstimateResult{..} ->
+        let automaticBuffer = max 900 (ceiling (fromIntegral rerDurationSeconds * (0.2 :: Double)))
+            bufferSeconds = maybe automaticBuffer (* 60) (eventLogisticsActivityBufferMinutes activity)
+            verdict
+                | allocatedSeconds < rerDurationSeconds = "infeasible"
+                | allocatedSeconds < rerDurationSeconds + bufferSeconds = "tight"
+                | otherwise = "feasible"
+         in (Just rerDurationSeconds, rerStaticDurationSeconds, Just rerDistanceMeters, bufferSeconds, verdict, rerEncodedPolyline, Nothing)
+
+logisticsDependencyReaches :: ConnectionPool -> EventLogisticsActivityId -> EventLogisticsActivityId -> Set.Set EventLogisticsActivityId -> IO Bool
+logisticsDependencyReaches pool current target visited
+    | current == target = pure True
+    | Set.member current visited = pure False
+    | otherwise = do
+        rows <- runSqlPool (selectList [EventLogisticsDependencyActivityId ==. current] []) pool
+        or <$> mapM (\row -> logisticsDependencyReaches pool (eventLogisticsDependencyDependsOnActivityId (entityVal row)) target (Set.insert current visited)) rows
+
+buildLogisticsIssues :: [EventLogisticsActivityDTO] -> [EventScheduleIssueDTO]
+buildLogisticsIssues activities =
+    concatMap routeIssue activities
+        <> concatMap dependencyIssues activities
+        <> overlappingAssignmentIssues
+        <> missingTransferIssues
+  where
+    routeIssue activity = case eacLatestVerification activity of
+        Just verification | ervVerdict verification `elem` ["tight", "infeasible", "unavailable"] ->
+            [ EventScheduleIssueDTO
+                { esiCode = "route_" <> ervVerdict verification
+                , esiSeverity = if ervVerdict verification == "tight" then "warning" else "error"
+                , esiActivityId = eacId activity
+                , esiMessage = fromMaybe (routeMessage (ervVerdict verification)) (ervErrorMessage verification)
+                }
+            ]
+        _ -> []
+    dependencyIssues activity =
+        [ EventScheduleIssueDTO
+            { esiCode = "dependency_timing"
+            , esiSeverity = "error"
+            , esiActivityId = eacId activity
+            , esiMessage = "La actividad comienza antes de que termine una dependencia."
+            }
+        | dependencyId <- eacDependencyIds activity
+        , Just dependency <- [findActivity dependencyId]
+        , fromMaybe (eacStart dependency) (eacEnd dependency) > eacStart activity
+        ]
+    findActivity activityId = listToMaybe [activity | activity <- activities, eacId activity == Just activityId]
+    overlappingAssignmentIssues =
+        [ EventScheduleIssueDTO
+            { esiCode = "assignment_overlap"
+            , esiSeverity = "warning"
+            , esiActivityId = eacId leftActivity
+            , esiMessage =
+                "El mismo responsable está asignado a actividades simultáneas: “"
+                    <> eacTitle leftActivity
+                    <> "” y “"
+                    <> eacTitle rightActivity
+                    <> "”."
+            }
+        | (index, leftActivity) <- zip [0 :: Int ..] activities
+        , rightActivity <- drop (index + 1) activities
+        , eacStatus leftActivity /= "cancelled"
+        , eacStatus rightActivity /= "cancelled"
+        , activityRangesOverlap leftActivity rightActivity
+        , not (Set.null (assignmentIdentities leftActivity `Set.intersection` assignmentIdentities rightActivity))
+        ]
+    activityRangesOverlap leftActivity rightActivity =
+        let leftEnd = fromMaybe (eacStart leftActivity) (eacEnd leftActivity)
+            rightEnd = fromMaybe (eacStart rightActivity) (eacEnd rightActivity)
+         in eacStart leftActivity < rightEnd && eacStart rightActivity < leftEnd
+    assignmentIdentities activity = Set.fromList (map assignmentIdentity (eacAssignments activity))
+    assignmentIdentity assignment = case elaPartyId assignment of
+        Just partyId -> "party:" <> T.strip partyId
+        Nothing ->
+            "external:"
+                <> T.toCaseFold (T.strip (fromMaybe "" (elaExternalName assignment)))
+                <> ":"
+                <> T.toCaseFold (T.strip (fromMaybe "" (elaExternalEmail assignment)))
+                <> ":"
+                <> T.strip (fromMaybe "" (elaExternalPhone assignment))
+    missingTransferIssues =
+        [ EventScheduleIssueDTO
+            { esiCode = "missing_transfer"
+            , esiSeverity = "warning"
+            , esiActivityId = eacId rightActivity
+            , esiMessage =
+                "Falta un traslado para "
+                    <> assignmentDisplayFor identity leftActivity
+                    <> " entre “"
+                    <> eacTitle leftActivity
+                    <> "” y “"
+                    <> eacTitle rightActivity
+                    <> "”."
+            }
+        | identity <- Set.toList allAssignmentIdentities
+        , let assignedActivities = sortOn eacStart
+                [ activity
+                | activity <- activities
+                , eacStatus activity /= "cancelled"
+                , Set.member identity (assignmentIdentities activity)
+                ]
+        , (leftActivity, rightActivity) <- zip assignedActivities (drop 1 assignedActivities)
+        , fromMaybe (eacStart leftActivity) (eacEnd leftActivity) <= eacStart rightActivity
+        , Just leftLocation <- [activityEndLocation leftActivity]
+        , Just rightLocation <- [activityStartLocation rightActivity]
+        , leftLocation /= rightLocation
+        ]
+    allAssignmentIdentities = Set.unions (map assignmentIdentities activities)
+    activityStartLocation activity
+        | eacType activity == "travel" = eacOriginPlaceId activity
+        | otherwise = eacPlaceId activity
+    activityEndLocation activity
+        | eacType activity == "travel" = eacDestinationPlaceId activity
+        | otherwise = eacPlaceId activity
+    assignmentDisplayFor identity activity =
+        fromMaybe "el responsable" $ listToMaybe
+            [ fromMaybe (fromMaybe "el responsable" (elaPartyId assignment))
+                (elaDisplayName assignment <|> elaExternalName assignment)
+            | assignment <- eacAssignments activity
+            , assignmentIdentity assignment == identity
+            ]
+    routeMessage "tight" = "El traslado cabe, pero no respeta la holgura recomendada."
+    routeMessage "infeasible" = "El tiempo reservado es menor que la duración estimada del traslado."
+    routeMessage _ = "No se pudo verificar la ruta."
 
 -- | Stable, human-friendly identifier for a follow (artistId + follower id).
 renderFollowId :: ArtistProfileId -> T.Text -> T.Text

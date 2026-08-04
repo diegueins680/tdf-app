@@ -69,6 +69,7 @@ executable tdf-hq-exe
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.EventLogisticsRoutes
     TDF.Services.Stripe
     TDF.Pipelines
     TDF.RagStore
@@ -258,6 +259,7 @@ test-suite tdf-hq-test
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.EventLogisticsRoutes
     TDF.Services.EventDiscoverySpec
     TDF.Services.InstagramSync
     TDF.Services.Stripe

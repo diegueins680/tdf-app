@@ -57,6 +57,14 @@ module TDF.DTO.SocialEventsDTO (
     EventBudgetLineDTO (..),
     EventFinanceEntryDTO (..),
     EventFinanceSummaryDTO (..),
+    EventLogisticsSettingsDTO (..),
+    EventLogisticsMemberDTO (..),
+    EventLogisticsPlaceDTO (..),
+    EventLogisticsAssignmentDTO (..),
+    EventLogisticsActivityDTO (..),
+    EventRouteVerificationDTO (..),
+    EventScheduleIssueDTO (..),
+    EventLogisticsPlanDTO (..),
 ) where
 
 import Data.Aeson (FromJSON, ToJSON, Value (..), defaultOptions, genericParseJSON, object, parseJSON, rejectUnknownFields, toJSON, withObject, (.!=), (.:), (.:!), (.:?), (.=))
@@ -1553,3 +1561,126 @@ data EventFinanceSummaryDTO = EventFinanceSummaryDTO
     deriving (Show, Eq, Generic)
 instance ToJSON EventFinanceSummaryDTO
 instance FromJSON EventFinanceSummaryDTO
+
+data EventLogisticsSettingsDTO = EventLogisticsSettingsDTO
+    { elsTimezone :: Text
+    , elsDefaultTravelMode :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsSettingsDTO
+instance FromJSON EventLogisticsSettingsDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventLogisticsMemberDTO = EventLogisticsMemberDTO
+    { elmPartyId :: Text
+    , elmDisplayName :: Maybe Text
+    , elmEmail :: Maybe Text
+    , elmRole :: Text
+    , elmCreatedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsMemberDTO
+instance FromJSON EventLogisticsMemberDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventLogisticsPlaceDTO = EventLogisticsPlaceDTO
+    { elpId :: Maybe Text
+    , elpVenueId :: Maybe Text
+    , elpLabel :: Text
+    , elpType :: Text
+    , elpAddress :: Maybe Text
+    , elpGooglePlaceId :: Maybe Text
+    , elpLatitude :: Double
+    , elpLongitude :: Double
+    , elpInstructions :: Maybe Text
+    , elpContactName :: Maybe Text
+    , elpContactPhone :: Maybe Text
+    , elpCreatedAt :: Maybe UTCTime
+    , elpUpdatedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsPlaceDTO
+instance FromJSON EventLogisticsPlaceDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventLogisticsAssignmentDTO = EventLogisticsAssignmentDTO
+    { elaPartyId :: Maybe Text
+    , elaDisplayName :: Maybe Text
+    , elaExternalName :: Maybe Text
+    , elaExternalPhone :: Maybe Text
+    , elaExternalEmail :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsAssignmentDTO
+instance FromJSON EventLogisticsAssignmentDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventRouteVerificationDTO = EventRouteVerificationDTO
+    { ervId :: Maybe Text
+    , ervActivityVersion :: Int
+    , ervProvider :: Text
+    , ervTravelMode :: Text
+    , ervDepartureTime :: UTCTime
+    , ervDurationSeconds :: Maybe Int
+    , ervStaticDurationSeconds :: Maybe Int
+    , ervDistanceMeters :: Maybe Int
+    , ervBufferSeconds :: Int
+    , ervAllocatedSeconds :: Int
+    , ervVerdict :: Text
+    , ervEncodedPolyline :: Maybe Text
+    , ervErrorMessage :: Maybe Text
+    , ervCheckpoint :: Maybe Text
+    , ervVerifiedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventRouteVerificationDTO
+instance FromJSON EventRouteVerificationDTO
+
+data EventLogisticsActivityDTO = EventLogisticsActivityDTO
+    { eacId :: Maybe Text
+    , eacType :: Text
+    , eacTitle :: Text
+    , eacNotes :: Maybe Text
+    , eacStart :: UTCTime
+    , eacEnd :: Maybe UTCTime
+    , eacPlaceId :: Maybe Text
+    , eacOriginPlaceId :: Maybe Text
+    , eacDestinationPlaceId :: Maybe Text
+    , eacTravelMode :: Maybe Text
+    , eacBufferMinutes :: Maybe Int
+    , eacPriority :: Text
+    , eacStatus :: Text
+    , eacVersion :: Maybe Int
+    , eacAssignments :: [EventLogisticsAssignmentDTO]
+    , eacDependencyIds :: [Text]
+    , eacLatestVerification :: Maybe EventRouteVerificationDTO
+    , eacCreatedAt :: Maybe UTCTime
+    , eacUpdatedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsActivityDTO
+instance FromJSON EventLogisticsActivityDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventScheduleIssueDTO = EventScheduleIssueDTO
+    { esiCode :: Text
+    , esiSeverity :: Text
+    , esiActivityId :: Maybe Text
+    , esiMessage :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventScheduleIssueDTO
+instance FromJSON EventScheduleIssueDTO
+
+data EventLogisticsPlanDTO = EventLogisticsPlanDTO
+    { elgEventId :: Text
+    , elgAccessRole :: Text
+    , elgSettings :: EventLogisticsSettingsDTO
+    , elgMembers :: [EventLogisticsMemberDTO]
+    , elgPlaces :: [EventLogisticsPlaceDTO]
+    , elgActivities :: [EventLogisticsActivityDTO]
+    , elgIssues :: [EventScheduleIssueDTO]
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventLogisticsPlanDTO
+instance FromJSON EventLogisticsPlanDTO

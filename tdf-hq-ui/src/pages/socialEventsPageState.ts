@@ -15,12 +15,11 @@ interface SocialEventsCreateUiStateInput {
   canCreateEvent: boolean;
   eventCount: number;
   filtersActive: boolean;
-  createFormOpen: boolean;
 }
 
 interface SocialEventsCreateUiState {
-  createFormDescription: string;
-  showCreateForm: boolean;
+  createWelcomeDescription: string;
+  showCreateWelcome: boolean;
   showCreateToolbarAction: boolean;
 }
 
@@ -72,9 +71,9 @@ interface SocialEventsFinanceSummaryUiState {
 }
 
 const FIRST_EVENT_CREATE_DESCRIPTION =
-  'Crea el primer evento aqui; cuando exista al menos uno, apareceran los filtros y el calendario.';
+  'Empieza con el nombre y la fecha. Podrás sumar colaboradores, venue y detalles sin salir del flujo.';
 const FOLLOW_UP_EVENT_CREATE_DESCRIPTION =
-  'Completa solo los campos necesarios para registrar otro evento. La lista actual se mantiene debajo.';
+  'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.';
 const ZERO_FINANCE_DETAILS_SUMMARY =
   'Los detalles financieros en cero se omiten hasta que tengan movimiento.';
 
@@ -116,16 +115,15 @@ export function getSocialEventsCreateUiState({
   canCreateEvent,
   eventCount,
   filtersActive,
-  createFormOpen,
 }: SocialEventsCreateUiStateInput): SocialEventsCreateUiState {
   const isFirstRun = eventCount === 0 && !filtersActive;
 
   return {
-    createFormDescription: isFirstRun
+    createWelcomeDescription: isFirstRun
       ? FIRST_EVENT_CREATE_DESCRIPTION
       : FOLLOW_UP_EVENT_CREATE_DESCRIPTION,
-    showCreateForm: canCreateEvent && (isFirstRun || createFormOpen),
-    showCreateToolbarAction: canCreateEvent && !isFirstRun && !createFormOpen,
+    showCreateWelcome: canCreateEvent && isFirstRun,
+    showCreateToolbarAction: canCreateEvent && !isFirstRun,
   };
 }
 

@@ -59,6 +59,7 @@ import qualified TDF.CMS.Models as CMS
 import TDF.Cron (
     startCoursePaymentReminderJob,
     startEventDiscoveryJob,
+    startEventLogisticsRecheckJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
@@ -158,6 +159,7 @@ runBootServer = do
         writeIORef appRef (wrapApp (mkApp env))
         startCoursePaymentReminderJob env
         startEventDiscoveryJob env
+        startEventLogisticsRecheckJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
