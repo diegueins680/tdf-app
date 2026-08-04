@@ -285,6 +285,8 @@ test-suite tdf-hq-test
     TDF.Trials.Models
     TDF.Trials.Server
     TDF.Trials.PublicLeadSpec
+    TDF.DDEX.ERN.V432.ParseSpec
+    TDF.DDEX.ERN.V432.BusinessRulesSpec
     TDF.UUIDInstances
     TDF.UserActivity
     TDF.Version
