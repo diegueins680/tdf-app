@@ -131,20 +131,21 @@ insertDocument fileName privateUri sha256 sizeBytes family version namespace mes
     , ddexDocumentCreatedAt = now
     }
 
--- | Get document by ID
-getDocumentById :: DdexDocumentId -> SqlPersistT IO (Maybe DdexDocument)
-getDocumentById = get
+-- | Get document by ID (returns Entity with key)
+getDocumentById :: DdexDocumentId -> SqlPersistT IO (Maybe (Entity DdexDocument))
+getDocumentById docId = do
+  mDoc <- get docId
+  return $ fmap (Entity docId) mDoc
 
--- | List documents with optional filters
-listDocuments :: Maybe Text -> Maybe Text -> SqlPersistT IO [DdexDocument]
+-- | List documents with optional filters (returns Entities with keys)
+listDocuments :: Maybe Text -> Maybe Text -> SqlPersistT IO [Entity DdexDocument]
 listDocuments mStatus _mPartner = do
   let filters = case mStatus of
         Nothing -> []
         Just s -> case parseStatus s of
           Nothing -> []
           Just st -> [DdexDocumentStatus ==. st]
-  results <- selectList filters [Desc DdexDocumentCreatedAt]
-  return $ map entityVal results
+  selectList filters [Desc DdexDocumentCreatedAt]
   where
     parseStatus "received" = Just StatusReceived
     parseStatus "quarantined" = Just StatusQuarantined
@@ -166,13 +167,13 @@ updateDocumentStatus docId status = do
   let statusEnum = toStatusEnum status
   update docId [DdexDocumentStatus =. statusEnum]
 
--- | Find document by SHA-256 hash
-findDocumentBySha256 :: Text -> SqlPersistT IO (Maybe DdexDocument)
+-- | Find document by SHA-256 hash (returns Entity with key)
+findDocumentBySha256 :: Text -> SqlPersistT IO (Maybe (Entity DdexDocument))
 findDocumentBySha256 sha = do
   results <- selectList [DdexDocumentSha256 ==. sha] [LimitTo 1]
   return $ case results of
     [] -> Nothing
-    (x:_) -> Just (entityVal x)
+    (x:_) -> Just x
 
 -- ============================================================
 -- Validation Operations
@@ -216,8 +217,8 @@ getLatestValidationRun docId = do
     [] -> Nothing
     (x:_) -> Just x
 
--- | Get validation report (run + issues)
-getValidationReport :: DdexDocumentId -> SqlPersistT IO (Maybe (DdexValidationRun, [DdexValidationIssue]))
+-- | Get validation report (run Entity + issues)
+getValidationReport :: DdexDocumentId -> SqlPersistT IO (Maybe (Entity DdexValidationRun, [DdexValidationIssue]))
 getValidationReport docId = do
   mRun <- getLatestValidationRun docId
   case mRun of
@@ -225,7 +226,7 @@ getValidationReport docId = do
     Just runEntity -> do
       let runId = entityKey runEntity
       issues <- selectList [DdexValidationIssueValidationRunId ==. runId] []
-      return $ Just (entityVal runEntity, map entityVal issues)
+      return $ Just (runEntity, map entityVal issues)
 
 -- ============================================================
 -- Import Plan Operations
@@ -335,8 +336,6 @@ insertPartner name dpid allowedVersions = do
     , ddexPartnerIsActive = True
     }
 
--- | List all partners
-listPartners :: SqlPersistT IO [DdexPartner]
-listPartners = do
-  results <- selectList [DdexPartnerIsActive ==. True] [Asc DdexPartnerName]
-  return $ map entityVal results
+-- | List all partners (returns Entities with keys)
+listPartners :: SqlPersistT IO [Entity DdexPartner]
+listPartners = selectList [DdexPartnerIsActive ==. True] [Asc DdexPartnerName]

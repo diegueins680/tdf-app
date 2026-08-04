@@ -7,7 +7,7 @@ import Control.Monad.Reader (ReaderT, ask)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
-import Database.Persist (get)
+import Database.Persist (get, entityKey, entityVal, Entity)
 import Database.Persist.Sql (runSqlPool, toSqlKey, fromSqlKey)
 import Servant
 import TDF.API.DDEX
@@ -49,18 +49,18 @@ listDocumentsHandler :: AuthedUser -> Maybe Text -> Maybe Text -> AppM [DdexDocu
 listDocumentsHandler user mStatus mPartner = do
   either throwError pure (validateModuleAccess ModuleCatalog user)
   env <- ask
-  docs <- liftIO $ runSqlPool (DB.listDocuments mStatus mPartner) (envPool env)
-  return $ map documentToDTO docs
+  docEntities <- liftIO $ runSqlPool (DB.listDocuments mStatus mPartner) (envPool env)
+  return $ map documentEntityToDTO docEntities
 
 -- | Get a single DDEX document
 getDocumentHandler :: AuthedUser -> Int -> AppM DdexDocumentDTO
 getDocumentHandler user docId = do
   either throwError pure (validateModuleAccess ModuleCatalog user)
   env <- ask
-  mDoc <- liftIO $ runSqlPool (DB.getDocumentById (toSqlKey (fromIntegral docId))) (envPool env)
-  case mDoc of
+  mDocEntity <- liftIO $ runSqlPool (DB.getDocumentById (toSqlKey (fromIntegral docId))) (envPool env)
+  case mDocEntity of
     Nothing -> throwError err404 { errBody = "Document not found" }
-    Just doc -> return $ documentToDTO doc
+    Just docEntity -> return $ documentEntityToDTO docEntity
 
 -- | Download raw XML file
 downloadRawHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
@@ -92,10 +92,10 @@ getValidationReportHandler user docId = do
       , reportIssues = []
       , reportIsValid = True
       }
-    Just (run, issues) -> return ValidationReportDTO
-      { reportRunId = 0  -- TODO: Get from entity key
+    Just (runEntity, issues) -> return ValidationReportDTO
+      { reportRunId = fromIntegral $ fromSqlKey (entityKey runEntity)
       , reportIssues = map issueToDTO issues
-      , reportIsValid = M.ddexValidationRunErrorCount run == 0
+      , reportIsValid = M.ddexValidationRunErrorCount (entityVal runEntity) == 0
       }
 
 -- | Get document preview
@@ -137,8 +137,8 @@ listPartnersHandler :: AuthedUser -> AppM [DdexPartnerDTO]
 listPartnersHandler user = do
   either throwError pure (validateModuleAccess ModuleCatalog user)
   env <- ask
-  partners <- liftIO $ runSqlPool DB.listPartners (envPool env)
-  return $ map partnerToDTO partners
+  partnerEntities <- liftIO $ runSqlPool DB.listPartners (envPool env)
+  return $ map partnerEntityToDTO partnerEntities
 
 -- | Create partner
 createPartnerHandler :: AuthedUser -> DdexPartnerCreateRequest -> AppM DdexPartnerDTO
@@ -149,7 +149,7 @@ createPartnerHandler user req = do
   mPartner <- liftIO $ runSqlPool (get partnerId) (envPool env)
   case mPartner of
     Nothing -> throwError err500 { errBody = "Failed to create partner" }
-    Just partner -> return $ partnerToDTO partner
+    Just partner -> return $ partnerToDTO partnerId partner
 
 -- | Get catalog releases by document
 getCatalogByDocumentHandler :: AuthedUser -> Maybe Int -> AppM [CatalogReleaseDTO]
@@ -159,20 +159,25 @@ getCatalogByDocumentHandler _user _ = pure []
 -- Conversion helpers
 -- ============================================================
 
-documentToDTO :: M.DdexDocument -> DdexDocumentDTO
-documentToDTO doc = DdexDocumentDTO
-  { ddexDocumentId = 0  -- TODO: Need Entity to get key
-  , ddexDocumentFileName = M.ddexDocumentFileName doc
-  , ddexDocumentSha256 = M.ddexDocumentSha256 doc
-  , ddexDocumentFamily = T.pack $ show $ M.ddexDocumentFamily doc
-  , ddexDocumentVersion = M.ddexDocumentVersion doc
-  , ddexDocumentStatus = T.pack $ show $ M.ddexDocumentStatus doc
-  , ddexDocumentMessageId = M.ddexDocumentMessageId doc
-  , ddexDocumentSenderId = M.ddexDocumentSenderId doc
-  , ddexDocumentRecipientId = M.ddexDocumentRecipientId doc
-  , ddexDocumentCreatedAt = M.ddexDocumentCreatedAt doc
-  }
+-- | Convert Entity DdexDocument to DdexDocumentDTO
+documentEntityToDTO :: Entity M.DdexDocument -> DdexDocumentDTO
+documentEntityToDTO docEntity =
+  let doc = entityVal docEntity
+      docId = entityKey docEntity
+  in DdexDocumentDTO
+    { ddexDocumentId = fromIntegral $ fromSqlKey docId
+    , ddexDocumentFileName = M.ddexDocumentFileName doc
+    , ddexDocumentSha256 = M.ddexDocumentSha256 doc
+    , ddexDocumentFamily = T.pack $ show $ M.ddexDocumentFamily doc
+    , ddexDocumentVersion = M.ddexDocumentVersion doc
+    , ddexDocumentStatus = T.pack $ show $ M.ddexDocumentStatus doc
+    , ddexDocumentMessageId = M.ddexDocumentMessageId doc
+    , ddexDocumentSenderId = M.ddexDocumentSenderId doc
+    , ddexDocumentRecipientId = M.ddexDocumentRecipientId doc
+    , ddexDocumentCreatedAt = M.ddexDocumentCreatedAt doc
+    }
 
+-- | Convert DdexValidationIssue to ValidationIssueDTO
 issueToDTO :: M.DdexValidationIssue -> ValidationIssueDTO
 issueToDTO issue = ValidationIssueDTO
   { issueSeverity = T.pack $ show $ M.ddexValidationIssueSeverity issue
@@ -183,9 +188,22 @@ issueToDTO issue = ValidationIssueDTO
   , issueColumn = M.ddexValidationIssueColumnNumber issue
   }
 
-partnerToDTO :: M.DdexPartner -> DdexPartnerDTO
-partnerToDTO partner = DdexPartnerDTO
-  { ddexPartnerId = 0  -- TODO: Need Entity to get key
+-- | Convert Entity DdexPartner to DdexPartnerDTO
+partnerEntityToDTO :: Entity M.DdexPartner -> DdexPartnerDTO
+partnerEntityToDTO partnerEntity =
+  let partner = entityVal partnerEntity
+      partnerId = entityKey partnerEntity
+  in DdexPartnerDTO
+    { ddexPartnerId = fromIntegral $ fromSqlKey partnerId
+    , ddexPartnerName = M.ddexPartnerName partner
+    , ddexPartnerDpid = M.ddexPartnerDpid partner
+    , ddexPartnerAllowedVersions = M.ddexPartnerAllowedVersions partner
+    }
+
+-- | Convert DdexPartner with key to DdexPartnerDTO
+partnerToDTO :: M.DdexPartnerId -> M.DdexPartner -> DdexPartnerDTO
+partnerToDTO partnerId partner = DdexPartnerDTO
+  { ddexPartnerId = fromIntegral $ fromSqlKey partnerId
   , ddexPartnerName = M.ddexPartnerName partner
   , ddexPartnerDpid = M.ddexPartnerDpid partner
   , ddexPartnerAllowedVersions = M.ddexPartnerAllowedVersions partner
