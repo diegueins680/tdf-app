@@ -16,3 +16,12 @@
 - Prefer small automation that catches setup drift early over more prompt text.
 - Para el trabajo de préstamo de Domo del Pululahua, todo material usado para pedir, sustentar, negociar o dar seguimiento al financiamiento debe entregarse en español y adaptado al contexto ecuatoriano. Si la investigación fuente está en inglés, traducir y localizar el entregable final a español ecuatoriano.
 - Para operaciones del préstamo de Domo del Pululahua, usar los flujos ya creados en `docs/venue-manager/domo-loan-packet/04-proformas-uso-de-fondos/` para proformas firmadas y en `docs/venue-manager/domo-loan-packet/07-respuestas-bancos-cooperativas/` para llamadas a bancos/cooperativas. No contactar bancos o proveedores ni enviar documentos privados sin confirmación explícita del operador y sin canal seguro confirmado.
+
+## Promoted From Short-Term Memory (2026-08-04)
+
+<!-- openclaw-memory-promotion:memory:memory/2026-07-28.md:3:6 -->
+- Added browser-side magnet-link and `.torrent` audio playback to the HQ radio widget using a lazy-loaded WebTorrent 2.8.5 browser bundle and scoped service worker. Uploaded torrent metadata stays session-only; magnet stations persist like other custom stations. Torrent playback selects the largest browser-compatible audio file and closes its P2P session when stopped or switched. - Replaced the dense inline social-event form with a guided collaborative creator at `/social/eventos/nuevo`.... [score=0.805 recalls=0 avg=0.620 source=memory/2026-07-28.md:3-6]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:8:8 -->
+- Added canonical multi-source event matching so ticketing platforms can attach [score=0.805 recalls=0 avg=0.620 source=memory/2026-07-30.md:8-8]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:16:17 -->
+- `/configuracion/fuentes-eventos` for enabling providers and registering city-bound HTTPS iCalendar/JSON venue feeds. [score=0.805 recalls=0 avg=0.620 source=memory/2026-07-30.md:16-17]
