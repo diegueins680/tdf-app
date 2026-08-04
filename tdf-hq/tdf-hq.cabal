@@ -104,6 +104,12 @@ executable tdf-hq-exe
     TDF.Calendar.Models
     TDF.CMS.Models
     TDF.Catalog.Types
+    TDF.DDEX.Types
+    TDF.DDEX.Storage
+    TDF.DDEX.Detect
+    TDF.DDEX.Security
+    TDF.DDEX.Validation
+    TDF.DDEX.Jobs
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History

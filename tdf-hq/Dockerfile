@@ -101,12 +101,12 @@ ARG BUILD_TIME=unknown
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Runtime libs for Postgres + CA certs for Neon TLS
+# Runtime libs for Postgres + CA certs for Neon TLS + xmllint for DDEX validation
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
-    libpq5 ca-certificates tzdata && \
+    libpq5 ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 
 ARG SOURCE_COMMIT=UNKNOWN
