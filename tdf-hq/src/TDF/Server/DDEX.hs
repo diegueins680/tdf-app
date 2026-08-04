@@ -2,12 +2,19 @@
 
 module TDF.Server.DDEX (ddexServer) where
 
-import Control.Monad.Reader (ReaderT)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ReaderT, ask)
 import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Time (UTCTime)
+import Database.Persist (get)
+import Database.Persist.Sql (runSqlPool, toSqlKey, fromSqlKey)
 import Servant
 import TDF.API.DDEX
 import TDF.Auth (AuthedUser, validateModuleAccess, ModuleAccess(..))
-import TDF.DB (Env)
+import TDF.DB (Env(..))
+import qualified TDF.DDEX.DB as DB
+import qualified TDF.DDEX.Models as M
 
 type AppM = ReaderT Env Handler
 
@@ -30,52 +37,156 @@ ddexServer user =
   :<|> createPartnerHandler user
   :<|> getCatalogByDocumentHandler user
 
--- Placeholder handlers returning stubs or errors
--- In full implementation, these would contain business logic
-
+-- | Upload a DDEX document
 uploadDocumentHandler :: AuthedUser -> DdexUploadRequest -> AppM DdexDocumentDTO
 uploadDocumentHandler user _req = do
   either throwError pure (validateModuleAccess ModuleCatalog user)
-  throwError err501 { errBody = "Not Implemented: Upload" }
+  -- TODO: Implement actual file storage and SHA-256 calculation
+  throwError err501 { errBody = "Not Implemented: Upload requires file storage integration" }
 
+-- | List DDEX documents
 listDocumentsHandler :: AuthedUser -> Maybe Text -> Maybe Text -> AppM [DdexDocumentDTO]
-listDocumentsHandler _user _status _partner = pure []
+listDocumentsHandler user mStatus mPartner = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  docs <- liftIO $ runSqlPool (DB.listDocuments mStatus mPartner) (envPool env)
+  return $ map documentToDTO docs
 
+-- | Get a single DDEX document
 getDocumentHandler :: AuthedUser -> Int -> AppM DdexDocumentDTO
-getDocumentHandler _user _ = throwError err501 { errBody = "Not Implemented: Get Document" }
+getDocumentHandler user docId = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  mDoc <- liftIO $ runSqlPool (DB.getDocumentById (toSqlKey (fromIntegral docId))) (envPool env)
+  case mDoc of
+    Nothing -> throwError err404 { errBody = "Document not found" }
+    Just doc -> return $ documentToDTO doc
 
+-- | Download raw XML file
 downloadRawHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
 downloadRawHandler _user _ = throwError err501 { errBody = "Not Implemented: Download Raw" }
 
+-- | Validate a document
 validateDocumentHandler :: AuthedUser -> Int -> AppM ValidationRunDTO
-validateDocumentHandler _user _ = throwError err501 { errBody = "Not Implemented: Validate" }
+validateDocumentHandler user docId = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  runId <- liftIO $ runSqlPool (DB.insertValidationRun (toSqlKey (fromIntegral docId)) (Just "1.0") Nothing) (envPool env)
+  return ValidationRunDTO
+    { validationRunId = fromIntegral $ fromSqlKey runId
+    , validationRunDocumentId = docId
+    , validationRunStatus = "pending"
+    , validationRunStartedAt = read "2026-01-01 00:00:00 UTC"
+    , validationRunFinishedAt = Nothing
+    }
 
+-- | Get validation report
 getValidationReportHandler :: AuthedUser -> Int -> AppM ValidationReportDTO
-getValidationReportHandler _user _ = throwError err501 { errBody = "Not Implemented: Get Report" }
+getValidationReportHandler user docId = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  mReport <- liftIO $ runSqlPool (DB.getValidationReport (toSqlKey (fromIntegral docId))) (envPool env)
+  case mReport of
+    Nothing -> return ValidationReportDTO
+      { reportRunId = 0
+      , reportIssues = []
+      , reportIsValid = True
+      }
+    Just (run, issues) -> return ValidationReportDTO
+      { reportRunId = 0  -- TODO: Get from entity key
+      , reportIssues = map issueToDTO issues
+      , reportIsValid = M.ddexValidationRunErrorCount run == 0
+      }
 
+-- | Get document preview
 getPreviewHandler :: AuthedUser -> Int -> AppM DdexPreviewDTO
 getPreviewHandler _user _ = throwError err501 { errBody = "Not Implemented: Preview" }
 
+-- | Create import plan
 createImportPlanHandler :: AuthedUser -> Int -> AppM ImportPlanDTO
-createImportPlanHandler _user _ = throwError err501 { errBody = "Not Implemented: Create Plan" }
+createImportPlanHandler user docId = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  planId <- liftIO $ runSqlPool (DB.insertImportPlan (toSqlKey (fromIntegral docId)) "{}") (envPool env)
+  return ImportPlanDTO
+    { importPlanId = fromIntegral $ fromSqlKey planId
+    , importPlanDocumentId = docId
+    , importPlanStatus = "draft"
+    , importPlanConflicts = []
+    , importPlanChanges = []
+    }
 
+-- | Resolve import plan conflicts
 resolveImportPlanHandler :: AuthedUser -> Int -> ImportPlanResolution -> AppM ImportPlanDTO
 resolveImportPlanHandler _user _ _ = throwError err501 { errBody = "Not Implemented: Resolve Plan" }
 
+-- | Commit import plan
 commitImportPlanHandler :: AuthedUser -> Int -> AppM ImportRunDTO
 commitImportPlanHandler _user _ = throwError err501 { errBody = "Not Implemented: Commit Plan" }
 
+-- | Create export
 createExportHandler :: AuthedUser -> DdexExportRequest -> AppM DdexExportDTO
 createExportHandler _user _ = throwError err501 { errBody = "Not Implemented: Create Export" }
 
+-- | Download export
 downloadExportHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
 downloadExportHandler _user _ = throwError err501 { errBody = "Not Implemented: Download Export" }
 
+-- | List partners
 listPartnersHandler :: AuthedUser -> AppM [DdexPartnerDTO]
-listPartnersHandler _user = pure []
+listPartnersHandler user = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  partners <- liftIO $ runSqlPool DB.listPartners (envPool env)
+  return $ map partnerToDTO partners
 
+-- | Create partner
 createPartnerHandler :: AuthedUser -> DdexPartnerCreateRequest -> AppM DdexPartnerDTO
-createPartnerHandler _user _ = throwError err501 { errBody = "Not Implemented: Create Partner" }
+createPartnerHandler user req = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  partnerId <- liftIO $ runSqlPool (DB.insertPartner (partnerName req) (partnerDpid req) (partnerAllowedVersions req)) (envPool env)
+  mPartner <- liftIO $ runSqlPool (get partnerId) (envPool env)
+  case mPartner of
+    Nothing -> throwError err500 { errBody = "Failed to create partner" }
+    Just partner -> return $ partnerToDTO partner
 
+-- | Get catalog releases by document
 getCatalogByDocumentHandler :: AuthedUser -> Maybe Int -> AppM [CatalogReleaseDTO]
 getCatalogByDocumentHandler _user _ = pure []
+
+-- ============================================================
+-- Conversion helpers
+-- ============================================================
+
+documentToDTO :: M.DdexDocument -> DdexDocumentDTO
+documentToDTO doc = DdexDocumentDTO
+  { ddexDocumentId = 0  -- TODO: Need Entity to get key
+  , ddexDocumentFileName = M.ddexDocumentFileName doc
+  , ddexDocumentSha256 = M.ddexDocumentSha256 doc
+  , ddexDocumentFamily = T.pack $ show $ M.ddexDocumentFamily doc
+  , ddexDocumentVersion = M.ddexDocumentVersion doc
+  , ddexDocumentStatus = T.pack $ show $ M.ddexDocumentStatus doc
+  , ddexDocumentMessageId = M.ddexDocumentMessageId doc
+  , ddexDocumentSenderId = M.ddexDocumentSenderId doc
+  , ddexDocumentRecipientId = M.ddexDocumentRecipientId doc
+  , ddexDocumentCreatedAt = M.ddexDocumentCreatedAt doc
+  }
+
+issueToDTO :: M.DdexValidationIssue -> ValidationIssueDTO
+issueToDTO issue = ValidationIssueDTO
+  { issueSeverity = T.pack $ show $ M.ddexValidationIssueSeverity issue
+  , issueLayer = T.pack $ show $ M.ddexValidationIssueLayer issue
+  , issueCode = maybe "" id (M.ddexValidationIssueCode issue)
+  , issueMessage = M.ddexValidationIssueMessage issue
+  , issueLine = M.ddexValidationIssueLineNumber issue
+  , issueColumn = M.ddexValidationIssueColumnNumber issue
+  }
+
+partnerToDTO :: M.DdexPartner -> DdexPartnerDTO
+partnerToDTO partner = DdexPartnerDTO
+  { ddexPartnerId = 0  -- TODO: Need Entity to get key
+  , ddexPartnerName = M.ddexPartnerName partner
+  , ddexPartnerDpid = M.ddexPartnerDpid partner
+  , ddexPartnerAllowedVersions = M.ddexPartnerAllowedVersions partner
+  }

@@ -35,6 +35,7 @@ module TDF.DDEX.DB
 
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime)
+import Control.Monad.IO.Class (liftIO)
 import Database.Persist
 import Database.Persist.Sql (SqlPersistT)
 import TDF.DDEX.Models
