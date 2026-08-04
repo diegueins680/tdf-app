@@ -105,6 +105,8 @@ executable tdf-hq-exe
     TDF.CMS.Models
     TDF.Catalog.Types
     TDF.DDEX.Types
+    TDF.DDEX.Models
+    TDF.DDEX.DB
     TDF.DDEX.Storage
     TDF.DDEX.Detect
     TDF.DDEX.Security
