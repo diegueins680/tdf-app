@@ -36,6 +36,8 @@ const LabelAssetsPage = lazy(() => import('../pages/LabelAssetsPage'));
 const LabelProjectsPage = lazy(() => import('../pages/LabelProjectsPage'));
 const LabelReleasesPage = lazy(() => import('../pages/LabelReleasesPage'));
 const LabelTracksPage = lazy(() => import('../pages/LabelTracksPage'));
+const DdexInboxPage = lazy(() => import('../features/ddex/DdexInboxPage'));
+const DdexDocumentPage = lazy(() => import('../features/ddex/DdexDocumentPage'));
 const LeadsPage = lazy(() => import('../pages/LeadsPage'));
 const LiveSessionIntakePage = lazy(() => import('../pages/LiveSessionIntakePage'));
 const LogsPage = lazy(() => import('../pages/LogsPage'));
@@ -133,6 +135,8 @@ export function renderProtectedRoutes() {
           <Route path="releases" element={<LabelReleasesPage />} />
           <Route path="assets" element={<LabelAssetsPage />} />
           <Route path="tracks" element={<LabelTracksPage />} />
+          <Route path="ddex" element={<DdexInboxPage />} />
+          <Route path="ddex/documents/:id" element={<DdexDocumentPage />} />
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
 
