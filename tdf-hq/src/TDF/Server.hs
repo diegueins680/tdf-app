@@ -93,6 +93,8 @@ import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Drive (DriveAPI, DriveUploadForm(..))
 import           TDF.Contracts.API (ContractsAPI)
+import qualified TDF.Server.DDEX as DDEXServer
+import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Courses.Production as ProductionCourse
 import           TDF.Config ( AppConfig(..)
                             , courseInstructorAvatarFallback
@@ -3727,6 +3729,8 @@ protectedServer user =
   :<|> radioServer user
   :<|> countriesServer
   :<|> futureServer user
+  :<|> DDEXServer.ddexServer user
+  :<|> CatalogServer.catalogServer user
 
 validateCalendarRedirectUri :: Text -> Either ServerError Text
 validateCalendarRedirectUri rawRedirect =

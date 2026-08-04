@@ -61,6 +61,8 @@ import           TDF.API.SocialEventsAPI (SocialEventsAPI)
 import           TDF.API.SocialSyncAPI (SocialSyncAPI)
 import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
+import           TDF.API.DDEX (DDEXAPI)
+import           TDF.API.Catalog (CatalogAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -526,6 +528,8 @@ type ProtectedAPI =
   :<|> RadioAPI
   :<|> CountryAPI
   :<|> "stubs"    :> FutureAPI
+  :<|> "ddex" :> DDEXAPI
+  :<|> "catalog" :> CatalogAPI
 
 type API =
        VersionAPI

@@ -70,6 +70,7 @@ data ModuleAccess
   | ModuleAdmin
   | ModuleInternships
   | ModuleOps
+  | ModuleCatalog
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 moduleName :: ModuleAccess -> Text
@@ -80,6 +81,7 @@ moduleName ModuleInvoicing  = "Invoicing"
 moduleName ModuleAdmin      = "Admin"
 moduleName ModuleInternships = "Internships"
 moduleName ModuleOps        = "Ops"
+moduleName ModuleCatalog    = "Catalog"
 
 -- | Authenticated user with associated module access.
 data AuthedUser = AuthedUser
@@ -256,9 +258,9 @@ isStrictAdminRoleScope role =
   role `elem` [Admin, Fan, Customer]
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
-modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
-modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships, ModuleOps]
-modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
+modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps, ModuleCatalog]
+modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships, ModuleOps, ModuleCatalog]
+modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps, ModuleCatalog]
 modulesForRole Reception  = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Accounting = Set.singleton ModuleInvoicing
 modulesForRole Engineer   = Set.singleton ModuleScheduling
@@ -276,15 +278,15 @@ modulesForRole Songwriter = Set.empty
 modulesForRole DJ         = Set.empty
 modulesForRole Publicist  = Set.empty
 modulesForRole TourManager = Set.empty
-modulesForRole LabelRep    = Set.empty
+modulesForRole LabelRep    = Set.fromList [ModuleCatalog]
 modulesForRole StageManager = Set.empty
 modulesForRole RoadCrew    = Set.empty
 modulesForRole Photographer = Set.empty
-modulesForRole AandR      = Set.fromList [ModuleCRM, ModuleScheduling]
+modulesForRole AandR      = Set.fromList [ModuleCRM, ModuleScheduling, ModuleCatalog]
 modulesForRole Student    = Set.singleton ModuleScheduling
 modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
-modulesForRole ReadOnly   = Set.singleton ModuleCRM
+modulesForRole ReadOnly   = Set.fromList [ModuleCRM, ModuleCatalog]
 modulesForRole Fan        = Set.empty
 modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling, ModuleOps]
 

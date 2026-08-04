@@ -43,6 +43,8 @@ executable tdf-hq-exe
     TDF.API.SocialEventsAPI
     TDF.API.Types
     TDF.API.WhatsApp
+    TDF.API.DDEX
+    TDF.API.Catalog
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Config
@@ -86,6 +88,8 @@ executable tdf-hq-exe
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.Server.SocialEventsHandlers
+    TDF.Server.DDEX
+    TDF.Server.Catalog
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
@@ -99,6 +103,7 @@ executable tdf-hq-exe
     TDF.Trials.Server
     TDF.Calendar.Models
     TDF.CMS.Models
+    TDF.Catalog.Types
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
