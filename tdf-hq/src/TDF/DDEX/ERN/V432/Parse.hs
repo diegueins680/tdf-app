@@ -272,7 +272,7 @@ parseRelease elem = do
   title <- findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "TitleText")
   let relIds = parseReleaseIds elem
       subTitle = findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "SubTitle")
-      contributors = []  -- Simplified for now
+      contributors = parseReleaseContributors elem
       resourceRefs = parseResourceReferences elem
       duration = findElementText (unqual "Duration") elem >>= parseDuration
       releaseDate = findElementText (unqual "ReleaseDate") elem >>= parseDate
@@ -292,6 +292,22 @@ parseRelease elem = do
     , releaseCopyrightLine = copyrightLine
     , releasePhonographicCopyrightLine = phonographicCopyrightLine
     , releaseGenre = genre
+    }
+
+-- | Parse release contributors from Release element
+parseReleaseContributors :: Element -> [ReleaseContributor]
+parseReleaseContributors elem =
+  let contribElems = findChildren (unqual "Contributor") elem
+  in mapMaybe parseReleaseContributor contribElems
+
+-- | Parse a single release contributor
+parseReleaseContributor :: Element -> Maybe ReleaseContributor
+parseReleaseContributor elem = do
+  partyRef <- findElementText (unqual "PartyReference") elem
+  role <- findElementText (unqual "Role") elem
+  return ReleaseContributor
+    { relcPartyReference = partyRef
+    , relcRole = role
     }
 
 -- | Parse release identifiers (UPC, GRid, etc.)
@@ -327,19 +343,42 @@ parseResourceGroups root =
     Nothing -> Nothing
     Just groupElem -> Just [parseResourceGroup groupElem]
 
--- | Parse a single ResourceGroup
+-- | Parse a single ResourceGroup (supports nested groups for multi-disc albums)
 parseResourceGroup :: Element -> ResourceGroup
 parseResourceGroup elem =
-  let seqNum = findElementText (unqual "SequenceNumber") elem >>= readMaybe
+  let seqNum = findElementText (unqual "SequenceNumber") elem >>= safeReadInt
       title = findElementText (unqual "Title") elem
       content = parseResourceGroupContent elem
-      subGroups = []  -- Simplified
+      subGroups = parseSubResourceGroups elem
   in ResourceGroup
     { rgSequenceNumber = seqNum
     , rgTitle = title
     , rgContent = content
     , rgSubGroups = subGroups
     }
+
+-- | Parse nested ResourceGroups (for multi-disc albums)
+parseSubResourceGroups :: Element -> [ResourceGroup]
+parseSubResourceGroups elem =
+  let subGroupElems = findChildren (unqual "ResourceGroup") elem
+  in mapMaybe parseSubResourceGroup subGroupElems
+
+-- | Parse a nested ResourceGroup (returns Nothing if it's the same as parent)
+parseSubResourceGroup :: Element -> Maybe ResourceGroup
+parseSubResourceGroup elem =
+  let seqNum = findElementText (unqual "SequenceNumber") elem >>= safeReadInt
+      title = findElementText (unqual "Title") elem
+      content = parseResourceGroupContent elem
+      -- Check if this has actual content or is just a container
+      hasContent = not (null content) || not (null (parseSubResourceGroups elem))
+  in if hasContent
+     then Just ResourceGroup
+       { rgSequenceNumber = seqNum
+       , rgTitle = title
+       , rgContent = content
+       , rgSubGroups = parseSubResourceGroups elem
+       }
+     else Nothing
 
 -- | Parse ResourceGroupContent
 parseResourceGroupContent :: Element -> [ResourceGroupContent]
@@ -351,7 +390,7 @@ parseResourceGroupContent elem =
 parseResourceGroupContentItem :: Element -> Maybe ResourceGroupContent
 parseResourceGroupContentItem elem = do
   ref <- findElementText (unqual "ResourceReference") elem
-  let seqNum = findElementText (unqual "SequenceNumber") elem >>= readMaybe
+  let seqNum = findElementText (unqual "SequenceNumber") elem >>= safeReadInt
   return $ case seqNum of
     Just n -> RGCSequence n (ResourceReference ref)
     Nothing -> RGCResource (ResourceReference ref)
@@ -386,9 +425,10 @@ parseDealTerms elem = do
   let priceType = findElementText (unqual "PriceType") elem
       wholesalePrice = findElementText (unqual "WholesalePricePerUnit") elem
       retailPrice = findElementText (unqual "RetailPricePerUnit") elem
-      startDate = DateYear 2024  -- Placeholder
-      endDate = Nothing
-      takedownDate = Nothing
+      startDate = fromMaybe (DateYear 2024) $
+        findElementText (unqual "ValidityStartDate") elem >>= parseDate
+      endDate = findElementText (unqual "ValidityEndDate") elem >>= parseDate
+      takedownDate = findElementText (unqual "TakedownDate") elem >>= parseDate
   return DealTerms
     { dtTerritoryCodes = territoryCodes
     , dtUsageType = usageType
@@ -422,19 +462,21 @@ parseDuration text =
       let (hours, rest1) = T.breakOn "H" rest
           (minutes, rest2) = T.breakOn "M" (T.drop 1 rest1)
           (seconds, _) = T.breakOn "S" (T.drop 1 rest2)
-      in Just Duration
-        { durationHours = readMaybe hours
-        , durationMinutes = readMaybe minutes
-        , durationSeconds = readMaybe seconds
-        }
+      in case (safeReadInt hours, safeReadInt minutes, safeReadInt seconds) of
+        (Just h, Just m, Just s) -> Just Duration
+          { durationHours = h
+          , durationMinutes = m
+          , durationSeconds = s
+          }
+        _ -> Nothing
 
 -- | Parse date from various formats
 parseDate :: Text -> Maybe Date
 parseDate text
-  | T.length text == 4 = DateYear <$> readMaybe text
+  | T.length text == 4 = DateYear <$> safeReadInt text
   | T.length text == 7 = do
-      year <- readMaybe (T.take 4 text)
-      month <- readMaybe (T.drop 5 text)
+      year <- safeReadInt (T.take 4 text)
+      month <- safeReadInt (T.drop 5 text)
       Just (DateYearMonth year month)
   | otherwise = DateFull <$> parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack text)
 
@@ -454,7 +496,14 @@ requireText path elem =
     Just t -> Right t
     Nothing -> Left $ ParseError ("Missing required field: " <> path) Nothing Nothing
 
--- | Safe read for Maybe Int
+-- | Safe read for Int, returns Nothing on failure
+safeReadInt :: Text -> Maybe Int
+safeReadInt text =
+  case reads (T.unpack text) of
+    [(val, "")] -> Just val
+    _ -> Nothing
+
+-- | Read for Int (legacy, uses safeReadInt)
 readMaybe :: Read a => Text -> a
 readMaybe text =
   case reads (T.unpack text) of
