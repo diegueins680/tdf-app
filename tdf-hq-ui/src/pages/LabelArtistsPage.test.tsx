@@ -2,10 +2,16 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { ArtistProfileDTO, PartyDTO } from '../api/types';
+import type { ArtistProfileDTO, ArtistPromoDayReportDTO, ArtistPromoSlotDTO, PartyDTO } from '../api/types';
 
 const listArtistProfilesMock = jest.fn<() => Promise<ArtistProfileDTO[]>>();
 const upsertArtistProfileMock = jest.fn<(payload: unknown) => Promise<ArtistProfileDTO | null>>();
+const listArtistPromoSlotsMock = jest.fn<(artistId: number, day: string) => Promise<ArtistPromoSlotDTO[]>>();
+const createArtistPromoSlotMock = jest.fn<(artistId: number, payload: unknown) => Promise<ArtistPromoSlotDTO | null>>();
+const updateArtistPromoSlotMock = jest.fn<(artistId: number, promotionId: number, payload: unknown) => Promise<ArtistPromoSlotDTO | null>>();
+const deleteArtistPromoSlotMock = jest.fn<(artistId: number, promotionId: number) => Promise<void>>();
+const getArtistPromoDayReportMock = jest.fn<(artistId: number, day: string) => Promise<ArtistPromoDayReportDTO>>();
+const getArtistPromoPdfBlobMock = jest.fn<(artistId: number, day: string) => Promise<Blob>>();
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const updatePartyMock = jest.fn<(partyId: number, payload: unknown) => Promise<PartyDTO | null>>();
 
@@ -13,6 +19,13 @@ jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
     listArtistProfiles: () => listArtistProfilesMock(),
     upsertArtistProfile: (payload: unknown) => upsertArtistProfileMock(payload),
+    listArtistPromoSlots: (artistId: number, day: string) => listArtistPromoSlotsMock(artistId, day),
+    createArtistPromoSlot: (artistId: number, payload: unknown) => createArtistPromoSlotMock(artistId, payload),
+    updateArtistPromoSlot: (artistId: number, promotionId: number, payload: unknown) =>
+      updateArtistPromoSlotMock(artistId, promotionId, payload),
+    deleteArtistPromoSlot: (artistId: number, promotionId: number) => deleteArtistPromoSlotMock(artistId, promotionId),
+    getArtistPromoDayReport: (artistId: number, day: string) => getArtistPromoDayReportMock(artistId, day),
+    getArtistPromoPdfBlob: (artistId: number, day: string) => getArtistPromoPdfBlobMock(artistId, day),
   },
 }));
 
@@ -114,6 +127,32 @@ const buildParty = (overrides: Partial<PartyDTO> = {}): PartyDTO => ({
   ...overrides,
 });
 
+const buildPromoSlot = (overrides: Partial<ArtistPromoSlotDTO> = {}): ArtistPromoSlotDTO => ({
+  apsPromotionId: 301,
+  apsArtistId: 101,
+  apsDay: '2026-04-23',
+  apsStartTime: '09:00',
+  apsMedium: 'Radio Quito',
+  apsProgram: 'La mañana en vivo',
+  apsInterviewerHost: 'Ana Rivera',
+  apsBandMembers: 'La Ruta completo',
+  apsStatus: 'confirmado',
+  apsNotes: 'Llegar 15 minutos antes',
+  apsCreatedAt: '2026-04-23T12:00:00Z',
+  apsUpdatedAt: '2026-04-23T12:00:00Z',
+  ...overrides,
+});
+
+const buildPromoReport = (overrides: Partial<ArtistPromoDayReportDTO> = {}): ArtistPromoDayReportDTO => ({
+  apdArtistId: 101,
+  apdArtistName: 'La Ruta',
+  apdDay: '2026-04-23',
+  apdTimezone: 'Hora de Ecuador (America/Guayaquil)',
+  apdDayHeader: 'Jueves 23 de abril de 2026',
+  apdEntries: [buildPromoSlot()],
+  ...overrides,
+});
+
 const buttonText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 const getButtonsByText = (root: ParentNode, labelText: string) =>
@@ -147,11 +186,23 @@ describe('LabelArtistsPage', () => {
   beforeEach(() => {
     listArtistProfilesMock.mockReset();
     upsertArtistProfileMock.mockReset();
+    listArtistPromoSlotsMock.mockReset();
+    createArtistPromoSlotMock.mockReset();
+    updateArtistPromoSlotMock.mockReset();
+    deleteArtistPromoSlotMock.mockReset();
+    getArtistPromoDayReportMock.mockReset();
+    getArtistPromoPdfBlobMock.mockReset();
     listPartiesMock.mockReset();
     updatePartyMock.mockReset();
     listArtistProfilesMock.mockResolvedValue([]);
     listPartiesMock.mockResolvedValue([]);
     upsertArtistProfileMock.mockResolvedValue(null);
+    listArtistPromoSlotsMock.mockResolvedValue([]);
+    createArtistPromoSlotMock.mockResolvedValue(null);
+    updateArtistPromoSlotMock.mockResolvedValue(null);
+    deleteArtistPromoSlotMock.mockResolvedValue(undefined);
+    getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport({ apdEntries: [] }));
+    getArtistPromoPdfBlobMock.mockResolvedValue(new Blob(['pdf']));
     updatePartyMock.mockResolvedValue(null);
   });
 
@@ -170,6 +221,7 @@ describe('LabelArtistsPage', () => {
         expect(container.querySelector('input[aria-label="Buscar artistas"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar artistas"]')).toBeNull();
         expect(container.textContent).not.toContain('Notas rápidas por artista');
+        expect(container.textContent).not.toContain('Promoción diaria y reporte PDF');
         expect(hasTableHeader(container, 'Artista')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
       });
@@ -181,6 +233,8 @@ describe('LabelArtistsPage', () => {
   it('restores search, refresh, quick notes, and the comparison table once an artist exists', async () => {
     listArtistProfilesMock.mockResolvedValue([buildArtist()]);
     listPartiesMock.mockResolvedValue([buildParty()]);
+    listArtistPromoSlotsMock.mockResolvedValue([buildPromoSlot()]);
+    getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport());
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -193,6 +247,8 @@ describe('LabelArtistsPage', () => {
         expect(container.querySelector('button[aria-label="Refrescar artistas"]')).not.toBeNull();
         expect(getButtonsByText(container, 'Refrescar')).toHaveLength(1);
         expect(container.textContent).toContain('Notas rápidas por artista');
+        expect(container.textContent).toContain('Promoción diaria y reporte PDF');
+        expect(container.textContent).toContain('Hora de Ecuador (America/Guayaquil)');
         expect(hasTableHeader(container, 'Artista')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).not.toContain('Todavía no hay perfiles de artista.');
