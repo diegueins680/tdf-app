@@ -120,6 +120,7 @@ executable tdf-hq-exe
     TDF.DDEX.ERN.V432.Normalize
     TDF.DDEX.ERN.V432.BusinessRules
     TDF.DDEX.ERN.V432.Render
+    TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.ImportPlan
     TDF.DDEX.MatchEngine
     TDF.Version
