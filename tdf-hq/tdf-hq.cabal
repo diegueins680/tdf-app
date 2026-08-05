@@ -124,6 +124,7 @@ executable tdf-hq-exe
     TDF.DDEX.ImportPlan
     TDF.DDEX.MatchEngine
     TDF.DDEX.Partner
+    TDF.DDEX.Observability
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
