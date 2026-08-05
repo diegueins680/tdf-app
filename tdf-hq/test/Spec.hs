@@ -83,6 +83,7 @@ import TDF.API.WhatsApp
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
+import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -14474,6 +14475,7 @@ main = hspec $ do
     APITypesSpec.spec
     DdexParseSpec.spec
     DdexBusinessRulesSpec.spec
+    ArtistPromotionSpec.spec
     EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec

@@ -140,6 +140,45 @@ data ArtistReleaseUpsert = ArtistReleaseUpsert
 instance FromJSON ArtistReleaseUpsert where
   parseJSON = genericParseJSON strictDecodeOptions
 
+data ArtistPromoSlotDTO = ArtistPromoSlotDTO
+  { apsPromotionId     :: Int64
+  , apsArtistId        :: Int64
+  , apsDay             :: Day
+  , apsStartTime       :: Text
+  , apsMedium          :: Text
+  , apsProgram         :: Text
+  , apsInterviewerHost :: Text
+  , apsBandMembers     :: Text
+  , apsStatus          :: Maybe Text
+  , apsNotes           :: Maybe Text
+  , apsCreatedAt       :: UTCTime
+  , apsUpdatedAt       :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ArtistPromoSlotDTO
+
+data ArtistPromoSlotUpsert = ArtistPromoSlotUpsert
+  { apsuDay             :: Day
+  , apsuStartTime       :: Text
+  , apsuMedium          :: Text
+  , apsuProgram         :: Text
+  , apsuInterviewerHost :: Text
+  , apsuBandMembers     :: Text
+  , apsuStatus          :: Maybe Text
+  , apsuNotes           :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON ArtistPromoSlotUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data ArtistPromoDayReportDTO = ArtistPromoDayReportDTO
+  { apdArtistId   :: Int64
+  , apdArtistName :: Text
+  , apdDay        :: Day
+  , apdTimezone   :: Text
+  , apdDayHeader  :: Text
+  , apdEntries    :: [ArtistPromoSlotDTO]
+  } deriving (Show, Generic)
+instance ToJSON ArtistPromoDayReportDTO
+
 data FanProfileDTO = FanProfileDTO
   { fpArtistId      :: Int64
   , fpDisplayName   :: Maybe Text
