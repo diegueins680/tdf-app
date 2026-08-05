@@ -384,7 +384,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
   }, []);
   const studioTimeZone = useMemo(
-    () => env.read('VITE_TZ') ?? 'America/Guayaquil',
+    () => env.read('VITE_DEFAULT_TIMEZONE') ?? 'UTC',
     [],
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);

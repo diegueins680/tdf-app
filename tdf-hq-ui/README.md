@@ -24,7 +24,11 @@ Create `.env` with:
 
 ```
 VITE_API_BASE=http://localhost:8080
-VITE_TZ=America/Guayaquil
+VITE_DEFAULT_TIMEZONE=UTC
+VITE_DEFAULT_LOCALE=en
+VITE_SUPPORTED_LOCALES=en,es,fr,de,pt
+VITE_DEFAULT_CURRENCY=USD
+VITE_SUPPORTED_CURRENCIES=USD,EUR,GBP,CAD,AUD,JPY,BRL
 ```
 
 ## Deploy to Render (Static Site)
@@ -35,7 +39,11 @@ VITE_TZ=America/Guayaquil
 4. Publish directory: `dist`
 5. Environment variables:
    - `VITE_API_BASE=https://<your-api>.onrender.com`
-   - `VITE_TZ=America/Guayaquil`
+   - `VITE_DEFAULT_TIMEZONE=UTC`
+   - `VITE_DEFAULT_LOCALE=en`
+   - `VITE_SUPPORTED_LOCALES=en,es,fr,de,pt`
+   - `VITE_DEFAULT_CURRENCY=USD`
+   - `VITE_SUPPORTED_CURRENCIES=USD,EUR,GBP,CAD,AUD,JPY,BRL`
 6. Create the site. After build, open the URL Render gives you.
 
 > Ensure your backend allows CORS from the static site origin. For dev you can use permissive CORS and later restrict to your static URL.

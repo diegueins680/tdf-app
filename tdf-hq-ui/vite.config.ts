@@ -65,11 +65,9 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) {
-            if (id.includes('/src/pages/')) {
-              const parts = id.split('/src/pages/')[1]?.split('/');
-              const page = parts?.[0];
-              if (page) return `page-${page}`;
-            }
+            // Route modules already use dynamic imports. Assigning every page
+            // to a manual chunk creates cross-route edges that Rollup then
+            // module-preloads on the public entry, defeating lazy loading.
             return;
           }
           // React core — match the exact package dirs so react-router /

@@ -36,7 +36,9 @@ import           Web.PathPieces (fromPathPiece, toPathPiece)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..), PaypalCaptureReq(..))
+import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
+import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
 import qualified TDF.ModelsExtra as ME
 import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO(..))
 
@@ -178,7 +180,8 @@ getOrderHandler orderIdText = do
 
 createStripePaymentIntentHandler :: Text -> AppM StripePaymentIntentDTO
 createStripePaymentIntentHandler _ =
-  throwError err501 { errBody = "Stripe is not available in Ecuador. Use Datafast or PayPal." }
+  throwError err501
+    { errBody = "Stripe checkout is not configured for the service storefront. Use an enabled payment provider." }
 
 createDatafastCheckoutHandler :: Text -> AppM DatafastCheckoutDTO
 createDatafastCheckoutHandler orderIdText = do
@@ -218,7 +221,7 @@ createDatafastCheckoutHandler orderIdText = do
         { dcOrderId    = toPathPiece oid
         , dcCheckoutId = checkoutId
         , dcWidgetUrl  = T.pack widgetUrl
-        , dcAmount     = formatUsdCents totalCents
+        , dcAmount     = formatMoney (defaultLocale envConfig) currency (fromIntegral totalCents)
         , dcCurrency   = currency
         }
 
@@ -432,13 +435,17 @@ createPackageAdminHandler :: ServiceStorefrontPackageCreate -> AppM ServiceStore
 createPackageAdminHandler ServiceStorefrontPackageCreate{..} = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
+  currency <-
+    case normalizeCurrencyCode (fromMaybe (defaultCurrency envConfig) sspcCurrency) of
+      Just value | value `elem` supportedCurrencies envConfig -> pure value
+      _ -> throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   let pkg = ME.ServiceStorefrontPackage
         { ME.serviceStorefrontPackageServiceKind = sspcServiceKind
         , ME.serviceStorefrontPackageTier = sspcTier
         , ME.serviceStorefrontPackageName = sspcName
         , ME.serviceStorefrontPackageDescription = sspcDescription
         , ME.serviceStorefrontPackagePriceUsdCents = sspcPriceUsdCents
-        , ME.serviceStorefrontPackageCurrency = fromMaybe "USD" sspcCurrency
+        , ME.serviceStorefrontPackageCurrency = currency
         , ME.serviceStorefrontPackageTurnaroundDays = fromMaybe 7 sspcTurnaroundDays
         , ME.serviceStorefrontPackageRevisionCount = fromMaybe 2 sspcRevisionCount
         , ME.serviceStorefrontPackageDeliverables = Nothing -- TODO: JSON encode
@@ -534,11 +541,6 @@ parsePackageId :: Text -> AppM ME.ServiceStorefrontPackageId
 parsePackageId txt = case fromPathPiece (T.strip txt) of
   Nothing -> throwError err400 { errBody = "Invalid package ID format" }
   Just key -> pure key
-
--- | Format cents as USD string.
-formatUsdCents :: Int -> Text
-formatUsdCents cents = "$" <> T.pack (show (cents `div` 100)) <> "." <> T.pack (pad2 (cents `mod` 100))
-  where pad2 n = if n < 10 then "0" <> show n else show n
 
 -- ============================================================================
 -- Datafast Integration
@@ -760,7 +762,7 @@ createPaypalOrderRemoteForService
   -> AppM (Text, Maybe Text)
 createPaypalOrderRemoteForService manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
-  let amountStr = formatUsdCentsDecimal totalCents
+  let amountStr = formatMinorUnitsDecimal currency (fromIntegral totalCents)
       body = object
         [ "intent" .= ("CAPTURE" :: Text)
         , "purchase_units" .=
@@ -868,10 +870,3 @@ encodeBase64 bs =
       splitInto n xs = take n xs : splitInto n (drop n xs)
       pad = let r = BS.length bs `mod` 3 in if r == 0 then "" else replicate (3 - r) '='
   in concatMap encodeTriple triples ++ pad
-
--- | Format cents as decimal USD string (e.g., 15000 -> "150.00").
-formatUsdCentsDecimal :: Int -> Text
-formatUsdCentsDecimal cents =
-  let dollars = cents `div` 100
-      c = cents `mod` 100
-  in T.pack (show dollars) <> "." <> T.pack (if c < 10 then "0" ++ show c else show c)

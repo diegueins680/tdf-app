@@ -103,6 +103,7 @@ import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleD
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
+import TDF.Internationalization (CurrencyDefinition(..), currencyDefinition, formatMinorUnitsDecimal, formatMoney, normalizeCountryCode, normalizeCurrencyCode, normalizeLocaleCode, normalizeTimeZone)
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
       EventMetadataUpdateDTO (..),
@@ -423,6 +424,9 @@ import TDF.Config
       courseMapFallback,
       courseSlugFallback,
       dbConnString,
+      defaultCurrency,
+      defaultLocale,
+      defaultTimezone,
       emailConfig,
       emailFromName,
       facebookAppId,
@@ -437,6 +441,7 @@ import TDF.Config
       instagramMessagingAccountId,
       instagramMessagingToken,
       instagramVerifyToken,
+      enableGdprCompliance,
       llmProvider,
       llmProviderApiBase,
       llmProviderDefaultChatModel,
@@ -463,7 +468,8 @@ import TDF.Config
       sessionCookieSameSite,
       sessionCookieSecure,
       smtpPort,
-      smtpUseTLS )
+      smtpUseTLS,
+      supportedCurrencies )
 import TDF.Version (VersionInfo (..), getVersionInfo)
 import TDF.Seed (seededCredentialSeedingAllowed)
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
@@ -702,6 +708,28 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "internationalization primitives" $ do
+        it "validates ISO 4217 currency codes and currency precision" $ do
+            normalizeCurrencyCode " eur " `shouldBe` Just "EUR"
+            normalizeCurrencyCode "ZZZ" `shouldBe` Nothing
+            fmap currencyDecimalPlaces (currencyDefinition "JPY") `shouldBe` Just 0
+
+        it "formats money with locale-aware separators" $ do
+            formatMoney "en" "USD" 123456 `shouldBe` "$1,234.56 USD"
+            formatMoney "de" "EUR" 123456 `shouldBe` "1.234,56 € EUR"
+            formatMoney "ja" "JPY" 1234 `shouldBe` "¥1,234 JPY"
+            formatMinorUnitsDecimal "USD" 123456 `shouldBe` "1234.56"
+            formatMinorUnitsDecimal "JPY" 1234 `shouldBe` "1234"
+
+        it "normalizes supported locales, countries, and IANA timezone identifiers" $ do
+            normalizeLocaleCode "pt-BR" `shouldBe` Just "pt"
+            normalizeLocaleCode "ar" `shouldBe` Nothing
+            normalizeCountryCode " br " `shouldBe` Just "BR"
+            normalizeCountryCode "BRA" `shouldBe` Nothing
+            normalizeCountryCode "ZZ" `shouldBe` Nothing
+            normalizeTimeZone "Europe/Berlin" `shouldBe` Just "Europe/Berlin"
+            normalizeTimeZone "../etc/passwd" `shouldBe` Nothing
+
     describe "event logistics route parsing" $ do
         it "parses Google durations including fractional seconds" $ do
             parseGoogleDurationSeconds "901s" `shouldBe` Just 901
@@ -1575,7 +1603,51 @@ main = hspec $ do
                 `shouldSatisfy`
                     failsWith "pcPeriod must be in YYYY-MM format"
 
+    describe "locale preference JSON contracts" $ do
+        it "accepts public API field names for preference updates" $
+            case eitherDecode @DTO.LocalePreferencesUpdate
+                "{\"locale\":\"de\",\"currency\":\"EUR\",\"timezone\":\"Europe/Berlin\",\"countryCode\":\"DE\"}" of
+                Left err -> expectationFailure err
+                Right update -> do
+                    DTO.lpuLocale update `shouldBe` "de"
+                    DTO.lpuCurrency update `shouldBe` "EUR"
+                    DTO.lpuTimezone update `shouldBe` "Europe/Berlin"
+                    DTO.lpuCountryCode update `shouldBe` Just "DE"
+
+        it "decodes currency conversion audit records in minor units" $
+            case eitherDecode @DTO.CurrencyConversionAuditCreate
+                "{\"sourceCurrency\":\"USD\",\"targetCurrency\":\"JPY\",\"sourceMinorUnits\":10000,\"targetMinorUnits\":1500000,\"exchangeRate\":150,\"rateSource\":\"frankfurter\"}" of
+                Left err -> expectationFailure err
+                Right audit -> do
+                    DTO.ccaSourceCurrency audit `shouldBe` "USD"
+                    DTO.ccaTargetCurrency audit `shouldBe` "JPY"
+                    DTO.ccaExchangeRate audit `shouldBe` 150
+
     describe "loadConfig" $ do
+        it "loads and validates international defaults from the environment" $ do
+            withEnvOverrides
+                [ ("DEFAULT_CURRENCY", Just "eur")
+                , ("SUPPORTED_CURRENCIES", Just "USD, EUR, GBP, JPY, BRL")
+                , ("DEFAULT_TIMEZONE", Just "Europe/Berlin")
+                , ("SUPPORTED_LOCALES", Just "en, es, fr, de, pt")
+                , ("DEFAULT_LOCALE", Just "de-DE")
+                , ("ENABLE_GDPR_COMPLIANCE", Just "true")
+                ] $ do
+                    cfg <- loadConfig
+                    defaultCurrency cfg `shouldBe` "EUR"
+                    supportedCurrencies cfg `shouldBe` ["USD", "EUR", "GBP", "JPY", "BRL"]
+                    defaultTimezone cfg `shouldBe` "Europe/Berlin"
+                    defaultLocale cfg `shouldBe` "de"
+                    enableGdprCompliance cfg `shouldBe` True
+
+            withEnvOverrides
+                [ ("DEFAULT_CURRENCY", Just "JPY")
+                , ("SUPPORTED_CURRENCIES", Just "USD,EUR")
+                ] $
+                    loadConfig `shouldThrow` \err ->
+                        "DEFAULT_CURRENCY must also be listed in SUPPORTED_CURRENCIES"
+                            `isInfixOf` show (err :: IOException)
+
         it "rejects malformed APP_PORT instead of booting on an unintended port" $ do
             let assertInvalid rawPort =
                     withEnvOverrides
@@ -9143,16 +9215,16 @@ main = hspec $ do
                 "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
 
     describe "validateEventCurrencyInput" $ do
-        it "defaults omitted or blank create currencies to USD and normalizes explicit ISO codes" $ do
-            validateEventCurrencyInput Nothing `shouldBe` Right "USD"
-            validateEventCurrencyInput (Just "   ") `shouldBe` Right "USD"
-            validateEventCurrencyInput (Just " eur ") `shouldBe` Right "EUR"
+        it "uses the configured default for omitted values and normalizes explicit ISO codes" $ do
+            validateEventCurrencyInput "EUR" Nothing `shouldBe` Right "EUR"
+            validateEventCurrencyInput "EUR" (Just "   ") `shouldBe` Right "EUR"
+            validateEventCurrencyInput "EUR" (Just " jpy ") `shouldBe` Right "JPY"
 
         it "rejects malformed explicit event currencies instead of storing opaque metadata" $ do
-            case validateEventCurrencyInput (Just "usdollars") of
+            case validateEventCurrencyInput "EUR" (Just "usdollars") of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
+                    BL.unpack (errBody err) `shouldContain` "eventCurrency must be a valid ISO 4217 code"
                 Right value ->
                     expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
 

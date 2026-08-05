@@ -293,7 +293,9 @@ function SidebarFrame(props: SidebarFrameProps) {
 
   return (
     <Box
-      component="aside"
+      component="nav"
+      id="app-sidebar"
+      aria-label="Navegación de la aplicación"
       sx={{
         width: open ? { xs: 260, md: 240 } : 0,
         transition: 'width 0.25s ease',
@@ -314,7 +316,7 @@ function SidebarFrame(props: SidebarFrameProps) {
         flexDirection: 'column',
       }}
     >
-      {children}
+      {open ? children : null}
     </Box>
   );
 }

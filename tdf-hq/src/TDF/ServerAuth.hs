@@ -101,8 +101,14 @@ import TDF.Auth (
     sessionCookieHeader,
   )
 import TDF.Config (AppConfig (..))
-import TDF.DB (Env (..), sharedTlsManager)
+import TDF.DB (ConnectionPool, Env (..), sharedTlsManager)
 import TDF.DTO
+import TDF.Internationalization
+  ( normalizeCountryCode
+  , normalizeCurrencyCode
+  , normalizeLocaleCode
+  , normalizeTimeZone
+  )
 import qualified TDF.Email.Service as EmailSvc
 import qualified TDF.LogBuffer as LogBuf
 import TDF.Models
@@ -543,6 +549,9 @@ normalizeAuthPhoneNumber raw =
             case firstDigitIndex of
               Nothing -> False
               Just digitIdx -> plusCount == 1 && idx < digitIdx
+      hasInternationalPrefix =
+        T.isPrefixOf "+" trimmed
+          && maybe False (/= '0') (T.find isAsciiPhoneDigit trimmed)
    in
     if T.null onlyDigits
          || digitCount < 8
@@ -550,6 +559,7 @@ normalizeAuthPhoneNumber raw =
          || hasUnsafeChars
          || hasInvalidChars
          || not plusIsValid
+         || not hasInternationalPrefix
       then Nothing
       else Just ("+" <> onlyDigits)
 
@@ -565,13 +575,17 @@ sessionServer :: ServerT Api.SessionAPI AppM
 sessionServer =
        currentSessionMaybe
   :<|> logoutSession
+  :<|> currentLocalePreferences
+  :<|> updateLocalePreferences
+  :<|> recordCurrencyConversion
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword
 
-buildSessionResponse :: Maybe Text -> AuthedUser -> SqlPersistT IO SessionResponse
-buildSessionResponse mResolvedUsername AuthedUser{..} = do
+buildSessionResponse :: AppConfig -> Maybe Text -> AuthedUser -> SqlPersistT IO SessionResponse
+buildSessionResponse cfg mResolvedUsername AuthedUser{..} = do
   mParty <- get auPartyId
+  preferences <- loadLocalePreferences cfg auPartyId
   let fallbackUsername = "party-" <> T.pack (show (fromSqlKey auPartyId))
       usernameText = fromMaybe fallbackUsername (cleanOptional mResolvedUsername)
       displayNameText = fromMaybe usernameText (cleanOptional (M.partyDisplayName <$> mParty))
@@ -581,6 +595,7 @@ buildSessionResponse mResolvedUsername AuthedUser{..} = do
     , sessionPartyId = fromSqlKey auPartyId
     , sessionRoles = auRoles
     , sessionModules = map moduleName (Set.toList auModules)
+    , sessionPreferences = preferences
     }
 
 currentSessionMaybe :: Maybe Text -> Maybe Text -> AppM (Maybe SessionResponse)
@@ -596,7 +611,149 @@ currentSessionMaybe mAuthorizationHeader mCookieHeader = do
             Nothing -> pure Nothing
             Just user -> do
               mUsername <- lookupUsernameFromToken token
-              Just <$> buildSessionResponse mUsername user
+              Just <$> buildSessionResponse cfg mUsername user
+
+currentLocalePreferences :: Maybe Text -> Maybe Text -> AppM LocalePreferencesDTO
+currentLocalePreferences mAuthorizationHeader mCookieHeader = do
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  liftIO $ flip runSqlPool pool $ loadLocalePreferences cfg (auPartyId user)
+
+updateLocalePreferences
+  :: Maybe Text
+  -> Maybe Text
+  -> LocalePreferencesUpdate
+  -> AppM LocalePreferencesDTO
+updateLocalePreferences mAuthorizationHeader mCookieHeader LocalePreferencesUpdate{..} = do
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  localeValue <-
+    either throwError pure $
+      validateConfiguredLocale (supportedLocales cfg) lpuLocale
+  currencyValue <-
+    either throwError pure $
+      validateConfiguredCurrency (supportedCurrencies cfg) lpuCurrency
+  timezoneValue <- either throwError pure (validateConfiguredTimezone lpuTimezone)
+  countryValue <- traverse (either throwError pure . validateCountryCode) lpuCountryCode
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ do
+    _ <- upsert
+      UserLocalePreference
+        { userLocalePreferenceUserId = auPartyId user
+        , userLocalePreferenceLocale = localeValue
+        , userLocalePreferenceCurrency = currencyValue
+        , userLocalePreferenceTimezone = timezoneValue
+        , userLocalePreferenceCountryCode = countryValue
+        , userLocalePreferenceUpdatedAt = now
+        }
+      [ UserLocalePreferenceLocale =. localeValue
+      , UserLocalePreferenceCurrency =. currencyValue
+      , UserLocalePreferenceTimezone =. timezoneValue
+      , UserLocalePreferenceCountryCode =. countryValue
+      , UserLocalePreferenceUpdatedAt =. now
+      ]
+    loadLocalePreferences cfg (auPartyId user)
+
+recordCurrencyConversion
+  :: Maybe Text
+  -> Maybe Text
+  -> CurrencyConversionAuditCreate
+  -> AppM NoContent
+recordCurrencyConversion mAuthorizationHeader mCookieHeader CurrencyConversionAuditCreate{..} = do
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  sourceCurrency <- either throwError pure (validateConfiguredCurrency (supportedCurrencies cfg) ccaSourceCurrency)
+  targetCurrency <- either throwError pure (validateConfiguredCurrency (supportedCurrencies cfg) ccaTargetCurrency)
+  let sourceLabel = T.strip ccaRateSource
+  when (isNaN ccaExchangeRate || isInfinite ccaExchangeRate || ccaExchangeRate <= 0 || ccaExchangeRate > 1000000000) $
+    throwError err400 { errBody = "exchangeRate must be finite and positive" }
+  unless (not (T.null sourceLabel) && T.length sourceLabel <= 80) $
+    throwError err400 { errBody = "rateSource is required and must be 80 characters or fewer" }
+  now <- liftIO getCurrentTime
+  liftIO $ flip runSqlPool pool $ insert_ CurrencyConversionAudit
+    { currencyConversionAuditUserId = Just (auPartyId user)
+    , currencyConversionAuditSourceCurrency = sourceCurrency
+    , currencyConversionAuditTargetCurrency = targetCurrency
+    , currencyConversionAuditSourceMinorUnits = ccaSourceMinorUnits
+    , currencyConversionAuditTargetMinorUnits = ccaTargetMinorUnits
+    , currencyConversionAuditExchangeRate = ccaExchangeRate
+    , currencyConversionAuditRateSource = sourceLabel
+    , currencyConversionAuditRateObservedAt = now
+    , currencyConversionAuditCreatedAt = now
+    }
+  pure NoContent
+
+requireSessionUser
+  :: AppConfig
+  -> ConnectionPool
+  -> Maybe Text
+  -> Maybe Text
+  -> AppM AuthedUser
+requireSessionUser cfg pool mAuthorizationHeader mCookieHeader = do
+  token <-
+    either
+      (\message -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 message) })
+      pure
+      (extractTokenFromHeaders cfg mAuthorizationHeader mCookieHeader)
+  mUser <- liftIO $ flip runSqlPool pool (loadAuthedUser token)
+  maybe (throwError err401 { errBody = "Invalid or inactive session token" }) pure mUser
+
+loadLocalePreferences :: AppConfig -> PartyId -> SqlPersistT IO LocalePreferencesDTO
+loadLocalePreferences cfg partyIdValue = do
+  mStored <- getBy (UniqueUserLocalePreference partyIdValue)
+  pure $
+    case mStored of
+      Nothing -> localePreferencesFromConfig cfg
+      Just (Entity _ stored) -> LocalePreferencesDTO
+        { lpLocale = userLocalePreferenceLocale stored
+        , lpCurrency = userLocalePreferenceCurrency stored
+        , lpTimezone = userLocalePreferenceTimezone stored
+        , lpCountryCode = userLocalePreferenceCountryCode stored
+        , lpSupportedLocales = supportedLocales cfg
+        , lpSupportedCurrencies = supportedCurrencies cfg
+        }
+
+localePreferencesFromConfig :: AppConfig -> LocalePreferencesDTO
+localePreferencesFromConfig cfg = LocalePreferencesDTO
+  { lpLocale = defaultLocale cfg
+  , lpCurrency = defaultCurrency cfg
+  , lpTimezone = defaultTimezone cfg
+  , lpCountryCode = Nothing
+  , lpSupportedLocales = supportedLocales cfg
+  , lpSupportedCurrencies = supportedCurrencies cfg
+  }
+
+validateConfiguredLocale :: [Text] -> Text -> Either ServerError Text
+validateConfiguredLocale supported raw =
+  case normalizeLocaleCode raw of
+    Just locale | locale `elem` supported -> Right locale
+    _ -> Left err400
+      { errBody = BL.fromStrict $ TE.encodeUtf8 $
+          "Unsupported locale. Supported locales: " <> T.intercalate ", " supported
+      }
+
+validateConfiguredCurrency :: [Text] -> Text -> Either ServerError Text
+validateConfiguredCurrency supported raw =
+  case normalizeCurrencyCode raw of
+    Just currency | currency `elem` supported -> Right currency
+    _ -> Left err400
+      { errBody = BL.fromStrict $ TE.encodeUtf8 $
+          "Unsupported currency. Supported currencies: " <> T.intercalate ", " supported
+      }
+
+validateConfiguredTimezone :: Text -> Either ServerError Text
+validateConfiguredTimezone raw =
+  maybe
+    (Left err400 { errBody = "timezone must be UTC or a valid IANA area/location name" })
+    Right
+    (normalizeTimeZone raw)
+
+validateCountryCode :: Text -> Either ServerError Text
+validateCountryCode raw =
+  maybe
+    (Left err400 { errBody = "countryCode must be a two-letter ISO 3166-1 code" })
+    Right
+    (normalizeCountryCode raw)
 
 logoutSession :: AppM (Api.SessionCookieHeaders NoContent)
 logoutSession = do

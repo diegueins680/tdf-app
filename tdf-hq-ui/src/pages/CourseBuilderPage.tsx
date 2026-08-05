@@ -109,7 +109,7 @@ export default function CourseBuilderPage() {
   const [capacity, setCapacity] = useState('16');
   const [sessionStartHour, setSessionStartHour] = useState('15');
   const [sessionDurationHours, setSessionDurationHours] = useState('4');
-  const [locationLabel, setLocationLabel] = useState('TDF Records – Quito');
+  const [locationLabel, setLocationLabel] = useState('TDF Records');
   const [locationMapUrl, setLocationMapUrl] = useState(COURSE_DEFAULTS.mapUrl);
   const [whatsappCtaUrl, setWhatsappCtaUrl] = useState(COURSE_DEFAULTS.whatsappUrl);
   const landingFor = useCallback((s: string) => `${COURSE_PATH_BASE}/${s}`, []);

@@ -22,6 +22,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import type { Ref } from 'react';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
@@ -32,6 +33,7 @@ import { canAccessPath } from '../utils/accessControl';
 interface TopBarProps {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  toggleButtonRef?: Ref<HTMLButtonElement>;
 }
 
 interface QuickNavResultLimitContract {
@@ -76,7 +78,7 @@ export function limitQuickNavItems<T>(items: readonly T[]): readonly T[] {
   return visibleItems;
 }
 
-export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarProps) {
+export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButtonRef }: TopBarProps) {
   const { session } = useSession();
   const navigate = useNavigate();
   const [quickNavOpen, setQuickNavOpen] = useState(false);
@@ -177,6 +179,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
       >
         <Tooltip title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}>
           <IconButton
+            ref={toggleButtonRef}
             edge="start"
             onClick={onToggleSidebar}
             sx={{ color: 'text.primary', mr: 1.5 }}

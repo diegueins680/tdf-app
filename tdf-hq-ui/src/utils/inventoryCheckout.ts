@@ -1,4 +1,5 @@
 import type { RoomDTO } from '../api/types';
+import i18n from '../i18n';
 
 export const CHECKOUT_DISPOSITION_OPTIONS = [
   { value: 'loan', label: 'Préstamo' },
@@ -51,7 +52,7 @@ export function formatCheckoutMoney(cents?: number | null, currency?: string | n
   if (!normalizedCurrency) return '';
   const amount = cents / 100;
   try {
-    return new Intl.NumberFormat('es-EC', {
+    return new Intl.NumberFormat(i18n.language, {
       style: 'currency',
       currency: normalizedCurrency,
       minimumFractionDigits: 2,

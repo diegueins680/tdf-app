@@ -24,6 +24,8 @@ import { CalendarApi } from '../api/calendar';
 import { isSessionAuthFailureMessage } from '../session/authEvents';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { formatDateTime } from '../utils/formatters';
 
 const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
 
@@ -50,7 +52,9 @@ const getCalendarPageErrorMessage = (error: unknown, fallback: string): string |
 };
 
 export default function CalendarSyncPage() {
-  const zone: string = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+  const { timezone: zone, locale } = useLocalePreferences();
+  const displayDateTime = useCallback((value: Date | string | number) =>
+    formatDateTime(value, { locale, timeZone: zone }), [locale, zone]);
   const [calendarId, setCalendarId] = useState('');
   const [code, setCode] = useState('');
   const [fromInput, setFromInput] = useState('');
@@ -231,7 +235,7 @@ export default function CalendarSyncPage() {
       }
       setSyncToast({
         severity: 'success',
-        message: `Sync OK (${new Date(ts).toLocaleString()}): ${res.created} creados, ${res.updated} actualizados.`,
+        message: `Sync OK (${displayDateTime(ts)}): ${res.created} creados, ${res.updated} actualizados.`,
       });
     },
     onError: () =>
@@ -283,9 +287,9 @@ export default function CalendarSyncPage() {
 
   const lastSyncSummary = useMemo(() => {
     if (!lastSyncAt) return 'Sin sincronizar';
-    const formatted = new Date(lastSyncAt).toLocaleString();
-    const fromLabel = fromInput ? new Date(fromInput).toLocaleString() : 'Sin fecha inicio';
-    const toLabel = toInput ? new Date(toInput).toLocaleString() : 'Sin fecha fin';
+    const formatted = displayDateTime(lastSyncAt);
+    const fromLabel = fromInput ? displayDateTime(fromInput) : 'Sin fecha inicio';
+    const toLabel = toInput ? displayDateTime(toInput) : 'Sin fecha fin';
     return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
   }, [fromInput, lastSyncAt, toInput]);
 
@@ -400,7 +404,7 @@ export default function CalendarSyncPage() {
               variant="outlined"
               color={lastSyncAt ? 'secondary' : 'default'}
               size="small"
-              label={`Última sync: ${lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}`}
+              label={`Última sync: ${lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar'}`}
             />
             <Button size="small" onClick={handleDisconnect} variant="outlined" color="inherit">
               Desconectar y limpiar
@@ -598,7 +602,7 @@ export default function CalendarSyncPage() {
                     Ver últimos logs
                   </Button>
                   <Typography variant="caption" color="text.secondary">
-                    Última sync: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}
+                    Última sync: {lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar'}
                   </Typography>
                 </Stack>
               </Paper>
@@ -654,8 +658,8 @@ export default function CalendarSyncPage() {
                         <Box sx={{ flexGrow: 1 }}>
                           <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {ev.startAt ? new Date(ev.startAt).toLocaleString() : 'Sin fecha'} —{' '}
-                            {ev.endAt ? new Date(ev.endAt).toLocaleString() : 'Sin fin'}
+                            {ev.startAt ? displayDateTime(ev.startAt) : 'Sin fecha'} —{' '}
+                            {ev.endAt ? displayDateTime(ev.endAt) : 'Sin fin'}
                           </Typography>
                           {ev.location && (
                             <Typography variant="body2" color="text.secondary">

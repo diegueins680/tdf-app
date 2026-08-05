@@ -104,8 +104,29 @@ export default function PublicBranding({
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box
+        component="a"
+        href="#main-content"
+        sx={{
+          position: 'fixed',
+          top: 8,
+          left: 8,
+          zIndex: (theme) => theme.zIndex.tooltip + 1,
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          transform: 'translateY(-150%)',
+          transition: 'transform 0.15s ease',
+          '&:focus': { transform: 'translateY(0)' },
+        }}
+      >
+        Saltar al contenido principal
+      </Box>
       {showHeader && (
         <Box
+          component="header"
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
@@ -133,6 +154,8 @@ export default function PublicBranding({
                   />
                 </Box>
                 <Stack
+                  component="nav"
+                  aria-label="Navegación principal"
                   direction="row"
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
@@ -204,11 +227,18 @@ export default function PublicBranding({
           </Container>
         </Box>
       )}
-      <Container maxWidth="xl" sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 } }}>
+      <Container
+        component="main"
+        id="main-content"
+        tabIndex={-1}
+        maxWidth="xl"
+        sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, outline: 'none' }}
+      >
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
       </Container>
       <Box
+        component="footer"
         sx={{
           borderTop: '1px solid',
           borderColor: 'divider',
@@ -279,7 +309,7 @@ export default function PublicBranding({
                 )}
               </Stack>
             </Stack>
-            <Stack spacing={0.75}>
+            <Stack component="nav" aria-label="Explorar TDF" spacing={0.75}>
               <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
                 Explorar
               </Typography>

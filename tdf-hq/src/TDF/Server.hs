@@ -96,6 +96,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Courses.Production as ProductionCourse
+import qualified TDF.Internationalization as Internationalization
 import           TDF.Config ( AppConfig(..)
                             , courseInstructorAvatarFallback
                             , courseMapFallback
@@ -2234,7 +2235,7 @@ resolveOperatorWhatsAppPhone = do
           Nothing ->
             Left $
               T.pack envName
-                <> " must be an international WhatsApp number, e.g. +593984755301"
+                <> " must be an international WhatsApp number, e.g. +14155552671"
 
 lookupFirstNonEmptyOperatorEnv :: [String] -> IO (Maybe (String, Text))
 lookupFirstNonEmptyOperatorEnv [] = pure Nothing
@@ -2245,20 +2246,7 @@ lookupFirstNonEmptyOperatorEnv (envName:rest) = do
     _ -> lookupFirstNonEmptyOperatorEnv rest
 
 normalizeOperatorWhatsAppPhone :: Text -> Maybe Text
-normalizeOperatorWhatsAppPhone rawPhone =
-  case normalizeCourseRegistrationPhoneInput rawPhone of
-    Just phone
-      | "+0" `T.isPrefixOf` phone
-          && T.length onlyDigits == 10
-          && "09" `T.isPrefixOf` onlyDigits ->
-          Just ("+593" <> T.drop 1 onlyDigits)
-      | "+0" `T.isPrefixOf` phone ->
-          Nothing
-      | otherwise ->
-          Just phone
-    Nothing -> Nothing
-  where
-    onlyDigits = T.filter isAsciiPhoneDigit rawPhone
+normalizeOperatorWhatsAppPhone = normalizeCourseRegistrationPhoneInput
 
 buildOperatorQuestionMessage
   :: AppConfig
@@ -4680,7 +4668,7 @@ productionCourseMetadataForStartDate cfg mWaContact slugVal startDate mTemplate 
       , format = templateText courseMetaFormat ProductionCourse.productionCourseFormat
       , duration = templateText courseMetaDuration ProductionCourse.productionCourseDuration
       , price = templatePrice
-      , currency = templateText courseMetaCurrency "USD"
+      , currency = templateText courseMetaCurrency (defaultCurrency cfg)
       , capacity = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
       , remaining = templateInt courseMetaCapacity ProductionCourse.productionCourseCapacity
       , sessionStartHour = templateInt courseMetaSessionStartHour ProductionCourse.productionCourseSessionStartHour
@@ -4807,7 +4795,7 @@ createProductionCourseForStartDate cfg waEnv startDate productionMetas =
             listToMaybe productionMetas
               <|> courseMetadataFor cfg (waContactNumber waEnv) (productionCourseSlug cfg)
           meta = productionCourseMetadataForStartDate cfg (waContactNumber waEnv) slugVal startDate mTemplate
-      runDB (insertProductionCourseMetadata now meta)
+      runDB (insertProductionCourseMetadata cfg now meta)
       fromMaybe meta <$> loadCourseMetadataFromDB cfg waEnv slugVal
 
 firstAvailableProductionCourseSlug :: Day -> SqlPersistT IO Text
@@ -4825,8 +4813,8 @@ firstAvailableProductionCourseSlug startDate =
         Nothing -> pure candidate
         Just _ -> firstAvailable rest
 
-insertProductionCourseMetadata :: UTCTime -> CourseMetadata -> SqlPersistT IO ()
-insertProductionCourseMetadata now meta = do
+insertProductionCourseMetadata :: AppConfig -> UTCTime -> CourseMetadata -> SqlPersistT IO ()
+insertProductionCourseMetadata cfg now meta = do
   let cleanTextList values =
         let cleaned = filter (not . T.null) (map T.strip values)
         in if null cleaned then Nothing else Just cleaned
@@ -4841,7 +4829,7 @@ insertProductionCourseMetadata now meta = do
     , Trials.courseFormat = cleanOptional (Just (courseMetaFormat meta))
     , Trials.courseDuration = cleanOptional (Just (courseMetaDuration meta))
     , Trials.coursePriceCents = coursePriceCents
-    , Trials.courseCurrency = textOr "USD" (courseMetaCurrency meta)
+    , Trials.courseCurrency = textOr (defaultCurrency cfg) (courseMetaCurrency meta)
     , Trials.courseCapacity = max 1 (courseMetaCapacity meta)
     , Trials.courseSessionStartHour = Just (courseMetaSessionStartHour meta)
     , Trials.courseSessionDurationHours = Just (courseMetaSessionDurationHours meta)
@@ -5040,6 +5028,8 @@ saveCourse Courses.CourseUpsert{..} = do
   whatsappClean <- either throwError pure (validateCoursePublicUrlField "whatsappCtaUrl" whatsappCtaUrl)
   instructorAvatarClean <- either throwError pure (validateCoursePublicUrlField "instructorAvatarUrl" instructorAvatarUrl)
   currencyClean <- either throwError pure (validateCourseCurrency currency)
+  unless (currencyClean `elem` supportedCurrencies envConfig) $
+    throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   let
       subtitleClean = cleanOptional subtitle
       formatClean = cleanOptional format
@@ -6364,12 +6354,16 @@ normalizeCourseRegistrationPhoneInput raw =
             case firstDigitIndex of
               Nothing -> False
               Just digitIdx -> plusCount == 1 && idx < digitIdx
+      hasInternationalPrefix =
+        T.isPrefixOf "+" trimmed
+          && maybe False (/= '0') (T.find isAsciiPhoneDigit trimmed)
   in
     if T.null onlyDigits
          || digitCount < 8
          || digitCount > 15
          || hasInvalidChars
          || not plusIsValid
+         || not hasInternationalPrefix
       then Nothing
       else Just ("+" <> onlyDigits)
 
@@ -8792,7 +8786,10 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
   catalogId <- either throwError pure (validateServiceAdCatalogId sacServiceCatalogId)
-  currency <- either throwError pure (validateServiceAdCurrency sacCurrency)
+  cfg <- asks envConfig
+  currency <- either throwError pure (validateServiceAdCurrency (sacCurrency <|> Just (defaultCurrency cfg)))
+  unless (currency `elem` supportedCurrencies cfg) $
+    throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
   pool <- asks envPool
@@ -8912,6 +8909,7 @@ createServiceMarketplaceBooking user Api.ServiceMarketplaceBookingReq{..} = do
       , paymentPartyId = auPartyId user
       , paymentMethod = paymentMethodVal
       , paymentAmountCents = serviceAdFeeCents ad
+      , paymentCurrency = serviceAdCurrency ad
       , paymentReceivedAt = now
       , paymentReference = Nothing
       , paymentConcept = Just "escrow_hold"
@@ -9002,6 +9000,7 @@ releaseServiceMarketplaceEscrow user rawBookingId = do
       , paymentPartyId = serviceEscrowProviderPartyId escrow
       , paymentMethod = BankTransferM
       , paymentAmountCents = serviceEscrowAmountCents escrow
+      , paymentCurrency = serviceEscrowCurrency escrow
       , paymentReceivedAt = now
       , paymentReference = Nothing
       , paymentConcept = Just "escrow_release"
@@ -9193,6 +9192,7 @@ courseCalendarBookings = do
                , resources          = []
                , courseSlug         = Just slugVal
                , coursePrice        = Just coursePriceD
+               , courseCurrency     = Just (Trials.courseCurrency course)
                , courseCapacity     = Just capacityVal
                , courseRemaining    = Just remainingVal
                , courseLocation     = Trials.courseLocationLabel course
@@ -9516,6 +9516,7 @@ buildBookingDTOs bookings = do
         , resources   = resources
         , courseSlug        = Nothing
         , coursePrice       = Nothing
+        , courseCurrency    = Nothing
         , courseCapacity    = Nothing
         , courseRemaining   = Nothing
         , courseLocation    = Nothing
@@ -10376,7 +10377,7 @@ validateReceiptBuyerEmail (Just rawEmail) =
         _ -> Left err400 { errBody = "buyerEmail must be a valid email address" }
 
 validateCurrencyCode :: Maybe Text -> Either ServerError Text
-validateCurrencyCode Nothing = Right "USD"
+validateCurrencyCode Nothing = Left err400 { errBody = "currency is required" }
 validateCurrencyCode (Just rawCurrency) =
   case normalizeCurrencyCodeText rawCurrency of
     Just currency -> Right currency
@@ -10384,13 +10385,7 @@ validateCurrencyCode (Just rawCurrency) =
 
 normalizeCurrencyCodeText :: Text -> Maybe Text
 normalizeCurrencyCodeText rawCurrency =
-  case normalizeOptionalInput (Just rawCurrency) of
-    Nothing -> Nothing
-    Just currency ->
-      let normalized = T.toUpper currency
-      in if T.length normalized == 3 && T.all isAsciiUpper normalized
-           then Just normalized
-           else Nothing
+  normalizeOptionalInput (Just rawCurrency) >>= Internationalization.normalizeCurrencyCode
 
 validateServiceAdSlotMinutes :: Maybe Int -> Either ServerError Int
 validateServiceAdSlotMinutes Nothing = Right 60
@@ -10934,7 +10929,7 @@ createInvoice :: AuthedUser -> CreateInvoiceReq -> AppM InvoiceDTO
 createInvoice user CreateInvoiceReq{..} = do
   requireModule user ModuleInvoicing
   either throwBadRequest pure (validateInvoiceLineItemCount ciLineItems)
-  currency <- either throwError pure (validateCurrencyCode ciCurrency)
+  explicitCurrency <- traverse (either throwError pure . validateCurrencyCode . Just) ciCurrency
   number <- either throwBadRequest pure (validateOptionalInvoiceNumber ciNumber)
   preparedLines <- case traverse prepareLine ciLineItems of
     Left msg   -> throwBadRequest msg
@@ -10951,7 +10946,14 @@ createInvoice user CreateInvoiceReq{..} = do
     validatePreparedCents
       "Invoice total"
       (sum (map (toInteger . plTotal) preparedLines))
-  Env pool _ <- ask
+  Env pool cfg <- ask
+  currency <-
+    maybe
+      (either throwError pure (validateCurrencyCode (Just (defaultCurrency cfg))))
+      pure
+      explicitCurrency
+  unless (currency `elem` supportedCurrencies cfg) $
+    throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   customerKey <- do
     resolved <- liftIO $ flip runSqlPool pool $ resolveInvoiceCustomerId ciCustomerId
     either throwError pure resolved
@@ -11176,7 +11178,7 @@ normalizeCurrency :: Maybe Text -> Text
 normalizeCurrency mCur =
   case fmap T.strip mCur of
     Just cur | not (T.null cur) -> T.toUpper cur
-    _                           -> "USD"
+    _                           -> ""
 
 normalizeOptionalText :: Maybe Text -> Maybe Text
 normalizeOptionalText =
@@ -11823,7 +11825,7 @@ adsAssistNoAiFallback cfg =
        [ "Gracias por escribirnos."
        , "Ahora mismo el asistente automático no está disponible,"
        , "pero te comparto lo principal:"
-       , "el Curso de Producción Musical es presencial en Quito,"
+       , "el Curso de Producción Musical es presencial,"
        , "dura cuatro sábados (16 horas en total), cuesta $150 USD y tiene cupos limitados."
        , "Más info e inscripción aquí:"
        , courseUrl
@@ -12252,7 +12254,7 @@ buildRagMessages kb examples userMsg mChannel =
       channelNote = maybe "" (\ch -> "[Canal: " <> T.strip ch <> "] ") mChannel
       systemIntro = T.intercalate "\n"
         [ "Eres un asistente de marketing de TDF Records."
-        , "Responde en español (Quito, Ecuador), tono cálido y conciso."
+        , "Responde en el idioma del usuario con un tono cálido y conciso."
         , "Tu objetivo es ayudar al usuario y, cuando sea relevante, promocionar el Curso de Producción Musical (presencial, cuatro sábados, 16 horas en total, $150 USD, cupos limitados) con link: https://tdf-app.pages.dev/curso/produccion-musical-jun-2026"
         , "REGLA CRÍTICA DE FORMATO: responde SOLO con una de estas dos formas:"
         , "1) SEND: <tu respuesta final para enviar al usuario>"
@@ -13215,14 +13217,14 @@ createCart = do
   now <- liftIO getCurrentTime
   Env{..} <- ask
   cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
-  cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartId
+  cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartId
   either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace cart" cartDto)
 
 getCart :: Text -> AppM MarketplaceCartDTO
 getCart rawId = do
   cartKey <- parseCartId rawId
   Env{..} <- ask
-  mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO cartKey
+  mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartKey
   maybe (throwError marketplaceCartNotFound) pure mCart
 
 upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
@@ -13269,7 +13271,7 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
                   then delete itemId
                   else update itemId [ME.MarketplaceCartItemQuantity =. mciuQuantity]
             update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-            maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO cartKey
+            maybe (Left marketplaceCartNotFound) Right <$> loadCartDTO (defaultCurrency envConfig) cartKey
   either throwError pure result
 
 checkoutCart :: Text -> MarketplaceCheckoutReq -> AppM MarketplaceOrderDTO
@@ -14343,14 +14345,14 @@ data MarketplaceCartTotalsState a
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
 
-loadCartDTO :: Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
-loadCartDTO cartId = do
+loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+loadCartDTO configuredDefault cartId = do
   mCart <- get cartId
   case mCart of
     Nothing -> pure Nothing
     Just _ -> do
       items <- loadCartLines cartId
-      pure (Just (cartToDTO cartId items))
+      pure (Just (cartToDTO configuredDefault cartId items))
 
 loadCartTotals
   :: Key ME.MarketplaceCart
@@ -14406,7 +14408,7 @@ resolveMarketplaceCartCurrency rawCurrencies =
     Just rawCurrency -> Left (MarketplaceCartInvalidCurrency rawCurrency)
     Nothing ->
       case nub (mapMaybe normalizeCurrencyCodeText rawCurrencies) of
-        [] -> Right "USD"
+        [] -> Left (MarketplaceCartInvalidCurrency "")
         [currency] -> Right currency
         mixed -> Left (MarketplaceCartMixedCurrencies mixed)
 
@@ -14500,11 +14502,12 @@ loadCartLines cartId = do
     pure (ent, listing, asset, qty)
 
 cartToDTO
-  :: Key ME.MarketplaceCart
+  :: Text
+  -> Key ME.MarketplaceCart
   -> [(Entity ME.MarketplaceCartItem, Entity ME.MarketplaceListing, Entity ME.Asset, Int)]
   -> MarketplaceCartDTO
-cartToDTO cartId items =
-  let currency = maybe "USD" (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
+cartToDTO configuredDefault cartId items =
+  let currency = maybe configuredDefault (ME.marketplaceListingCurrency . entityVal) (listToMaybe [listing | (_, listing, _, _) <- items])
       subtotal = sum [ ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
                      | (_, listing, _, qty) <- items
                      ]

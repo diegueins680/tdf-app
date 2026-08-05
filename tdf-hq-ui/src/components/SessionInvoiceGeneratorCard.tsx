@@ -30,6 +30,9 @@ import { Invoices, type GenerateSessionInvoiceInput, type GenerateSessionInvoice
 import { Sessions, type SessionDTO } from '../api/sessions';
 import type { PartyDTO } from '../api/types';
 import LazyPaginatedList from './LazyPaginatedList';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { formatDateTime } from '../utils/formatters';
 
 interface SessionInvoiceGeneratorCardProps {
   parties: PartyDTO[];
@@ -102,23 +105,11 @@ const parsePositiveInteger = (raw: string | null | undefined): number | null => 
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
-const formatAmount = (cents: number, currency: string) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
-
-const formatSessionDate = (iso: string) => {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  return new Intl.DateTimeFormat('es-EC', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(parsed);
-};
-
-const sessionLabel = (session: SessionDTO, partyMap: Map<number, PartyDTO>) => {
+const sessionLabel = (session: SessionDTO, partyMap: Map<number, PartyDTO>, locale: string, timezone: string) => {
   const partyId = parsePositiveInteger(session.sClientPartyRef);
   const partyName = partyId != null ? partyMap.get(partyId)?.displayName : null;
   const customer = partyName ?? session.sClientPartyRef ?? 'Sin cliente';
-  return `${formatSessionDate(session.sStartAt)} · ${session.sService} · ${customer}`;
+  return `${formatDateTime(session.sStartAt, { locale, timeZone: timezone })} · ${session.sService} · ${customer}`;
 };
 
 const toOptionalText = (value: string): string | undefined => {
@@ -159,12 +150,14 @@ const isSriError = (value: GenerateSessionInvoiceResponse['sri']): value is { ok
   typeof value === 'object' && value != null && 'error' in value;
 
 export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceGeneratorCardProps) {
+  const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
+  const { formatMoney } = useCurrency();
   const qc = useQueryClient();
   const [sessionInput, setSessionInput] = useState('');
   const [selectedSession, setSelectedSession] = useState<SessionDTO | null>(null);
   const [customerInput, setCustomerInput] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<PartyDTO | null>(null);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(preferredCurrency);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [certificatePassword, setCertificatePassword] = useState('');
@@ -251,7 +244,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
     try {
       const payload: GenerateSessionInvoiceInput = {
         customerId: selectedCustomer?.partyId ?? undefined,
-        currency: toOptionalText(currency) ?? 'USD',
+        currency: toOptionalText(currency) ?? preferredCurrency,
         number: toOptionalText(invoiceNumber),
         notes: toOptionalText(notes),
         lineItems: lines.map(normalizeLineDraft),
@@ -313,7 +306,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
               inputValue={sessionInput}
               onInputChange={(_, value) => setSessionInput(value)}
               filterOptions={sessionFilterOptions}
-              getOptionLabel={(option) => sessionLabel(option, partyMap)}
+              getOptionLabel={(option) => sessionLabel(option, partyMap, locale, timezone)}
               isOptionEqualToValue={(option, value) => option.sessionId === value.sessionId}
               renderInput={(params) => (
                 <TextField
@@ -332,7 +325,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
                 <Chip label={`UUID ${selectedSession.sessionId.slice(0, 8)}…`} />
                 <Chip label={selectedSession.sStatus} color="info" variant="outlined" />
                 <Chip label={selectedSession.sService} variant="outlined" />
-                <Chip label={`Inicio ${formatSessionDate(selectedSession.sStartAt)}`} variant="outlined" />
+                <Chip label={`Inicio ${formatDateTime(selectedSession.sStartAt, { locale, timeZone: timezone })}`} variant="outlined" />
                 {resolvedSessionCustomer ? (
                   <Chip
                     label={`Cliente sesión: ${resolvedSessionCustomer.displayName} · ID ${resolvedSessionCustomer.partyId}`}
@@ -462,7 +455,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
                 </Grid>
                 <Grid item xs={12} md={2}>
                   <TextField
-                    label="Unitario USD"
+                    label={`Unitario ${currency || preferredCurrency}`}
                     fullWidth
                     value={line.unitAmount}
                     onChange={(event) =>
@@ -597,7 +590,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
 
         <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} gap={2}>
           <Typography variant="subtitle1">
-            Total estimado: {formatAmount(Math.round(totalPreview * 100), currency || 'USD')}
+            Total estimado: {formatMoney(totalPreview, currency || preferredCurrency)}
           </Typography>
           <Button
             variant="contained"
@@ -623,7 +616,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
                 {result.invoice.number ? ` · ${result.invoice.number}` : ''}
               </Typography>
               <Typography variant="body2">
-                Estado interno: {result.invoice.statusI} · Total: {formatAmount(result.invoice.totalC, result.invoice.currency)}
+                Estado interno: {result.invoice.statusI} · Total: {formatMoney(result.invoice.totalC / 100, result.invoice.currency)}
               </Typography>
               {isSriError(result.sri) ? (
                 <Typography variant="body2">SRI: {result.sri.error}</Typography>
@@ -675,7 +668,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
                         <TableCell>{invoice.invId}</TableCell>
                         <TableCell>{invoice.number ?? '—'}</TableCell>
                         <TableCell>{invoice.statusI}</TableCell>
-                        <TableCell>{formatAmount(invoice.totalC, invoice.currency)}</TableCell>
+                        <TableCell>{formatMoney(invoice.totalC / 100, invoice.currency)}</TableCell>
                         <TableCell>{invoice.sriDocumentId ?? '—'}</TableCell>
                       </TableRow>
                     ))}

@@ -108,7 +108,7 @@ const CURATED_STATIONS: Station[] = [
     source: 'curated',
     prompts: [
       { text: 'Paisajes sonoros nocturnos con sintes lentos', author: 'Agente', createdAt: '2025-12-01' },
-      { text: 'Texturas granulares inspiradas en lluvia en Quito', createdAt: '2025-12-02' },
+      { text: 'Texturas granulares inspiradas en lluvia urbana', createdAt: '2025-12-02' },
     ],
   },
   {
@@ -1869,14 +1869,14 @@ export default function RadioWidget() {
         ref={miniContainerRef}
       >
         <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-          <IconButton size="small" onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>
+          <IconButton sx={{ minWidth: 44, minHeight: 44 }} onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
         <Tooltip title="Saltar al anterior">
           <span>
             <IconButton
-              size="small"
+              sx={{ minWidth: 44, minHeight: 44 }}
               onClick={jumpToPreviousStation}
               data-no-drag
               aria-label="Saltar a la estación anterior"
@@ -1889,7 +1889,7 @@ export default function RadioWidget() {
         <Tooltip title="Saltar al siguiente">
           <span>
             <IconButton
-              size="small"
+              sx={{ minWidth: 44, minHeight: 44 }}
               onClick={jumpToNextStation}
               data-no-drag
               aria-label="Saltar a la siguiente estación"
@@ -1901,7 +1901,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={() => setMuted((m) => !m)}
             data-no-drag
             aria-label={muted ? 'Quitar silencio' : 'Silenciar radio'}
@@ -1911,7 +1911,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title="Ocultar la barra">
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={(e) => {
               e.stopPropagation();
               setMiniBarDismissed(true);
@@ -1924,7 +1924,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title="Mostrar radio">
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={() => {
               setMiniBarVisible(false);
               setExpanded(true);
@@ -2453,7 +2453,7 @@ export default function RadioWidget() {
                         label="País"
                         value={searchCountry}
                         onChange={(e) => setSearchCountry(e.target.value)}
-                        placeholder="Ecuador, US, MX..."
+                        placeholder="DE, US, MX..."
                         fullWidth
                         inputProps={{ list: 'radio-country-options' }}
                       />
@@ -3060,7 +3060,7 @@ export default function RadioWidget() {
                       label="País"
                       value={newStationCountry}
                       onChange={(e) => setNewStationCountry(e.target.value)}
-                      placeholder="Ecuador, México, UK..."
+                      placeholder="Alemania, México, UK..."
                       fullWidth
                     />
                     <TextField

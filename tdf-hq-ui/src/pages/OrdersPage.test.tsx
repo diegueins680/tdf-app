@@ -22,6 +22,10 @@ jest.unstable_mockModule('../api/parties', () => ({
   },
 }));
 
+jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
+  useLocalePreferences: () => ({ locale: 'es', timezone: 'UTC' }),
+}));
+
 const { default: OrdersPage } = await import('./OrdersPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));

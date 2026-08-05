@@ -122,6 +122,8 @@ import           TDF.Config
   , eventLogisticsRecheckEnabled
   , googleRoutesApiBase
   , googleRoutesApiKey
+  , defaultCurrency
+  , defaultLocale
   )
 import           Web.PathPieces          (fromPathPiece)
 import           TDF.WhatsApp.Client     (SendTextResult)
@@ -362,7 +364,7 @@ recheckLogisticsActivity Env{envPool, envConfig} apiKey checkpoint (Entity activ
                 , reiTravelMode = mode
                 , reiDepartureTime = Social.eventLogisticsActivityStartTime activity
                 }
-          result <- computeGoogleRoute apiKey (googleRoutesApiBase envConfig) input
+          result <- computeGoogleRoute apiKey (googleRoutesApiBase envConfig) (defaultLocale envConfig) input
           pure (mode, endTime, result)
         _ -> pure ("drive", endTime, Left "El origen o destino ya no existe.")
     _ -> pure ("drive", Social.eventLogisticsActivityStartTime activity, Left "El traslado está incompleto.")
@@ -807,7 +809,8 @@ sendCoursePaymentReminders Env{..} = do
     envPool
   let meta = metaFromDb <|> courseMetadataFor envConfig Nothing slugVal
       courseTitle = maybe "Curso de Producción Musical" title meta
-      priceUsd = maybe productionCoursePrice price meta
+      coursePrice = maybe productionCoursePrice price meta
+      courseCurrency = maybe (defaultCurrency envConfig) currency meta
       capacityVal = maybe productionCourseCapacity capacity meta
   totalCount <- runSqlPool
     (count [ ME.CourseRegistrationCourseSlug ==. slugVal
@@ -870,7 +873,9 @@ sendCoursePaymentReminders Env{..} = do
                 nameTxt
                 emailTxt
                 courseTitle
-                priceUsd
+                coursePrice
+                courseCurrency
+                (defaultLocale envConfig)
                 remainingSeats
                 landingUrl)
               :: IO (Either SomeException ())

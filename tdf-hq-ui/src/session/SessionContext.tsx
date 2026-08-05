@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import type { LocalePreferences } from '../api/preferences';
 
 export interface SessionUser {
   username: string;
@@ -13,6 +14,7 @@ export interface SessionUser {
   apiToken?: string | null;
   modules?: string[];
   partyId?: number;
+  preferences?: LocalePreferences;
 }
 
 export interface LoginOptions {
@@ -91,6 +93,7 @@ const normalizeSessionUser = (
     apiToken?: unknown;
     modules?: unknown;
     partyId?: unknown;
+    preferences?: unknown;
   },
 ): SessionUser => {
   const username = normalizeNonEmptyString(value.username) ?? 'usuario';
@@ -99,6 +102,9 @@ const normalizeSessionUser = (
   const modules = normalizeStringArray(value.modules, { lowerCase: true, dedupeCaseInsensitive: true });
   const apiToken = normalizeApiToken(value.apiToken);
   const partyId = normalizePositivePartyId(value.partyId);
+  const preferences = value.preferences && typeof value.preferences === 'object'
+    ? value.preferences as LocalePreferences
+    : undefined;
 
   return {
     username,
@@ -107,6 +113,7 @@ const normalizeSessionUser = (
     ...(apiToken ? { apiToken } : {}),
     ...(modules.length > 0 ? { modules } : {}),
     ...(partyId !== undefined ? { partyId } : {}),
+    ...(preferences ? { preferences } : {}),
   };
 };
 
@@ -130,6 +137,7 @@ export const parseStoredSession = (raw: string): SessionUser | null => {
       roles: value['roles'],
       modules: value['modules'],
       partyId: value['partyId'],
+      preferences: value['preferences'],
     });
   } catch {
     return null;
@@ -246,6 +254,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
             roles: snapshot.roles,
             modules: snapshot.modules,
             partyId: snapshot.partyId,
+            preferences: snapshot.preferences,
             apiToken: prev?.apiToken,
           });
           currentSession = next;

@@ -1,7 +1,10 @@
 import { lazyWithReload as lazy } from '../utils/lazyWithReload';
 import { Navigate, Outlet, Route } from 'react-router-dom';
 
-import { ConfigurationIndexRedirect, Shell } from './AppShell';
+const Shell = lazy(() => import('./AppShell').then((module) => ({ default: module.Shell })));
+const ConfigurationIndexRedirect = lazy(() => import('./AppShell').then((module) => ({
+  default: module.ConfigurationIndexRedirect,
+})));
 
 const AboutPage = lazy(() => import('../pages/AboutPage'));
 const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));

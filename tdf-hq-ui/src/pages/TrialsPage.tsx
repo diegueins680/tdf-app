@@ -331,7 +331,7 @@ export default function TrialsPage() {
                       label="WhatsApp o teléfono"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+593..."
+                      placeholder="+14155552671"
                       fullWidth
                       sx={fieldSx}
                     />

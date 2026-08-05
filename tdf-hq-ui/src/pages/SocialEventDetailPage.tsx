@@ -9,11 +9,15 @@ import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
 import { useSession } from '../session/SessionContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { formatCurrency } from '../utils/formatters';
 
-const formatDate = (value?: string | null) => {
+const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
   if (!value) return '';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('es-EC', { dateStyle: 'medium', timeStyle: 'short' });
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString(locale, { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' });
 };
 
 const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';
@@ -24,11 +28,10 @@ const ticketFee = (faceValueCents: number) => {
   return { buyer, organizer: total - buyer, checkout: faceValueCents + buyer };
 };
 
-const money = (cents: number, currency = 'USD') => `${currency.toUpperCase()} ${(cents / 100).toFixed(2)}`;
-
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
   const { session } = useSession();
+  const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [caption, setCaption] = useState('');
@@ -88,7 +91,7 @@ export default function SocialEventDetailPage() {
         ticketTierCode: name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL',
         ticketTierName: name,
         ticketTierPriceCents: Math.round(price * 100),
-        ticketTierCurrency: event?.eventCurrency ?? 'USD',
+        ticketTierCurrency: event?.eventCurrency ?? preferredCurrency,
         ticketTierQuantityTotal: quantity,
         ticketTierQuantitySold: 0,
         ticketTierActive: true,
@@ -109,7 +112,7 @@ export default function SocialEventDetailPage() {
   return (
     <PageShell
       title={event?.eventTitle ?? 'Evento'}
-      subtitle={event ? `${formatDate(event.eventStart)} · ${event.eventType ?? 'Evento'}` : undefined}
+      subtitle={event ? `${formatDate(event.eventStart, locale, timezone)} · ${event.eventType ?? 'Evento'}` : undefined}
       loading={eventQuery.isLoading}
       actions={<Stack direction="row" spacing={1}>
         <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
@@ -124,7 +127,7 @@ export default function SocialEventDetailPage() {
               <Stack spacing={1.5}>
                 {event.eventImageUrl && <Box component="img" src={event.eventImageUrl} alt={`Afiche de ${event.eventTitle}`} sx={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 2 }} />}
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip label={formatDate(event.eventStart)} color="primary" />
+                  <Chip label={formatDate(event.eventStart, locale, timezone)} color="primary" />
                   {event.eventStatus && <Chip label={event.eventStatus} variant="outlined" />}
                   {event.eventCapacity && <Chip label={`${event.eventCapacity} personas`} variant="outlined" />}
                 </Stack>
@@ -145,7 +148,7 @@ export default function SocialEventDetailPage() {
                     const fee = ticketFee(tier.ticketTierPriceCents);
                     return <Stack key={tier.ticketTierId ?? tier.ticketTierCode} direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                       <Box><Typography fontWeight={700}>{tier.ticketTierName}</Typography><Typography variant="body2" color="text.secondary">{Math.max(0, tier.ticketTierQuantityTotal - tier.ticketTierQuantitySold)} disponibles</Typography></Box>
-                      <Box sx={{ textAlign: { sm: 'right' } }}><Typography>{money(tier.ticketTierPriceCents, tier.ticketTierCurrency)}</Typography><Typography variant="caption" color="text.secondary">Checkout: {money(fee.checkout, tier.ticketTierCurrency)} (incluye {money(fee.buyer, tier.ticketTierCurrency)} de tarifa)</Typography></Box>
+                      <Box sx={{ textAlign: { sm: 'right' } }}><Typography>{formatCurrency(tier.ticketTierPriceCents / 100, tier.ticketTierCurrency, locale)}</Typography><Typography variant="caption" color="text.secondary">Checkout: {formatCurrency(fee.checkout / 100, tier.ticketTierCurrency, locale)} (incluye {formatCurrency(fee.buyer / 100, tier.ticketTierCurrency, locale)} de tarifa)</Typography></Box>
                     </Stack>;
                   })}
                 </Stack>
@@ -209,7 +212,7 @@ export default function SocialEventDetailPage() {
                         <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
                         <Box>
                           <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
-                          <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt)}</Typography>
+                          <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt, locale, timezone)}</Typography>
                         </Box>
                       </Stack>
                     </ButtonBase>
@@ -218,7 +221,7 @@ export default function SocialEventDetailPage() {
                       <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
                       <Box>
                         <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
-                        <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt)}</Typography>
+                        <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt, locale, timezone)}</Typography>
                       </Box>
                     </Stack>
                   )}

@@ -51,8 +51,8 @@ data RouteEstimateResult = RouteEstimateResult
     }
     deriving (Show, Eq)
 
-computeGoogleRoute :: Text -> Text -> RouteEstimateInput -> IO (Either Text RouteEstimateResult)
-computeGoogleRoute apiKey apiBase input = do
+computeGoogleRoute :: Text -> Text -> Text -> RouteEstimateInput -> IO (Either Text RouteEstimateResult)
+computeGoogleRoute apiKey apiBase locale input = do
     requestResult <- try (parseRequest endpoint) :: IO (Either HttpException Request)
     case requestResult of
         Left _ -> pure (Left "No se pudo preparar la solicitud de Google Routes.")
@@ -67,7 +67,7 @@ computeGoogleRoute apiKey apiBase input = do
                               , "routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline"
                               )
                             ]
-                        , requestBody = RequestBodyLBS (encode (requestPayload input))
+                        , requestBody = RequestBodyLBS (encode (requestPayload locale input))
                         }
             responseResult <- try (httpLbs request sharedTlsManager) :: IO (Either HttpException (Response BL.ByteString))
             pure $ case responseResult of
@@ -79,15 +79,15 @@ computeGoogleRoute apiKey apiBase input = do
   where
     endpoint = T.unpack (T.dropWhileEnd (== '/') (T.strip apiBase) <> "/directions/v2:computeRoutes")
 
-requestPayload :: RouteEstimateInput -> Value
-requestPayload RouteEstimateInput{..} =
+requestPayload :: Text -> RouteEstimateInput -> Value
+requestPayload locale RouteEstimateInput{..} =
     object
         ( [ "origin" .= waypoint reiOriginLatitude reiOriginLongitude
           , "destination" .= waypoint reiDestinationLatitude reiDestinationLongitude
           , "travelMode" .= googleTravelMode reiTravelMode
           , "departureTime" .= reiDepartureTime
           , "computeAlternativeRoutes" .= False
-          , "languageCode" .= ("es-EC" :: Text)
+          , "languageCode" .= locale
           , "units" .= ("METRIC" :: Text)
           ]
             <> ["routingPreference" .= ("TRAFFIC_AWARE" :: Text) | T.toCaseFold reiTravelMode == "drive"]

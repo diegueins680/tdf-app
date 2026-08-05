@@ -48,6 +48,8 @@ import {
   requiresEngineerForService,
   shouldShowQuickBookingTemplate,
 } from './bookingsPageLogic';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -60,6 +62,8 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+  const { timezone: zone, locale } = useLocalePreferences();
+  const { formatMoney } = useCurrency();
   const location = useLocation();
   const navigate = useNavigate();
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -100,7 +104,6 @@ export default function BookingsPage() {
     staleTime: 5 * 60 * 1000,
   });
   const qc = useQueryClient();
-  const zone = (import.meta.env['VITE_TZ'] as string | undefined) ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
@@ -133,7 +136,7 @@ export default function BookingsPage() {
   };
   const formatEventRange = (start?: Date | null, end?: Date | null) => {
     if (!start) return '';
-    const startStr = DateTime.fromJSDate(start).setZone(zone).toFormat('ccc d LLL, HH:mm');
+    const startStr = DateTime.fromJSDate(start).setZone(zone).setLocale(locale).toFormat('ccc d LLL, HH:mm');
     if (!end) return startStr;
     const endStr = DateTime.fromJSDate(end).setZone(zone).toFormat('HH:mm');
     return `${startStr} - ${endStr}`;
@@ -179,7 +182,7 @@ export default function BookingsPage() {
         const courseSubtitle = courseCapacity
           ? `Cupos: ${Math.max(0, courseRemaining ?? 0)}/${courseCapacity}`
           : null;
-        const priceText = coursePrice ? `USD ${Math.round(coursePrice)}` : null;
+        const priceText = coursePrice ? formatMoney(coursePrice, booking.courseCurrency ?? undefined) : null;
         const locationText = courseLocation ?? null;
         return {
           id: String(booking.bookingId),
@@ -202,7 +205,7 @@ export default function BookingsPage() {
           durationEditable: !isCourse,
         };
       }),
-    [bookings],
+    [bookings, formatMoney],
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -954,8 +957,8 @@ const openDialogForRange = (start: Date, end: Date) => {
                     {isCourse && (
                       <span
                         style={{
-                          background: 'rgba(59,130,246,0.18)',
-                          color: '#0f172a',
+                          background: 'rgba(255,255,255,0.22)',
+                          color: 'inherit',
                           fontSize: 11,
                           fontWeight: 700,
                           padding: '2px 8px',
@@ -968,12 +971,12 @@ const openDialogForRange = (start: Date, end: Date) => {
                     <span>{arg.event.title}</span>
                   </div>
                   {isCourse && (
-                    <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
+                    <span style={{ fontSize: 11, color: 'inherit', opacity: 0.9 }}>
                       {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
                     </span>
                   )}
                   {engineerLabel && (
-                    <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.85 }}>
+                    <span style={{ fontSize: 11, color: 'inherit', opacity: 0.9 }}>
                       Ingeniero: {engineerLabel}
                     </span>
                   )}
@@ -983,6 +986,7 @@ const openDialogForRange = (start: Date, end: Date) => {
             events={events}
             nowIndicator
             timeZone={zone}
+            locale={locale}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',

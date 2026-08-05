@@ -4751,7 +4751,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -8281,10 +8281,17 @@ spec = describe "TDF.Server helpers" $ do
                 BL8.unpack (errBody serverErr) `shouldContain` "Service catalog is inactive"
 
     describe "validateServiceAdCurrency" $ do
-        it "defaults omitted values to USD and normalizes explicit ISO codes" $ do
-            validateServiceAdCurrency Nothing `shouldBe` Right "USD"
+        it "normalizes explicit ISO codes" $ do
             validateServiceAdCurrency (Just " usd ") `shouldBe` Right "USD"
             validateServiceAdCurrency (Just "eur") `shouldBe` Right "EUR"
+
+        it "requires callers to supply either an explicit or configured default currency" $
+            case validateServiceAdCurrency Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "currency is required"
+                Right currencyVal ->
+                    expectationFailure ("Expected missing currency error, got: " <> show currencyVal)
 
         it "rejects blank or malformed ad currencies instead of storing ambiguous pricing data" $ do
             let assertInvalid result = case result of
@@ -10478,11 +10485,13 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateOperatorQuestionRequiredIdentifier "senderId" "sender 1")
             assertInvalid (validateOperatorQuestionTextField "neededInfo" 10 "hola\NUL")
 
-        it "accepts Ecuador local operator phones and builds a bounded WhatsApp handoff message" $ do
-            normalizeOperatorWhatsAppPhone "0984755301"
-                `shouldBe` Just "+593984755301"
+        it "accepts international operator phones and requires an explicit country code" $ do
+            normalizeOperatorWhatsAppPhone "+14155552671"
+                `shouldBe` Just "+14155552671"
             normalizeOperatorWhatsAppPhone "+593984755301"
                 `shouldBe` Just "+593984755301"
+            normalizeOperatorWhatsAppPhone "0984755301"
+                `shouldBe` Nothing
             normalizeOperatorWhatsAppPhone "0123456789"
                 `shouldBe` Nothing
 
@@ -11386,6 +11395,7 @@ spec = describe "TDF.Server helpers" $ do
                         Nothing
                         Nothing
                         Nothing
+                        Nothing
             case requirePersistedBookingDTO [projected] of
                 Left serverErr ->
                     expectationFailure
@@ -11765,10 +11775,17 @@ spec = describe "TDF.Server helpers" $ do
                 "sessionDurationHours must be greater than or equal to 0"
 
     describe "course upsert currency validation" $ do
-        it "defaults blank course currencies to USD and normalizes explicit ISO codes" $ do
-            validateCourseCurrency "   " `shouldBe` Right "USD"
+        it "normalizes explicit ISO codes" $ do
             validateCourseCurrency " usd " `shouldBe` Right "USD"
             validateCourseCurrency "eur" `shouldBe` Right "EUR"
+
+        it "rejects a blank required currency" $
+            case validateCourseCurrency "   " of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL8.unpack (errBody serverErr) `shouldContain` "currency is required"
+                Right currencyVal ->
+                    expectationFailure ("Expected missing currency error, got: " <> show currencyVal)
 
         it "rejects malformed course currencies instead of storing ambiguous public pricing data" $ do
             let assertInvalid rawCurrency =
@@ -14425,6 +14442,12 @@ marketplaceTestConfig seedFlag =
         , googleRoutesApiKey = Nothing
         , googleRoutesApiBase = "https://routes.googleapis.com"
         , eventLogisticsRecheckEnabled = False
+        , defaultCurrency = "USD"
+        , supportedCurrencies = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "BRL"]
+        , defaultTimezone = "UTC"
+        , supportedLocales = ["en", "es", "fr", "de", "pt"]
+        , defaultLocale = "en"
+        , enableGdprCompliance = True
         }
 
 initializeMarketplaceListingSchema :: SqlPersistT IO ()
@@ -14593,6 +14616,19 @@ initializeAuthSchema = do
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_locale_preferences\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"user_id\" INTEGER NOT NULL UNIQUE,\
+        \\"locale\" VARCHAR NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"timezone\" VARCHAR NOT NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 

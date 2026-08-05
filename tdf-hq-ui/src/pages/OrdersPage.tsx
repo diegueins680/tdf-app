@@ -37,6 +37,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bookings, type BookingUpdatePayload } from '../api/bookings';
 import { Parties } from '../api/parties';
 import type { BookingDTO, BookingResourceDTO, PartyDTO } from '../api/types';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 type StatusValue = 'Tentative' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'NoShow';
 
@@ -62,7 +63,6 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
   return acc;
 }, {});
 
-const TZ = import.meta.env?.['VITE_TZ'] ?? 'America/Guayaquil';
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 const ORDERS_PAGE_OVERVIEW_SUMMARY =
   'Revisa horario, servicio, booking, recursos y estado desde una sola tabla.';
@@ -84,9 +84,9 @@ const formatDisplayedRowsLabel = ({
   count: number;
 }) => `${from}-${to} de ${count === -1 ? `más de ${to}` : count}`;
 
-function formatScheduleRange(start: string, end: string) {
-  const s = DateTime.fromISO(start, { zone: TZ });
-  const e = DateTime.fromISO(end, { zone: TZ });
+function formatScheduleRange(start: string, end: string, timezone: string, locale: string) {
+  const s = DateTime.fromISO(start, { zone: timezone }).setLocale(locale);
+  const e = DateTime.fromISO(end, { zone: timezone }).setLocale(locale);
   if (!s.isValid || !e.isValid) return '—';
   const datePart = s.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
   const timeRange = `${s.toLocaleString(DateTime.TIME_SIMPLE)} → ${e.toLocaleString(DateTime.TIME_SIMPLE)}`;
@@ -296,6 +296,7 @@ function getOrderRowBookingSummary(row: Pick<OrderRow, 'bookingPrimary' | 'booki
 }
 
 export default function OrdersPage() {
+  const { timezone, locale } = useLocalePreferences();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
@@ -350,7 +351,7 @@ export default function OrdersPage() {
 
       return {
         bookingId: booking.bookingId,
-        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? ''),
+        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? '', timezone, locale),
         service: serviceTitle,
         isRecording,
         bookingPrimary,
@@ -360,7 +361,7 @@ export default function OrdersPage() {
         status: booking.status,
       };
     });
-  }, [bookings, partyLookup]);
+  }, [bookings, locale, partyLookup, timezone]);
 
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);

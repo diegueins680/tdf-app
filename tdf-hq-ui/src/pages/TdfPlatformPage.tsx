@@ -18,15 +18,17 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GroupsIcon from '@mui/icons-material/Groups';
 import MicExternalOnIcon from '@mui/icons-material/MicExternalOn';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SchoolIcon from '@mui/icons-material/School';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { Fans } from '../api/fans';
+import { useAnalytics } from '../analytics/useAnalytics';
 import type { ArtistProfileDTO } from '../api/types';
 import { STUDIO_MAP_URL } from '../config/appConfig';
 import { recordings, releases } from '../constants/recordsContent';
@@ -36,6 +38,17 @@ const GENERAL_SIGNUP_PATH = '/login?signup=1&redirect=/fans';
 const FAN_SIGNUP_PATH = '/login?signup=1&roles=Fan&redirect=/fans';
 const ARTIST_SIGNUP_PATH = '/login?signup=1&intent=artist&redirect=/mi-artista';
 const HERO_VIDEO_SRC = '/videos/music-hero.mp4';
+
+interface NavigatorConnection {
+  saveData?: boolean;
+  addEventListener?: (type: 'change', listener: () => void) => void;
+  removeEventListener?: (type: 'change', listener: () => void) => void;
+}
+
+function getNavigatorConnection(): NavigatorConnection | undefined {
+  if (typeof navigator === 'undefined') return undefined;
+  return (navigator as Navigator & { connection?: NavigatorConnection }).connection;
+}
 
 type RgbTriplet = readonly [number, number, number];
 type CssPercent = `${number}%`;
@@ -376,7 +389,7 @@ function SectionHeader({
   return (
     <Stack spacing={1.25} sx={{ maxWidth: SECTION_HEADER_MAX_WIDTH_PX }}>
       <Eyebrow>{eyebrow}</Eyebrow>
-      <Typography variant="h3" sx={{ fontWeight: FONT_WEIGHT_SECTION_HEADING, color: COLOR_TEXT_PRIMARY, lineHeight: 1.08 }}>
+      <Typography component="h2" variant="h3" sx={{ fontWeight: FONT_WEIGHT_SECTION_HEADING, color: COLOR_TEXT_PRIMARY, lineHeight: 1.08 }}>
         {title}
       </Typography>
       <Typography variant="body1" sx={{ color: COLOR_TEXT_SECONDARY, fontSize: '1.05rem' }}>
@@ -420,7 +433,7 @@ function ValueCard({
               bgcolor: accent,
             }}
           />
-          <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
+          <Typography component="h3" variant="h5" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
             {title}
           </Typography>
           <Typography variant="body2" sx={{ color: COLOR_TEXT_SECONDARY_SOFT }}>
@@ -546,6 +559,8 @@ function ArtistCarousel({
             component="img"
             src={artistImageFor(artist, index)}
             alt={`Imagen de ${artist.apDisplayName}`}
+            loading="lazy"
+            decoding="async"
             sx={{
               width: '100%',
               height: ARTIST_CARD_IMAGE_HEIGHT_PX,
@@ -568,7 +583,7 @@ function ArtistCarousel({
                   sx={{ bgcolor: COLOR_CYAN_BADGE_BACKGROUND, color: COLOR_CYAN_TEXT }}
                 />
               </Stack>
-              <Typography variant="h5" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
+              <Typography component="h3" variant="h5" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
                 {artist.apDisplayName}
               </Typography>
               <Typography
@@ -603,6 +618,46 @@ function ArtistCarousel({
 
 export default function TdfPlatformPage() {
   const { t } = useTranslation();
+  const analytics = useAnalytics();
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
+  const [heroVideoPaused, setHeroVideoPaused] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const narrowViewport = window.matchMedia('(max-width: 599px)');
+    const connection = getNavigatorConnection();
+    const updateVideoPreference = () => {
+      const enabled = !reducedMotion.matches && !narrowViewport.matches && !connection?.saveData;
+      setHeroVideoEnabled(enabled);
+      if (!enabled) setHeroVideoPaused(true);
+    };
+
+    updateVideoPreference();
+    reducedMotion.addEventListener('change', updateVideoPreference);
+    narrowViewport.addEventListener('change', updateVideoPreference);
+    connection?.addEventListener?.('change', updateVideoPreference);
+    return () => {
+      reducedMotion.removeEventListener('change', updateVideoPreference);
+      narrowViewport.removeEventListener('change', updateVideoPreference);
+      connection?.removeEventListener?.('change', updateVideoPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    analytics.capture('acquisition_landing_viewed', { route: '/tdf' });
+  }, [analytics]);
+
+  const toggleHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play();
+    } else {
+      video.pause();
+    }
+  };
   const artistsQuery = useQuery({
     queryKey: ['tdf-platform', 'public-artists'],
     queryFn: Fans.listPublicArtists,
@@ -656,23 +711,29 @@ export default function TdfPlatformPage() {
           borderBottom: BORDER_SUBTLE,
         }}
       >
-        <Box
-          component="video"
-          src={HERO_VIDEO_SRC}
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden="true"
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: 0.5,
-          }}
-        />
+        {heroVideoEnabled && (
+          <Box
+            component="video"
+            ref={heroVideoRef}
+            src={HERO_VIDEO_SRC}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+            onPlay={() => setHeroVideoPaused(false)}
+            onPause={() => setHeroVideoPaused(true)}
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: 0.5,
+            }}
+          />
+        )}
         <Box
           sx={{
             position: 'absolute',
@@ -680,9 +741,31 @@ export default function TdfPlatformPage() {
             background: HERO_OVERLAY_BACKGROUND,
           }}
         />
+        {heroVideoEnabled && (
+          <Button
+            type="button"
+            variant="contained"
+            size="small"
+            onClick={toggleHeroVideo}
+            startIcon={heroVideoPaused ? <PlayArrowIcon /> : <PauseIcon />}
+            aria-pressed={heroVideoPaused}
+            sx={{
+              position: 'absolute',
+              zIndex: 2,
+              right: { xs: 16, sm: 24 },
+              bottom: { xs: 16, sm: 24 },
+              minHeight: 44,
+              bgcolor: 'rgba(15,23,42,0.9)',
+              color: '#ffffff',
+              '&:hover': { bgcolor: '#0f172a' },
+            }}
+          >
+            {heroVideoPaused ? 'Reproducir fondo' : 'Pausar fondo'}
+          </Button>
+        )}
         <Container maxWidth="lg" sx={{ position: 'relative', py: { xs: 8, md: GRID_FULL_SPAN } }}>
           <Stack spacing={3.5} sx={{ maxWidth: HERO_CONTENT_MAX_WIDTH_PX }}>
-            <Eyebrow>Comunidad musical · Quito · Plataforma</Eyebrow>
+            <Eyebrow>Comunidad musical · Plataforma global</Eyebrow>
             <Stack spacing={2}>
               <Typography
                 component="h1"
@@ -696,6 +779,7 @@ export default function TdfPlatformPage() {
                 TDF Records
               </Typography>
               <Typography
+                component="p"
                 variant="h5"
                 sx={{ color: COLOR_HERO_COPY, lineHeight: 1.45, maxWidth: HERO_COPY_MAX_WIDTH_PX }}
               >
@@ -710,6 +794,7 @@ export default function TdfPlatformPage() {
                 variant="contained"
                 size="large"
                 startIcon={<AccountCircleIcon />}
+                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'general' })}
                 sx={{
                   bgcolor: COLOR_TDF_GOLD,
                   color: COLOR_ON_GOLD,
@@ -727,6 +812,7 @@ export default function TdfPlatformPage() {
                 to={FAN_SIGNUP_PATH}
                 variant="outlined"
                 size="large"
+                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'fan' })}
                 sx={{ color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK, textTransform: 'none' }}
               >
                 {copy.fanProfile}
@@ -737,6 +823,7 @@ export default function TdfPlatformPage() {
                 to={ARTIST_SIGNUP_PATH}
                 variant="text"
                 size="large"
+                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'artist' })}
                 sx={{ color: COLOR_CYAN_TEXT, textTransform: 'none' }}
               >
                 {copy.artistProfile}
@@ -825,7 +912,7 @@ export default function TdfPlatformPage() {
                       <CardContent>
                         <Stack spacing={1.4}>
                           <Box sx={{ color: COLOR_TDF_GOLD_LIGHT, display: 'flex' }}>{item.icon}</Box>
-                          <Typography variant="h6" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
+                          <Typography component="h3" variant="h6" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
                             {item.title}
                           </Typography>
                           <Typography variant="body2" sx={{ color: COLOR_TEXT_SECONDARY_SOFT }}>
@@ -924,6 +1011,8 @@ export default function TdfPlatformPage() {
                 component="img"
                 src={recordings[1]?.image ?? recordings[0]?.image}
                 alt="Sesión musical en estudio"
+                loading="lazy"
+                decoding="async"
                 sx={{
                   width: '100%',
                   aspectRatio: '4 / 3',
@@ -942,7 +1031,7 @@ export default function TdfPlatformPage() {
         <Container maxWidth="md">
           <Stack spacing={3} alignItems="center" textAlign="center">
             <Eyebrow>{copy.startEyebrow}</Eyebrow>
-            <Typography variant="h3" sx={{ color: COLOR_TEXT_PRIMARY, fontWeight: FONT_WEIGHT_HERO_TITLE }}>
+            <Typography component="h2" variant="h3" sx={{ color: COLOR_TEXT_PRIMARY, fontWeight: FONT_WEIGHT_HERO_TITLE }}>
               Crea tu usuario y elige tu ruta dentro de TDF.
             </Typography>
             <Typography sx={{ color: COLOR_TEXT_SECONDARY }}>

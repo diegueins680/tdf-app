@@ -100,6 +100,7 @@ import TDF.Config
   , normalizeConfiguredHttpsUrl
   )
 import TDF.DB (ConnectionPool, sharedTlsManager)
+import TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, normalizeCurrencyCode)
 import qualified TDF.Models.SocialEventsModels as Social
 
 providerName :: Text
@@ -575,10 +576,10 @@ fetchBuenPlanEvents ::
   UTCTime ->
   IO (Either Text [DiscoveredEvent])
 fetchBuenPlanEvents cfg cities now
-  | null ecuadorCities = pure (Right [])
+  | null providerCities = pure (Right [])
   | otherwise = fetchPage 1 []
   where
-    ecuadorCities =
+    providerCities =
       filter ((== "EC") . eventDiscoveryCityCountryCode) cities
     endTime =
       addUTCTime
@@ -619,7 +620,7 @@ fetchBuenPlanEvents cfg cities now
                                 Right decoded -> do
                                   let normalized =
                                         mapMaybe
-                                          (normalizeBuenPlanEvent ecuadorCities now endTime)
+                                          (normalizeBuenPlanEvent (defaultCurrency cfg) providerCities now endTime)
                                           (buenPlanEvents decoded)
                                       nextCollected = collected ++ normalized
                                       pageCount = buenPlanPageCount (buenPlanMeta decoded)
@@ -643,12 +644,13 @@ fetchBuenPlanEvents cfg cities now
         )
 
 normalizeBuenPlanEvent ::
+  Text ->
   [EventDiscoveryCity] ->
   UTCTime ->
   UTCTime ->
   BuenPlanEvent ->
   Maybe DiscoveredEvent
-normalizeBuenPlanEvent cities now endTime BuenPlanEvent{..} = do
+normalizeBuenPlanEvent configuredDefault cities now endTime BuenPlanEvent{..} = do
   externalId <- cleanIdentifier buenPlanEventId
   title <- cleanSingleLine 160 buenPlanEventTitle
   whenMaybe (buenPlanEventStart < now || buenPlanEventStart > endTime) Nothing
@@ -667,7 +669,7 @@ normalizeBuenPlanEvent cities now endTime BuenPlanEvent{..} = do
         (buenPlanEventPoster <|> buenPlanEventCover)
           >>= normalizeHttpsUrl "Buen Plan event image" . buenPlanImageUrl
       currency =
-        fromMaybe "USD"
+        fromMaybe configuredDefault
           ( buenPlanEventCurrency
               >>= normalizeCurrencyCode
           )
@@ -743,14 +745,6 @@ extractBuenPlanVenueName description =
     , not (T.null venue)
     , T.length venue <= 300
     ]
-
-normalizeCurrencyCode :: Text -> Maybe Text
-normalizeCurrencyCode rawCurrency =
-  let currency = T.toUpper (T.strip rawCurrency)
-   in if T.length currency == 3
-        && T.all (\ch -> ch >= 'A' && ch <= 'Z') currency
-        then Just currency
-        else Nothing
 
 data StructuredFeedEvent = StructuredFeedEvent
   { structuredEventId :: Text
@@ -939,7 +933,7 @@ normalizeStructuredEvent cfg sourceKey city now StructuredFeedEvent{..} = do
           now
   whenMaybe (structuredEventStart < now || structuredEventStart > lookaheadEnd) Nothing
   let currency =
-        fromMaybe "USD" (structuredEventCurrency >>= normalizeCurrencyCode)
+        fromMaybe (defaultCurrency cfg) (structuredEventCurrency >>= normalizeCurrencyCode)
       status =
         normalizeStructuredStatus now structuredEventStart endTime structuredEventStatus
       artists =
@@ -1264,7 +1258,7 @@ fetchTicketmasterEventsWithCountry cfg countryCode apiKey city now =
                             Left _ -> pure (Left "Ticketmaster returned an invalid event response")
                             Right decoded -> do
                               let decodedEvents = ticketmasterResponseEvents decoded
-                                  normalized = normalizeTicketmasterResponse city now decoded
+                                  normalized = normalizeTicketmasterResponse (defaultCurrency cfg) city now decoded
                                   nextCollected = collected ++ normalized
                                   totalPages = ticketmasterResponseTotalPages decoded
                               if ticketmasterResponseRawEventCount decoded > 0 && null decodedEvents
@@ -1296,12 +1290,12 @@ ticketmasterRetryDelayMicros response =
     Just seconds -> max 1000000 (min (60 * 1000000) (seconds * 1000000))
     Nothing -> 2000000
 
-normalizeTicketmasterResponse :: Text -> UTCTime -> TicketmasterResponse -> [DiscoveredEvent]
-normalizeTicketmasterResponse requestedCity now =
-  mapMaybe (normalizeTicketmasterEvent requestedCity now) . ticketmasterResponseEvents
+normalizeTicketmasterResponse :: Text -> Text -> UTCTime -> TicketmasterResponse -> [DiscoveredEvent]
+normalizeTicketmasterResponse configuredDefault requestedCity now =
+  mapMaybe (normalizeTicketmasterEvent configuredDefault requestedCity now) . ticketmasterResponseEvents
 
-normalizeTicketmasterEvent :: Text -> UTCTime -> TicketmasterEvent -> Maybe DiscoveredEvent
-normalizeTicketmasterEvent requestedCity now TicketmasterEvent{..} = do
+normalizeTicketmasterEvent :: Text -> Text -> UTCTime -> TicketmasterEvent -> Maybe DiscoveredEvent
+normalizeTicketmasterEvent configuredDefault requestedCity now TicketmasterEvent{..} = do
   externalId <- cleanIdentifier ticketmasterEventId
   title <- cleanSingleLine 160 ticketmasterEventName
   embedded <- ticketmasterEventEmbedded
@@ -1347,7 +1341,7 @@ normalizeTicketmasterEvent requestedCity now TicketmasterEvent{..} = do
       ticketUrl = if saleOpen then rawTicketUrl else Nothing
       eventStatus = normalizeEventStatus now start end sourceStatus saleOpen
       eventType = normalizeEventType title segmentName
-      (priceCents, currency) = normalizePrice ticketmasterEventPrices
+      (priceCents, currency) = normalizePrice configuredDefault ticketmasterEventPrices
       description =
         joinDescription
           [ ticketmasterEventInfo >>= cleanMultiline 5000
@@ -1462,24 +1456,24 @@ normalizeEventStatus now startsAt endsAt sourceStatus saleOpen
   where
     normalizedSource = maybe "" (T.toCaseFold . T.strip) sourceStatus
 
-normalizePrice :: [TicketmasterPriceRange] -> (Maybe Int, Text)
-normalizePrice ranges =
+normalizePrice :: Text -> [TicketmasterPriceRange] -> (Maybe Int, Text)
+normalizePrice configuredDefault ranges =
   case
     sortOn fst
       [ (cents, currency)
       | TicketmasterPriceRange (Just rawCurrency) (Just minimumPrice) <- ranges
-      , let currency = T.toUpper (T.strip rawCurrency)
-      , T.length currency == 3
-      , T.all (\ch -> ch >= 'A' && ch <= 'Z') currency
+      , Just currency <- [normalizeCurrencyCode rawCurrency]
       , not (isNaN minimumPrice || isInfinite minimumPrice)
       , minimumPrice >= 0
-      , minimumPrice <= fromIntegral (maxBound :: Int) / 100
-      , let centsInteger = round (minimumPrice * 100) :: Integer
+      , let decimalPlaces = maybe 2 currencyDecimalPlaces (currencyDefinition currency)
+      , let minorUnitFactor = 10 ^ decimalPlaces :: Integer
+      , minimumPrice <= fromIntegral (maxBound :: Int) / fromIntegral minorUnitFactor
+      , let centsInteger = round (minimumPrice * fromIntegral minorUnitFactor) :: Integer
       , centsInteger <= fromIntegral (maxBound :: Int)
       , let cents = fromIntegral centsInteger
       ] of
       firstPrice : _ -> (Just (fst firstPrice), snd firstPrice)
-      [] -> (Nothing, "USD")
+      [] -> (Nothing, configuredDefault)
 
 normalizeCoordinates :: Maybe TicketmasterLocation -> (Maybe Double, Maybe Double)
 normalizeCoordinates location =

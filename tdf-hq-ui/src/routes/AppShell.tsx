@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
@@ -19,6 +19,7 @@ export function Shell() {
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const { session, loading } = useSession();
   const location = useLocation();
+  const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < DESKTOP_NAV_MIN_WIDTH;
@@ -55,6 +56,44 @@ export function Shell() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [sidebarCollapsed, isDesktop]);
+
+  useEffect(() => {
+    if (isDesktop || sidebarCollapsed) return;
+    const sidebar = document.getElementById('app-sidebar');
+    if (!sidebar) return;
+    const sidebarToggleButton = sidebarToggleRef.current;
+    const selector = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+    const getFocusable = () => Array.from(sidebar.querySelectorAll<HTMLElement>(selector));
+    const animationFrame = window.requestAnimationFrame(() => getFocusable()[0]?.focus());
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener('keydown', trapFocus);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener('keydown', trapFocus);
+      sidebarToggleButton?.focus();
+    };
+  }, [isDesktop, sidebarCollapsed]);
 
   if (loading) {
     return <RouteLoadingFallback />;
@@ -102,6 +141,26 @@ export function Shell() {
         overflow: 'hidden',
       }}
     >
+      <Box
+        component="a"
+        href="#main-content"
+        sx={{
+          position: 'fixed',
+          top: 8,
+          left: 8,
+          zIndex: (currentTheme) => currentTheme.zIndex.tooltip + 1,
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          transform: 'translateY(-150%)',
+          transition: 'transform 0.15s ease',
+          '&:focus': { transform: 'translateY(0)' },
+        }}
+      >
+        Saltar al contenido principal
+      </Box>
       <SidebarNav open={!sidebarCollapsed} onNavigate={handleNavigateFromSidebar} />
       <Box
         sx={{
@@ -117,6 +176,10 @@ export function Shell() {
       >
         {!sidebarCollapsed && (
           <Box
+            component="button"
+            type="button"
+            aria-label="Cerrar menú lateral"
+            tabIndex={-1}
             sx={{
               position: 'fixed',
               inset: 0,
@@ -124,14 +187,23 @@ export function Shell() {
               backdropFilter: 'blur(2px)',
               zIndex: 1100,
               display: { xs: 'block', lg: 'none' },
+              border: 0,
+              p: 0,
+              cursor: 'pointer',
             }}
             onClick={() => setSidebarCollapsed(true)}
           />
         )}
-        <TopBar onToggleSidebar={handleToggleSidebar} sidebarOpen={!sidebarCollapsed} />
+        <TopBar
+          onToggleSidebar={handleToggleSidebar}
+          sidebarOpen={!sidebarCollapsed}
+          toggleButtonRef={sidebarToggleRef}
+        />
         <ApiActivityIndicator />
         <Box
           component="main"
+          id="main-content"
+          tabIndex={-1}
           sx={{
             flexGrow: 1,
             position: 'relative',
