@@ -191,6 +191,7 @@ const DdexInboxPage: React.FC = () => {
                   <IconButton
                     size="small"
                     color="default"
+                    aria-label={`Download DDEX document ${doc.ddexDocumentFileName}`}
                     onClick={() => {
                       // TODO: Implement download
                       console.log('Download', doc.ddexDocumentId);
