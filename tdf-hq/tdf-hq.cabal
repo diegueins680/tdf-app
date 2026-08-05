@@ -123,6 +123,7 @@ executable tdf-hq-exe
     TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.ImportPlan
     TDF.DDEX.MatchEngine
+    TDF.DDEX.Partner
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
