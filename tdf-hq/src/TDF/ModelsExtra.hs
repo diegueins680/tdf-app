@@ -851,6 +851,80 @@ ArtistTip
     UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
+ServiceStorefrontPackage
+    Id               UUID default=gen_random_uuid()
+    serviceKind      Text
+    tier             Text
+    name             Text
+    description      Text Maybe
+    priceUsdCents    Int
+    currency         Text default='USD'
+    turnaroundDays   Int default=7
+    revisionCount    Int default=2
+    deliverables     Text Maybe
+    features         Text Maybe
+    active           Bool default=True
+    sortOrder        Int default=0
+    createdAt        UTCTime default=now()
+    updatedAt        UTCTime default=now()
+    deriving Show Generic
+
+ServiceStorefrontOrder
+    Id                    UUID default=gen_random_uuid()
+    orderNumber           Text
+    buyerName             Text
+    buyerEmail            Text
+    buyerPhone            Text Maybe
+    artistName            Text Maybe
+    packageId             ServiceStorefrontPackageId
+    serviceKind           Text
+    tier                  Text
+    priceUsdCents         Int
+    currency              Text default='USD'
+    status                Text default='pending_payment'
+    paymentProvider       Text Maybe
+    stripePaymentIntentId Text Maybe
+    stripeIdempotencyKey  Text Maybe
+    datafastCheckoutId    Text Maybe
+    datafastResourcePath  Text Maybe
+    datafastPaymentId     Text Maybe
+    paypalOrderId         Text Maybe
+    paypalPayerEmail      Text Maybe
+    paidAt                UTCTime Maybe
+    genre                 Text Maybe
+    songCount             Int default=1
+    notes                 Text Maybe
+    referenceTrackUrl     Text Maybe
+    deadline              Day Maybe
+    sourceFilesUrl        Text Maybe
+    deliverablesUrl       Text Maybe
+    pipelineCardId        PipelineCardId Maybe
+    createdAt             UTCTime default=now()
+    updatedAt             UTCTime default=now()
+    UniqueServiceStorefrontOrderNumber orderNumber
+    UniqueServiceStorefrontOrderStripePI stripePaymentIntentId !force
+    deriving Show Generic
+
+ServiceStorefrontOrderStatusChange
+    Id        UUID default=gen_random_uuid()
+    orderId   ServiceStorefrontOrderId
+    status    Text
+    notes     Text Maybe
+    changedBy Text Maybe
+    createdAt UTCTime default=now()
+    deriving Show Generic
+
+ServiceStorefrontRevision
+    Id             UUID default=gen_random_uuid()
+    orderId        ServiceStorefrontOrderId
+    revisionNumber Int
+    feedback       Text
+    status         Text default='pending'
+    createdAt      UTCTime default=now()
+    completedAt    UTCTime Maybe
+    UniqueServiceStorefrontRevisionOrderNumber orderId revisionNumber
+    deriving Show Generic
+
 |]
 
 instance ToJSON (Entity Asset) where

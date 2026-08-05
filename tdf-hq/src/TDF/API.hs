@@ -63,6 +63,7 @@ import           TDF.API.SocialDiscoveryAPI (SocialDiscoveryAPI)
 import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI)
+import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -530,6 +531,7 @@ type ProtectedAPI =
   :<|> "stubs"    :> FutureAPI
   :<|> "ddex" :> DDEXAPI
   :<|> "catalog" :> CatalogAPI
+  :<|> ServiceStorefrontAdminAPI
 
 type API =
        VersionAPI
@@ -564,6 +566,7 @@ type API =
   :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI
+  :<|> ServiceStorefrontPublicAPI
   :<|> "engineers" :> Get '[JSON] [PublicEngineerDTO]
   :<|> BookingPublicAPI
   :<|> AssetsAPI

@@ -20,6 +20,7 @@ const LiveSessionPublicPage = lazy(() => import('../pages/LiveSessionPublicPage'
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
+const MixingMasteringPage = lazy(() => import('../pages/MixingMasteringPage'));
 const MusicMakerPage = lazy(() => import('../pages/MusicMakerPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
@@ -45,6 +46,8 @@ export function renderPublicRoutes() {
       <Route path="/a/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
       <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
+      <Route path="/mezcla-mastering" element={<PublicBranding><MixingMasteringPage /></PublicBranding>} />
+      <Route path="/services/mixing-mastering" element={<Navigate to="/mezcla-mastering" replace />} />
       <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />
       <Route path="/oauth/google-drive/callback" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />
       <Route path="/oauth/instagram/callback" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />

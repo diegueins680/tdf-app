@@ -153,6 +153,7 @@ import qualified Data.Map.Strict            as Map
 import           TDF.ServerFuture (futureServer)
 import           TDF.ServerRadio (radioServer)
 import           TDF.ServerLiveSessions (liveSessionsServer)
+import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import           TDF.ServerFeedback (feedbackServer)
 import qualified TDF.Contracts.Server as Contracts
 import           TDF.ServerProposals (proposalsServer)
@@ -700,6 +701,7 @@ server env =
   :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
+  :<|> serviceStorefrontPublicServer
   :<|> listEngineersPublic
   :<|> bookingPublicServer
   :<|> inventoryStaticServer assetsRoot
@@ -3731,6 +3733,7 @@ protectedServer user =
   :<|> futureServer user
   :<|> DDEXServer.ddexServer user
   :<|> CatalogServer.catalogServer user
+  :<|> serviceStorefrontAdminServer
 
 validateCalendarRedirectUri :: Text -> Either ServerError Text
 validateCalendarRedirectUri rawRedirect =
