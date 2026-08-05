@@ -23,10 +23,10 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
 } from '@mui/icons-material';
-import type { ImportPlanConflict } from '../../api/ddex';
+import type { ImportConflictDTO } from '../../api/ddex';
 
 interface ConflictResolverProps {
-  conflicts: ImportPlanConflict[];
+  conflicts: ImportConflictDTO[];
   resolutions: Map<number, string>;
   onResolutionChange: (conflictId: number, action: string) => void;
 }
@@ -116,7 +116,7 @@ export const ConflictResolver: React.FC<ConflictResolverProps> = ({
           <TableBody>
             {conflicts.map((conflict) => {
               const isResolved = resolutions.has(conflict.conflictId);
-              const selectedAction = resolutions.get(conflict.conflictId) || conflict.ipcSuggestedAction;
+              const selectedAction = resolutions.get(conflict.conflictId) || 'ManualReview';
 
               return (
                 <TableRow
@@ -135,18 +135,18 @@ export const ConflictResolver: React.FC<ConflictResolverProps> = ({
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={conflict.ipcConflictType}
+                      label={conflict.conflictEntityType}
                       size="small"
-                      color={getConflictColor(conflict.ipcConflictType)}
+                      color={getConflictColor(conflict.conflictEntityType)}
                     />
                   </TableCell>
-                  <TableCell>{conflict.ipcEntityType}</TableCell>
+                  <TableCell>{conflict.conflictEntityType}</TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                      {conflict.ipcIdentifier}
+                      {conflict.conflictIdentifier}
                     </Typography>
                   </TableCell>
-                  <TableCell>{conflict.ipcDescription}</TableCell>
+                  <TableCell>{conflict.conflictDescription}</TableCell>
                   <TableCell>
                     <FormControl size="small" fullWidth>
                       <InputLabel>Action</InputLabel>
@@ -181,25 +181,20 @@ export const ConflictResolver: React.FC<ConflictResolverProps> = ({
               <Card key={conflict.conflictId} variant="outlined">
                 <CardContent>
                   <Stack direction="row" spacing={2} alignItems="center">
-                    {getConflictSeverity(conflict.ipcConflictType) === 'error' ? (
+                    {getConflictSeverity(conflict.conflictEntityType) === 'error' ? (
                       <ErrorIcon color="error" />
                     ) : (
                       <WarningIcon color="warning" />
                     )}
                     <Typography variant="subtitle1">
-                      {conflict.ipcConflictType}: {conflict.ipcIdentifier}
+                      {conflict.conflictEntityType}: {conflict.conflictIdentifier}
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {conflict.ipcDescription}
+                    {conflict.conflictDescription}
                   </Typography>
-                  {conflict.ipcExistingId && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Existing entity ID: <strong>{conflict.ipcExistingId}</strong>
-                    </Typography>
-                  )}
                   <Typography variant="body2" sx={{ mt: 1 }}>
-                    Suggested action: <Chip label={conflict.ipcSuggestedAction} size="small" />
+                    Suggested action: <Chip label="ManualReview" size="small" />
                   </Typography>
                 </CardContent>
               </Card>

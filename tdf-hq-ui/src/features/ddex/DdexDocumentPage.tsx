@@ -41,7 +41,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </Box>
 );
 
-export const DdexDocumentPage: React.FC = () => {
+const DdexDocumentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tabValue, setTabValue] = React.useState(0);
@@ -352,3 +352,5 @@ export const DdexDocumentPage: React.FC = () => {
     </Box>
   );
 };
+
+export default DdexDocumentPage;

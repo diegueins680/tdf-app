@@ -10,13 +10,14 @@ module TDF.Server.ServiceStorefront
 import           Control.Monad (when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
-import           Data.Aeson (eitherDecode, FromJSON(..), Value(..))
+import           Data.Aeson (eitherDecode, FromJSON(..), Value(..), (.=), object)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.KeyMap as KM
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Maybe (fromMaybe, catMaybes)
+import           Control.Applicative ((<|>))
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -25,7 +26,7 @@ import           Data.UUID (UUID, toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (selectList, get, insert, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
 import           Database.Persist.Sql (runSqlPool, SqlBackend)
-import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..))
+import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..), Manager)
 import           Network.HTTP.Client.TLS (tlsManagerSettings, newTlsManager)
 import           Network.HTTP.Types (statusCode)
 import           Servant
@@ -268,12 +269,104 @@ confirmDatafastStatusHandler mOrderId mResourcePath = do
         Just updated -> pure (orderToDTO oid updated)
 
 createPaypalOrderHandler :: Text -> AppM PaypalCreateDTO
-createPaypalOrderHandler _ =
-  throwError err501 { errBody = "PayPal not yet configured. Contact admin." }
+createPaypalOrderHandler orderIdText = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  
+  -- Load order by order number
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      -- Verify order is in a payable state
+      let status = ME.serviceStorefrontOrderStatus order
+      when (status `notElem` ["pending_payment", "payment_failed"]) $
+        throwError err400 { errBody = "Order is not in a payable state" }
+      
+      let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
+          currency = ME.serviceStorefrontOrderCurrency order
+          buyerName = ME.serviceStorefrontOrderBuyerName order
+          buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
+      
+      -- Load PayPal env
+      (cid, sec, baseUrl) <- loadPaypalEnvForService
+      manager <- liftIO newTlsManager
+      
+      -- Create PayPal order remotely
+      (ppOrderId, approvalUrl) <- createPaypalOrderRemoteForService
+        manager cid sec baseUrl totalCents currency buyerName buyerEmail
+      
+      -- Update order with PayPal info
+      liftIO $ flip runSqlPool envPool $ update oid
+        [ ME.ServiceStorefrontOrderStatus =. "paypal_pending"
+        , ME.ServiceStorefrontOrderPaymentProvider =. Just "paypal"
+        , ME.ServiceStorefrontOrderPaypalOrderId =. Just ppOrderId
+        , ME.ServiceStorefrontOrderUpdatedAt =. now
+        ]
+      
+      pure PaypalCreateDTO
+        { pcOrderId = toPathPiece oid
+        , pcPaypalOrderId = ppOrderId
+        , pcApprovalUrl = approvalUrl
+        }
 
 capturePaypalHandler :: PaypalCaptureReq -> AppM ServiceStorefrontOrderDTO
-capturePaypalHandler _ =
-  throwError err501 { errBody = "PayPal capture not yet configured." }
+capturePaypalHandler PaypalCaptureReq{..} = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  
+  -- Load order by order number
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber pcCaptureOrderId)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      -- Verify PayPal order ID matches
+      case ME.serviceStorefrontOrderPaypalOrderId order of
+        Nothing -> throwError err400 { errBody = "Order has no PayPal order" }
+        Just storedPpOrderId | storedPpOrderId /= pcCapturePaypalId ->
+          throwError err400 { errBody = "PayPal order ID mismatch" }
+        _ -> pure ()
+      
+      -- Load PayPal env
+      (cid, sec, baseUrl) <- loadPaypalEnvForService
+      manager <- liftIO newTlsManager
+      
+      -- Capture PayPal order
+      (captureStatus, payerEmail) <- capturePaypalOrderRemoteForService
+        manager cid sec baseUrl pcCapturePaypalId
+      
+      -- Determine next status
+      let nextStatus = case captureStatus of
+            "COMPLETED" -> "paid"
+            "APPROVED"  -> "paypal_pending"
+            _           -> "payment_failed"
+          paidAt = if nextStatus == "paid" then Just now else Nothing
+      
+      -- Update order
+      liftIO $ flip runSqlPool envPool $ update oid
+        [ ME.ServiceStorefrontOrderStatus =. nextStatus
+        , ME.ServiceStorefrontOrderPaypalPayerEmail =. (payerEmail <|> ME.serviceStorefrontOrderPaypalPayerEmail order)
+        , ME.ServiceStorefrontOrderPaidAt =. paidAt
+        , ME.ServiceStorefrontOrderUpdatedAt =. now
+        ]
+      
+      -- Insert status change
+      let statusChange = ME.ServiceStorefrontOrderStatusChange
+            { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+            , ME.serviceStorefrontOrderStatusChangeStatus = nextStatus
+            , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "PayPal capture: " <> captureStatus
+            , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "paypal_capture"
+            , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+            }
+      _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
+      
+      -- Return updated order
+      mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
+      case mUpdated of
+        Nothing -> throwError err500 { errBody = "Failed to load updated order" }
+        Just updated -> pure (orderToDTO oid updated)
 
 createRevisionHandler :: Text -> ServiceStorefrontRevisionCreate -> AppM ServiceStorefrontRevisionDTO
 createRevisionHandler _ _ =
@@ -620,3 +713,165 @@ renderFormBody params =
 -- | Strip trailing slash from a URL string.
 stripTrailingSlash :: String -> String
 stripTrailingSlash s = if not (null s) && last s == '/' then init s else s
+
+-- ============================================================================
+-- PayPal Integration
+-- ============================================================================
+
+-- | Load PayPal environment configuration.
+loadPaypalEnvForService :: AppM (Text, Text, String)
+loadPaypalEnvForService = do
+  mCid <- liftIO $ lookupEnv "PAYPAL_CLIENT_ID"
+  mSecret <- liftIO $ lookupEnv "PAYPAL_CLIENT_SECRET"
+  mEnv <- liftIO $ lookupEnv "PAYPAL_ENV"
+  cid <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_ID not set" }) (pure . T.pack) mCid
+  secret <- maybe (throwError err500 { errBody = "PAYPAL_CLIENT_SECRET not set" }) (pure . T.pack) mSecret
+  let baseUrl = case mEnv of
+        Just "sandbox" -> "https://api-m.sandbox.paypal.com"
+        Just "live"    -> "https://api-m.paypal.com"
+        _              -> "https://api-m.sandbox.paypal.com"
+  pure (cid, secret, baseUrl)
+
+-- | Get PayPal access token.
+paypalAccessTokenForService :: Manager -> Text -> Text -> String -> AppM Text
+paypalAccessTokenForService manager cid sec baseUrl = do
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyBS "grant_type=client_credentials"
+        , requestHeaders =
+            [ ("Authorization", "Basic " <> encodeBasicAuth cid sec)
+            , ("Content-Type", "application/x-www-form-urlencoded")
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal token request failed." }
+  case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal token response: " <> T.pack err)) }
+    Right (Object obj) -> case KM.lookup "access_token" obj of
+      Just (String token) -> pure token
+      _ -> throwError err502 { errBody = "No access_token in PayPal response" }
+    _ -> throwError err502 { errBody = "Invalid PayPal token response format" }
+
+-- | Create a PayPal order remotely.
+createPaypalOrderRemoteForService
+  :: Manager -> Text -> Text -> String -> Int -> Text -> Text -> Text
+  -> AppM (Text, Maybe Text)
+createPaypalOrderRemoteForService manager cid sec baseUrl totalCents currency buyerName buyerEmail = do
+  token <- paypalAccessTokenForService manager cid sec baseUrl
+  let amountStr = formatUsdCentsDecimal totalCents
+      body = object
+        [ "intent" .= ("CAPTURE" :: Text)
+        , "purchase_units" .=
+            [ object
+                [ "amount" .= object
+                    [ "currency_code" .= T.toUpper currency
+                    , "value" .= amountStr
+                    ]
+                ]
+            ]
+        , "payer" .= object
+            [ "name" .= object ["given_name" .= buyerName]
+            , "email_address" .= buyerEmail
+            ]
+        , "application_context" .= object
+            [ "shipping_preference" .= ("NO_SHIPPING" :: Text) ]
+        ]
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyLBS (Aeson.encode body)
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal create order failed." }
+  case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal response: " <> T.pack err)) }
+    Right (Object obj) -> do
+      ppOrderId <- case KM.lookup "id" obj of
+        Just (String s) -> pure s
+        _ -> throwError err502 { errBody = "No order ID in PayPal response" }
+      approvalUrl <- extractPaypalApprovalUrl obj
+      pure (ppOrderId, approvalUrl)
+    _ -> throwError err502 { errBody = "Invalid PayPal response format" }
+
+-- | Capture a PayPal order remotely.
+capturePaypalOrderRemoteForService
+  :: Manager -> Text -> Text -> String -> Text
+  -> AppM (Text, Maybe Text)  -- (status, payerEmail)
+capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
+  token <- paypalAccessTokenForService manager cid sec baseUrl
+  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack ppOrderId ++ "/capture")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyBS "{}"
+        , requestHeaders =
+            [ ("Content-Type", "application/json")
+            , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "PayPal capture failed." }
+  case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal capture response: " <> T.pack err)) }
+    Right (Object obj) -> do
+      let captureStatus = case KM.lookup "status" obj of
+            Just (String s) -> s
+            _ -> "UNKNOWN"
+      let payerEmail = case KM.lookup "payer" obj of
+            Just (Object payerObj) -> case KM.lookup "email_address" payerObj of
+              Just (String e) -> Just e
+              _ -> Nothing
+            _ -> Nothing
+      pure (captureStatus, payerEmail)
+    _ -> throwError err502 { errBody = "Invalid PayPal capture response format" }
+
+-- | Extract approval URL from PayPal order response.
+extractPaypalApprovalUrl :: Aeson.Object -> AppM (Maybe Text)
+extractPaypalApprovalUrl obj = case KM.lookup "links" obj of
+  Just (Array links) -> pure $ findApprovalUrl (foldr (:) [] links)
+  _ -> pure Nothing
+
+findApprovalUrl :: [Value] -> Maybe Text
+findApprovalUrl [] = Nothing
+findApprovalUrl (Object lnk : rest) =
+  case (KM.lookup "rel" lnk, KM.lookup "href" lnk) of
+    (Just (String rel), Just (String href))
+      | T.toLower (T.strip rel) == "approve" -> Just href
+    _ -> findApprovalUrl rest
+findApprovalUrl (_ : rest) = findApprovalUrl rest
+
+-- | Encode Basic auth header.
+encodeBasicAuth :: Text -> Text -> ByteString
+encodeBasicAuth cid sec =
+  let credentials = TE.encodeUtf8 (cid <> ":" <> sec)
+  in TE.encodeUtf8 (T.pack (encodeBase64 credentials))
+
+-- | Simple Base64 encoding.
+encodeBase64 :: ByteString -> String
+encodeBase64 bs =
+  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+      toChar n = chars !! (n `mod` 64)
+      bytes = map fromIntegral (BS.unpack bs) :: [Int]
+      triples = splitInto 3 bytes
+      encodeTriple [a] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16)]
+      encodeTriple [a, b] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16 + b `div` 16), toChar ((b `mod` 16) * 4)]
+      encodeTriple [a, b, c] = [toChar (a `div` 4), toChar ((a `mod` 4) * 16 + b `div` 16), toChar ((b `mod` 16) * 4 + c `div` 64), toChar (c `mod` 64)]
+      encodeTriple _ = ""
+      splitInto _ [] = []
+      splitInto n xs = take n xs : splitInto n (drop n xs)
+      pad = let r = BS.length bs `mod` 3 in if r == 0 then "" else replicate (3 - r) '='
+  in concatMap encodeTriple triples ++ pad
+
+-- | Format cents as decimal USD string (e.g., 15000 -> "150.00").
+formatUsdCentsDecimal :: Int -> Text
+formatUsdCentsDecimal cents =
+  let dollars = cents `div` 100
+      c = cents `mod` 100
+  in T.pack (show dollars) <> "." <> T.pack (if c < 10 then "0" ++ show c else show c)

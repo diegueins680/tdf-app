@@ -28,7 +28,7 @@ export const DdexUploadDropzone: React.FC<DdexUploadDropzoneProps> = ({
         reader.onload = () => {
           const dataUrl = reader.result as string;
           // Remove data URL prefix
-          const base64Data = dataUrl.split(',')[1];
+          const base64Data = dataUrl.split(',')[1] ?? '';
           resolve(base64Data);
         };
         reader.onerror = reject;
@@ -51,19 +51,18 @@ export const DdexUploadDropzone: React.FC<DdexUploadDropzoneProps> = ({
   });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      // Validate file type
-      const validTypes = ['application/xml', 'text/xml', ''];
-      const isValidType = validTypes.includes(file.type) || file.name.endsWith('.xml');
-      
-      if (!isValidType) {
-        setUploadError('Please upload an XML file');
-        return;
-      }
+    const file = acceptedFiles[0];
+    if (!file) return;
+    // Validate file type
+    const validTypes = ['application/xml', 'text/xml', ''];
+    const isValidType = validTypes.includes(file.type) || file.name.endsWith('.xml');
 
-      uploadMutation.mutate(file);
+    if (!isValidType) {
+      setUploadError('Please upload an XML file');
+      return;
     }
+
+    uploadMutation.mutate(file);
   }, [uploadMutation]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

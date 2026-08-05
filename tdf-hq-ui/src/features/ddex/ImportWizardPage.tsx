@@ -24,7 +24,7 @@ import { ConflictResolver } from './ConflictResolver';
 
 const steps = ['Review Changes', 'Resolve Conflicts', 'Confirm Import'];
 
-export const ImportWizardPage: React.FC = () => {
+const ImportWizardPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
@@ -234,3 +234,5 @@ export const ImportWizardPage: React.FC = () => {
     </Box>
   );
 };
+
+export default ImportWizardPage;

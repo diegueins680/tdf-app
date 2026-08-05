@@ -33,7 +33,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DDEX, getStatusColor } from '../../api/ddex';
 import { DdexUploadDropzone } from './DdexUploadDropzone';
 
-export const DdexInboxPage: React.FC = () => {
+const DdexInboxPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -224,3 +224,5 @@ export const DdexInboxPage: React.FC = () => {
     </Box>
   );
 };
+
+export default DdexInboxPage;

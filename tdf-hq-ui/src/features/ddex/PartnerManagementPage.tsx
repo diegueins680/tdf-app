@@ -30,7 +30,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
 import type { DdexPartnerDTO, DdexPartnerCreateRequest } from '../../api/ddex';
 
-export const PartnerManagementPage: React.FC = () => {
+const PartnerManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPartner, setEditingPartner] = useState<DdexPartnerDTO | null>(null);
@@ -228,3 +228,5 @@ export const PartnerManagementPage: React.FC = () => {
     </Box>
   );
 };
+
+export default PartnerManagementPage;
