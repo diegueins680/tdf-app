@@ -5,9 +5,10 @@
 
 module TDF.API.Admin where
 
+import qualified Data.ByteString.Lazy as BL
 import           Data.Text     (Text)
 import qualified Data.Text     as T
-import           Data.Time     (UTCTime)
+import           Data.Time     (Day, UTCTime)
 import           Servant
 
 import           TDF.API.Types ( DropdownOptionCreate
@@ -29,7 +30,16 @@ import           Data.Char      ( GeneralCategory(Format, LineSeparator, Paragra
                                 )
 import           GHC.Generics (Generic)
 import           Data.Int      (Int64)
-import           TDF.DTO       (ArtistProfileDTO, ArtistProfileUpsert, ArtistReleaseDTO, ArtistReleaseUpsert, LogEntryDTO, UserActivityDTO)
+import           TDF.DTO       ( ArtistProfileDTO
+                               , ArtistProfileUpsert
+                               , ArtistPromoDayReportDTO
+                               , ArtistPromoSlotDTO
+                               , ArtistPromoSlotUpsert
+                               , ArtistReleaseDTO
+                               , ArtistReleaseUpsert
+                               , LogEntryDTO
+                               , UserActivityDTO
+                               )
 
 type DropdownCategoryAPI =
        QueryParam "includeInactive" Bool :> Get '[JSON] [DropdownOptionDTO]
@@ -60,6 +70,15 @@ type UserCommunicationsAPI =
 
 type RolesAPI = Get '[JSON] [RoleDetailDTO]
 
+type ArtistPromotionAdminAPI =
+       ( QueryParam' '[Required] "day" Day :> Get '[JSON] [ArtistPromoSlotDTO] )
+  :<|> ( ReqBody '[JSON] ArtistPromoSlotUpsert :> Post '[JSON] ArtistPromoSlotDTO )
+  :<|> ( Capture "promotionId" Int64 :> ReqBody '[JSON] ArtistPromoSlotUpsert :> Put '[JSON] ArtistPromoSlotDTO )
+  :<|> ( Capture "promotionId" Int64 :> Delete '[JSON] NoContent )
+  :<|> ( "report" :> QueryParam' '[Required] "day" Day :> Get '[JSON] ArtistPromoDayReportDTO )
+  :<|> ( "report" :> "pdf" :> QueryParam' '[Required] "day" Day
+         :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString) )
+
 type ArtistAdminAPI =
        "profiles" :>
          ( Get '[JSON] [ArtistProfileDTO]
@@ -72,6 +91,7 @@ type ArtistAdminAPI =
   :<|> "profiles" :> Capture "artistProfileId" Int64 :> "connect" :> "onboarding-link"
          :> ReqBody '[JSON] ConnectOnboardingLinkRequest
          :> Post '[JSON] ConnectOnboardingLinkResponse
+  :<|> Capture "artistId" Int64 :> "promotions" :> ArtistPromotionAdminAPI
 
 type LogsAPI =
        QueryParam "limit" Int :> Get '[JSON] [LogEntryDTO]
