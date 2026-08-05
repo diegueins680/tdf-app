@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module TDF.DDEX.ERN.V432.ParseSpec (spec) where
 
 import Test.Hspec
 import qualified Data.ByteString.Lazy as BL
 import Data.Either (isRight, isLeft)
+import Data.Text (Text)
 import TDF.DDEX.ERN.V432.Parse
 import TDF.DDEX.ERN.V432.Types
 
