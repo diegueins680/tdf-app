@@ -40,6 +40,7 @@ import type {
 } from '../api/types';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 interface FormState {
   id?: string;
@@ -94,7 +95,7 @@ export default function ServiceTypesPage() {
   const [form, setForm] = useState<FormState>({
     name: '',
     price: '',
-    currency: 'USD',
+    currency: resolveRuntimeCurrency(),
     billingUnit: '',
     kind: 'Recording',
     pricingModel: 'Hourly',
@@ -148,7 +149,7 @@ export default function ServiceTypesPage() {
     setForm({
       name: '',
       price: '',
-      currency: 'USD',
+      currency: resolveRuntimeCurrency(),
       billingUnit: '',
       kind: 'Recording',
       pricingModel: 'Hourly',
@@ -209,7 +210,7 @@ export default function ServiceTypesPage() {
       setFieldErrors((prev) => ({ ...prev, tax: 'Ingresa puntos base numéricos o deja vacío si no aplica.' }));
       return;
     }
-    const currency = form.currency.trim() || 'USD';
+    const currency = form.currency.trim() || resolveRuntimeCurrency();
     const billingUnit = form.billingUnit.trim() || null;
     setError(null);
     try {

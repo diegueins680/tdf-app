@@ -25,6 +25,7 @@ import {
   type DiscoveryReviewStatus,
   type SocialDiscoveryPost,
 } from '../api/socialDiscovery';
+import { formatDateTimeForUser } from '../utils/formatters';
 
 const reviewLabels: Record<DiscoveryReviewStatus, string> = {
   pending: 'Pendiente',
@@ -34,8 +35,7 @@ const reviewLabels: Record<DiscoveryReviewStatus, string> = {
 
 const formatDate = (value?: string | null) => {
   if (!value) return 'Sin fecha de publicación';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-EC');
+  return formatDateTimeForUser(value);
 };
 
 interface ReviewDraft {

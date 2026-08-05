@@ -37,6 +37,11 @@
       "introducedBy": "54009732c8ac9d2a4e7b6912b5ec1ed9dd5d945e"
     },
     {
+      "id": "2026-08-05_platform_internationalization",
+      "path": "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
+      "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
+    },
+    {
       "id": "2026-08-05_artist_promotion_slots",
       "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
       "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"

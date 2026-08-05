@@ -16,6 +16,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import TagIcon from '@mui/icons-material/Tag';
 import { Ads } from '../api/ads';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { formatDateForUser } from '../utils/formatters';
 
 export default function AdsInboxPage() {
   const inquiriesQuery = useQuery({
@@ -75,7 +76,7 @@ export default function AdsInboxPage() {
                         )}
                       </Box>
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(inq.createdAt).toLocaleString('es-EC', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {formatDateForUser(inq.createdAt, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </Typography>
                     </Stack>
                   </Paper>

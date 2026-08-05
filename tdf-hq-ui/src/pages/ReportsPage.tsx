@@ -16,14 +16,31 @@ import { Bookings } from '../api/bookings';
 import { Payments } from '../api/payments';
 import { Trials } from '../api/trials';
 import PageShell from '../components/PageShell';
+import {
+  formatCurrencyForUser,
+  formatDateForUser,
+  resolveRuntimeCurrency,
+  resolveRuntimeFormatOptions,
+} from '../utils/formatters';
 
-const currency = (cents: number) =>
-  cents.toLocaleString('es-EC', { style: 'currency', currency: 'USD', maximumFractionDigits: 2, minimumFractionDigits: 2 }).replace('USD', '$');
+type CurrencyTotals = Record<string, number>;
+
+const sumPaymentsByCurrency = (payments: Awaited<ReturnType<typeof Payments.list>>): CurrencyTotals =>
+  payments.reduce<CurrencyTotals>((totals, payment) => {
+    const code = payment.payCurrency?.trim().toUpperCase() || resolveRuntimeCurrency();
+    totals[code] = (totals[code] ?? 0) + (payment.payAmountCents ?? 0);
+    return totals;
+  }, {});
+
+const formatCurrencyTotals = (totals: CurrencyTotals) => {
+  const entries = Object.entries(totals).sort(([left], [right]) => left.localeCompare(right));
+  return entries.length === 0
+    ? formatCurrencyForUser(0, resolveRuntimeCurrency())
+    : entries.map(([code, cents]) => formatCurrencyForUser(cents / 100, code)).join(' · ');
+};
 
 const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-EC', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return formatDateForUser(iso, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const toLocalInput = (iso: string) => {
@@ -159,6 +176,7 @@ export default function ReportsPage() {
   );
 
   const now = useMemo(() => new Date(clockTs), [clockTs]);
+  const userTimeZone = resolveRuntimeFormatOptions().timeZone;
   const sevenDaysOut = useMemo(() => {
     const d = new Date(clockTs);
     d.setDate(d.getDate() + 7);
@@ -172,14 +190,20 @@ export default function ReportsPage() {
     });
     const upcomingClasses = filteredClasses.filter((c) => new Date(c.startAt) >= now);
 
-    const revenueInRange = filteredPayments.reduce((acc, p) => acc + (p.payAmountCents ?? 0), 0);
-    const revenueToday = filteredPayments
-      .filter((p) => {
+    const revenueInRange = sumPaymentsByCurrency(filteredPayments);
+    const calendarDayFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: userTimeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const todayKey = calendarDayFormatter.format(now);
+    const revenueToday = sumPaymentsByCurrency(
+      filteredPayments.filter((p) => {
         const paid = new Date(p.payPaidAt);
-        const today = new Date();
-        return paid.toDateString() === today.toDateString();
-      })
-      .reduce((acc, p) => acc + (p.payAmountCents ?? 0), 0);
+        return !Number.isNaN(paid.getTime()) && calendarDayFormatter.format(paid) === todayKey;
+      }),
+    );
 
     return {
       upcomingBookingsCount: upcomingBookings.length,
@@ -187,7 +211,7 @@ export default function ReportsPage() {
       revenueRange: revenueInRange,
       revenueToday,
     };
-  }, [filteredBookings, filteredClasses, filteredPayments, now, sevenDaysOut]);
+  }, [filteredBookings, filteredClasses, filteredPayments, now, sevenDaysOut, userTimeZone]);
 
   const summaryLoading = bookingsQuery.isLoading || paymentsQuery.isLoading || classesQuery.isLoading;
   const summaryError = bookingsQuery.error ?? paymentsQuery.error ?? classesQuery.error ?? null;
@@ -305,7 +329,7 @@ export default function ReportsPage() {
           <Card variant="outlined">
             <CardContent>
               <Typography color="text.secondary" variant="body2">Ingresos en rango</Typography>
-              <Typography variant="h5" fontWeight={800}>{currency(kpis.revenueRange / 100)}</Typography>
+              <Typography variant="h5" fontWeight={800}>{formatCurrencyTotals(kpis.revenueRange)}</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -313,7 +337,7 @@ export default function ReportsPage() {
           <Card variant="outlined">
             <CardContent>
               <Typography color="text.secondary" variant="body2">Ingresos hoy</Typography>
-              <Typography variant="h5" fontWeight={800}>{currency(kpis.revenueToday / 100)}</Typography>
+              <Typography variant="h5" fontWeight={800}>{formatCurrencyTotals(kpis.revenueToday)}</Typography>
             </CardContent>
           </Card>
         </Grid>

@@ -33,6 +33,7 @@ import type { ArtistProfileDTO } from '../api/types';
 import { STUDIO_MAP_URL } from '../config/appConfig';
 import { recordings, releases } from '../constants/recordsContent';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { formatNumberForUser } from '../utils/formatters';
 
 const GENERAL_SIGNUP_PATH = '/login?signup=1&redirect=/fans';
 const FAN_SIGNUP_PATH = '/login?signup=1&roles=Fan&redirect=/fans';
@@ -346,7 +347,7 @@ const fallbackImages = [
 ].filter(Boolean) as string[];
 
 const formatFollowerCount = (value: number) =>
-  value === 1 ? '1 seguidor' : `${value.toLocaleString('es-EC')} seguidores`;
+  value === 1 ? '1 seguidor' : `${formatNumberForUser(value)} seguidores`;
 
 const artistImageFor = (artist: ArtistProfileDTO, index: number) =>
   getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ??
@@ -950,7 +951,7 @@ export default function TdfPlatformPage() {
               <Stack direction="row" spacing={1} flexWrap="wrap" alignSelf={{ xs: 'flex-start', md: 'flex-end' }}>
                 <Chip
                   icon={<GroupsIcon />}
-                  label={`${totalFollowers.toLocaleString('es-EC')} seguidores`}
+                  label={`${formatNumberForUser(totalFollowers)} seguidores`}
                   sx={{ bgcolor: COLOR_CYAN_CHIP_BACKGROUND, color: COLOR_CYAN_SOFT_TEXT }}
                 />
                 <Chip

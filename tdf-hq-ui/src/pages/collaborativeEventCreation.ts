@@ -4,6 +4,7 @@ import type {
   EventLogisticsMemberDTO,
   SocialEventDTO,
 } from '../api/socialEvents';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 export type CollaborativeEventRole = EventLogisticsMemberDTO['elmRole'];
 
@@ -145,7 +146,7 @@ export function buildCollaborativeEventPayload(
     eventCapacity: parseOptionalCapacity(draft.capacity),
     eventType: draft.eventType,
     eventStatus: 'planning',
-    eventCurrency: 'USD',
+    eventCurrency: resolveRuntimeCurrency(),
     eventBudgetCents: null,
     eventTicketUrl: normalizeTicketUrl(draft.ticketUrl),
     eventImageUrl: null,

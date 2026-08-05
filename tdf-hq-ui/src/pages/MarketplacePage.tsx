@@ -61,6 +61,7 @@ import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
+import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
 
 const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
 
@@ -886,7 +887,7 @@ export default function MarketplacePage() {
   }, [computeRelevanceScore, filteredListings, sort]);
   const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
   const hasCartItems = cartItems.length > 0;
-  const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
+  const cartSubtotal = cart?.mcSubtotalDisplay ?? formatCurrencyForUser(0, paypalCurrency ?? resolveRuntimeCurrency());
   const checkoutDisabledReason = useMemo(() => {
     if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
     if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';

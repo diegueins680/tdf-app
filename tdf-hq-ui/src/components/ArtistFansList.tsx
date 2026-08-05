@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import { Fans } from '../api/fans';
+import { formatDateForUser } from '../utils/formatters';
 
 interface ArtistFansListProps {
   artistId: number;
@@ -129,7 +130,7 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
                 {fan.afDisplayName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Fan desde {new Date(fan.afFollowedAt).toLocaleDateString('es-EC', {
+                Fan desde {formatDateForUser(fan.afFollowedAt, {
                   year: 'numeric',
                   month: 'short',
                   day: 'numeric',

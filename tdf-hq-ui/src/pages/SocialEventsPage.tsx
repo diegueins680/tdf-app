@@ -51,6 +51,7 @@ import {
   getSocialEventsOverviewUiState,
 } from './socialEventsPageState';
 import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
+import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 
 interface InvitationState {
   partyId: string;
@@ -177,13 +178,18 @@ const PROJECT_BUDGET_TEMPLATE: {
   { code: 'EXP-SECURITY', name: 'Seguridad', type: 'expense', category: 'security' },
 ];
 
-const formatDate = (iso: string) =>
-  DateTime.fromISO(iso).setLocale('es').toFormat('EEE d LLL, HH:mm');
+const formatDate = (iso: string) => formatDateForUser(iso, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 const formatMoney = (amountCents?: number | null, currency?: string | null) => {
   if (typeof amountCents !== 'number') return 'Gratis';
-  const code = (currency ?? 'USD').toUpperCase();
-  return `${code} ${(amountCents / 100).toFixed(2)}`;
+  const code = (currency ?? resolveRuntimeCurrency()).toUpperCase();
+  return formatCurrencyForUser(amountCents / 100, code);
 };
 
 const ticketCheckoutTotal = (faceValueCents: number) => {
@@ -271,7 +277,7 @@ const buildEventFinanceCsvRows = (
   const eventTitle = event.eventTitle;
   const eventStart = event.eventStart;
   const eventEnd = event.eventEnd;
-  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? 'USD').toUpperCase();
+  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? resolveRuntimeCurrency()).toUpperCase();
 
   const summaryMetrics: [string, number | string | null | undefined][] = [
     ['budget_cents', financeSummary?.efsBudgetCents],
@@ -388,6 +394,7 @@ const buildEventFinanceCsvRows = (
 export default function SocialEventsPage() {
   const qc = useQueryClient();
   const { session } = useSession();
+  const preferredCurrency = resolveRuntimeCurrency();
   const [city, setCity] = useState('');
   const [eventTypeFilter, setEventTypeFilter] = useState('');
   const [eventStatusFilter, setEventStatusFilter] = useState('');
@@ -631,7 +638,7 @@ export default function SocialEventsPage() {
         name: '',
         price: '',
         quantity: '',
-        currency: 'USD',
+        currency: preferredCurrency,
       };
       const priceCents = parseOptionalUnsignedInt(draft.price);
       const quantity = parseOptionalUnsignedInt(draft.quantity);
@@ -643,7 +650,7 @@ export default function SocialEventsPage() {
         ticketTierName: draft.name.trim(),
         ticketTierDescription: null,
         ticketTierPriceCents: priceCents,
-        ticketTierCurrency: draft.currency.trim().toUpperCase() || 'USD',
+        ticketTierCurrency: draft.currency.trim().toUpperCase() || preferredCurrency,
         ticketTierQuantityTotal: quantity,
         ticketTierQuantitySold: 0,
         ticketTierSalesStart: null,
@@ -656,7 +663,7 @@ export default function SocialEventsPage() {
     onSuccess: (_resp, { eventId }) => {
       setTicketTierForms((prev) => ({
         ...prev,
-        [eventId]: { code: '', name: '', price: '', quantity: '', currency: 'USD' },
+        [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
       }));
       void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
       setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
@@ -776,14 +783,14 @@ export default function SocialEventsPage() {
         counterparty: '',
         concept: '',
         amountCents: '',
-        currency: 'USD',
+        currency: preferredCurrency,
         status: 'pending' as const,
         notes: '',
       };
       const amountCents = parseOptionalUnsignedInt(draft.amountCents);
       if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
       if (amountCents === null || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
-      const currency = draft.currency.trim().toUpperCase() || 'USD';
+      const currency = draft.currency.trim().toUpperCase() || preferredCurrency;
       const contractResponse = await ContractsAPI.create({
         kind: draft.kind.trim() || 'event_vendor_contract',
         eventId,
@@ -821,7 +828,7 @@ export default function SocialEventsPage() {
           counterparty: '',
           concept: '',
           amountCents: '',
-          currency: 'USD',
+          currency: preferredCurrency,
           status: 'pending',
           notes: '',
         },
@@ -860,7 +867,7 @@ export default function SocialEventsPage() {
         category: 'general',
         concept: '',
         amountCents: '',
-        currency: 'USD',
+        currency: preferredCurrency,
         status: 'posted',
         externalRef: '',
         notes: '',
@@ -876,7 +883,7 @@ export default function SocialEventsPage() {
         efeCategory: draft.category.trim() || 'general',
         efeConcept: draft.concept.trim(),
         efeAmountCents: amountCents,
-        efeCurrency: draft.currency.trim().toUpperCase() || 'USD',
+        efeCurrency: draft.currency.trim().toUpperCase() || preferredCurrency,
         efeStatus: draft.status,
         efeExternalRef: draft.externalRef.trim() || null,
         efeNotes: draft.notes.trim() || null,
@@ -894,7 +901,7 @@ export default function SocialEventsPage() {
           category: 'general',
           concept: '',
           amountCents: '',
-          currency: 'USD',
+          currency: preferredCurrency,
           status: 'posted',
           externalRef: '',
           notes: '',
@@ -1237,7 +1244,7 @@ export default function SocialEventsPage() {
               availableTiers.find((tier) => String(tier.ticketTierId ?? '') === purchaseDraft.tierId)
               ?? availableTiers[0]
               ?? null;
-            const tierDraft = ticketTierForms[eventId] ?? { code: '', name: '', price: '', quantity: '', currency: 'USD' };
+            const tierDraft = ticketTierForms[eventId] ?? { code: '', name: '', price: '', quantity: '', currency: preferredCurrency };
             const budgetDraft = budgetLineForms[eventId] ?? {
               code: '',
               name: '',
@@ -1253,7 +1260,7 @@ export default function SocialEventsPage() {
               category: 'general',
               concept: '',
               amountCents: '',
-              currency: ev.eventCurrency ?? 'USD',
+              currency: ev.eventCurrency ?? preferredCurrency,
               status: 'posted' as const,
               externalRef: '',
               notes: '',
@@ -1264,7 +1271,7 @@ export default function SocialEventsPage() {
               counterparty: '',
               concept: '',
               amountCents: '',
-              currency: ev.eventCurrency ?? 'USD',
+              currency: ev.eventCurrency ?? preferredCurrency,
               status: 'pending' as const,
               notes: '',
             };
@@ -1318,12 +1325,12 @@ export default function SocialEventsPage() {
                     ) : null}
                     {typeof ev.eventPriceCents === 'number' && (
                       <Typography variant="body2" color="text.secondary">
-                        Cover referencial: {formatMoney(ev.eventPriceCents, ev.eventCurrency ?? 'USD')}
+                        Cover referencial: {formatMoney(ev.eventPriceCents, ev.eventCurrency ?? preferredCurrency)}
                       </Typography>
                     )}
                     {typeof ev.eventBudgetCents === 'number' && (
                       <Typography variant="body2" color="text.secondary">
-                        Presupuesto general: {formatMoney(ev.eventBudgetCents, ev.eventCurrency ?? 'USD')}
+                        Presupuesto general: {formatMoney(ev.eventBudgetCents, ev.eventCurrency ?? preferredCurrency)}
                       </Typography>
                     )}
                     {ev.eventDescription && (
@@ -1722,7 +1729,7 @@ export default function SocialEventsPage() {
                                   <Stack key={line.eblId ?? line.eblCode} direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                                     <Chip size="small" label={`${line.eblCode} · ${line.eblType}`} />
                                     <Typography variant="caption" color="text.secondary">
-                                      Plan: {formatMoney(line.eblPlannedCents, ev.eventCurrency ?? 'USD')} · Real: {formatMoney(line.eblActualCents ?? 0, ev.eventCurrency ?? 'USD')}
+                                      Plan: {formatMoney(line.eblPlannedCents, ev.eventCurrency ?? preferredCurrency)} · Real: {formatMoney(line.eblActualCents ?? 0, ev.eventCurrency ?? preferredCurrency)}
                                     </Typography>
                                   </Stack>
                                 ))}

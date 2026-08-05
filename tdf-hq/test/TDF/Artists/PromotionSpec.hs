@@ -4,6 +4,8 @@ module TDF.Artists.PromotionSpec (spec) where
 
 import qualified Data.Aeson as A
 import           Data.Either              (isLeft)
+import           Data.Foldable            (for_)
+import           Data.Maybe               (isJust)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Data.Time                (fromGregorian)
@@ -11,7 +13,7 @@ import           Data.Time.Clock          (UTCTime (..), secondsToDiffTime)
 import           Database.Persist         (Key, insert)
 import           Database.Persist.Sql     (SqlBackend, SqlPersistT, rawExecute)
 import           Database.Persist.Sqlite  (runSqlite)
-import           Control.Monad.IO.Class   (MonadIO)
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           Control.Monad.Logger     (NoLoggingT)
 import           Control.Monad.Trans.Reader (ReaderT)
 import           Control.Monad.Trans.Resource (ResourceT)
@@ -32,14 +34,14 @@ spec :: Spec
 spec = do
     describe "ArtistPromoSlotUpsert FromJSON" $ do
         it "accepts canonical artist promotion payloads" $
-            case A.eitherDecode
-                "{\"apsuDay\":\"2026-04-23\",\"apsuStartTime\":\"09:15\",\"apsuMedium\":\"Radio Quito\",\"apsuProgram\":\"Despertar\",\"apsuInterviewerHost\":\"Ana Rivera\",\"apsuBandMembers\":\"La Ruta\",\"apsuStatus\":\"confirmado\",\"apsuNotes\":\"Llegar 15 minutos antes\"}" of
-                Left err ->
-                    expectationFailure ("Expected canonical artist promotion payload to decode, got: " <> err)
-                Right payload -> do
+            either
+                (expectationFailure . ("Expected canonical artist promotion payload to decode, got: " <>))
+                (\payload -> do
                     apsuStartTime payload `shouldBe` "09:15"
                     apsuMedium payload `shouldBe` "Radio Quito"
-                    apsuProgram payload `shouldBe` "Despertar"
+                    apsuProgram payload `shouldBe` "Despertar")
+                (A.eitherDecode
+                    "{\"apsuDay\":\"2026-04-23\",\"apsuStartTime\":\"09:15\",\"apsuMedium\":\"Radio Quito\",\"apsuProgram\":\"Despertar\",\"apsuInterviewerHost\":\"Ana Rivera\",\"apsuBandMembers\":\"La Ruta\",\"apsuStatus\":\"confirmado\",\"apsuNotes\":\"Llegar 15 minutos antes\"}")
 
         it "rejects unexpected artist promotion keys so typoed writes fail explicitly" $ do
             (A.eitherDecode
@@ -82,8 +84,8 @@ spec = do
             map apsStatus slots `shouldBe` [Nothing, Just "confirmado"]
             map apsNotes slots `shouldBe` [Just "Llegar temprano", Nothing]
 
-        it "builds a report with Ecuador header data and PDF-ready columns" $ do
-            report <- runInMemory $ do
+        it "builds a locale- and timezone-aware report with PDF-ready columns" $ do
+            mReport <- runInMemory $ do
                 let now = mkUtc 2026 4 23
                     reportDay = fromGregorian 2026 4 23
                 artistId <- insertParty "La Ruta"
@@ -98,16 +100,17 @@ spec = do
                         , apsuStatus = Just "confirmado"
                         , apsuNotes = Just "Llegar 15 minutos antes"
                         }
-                mReport <- loadArtistPromoDayReport artistId reportDay
-                pure (maybe (error "Expected artist promotion report to exist") id mReport)
+                loadArtistPromoDayReport "es" "America/New_York" artistId reportDay
 
-            let latex = renderArtistPromoDayReportLatex report
-            apdArtistName report `shouldBe` "La Ruta"
-            apdTimezone report `shouldBe` "Hora de Ecuador (America/Guayaquil)"
-            apdDayHeader report `shouldSatisfy` T.isInfixOf "abril de 2026"
-            latex `shouldSatisfy` T.isInfixOf "Reporte diario de promoción"
-            latex `shouldSatisfy` T.isInfixOf "Hora & Medio & Programa"
-            latex `shouldSatisfy` T.isInfixOf "La mañana en vivo"
+            mReport `shouldSatisfy` isJust
+            for_ mReport $ \report -> do
+                let latex = renderArtistPromoDayReportLatex report
+                apdArtistName report `shouldBe` "La Ruta"
+                apdTimezone report `shouldBe` "America/New_York"
+                apdDayHeader report `shouldSatisfy` T.isInfixOf "abril de 2026"
+                latex `shouldSatisfy` T.isInfixOf "Reporte diario de promoción"
+                latex `shouldSatisfy` T.isInfixOf "Hora & Medio & Programa"
+                latex `shouldSatisfy` T.isInfixOf "La mañana en vivo"
 
 runInMemory :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> IO a
 runInMemory action =
@@ -173,12 +176,10 @@ insertParty name =
 
 createSlot :: (MonadIO m) => Key Party -> UTCTime -> ArtistPromoSlotUpsert -> SqlPersistT m ()
 createSlot artistId now payload =
-    case createArtistPromoSlotRecord artistId payload now of
-        Left err ->
-            error ("Expected valid artist promo payload, got: " <> show err)
-        Right action -> do
-            _ <- action
-            pure ()
+    either
+        (liftIO . expectationFailure . ("Expected valid artist promo payload, got: " <>) . show)
+        (>> pure ())
+        (createArtistPromoSlotRecord artistId payload now)
 
 mkUtc :: Integer -> Int -> Int -> UTCTime
 mkUtc yearVal monthVal dayVal =

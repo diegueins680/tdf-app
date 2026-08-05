@@ -28,6 +28,7 @@ import { useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { formatDateForUser } from '../utils/formatters';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
@@ -45,7 +46,7 @@ const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
 
 function ReleaseCard({ release }: ReleaseCardProps) {
   const releaseDate = release.arReleaseDate
-    ? new Date(release.arReleaseDate).toLocaleDateString('es-EC', {
+    ? formatDateForUser(release.arReleaseDate, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

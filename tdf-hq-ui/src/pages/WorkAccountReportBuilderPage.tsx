@@ -37,6 +37,7 @@ import {
   type WorkAccountReportSource,
   type WorkBlockSource,
 } from '../features/finance/davidCelayaReport';
+import { formatDateTimeForUser } from '../utils/formatters';
 
 type BuilderBlock = WorkBlockSource;
 type CustomFieldType = 'text' | 'number' | 'date' | 'currency';
@@ -166,12 +167,7 @@ const writeTemplates = (templates: WorkAccountTemplate[]) => {
 };
 
 const formatSavedAt = (iso: string) => {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat('es-EC', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
+  return formatDateTimeForUser(iso);
 };
 
 const builderCardSx = {

@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
+import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 jest.unstable_mockModule('./BrandLogo', () => ({
   default: () => <span>TDF Records</span>,
@@ -123,6 +124,18 @@ describe('PublicBranding Instagram entry links', () => {
       expect(container.querySelector('header')).not.toBeNull();
       expect(container.querySelector('nav[aria-label="Navegación principal"]')).not.toBeNull();
       expect(container.querySelector('footer')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('has no critical or serious automated accessibility violations', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/tdf');
+
+    try {
+      await expectNoSeriousAccessibilityViolations(container);
     } finally {
       await cleanup();
     }

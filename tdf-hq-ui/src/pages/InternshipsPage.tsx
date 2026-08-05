@@ -37,6 +37,7 @@ import type {
 import { useSession } from '../session/SessionContext';
 import { parseDateForDisplay } from '../utils/dateOnly';
 import { hasInternshipsAccess, hasInternshipsAdminAccess, normalizeAccessRoles } from '../utils/accessControl';
+import { formatDateForUser, formatDateTimeForUser } from '../utils/formatters';
 
 const TASK_STATUS_OPTIONS = [
   { value: 'todo', label: 'Pendiente' },
@@ -162,14 +163,12 @@ const formatDate = (value?: string | null) => {
   if (!value) return '—';
   const date = parseDateForDisplay(value);
   if (!date) return value;
-  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(date);
+  return formatDateForUser(date);
 };
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return formatDateTimeForUser(value);
 };
 
 const resolveEntryMinutes = (entry: InternTimeEntryDTO) => {

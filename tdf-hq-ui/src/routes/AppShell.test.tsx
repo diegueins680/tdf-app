@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 const session = {
   username: 'admin',
@@ -58,13 +59,13 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
           <Route element={<Shell />}>
             <Route
               path="/configuracion/inscripciones-curso"
-              element={<main>Course registrations admin body</main>}
+              element={<div>Course registrations admin body</div>}
             />
-            <Route path="/configuracion/usuarios-admin" element={<main>Admin users body</main>} />
-            <Route path="/social/inbox" element={<main>Social inbox admin body</main>} />
-            <Route path="/operacion/ordenes-marketplace" element={<main>Marketplace orders admin body</main>} />
-            <Route path="/configuracion/estado" element={<main>System status body</main>} />
-            <Route path="/inicio" element={<main>Home body</main>} />
+            <Route path="/configuracion/usuarios-admin" element={<div>Admin users body</div>} />
+            <Route path="/social/inbox" element={<div>Social inbox admin body</div>} />
+            <Route path="/operacion/ordenes-marketplace" element={<div>Marketplace orders admin body</div>} />
+            <Route path="/configuracion/estado" element={<div>System status body</div>} />
+            <Route path="/inicio" element={<div>Home body</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -159,6 +160,20 @@ describe('Shell', () => {
       expect(container.textContent).toContain('System status body');
       expect(container.querySelector('[data-testid="api-status-chip"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="chatkit-launcher"]')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('exposes one main landmark, a skip target, and no serious automated violations', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/inicio');
+
+    try {
+      expect(container.querySelectorAll('main#main-content')).toHaveLength(1);
+      expect(container.querySelector('a[href="#main-content"]')).not.toBeNull();
+      await expectNoSeriousAccessibilityViolations(container);
     } finally {
       await cleanup();
     }

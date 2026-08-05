@@ -24,9 +24,7 @@ import           Data.Time                   ( Day
                                              , defaultTimeLocale
                                              , formatTime
                                              , parseTimeM
-                                             , toGregorian
                                              )
-import           Data.Time.Calendar.WeekDate (toWeekDate)
 import qualified Data.ByteString.Lazy        as BL
 import           Database.Persist            ( Entity(..)
                                              , SelectOpt(..)
@@ -46,7 +44,9 @@ import           TDF.DTO                     ( ArtistPromoDayReportDTO(..)
                                              , ArtistPromoSlotDTO(..)
                                              , ArtistPromoSlotUpsert(..)
                                              )
+import           TDF.Courses.Production      (dayLabelForLocale)
 import           TDF.Handlers.InputList      (generateInputListPdf)
+import           TDF.Internationalization    (normalizeLocaleCode)
 import           TDF.Models
 
 data ArtistPromoSlotWrite = ArtistPromoSlotWrite
@@ -60,8 +60,10 @@ data ArtistPromoSlotWrite = ArtistPromoSlotWrite
   , apswNotes           :: Maybe Text
   }
 
-reportTimezoneLabel :: Text
-reportTimezoneLabel = "Hora de Ecuador (America/Guayaquil)"
+reportTimezoneLabel :: Text -> Text
+reportTimezoneLabel rawTimezone =
+  let timezone = T.strip rawTimezone
+  in if T.null timezone then "UTC" else timezone
 
 listArtistPromoSlotsForDay
   :: MonadIO m
@@ -152,22 +154,24 @@ deleteArtistPromoSlotRecord artistKey promotionKey = do
 
 loadArtistPromoDayReport
   :: MonadIO m
-  => PartyId
+  => Text
+  -> Text
+  -> PartyId
   -> Day
   -> SqlPersistT m (Maybe ArtistPromoDayReportDTO)
-loadArtistPromoDayReport artistKey dayVal = do
+loadArtistPromoDayReport locale timezone artistKey dayVal = do
   mParty <- get artistKey
-  case mParty of
-    Nothing -> pure Nothing
-    Just party -> do
+  maybe (pure Nothing) buildReport mParty
+  where
+    buildReport party = do
       entries <- listArtistPromoSlotsForDay artistKey dayVal
       pure $
         Just ArtistPromoDayReportDTO
           { apdArtistId = fromSqlKey artistKey
           , apdArtistName = partyDisplayName party
           , apdDay = dayVal
-          , apdTimezone = reportTimezoneLabel
-          , apdDayHeader = formatArtistPromoDayHeader dayVal
+          , apdTimezone = reportTimezoneLabel timezone
+          , apdDayHeader = formatArtistPromoDayHeader locale dayVal
           , apdEntries = entries
           }
 
@@ -283,50 +287,15 @@ validateStartTime raw =
 formatArtistPromoTime :: TimeOfDay -> Text
 formatArtistPromoTime = T.pack . formatTime defaultTimeLocale "%H:%M"
 
-formatArtistPromoDayHeader :: Day -> Text
-formatArtistPromoDayHeader dayVal =
-  let (yearVal, monthVal, dayNum) = toGregorian dayVal
-      (_, _, weekdayNum) = toWeekDate dayVal
-      weekdayLabel = weekdayName weekdayNum
-      monthLabel = monthName monthVal
-  in T.concat
-      [ weekdayLabel
-      , " "
-      , T.pack (show dayNum)
-      , " de "
-      , monthLabel
-      , " de "
-      , T.pack (show yearVal)
-      ]
-
-weekdayName :: Int -> Text
-weekdayName weekdayNum =
-  case weekdayNum of
-    1 -> "Lunes"
-    2 -> "Martes"
-    3 -> "Miércoles"
-    4 -> "Jueves"
-    5 -> "Viernes"
-    6 -> "Sábado"
-    7 -> "Domingo"
-    _ -> "Día"
-
-monthName :: Int -> Text
-monthName monthNum =
-  case monthNum of
-    1  -> "enero"
-    2  -> "febrero"
-    3  -> "marzo"
-    4  -> "abril"
-    5  -> "mayo"
-    6  -> "junio"
-    7  -> "julio"
-    8  -> "agosto"
-    9  -> "septiembre"
-    10 -> "octubre"
-    11 -> "noviembre"
-    12 -> "diciembre"
-    _  -> "mes"
+formatArtistPromoDayHeader :: Text -> Day -> Text
+formatArtistPromoDayHeader locale dayVal =
+  let normalizedLocale = fromMaybe "en" (normalizeLocaleCode locale)
+      year = T.pack (formatTime defaultTimeLocale "%Y" dayVal)
+      separator
+        | normalizedLocale `elem` ["es", "pt"] = " de "
+        | normalizedLocale == "en" = ", "
+        | otherwise = " "
+  in dayLabelForLocale normalizedLocale dayVal <> separator <> year
 
 normalizeCellText :: Text -> Text
 normalizeCellText = T.unwords . T.words
@@ -334,18 +303,18 @@ normalizeCellText = T.unwords . T.words
 latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar . normalizeCellText
   where
-    escapeChar c = case c of
-      '&'  -> "\\&"
-      '%'  -> "\\%"
-      '$'  -> "\\$"
-      '#'  -> "\\#"
-      '_'  -> "\\_"
-      '{'  -> "\\{"
-      '}'  -> "\\}"
-      '~'  -> "\\textasciitilde{}"
-      '^'  -> "\\textasciicircum{}"
-      '\\' -> "\\textbackslash{}"
-      _    -> T.singleton c
+    escapeChar c = fromMaybe (T.singleton c) $ lookup c
+      [ ('&', "\\&")
+      , ('%', "\\%")
+      , ('$', "\\$")
+      , ('#', "\\#")
+      , ('_', "\\_")
+      , ('{', "\\{")
+      , ('}', "\\}")
+      , ('~', "\\textasciitilde{}")
+      , ('^', "\\textasciicircum{}")
+      , ('\\', "\\textbackslash{}")
+      ]
 
 maybeToList :: Maybe a -> [a]
 maybeToList Nothing = []
