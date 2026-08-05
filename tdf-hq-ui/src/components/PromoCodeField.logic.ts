@@ -1,7 +1,5 @@
 import type { PromoCodeDTO } from '../api/socialEvents';
 
-export const PROMO_CODE_LOADING_HELPER_TEXT = 'Loading promo code...';
-
 export interface PromoCodeState {
   code: string;
   debouncedCode: string;

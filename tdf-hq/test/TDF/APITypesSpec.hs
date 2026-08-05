@@ -170,6 +170,18 @@ spec = do
                 "{\"amountCents\":1000,\"currency\":\"usd\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+    describe "RefundDTO currency contract" $ do
+        it "carries the refunded order currency with the minor-unit amount" $
+            case
+                decodeRefundDTO
+                    "{\"refundOrderId\":\"order-7\",\"refundAmountCents\":2500,\"refundCurrency\":\"EUR\",\"refundStatus\":\"pending\"}"
+            of
+                Left err ->
+                    expectationFailure ("Expected refund payload to decode, got: " <> err)
+                Right refund -> do
+                    SocialEvents.refundAmountCents refund `shouldBe` 2500
+                    SocialEvents.refundCurrency refund `shouldBe` "EUR"
+
     describe "UserRoleUpdatePayload FromJSON" $ do
         it "accepts canonical admin role update payloads" $
             case decodeUserRoleUpdate "{\"roles\":[\"Admin\",\"Teacher\"]}" of
@@ -3225,6 +3237,8 @@ spec = do
     decodeTicketPurchase = eitherDecode
     decodeTicketPurchaseWithPromo :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseWithPromoDTO
     decodeTicketPurchaseWithPromo = eitherDecode
+    decodeRefundDTO :: BL8.ByteString -> Either String SocialEvents.RefundDTO
+    decodeRefundDTO = eitherDecode
     ticketPurchaseJson :: Int -> BL8.ByteString
     ticketPurchaseJson quantity =
         BL8.pack ("{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":" <> show quantity <> "}")

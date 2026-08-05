@@ -1,5 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import '../i18n/index';
 
 const { default: LazyPaginatedList } = await import('./LazyPaginatedList');
 
@@ -62,8 +63,8 @@ describe('LazyPaginatedList', () => {
       expect(loadingStatus).not.toBeNull();
       expect(loadingStatus?.getAttribute('aria-live')).toBe('polite');
       expect(loadingHost.firstElementChild?.getAttribute('aria-busy')).toBe('true');
-      expect(loadingProgress?.getAttribute('aria-label')).toBe('Cargando resultados...');
-      expect(loadingHost.textContent).toContain('Cargando resultados...');
+      expect(loadingProgress?.getAttribute('aria-label')).toBe('Loading results…');
+      expect(loadingHost.textContent).toContain('Loading results…');
       expect(loadingItems?.textContent).toBe('Alpha|Beta');
     } finally {
       await cleanup();
@@ -83,7 +84,7 @@ describe('LazyPaginatedList', () => {
       expect(paginationItems?.textContent).toBe('Alpha|Beta');
       expect(paginationItems?.getAttribute('data-start-index')).toBe('0');
       expect(paginationItems?.getAttribute('data-total-items')).toBe('3');
-      expect(paginationHost.textContent).toContain('1-2 de 3 items');
+      expect(paginationHost.textContent).toContain('1–2 of 3 items');
     } finally {
       await cleanup();
     }
@@ -110,7 +111,7 @@ describe('LazyPaginatedList', () => {
       expect(secondPageItems?.textContent).toBe('Gamma|Delta');
       expect(secondPageItems?.getAttribute('data-start-index')).toBe('2');
       expect(secondPageItems?.getAttribute('data-total-items')).toBe('4');
-      expect(pagingHost.textContent).toContain('3-4 de 4 items');
+      expect(pagingHost.textContent).toContain('3–4 of 4 items');
     } finally {
       await cleanup();
     }

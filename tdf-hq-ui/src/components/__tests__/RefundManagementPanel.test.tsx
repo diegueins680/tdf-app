@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { RefundDTO, RejectionReasonDTO } from '../../api/socialEvents';
+import '../../i18n/index';
 
 const listRefunds = jest.fn<(eventId: string) => Promise<RefundDTO[]>>();
 const approveRefund = jest.fn<(eventId: string, refundId: string) => Promise<RefundDTO>>();
@@ -58,6 +59,7 @@ describe('RefundManagementPanel', () => {
       refundOrderId: 'order-1-aaaa',
       refundReason: 'Cannot attend event',
       refundAmountCents: PENDING_REFUND_AMOUNT_CENTS,
+      refundCurrency: 'USD',
       refundStatus: 'pending',
       refundStripeRefundId: null,
       refundRejectionReason: null,
@@ -69,6 +71,7 @@ describe('RefundManagementPanel', () => {
       refundOrderId: 'order-2-bbbb',
       refundReason: 'Event cancelled',
       refundAmountCents: APPROVED_REFUND_AMOUNT_CENTS,
+      refundCurrency: 'EUR',
       refundStatus: 'approved',
       refundStripeRefundId: 're_123456',
       refundRejectionReason: null,
@@ -89,8 +92,8 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
-      expect(screen.getByText('USD 75.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
+      expect(screen.getByText('€75.00')).toBeInTheDocument();
     });
   });
 
@@ -133,7 +136,7 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
     });
 
     const confirmApproveButton = screen.getByRole('button', { name: /Approve/i });
@@ -157,7 +160,7 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
     });
 
     // Open the rejection dialog from the pending refund row.
@@ -183,8 +186,8 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('PENDING')).toBeInTheDocument();
-      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+      expect(screen.getByText('Pending')).toBeInTheDocument();
+      expect(screen.getByText('Approved')).toBeInTheDocument();
     });
   });
 
@@ -196,8 +199,8 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
-      expect(screen.getByText('USD 75.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
+      expect(screen.getByText('€75.00')).toBeInTheDocument();
     });
   });
 
@@ -211,7 +214,7 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
     });
 
     const rejectedApproveButton = screen.getByRole('button', { name: /Approve/i });
@@ -222,7 +225,7 @@ describe('RefundManagementPanel', () => {
     });
 
     // A failed approval leaves the row in place (no crash, no inline alert).
-    expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+    expect(screen.getByText('$50.00')).toBeInTheDocument();
   });
 
   it('only renders action buttons for pending refunds', async () => {
@@ -233,7 +236,7 @@ describe('RefundManagementPanel', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('USD 50.00')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
     });
 
     // Only the single pending refund exposes Approve/Reject actions.

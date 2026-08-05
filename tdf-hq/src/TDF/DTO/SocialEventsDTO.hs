@@ -1291,6 +1291,7 @@ data RefundDTO = RefundDTO
     , refundRequestedByPartyId :: Maybe Text
     , refundReason :: Maybe Text
     , refundAmountCents :: Int
+    , refundCurrency :: Text
     , refundStatus :: Text
     , refundApprovedByPartyId :: Maybe Text
     , refundApprovedAt :: Maybe UTCTime

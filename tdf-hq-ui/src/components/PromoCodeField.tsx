@@ -10,30 +10,21 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
+import { useTranslation } from 'react-i18next';
 import { SocialEventsAPI, type PromoCodeDTO } from '../api/socialEvents';
+import { initialPromoCodeState, promoCodeReducer } from './PromoCodeField.logic';
 import {
-  PROMO_CODE_LOADING_HELPER_TEXT,
-  initialPromoCodeState,
-  promoCodeReducer,
-} from './PromoCodeField.logic';
-import { resolveRuntimeCurrency } from '../utils/formatters';
+  formatCurrencyForUser,
+  formatDateForUser,
+  formatNumberForUser,
+  resolveRuntimeCurrency,
+} from '../utils/formatters';
 
 interface PromoCodeFieldProps {
   eventId: string;
   tierId: string;
   onPromoApplied: (code: string | null) => void;
 }
-
-const PROMO_COPY = {
-  label: 'Promo Code (Optional)',
-  placeholder: 'ENTER-CODE-HERE',
-  clear: 'Clear promo code',
-  inactive: 'Promo code is not active',
-  invalid: 'Invalid promo code',
-  checking: PROMO_CODE_LOADING_HELPER_TEXT,
-  validUntil: 'Valid until',
-  usesRemaining: 'uses remaining',
-};
 
 const PROMO_VALIDATION_SPINNER_SIZE_PX = 2 * 10;
 
@@ -54,6 +45,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
     promoCodeReducer,
     initialPromoCodeState,
   );
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const validationRequestRef = useRef(0);
 
@@ -93,18 +85,18 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
         dispatch({ type: 'validationSucceeded', promo });
         onPromoApplied(promo.promoCodeCode ?? promoCode);
       } else {
-        dispatch({ type: 'validationFailed', error: PROMO_COPY.inactive });
+        dispatch({ type: 'validationFailed', error: t('promoCode.inactive') });
         onPromoApplied(null);
       }
-    } catch (err) {
+    } catch {
       if (validationRequestRef.current !== requestId) {
         return;
       }
 
-      dispatch({ type: 'validationFailed', error: err instanceof Error ? err.message : PROMO_COPY.invalid });
+      dispatch({ type: 'validationFailed', error: t('promoCode.invalid') });
       onPromoApplied(null);
     }
-  }, [eventId, tierId, onPromoApplied]);
+  }, [eventId, tierId, onPromoApplied, t]);
 
   useEffect(() => {
     if (debouncedCode) {
@@ -138,36 +130,40 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
 
   const formatDiscount = (promo: PromoCodeDTO): string => {
     if (promo.promoCodeDiscountType === 'percentage') {
-      return `${promo.promoCodeDiscountValue / 100}% off`;
+      return t('promoCode.percentOff', {
+        value: formatNumberForUser(promo.promoCodeDiscountValue / 100),
+      });
     }
 
     const currency = (promo.promoCodeCurrency ?? resolveRuntimeCurrency()).toUpperCase();
-    return `${currency} ${(promo.promoCodeDiscountValue / 100).toFixed(2)} off`;
+    return t('promoCode.fixedOff', {
+      value: formatCurrencyForUser(promo.promoCodeDiscountValue / 100, currency),
+    });
   };
 
   const fieldContent = (
     <Box>
       <TextField
-        label={PROMO_COPY.label}
+        label={t('promoCode.label')}
         fullWidth
         inputRef={inputRef}
         value={code}
         onChange={handleCodeChange}
-        placeholder={PROMO_COPY.placeholder}
+        placeholder={t('promoCode.placeholder')}
         margin="normal"
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
               {validating && (
                 <CircularProgress
-                  aria-label={PROMO_COPY.checking}
+                  aria-label={t('promoCode.checking')}
                   size={PROMO_VALIDATION_SPINNER_SIZE_PX}
                 />
               )}
               {validPromo && <CheckCircleIcon color="success" />}
               {code && !validating && (
                 <IconButton
-                  aria-label={PROMO_COPY.clear}
+                  aria-label={t('promoCode.clear')}
                   size="small"
                   onKeyDown={handleClearKeyDown}
                   onClick={() => {
@@ -182,7 +178,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
           ),
         }}
         error={Boolean(error)}
-        helperText={validating ? PROMO_COPY.checking : error ?? undefined}
+        helperText={validating ? t('promoCode.checking') : error ?? undefined}
       />
 
       {validPromo && (
@@ -192,13 +188,14 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
           </Typography>
           {validPromo.promoCodeValidUntil && (
             <Typography variant="caption" display="block">
-              {PROMO_COPY.validUntil}: {new Date(validPromo.promoCodeValidUntil).toLocaleDateString()}
+              {t('promoCode.validUntil')}: {formatDateForUser(validPromo.promoCodeValidUntil)}
             </Typography>
           )}
           {validPromo.promoCodeMaxRedemptions && (
             <Typography variant="caption" display="block">
-              {Math.max(0, validPromo.promoCodeMaxRedemptions - validPromo.promoCodeCurrentRedemptions)}{' '}
-              {PROMO_COPY.usesRemaining}
+              {t('promoCode.usesRemaining', {
+                count: Math.max(0, validPromo.promoCodeMaxRedemptions - validPromo.promoCodeCurrentRedemptions),
+              })}
             </Typography>
           )}
         </Alert>

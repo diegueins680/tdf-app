@@ -124,6 +124,7 @@ import Data.Char (
  )
 import Data.Int (Int64)
 import Data.List (sortOn)
+import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
 import Data.Ord (Down (..))
 import qualified Data.Set as Set
@@ -4574,7 +4575,7 @@ socialEventsServer user =
         mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
         maybe
             (throwError err500{errBody = "Could not create refund request"})
-            (pure . refundEntityToDTO)
+            (pure . refundEntityToDTO (eventTicketOrderCurrency order))
             mRefund
 
     listRefunds :: T.Text -> AppM [RefundDTO]
@@ -4584,28 +4585,33 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
-        orderIds <-
+        orders <-
             if manager
-                then do
-                    orders <-
-                        liftIO $
-                            runSqlPool
-                                (selectList [EventTicketOrderEventId ==. eventKey] [])
-                                envPool
-                    pure (map entityKey orders)
-                else do
-                    orders <-
-                        liftIO $
-                            runSqlPool
-                                (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
-                                envPool
-                    pure (map entityKey orders)
+                then
+                    liftIO $
+                        runSqlPool
+                            (selectList [EventTicketOrderEventId ==. eventKey] [])
+                            envPool
+                else
+                    liftIO $
+                        runSqlPool
+                            (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [])
+                            envPool
+        let orderIds = map entityKey orders
+            orderCurrencies =
+                Map.fromList
+                    [ (entityKey orderEntity, eventTicketOrderCurrency (entityVal orderEntity))
+                    | orderEntity <- orders
+                    ]
         refunds <-
             liftIO $
                 runSqlPool
                     (selectList [TicketRefundRequestOrderId <-. orderIds] [Desc TicketRefundRequestCreatedAt])
                     envPool
-        pure (map refundEntityToDTO refunds)
+        forM refunds $ \refundEntity@(Entity _ refundRow) ->
+            case Map.lookup (ticketRefundRequestOrderId refundRow) orderCurrencies of
+                Just currency -> pure (refundEntityToDTO currency refundEntity)
+                Nothing -> throwError err500{errBody = "Refund order currency not found"}
 
     approveRefund :: T.Text -> T.Text -> AppM RefundDTO
     approveRefund eventIdStr refundIdStr = do
@@ -4661,7 +4667,7 @@ socialEventsServer user =
                         mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
                         maybe
                             (throwError err500{errBody = "Could not approve refund"})
-                            (pure . refundEntityToDTO)
+                            (pure . refundEntityToDTO (eventTicketOrderCurrency order))
                             mUpdated
             _ -> throwError err500{errBody = "Cannot process refund: Stripe not configured or order has no payment intent"}
 
@@ -4695,7 +4701,7 @@ socialEventsServer user =
         mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
         maybe
             (throwError err500{errBody = "Could not reject refund"})
-            (pure . refundEntityToDTO)
+            (pure . refundEntityToDTO (eventTicketOrderCurrency order))
             mUpdated
 
     -- Transfers
@@ -8076,14 +8082,15 @@ normalizeStoredPromoCodeDiscountType :: T.Text -> T.Text
 normalizeStoredPromoCodeDiscountType "fixed_amount" = "fixed"
 normalizeStoredPromoCodeDiscountType discountType = discountType
 
-refundEntityToDTO :: Entity TicketRefundRequest -> RefundDTO
-refundEntityToDTO (Entity refundKey refundRow) =
+refundEntityToDTO :: T.Text -> Entity TicketRefundRequest -> RefundDTO
+refundEntityToDTO currency (Entity refundKey refundRow) =
     RefundDTO
         { refundId = Just (renderKeyText refundKey)
         , refundOrderId = renderKeyText (ticketRefundRequestOrderId refundRow)
         , refundRequestedByPartyId = ticketRefundRequestRequestedByPartyId refundRow
         , refundReason = ticketRefundRequestReason refundRow
         , refundAmountCents = ticketRefundRequestAmountCents refundRow
+        , refundCurrency = currency
         , refundStatus = ticketRefundRequestStatus refundRow
         , refundApprovedByPartyId = ticketRefundRequestApprovedByPartyId refundRow
         , refundApprovedAt = ticketRefundRequestApprovedAt refundRow

@@ -1,5 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Box, LinearProgress, Stack, TablePagination, Typography, type SxProps, type Theme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import '../i18n/index';
 
 const DEFAULT_ROWS_PER_PAGE_OPTIONS = [10, 25, 50] as const;
 
@@ -34,9 +36,10 @@ export default function LazyPaginatedList<T>({
   loading = false,
   pagination = {},
 }: LazyPaginatedListProps<T>) {
+  const { t } = useTranslation();
   const paginationConfig = pagination === false ? null : pagination;
-  const itemLabel = paginationConfig?.itemLabel ?? 'registros';
-  const labelRowsPerPage = paginationConfig?.labelRowsPerPage ?? 'Por página';
+  const itemLabel = paginationConfig?.itemLabel ?? t('pagination.items');
+  const labelRowsPerPage = paginationConfig?.labelRowsPerPage ?? t('pagination.rowsPerPage');
   const initialRowsPerPage = paginationConfig?.initialRowsPerPage;
   const rowsPerPageOptions = paginationConfig?.rowsPerPageOptions ?? DEFAULT_ROWS_PER_PAGE_OPTIONS;
   const resetKey = paginationConfig?.resetKey;
@@ -50,7 +53,7 @@ export default function LazyPaginatedList<T>({
   const totalItems = deferredItems.length;
   const maxPage = Math.max(0, Math.ceil(totalItems / rowsPerPage) - 1);
   const isUpdating = loading || deferredItems !== items;
-  const loadingLabel = loading ? 'Cargando resultados...' : 'Actualizando resultados...';
+  const loadingLabel = loading ? t('pagination.loading') : t('pagination.updating');
 
   useEffect(() => {
     setRowsPerPage((current) => (normalizedOptions.includes(current) ? current : initialPageSize));
@@ -115,8 +118,11 @@ export default function LazyPaginatedList<T>({
             rowsPerPageOptions={normalizedOptions}
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage={labelRowsPerPage}
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} de ${count === -1 ? `más de ${to}` : `${count} ${itemLabel}`}`}
+            labelDisplayedRows={({ from, to, count }) => t(
+              count === -1 ? 'pagination.displayedMoreThan' : 'pagination.displayed',
+              { from, to, count: count === -1 ? to : count, itemLabel },
+            )}
+            getItemAriaLabel={(type) => t(`pagination.${type}Page`)}
           />
         </Box>
       )}

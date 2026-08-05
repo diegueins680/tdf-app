@@ -23,10 +23,15 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from 'react-i18next';
 import { SocialEventsAPI, type RefundDTO } from '../api/socialEvents';
 import { getRefundStatusColor } from './RefundManagementPanel.logic';
 import LazyPaginatedList from './LazyPaginatedList';
-import { resolveRuntimeCurrency } from '../utils/formatters';
+import {
+  formatCurrencyForUser,
+  formatDateForUser,
+  resolveRuntimeCurrency,
+} from '../utils/formatters';
 
 interface RefundManagementPanelProps {
   eventId: string;
@@ -48,6 +53,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
    * postcondition: success clears selection.
    */
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const [selectedRefund, setSelectedRefund] = useState<RefundDTO | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -82,7 +88,8 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
       return;
     }
 
-    if (window.confirm(`Approve refund for ${formatMoney(refund.refundAmountCents)}?`)) {
+    const amount = formatMoney(refund.refundAmountCents, refund.refundCurrency);
+    if (window.confirm(t('refunds.confirmApproval', { amount }))) {
       approveMutation.mutate(approvedRefundId);
     }
   };
@@ -100,10 +107,10 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     });
   };
 
-  const formatMoney = (cents: number, currency?: string): string => {
+  const formatMoney = (cents: number, currency?: string | null): string => {
     const currencyText = currency?.trim();
     const code = currencyText ? currencyText.toUpperCase() : resolveRuntimeCurrency();
-    return `${code} ${(cents / 100).toFixed(2)}`;
+    return formatCurrencyForUser(cents / 100, code);
   };
 
   const formatRefundReason = (reason?: string | null): string => {
@@ -114,11 +121,15 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   if (refundsQuery.isLoading) {
     const loadingContent = (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('refunds.loading')} />
       </Box>
     );
 
     return loadingContent;
+  }
+
+  if (refundsQuery.isError) {
+    return <Alert severity="error">{t('refunds.loadError')}</Alert>;
   }
 
   const refunds = refundsQuery.data ?? [];
@@ -128,31 +139,31 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     <Box>
       {pendingRefunds.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          {pendingRefunds.length} refund request{pendingRefunds.length !== 1 ? 's' : ''} pending approval
+          {t('refunds.pendingSummary', { count: pendingRefunds.length })}
         </Alert>
       )}
 
       <LazyPaginatedList
         items={refunds}
-        pagination={{ itemLabel: 'refunds', initialRowsPerPage: 10 }}
+        pagination={{ itemLabel: t('refunds.itemLabel'), initialRowsPerPage: 10 }}
         renderItems={(visibleRefunds) => (
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Order ID</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Requested</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>{t('refunds.orderId')}</TableCell>
+                  <TableCell>{t('refunds.amount')}</TableCell>
+                  <TableCell>{t('refunds.reason')}</TableCell>
+                  <TableCell>{t('refunds.status')}</TableCell>
+                  <TableCell>{t('refunds.requested')}</TableCell>
+                  <TableCell>{t('refunds.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {refunds.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
-                      <Typography color="text.secondary">No refund requests</Typography>
+                      <Typography color="text.secondary">{t('refunds.empty')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -163,7 +174,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                           {(refund.refundOrderId ?? '').slice(0, 8)}...
                         </Typography>
                       </TableCell>
-                      <TableCell>{formatMoney(refund.refundAmountCents)}</TableCell>
+                      <TableCell>{formatMoney(refund.refundAmountCents, refund.refundCurrency)}</TableCell>
                       <TableCell>
                         <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
                           {formatRefundReason(refund.refundReason)}
@@ -171,14 +182,16 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={refund.refundStatus.toUpperCase()}
+                          label={t(`refunds.statuses.${refund.refundStatus.toLowerCase()}`, {
+                            defaultValue: refund.refundStatus,
+                          })}
                           color={getRefundStatusColor(refund.refundStatus)}
                           size="small"
                         />
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {refund.refundCreatedAt ? new Date(refund.refundCreatedAt).toLocaleDateString() : '-'}
+                          {refund.refundCreatedAt ? formatDateForUser(refund.refundCreatedAt) : '-'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -192,7 +205,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                               onClick={() => handleApprove(refund)}
                               disabled={approveMutation.isPending || !refund.refundId}
                             >
-                              Approve
+                              {t('refunds.approve')}
                             </Button>
                             <Button
                               size="small"
@@ -205,13 +218,13 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                               }}
                               disabled={rejectMutation.isPending || !refund.refundId}
                             >
-                              Reject
+                              {t('refunds.reject')}
                             </Button>
                           </Stack>
                         )}
                         {refund.refundStatus === 'rejected' && refund.refundRejectionReason && (
                           <Typography variant="caption" color="error">
-                            Rejected: {refund.refundRejectionReason}
+                            {t('refunds.rejected', { reason: refund.refundRejectionReason })}
                           </Typography>
                         )}
                       </TableCell>
@@ -225,29 +238,31 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
       />
 
       <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Reject Refund Request</DialogTitle>
+        <DialogTitle>{t('refunds.rejectDialogTitle')}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Rejection Reason"
+            label={t('refunds.rejectionReason')}
             multiline
             rows={4}
             fullWidth
             required
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            placeholder="Explain why this refund request is being rejected..."
+            placeholder={t('refunds.rejectionPlaceholder')}
             margin="normal"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRejectDialogOpen(false)}>{t('refunds.cancel')}</Button>
           <Button
             onClick={handleReject}
             variant="contained"
             color="error"
             disabled={!rejectionReason.trim() || rejectMutation.isPending}
           >
-            {rejectMutation.isPending ? <CircularProgress size={REFUND_ACTION_SPINNER_SIZE_PX} /> : 'Reject Refund'}
+            {rejectMutation.isPending
+              ? <CircularProgress aria-label={t('refunds.rejectRefund')} size={REFUND_ACTION_SPINNER_SIZE_PX} />
+              : t('refunds.rejectRefund')}
           </Button>
         </DialogActions>
       </Dialog>
