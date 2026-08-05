@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { PromoCodeDTO } from '../../api/socialEvents';
+import '../../i18n/index';
 
 const validatePromoCode =
   jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();

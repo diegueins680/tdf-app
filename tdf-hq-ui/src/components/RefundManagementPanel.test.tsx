@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { RefundDTO, RejectionReasonDTO } from '../api/socialEvents';
+import '../i18n/index';
 
 const listRefundsMock = jest.fn<(eventId: string) => Promise<RefundDTO[]>>();
 const approveRefundMock = jest.fn<(eventId: string, refundId: string) => Promise<RefundDTO>>();
@@ -160,11 +161,11 @@ describe('RefundManagementPanel', () => {
       await clickButton(getButtonByText(container, 'Reject'));
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Reject Refund Request');
+        expect(document.body.textContent).toContain('Reject refund request');
       });
 
-      await changeTextControlValue(getTextControlByLabel(document.body, 'Rejection Reason'), '  Missing receipt  ');
-      await clickButton(getButtonByText(document.body, 'Reject Refund'));
+      await changeTextControlValue(getTextControlByLabel(document.body, 'Rejection reason'), '  Missing receipt  ');
+      await clickButton(getButtonByText(document.body, 'Reject refund'));
 
       await waitForExpectation(() => {
         expect(rejectRefundMock).toHaveBeenCalledWith('event-7', 'refund-selected-42', {

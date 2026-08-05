@@ -362,6 +362,7 @@ export interface RefundDTO {
   refundRequestedByPartyId?: string | null;
   refundReason?: string | null;
   refundAmountCents: number;
+  refundCurrency?: string | null;
   refundStatus: string;
   refundApprovedByPartyId?: string | null;
   refundApprovedAt?: string | null;
