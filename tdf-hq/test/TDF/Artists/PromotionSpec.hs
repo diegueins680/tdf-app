@@ -82,7 +82,7 @@ spec = do
             map apsStatus slots `shouldBe` [Nothing, Just "confirmado"]
             map apsNotes slots `shouldBe` [Just "Llegar temprano", Nothing]
 
-        it "builds a report with Ecuador header data and PDF-ready columns" $ do
+        it "builds a locale- and timezone-aware report with PDF-ready columns" $ do
             report <- runInMemory $ do
                 let now = mkUtc 2026 4 23
                     reportDay = fromGregorian 2026 4 23
@@ -98,12 +98,12 @@ spec = do
                         , apsuStatus = Just "confirmado"
                         , apsuNotes = Just "Llegar 15 minutos antes"
                         }
-                mReport <- loadArtistPromoDayReport artistId reportDay
+                mReport <- loadArtistPromoDayReport "es" "America/New_York" artistId reportDay
                 pure (maybe (error "Expected artist promotion report to exist") id mReport)
 
             let latex = renderArtistPromoDayReportLatex report
             apdArtistName report `shouldBe` "La Ruta"
-            apdTimezone report `shouldBe` "Hora de Ecuador (America/Guayaquil)"
+            apdTimezone report `shouldBe` "America/New_York"
             apdDayHeader report `shouldSatisfy` T.isInfixOf "abril de 2026"
             latex `shouldSatisfy` T.isInfixOf "Reporte diario de promoción"
             latex `shouldSatisfy` T.isInfixOf "Hora & Medio & Programa"

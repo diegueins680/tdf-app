@@ -34,6 +34,12 @@ import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  formatCurrencyForUser,
+  formatDateForUser,
+  resolveRuntimeCurrency,
+  resolveRuntimeFormatOptions,
+} from '../utils/formatters';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
@@ -49,16 +55,14 @@ const formatCourseDate = (value?: string | null) => {
   if (match) {
     const [, y, m, d] = match;
     const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12));
-    return dt.toLocaleDateString('es-EC', {
+    return new Intl.DateTimeFormat(resolveRuntimeFormatOptions().locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       timeZone: 'UTC',
-    });
+    }).format(dt);
   }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+  return formatDateForUser(value, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const getSessionDates = (sessions?: CourseMetadata['sessions']) => {
@@ -495,7 +499,9 @@ function Hero({
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Typography variant="h4" fontWeight={800} sx={{ color: '#cbd5f5' }}>
-            {loading ? '—' : `$${meta?.price?.toFixed(0) ?? '150'} ${meta?.currency ?? 'USD'}`}
+            {loading
+              ? '—'
+              : formatCurrencyForUser(meta?.price ?? 150, meta?.currency ?? resolveRuntimeCurrency())}
           </Typography>
           <Stack spacing={0.5}>
             <Typography variant="body1" sx={{ color: 'rgba(226,232,240,0.75)' }}>

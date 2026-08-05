@@ -138,7 +138,13 @@ import           TDF.Auth               ( AuthedUser
                                         , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
-import           TDF.Config             (ragRefreshHours, seedTriggerToken, stripeSecretKey, stripeWebhookSecret)
+import           TDF.Config             ( defaultLocale
+                                        , defaultTimezone
+                                        , ragRefreshHours
+                                        , seedTriggerToken
+                                        , stripeSecretKey
+                                        , stripeWebhookSecret
+                                        )
 import           TDF.Models
 import           TDF.Internationalization (normalizeCountryCode)
 import           TDF.ModelsExtra (DropdownOption(..))
@@ -881,14 +887,16 @@ adminServer user =
     artistPromoDayReportAdmin rawArtistId dayVal = do
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
-      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      (locale, timezone) <- artistPromoLocalePreferences
+      mReport <- withPool $ loadArtistPromoDayReport locale timezone artistKey dayVal
       maybe (throwError err404) pure mReport
 
     artistPromoDayReportPdfAdmin rawArtistId dayVal = do
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
       let artistId = fromSqlKey artistKey
-      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      (locale, timezone) <- artistPromoLocalePreferences
+      mReport <- withPool $ loadArtistPromoDayReport locale timezone artistKey dayVal
       report <- maybe (throwError err404) pure mReport
       pdfResult <- liftIO (generateArtistPromoDayReportPdf report)
       case pdfResult of
@@ -904,6 +912,16 @@ adminServer user =
               fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
               disposition = T.concat ["attachment; filename=\"", fileName, "\""]
           pure (addHeader disposition pdf)
+
+    artistPromoLocalePreferences = do
+      cfg <- asks envConfig
+      mStored <- withPool $ getBy (UniqueUserLocalePreference (auPartyId user))
+      pure $ case mStored of
+        Nothing -> (defaultLocale cfg, defaultTimezone cfg)
+        Just (Entity _ preferences) ->
+          ( userLocalePreferenceLocale preferences
+          , userLocalePreferenceTimezone preferences
+          )
 
     resolveArtistKey rawArtistId = do
       artistId <- either throwError pure $

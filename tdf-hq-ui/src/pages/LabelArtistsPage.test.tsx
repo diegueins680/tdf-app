@@ -40,6 +40,10 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
   default: () => null,
 }));
 
+jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
+  useLocalePreferences: () => ({ locale: 'de-DE', timezone: 'Europe/Berlin' }),
+}));
+
 const { default: LabelArtistsPage } = await import('./LabelArtistsPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -248,7 +252,8 @@ describe('LabelArtistsPage', () => {
         expect(getButtonsByText(container, 'Refrescar')).toHaveLength(1);
         expect(container.textContent).toContain('Notas rápidas por artista');
         expect(container.textContent).toContain('Promoción diaria y reporte PDF');
-        expect(container.textContent).toContain('Hora de Ecuador (America/Guayaquil)');
+        expect(container.textContent).toContain('Europe/Berlin');
+        expect(container.textContent).not.toContain('America/Guayaquil');
         expect(hasTableHeader(container, 'Artista')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).not.toContain('Todavía no hay perfiles de artista.');

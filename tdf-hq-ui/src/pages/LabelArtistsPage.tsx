@@ -47,6 +47,7 @@ import type {
   ArtistPromoSlotDTO,
   ArtistPromoSlotUpsert,
 } from '../api/types';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -80,7 +81,6 @@ interface BannerState {
   message: string;
 }
 
-const ECUADOR_TIMEZONE = 'America/Guayaquil';
 const DEFAULT_PROMOTION_TIME = '09:00';
 
 function buildEmptyForm(): ArtistFormState {
@@ -119,7 +119,7 @@ const toNullableField = (value: string) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const todayInEcuador = () => DateTime.now().setZone(ECUADOR_TIMEZONE).toISODate() ?? '';
+const todayInTimezone = (timezone: string) => DateTime.now().setZone(timezone).toISODate() ?? '';
 
 const sortPromotionSlots = (slots: ArtistPromoSlotDTO[]) =>
   [...slots].sort((a, b) => {
@@ -195,6 +195,7 @@ function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
 
 export default function LabelArtistsPage() {
   const qc = useQueryClient();
+  const { locale, timezone } = useLocalePreferences();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
@@ -205,7 +206,7 @@ export default function LabelArtistsPage() {
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
-  const [promotionDay, setPromotionDay] = useState(todayInEcuador);
+  const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
   const [promotionFormError, setPromotionFormError] = useState<string | null>(null);
   const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
@@ -243,18 +244,22 @@ export default function LabelArtistsPage() {
     [promotionsQuery.data],
   );
   const promotionReport = useMemo<ArtistPromoDayReportDTO | null>(() => {
-    if (promotionReportQuery.data) return promotionReportQuery.data;
-    if (!selectedPromotionArtist) return null;
-    return {
+    const report = promotionReportQuery.data ?? (selectedPromotionArtist ? {
       apdArtistId: selectedPromotionArtist.apArtistId,
       apdArtistName: selectedPromotionArtist.apDisplayName,
       apdDay: promotionDay,
-      apdTimezone: `Hora de Ecuador (${ECUADOR_TIMEZONE})`,
-      apdDayHeader:
-        DateTime.fromISO(promotionDay, { zone: ECUADOR_TIMEZONE }).setLocale('es').toFormat("cccc d 'de' LLLL 'de' yyyy"),
+      apdTimezone: timezone,
+      apdDayHeader: '',
       apdEntries: promotionSlots,
+    } : null);
+    if (!report) return null;
+    const localizedDay = DateTime.fromISO(promotionDay, { zone: timezone }).setLocale(locale);
+    return {
+      ...report,
+      apdTimezone: timezone,
+      apdDayHeader: localizedDay.isValid ? localizedDay.toLocaleString(DateTime.DATE_FULL) : promotionDay,
     };
-  }, [promotionDay, promotionReportQuery.data, promotionSlots, selectedPromotionArtist]);
+  }, [locale, promotionDay, promotionReportQuery.data, promotionSlots, selectedPromotionArtist, timezone]);
 
   const sortedArtists = useMemo(
     () => [...artists].sort((a, b) => a.apDisplayName.localeCompare(b.apDisplayName)),
@@ -859,12 +864,12 @@ export default function LabelArtistsPage() {
               <Stack spacing={0.5}>
                 <Typography variant="h6">Promoción diaria y reporte PDF</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Gestiona la agenda promocional por artista y genera el PDF diario ordenado por hora en formato Ecuador.
+                  Gestiona la agenda promocional por artista y genera el PDF diario ordenado por hora.
                 </Typography>
               </Stack>
 
               <Alert severity="info" variant="outlined">
-                El reporte usa horario de Ecuador ({ECUADOR_TIMEZONE}) y un PDF por artista + día seleccionado.
+                El reporte usa tu zona horaria configurada ({timezone}) y un PDF por artista + día seleccionado.
               </Alert>
 
               <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems={{ xs: 'stretch', lg: 'center' }}>
