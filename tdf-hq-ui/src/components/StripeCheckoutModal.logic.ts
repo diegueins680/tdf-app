@@ -1,4 +1,5 @@
 import type { SocialTicketTierDTO } from '../api/socialEvents';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 export interface BuyerDetailsState {
   name: string;
@@ -165,7 +166,7 @@ export function formatTicketTierPrice(tier: SocialTicketTierDTO, quantity: numbe
   }
 
   const totalCents = tier.ticketTierPriceCents * quantity;
-  const currencyCode = (tier.ticketTierCurrency ?? 'USD').toUpperCase();
+  const currencyCode = (tier.ticketTierCurrency ?? resolveRuntimeCurrency()).toUpperCase();
   return `${currencyCode} ${(totalCents / CURRENCY_MINOR_UNITS_PER_MAJOR).toFixed(2)}`;
 }
 

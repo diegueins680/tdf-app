@@ -18,18 +18,16 @@ import type { PartyDTO, PartyRelatedDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { useNavigate } from 'react-router-dom';
 import LazyPaginatedList from './LazyPaginatedList';
+import { formatDateForUser } from '../utils/formatters';
 
-const fmtDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString('es-EC', {
+const fmtDateTime = (iso: string) =>
+  formatDateForUser(iso, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });
-};
 
 const byStartDesc = <T,>(getIso: (value: T) => string) => (a: T, b: T) => {
   const ta = new Date(getIso(a)).getTime();

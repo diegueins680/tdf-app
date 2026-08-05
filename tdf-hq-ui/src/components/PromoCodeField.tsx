@@ -16,6 +16,7 @@ import {
   initialPromoCodeState,
   promoCodeReducer,
 } from './PromoCodeField.logic';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 interface PromoCodeFieldProps {
   eventId: string;
@@ -140,7 +141,7 @@ export function PromoCodeField({ eventId, tierId, onPromoApplied }: PromoCodeFie
       return `${promo.promoCodeDiscountValue / 100}% off`;
     }
 
-    const currency = (promo.promoCodeCurrency ?? 'USD').toUpperCase();
+    const currency = (promo.promoCodeCurrency ?? resolveRuntimeCurrency()).toUpperCase();
     return `${currency} ${(promo.promoCodeDiscountValue / 100).toFixed(2)} off`;
   };
 

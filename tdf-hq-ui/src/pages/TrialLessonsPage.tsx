@@ -37,6 +37,7 @@ import type {
 import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { formatDateForUser } from '../utils/formatters';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -134,11 +135,13 @@ const addMinutes = (iso: string, minutes: number) => {
   return end.toISOString();
 };
 
-const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-EC', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
+const formatDateTime = (iso: string) => formatDateForUser(iso, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 export default function TrialLessonsPage() {
   const qc = useQueryClient();

@@ -41,6 +41,7 @@ import {
 } from '../api/trials';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
+import { formatDateForUser } from '../utils/formatters';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
 type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
@@ -137,17 +138,14 @@ const parsePositiveIntFieldValue = (value: string): number | '' => {
   return parsed ?? '';
 };
 
-const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-EC', {
+const formatDateTime = (iso: string) =>
+  formatDateForUser(iso, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });
-};
 
 const focusFirstDialogControl = () => {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;

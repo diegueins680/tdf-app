@@ -55,6 +55,7 @@ import {
 import { Parties } from '../api/parties';
 import type { PartyDTO } from '../api/types';
 import PageShell from '../components/PageShell';
+import { formatDateTimeForUser, formatNumberForUser, resolveRuntimeFormatOptions } from '../utils/formatters';
 
 interface Notice {
   severity: 'success' | 'error' | 'info' | 'warning';
@@ -88,19 +89,14 @@ const enrollmentLabels: Record<CampaignEnrollment['status'], string> = {
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '—';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '—';
-  return parsed.toLocaleString('es-EC', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return formatDateTimeForUser(value);
 };
 
 const hasWhatsAppCandidate = (party: PartyDTO) =>
   Boolean(party.whatsapp?.trim() || party.primaryPhone?.trim());
 
 const normalizeSearchText = (value?: string | null) =>
-  value?.trim().toLocaleLowerCase('es-EC') ?? '';
+  value?.trim().toLocaleLowerCase(resolveRuntimeFormatOptions().locale) ?? '';
 
 const templateForAutomation = (
   templates: CampaignAutomationTemplate[],
@@ -119,7 +115,7 @@ function Metric({
   return (
     <Box>
       <Typography variant="h6" color={tone}>
-        {value.toLocaleString('es-EC')}
+        {formatNumberForUser(value)}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {label}
@@ -429,7 +425,7 @@ export default function CampaignAutomationsPage() {
         message:
           automation.status === 'active'
             ? `${automation.name} está activa. El worker procesará únicamente contactos consentidos y mensajes vencidos.`
-            : `${automation.name} quedó ${statusLabels[automation.status].toLocaleLowerCase('es-EC')}.`,
+            : `${automation.name} quedó ${statusLabels[automation.status].toLocaleLowerCase(resolveRuntimeFormatOptions().locale)}.`,
       });
     },
     onError: (error: Error) => {

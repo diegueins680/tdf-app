@@ -26,6 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { SocialEventsAPI, type RefundDTO } from '../api/socialEvents';
 import { getRefundStatusColor } from './RefundManagementPanel.logic';
 import LazyPaginatedList from './LazyPaginatedList';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 interface RefundManagementPanelProps {
   eventId: string;
@@ -101,7 +102,7 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
 
   const formatMoney = (cents: number, currency?: string): string => {
     const currencyText = currency?.trim();
-    const code = currencyText ? currencyText.toUpperCase() : 'USD';
+    const code = currencyText ? currencyText.toUpperCase() : resolveRuntimeCurrency();
     return `${code} ${(cents / 100).toFixed(2)}`;
   };
 

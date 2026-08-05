@@ -22,6 +22,7 @@ import {
   type EventDiscoverySourceType,
   type EventDiscoverySourceWrite,
 } from '../api/eventDiscoverySources';
+import { formatDateTimeForUser } from '../utils/formatters';
 
 interface EventCityDTO {
   eventCityId: string;
@@ -63,8 +64,7 @@ const isVenueFeed = (sourceType: EventDiscoverySourceType) =>
 
 const formatTimestamp = (value?: string | null) => {
   if (!value) return 'Nunca';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-EC');
+  return formatDateTimeForUser(value);
 };
 
 export default function EventDiscoverySourcesPage() {

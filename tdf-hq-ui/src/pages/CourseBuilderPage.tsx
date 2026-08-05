@@ -19,6 +19,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 const COURSE_DRAFT_STORAGE_KEY = 'tdf-course-builder-draft';
 
@@ -105,7 +106,7 @@ export default function CourseBuilderPage() {
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('Cuatro sábados (16 horas en total)');
   const [price, setPrice] = useState('150');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(resolveRuntimeCurrency);
   const [capacity, setCapacity] = useState('16');
   const [sessionStartHour, setSessionStartHour] = useState('15');
   const [sessionDurationHours, setSessionDurationHours] = useState('4');
@@ -221,7 +222,7 @@ export default function CourseBuilderPage() {
       format: format.trim() || null,
       duration: duration.trim() || null,
       priceCents: cleanPrice,
-      currency: currency.trim() || 'USD',
+      currency: currency.trim() || resolveRuntimeCurrency(),
       capacity: Math.max(0, Math.round(cleanCapacity)),
       sessionStartHour: sessionStart ?? null,
       sessionDurationHours: sessionDuration ?? null,
@@ -399,7 +400,7 @@ export default function CourseBuilderPage() {
     setFormat(meta.format ?? '');
     setDuration(meta.duration ?? '');
     setPrice(meta.price ? String(Math.round(meta.price)) : '0');
-    setCurrency(meta.currency ?? 'USD');
+    setCurrency(meta.currency ?? resolveRuntimeCurrency());
     setCapacity(meta.capacity ? String(meta.capacity) : '0');
     setSessionStartHour(meta.sessionStartHour != null ? String(meta.sessionStartHour) : '');
     setSessionDurationHours(meta.sessionDurationHours != null ? String(meta.sessionDurationHours) : '');

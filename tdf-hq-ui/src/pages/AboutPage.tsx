@@ -18,6 +18,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import { Link as RouterLink } from 'react-router-dom';
 import { Meta } from '../api/meta';
 import { API_BASE_URL } from '../api/client';
+import { formatDateTimeForUser } from '../utils/formatters';
 
 const RESOURCE_LINKS = [
   { label: 'Documentación (Redoc)', href: '/docs' },
@@ -77,12 +78,7 @@ export default function AboutPage() {
 
   const buildDate = useMemo(() => {
     if (!version?.buildTime) return '—';
-    const date = new Date(version.buildTime);
-    if (Number.isNaN(date.getTime())) return version.buildTime;
-    return new Intl.DateTimeFormat('es-EC', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
+    return formatDateTimeForUser(version.buildTime);
   }, [version]);
 
   return (

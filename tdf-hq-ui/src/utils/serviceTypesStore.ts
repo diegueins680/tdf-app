@@ -1,4 +1,5 @@
 import type { ServiceCatalogDTO } from '../api/types';
+import { resolveRuntimeCurrency } from './formatters';
 
 export interface ServiceType {
   id: string;
@@ -12,12 +13,14 @@ export interface ServiceType {
   active: boolean;
 }
 
+const defaultCurrency = resolveRuntimeCurrency();
+
 export const defaultServiceTypes: ServiceType[] = [
   {
     id: 'band-rec',
     name: 'Grabación de Banda',
     priceCents: 25 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'hora',
     kind: 'Recording',
     pricingModel: 'Hourly',
@@ -28,7 +31,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'vocal-rec',
     name: 'Grabación de Voz',
     priceCents: 35 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'hora',
     kind: 'Recording',
     pricingModel: 'Hourly',
@@ -39,7 +42,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'podcast',
     name: 'Podcast',
     priceCents: 80 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'episodio',
     kind: 'EventProduction',
     pricingModel: 'PerSong',
@@ -50,7 +53,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'ensayo',
     name: 'Ensayo',
     priceCents: 30 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'hora',
     kind: 'Rehearsal',
     pricingModel: 'Hourly',
@@ -61,7 +64,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'dj-practice',
     name: 'Práctica en DJ Booth',
     priceCents: 15 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'hora',
     kind: 'Rehearsal',
     pricingModel: 'Hourly',
@@ -72,7 +75,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'mix',
     name: 'Mezcla',
     priceCents: 120 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'canción',
     kind: 'Mixing',
     pricingModel: 'PerSong',
@@ -83,7 +86,7 @@ export const defaultServiceTypes: ServiceType[] = [
     id: 'master',
     name: 'Mastering',
     priceCents: 70 * 100,
-    currency: 'USD',
+    currency: defaultCurrency,
     billingUnit: 'canción',
     kind: 'Mastering',
     pricingModel: 'PerSong',

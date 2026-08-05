@@ -42,6 +42,7 @@ import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
 import { defaultServiceTypes, mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
+import { resolveRuntimeCurrency } from '../utils/formatters';
 
 interface FormState {
   fullName: string;
@@ -174,7 +175,7 @@ const resolvePresetService = (
       id: 'dj-practice',
       name: presetConfig.fallbackServiceName,
       priceCents: 15 * 100,
-      currency: 'USD',
+      currency: resolveRuntimeCurrency(),
       billingUnit: 'hora',
       kind: 'Rehearsal',
       pricingModel: 'Hourly',
@@ -389,7 +390,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
-  const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
+  const studioCurrency = useMemo(() => services[0]?.currency ?? resolveRuntimeCurrency(), [services]);
   const usingFallbackServices =
     serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
   const usingFallbackRooms =
