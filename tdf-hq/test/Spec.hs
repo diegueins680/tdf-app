@@ -97,6 +97,8 @@ import TDF.CampaignAutomation
       validateCampaignAutomationStatus )
 import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
 import TDF.Email (resolveRefundTimelineMessage)
+import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DdexBusinessRulesSpec
+import qualified TDF.DDEX.ERN.V432.ParseSpec as DdexParseSpec
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
@@ -14470,6 +14472,8 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    DdexParseSpec.spec
+    DdexBusinessRulesSpec.spec
     EventDiscoverySpec.spec
     ArtistSpec.spec
     ServerAuthSpec.spec
