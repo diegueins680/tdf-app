@@ -184,6 +184,7 @@ const DdexInboxPage: React.FC = () => {
                     size="small"
                     color="primary"
                     href={`/label/ddex/documents/${doc.ddexDocumentId}`}
+                    aria-label={`View DDEX document ${doc.ddexDocumentFileName}`}
                   >
                     <ViewIcon />
                   </IconButton>
