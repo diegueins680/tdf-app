@@ -6,7 +6,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Database.Persist (get, entityKey, entityVal, Entity)
 import Database.Persist.Sql (runSqlPool, toSqlKey, fromSqlKey)
 import Servant
@@ -126,11 +126,38 @@ commitImportPlanHandler _user _ = throwError err501 { errBody = "Not Implemented
 
 -- | Create export
 createExportHandler :: AuthedUser -> DdexExportRequest -> AppM DdexExportDTO
-createExportHandler _user _ = throwError err501 { errBody = "Not Implemented: Create Export" }
+createExportHandler user req = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+  now <- liftIO getCurrentTime
+
+  -- TODO: Fetch catalog entities from database
+  -- For now, return a stub response
+  let exportId = 0  -- TODO: Insert into ddex_export table
+      checksum = "placeholder-checksum"
+
+  return DdexExportDTO
+    { ddexExportId = exportId
+    , ddexExportReleaseId = exportReleaseId req
+    , ddexExportPartnerId = exportPartnerId req
+    , ddexExportStatus = "pending"
+    , ddexExportXmlChecksum = checksum
+    , ddexExportCreatedAt = now
+    }
 
 -- | Download export
 downloadExportHandler :: AuthedUser -> Int -> AppM DdexDownloadResponse
-downloadExportHandler _user _ = throwError err501 { errBody = "Not Implemented: Download Export" }
+downloadExportHandler user exportId = do
+  either throwError pure (validateModuleAccess ModuleCatalog user)
+  env <- ask
+
+  -- TODO: Fetch export from database and generate XML
+  -- For now, return a stub response
+  return DdexDownloadResponse
+    { downloadFileName = "export-" <> T.pack (show exportId) <> ".xml"
+    , downloadContentType = "application/xml"
+    , downloadContentBase64 = ""  -- TODO: Generate actual XML
+    }
 
 -- | List partners
 listPartnersHandler :: AuthedUser -> AppM [DdexPartnerDTO]
