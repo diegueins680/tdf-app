@@ -11,9 +11,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import Data.Time (Day, UTCTime, parseTimeM, defaultTimeLocale)
-import Data.Maybe (mapMaybe, fromMaybe, catMaybes)
-import Control.Monad ((>=>))
+import Data.Time (UTCTime, parseTimeM, defaultTimeLocale)
+import Data.Maybe (mapMaybe, fromMaybe, catMaybes, listToMaybe)
+import Control.Monad (foldM)
 import Text.XML.Light
 import TDF.DDEX.ERN.V432.Types
 
@@ -55,17 +55,12 @@ parseErnMessage content =
 
 -- | Parse XML document from lazy ByteString
 parseXmlDocument :: BL.ByteString -> Maybe Element
-parseXmlDocument content =
-  let xmlStr = BL8.unpack content
-      contents = parseXML xmlStr
-  in case contents of
-    (Elem e:_) -> Just e
-    _ -> Nothing
+parseXmlDocument = parseXMLDoc . BL8.unpack
 
 -- | Parse MessageHeader from root element
 parseMessageHeader :: Element -> Either ParseError MessageHeader
 parseMessageHeader root =
-  case findElement (unqual "MessageHeader") root of
+  case findLocalElement (unqual "MessageHeader") root of
     Nothing -> Left $ ParseError "Missing MessageHeader" Nothing Nothing
     Just headerElem -> do
       messageId <- requireText "MessageId" headerElem
@@ -73,7 +68,11 @@ parseMessageHeader root =
       recipientId <- requireText "MessageRecipient/PartyId" headerElem
       createdDateTimeText <- requireText "MessageCreatedDateTime" headerElem
       case parseDateTime createdDateTimeText of
-        Nothing -> Left $ ParseError "Invalid MessageCreatedDateTime format" (Just "MessageCreatedDateTime") Nothing
+        Nothing ->
+          Left $ ParseError
+            "Invalid MessageCreatedDateTime format"
+            (Just "MessageCreatedDateTime")
+            Nothing
         Just createdDateTime -> do
           let threadId = findElementText (unqual "MessageThreadId") headerElem
           Right MessageHeader
@@ -88,17 +87,17 @@ parseMessageHeader root =
 -- | Parse PartyList from root element
 parsePartyList :: Element -> Either ParseError [Party]
 parsePartyList root =
-  case findElement (unqual "PartyList") root of
+  case findLocalElement (unqual "PartyList") root of
     Nothing -> Right []  -- PartyList is optional
     Just partyListElem ->
-      let partyElems = findChildren (unqual "Party") partyListElem
+      let partyElems = findLocalChildren (unqual "Party") partyListElem
       in Right $ mapMaybe parseParty partyElems
 
 -- | Parse a single Party element
 parseParty :: Element -> Maybe Party
 parseParty partyElem = do
   partyId <- parsePartyId partyElem
-  let partyName = findElement (unqual "PartyName") partyElem >>= parsePartyName
+  let partyName = findLocalElement (unqual "PartyName") partyElem >>= parsePartyName
       ipiNumber = findElementText (unqual "IPI") partyElem
       isniNumber = findElementText (unqual "ISNI") partyElem
       dpid = case partyId of
@@ -115,7 +114,7 @@ parseParty partyElem = do
 -- | Parse PartyId from various formats
 parsePartyId :: Element -> Maybe PartyId
 parsePartyId elem =
-  case findElement (unqual "PartyId") elem of
+  case findLocalElement (unqual "PartyId") elem of
     Nothing -> Nothing
     Just pidElem ->
       case findElementText (unqual "DPID") pidElem of
@@ -132,8 +131,8 @@ parsePartyId elem =
 parsePartyName :: Element -> Maybe PartyName
 parsePartyName elem = do
   fullName <- findElementText (unqual "FullName") elem
-  let namesToDisplay = mapMaybe (findElementText (unqual "NameToDisplay"))
-                       (findChildren (unqual "PartyName") elem)
+  let namesToDisplay = map (T.pack . strContent)
+                       (findLocalChildren (unqual "NameToDisplay") elem)
   return PartyName
     { pnFullName = fullName
     , pnNamesToDisplay = namesToDisplay
@@ -142,12 +141,12 @@ parsePartyName elem = do
 -- | Parse ResourceList from root element
 parseResourceList :: Element -> Either ParseError [Resource]
 parseResourceList root =
-  case findElement (unqual "ResourceList") root of
+  case findLocalElement (unqual "ResourceList") root of
     Nothing -> Left $ ParseError "Missing ResourceList" Nothing Nothing
     Just resourceListElem ->
-      let soundRecs = findChildren (unqual "SoundRecording") resourceListElem
-          videos = findChildren (unqual "MusicVideo") resourceListElem
-          images = findChildren (unqual "Image") resourceListElem
+      let soundRecs = findLocalChildren (unqual "SoundRecording") resourceListElem
+          videos = findLocalChildren (unqual "MusicVideo") resourceListElem
+          images = findLocalChildren (unqual "Image") resourceListElem
       in Right $ mapMaybe parseSoundRecording soundRecs ++
                  mapMaybe parseMusicVideo videos ++
                  mapMaybe parseImage images
@@ -156,10 +155,14 @@ parseResourceList root =
 parseSoundRecording :: Element -> Maybe Resource
 parseSoundRecording elem = do
   ref <- findElementText (unqual "ResourceReference") elem
-  title <- findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "TitleText")
+  title <-
+    findLocalElement (unqual "ReferenceTitle") elem >>=
+      findElementText (unqual "TitleText")
   let resType = ResourceTypeSoundRecording
       resIds = parseResourceIds elem
-      subTitle = findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "SubTitle")
+      subTitle =
+        findLocalElement (unqual "ReferenceTitle") elem >>=
+          findElementText (unqual "SubTitle")
       contributors = parseContributors elem
       duration = findElementText (unqual "Duration") elem >>= parseDuration
       language = findElementText (unqual "Language") elem
@@ -182,7 +185,7 @@ parseSoundRecording elem = do
 parseMusicVideo :: Element -> Maybe Resource
 parseMusicVideo elem = do
   ref <- findElementText (unqual "ResourceReference") elem
-  title <- findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "TitleText")
+  title <- findLocalElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "TitleText")
   let resType = ResourceTypeMusicVideo
       resIds = parseResourceIds elem
   return Resource
@@ -220,8 +223,9 @@ parseImage elem = do
 -- | Parse resource identifiers (ISRC, GRid, etc.)
 parseResourceIds :: Element -> [ResourceId]
 parseResourceIds elem =
-  let isrcs = mapMaybe (findElementText (unqual "ISRC")) (findChildren (unqual "SoundRecordingId") elem)
-      grids = mapMaybe (findElementText (unqual "GRid")) (findChildren (unqual "SoundRecordingId") elem)
+  let recordingIds = findLocalChildren (unqual "SoundRecordingId") elem
+      isrcs = mapMaybe (findElementText (unqual "ISRC")) recordingIds
+      grids = mapMaybe (findElementText (unqual "GRid")) recordingIds
   in map (ResourceIdISRC . parseISRC) isrcs ++ map (ResourceIdGRid . GRid) grids
 
 -- | Parse ISRC string into components
@@ -238,9 +242,9 @@ parseISRC isrc
 -- | Parse contributors from element
 parseContributors :: Element -> [ResourceContributor]
 parseContributors elem =
-  let creationInfo = findElement (unqual "CreationInformation") elem
-      creationDetails = creationInfo >>= findElement (unqual "CreationDetails")
-      contribElems = maybe [] (findChildren (unqual "Contributor")) creationDetails
+  let creationInfo = findLocalElement (unqual "CreationInformation") elem
+      creationDetails = creationInfo >>= findLocalElement (unqual "CreationDetails")
+      contribElems = maybe [] (findLocalChildren (unqual "Contributor")) creationDetails
   in mapMaybe parseContributor contribElems
 
 -- | Parse a single contributor
@@ -258,10 +262,10 @@ parseContributor elem = do
 -- | Parse ReleaseList from root element
 parseReleaseList :: Element -> Either ParseError [Release]
 parseReleaseList root =
-  case findElement (unqual "ReleaseList") root of
+  case findLocalElement (unqual "ReleaseList") root of
     Nothing -> Left $ ParseError "Missing ReleaseList" Nothing Nothing
     Just releaseListElem ->
-      let releaseElems = findChildren (unqual "Release") releaseListElem
+      let releaseElems = findLocalChildren (unqual "Release") releaseListElem
       in Right $ mapMaybe parseRelease releaseElems
 
 -- | Parse a single Release element
@@ -269,15 +273,26 @@ parseRelease :: Element -> Maybe Release
 parseRelease elem = do
   ref <- findElementText (unqual "ReleaseReference") elem
   relType <- findElementText (unqual "ReleaseType") elem >>= parseReleaseType
-  title <- findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "TitleText")
+  title <-
+    findLocalElement (unqual "ReferenceTitle") elem >>=
+      findElementText (unqual "TitleText")
   let relIds = parseReleaseIds elem
-      subTitle = findElement (unqual "ReferenceTitle") elem >>= findElementText (unqual "SubTitle")
+      subTitle =
+        findLocalElement (unqual "ReferenceTitle") elem >>=
+          findElementText (unqual "SubTitle")
       contributors = parseReleaseContributors elem
       resourceRefs = parseResourceReferences elem
       duration = findElementText (unqual "Duration") elem >>= parseDuration
       releaseDate = findElementText (unqual "ReleaseDate") elem >>= parseDate
-      copyrightLine = findElement (unqual "Rights") elem >>= findElement (unqual "CopyrightLine") >>= findElementText (unqual "Line")
-      phonographicCopyrightLine = findElement (unqual "Rights") elem >>= findElement (unqual "PLine") >>= findElementText (unqual "Line")
+      rights = findLocalElement (unqual "Rights") elem
+      copyrightLine =
+        rights >>=
+          findLocalElement (unqual "CopyrightLine") >>=
+            findElementText (unqual "Line")
+      phonographicCopyrightLine =
+        rights >>=
+          findLocalElement (unqual "PLine") >>=
+            findElementText (unqual "Line")
       genre = findElementText (unqual "Genre") elem
   return Release
     { releaseReference = ReleaseReference ref
@@ -297,7 +312,7 @@ parseRelease elem = do
 -- | Parse release contributors from Release element
 parseReleaseContributors :: Element -> [ReleaseContributor]
 parseReleaseContributors elem =
-  let contribElems = findChildren (unqual "Contributor") elem
+  let contribElems = findLocalChildren (unqual "Contributor") elem
   in mapMaybe parseReleaseContributor contribElems
 
 -- | Parse a single release contributor
@@ -313,7 +328,7 @@ parseReleaseContributor elem = do
 -- | Parse release identifiers (UPC, GRid, etc.)
 parseReleaseIds :: Element -> [ReleaseId]
 parseReleaseIds elem =
-  let releaseIdElem = findElement (unqual "ReleaseId") elem
+  let releaseIdElem = findLocalElement (unqual "ReleaseId") elem
       upcs = maybe [] (\e -> mapMaybe (findElementText (unqual "UPC")) [e]) releaseIdElem
       grids = maybe [] (\e -> mapMaybe (findElementText (unqual "GRid")) [e]) releaseIdElem
   in map ReleaseIdUPC upcs ++ map (ReleaseIdGRid . GRid) grids
@@ -321,8 +336,10 @@ parseReleaseIds elem =
 -- | Parse resource references from ExternalResourceLink elements
 parseResourceReferences :: Element -> [ResourceReference]
 parseResourceReferences elem =
-  let links = findChildren (unqual "ExternalResourceLink") elem
-  in mapMaybe (\link -> findElementText (unqual "ResourceReference") link >>= Just . ResourceReference) links
+  let links = findLocalChildren (unqual "ExternalResourceLink") elem
+  in mapMaybe
+       (fmap ResourceReference . findElementText (unqual "ResourceReference"))
+       links
 
 -- | Parse ReleaseType from text
 parseReleaseType :: Text -> Maybe ReleaseType
@@ -339,7 +356,7 @@ parseReleaseType _ = Nothing
 -- | Parse ResourceGroups from root element
 parseResourceGroups :: Element -> Maybe [ResourceGroup]
 parseResourceGroups root =
-  case findElement (unqual "ResourceGroup") root of
+  case findLocalElement (unqual "ResourceGroup") root of
     Nothing -> Nothing
     Just groupElem -> Just [parseResourceGroup groupElem]
 
@@ -360,7 +377,7 @@ parseResourceGroup elem =
 -- | Parse nested ResourceGroups (for multi-disc albums)
 parseSubResourceGroups :: Element -> [ResourceGroup]
 parseSubResourceGroups elem =
-  let subGroupElems = findChildren (unqual "ResourceGroup") elem
+  let subGroupElems = findLocalChildren (unqual "ResourceGroup") elem
   in mapMaybe parseSubResourceGroup subGroupElems
 
 -- | Parse a nested ResourceGroup (returns Nothing if it's the same as parent)
@@ -383,7 +400,7 @@ parseSubResourceGroup elem =
 -- | Parse ResourceGroupContent
 parseResourceGroupContent :: Element -> [ResourceGroupContent]
 parseResourceGroupContent elem =
-  let items = findChildren (unqual "ResourceGroupContentItem") elem
+  let items = findLocalChildren (unqual "ResourceGroupContentItem") elem
   in mapMaybe parseResourceGroupContentItem items
 
 -- | Parse a single ResourceGroupContentItem
@@ -398,16 +415,16 @@ parseResourceGroupContentItem elem = do
 -- | Parse DealList from root element
 parseDealList :: Element -> Maybe [Deal]
 parseDealList root =
-  findElement (unqual "DealList") root >>= \dealListElem ->
-    let dealElems = findChildren (unqual "Deal") dealListElem
+  findLocalElement (unqual "DealList") root >>= \dealListElem ->
+    let dealElems = findLocalChildren (unqual "Deal") dealListElem
     in Just $ mapMaybe parseDeal dealElems
 
 -- | Parse a single Deal element
 parseDeal :: Element -> Maybe Deal
 parseDeal elem = do
   terms <- parseDealTerms elem
-  let releaseRefs = mapMaybe (findElementText (unqual "ReleaseReference") >=> Just . ReleaseReference)
-                    (findChildren (unqual "ReleaseReference") elem)
+  let releaseRefs = map (ReleaseReference . T.pack . strContent)
+                    (findLocalChildren (unqual "ReleaseReference") elem)
       resourceRefs = []
       effectiveDate = DateYear 2024  -- Placeholder
   return Deal
@@ -420,15 +437,19 @@ parseDeal elem = do
 -- | Parse DealTerms from Deal element
 parseDealTerms :: Element -> Maybe DealTerms
 parseDealTerms elem = do
-  territoryCodes <- parseTerritoryCodes elem
-  usageType <- findElementText (unqual "UseType") elem
-  let priceType = findElementText (unqual "PriceType") elem
-      wholesalePrice = findElementText (unqual "WholesalePricePerUnit") elem
-      retailPrice = findElementText (unqual "RetailPricePerUnit") elem
+  termsElem <- findLocalElement (unqual "DealTerms") elem
+  territoryCodes <- parseTerritoryCodes termsElem
+  let usage = findLocalElement (unqual "Usage") termsElem
+  usageType <- case usage >>= findElementText (unqual "UseType") of
+    Just useType -> Just useType
+    Nothing -> findElementText (unqual "CommercialModelType") termsElem
+  let priceType = findElementText (unqual "PriceType") termsElem
+      wholesalePrice = findElementText (unqual "WholesalePricePerUnit") termsElem
+      retailPrice = findElementText (unqual "RetailPricePerUnit") termsElem
       startDate = fromMaybe (DateYear 2024) $
-        findElementText (unqual "ValidityStartDate") elem >>= parseDate
-      endDate = findElementText (unqual "ValidityEndDate") elem >>= parseDate
-      takedownDate = findElementText (unqual "TakedownDate") elem >>= parseDate
+        findElementText (unqual "ValidityStartDate") termsElem >>= parseDate
+      endDate = findElementText (unqual "ValidityEndDate") termsElem >>= parseDate
+      takedownDate = findElementText (unqual "TakedownDate") termsElem >>= parseDate
   return DealTerms
     { dtTerritoryCodes = territoryCodes
     , dtUsageType = usageType
@@ -443,7 +464,7 @@ parseDealTerms elem = do
 -- | Parse territory codes from Deal element
 parseTerritoryCodes :: Element -> Maybe [TerritoryCode]
 parseTerritoryCodes elem =
-  let territories = findChildren (unqual "TerritoryCode") elem
+  let territories = findLocalChildren (unqual "TerritoryCode") elem
       codes = map (parseTerritoryCode . T.pack . strContent) territories
   in Just codes
 
@@ -454,21 +475,27 @@ parseTerritoryCode code = TerritoryCode code
 
 -- | Parse duration from ISO 8601 format (PT##H##M##S)
 parseDuration :: Text -> Maybe Duration
-parseDuration text =
-  let stripped = T.stripPrefix "PT" text
-  in case stripped of
-    Nothing -> Nothing
-    Just rest ->
-      let (hours, rest1) = T.breakOn "H" rest
-          (minutes, rest2) = T.breakOn "M" (T.drop 1 rest1)
-          (seconds, _) = T.breakOn "S" (T.drop 1 rest2)
-      in case (safeReadInt hours, safeReadInt minutes, safeReadInt seconds) of
-        (Just h, Just m, Just s) -> Just Duration
-          { durationHours = h
-          , durationMinutes = m
-          , durationSeconds = s
-          }
-        _ -> Nothing
+parseDuration text = do
+  rest <- T.stripPrefix "PT" text
+  (hours, afterHours) <- parseOptionalDurationComponent "H" rest
+  (minutes, afterMinutes) <- parseOptionalDurationComponent "M" afterHours
+  (seconds, trailing) <- parseOptionalDurationComponent "S" afterMinutes
+  if T.null trailing
+    then Just Duration
+      { durationHours = hours
+      , durationMinutes = minutes
+      , durationSeconds = seconds
+      }
+    else Nothing
+
+parseOptionalDurationComponent :: Text -> Text -> Maybe (Int, Text)
+parseOptionalDurationComponent marker input =
+  let (rawValue, suffix) = T.breakOn marker input
+  in if T.null suffix
+       then Just (0, input)
+       else do
+         value <- safeReadInt rawValue
+         Just (value, T.drop (T.length marker) suffix)
 
 -- | Parse date from various formats
 parseDate :: Text -> Maybe Date
@@ -487,12 +514,28 @@ parseDateTime = parseTimeM True defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" . T.unpac
 -- | Helper to find element text
 findElementText :: QName -> Element -> Maybe Text
 findElementText qname elem =
-  findElement qname elem >>= Just . T.pack . strContent
+  findLocalElement qname elem >>= Just . T.pack . strContent
+
+-- | Find direct children by local name, regardless of the XML namespace URI.
+findLocalElement :: QName -> Element -> Maybe Element
+findLocalElement qname = listToMaybe . findLocalChildren qname
+
+findLocalChildren :: QName -> Element -> [Element]
+findLocalChildren qname =
+  filter ((== qName qname) . qName . elName) . elChildren
+
+findPathText :: Text -> Element -> Maybe Text
+findPathText path elem = do
+  target <- foldM findPathSegment elem (filter (not . T.null) (T.splitOn "/" path))
+  Just (T.pack (strContent target))
+  where
+    findPathSegment parent segment =
+      findLocalElement (unqual (T.unpack segment)) parent
 
 -- | Require text from element, returning error if missing
 requireText :: Text -> Element -> Either ParseError Text
 requireText path elem =
-  case findElementText (unqual (T.unpack path)) elem of
+  case findPathText path elem of
     Just t -> Right t
     Nothing -> Left $ ParseError ("Missing required field: " <> path) Nothing Nothing
 
