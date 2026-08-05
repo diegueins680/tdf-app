@@ -94,6 +94,24 @@ export interface ImportRunDTO {
   importRunEntitiesUpdated: number;
 }
 
+// Dry-run result type
+export interface DryRunResult {
+  drrIsValid: boolean;
+  drrChanges: ImportPlanChange[];
+  drrConflicts: ImportConflictDTO[];
+  drrWarnings: string[];
+  drrSummary: string;
+}
+
+export interface ImportPlanChange {
+  ipchOperation: 'CreateEntity' | 'UpdateEntity' | 'LinkEntity' | 'SkipEntity';
+  ipchEntityType: string;
+  ipchEntityRef: string;
+  ipchDescription: string;
+  ipchPreviousState: string | null;
+  ipchNewState: string;
+}
+
 // Export types
 export interface DdexExportRequest {
   exportReleaseId: number;
@@ -208,6 +226,9 @@ export const DDEX = {
   // Import plans
   createImportPlan: (id: number) =>
     post<ImportPlanDTO>(`/ddex/documents/${id}/import-plans`, {}),
+
+  dryRunImport: (planId: number) =>
+    post<DryRunResult>(`/ddex/import-plans/${planId}/dry-run`, {}),
 
   resolveImportPlan: (id: number, resolution: ImportPlanResolution) =>
     patch<ImportPlanDTO>(`/ddex/import-plans/${id}`, resolution),
