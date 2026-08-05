@@ -17,15 +17,13 @@ import {
   List,
   ListItem,
   ListItemText,
-  Divider,
 } from '@mui/material';
 import {
   CheckCircle as CreateIcon,
   Update as UpdateIcon,
   Link as LinkIcon,
-  Warning as WarningIcon,
 } from '@mui/icons-material';
-import { DryRunResult, ImportPlanChange, ImportPlanConflict } from '../../api/ddex';
+import type { DryRunResult } from '../../api/ddex';
 
 interface DryRunPreviewProps {
   result: DryRunResult;
@@ -197,7 +195,7 @@ export const DryRunPreview: React.FC<DryRunPreviewProps> = ({ result }) => {
             Conflicts ({result.drrConflicts.length})
           </Typography>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            These conflicts must be resolved before importing. Click "Next" to resolve them.
+            These conflicts must be resolved before importing. Click &quot;Next&quot; to resolve them.
           </Alert>
         </>
       )}

@@ -11,7 +11,6 @@ import {
   Divider,
   FormControl,
   Grid,
-  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -25,7 +24,6 @@ import {
   Typography,
   Link,
   Snackbar,
-  CircularProgress,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -41,19 +39,13 @@ import {
   Album,
   Timer,
   Refresh,
-  Star,
   Security,
   Speed,
 } from '@mui/icons-material';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useSession } from '../session/SessionContext';
+import { useQuery } from '@tanstack/react-query';
+import { ServiceStorefront, type ServiceStorefrontPackageDTO } from '../api/serviceStorefront';
 
-const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
-const API_BASE = (IMPORT_META_ENV['VITE_API_BASE'] && IMPORT_META_ENV['VITE_API_BASE'].trim() !== ''
-  ? IMPORT_META_ENV['VITE_API_BASE']
-  : 'https://tdf-hq.fly.dev');
-
-// Service package data (will be fetched from API when backend is ready)
+// Service package interface (matches API DTO shape)
 interface ServicePackage {
   id: string;
   serviceKind: 'Mixing' | 'Mastering' | 'Bundle';
@@ -67,6 +59,21 @@ interface ServicePackage {
   deliverables: string[];
   features: string[];
 }
+
+// Map API DTO to local interface
+const mapPackageDTO = (dto: ServiceStorefrontPackageDTO): ServicePackage => ({
+  id: dto.sspId,
+  serviceKind: dto.sspServiceKind as ServicePackage['serviceKind'],
+  tier: dto.sspTier as ServicePackage['tier'],
+  name: dto.sspName,
+  description: dto.sspDescription ?? '',
+  priceUsdCents: dto.sspPriceUsdCents,
+  currency: dto.sspCurrency,
+  turnaroundDays: dto.sspTurnaroundDays,
+  revisionCount: dto.sspRevisionCount,
+  deliverables: dto.sspDeliverables ?? [],
+  features: dto.sspFeatures ?? [],
+});
 
 const PACKAGES: ServicePackage[] = [
   {
@@ -255,10 +262,24 @@ export default function MixingMasteringPage() {
     severity: 'info',
   });
 
+  // Fetch packages from API, fall back to hardcoded data
+  const { data: apiPackages } = useQuery({
+    queryKey: ['serviceStorefrontPackages'],
+    queryFn: () => ServiceStorefront.listPackages(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const packages = useMemo(() => {
+    if (apiPackages && apiPackages.length > 0) {
+      return apiPackages.map(mapPackageDTO);
+    }
+    return PACKAGES; // Fallback to hardcoded data
+  }, [apiPackages]);
+
   const filteredPackages = useMemo(() => {
-    if (serviceFilter === 'all') return PACKAGES;
-    return PACKAGES.filter((p) => p.serviceKind === serviceFilter);
-  }, [serviceFilter]);
+    if (serviceFilter === 'all') return packages;
+    return packages.filter((p) => p.serviceKind === serviceFilter);
+  }, [serviceFilter, packages]);
 
   const handleFilterChange = useCallback((event: SelectChangeEvent<ServiceFilter>) => {
     setServiceFilter(event.target.value as ServiceFilter);
@@ -293,33 +314,24 @@ export default function MixingMasteringPage() {
     }
 
     try {
-      // Create order via API
-      const response = await fetch(`${API_BASE}/services/storefront/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ssocPackageId: selectedPackage.id,
-          ssocBuyerName: formData.buyerName.trim(),
-          ssocBuyerEmail: formData.buyerEmail.trim(),
-          ssocBuyerPhone: formData.buyerPhone.trim() || null,
-          ssocArtistName: formData.artistName.trim() || null,
-          ssocGenre: formData.genre.trim() || null,
-          ssocSongCount: formData.songCount,
-          ssocNotes: formData.notes.trim() || null,
-          ssocReferenceTrackUrl: formData.referenceTrackUrl.trim() || null,
-        }),
+      // Create order via API client
+      const order = await ServiceStorefront.createOrder({
+        ssocPackageId: selectedPackage.id,
+        ssocBuyerName: formData.buyerName.trim(),
+        ssocBuyerEmail: formData.buyerEmail.trim(),
+        ssocBuyerPhone: formData.buyerPhone.trim() || null,
+        ssocArtistName: formData.artistName.trim() || null,
+        ssocGenre: formData.genre.trim() || null,
+        ssocSongCount: formData.songCount,
+        ssocNotes: formData.notes.trim() || null,
+        ssocReferenceTrackUrl: formData.referenceTrackUrl.trim() || null,
       });
 
-      if (!response.ok) {
-        throw new Error('Error al crear el pedido');
-      }
-
-      const order = await response.json();
       setOrderNumber(order.ssoOrderNumber);
       setCurrentStep('confirmation');
       setSnackbar({ open: true, message: '¡Pedido creado exitosamente!', severity: 'success' });
     } catch {
-      // For demo purposes, generate a fake order number
+      // Fallback: generate a demo order number if API is unreachable
       const fakeOrderNumber = `TDF-${Date.now().toString(36).toUpperCase()}`;
       setOrderNumber(fakeOrderNumber);
       setCurrentStep('confirmation');
@@ -649,7 +661,7 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={handleSubmitOrder}
+              onClick={() => { void handleSubmitOrder(); }}
             >
               💳 Tarjeta de crédito/débito (Datafast)
             </Button>
@@ -658,7 +670,7 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={handleSubmitOrder}
+              onClick={() => { void handleSubmitOrder(); }}
             >
               🅿️ PayPal
             </Button>
@@ -667,7 +679,7 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={handleSubmitOrder}
+              onClick={() => { void handleSubmitOrder(); }}
             >
               🏦 Transferencia bancaria
             </Button>

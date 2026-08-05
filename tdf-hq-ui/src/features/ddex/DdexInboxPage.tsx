@@ -30,7 +30,7 @@ import {
   HourglassEmpty as PendingIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { DDEX, DdexDocumentDTO, getStatusColor } from '../../api/ddex';
+import { DDEX, getStatusColor } from '../../api/ddex';
 import { DdexUploadDropzone } from './DdexUploadDropzone';
 
 export const DdexInboxPage: React.FC = () => {
@@ -73,7 +73,7 @@ export const DdexInboxPage: React.FC = () => {
 
   const handleUploadComplete = () => {
     setShowUpload(false);
-    refetch();
+    void refetch();
   };
 
   if (isLoading) {
@@ -88,7 +88,7 @@ export const DdexInboxPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading DDEX documents: {(error as Error).message}
+          Error loading DDEX documents: {error.message}
         </Alert>
       </Box>
     );

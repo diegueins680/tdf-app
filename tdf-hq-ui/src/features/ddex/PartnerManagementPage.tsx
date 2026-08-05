@@ -17,8 +17,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControlLabel,
-  Switch,
   Stack,
   Alert,
   CircularProgress,
@@ -29,7 +27,8 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DDEX, DdexPartnerDTO, DdexPartnerCreateRequest } from '../../api/ddex';
+import { DDEX } from '../../api/ddex';
+import type { DdexPartnerDTO, DdexPartnerCreateRequest } from '../../api/ddex';
 
 export const PartnerManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -49,7 +48,7 @@ export const PartnerManagementPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (data: DdexPartnerCreateRequest) => DDEX.createPartner(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ddex-partners'] });
+      void queryClient.invalidateQueries({ queryKey: ['ddex-partners'] });
       handleCloseDialog();
     },
   });
@@ -99,7 +98,7 @@ export const PartnerManagementPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading partners: {(error as Error).message}
+          Error loading partners: {error.message}
         </Alert>
       </Box>
     );
@@ -223,7 +222,7 @@ export const PartnerManagementPage: React.FC = () => {
 
       {createMutation.isError && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          Error: {(createMutation.error as Error).message}
+          Error: {createMutation.error.message}
         </Alert>
       )}
     </Box>

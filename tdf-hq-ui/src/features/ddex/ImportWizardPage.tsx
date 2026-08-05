@@ -17,7 +17,8 @@ import {
   ArrowForward as NextIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { DDEX, ImportPlanDTO, DryRunResult } from '../../api/ddex';
+import { DDEX } from '../../api/ddex';
+import type { DryRunResult } from '../../api/ddex';
 import { DryRunPreview } from './DryRunPreview';
 import { ConflictResolver } from './ConflictResolver';
 
@@ -93,7 +94,7 @@ export const ImportWizardPage: React.FC = () => {
   const isLoading = docLoading || createPlanMutation.isPending || dryRunMutation.isPending;
   const hasConflicts = dryRunResult?.drrConflicts && dryRunResult.drrConflicts.length > 0;
   const allConflictsResolved = hasConflicts &&
-    dryRunResult!.drrConflicts.every((c) => resolutions.has(c.conflictId));
+    dryRunResult.drrConflicts.every((c) => resolutions.has(c.conflictId));
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -227,7 +228,7 @@ export const ImportWizardPage: React.FC = () => {
 
       {commitMutation.isError && (
         <Alert severity="error">
-          Import failed: {(commitMutation.error as Error).message}
+          Import failed: {commitMutation.error.message}
         </Alert>
       )}
     </Box>

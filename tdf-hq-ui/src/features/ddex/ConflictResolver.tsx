@@ -23,7 +23,7 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
 } from '@mui/icons-material';
-import { ImportPlanConflict } from '../../api/ddex';
+import type { ImportPlanConflict } from '../../api/ddex';
 
 interface ConflictResolverProps {
   conflicts: ImportPlanConflict[];

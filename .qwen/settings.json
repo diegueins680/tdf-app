@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cabal *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(stack *)",
+      "Bash(git push)",
+      "Bash(npx *)",
+      "Bash(sed *)"
+    ]
+  },
+  "$version": 4
+}

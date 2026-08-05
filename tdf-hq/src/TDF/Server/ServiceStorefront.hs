@@ -7,18 +7,29 @@ module TDF.Server.ServiceStorefront
   , serviceStorefrontAdminServer
   ) where
 
-import           Control.Monad (when)
+import           Control.Monad (when, unless)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
-import           Data.Maybe (fromMaybe)
+import           Data.Aeson (eitherDecode, FromJSON(..), Value(..))
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as KM
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
+import           Data.Maybe (fromMaybe, catMaybes)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import           Data.Time (getCurrentTime, UTCTime)
 import           Data.UUID (UUID, toText)
 import           Data.UUID.V4 (nextRandom)
-import           Database.Persist (selectList, get, insert, getBy, replace, Entity(..), (==.), SelectOpt(..))
+import           Database.Persist (selectList, get, insert, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
 import           Database.Persist.Sql (runSqlPool, SqlBackend)
+import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..))
+import           Network.HTTP.Client.TLS (tlsManagerSettings, newTlsManager)
+import           Network.HTTP.Types (statusCode)
 import           Servant
+import           System.Environment (lookupEnv)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
@@ -169,12 +180,92 @@ createStripePaymentIntentHandler _ =
   throwError err501 { errBody = "Stripe is not available in Ecuador. Use Datafast or PayPal." }
 
 createDatafastCheckoutHandler :: Text -> AppM DatafastCheckoutDTO
-createDatafastCheckoutHandler _ =
-  throwError err501 { errBody = "Datafast checkout not yet configured. Contact admin." }
+createDatafastCheckoutHandler orderIdText = do
+  Env{..} <- ask
+  now <- liftIO getCurrentTime
+  
+  -- Load order by order number
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      -- Verify order is in a payable state
+      let status = ME.serviceStorefrontOrderStatus order
+      when (status `notElem` ["pending_payment", "payment_failed"]) $
+        throwError err400 { errBody = "Order is not in a payable state" }
+      
+      let totalCents = ME.serviceStorefrontOrderPriceUsdCents order
+          currency = ME.serviceStorefrontOrderCurrency order
+          buyerName = ME.serviceStorefrontOrderBuyerName order
+          buyerEmail = ME.serviceStorefrontOrderBuyerEmail order
+          buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
+      
+      -- Request Datafast checkout
+      (checkoutId, widgetUrl) <- requestDatafastCheckoutForService
+        (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+      
+      -- Update order with Datafast info
+      liftIO $ flip runSqlPool envPool $ update oid
+        [ ME.ServiceStorefrontOrderStatus =. "datafast_pending"
+        , ME.ServiceStorefrontOrderPaymentProvider =. Just "datafast"
+        , ME.ServiceStorefrontOrderDatafastCheckoutId =. Just checkoutId
+        , ME.ServiceStorefrontOrderUpdatedAt =. now
+        ]
+      
+      pure DatafastCheckoutDTO
+        { dcOrderId    = toPathPiece oid
+        , dcCheckoutId = checkoutId
+        , dcWidgetUrl  = T.pack widgetUrl
+        , dcAmount     = formatUsdCents totalCents
+        , dcCurrency   = currency
+        }
 
 confirmDatafastStatusHandler :: Maybe Text -> Maybe Text -> AppM ServiceStorefrontOrderDTO
-confirmDatafastStatusHandler _ _ =
-  throwError err501 { errBody = "Datafast status confirmation not yet configured." }
+confirmDatafastStatusHandler mOrderId mResourcePath = do
+  Env{..} <- ask
+  orderIdText <- maybe (throwError err400 { errBody = "orderId requerido" }) pure mOrderId
+  resourcePathTxt <- maybe (throwError err400 { errBody = "resourcePath requerido" }) pure mResourcePath
+  
+  -- Load order
+  mEntity <- liftIO $ flip runSqlPool envPool $
+    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+  case mEntity of
+    Nothing -> throwError err404 { errBody = "Order not found" }
+    Just (Entity oid order) -> do
+      -- Check payment status with Datafast
+      paymentStatus <- checkDatafastPaymentStatus resourcePathTxt
+      
+      now <- liftIO getCurrentTime
+      let (newStatus, paidAt) = case paymentStatus of
+            "completed" -> ("paid", Just now)
+            "pending"   -> ("datafast_pending", Nothing)
+            _           -> ("payment_failed", Nothing)
+      
+      -- Update order
+      liftIO $ flip runSqlPool envPool $ update oid
+        [ ME.ServiceStorefrontOrderStatus =. newStatus
+        , ME.ServiceStorefrontOrderDatafastResourcePath =. Just resourcePathTxt
+        , ME.ServiceStorefrontOrderDatafastPaymentId =. Just resourcePathTxt
+        , ME.ServiceStorefrontOrderPaidAt =. paidAt
+        , ME.ServiceStorefrontOrderUpdatedAt =. now
+        ]
+      
+      -- Insert status change
+      let statusChange = ME.ServiceStorefrontOrderStatusChange
+            { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+            , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
+            , ME.serviceStorefrontOrderStatusChangeNotes = Just $ "Datafast payment status: " <> paymentStatus
+            , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "datafast_webhook"
+            , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+            }
+      _ <- liftIO $ flip runSqlPool envPool $ insert statusChange
+      
+      -- Return updated order
+      mUpdated <- liftIO $ flip runSqlPool envPool $ get oid
+      case mUpdated of
+        Nothing -> throwError err500 { errBody = "Failed to load updated order" }
+        Just updated -> pure (orderToDTO oid updated)
 
 createPaypalOrderHandler :: Text -> AppM PaypalCreateDTO
 createPaypalOrderHandler _ =
@@ -350,3 +441,182 @@ parsePackageId :: Text -> AppM ME.ServiceStorefrontPackageId
 parsePackageId txt = case fromPathPiece (T.strip txt) of
   Nothing -> throwError err400 { errBody = "Invalid package ID format" }
   Just key -> pure key
+
+-- | Format cents as USD string.
+formatUsdCents :: Int -> Text
+formatUsdCents cents = "$" <> T.pack (show (cents `div` 100)) <> "." <> T.pack (pad2 (cents `mod` 100))
+  where pad2 n = if n < 10 then "0" <> show n else show n
+
+-- ============================================================================
+-- Datafast Integration
+-- ============================================================================
+
+-- | Datafast environment configuration.
+data ServiceDatafastEnv = ServiceDatafastEnv
+  { sdfEntityId    :: Text
+  , sdfBearerToken :: Text
+  , sdfBaseUrl     :: String
+  , sdfTestMode    :: Maybe Text
+  } deriving (Show)
+
+-- | Load Datafast environment from env vars.
+loadServiceDatafastEnv :: AppM ServiceDatafastEnv
+loadServiceDatafastEnv = do
+  mEntity <- liftIO $ lookupEnv "DATAFAST_ENTITY_ID"
+  mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
+  mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
+  mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
+  entityId <- maybe (throwError err500 { errBody = "DATAFAST_ENTITY_ID not set" }) (pure . T.pack) mEntity
+  bearer   <- maybe (throwError err500 { errBody = "DATAFAST_BEARER_TOKEN not set" }) (pure . T.pack) mBearer
+  baseUrl  <- maybe (throwError err500 { errBody = "DATAFAST_BASE_URL not set" }) (pure) mBase
+  let testMode = T.pack <$> mTest
+  pure ServiceDatafastEnv
+    { sdfEntityId = entityId
+    , sdfBearerToken = bearer
+    , sdfBaseUrl = baseUrl
+    , sdfTestMode = testMode
+    }
+
+-- | Request a Datafast checkout session for a service order.
+requestDatafastCheckoutForService
+  :: Text  -- ^ Transaction ID (order UUID)
+  -> Int   -- ^ Amount in cents
+  -> Text  -- ^ Currency
+  -> Text  -- ^ Buyer name
+  -> Text  -- ^ Buyer email
+  -> Maybe Text  -- ^ Buyer phone
+  -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
+requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
+  dfEnv <- loadServiceDatafastEnv
+  manager <- liftIO $ newTlsManager
+  let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
+      currencyTxt = T.toUpper (T.strip currency)
+      (givenName, surname) = splitBuyerName name
+      -- Build form body
+      baseParams =
+        [ ("entityId", TE.encodeUtf8 (sdfEntityId dfEnv))
+        , ("amount", TE.encodeUtf8 amountTxt)
+        , ("currency", TE.encodeUtf8 currencyTxt)
+        , ("paymentType", "DB")
+        , ("merchantTransactionId", TE.encodeUtf8 txnId)
+        , ("customer.givenName", TE.encodeUtf8 givenName)
+        , ("customer.surname", TE.encodeUtf8 surname)
+        , ("customer.email", TE.encodeUtf8 email)
+        ]
+      phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
+      testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
+      allParams = baseParams <> phoneParam <> testModeParam
+      body = renderFormBody allParams
+      baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
+  req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
+  let req = req0
+        { method = "POST"
+        , requestBody = RequestBodyBS body
+        , requestHeaders =
+            [ ("Authorization", "Bearer " <> TE.encodeUtf8 (sdfBearerToken dfEnv))
+            , ("Content-Type", "application/x-www-form-urlencoded")
+            ]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "Datafast checkout request failed." }
+  case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid Datafast response: " <> T.pack err)) }
+    Right dfResp -> do
+      let mCheckoutId = extractCheckoutId dfResp
+          mResultCode = extractResultCode dfResp
+      case mResultCode of
+        Just code | not (isSuccessCode code) ->
+          throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Datafast rejected checkout: " <> code)) }
+        _ -> pure ()
+      checkoutId <- maybe (throwError err502 { errBody = "No checkout ID in response" }) pure mCheckoutId
+      let widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+      pure (checkoutId, widgetUrl)
+  where
+    pad2 n = if n < 10 then "0" <> show n else show n
+
+-- | Check Datafast payment status.
+checkDatafastPaymentStatus :: Text -> AppM Text
+checkDatafastPaymentStatus resourcePath = do
+  dfEnv <- loadServiceDatafastEnv
+  manager <- liftIO $ newTlsManager
+  let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
+      rp = T.unpack resourcePath
+      basePath = baseUrlClean ++ rp
+      sep = if '?' `elem` basePath then "&" else "?"
+      fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (sdfEntityId dfEnv)
+  req0 <- liftIO $ parseRequest fullUrl
+  let req = req0
+        { method = "GET"
+        , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (sdfBearerToken dfEnv))]
+        }
+  resp <- liftIO $ httpLbs req manager
+  when (statusCode (responseStatus resp) >= 400) $
+    throwError err502 { errBody = "Datafast status check failed." }
+  case eitherDecode (responseBody resp) of
+    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid Datafast status response: " <> T.pack err)) }
+    Right dfResp -> do
+      let mStatus = extractPaymentStatus dfResp
+      pure (fromMaybe "unknown" mStatus)
+
+-- | Extract checkout ID from Datafast response.
+extractCheckoutId :: Value -> Maybe Text
+extractCheckoutId (Object obj) = case KM.lookup "id" obj of
+  Just (String s) -> Just s
+  _ -> Nothing
+extractCheckoutId _ = Nothing
+
+-- | Extract result code from Datafast response.
+extractResultCode :: Value -> Maybe Text
+extractResultCode (Object obj) = case KM.lookup "result" obj of
+  Just (Object resultObj) -> case KM.lookup "code" resultObj of
+    Just (String s) -> Just s
+    _ -> Nothing
+  _ -> Nothing
+extractResultCode _ = Nothing
+
+-- | Extract payment status from Datafast status response.
+extractPaymentStatus :: Value -> Maybe Text
+extractPaymentStatus (Object obj) = case KM.lookup "payments" obj of
+  Just (Array payments) ->
+    case take 1 (foldr (:) [] payments) of
+      [Object payment] -> case KM.lookup "status" payment of
+        Just (String s) -> Just s
+        _ -> Nothing
+      _ -> Nothing
+  _ -> Nothing
+extractPaymentStatus _ = Nothing
+
+-- | Check if a Datafast result code indicates success.
+isSuccessCode :: Text -> Bool
+isSuccessCode code = code `elem` ["000.000.000", "000.100.110", "000.200.000"]
+
+-- | Split a buyer name into (givenName, surname).
+splitBuyerName :: Text -> (Text, Text)
+splitBuyerName name =
+  let parts = T.words name
+  in case parts of
+    [] -> ("", "")
+    [x] -> (x, "")
+    (x:xs) -> (x, T.unwords xs)
+
+-- | Render form parameters as URL-encoded body (strict ByteString).
+renderFormBody :: [(ByteString, ByteString)] -> ByteString
+renderFormBody params =
+  let encoded = map (\(k, v) -> urlEncodeBS k <> "=" <> urlEncodeBS v) params
+  in BS.intercalate "&" encoded
+  where
+    urlEncodeBS bs =
+      let txt = TE.decodeUtf8 bs
+          encodedTxt = T.concatMap (\c ->
+            if c `elem` ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~" :: String)
+              then T.singleton c
+              else "%" <> hexByte c) txt
+      in TE.encodeUtf8 encodedTxt
+    hexByte c = let n = fromEnum c in T.pack [intToHex (n `div` 16), intToHex (n `mod` 16)]
+    intToHex n | n < 10 = toEnum (fromEnum '0' + n)
+               | otherwise = toEnum (fromEnum 'A' + n - 10)
+
+-- | Strip trailing slash from a URL string.
+stripTrailingSlash :: String -> String
+stripTrailingSlash s = if not (null s) && last s == '/' then init s else s

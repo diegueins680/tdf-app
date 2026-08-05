@@ -75,6 +75,16 @@ export interface ImportConflictDTO {
   conflictDescription: string;
 }
 
+export interface ImportPlanConflict {
+  conflictId: number;
+  ipcConflictType: string;
+  ipcEntityType: string;
+  ipcIdentifier: string;
+  ipcDescription: string;
+  ipcSuggestedAction: string;
+  ipcExistingId: string | null;
+}
+
 export interface ImportPlanResolution {
   resolutionPlanId: number;
   resolutionConflicts: ConflictResolution[];

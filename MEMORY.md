@@ -25,3 +25,26 @@
 - Added canonical multi-source event matching so ticketing platforms can attach [score=0.805 recalls=0 avg=0.620 source=memory/2026-07-30.md:8-8]
 <!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:16:17 -->
 - `/configuracion/fuentes-eventos` for enabling providers and registering city-bound HTTPS iCalendar/JSON venue feeds. [score=0.805 recalls=0 avg=0.620 source=memory/2026-07-30.md:16-17]
+
+## Promoted From Short-Term Memory (2026-08-05)
+
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:4:4 -->
+- Buen Plan Ecuador, and structured venue-owned iCalendar/JSON feeds. [score=0.836 recalls=0 avg=0.620 source=memory/2026-07-30.md:4-4]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:11:11 -->
+- Added country-aware event-city/subscription APIs and mobile UI. The Events tab [score=0.836 recalls=0 avg=0.620 source=memory/2026-07-30.md:11-11]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:14:15 -->
+- Added mobile multi-platform purchase choices to event detail.; Added strict-admin source management APIs and the HQ page at [score=0.836 recalls=0 avg=0.620 source=memory/2026-07-30.md:14-15]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-29.md:3:6 -->
+- Investigated the live `/feedback` authentication error shown at 10:06. PR #138 (`54009732c`) merged at 10:09 and Cloudflare deployed the corrected frontend at 10:11; the deployed bundle now includes session cookies, resolves the Fly API base, and does not prefill non-email usernames such as `admin`. - Production Fly still runs backend commit `393bf4fc9708a051409dbef3606564eb2e446933` from July 15, so anonymous `POST /feedback` still returns `401 Missing or invalid auth token`. An invalid `consent=false` probe confirmed this without inserting feedback or sending email.... [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-29.md:3-6]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-29.md:7:8 -->
+- Fly resolved the image correctly but rejected the canary update before applying it because the `diego-saa` organization requires billing information. Both production Machines were rechecked afterward and remain started on the prior digest `sha256:4664e57e556a75057732f6c971d9aca98bf73e524ec86c8b26573dbd587db273`; no production state changed. After billing is added, resume the one-Machine-at-a-time rollout, explicitly preserve `EVENT_DISCOVERY_ENABLED=true`, verify the canary directly, and retain the prior digest for rollback. Do not use the generic releaser unchanged because it stages event discovery to `false`.... [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-29.md:7-8]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:3:3 -->
+- Implemented city-subscription-based event discovery across Ticketmaster, [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:3-3]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:5:5 -->
+- Event discovery now runs in isolated six-hour provider slots with a PostgreSQL [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:5-5]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:6:7 -->
+- leader lock, per-source health/error tracking, a 24-hour circuit-breaker cooldown after repeated failures, and a two-run missing-event grace period. [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:6-7]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:9:10 -->
+- separate purchase options without duplicating the public event. Ticketmaster, Buen Plan, and venue sources use configurable priorities. [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:9-10]
+<!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:12:13 -->
+- defaults to subscribed cities, supports Explore-all and saved-event scopes, and lets users add/remove global cities by ISO-2 country code. [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:12-13]

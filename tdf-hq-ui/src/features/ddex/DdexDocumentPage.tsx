@@ -78,7 +78,7 @@ export const DdexDocumentPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading document: {(docError as Error)?.message || 'Document not found'}
+          Error loading document: {docError?.message || 'Document not found'}
         </Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate('/label/ddex')} sx={{ mt: 2 }}>
           Back to Inbox

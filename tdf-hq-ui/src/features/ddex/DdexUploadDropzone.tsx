@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import {
-  Box,
   Typography,
   Paper,
   Alert,
@@ -27,9 +26,9 @@ export const DdexUploadDropzone: React.FC<DdexUploadDropzoneProps> = ({
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
-          const result = reader.result as string;
+          const dataUrl = reader.result as string;
           // Remove data URL prefix
-          const base64Data = result.split(',')[1];
+          const base64Data = dataUrl.split(',')[1];
           resolve(base64Data);
         };
         reader.onerror = reject;
@@ -47,7 +46,7 @@ export const DdexUploadDropzone: React.FC<DdexUploadDropzoneProps> = ({
       onUploadComplete();
     },
     onError: (error) => {
-      setUploadError((error as Error).message);
+      setUploadError(error.message);
     },
   });
 
