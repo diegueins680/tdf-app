@@ -19,6 +19,12 @@ import           System.Directory  (doesDirectoryExist)
 import           System.Environment (lookupEnv)
 import           Text.Read          (readMaybe)
 
+import           TDF.Internationalization
+  ( normalizeCurrencyCode
+  , normalizeLocaleCode
+  , normalizeTimeZone
+  )
+
 data EmailConfig = EmailConfig
   { emailFromName    :: Text
   , emailFromAddress :: Text
@@ -93,6 +99,12 @@ data AppConfig = AppConfig
   , googleRoutesApiKey :: Maybe Text
   , googleRoutesApiBase :: Text
   , eventLogisticsRecheckEnabled :: Bool
+  , defaultCurrency :: Text
+  , supportedCurrencies :: [Text]
+  , defaultTimezone :: Text
+  , supportedLocales :: [Text]
+  , defaultLocale :: Text
+  , enableGdprCompliance :: Bool
   } deriving (Show)
 
 data LlmProviderConfig = LlmProviderConfig
@@ -534,6 +546,75 @@ validateEventDiscoveryCountryCode (Just rawValue)
     isAsciiLetter ch =
       (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
 
+validateSupportedCurrencies :: Maybe String -> IO [Text]
+validateSupportedCurrencies rawValue =
+  validateConfiguredList
+    "SUPPORTED_CURRENCIES"
+    ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "BRL"]
+    normalizeCurrencyCode
+    rawValue
+
+validateDefaultCurrency :: [Text] -> Maybe String -> IO Text
+validateDefaultCurrency supported rawValue = do
+  let configured = T.pack (fromMaybe "USD" rawValue)
+  normalized <-
+    maybe
+      (fail "DEFAULT_CURRENCY must be a valid ISO 4217 currency code")
+      pure
+      (normalizeCurrencyCode configured)
+  if normalized `elem` supported
+    then pure normalized
+    else fail "DEFAULT_CURRENCY must also be listed in SUPPORTED_CURRENCIES"
+
+validateSupportedLocales :: Maybe String -> IO [Text]
+validateSupportedLocales rawValue =
+  validateConfiguredList
+    "SUPPORTED_LOCALES"
+    ["en", "es", "fr", "de", "pt"]
+    normalizeLocaleCode
+    rawValue
+
+validateDefaultLocale :: [Text] -> Maybe String -> IO Text
+validateDefaultLocale supported rawValue = do
+  let configured = T.pack (fromMaybe "en" rawValue)
+  normalized <-
+    maybe
+      (fail "DEFAULT_LOCALE must be one of: en, es, fr, de, pt")
+      pure
+      (normalizeLocaleCode configured)
+  if normalized `elem` supported
+    then pure normalized
+    else fail "DEFAULT_LOCALE must also be listed in SUPPORTED_LOCALES"
+
+validateDefaultTimezone :: Maybe String -> IO Text
+validateDefaultTimezone rawValue =
+  maybe
+    (fail "DEFAULT_TIMEZONE must be UTC or a valid IANA area/location name")
+    pure
+    (normalizeTimeZone (T.pack (fromMaybe "UTC" rawValue)))
+
+validateConfiguredList
+  :: String
+  -> [Text]
+  -> (Text -> Maybe Text)
+  -> Maybe String
+  -> IO [Text]
+validateConfiguredList envName fallback normalizeValue rawValue = do
+  let configured =
+        case rawValue of
+          Nothing -> fallback
+          Just raw -> map T.strip (T.splitOn "," (T.pack raw))
+      normalized = traverse normalizeValue configured
+  values <-
+    maybe
+      (fail (envName <> " contains an unsupported or malformed value"))
+      pure
+      normalized
+  let uniqueValues = nub values
+  if null uniqueValues
+    then fail (envName <> " must contain at least one value")
+    else pure uniqueValues
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -702,6 +783,12 @@ loadConfig = do
   googleRoutesApiKeyEnv <- lookupEnv "GOOGLE_ROUTES_API_KEY"
   googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
   eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
+  defaultCurrencyEnv <- lookupEnv "DEFAULT_CURRENCY"
+  supportedCurrenciesEnv <- lookupEnv "SUPPORTED_CURRENCIES"
+  defaultTimezoneEnv <- lookupEnv "DEFAULT_TIMEZONE"
+  supportedLocalesEnv <- lookupEnv "SUPPORTED_LOCALES"
+  defaultLocaleEnv <- lookupEnv "DEFAULT_LOCALE"
+  enableGdprComplianceEnv <- lookupEnv "ENABLE_GDPR_COMPLIANCE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
   assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
@@ -788,6 +875,16 @@ loadConfig = do
       "EVENT_LOGISTICS_RECHECK_ENABLED"
       False
       eventLogisticsRecheckEnabledEnv
+  supportedCurrenciesVal <- validateSupportedCurrencies supportedCurrenciesEnv
+  defaultCurrencyVal <- validateDefaultCurrency supportedCurrenciesVal defaultCurrencyEnv
+  defaultTimezoneVal <- validateDefaultTimezone defaultTimezoneEnv
+  supportedLocalesVal <- validateSupportedLocales supportedLocalesEnv
+  defaultLocaleVal <- validateDefaultLocale supportedLocalesVal defaultLocaleEnv
+  enableGdprComplianceVal <-
+    validateStartupBooleanFlag
+      "ENABLE_GDPR_COMPLIANCE"
+      True
+      enableGdprComplianceEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -901,6 +998,12 @@ loadConfig = do
     , googleRoutesApiKey = googleRoutesApiKeyVal
     , googleRoutesApiBase = googleRoutesApiBaseVal
     , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
+    , defaultCurrency = defaultCurrencyVal
+    , supportedCurrencies = supportedCurrenciesVal
+    , defaultTimezone = defaultTimezoneVal
+    , supportedLocales = supportedLocalesVal
+    , defaultLocale = defaultLocaleVal
+    , enableGdprCompliance = enableGdprComplianceVal
     }
   where
     getWithFallback requireUnique keys def =

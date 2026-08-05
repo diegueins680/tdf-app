@@ -95,7 +95,20 @@ export default function PageShell({
               </>
             )}
           </Stack>
-          {actions && <Stack direction="row" spacing={1}>{actions}</Stack>}
+          {actions && (
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                flexWrap: 'wrap',
+                width: { xs: '100%', sm: 'auto' },
+                '& > *': { flexGrow: { xs: 1, sm: 0 } },
+              }}
+            >
+              {actions}
+            </Stack>
+          )}
         </Stack>
       </Box>
       <Box sx={{ maxWidth: maxWidth === false ? undefined : `${maxWidthMap[maxWidth]}px`, width: '100%' }}>

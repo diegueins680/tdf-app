@@ -144,6 +144,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/session/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get locale preferences */
+        get: operations["getLocalePreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/currency-conversions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update locale preferences */
+        put: operations["updateLocalePreferences"];
+        /** Record an audited currency conversion */
+        post: operations["recordCurrencyConversion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/courses/{slug}": {
         parameters: {
             query?: never;
@@ -1022,7 +1057,7 @@ export interface components {
              * @example ops@tdfrecords.com
              */
             email: string;
-            /** @example +593 99 555 1122 */
+            /** @example +1 415 555 2671 */
             phone?: string | null;
             /**
              * Format: password
@@ -1054,6 +1089,35 @@ export interface components {
             partyId: number;
             roles: components["schemas"]["Role"][];
             modules: string[];
+            preferences: components["schemas"]["LocalePreferences"];
+        };
+        LocalePreferences: {
+            /** @example en */
+            locale: string;
+            /** @example USD */
+            currency: string;
+            /** @example Europe/Berlin */
+            timezone: string;
+            countryCode?: string | null;
+            supportedLocales: string[];
+            supportedCurrencies: string[];
+        };
+        LocalePreferencesUpdate: {
+            locale: string;
+            currency: string;
+            timezone: string;
+            countryCode?: string | null;
+        };
+        CurrencyConversionAuditCreate: {
+            sourceCurrency: string;
+            targetCurrency: string;
+            /** Format: int64 */
+            sourceMinorUnits: number;
+            /** Format: int64 */
+            targetMinorUnits: number;
+            /** Format: double */
+            exchangeRate: number;
+            rateSource: string;
         };
         /**
          * @description Assigned platform role.
@@ -1136,7 +1200,7 @@ export interface components {
         WhatsAppConsentRequest: {
             /**
              * @description Phone number in E.164 format.
-             * @example +593995413168
+             * @example +14155552671
              */
             phone: string;
             name?: string | null;
@@ -1371,7 +1435,7 @@ export interface components {
             fullName?: string | null;
             /** Format: email */
             email?: string | null;
-            /** @example +593999001122 */
+            /** @example +442079460018 */
             phoneE164?: string | null;
             /** @description landing | whatsapp | other keyword */
             source: string;
@@ -1603,6 +1667,107 @@ export interface operations {
                 headers: {
                     /** @description Expired session cookie. */
                     "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLocalePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user locale, currency, and timezone preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalePreferences"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLocalePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalePreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalePreferences"];
+                };
+            };
+            /** @description Unsupported locale, currency, timezone, or country */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordCurrencyConversion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyConversionAuditCreate"];
+            };
+        };
+        responses: {
+            /** @description Conversion recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid currency, amount, rate, or source */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content?: never;

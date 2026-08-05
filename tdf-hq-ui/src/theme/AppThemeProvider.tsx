@@ -1,21 +1,29 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CssBaseline, ThemeProvider, createTheme, type PaletteMode } from '@mui/material';
 
+export type ThemeModePreference = PaletteMode | 'system';
+
 interface ThemeModeContextValue {
+  /** Resolved palette mode currently rendered by MUI. */
   mode: PaletteMode;
+  /** Persisted user choice. `system` follows the OS in real time. */
+  preference: ThemeModePreference;
   toggleMode: () => void;
-  setMode: (mode: PaletteMode) => void;
+  setMode: (mode: ThemeModePreference) => void;
 }
 
 const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefined);
 const STORAGE_KEY = 'tdf-hq-ui/theme-mode';
 
-function readStoredMode(): PaletteMode {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
+function readStoredMode(): ThemeModePreference {
+  if (typeof window === 'undefined') return 'system';
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
+  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  return 'system';
+}
+
+function readSystemMode(): PaletteMode {
+  if (typeof window === 'undefined') return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -24,11 +32,30 @@ interface AppThemeProviderProps {
 }
 
 export function AppThemeProvider({ children }: AppThemeProviderProps) {
-  const [mode, setMode] = useState<PaletteMode>(() => readStoredMode());
+  const [preference, setPreference] = useState<ThemeModePreference>(() => readStoredMode());
+  const [systemMode, setSystemMode] = useState<PaletteMode>(() => readSystemMode());
+  const mode = preference === 'system' ? systemMode : preference;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, mode);
+    window.localStorage.setItem(STORAGE_KEY, preference);
+  }, [preference]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateSystemMode = (event: MediaQueryListEvent | MediaQueryList) => {
+      setSystemMode(event.matches ? 'dark' : 'light');
+    };
+    updateSystemMode(media);
+    media.addEventListener('change', updateSystemMode);
+    return () => media.removeEventListener('change', updateSystemMode);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.style.colorScheme = mode;
+    document.documentElement.dataset['theme'] = mode;
   }, [mode]);
 
   const theme = useMemo(
@@ -36,8 +63,10 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
       createTheme({
         palette: {
           mode,
-          primary: { main: '#8b5cf6', contrastText: '#ffffff' },
-          secondary: { main: '#f43f5e', contrastText: '#ffffff' },
+          // Keep the brighter brand hues as `light`, while using AA-safe
+          // action shades whenever MUI places normal-size white text on top.
+          primary: { main: '#7c3aed', light: '#8b5cf6', dark: '#6d28d9', contrastText: '#ffffff' },
+          secondary: { main: '#e11d48', light: '#f43f5e', dark: '#be123c', contrastText: '#ffffff' },
           background: {
             default: mode === 'light' ? '#f8f7f5' : '#0a0a0f',
             paper: mode === 'light' ? '#ffffff' : '#12121a',
@@ -92,10 +121,12 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
                 },
               },
               containedPrimary: {
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                backgroundColor: '#7c3aed',
+                '&:hover': { backgroundColor: '#6d28d9' },
               },
               containedSecondary: {
-                background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+                backgroundColor: '#e11d48',
+                '&:hover': { backgroundColor: '#be123c' },
               },
             },
           },
@@ -120,10 +151,10 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
                 borderRadius: 8,
                 transition: 'box-shadow 0.15s ease',
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: mode === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)',
+                  borderColor: mode === 'light' ? 'rgba(0,0,0,0.54)' : 'rgba(255,255,255,0.54)',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderWidth: 1.5,
+                  borderWidth: 2,
                 },
               },
             },
@@ -167,6 +198,18 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
                 backgroundColor: mode === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)',
                 borderRadius: '999px',
               },
+              ':focus-visible': {
+                outline: `3px solid ${mode === 'light' ? '#6d28d9' : '#a78bfa'}`,
+                outlineOffset: 2,
+              },
+              '@media (prefers-reduced-motion: reduce)': {
+                '*, *::before, *::after': {
+                  animationDuration: '0.01ms !important',
+                  animationIterationCount: '1 !important',
+                  scrollBehavior: 'auto !important',
+                  transitionDuration: '0.01ms !important',
+                },
+              },
             },
           },
         },
@@ -177,10 +220,11 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
   const value = useMemo<ThemeModeContextValue>(
     () => ({
       mode,
-      toggleMode: () => setMode((prev) => (prev === 'light' ? 'dark' : 'light')),
-      setMode,
+      preference,
+      toggleMode: () => setPreference(mode === 'light' ? 'dark' : 'light'),
+      setMode: setPreference,
     }),
-    [mode],
+    [mode, preference],
   );
 
   return (

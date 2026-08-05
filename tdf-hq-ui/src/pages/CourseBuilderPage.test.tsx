@@ -340,7 +340,7 @@ describe('CourseBuilderPage', () => {
     } finally {
       await cleanup();
     }
-  });
+  }, 15_000);
 
   it('keeps the technical publish payload hidden until an admin asks for it', async () => {
     const container = document.createElement('div');

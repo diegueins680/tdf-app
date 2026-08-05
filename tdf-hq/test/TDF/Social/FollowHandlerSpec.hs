@@ -214,16 +214,16 @@ spec = describe "social event handler helpers" $ do
                     { socialEventMetadata = rawMetadata
                     }
             assertInvalid rawMetadata expectedMessage =
-                case validateStoredEventFinanceMetadata (eventWithMetadata rawMetadata) of
+                case validateStoredEventFinanceMetadata "USD" (eventWithMetadata rawMetadata) of
                     Left message ->
                         T.unpack message `shouldContain` expectedMessage
                     Right value ->
                         expectationFailure
                             ("Expected invalid stored event metadata to be rejected, got: " <> show value)
 
-        validateStoredEventFinanceMetadata (eventWithMetadata Nothing)
+        validateStoredEventFinanceMetadata "USD" (eventWithMetadata Nothing)
             `shouldBe` Right ("USD", Nothing)
-        validateStoredEventFinanceMetadata
+        validateStoredEventFinanceMetadata "USD"
             (eventWithMetadata (Just "{\"currency\":\"eur\",\"budgetCents\":2500}"))
             `shouldBe` Right ("EUR", Just 2500)
         assertInvalid (Just "not-json") "Stored event metadata is invalid JSON"

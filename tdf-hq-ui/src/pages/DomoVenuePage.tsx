@@ -35,6 +35,8 @@ import { DateTime } from 'luxon';
 import { Bookings } from '../api/bookings';
 import { PUBLIC_BASE } from '../config/appConfig';
 
+const DOMO_TIMEZONE = import.meta.env.VITE_DOMO_TIMEZONE ?? 'UTC';
+
 type EventType = 'wedding' | 'corporate' | 'retreat' | 'concert' | 'workshop' | 'photo';
 
 interface EventTypeConfig {
@@ -158,7 +160,7 @@ const EVENT_TYPES: Record<EventType, EventTypeConfig> = {
 
 const initialStart = () =>
   DateTime.now()
-    .setZone('America/Guayaquil')
+    .setZone(DOMO_TIMEZONE)
     .plus({ days: 14 })
     .set({ hour: 10, minute: 0, second: 0, millisecond: 0 })
     .toFormat("yyyy-LL-dd'T'HH:mm");
@@ -226,7 +228,7 @@ const calculateQuote = (form: BookingFormState) => {
 };
 
 const toBookingIso = (value: string) => {
-  const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: 'America/Guayaquil' });
+  const parsed = DateTime.fromFormat(value, "yyyy-LL-dd'T'HH:mm", { zone: DOMO_TIMEZONE });
   if (!parsed.isValid) return null;
   return parsed.toUTC().toISO({ suppressMilliseconds: true });
 };

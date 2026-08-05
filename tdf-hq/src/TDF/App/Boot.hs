@@ -52,6 +52,7 @@ import TDF.Config (
     resetDb,
     runMigrations,
     seedDatabase,
+    supportedCurrencies,
   )
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
@@ -65,12 +66,25 @@ import TDF.Cron (
   )
 import TDF.DB (ConnectionPool, Env (..), makePool)
 import TDF.Models (
-    EntityField (PartyRoleActive),
+    EntityField
+      ( PartyRoleActive
+      , SupportedCurrencyDecimalPlaces
+      , SupportedCurrencyDecimalSeparator
+      , SupportedCurrencyEnabled
+      , SupportedCurrencySymbol
+      , SupportedCurrencyThousandsSeparator
+      , SupportedCurrencyUpdatedAt
+      ),
     PartyId,
     PartyRole (..),
     RoleEnum,
+    SupportedCurrency (..),
     migrateAll,
     roleFromText,
+  )
+import TDF.Internationalization
+  ( CurrencyDefinition (..)
+  , currencyDefinition
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
@@ -245,6 +259,8 @@ runAllMigrations cfg = do
   legacyRoles <- captureLegacyPartyRoles
   dropLegacyPartyColumns
   runMigration migrateAll
+  syncSupportedCurrencyCatalog cfg
+  backfillLegacyLocalePreferences
   runMigration migrateExtra
   rawExecute
     "CREATE UNIQUE INDEX IF NOT EXISTS uq_marketplace_cart_active_stripe_payment \
@@ -255,7 +271,55 @@ runAllMigrations cfg = do
   ensureBrainTagsArray
   runMigration migrateSocialEvents
   runMigration migrateTrials
+  ensureInternationalColumns
   restoreLegacyPartyRoles legacyRoles
+
+syncSupportedCurrencyCatalog :: AppConfig -> SqlPersistT IO ()
+syncSupportedCurrencyCatalog cfg = do
+  now <- liftIO getCurrentTime
+  forM_ (supportedCurrencies cfg) $ \code ->
+    case currencyDefinition code of
+      Nothing -> pure ()
+      Just definition -> do
+        let usesDecimalComma = code `elem` ["BRL", "EUR"]
+            decimalSeparator = if usesDecimalComma then "," else "."
+            thousandsSeparator = if usesDecimalComma then "." else ","
+            record = SupportedCurrency
+              { supportedCurrencyCurrencyCode = currencyCode definition
+              , supportedCurrencySymbol = currencySymbol definition
+              , supportedCurrencyDecimalPlaces = currencyDecimalPlaces definition
+              , supportedCurrencyDecimalSeparator = decimalSeparator
+              , supportedCurrencyThousandsSeparator = thousandsSeparator
+              , supportedCurrencyEnabled = True
+              , supportedCurrencyUpdatedAt = now
+              }
+        _ <- upsert record
+          [ SupportedCurrencySymbol =. currencySymbol definition
+          , SupportedCurrencyDecimalPlaces =. currencyDecimalPlaces definition
+          , SupportedCurrencyDecimalSeparator =. decimalSeparator
+          , SupportedCurrencyThousandsSeparator =. thousandsSeparator
+          , SupportedCurrencyEnabled =. True
+          , SupportedCurrencyUpdatedAt =. now
+          ]
+        pure ()
+
+backfillLegacyLocalePreferences :: SqlPersistT IO ()
+backfillLegacyLocalePreferences =
+  rawExecute
+    "INSERT INTO user_locale_preferences (user_id, locale, currency, timezone, country_code, updated_at) \
+    \SELECT id, 'es', 'USD', 'America/Guayaquil', 'EC', now() FROM party \
+    \WHERE created_at < TIMESTAMPTZ '2026-08-05 00:00:00+00' \
+    \ON CONFLICT (user_id) DO NOTHING"
+    []
+
+ensureInternationalColumns :: SqlPersistT IO ()
+ensureInternationalColumns = do
+  rawExecute "ALTER TABLE party ADD COLUMN IF NOT EXISTS country_code TEXT" []
+  rawExecute "ALTER TABLE artist_profile ADD COLUMN IF NOT EXISTS country_code TEXT" []
+  rawExecute "ALTER TABLE social_artist_profile ADD COLUMN IF NOT EXISTS country_code TEXT" []
+  rawExecute "ALTER TABLE venue ADD COLUMN IF NOT EXISTS country_code TEXT" []
+  rawExecute "ALTER TABLE venue ADD COLUMN IF NOT EXISTS timezone TEXT" []
+  rawExecute "ALTER TABLE social_event ADD COLUMN IF NOT EXISTS timezone TEXT" []
 
 hasVectorExtension :: SqlPersistT IO Bool
 hasVectorExtension = do

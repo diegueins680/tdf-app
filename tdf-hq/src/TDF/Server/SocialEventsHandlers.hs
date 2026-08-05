@@ -159,6 +159,7 @@ import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
+import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
@@ -679,7 +680,7 @@ data TicketPlatformFeeBreakdown = TicketPlatformFeeBreakdown
     }
 
 ticketPlatformFeeBps :: Int
--- 4% total is competitive with Ecuador's published self-service ticketing
+-- 4% total is the platform's configurable self-service ticketing baseline.
 -- rates while still covering TDF's platform operations. It is split evenly
 -- between buyer checkout and organizer proceeds.
 ticketPlatformFeeBps = 400
@@ -1887,7 +1888,7 @@ socialEventsServer user =
         forM filteredRows $ \(Entity eid eventRow) -> do
             artists <- loadEventArtists envPool eid
             sources <- liftIO (loadExternalEventSources envPool eid)
-            dto <- either throwError pure (eventEntityToDTO eid eventRow artists)
+            dto <- either throwError pure (eventEntityToDTO (defaultCurrency envConfig) eid eventRow artists)
             pure dto{eventSources = Just sources}
 
     resolveSubscribedEventIds ::
@@ -2147,7 +2148,9 @@ socialEventsServer user =
                 (eventCapacity dto)
                 (eventBudgetCents dto)
         (eventTypeVal, eventStatusVal) <- either throwError pure (validateEventCreateTypeStatus (eventType dto) (eventStatus dto))
-        currencyVal <- either throwError pure (validateEventCurrencyInput (eventCurrency dto))
+        currencyVal <- either throwError pure (validateEventCurrencyInput (defaultCurrency envConfig) (eventCurrency dto))
+        unless (currencyVal `elem` supportedCurrencies envConfig) $
+            throwError err400{errBody = "Currency is not enabled by SUPPORTED_CURRENCIES"}
         ticketUrlVal <-
             either throwError pure $
                 validateEventMetadataUrlField "eventTicketUrl" (eventTicketUrl dto)
@@ -2222,7 +2225,7 @@ socialEventsServer user =
             Just eventRow -> do
                 artists <- loadEventArtists envPool eventKey
                 sources <- liftIO (loadExternalEventSources envPool eventKey)
-                dto <- either throwError pure (eventEntityToDTO eventKey eventRow artists)
+                dto <- either throwError pure (eventEntityToDTO (defaultCurrency envConfig) eventKey eventRow artists)
                 pure dto{eventSources = Just sources}
 
     updateEvent :: T.Text -> EventUpdateDTO -> AppM EventDTO
@@ -3389,7 +3392,7 @@ socialEventsServer user =
             either
                 (throwError . storedEventMetadataServerError)
                 pure
-                (validateStoredEventFinanceMetadata eventVal)
+                (validateStoredEventFinanceMetadata (defaultCurrency envConfig) eventVal)
         currencyVal <-
             either throwError pure $
                 validateTicketTierCurrencyInput eventCurrencyVal (ticketTierCurrency dto)
@@ -3452,7 +3455,7 @@ socialEventsServer user =
             either
                 (throwError . storedEventMetadataServerError)
                 pure
-                (validateStoredEventFinanceMetadata eventVal)
+                (validateStoredEventFinanceMetadata (defaultCurrency envConfig) eventVal)
         currencyVal <-
             either throwError pure $
                 validateTicketTierCurrencyInput eventCurrencyVal (ticketTierCurrency dto)
@@ -5214,7 +5217,7 @@ socialEventsServer user =
             either
                 (throwError . storedEventMetadataServerError)
                 pure
-                (validateStoredEventFinanceMetadata eventRec)
+                (validateStoredEventFinanceMetadata (defaultCurrency envConfig) eventRec)
         let categoryVal = normalizeCategory (Just (efeCategory dto))
             conceptVal = T.strip (efeConcept dto)
             amountVal = efeAmountCents dto
@@ -5272,7 +5275,7 @@ socialEventsServer user =
             either
                 (throwError . storedEventMetadataServerError)
                 pure
-                (validateStoredEventFinanceMetadata eventRec)
+                (validateStoredEventFinanceMetadata (defaultCurrency envConfig) eventRec)
         let categoryVal = normalizeCategory (Just (efeCategory dto))
             conceptVal = T.strip (efeConcept dto)
             amountVal = efeAmountCents dto
@@ -5317,7 +5320,7 @@ socialEventsServer user =
             either
                 (throwError . storedEventMetadataServerError)
                 pure
-                (validateStoredEventFinanceMetadata eventRec)
+                (validateStoredEventFinanceMetadata (defaultCurrency envConfig) eventRec)
         budgetRows <- liftIO $ runSqlPool (selectList [EventBudgetLineEventId ==. eventKey] []) envPool
         allFinanceRows <-
             liftIO $
@@ -5520,7 +5523,7 @@ socialEventsServer user =
     getLogisticsPlan eventIdStr = do
         Env{..} <- ask
         (eventKey, _, accessRole) <- requireLogisticsAccess eventIdStr False
-        settings <- loadLogisticsSettings envPool eventKey
+        settings <- loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
         memberRows <- liftIO $ runSqlPool (selectList [EventLogisticsMemberEventId ==. eventKey] [Asc EventLogisticsMemberCreatedAt]) envPool
         members <- mapM (logisticsMemberEntityToDTO envPool) memberRows
         placeRows <- liftIO $ runSqlPool (selectList [EventLogisticsPlaceEventId ==. eventKey] [Asc EventLogisticsPlaceLabel]) envPool
@@ -5686,7 +5689,8 @@ socialEventsServer user =
         validated <- validateLogisticsActivityInput envPool eventKey Nothing dto
         let (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys) = validated
         modeToStore <- if typeVal == "travel" && isNothing modeVal
-            then Just . elsDefaultTravelMode <$> loadLogisticsSettings envPool eventKey
+            then Just . elsDefaultTravelMode <$>
+                loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
         key <- liftIO $ runSqlPool (insert EventLogisticsActivity
             { eventLogisticsActivityEventId = eventKey
@@ -5724,7 +5728,8 @@ socialEventsServer user =
         let (typeVal, titleVal, endVal, placeKey, originKey, destinationKey, modeVal, bufferVal, priorityVal, statusVal, dependencyKeys) = validated
             nextVersion = expectedVersion + 1
         modeToStore <- if typeVal == "travel" && isNothing modeVal
-            then Just . elsDefaultTravelMode <$> loadLogisticsSettings envPool eventKey
+            then Just . elsDefaultTravelMode <$>
+                loadLogisticsSettings (defaultTimezone envConfig) envPool eventKey
             else pure modeVal
         now <- liftIO getCurrentTime
         updatedRows <- liftIO $ runSqlPool (updateWhereCount
@@ -5903,7 +5908,7 @@ socialEventsServer user =
                 }
         result <- case googleRoutesApiKey config of
             Nothing -> pure (Left "GOOGLE_ROUTES_API_KEY no está configurada.")
-            Just apiKey -> liftIO (computeGoogleRoute apiKey (googleRoutesApiBase config) input)
+            Just apiKey -> liftIO (computeGoogleRoute apiKey (googleRoutesApiBase config) (defaultLocale config) input)
         now <- liftIO getCurrentTime
         let computed = routeVerificationValues activity allocatedSeconds result
             (durationVal, staticVal, distanceVal, bufferSeconds, verdictVal, polylineVal, errorVal) = computed
@@ -6075,11 +6080,11 @@ validateLogisticsAssignments pool assignments = forM_ assignments $ \assignment 
         when (T.length email > 320 || not ("@" `T.isInfixOf` email)) $
             throwError err400{errBody = "external assignee email is invalid"}
 
-loadLogisticsSettings :: ConnectionPool -> SocialEventId -> AppM EventLogisticsSettingsDTO
-loadLogisticsSettings pool eventKey = do
+loadLogisticsSettings :: T.Text -> ConnectionPool -> SocialEventId -> AppM EventLogisticsSettingsDTO
+loadLogisticsSettings fallbackTimezone pool eventKey = do
     row <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsPlan eventKey)) pool
     pure $ case row of
-        Nothing -> EventLogisticsSettingsDTO "America/Guayaquil" "drive"
+        Nothing -> EventLogisticsSettingsDTO fallbackTimezone "drive"
         Just (Entity _ value) -> EventLogisticsSettingsDTO
             { elsTimezone = eventLogisticsPlanTimezone value
             , elsDefaultTravelMode = eventLogisticsPlanDefaultTravelMode value
@@ -7014,24 +7019,24 @@ validateVenueCoordinatePair (Just lat) (Just lng)
 validateVenueCoordinatePair _ _ =
     Left err400{errBody = "venue latitude and longitude must be provided together"}
 
-validateEventCurrencyInput :: Maybe T.Text -> Either ServerError T.Text
-validateEventCurrencyInput mCurrency =
+validateEventCurrencyInput :: T.Text -> Maybe T.Text -> Either ServerError T.Text
+validateEventCurrencyInput configuredDefault mCurrency =
     case cleanMaybeText mCurrency of
-        Nothing -> Right "USD"
+        Nothing ->
+            maybe
+                (Left err500{errBody = "Configured default currency is invalid"})
+                Right
+                (normalizeCurrencyCode configuredDefault)
         Just rawCurrency ->
-            case normalizeEventCurrencyCode rawCurrency of
+            case normalizeCurrencyCode rawCurrency of
                 Just currency -> Right currency
-                Nothing -> Left err400{errBody = "eventCurrency must be a 3-letter ISO code"}
+                Nothing -> Left err400{errBody = "eventCurrency must be a valid ISO 4217 code"}
 
 normalizeEventCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
 normalizeEventCurrencyMaybe = (>>= normalizeEventCurrencyCode) . cleanMaybeText
 
 normalizeEventCurrencyCode :: T.Text -> Maybe T.Text
-normalizeEventCurrencyCode rawCurrency =
-    let normalized = T.toUpper (T.strip rawCurrency)
-     in if T.length normalized == 3 && T.all isAsciiUpper normalized
-            then Just normalized
-            else Nothing
+normalizeEventCurrencyCode = normalizeCurrencyCode
 
 normalizeCurrencyMaybe :: Maybe T.Text -> Maybe T.Text
 normalizeCurrencyMaybe mCurrency = normalizeCurrency <$> cleanMaybeText mCurrency
@@ -7477,12 +7482,12 @@ storedEventMetadataDecodeError rawError =
   where
     unknownFieldsPrefix = "Stored event metadata contains unknown fields:"
 
-validateStoredEventFinanceMetadata :: SocialEvent -> Either T.Text (T.Text, Maybe Int)
-validateStoredEventFinanceMetadata eventRec = do
+validateStoredEventFinanceMetadata :: T.Text -> SocialEvent -> Either T.Text (T.Text, Maybe Int)
+validateStoredEventFinanceMetadata configuredDefault eventRec = do
     metadata <- decodeStoredEventMetadata (socialEventMetadata eventRec)
     currencyVal <-
         case emCurrency metadata of
-            Nothing -> Right "USD"
+            Nothing -> maybe (Left "Configured default currency is invalid") Right (normalizeCurrencyCode configuredDefault)
             Just rawCurrency ->
                 maybe
                     (Left "Stored event currency is invalid")
@@ -7638,8 +7643,7 @@ fallbackBudget plannedExpenseCents
 
 normalizeCurrency :: T.Text -> T.Text
 normalizeCurrency raw =
-    let cleaned = T.toUpper (T.strip raw)
-     in if T.null cleaned then "USD" else cleaned
+    T.toUpper (T.strip raw)
 
 nonEmptyText :: T.Text -> Maybe T.Text
 nonEmptyText txt =
@@ -7961,8 +7965,8 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
-eventEntityToDTO :: SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
-eventEntityToDTO eid eventRow artists = do
+eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> Either ServerError EventDTO
+eventEntityToDTO configuredDefault eid eventRow artists = do
     metadata <-
         either (Left . storedEventMetadataServerError) Right $
             decodeStoredEventMetadata (socialEventMetadata eventRow)
@@ -7982,7 +7986,7 @@ eventEntityToDTO eid eventRow artists = do
             , eventIsPublic = emIsPublic metadata <|> Just True
             , eventType = emType metadata <|> Just "party"
             , eventStatus = emStatus metadata <|> Just "planning"
-            , eventCurrency = emCurrency metadata <|> Just "USD"
+            , eventCurrency = emCurrency metadata <|> Just configuredDefault
             , eventBudgetCents = emBudgetCents metadata
             , eventSources = Nothing
             , eventCreatedAt = Just (socialEventCreatedAt eventRow)

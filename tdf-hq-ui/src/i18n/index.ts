@@ -1,102 +1,65 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import de from './locales/de';
+import en from './locales/en';
+import es from './locales/es';
+import fr from './locales/fr';
+import pt from './locales/pt';
+
+export const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt'] as const;
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+export const LOCALE_STORAGE_KEY = 'tdf-hq-ui/locale';
+const VITE_ENV = (import.meta as ImportMeta & { env?: ImportMetaEnv }).env ?? {};
+
+export function normalizeLocale(value: string | null | undefined): SupportedLocale | null {
+  const base = value?.trim().toLowerCase().split(/[-_]/)[0];
+  return SUPPORTED_LOCALES.find((candidate) => candidate === base) ?? null;
+}
+
+function initialLocale(): SupportedLocale {
+  if (typeof window !== 'undefined') {
+    const stored = normalizeLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
+    if (stored) return stored;
+  }
+  if (typeof navigator !== 'undefined') {
+    for (const candidate of navigator.languages ?? [navigator.language]) {
+      const detected = normalizeLocale(candidate);
+      if (detected) return detected;
+    }
+  }
+  const envDefault = normalizeLocale(VITE_ENV.VITE_DEFAULT_LOCALE);
+  if (envDefault) return envDefault;
+  return 'en';
+}
+
+const detectedLocale = initialLocale();
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = detectedLocale;
+  document.documentElement.dir = 'ltr';
+}
 
 void i18n.use(initReactI18next).init({
-  lng: 'es',
+  lng: detectedLocale,
   fallbackLng: 'en',
+  supportedLngs: [...SUPPORTED_LOCALES],
+  load: 'languageOnly',
   interpolation: { escapeValue: false },
   resources: {
-    es: {
-      translation: {
-        Parties: 'Personas',
-        Bookings: 'Agenda',
-        Kanban: 'Pipelines',
-        notifications: {
-          title: 'Notificaciones',
-          markAll: 'Leer todo',
-          markAllLoading: 'Marcando...',
-          loading: 'Cargando notificaciones',
-          empty: 'Sin notificaciones',
-        },
-        login: {
-          resetDialog: {
-            title: 'Recuperar acceso',
-          },
-          signupDialog: {
-            title: 'Crear cuenta',
-          },
-        },
-        tdfPlatform: {
-          cta: {
-            createAccount: 'Crear cuenta',
-            fanProfile: 'Perfil fan',
-            artistProfile: 'Perfil artista',
-            createFanProfile: 'Crear perfil fan',
-            createArtistProfile: 'Crear perfil de artista',
-            viewArtistProfile: 'Ver perfil',
-            explore: 'Explorar',
-            reserveExperience: 'Reservar experiencia',
-            viewLocation: 'Ver ubicación',
-            viewReleases: 'Ver lanzamientos',
-          },
-          empty: {
-            artists: 'El carrusel se llenará automáticamente cuando existan artistas publicados en la plataforma.',
-            services: 'Pronto verás nuevas rutas TDF en este espacio.',
-            fanBenefits: 'Pronto agregaremos beneficios para fans.',
-            artistBenefits: 'Pronto agregaremos beneficios para artistas.',
-          },
-          sections: {
-            startEyebrow: 'Empieza por tu cuenta',
-          },
-        },
-      },
-    },
-    en: {
-      translation: {
-        Parties: 'Parties',
-        Bookings: 'Bookings',
-        Kanban: 'Pipelines',
-        notifications: {
-          title: 'Notifications',
-          markAll: 'Mark all read',
-          markAllLoading: 'Marking...',
-          loading: 'Loading notifications',
-          empty: 'No notifications',
-        },
-        login: {
-          resetDialog: {
-            title: 'Recover access',
-          },
-          signupDialog: {
-            title: 'Create account',
-          },
-        },
-        tdfPlatform: {
-          cta: {
-            createAccount: 'Create account',
-            fanProfile: 'Fan profile',
-            artistProfile: 'Artist profile',
-            createFanProfile: 'Create fan profile',
-            createArtistProfile: 'Create artist profile',
-            viewArtistProfile: 'View profile',
-            explore: 'Explore',
-            reserveExperience: 'Reserve experience',
-            viewLocation: 'View location',
-            viewReleases: 'View releases',
-          },
-          empty: {
-            artists: 'The carousel will fill automatically when artists are published on the platform.',
-            services: 'New TDF routes will appear here soon.',
-            fanBenefits: 'Fan benefits will appear here soon.',
-            artistBenefits: 'Artist benefits will appear here soon.',
-          },
-          sections: {
-            startEyebrow: 'Start on your own',
-          },
-        },
-      },
-    },
+    en: { translation: en },
+    es: { translation: es },
+    fr: { translation: fr },
+    de: { translation: de },
+    pt: { translation: pt },
   },
+});
+
+i18n.on('languageChanged', (language) => {
+  const normalized = normalizeLocale(language) ?? 'en';
+  if (typeof window !== 'undefined') window.localStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = normalized;
+    document.documentElement.dir = 'ltr';
+  }
 });
 
 export default i18n;

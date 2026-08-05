@@ -55,14 +55,16 @@ sendCourseRegistration svc name email courseTitle landingUrl datesSummary =
     landingUrl
     datesSummary
 
-sendCoursePaymentReminder :: EmailService -> Text -> Text -> Text -> Double -> Int -> Text -> IO ()
-sendCoursePaymentReminder svc name email courseTitle price seatsLeft landingUrl =
+sendCoursePaymentReminder :: EmailService -> Text -> Text -> Text -> Double -> Text -> Text -> Int -> Text -> IO ()
+sendCoursePaymentReminder svc name email courseTitle price currency locale seatsLeft landingUrl =
   Email.sendCoursePaymentReminderEmail
     (esConfig svc)
     name
     email
     courseTitle
     price
+    currency
+    locale
     seatsLeft
     landingUrl
 

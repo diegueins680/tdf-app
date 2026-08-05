@@ -416,8 +416,8 @@ spec = do
         (paymentCreateJson "   " "cash" "2026-04-13" "Studio booking")
         "pcCurrency is required"
       assertInvalid
-        (paymentCreateJson "EUR" "cash" "2026-04-13" "Studio booking")
-        "pcCurrency must be USD because manual payments are currently USD-only"
+        (paymentCreateJson "ZZZ" "cash" "2026-04-13" "Studio booking")
+        "pcCurrency must be a valid ISO 4217 currency code"
       assertInvalid
         (paymentCreateJson "USD" "\n" "2026-04-13" "Studio booking")
         "pcMethod is required"
@@ -5497,9 +5497,11 @@ spec = do
         (validatePaymentMethod ("cash" <> "\x202E"))
 
   describe "validatePaymentCurrency" $ do
-    it "normalizes supported manual payment currencies to USD" $ do
-      validatePaymentCurrency "USD" `shouldBe` Right "USD"
-      validatePaymentCurrency " usd " `shouldBe` Right "USD"
+    let supported = ["USD", "EUR", "GBP"]
+
+    it "normalizes configured ISO 4217 manual payment currencies" $ do
+      validatePaymentCurrency supported "USD" `shouldBe` Right "USD"
+      validatePaymentCurrency supported " eur " `shouldBe` Right "EUR"
 
     it "rejects blank, unsupported, or control-bearing payment currencies before manual payment writes become ambiguous" $ do
       let assertInvalid expectedMessage result = case result of
@@ -5508,12 +5510,13 @@ spec = do
               BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid payment currency error, got " <> show value)
-      assertInvalid "currency is required" (validatePaymentCurrency "   ")
-      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "EUR")
-      assertInvalid "currency must not contain control characters" (validatePaymentCurrency "USD\n")
+      assertInvalid "currency is required" (validatePaymentCurrency supported "   ")
+      assertInvalid "Unsupported currency" (validatePaymentCurrency supported "JPY")
+      assertInvalid "valid ISO 4217" (validatePaymentCurrency supported "ZZZ")
+      assertInvalid "currency must not contain control characters" (validatePaymentCurrency supported "USD\n")
       assertInvalid
         "hidden formatting characters"
-        (validatePaymentCurrency ("USD" <> "\x200B"))
+        (validatePaymentCurrency supported ("USD" <> "\x200B"))
 
   describe "validatePaymentAmountCents" $ do
     it "accepts positive payment amounts without rewriting them" $ do
@@ -6290,7 +6293,7 @@ spec = do
 
   describe "validateServiceCatalogCurrency" $ do
     it "defaults omitted values to USD and normalizes supported ISO codes" $ do
-      validateServiceCatalogCurrency Nothing `shouldBe` Right "USD"
+      validateServiceCatalogCurrency Nothing `shouldSatisfy` isLeft
       validateServiceCatalogCurrency (Just " usd ") `shouldBe` Right "USD"
       validateServiceCatalogCurrency (Just "eur") `shouldBe` Right "EUR"
 

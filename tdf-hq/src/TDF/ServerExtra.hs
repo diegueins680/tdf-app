@@ -83,7 +83,8 @@ import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), P
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
 import           TDF.DB                     (Env(..), sharedTlsManager)
-import           TDF.Config                 (AppConfig, assetsRootDir, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
+import           TDF.Config                 (AppConfig, assetsRootDir, defaultCurrency, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase, supportedCurrencies)
+import           TDF.Internationalization   (normalizeCurrencyCode)
 import           TDF.Services.InstagramMessaging (sendInstagramTextWithContextAndTag)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
@@ -2533,8 +2534,11 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     createH ServiceCatalogCreate{..} = do
       ensureModule ModuleScheduling user
+      Env _ cfg <- ask
       nameClean <- normalizeName sccName
-      currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
+      currencyClean <- either throwError pure (validateServiceCatalogCurrency (sccCurrency <|> Just (defaultCurrency cfg)))
+      unless (currencyClean `elem` supportedCurrencies cfg) $
+        throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
       taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
       billingUnitClean <-
         either throwError pure (validateServiceCatalogBillingUnit sccBillingUnit)
@@ -2560,10 +2564,14 @@ serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
 
     updateH rawId ServiceCatalogUpdate{..} = do
       ensureModule ModuleScheduling user
+      Env _ cfg <- ask
       svcId <- either throwError pure (validateServiceCatalogId rawId)
       let svcKey = toSqlKey svcId :: Key M.ServiceCatalog
       let rateCandidate = join scuRateCents
       currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
+      for_ currencyUpdate $ \currencyValue ->
+        unless (currencyValue `elem` supportedCurrencies cfg) $
+          throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
       taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
       billingUnitUpdate <-
         either throwError pure (validateServiceCatalogBillingUnitUpdate scuBillingUnit)
@@ -2688,15 +2696,13 @@ validateServiceCatalogBillingUnitValue billingUnit
       Right billingUnit
 
 validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
-validateServiceCatalogCurrency Nothing = Right "USD"
+validateServiceCatalogCurrency Nothing =
+  Left err400 { errBody = "Currency is required when no configured default is supplied" }
 validateServiceCatalogCurrency (Just rawCurrency) =
-  let trimmed = T.toUpper (T.strip rawCurrency)
+  let trimmed = T.strip rawCurrency
   in if T.null trimmed
        then invalidCurrency
-       else
-         if T.length trimmed == 3 && T.all isAsciiUpper trimmed
-           then Right trimmed
-           else invalidCurrency
+       else maybe invalidCurrency Right (normalizeCurrencyCode trimmed)
   where
     invalidCurrency =
       Left err400 { errBody = "Moneda inválida. Usa un código ISO de 3 letras, por ejemplo USD" }
@@ -3238,6 +3244,7 @@ paymentsServer user =
 
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
+      cfg <- asks envConfig
       partyId <- either throwError pure (validatePositivePaymentReferenceId "partyId" pcPartyId)
       orderId <- either throwError pure (validateOptionalPositivePaymentReferenceId "orderId" pcOrderId)
       invoiceId <- either throwError pure (validateOptionalPositivePaymentReferenceId "invoiceId" pcInvoiceId)
@@ -3245,7 +3252,7 @@ paymentsServer user =
       now <- liftIO getCurrentTime
       paidAt <- either throwError pure (validatePaymentPaidAt now parsedPaidAt)
       amountCents <- either throwError pure (validatePaymentAmountCents pcAmountCents)
-      _ <- either throwError pure (validatePaymentCurrency pcCurrency)
+      currency <- either throwError pure (validatePaymentCurrency (supportedCurrencies cfg) pcCurrency)
       conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       referenceVal <- either throwError pure (validatePaymentReference pcReference)
@@ -3262,6 +3269,7 @@ paymentsServer user =
           , paymentPartyId     = partyKey
           , paymentMethod      = paymentMethodVal
           , paymentAmountCents = amountCents
+          , paymentCurrency    = currency
           , paymentReceivedAt  = paidAt
           , paymentReference   = referenceVal
           , paymentConcept     = Just conceptVal
@@ -3285,7 +3293,7 @@ paymentsServer user =
       , payOrderId     = fmap fromSqlKey (paymentOrderId p)
       , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
       , payAmountCents = M.paymentAmountCents p
-      , payCurrency    = "USD"
+      , payCurrency    = M.paymentCurrency p
       , payMethod      = T.pack (show (paymentMethod p))
       , payReference   = M.paymentReference p
       , payPaidAt      = T.pack (show (paymentReceivedAt p))
@@ -3483,19 +3491,26 @@ validatePaymentMethod rawMethod
             "paymentMethod must be one of: cash, bank_transfer, bank, transferencia, produbanco, card, paypal, stripe, wompi, payphone, crypto, other"
         }
 
-validatePaymentCurrency :: Text -> Either ServerError Text
-validatePaymentCurrency rawCurrency =
+validatePaymentCurrency :: [Text] -> Text -> Either ServerError Text
+validatePaymentCurrency supported rawCurrency =
   let trimmed = T.strip rawCurrency
-      normalized = T.toUpper trimmed
   in if T.any isUnsafePaymentTextChar rawCurrency
        then Left err400
          { errBody = "currency must not contain control characters or hidden formatting characters"
          }
      else if T.null trimmed
        then Left err400 { errBody = "currency is required" }
-     else if normalized == "USD"
-       then Right normalized
-       else Left err400 { errBody = "Only USD manual payments are currently supported" }
+     else case normalizeCurrencyCode trimmed of
+       Nothing -> Left err400 { errBody = "currency must be a valid ISO 4217 code" }
+       Just normalized
+         | normalized `elem` supported -> Right normalized
+         | otherwise -> Left err400
+             { errBody =
+                 BL.fromStrict $
+                   TE.encodeUtf8 $
+                     "Unsupported currency. Supported currencies: "
+                       <> T.intercalate ", " supported
+             }
 
 validatePaymentAttachmentUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validatePaymentAttachmentUrl Nothing = Right Nothing

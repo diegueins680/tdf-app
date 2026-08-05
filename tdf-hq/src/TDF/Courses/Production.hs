@@ -22,6 +22,8 @@ module TDF.Courses.Production (
     productionCourseSlugForStartDate,
     productionCourseDaySlugForStartDate,
     productionCourseSubtitleForStartDate,
+    dayLabelForLocale,
+    monthNameForLocale,
 ) where
 
 import Data.Text (Text)
@@ -54,7 +56,7 @@ productionCourseSessionDurationHours :: Int
 productionCourseSessionDurationHours = 4
 
 productionCourseLocationLabel :: Text
-productionCourseLocationLabel = "TDF Records – Quito"
+productionCourseLocationLabel = "TDF Records"
 
 productionCourseInstructorName :: Text
 productionCourseInstructorName = "Esteban Muñoz"
@@ -119,7 +121,7 @@ productionCourseDaySlugForStartDate startDate =
 productionCourseSubtitleForStartDate :: Day -> Text
 productionCourseSubtitleForStartDate startDate =
     "Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: "
-        <> spanishDayLabel startDate
+        <> dayLabelForLocale "es" startDate
 
 nextSaturdayOnOrAfter :: Day -> Day
 nextSaturdayOnOrAfter day =
@@ -127,10 +129,20 @@ nextSaturdayOnOrAfter day =
         offset = (6 - weekDay) `mod` 7
      in addDays (fromIntegral offset) day
 
-spanishDayLabel :: Day -> Text
-spanishDayLabel day =
-    let (_, month, dayOfMonth) = toGregorian day
-     in "sábado " <> T.pack (show dayOfMonth) <> " de " <> spanishMonthName month
+dayLabelForLocale :: Text -> Day -> Text
+dayLabelForLocale rawLocale day =
+    let locale = normalizeLocale rawLocale
+        (_, month, dayOfMonth) = toGregorian day
+        (_, _, weekDay) = toWeekDate day
+        weekday = weekdayNameForLocale locale weekDay
+        monthName = monthNameForLocale locale month
+        dayNumber = T.pack (show dayOfMonth)
+     in case locale of
+          "es" -> weekday <> " " <> dayNumber <> " de " <> monthName
+          "fr" -> weekday <> " " <> dayNumber <> " " <> monthName
+          "de" -> weekday <> ", " <> dayNumber <> ". " <> monthName
+          "pt" -> weekday <> ", " <> dayNumber <> " de " <> monthName
+          _ -> weekday <> ", " <> monthName <> " " <> dayNumber
 
 monthSlug :: Int -> Text
 monthSlug 1 = "ene"
@@ -147,20 +159,31 @@ monthSlug 11 = "nov"
 monthSlug 12 = "dic"
 monthSlug n = twoDigits n
 
-spanishMonthName :: Int -> Text
-spanishMonthName 1 = "enero"
-spanishMonthName 2 = "febrero"
-spanishMonthName 3 = "marzo"
-spanishMonthName 4 = "abril"
-spanishMonthName 5 = "mayo"
-spanishMonthName 6 = "junio"
-spanishMonthName 7 = "julio"
-spanishMonthName 8 = "agosto"
-spanishMonthName 9 = "septiembre"
-spanishMonthName 10 = "octubre"
-spanishMonthName 11 = "noviembre"
-spanishMonthName 12 = "diciembre"
-spanishMonthName n = twoDigits n
+monthNameForLocale :: Text -> Int -> Text
+monthNameForLocale rawLocale month =
+    let locale = normalizeLocale rawLocale
+        monthNames = case locale of
+          "es" -> ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+          "fr" -> ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+          "de" -> ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+          "pt" -> ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+          _ -> ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+     in if month >= 1 && month <= 12
+          then monthNames !! (month - 1)
+          else twoDigits month
+
+weekdayNameForLocale :: Text -> Int -> Text
+weekdayNameForLocale locale weekDay =
+    let names = case locale of
+          "es" -> ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+          "fr" -> ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+          "de" -> ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+          "pt" -> ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"]
+          _ -> ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+     in if weekDay >= 1 && weekDay <= 7 then names !! (weekDay - 1) else ""
+
+normalizeLocale :: Text -> Text
+normalizeLocale = T.toLower . T.takeWhile (\ch -> ch /= '-' && ch /= '_') . T.strip
 
 twoDigits :: Show a => a -> Text
 twoDigits value =

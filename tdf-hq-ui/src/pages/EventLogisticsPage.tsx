@@ -26,6 +26,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import RouteIcon from '@mui/icons-material/Route';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { DateTime } from 'luxon';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
@@ -137,7 +138,7 @@ const emptyPlace = (): PlaceDraft => ({
 });
 
 const localDateTimeFormat = "yyyy-LL-dd'T'HH:mm";
-const toLocalInput = (value?: string | null, timezone = 'America/Guayaquil') => {
+const toLocalInput = (value?: string | null, timezone = 'UTC') => {
   const date = value ? DateTime.fromISO(value) : DateTime.now();
   return date.isValid ? date.setZone(timezone).toFormat(localDateTimeFormat) : '';
 };
@@ -152,7 +153,7 @@ const toIsoInZone = (value: string, timezone: string, label: string) => {
 const emptyActivity = (
   eventStart?: string,
   eventEnd?: string,
-  timezone = 'America/Guayaquil',
+  timezone = 'UTC',
   travelMode: LogisticsTravelMode = 'drive',
 ): ActivityDraft => ({
   type: 'task', title: '', notes: '', start: toLocalInput(eventStart, timezone), end: toLocalInput(eventEnd, timezone),
@@ -164,7 +165,7 @@ const emptyActivity = (
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'La operación no pudo completarse.';
 const assertValidTimezone = (timezone: string) => {
   try {
-    new Intl.DateTimeFormat('es-EC', { timeZone: timezone }).format();
+    new Intl.DateTimeFormat(undefined, { timeZone: timezone }).format();
   } catch {
     throw new Error('La zona horaria no es un identificador IANA válido.');
   }
@@ -252,6 +253,7 @@ function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (nex
 }
 
 export default function EventLogisticsPage() {
+  const { timezone: preferredTimezone, locale } = useLocalePreferences();
   const { eventId = '' } = useParams();
   const qc = useQueryClient();
   const eventQuery = useQuery({ queryKey: ['social-event', eventId], queryFn: () => SocialEventsAPI.getEvent(eventId), enabled: Boolean(eventId) });
@@ -263,7 +265,7 @@ export default function EventLogisticsPage() {
   const [editingActivity, setEditingActivity] = useState<EventLogisticsActivityDTO | null>(null);
   const [memberPartyId, setMemberPartyId] = useState('');
   const [memberRole, setMemberRole] = useState<EventLogisticsMemberDTO['elmRole']>('editor');
-  const [timezone, setTimezone] = useState('America/Guayaquil');
+  const [timezone, setTimezone] = useState(preferredTimezone);
   const [defaultMode, setDefaultMode] = useState<LogisticsTravelMode>('drive');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -278,6 +280,9 @@ export default function EventLogisticsPage() {
       setDefaultMode(planQuery.data.elgSettings.elsDefaultTravelMode);
     }
   }, [planQuery.data]);
+  useEffect(() => {
+    if (!planQuery.data) setTimezone(preferredTimezone);
+  }, [planQuery.data, preferredTimezone]);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['event-logistics', eventId] });
   const settingsMutation = useMutation({
@@ -535,7 +540,7 @@ export default function EventLogisticsPage() {
             const routeUrl = origin && destination ? `https://www.google.com/maps/dir/?api=1&origin=${origin.elpLatitude},${origin.elpLongitude}&destination=${destination.elpLatitude},${destination.elpLongitude}` : '';
             return <Card key={activity.eacId} variant="outlined" sx={{ borderLeft: 5, borderLeftColor: activity.eacPriority === 'critical' ? 'error.main' : activity.eacPriority === 'high' ? 'warning.main' : 'primary.main' }}><CardContent><Stack spacing={1}>
               <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-                <Box><Typography variant="caption" color="text.secondary">{new Date(activity.eacStart).toLocaleString('es-EC', { timeZone: plan?.elgSettings.elsTimezone })}{activity.eacEnd ? ` – ${new Date(activity.eacEnd).toLocaleString('es-EC', { timeZone: plan?.elgSettings.elsTimezone })}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
+                <Box><Typography variant="caption" color="text.secondary">{new Date(activity.eacStart).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}{activity.eacEnd ? ` – ${new Date(activity.eacEnd).toLocaleString(locale, { timeZone: plan?.elgSettings.elsTimezone ?? timezone })}` : ''}</Typography><Typography variant="h6">{activity.eacTitle}</Typography></Box>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap><Chip size="small" label={activity.eacType} /><Chip size="small" label={activity.eacStatus} /><Chip size="small" label={activity.eacPriority} /></Stack>
               </Stack>
               {activity.eacType === 'travel' && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}><DirectionsCarIcon color="action" /><Typography>{origin?.elpLabel ?? 'Origen'} → {destination?.elpLabel ?? 'Destino'}</Typography>{routeUrl && <Link href={routeUrl} target="_blank" rel="noreferrer">Abrir ruta</Link>}</Stack>}

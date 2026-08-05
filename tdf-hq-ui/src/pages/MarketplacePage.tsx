@@ -486,6 +486,7 @@ export default function MarketplacePage() {
   });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+  const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() || null;
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -546,13 +547,13 @@ export default function MarketplacePage() {
   }, [paymentMethod]);
 
   useEffect(() => {
-    if (!paypalClientId || typeof window === 'undefined') return;
+    if (!paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=USD`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(paypalCurrency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
     script.onerror = () => setPaypalError('No se pudo cargar PayPal. Intenta de nuevo.');
@@ -560,7 +561,7 @@ export default function MarketplacePage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [paypalClientId]);
+  }, [paypalClientId, paypalCurrency]);
 
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;

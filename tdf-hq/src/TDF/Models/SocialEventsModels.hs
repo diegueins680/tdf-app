@@ -332,7 +332,7 @@ EventFinanceEntry
 
 EventLogisticsPlan
     eventId SocialEventId
-    timezone Text default='America/Guayaquil'
+    timezone Text default='UTC'
     defaultTravelMode Text default='drive'
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()

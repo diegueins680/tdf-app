@@ -342,6 +342,7 @@ export interface BookingDTO {
   resources: BookingResourceDTO[];
   courseSlug?: string | null;
   coursePrice?: number | null;
+  courseCurrency?: string | null;
   courseCapacity?: number | null;
   courseRemaining?: number | null;
   courseLocation?: string | null;

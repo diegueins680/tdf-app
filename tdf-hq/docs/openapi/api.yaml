@@ -138,6 +138,56 @@ paths:
               description: Expired session cookie.
               schema:
                 type: string
+  /session/preferences:
+    get:
+      summary: Get locale preferences
+      operationId: getLocalePreferences
+      responses:
+        '200':
+          description: Current user locale, currency, and timezone preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferences'
+        '401':
+          description: Authentication required
+  /session/currency-conversions:
+    post:
+      summary: Record an audited currency conversion
+      operationId: recordCurrencyConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyConversionAuditCreate'
+      responses:
+        '200':
+          description: Conversion recorded
+        '400':
+          description: Invalid currency, amount, rate, or source
+        '401':
+          description: Authentication required
+    put:
+      summary: Update locale preferences
+      operationId: updateLocalePreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalePreferencesUpdate'
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferences'
+        '400':
+          description: Unsupported locale, currency, timezone, or country
+        '401':
+          description: Authentication required
   /public/courses/{slug}:
     parameters:
       - name: slug
@@ -1372,7 +1422,7 @@ components:
         phone:
           type: string
           nullable: true
-          example: "+593 99 555 1122"
+          example: "+1 415 555 2671"
         password:
           type: string
           format: password
@@ -1413,7 +1463,7 @@ components:
             description: Enabled modules for the user.
     SessionResponse:
       type: object
-      required: [username, displayName, partyId, roles, modules]
+      required: [username, displayName, partyId, roles, modules, preferences]
       properties:
         username:
           type: string
@@ -1431,6 +1481,75 @@ components:
           items:
             type: string
             description: Enabled modules for the user.
+        preferences:
+          $ref: '#/components/schemas/LocalePreferences'
+    LocalePreferences:
+      type: object
+      required: [locale, currency, timezone, supportedLocales, supportedCurrencies]
+      properties:
+        locale:
+          type: string
+          example: en
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        timezone:
+          type: string
+          example: Europe/Berlin
+        countryCode:
+          type: string
+          nullable: true
+          pattern: '^[A-Z]{2}$'
+        supportedLocales:
+          type: array
+          items:
+            type: string
+        supportedCurrencies:
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Z]{3}$'
+    LocalePreferencesUpdate:
+      type: object
+      additionalProperties: false
+      required: [locale, currency, timezone]
+      properties:
+        locale:
+          type: string
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        timezone:
+          type: string
+        countryCode:
+          type: string
+          nullable: true
+          pattern: '^[A-Z]{2}$'
+    CurrencyConversionAuditCreate:
+      type: object
+      additionalProperties: false
+      required: [sourceCurrency, targetCurrency, sourceMinorUnits, targetMinorUnits, exchangeRate, rateSource]
+      properties:
+        sourceCurrency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        targetCurrency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        sourceMinorUnits:
+          type: integer
+          format: int64
+        targetMinorUnits:
+          type: integer
+          format: int64
+        exchangeRate:
+          type: number
+          format: double
+          exclusiveMinimum: 0
+        rateSource:
+          type: string
+          maxLength: 80
     Role:
       type: string
       description: Assigned platform role.
@@ -1617,7 +1736,7 @@ components:
         phone:
           type: string
           description: Phone number in E.164 format.
-          example: "+593995413168"
+          example: "+14155552671"
         name:
           type: string
           nullable: true
@@ -2111,7 +2230,7 @@ components:
         phoneE164:
           type: string
           nullable: true
-          example: "+593999001122"
+          example: "+442079460018"
         source:
           type: string
           description: landing | whatsapp | other keyword

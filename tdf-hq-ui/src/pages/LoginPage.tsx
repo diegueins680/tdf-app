@@ -1341,8 +1341,11 @@ export default function LoginPage() {
             />
             <TextField
               label="Celular (opcional)"
+              type="tel"
+              autoComplete="tel"
               value={signupForm.phone}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
+              inputProps={{ inputMode: 'tel' }}
               fullWidth
               sx={dialogFieldSx}
             />

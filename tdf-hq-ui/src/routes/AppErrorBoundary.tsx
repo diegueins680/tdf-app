@@ -53,7 +53,7 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
           <Stack spacing={0.5}>
             <Typography fontWeight={800}>No pudimos cargar esta vista.</Typography>
             <Typography variant="body2">
-              Recarga la pagina para tomar la version mas reciente de TDF Records.
+              Recarga la página para usar la versión más reciente de TDF Records.
             </Typography>
           </Stack>
         </Alert>

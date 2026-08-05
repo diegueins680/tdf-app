@@ -85,7 +85,7 @@ spec = do
         Left err -> expectationFailure ("Fixture did not decode: " <> err)
         Right response -> do
           let now = fixtureTime 10 0
-              events = normalizeTicketmasterResponse "Quito" now response
+              events = normalizeTicketmasterResponse "USD" "Quito" now response
           case events of
             [event] -> do
               discoveredEventExternalId event `shouldBe` "tm-event-1"
@@ -103,13 +103,13 @@ spec = do
               map discoveredArtistName (discoveredEventArtists event) `shouldBe` ["La Banda"]
               map discoveredArtistGenres (discoveredEventArtists event) `shouldBe` [["Latin", "Latin Pop"]]
             other -> expectationFailure ("Expected one normalized Quito event, got " <> show other)
-          normalizeTicketmasterResponse "Guayaquil" now response `shouldBe` []
+          normalizeTicketmasterResponse "USD" "Guayaquil" now response `shouldBe` []
 
     it "removes the purchase link when the provider reports that sales are closed" $ do
       case eitherDecode (ticketmasterFixtureWithStatus "offsale") of
         Left err -> expectationFailure ("Fixture did not decode: " <> err)
         Right response ->
-          case normalizeTicketmasterResponse "Quito" (fixtureTime 10 0) response of
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
             [event] -> do
               discoveredEventStatus event `shouldBe` "announced"
               discoveredEventTicketUrl event `shouldBe` Nothing
@@ -119,7 +119,7 @@ spec = do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
         Right response ->
-          case normalizeTicketmasterResponse "Quito" (fixtureTime 10 0) response of
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
             [normalized] -> pure normalized
             other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
       pool <- runNoLoggingT $ createSqlitePool ":memory:" 1

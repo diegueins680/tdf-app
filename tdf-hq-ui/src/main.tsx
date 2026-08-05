@@ -9,6 +9,9 @@ import { SessionProvider } from './session/SessionContext';
 import { AppThemeProvider } from './theme/AppThemeProvider';
 import { reportMissingEnv } from './utils/env';
 import { getAnalyticsClient } from './analytics/posthog';
+import { startWebVitalsTracking } from './analytics/webVitals';
+import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -30,7 +33,8 @@ reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);
 // Initialize analytics as early as possible so pageviews captured by
 // posthog-js include the landing route. If VITE_POSTHOG_KEY is unset
 // this is a no-op.
-getAnalyticsClient();
+const analytics = getAnalyticsClient();
+startWebVitalsTracking(analytics);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -38,7 +42,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AppThemeProvider>
         <BrowserRouter>
           <SessionProvider>
-            <App />
+            <LocalePreferencesProvider>
+              <CurrencyProvider>
+                <App />
+              </CurrencyProvider>
+            </LocalePreferencesProvider>
           </SessionProvider>
         </BrowserRouter>
       </AppThemeProvider>

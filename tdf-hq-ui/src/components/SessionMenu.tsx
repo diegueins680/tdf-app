@@ -4,9 +4,11 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import type { MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
+import { useTranslation } from 'react-i18next';
 
 export default function SessionMenu() {
   const { session, logout } = useSession();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -30,12 +32,12 @@ export default function SessionMenu() {
 
   const initials = session.displayName?.charAt(0).toUpperCase() || session.username.charAt(0).toUpperCase();
   const roles = Array.isArray(session.roles) ? session.roles : [];
-  const rolesLabel = roles.length ? roles.join(', ') : 'Sin roles asignados';
+  const rolesLabel = roles.length ? roles.join(', ') : t('sessionMenu.noRoles');
 
   return (
     <>
       <Tooltip title={session.displayName} placement="bottom">
-        <IconButton color="inherit" onClick={handleOpen} size="small" aria-label="Abrir menú de sesión">
+        <IconButton color="inherit" onClick={handleOpen} size="small" aria-label={t('sessionMenu.open')}>
           <Avatar sx={{ width: 32, height: 32, fontSize: 16 }}>{initials}</Avatar>
         </IconButton>
       </Tooltip>
@@ -56,7 +58,7 @@ export default function SessionMenu() {
         <MenuItem onClick={handleLogout}>
           <Stack direction="row" spacing={1} alignItems="center">
             <LogoutIcon fontSize="small" />
-            <Typography variant="body2">Cerrar sesión</Typography>
+            <Typography variant="body2">{t('sessionMenu.logout')}</Typography>
           </Stack>
         </MenuItem>
       </Menu>

@@ -33,9 +33,10 @@ import type { DriveFileInfo } from '../services/googleDrive';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCard';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
-const CURRENCY_OPTIONS = ['USD', 'EUR', 'COP'];
 const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
 const MONTH_CODES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] as const;
 
@@ -82,9 +83,6 @@ const parseOptionalPositiveInt = (value: string): number | null | 'invalid' => {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 'invalid';
 };
 
-const formatAmount = (cents: number, currency: string) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
-
 function PaymentForm({
   onCreated,
   parties,
@@ -96,13 +94,15 @@ function PaymentForm({
   defaultParty?: PartyDTO | null;
   payments: PaymentDTO[];
 }) {
+  const { currency: preferredCurrency, supportedCurrencies } = useLocalePreferences();
+  const { formatMoney } = useCurrency();
   const [toast, setToast] = useState<string | null>(null);
   const qc = useQueryClient();
   const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
   const [partyInput, setPartyInput] = useState<string>('');
   const [paidAt, setPaidAt] = useState<string>(() => toLocalDateInputValue());
   const [amount, setAmount] = useState<string>('');
-  const [currency, setCurrency] = useState<string>('USD');
+  const [currency, setCurrency] = useState<string>(preferredCurrency);
   const [method, setMethod] = useState<string>('Produbanco');
   const [reference, setReference] = useState<string>('N/A');
   const [concept, setConcept] = useState<string>('Honorarios');
@@ -199,7 +199,7 @@ function PaymentForm({
       pcOrderId: parsedOrderId,
       pcInvoiceId: parsedInvoiceId,
       pcAmountCents: Math.round(normalizedAmount * 100),
-      pcCurrency: currency.trim() || 'USD',
+      pcCurrency: currency.trim() || preferredCurrency,
       pcMethod: method,
       pcReference: reference.trim() || null,
       pcPaidAt: paidAt,
@@ -292,7 +292,7 @@ function PaymentForm({
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
             >
-              {CURRENCY_OPTIONS.map((code) => (
+              {supportedCurrencies.map((code) => (
                 <MenuItem key={code} value={code}>
                   {code}
                 </MenuItem>
@@ -413,7 +413,7 @@ function PaymentForm({
         )}
         {lastPaymentForParty && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            Último pago de este contacto: {formatAmount(lastPaymentForParty.payAmountCents, lastPaymentForParty.payCurrency)} · {lastPaymentForParty.payMethod}.{' '}
+            Último pago de este contacto: {formatMoney(lastPaymentForParty.payAmountCents / 100, lastPaymentForParty.payCurrency)} · {lastPaymentForParty.payMethod}.{' '}
             <Button
               size="small"
               onClick={() => {
@@ -442,6 +442,7 @@ function PaymentForm({
 }
 
 export default function PaymentsPage() {
+  const { formatMoney } = useCurrency();
   const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
   const [partyFilterInput, setPartyFilterInput] = useState<string>('');
   const [fromFilter, setFromFilter] = useState<string>('');
@@ -635,7 +636,7 @@ export default function PaymentsPage() {
                             </TableCell>
                             <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
                             <TableCell>{pay.payPeriod ?? '-'}</TableCell>
-                            <TableCell>{formatAmount(pay.payAmountCents, pay.payCurrency)}</TableCell>
+                            <TableCell>{formatMoney(pay.payAmountCents / 100, pay.payCurrency)}</TableCell>
                             <TableCell>{pay.payMethod}</TableCell>
                             <TableCell>{pay.payReference ?? '-'}</TableCell>
                             <TableCell>

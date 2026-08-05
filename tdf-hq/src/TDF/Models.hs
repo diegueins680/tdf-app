@@ -20,6 +20,7 @@ import           GHC.Generics (Generic)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime, Day)
+import           Data.Int (Int64)
 import           Data.UUID (UUID)
 import           Database.Persist.TH
 import           TDF.UUIDInstances ()
@@ -253,6 +254,36 @@ Party
     emergencyContact Text Maybe
     notes            Text Maybe
     stripeCustomerId Text Maybe
+    createdAt        UTCTime
+    deriving Show Generic
+SupportedCurrency sql=supported_currencies
+    currencyCode     Text
+    symbol           Text
+    decimalPlaces    Int
+    decimalSeparator Text
+    thousandsSeparator Text
+    enabled          Bool default=True
+    updatedAt        UTCTime
+    UniqueSupportedCurrency currencyCode
+    deriving Show Generic
+UserLocalePreference sql=user_locale_preferences
+    userId           PartyId
+    locale           Text
+    currency         Text
+    timezone         Text
+    countryCode      Text Maybe
+    updatedAt        UTCTime
+    UniqueUserLocalePreference userId
+    deriving Show Generic
+CurrencyConversionAudit sql=currency_conversion_audit
+    userId           PartyId Maybe
+    sourceCurrency   Text
+    targetCurrency   Text
+    sourceMinorUnits Int64
+    targetMinorUnits Int64
+    exchangeRate     Double
+    rateSource       Text
+    rateObservedAt   UTCTime
     createdAt        UTCTime
     deriving Show Generic
 PartyRole
@@ -531,6 +562,7 @@ Payment
     partyId          PartyId
     method           PaymentMethod
     amountCents      Int
+    currency         Text default='USD'
     receivedAt       UTCTime
     reference        Text Maybe
     concept          Text Maybe

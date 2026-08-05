@@ -11,4 +11,10 @@ describe('shouldHideRadioForRoute', () => {
     expect(shouldHideRadioForRoute('/inicio')).toBe(true);
     expect(shouldHideRadioForRoute('/inicio', '#radio')).toBe(false);
   });
+
+  it('keeps acquisition pages clear unless the visitor explicitly opens the radio', () => {
+    expect(shouldHideRadioForRoute('/tdf')).toBe(true);
+    expect(shouldHideRadioForRoute('/tdf/artistas')).toBe(true);
+    expect(shouldHideRadioForRoute('/tdf', '#radio')).toBe(false);
+  });
 });

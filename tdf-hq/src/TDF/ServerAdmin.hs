@@ -140,6 +140,7 @@ import           TDF.Auth               ( AuthedUser
 import           TDF.DB                 (Env(..))
 import           TDF.Config             (ragRefreshHours, seedTriggerToken, stripeSecretKey, stripeWebhookSecret)
 import           TDF.Models
+import           TDF.Internationalization (normalizeCountryCode)
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
@@ -774,9 +775,18 @@ adminServer user =
           (accountId, accountCreated) <- case artistProfileStripeAccountId profile of
             Just existing -> pure (existing, False)
             Nothing -> do
-              -- Default to EC since TDF Records is an Ecuador-based platform;
-              -- per-request override is colCountry.
-              let country = fromMaybe "EC" (colCountry req)
+              mStoredPreferences <- withPool $
+                getBy (UniqueUserLocalePreference (artistProfileArtistPartyId profile))
+              let storedCountry =
+                    mStoredPreferences >>= userLocalePreferenceCountryCode . entityVal
+                  requestedCountry = colCountry req <|> storedCountry
+              country <-
+                case requestedCountry >>= normalizeCountryCode of
+                  Just value -> pure value
+                  Nothing -> throwError err400
+                    { errBody =
+                        "colCountry is required for a new Stripe account when the artist has no country preference"
+                    }
               mEmail <- withPool $ do
                 mParty <- get (artistProfileArtistPartyId profile)
                 pure (mParty >>= partyPrimaryEmail)

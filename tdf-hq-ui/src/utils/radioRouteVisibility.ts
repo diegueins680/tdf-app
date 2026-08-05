@@ -10,6 +10,7 @@ const HIDDEN_RADIO_PATH_PREFIXES = [
 ];
 
 const RADIO_ON_DEMAND_PATH_PREFIXES = [
+  '/tdf',
   '/inicio',
   '/fans',
   '/records',

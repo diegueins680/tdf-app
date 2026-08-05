@@ -36,9 +36,9 @@ import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
 import           System.IO                (stderr)
-import           Text.Printf              (printf)
 
 import           TDF.Config               (EmailConfig(..), defaultAppBase, resolveAppBase)
+import           TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, formatMoney)
 
 generateTempPassword :: IO Text
 generateTempPassword = do
@@ -141,20 +141,22 @@ sendCoursePaymentReminderEmail
   -> Text   -- ^ recipient name
   -> Text   -- ^ recipient email
   -> Text   -- ^ course title
-  -> Double -- ^ course price (USD)
+  -> Double -- ^ course price in major units
+  -> Text   -- ^ ISO 4217 currency
+  -> Text   -- ^ locale
   -> Int    -- ^ remaining seats
   -> Text   -- ^ landing URL
   -> IO ()
-sendCoursePaymentReminderEmail Nothing _name _email _courseTitle _price _seats _landingUrl =
+sendCoursePaymentReminderEmail Nothing _name _email _courseTitle _price _currency _locale _seats _landingUrl =
   putStrLn "[Email] SMTP not configured; skipped course payment reminder."
-sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price seats landingUrl = do
+sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price currency locale seats landingUrl = do
   let subject   = "Completa tu pago - " <> courseTitle
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
       seatsLine
         | seats == 1 = "Solo queda 1 cupo disponible."
         | otherwise  = "Solo quedan " <> T.pack (show seats) <> " cupos disponibles."
       preheader = "Asegura tu cupo realizando el pago hoy mismo."
-      priceLine = "Valor del curso: " <> formatUsd price
+      priceLine = "Valor del curso: " <> formatCoursePrice locale currency price
       bodyLines =
         [ "Recibimos tu inscripción a " <> courseTitle <> "."
         , "Para asegurar tu cupo realiza tu pago hoy."
@@ -172,10 +174,11 @@ sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price seats lan
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
 
-formatUsd :: Double -> Text
-formatUsd amount =
-  let formatted = printf "%.2f" amount :: String
-  in "$" <> T.pack formatted <> " USD"
+formatCoursePrice :: Text -> Text -> Double -> Text
+formatCoursePrice locale currency amount =
+  let decimals = maybe 2 currencyDecimalPlaces (currencyDefinition currency)
+      minorUnits = round (amount * fromIntegral (10 ^ decimals :: Integer))
+  in formatMoney locale currency minorUnits
 
 -- Send marketplace order confirmation to buyer.
 sendMarketplaceOrderEmail
@@ -351,7 +354,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , ctaBlock
         , "<div style=\"margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;\">"
         , "<p style=\"margin:0 0 4px;color:#0f172a;font-weight:700;\">TDF Records</p>"
-        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Quito · Escuela &amp; Estudios</p>"
+        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Escuela &amp; Estudios</p>"
         , "</div>"
         , "</td></tr></table></td></tr></table></body></html>"
         ]

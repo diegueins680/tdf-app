@@ -29,6 +29,7 @@ import           Data.Aeson.Types (Object, Parser)
 import           Text.Read (readMaybe)
 
 import           TDF.API.Types (LooseJSON)
+import           TDF.Internationalization (normalizeCurrencyCode)
 
 data PaymentCreate = PaymentCreate
   { pcPartyId      :: Int64
@@ -105,10 +106,9 @@ validatePositiveIntField fieldName rawValue =
 validateRequiredPaymentCurrencyField :: String -> Text -> Parser Text
 validateRequiredPaymentCurrencyField fieldName rawValue = do
   value <- validateRequiredPaymentTextField fieldName 3 rawValue
-  let normalized = T.toUpper value
-  if normalized == "USD"
-    then pure normalized
-    else fail (fieldName <> " must be USD because manual payments are currently USD-only")
+  case normalizeCurrencyCode value of
+    Just normalized -> pure normalized
+    Nothing -> fail (fieldName <> " must be a valid ISO 4217 currency code")
 
 validateRequiredPaymentTextField :: String -> Int -> Text -> Parser Text
 validateRequiredPaymentTextField fieldName maxLength rawValue

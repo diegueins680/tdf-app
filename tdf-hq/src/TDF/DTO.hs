@@ -726,6 +726,7 @@ data BookingDTO = BookingDTO
   , resources   :: [BookingResourceDTO]
   , courseSlug        :: Maybe Text
   , coursePrice       :: Maybe Double
+  , courseCurrency    :: Maybe Text
   , courseCapacity    :: Maybe Int
   , courseRemaining   :: Maybe Int
   , courseLocation    :: Maybe Text
@@ -1014,10 +1015,51 @@ data SessionResponse = SessionResponse
   , sessionPartyId :: Int64
   , sessionRoles :: [RoleEnum]
   , sessionModules :: [Text]
+  , sessionPreferences :: LocalePreferencesDTO
   } deriving (Show, Generic)
 
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
+
+data LocalePreferencesDTO = LocalePreferencesDTO
+  { lpLocale :: Text
+  , lpCurrency :: Text
+  , lpTimezone :: Text
+  , lpCountryCode :: Maybe Text
+  , lpSupportedLocales :: [Text]
+  , lpSupportedCurrencies :: [Text]
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON LocalePreferencesDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
+
+data LocalePreferencesUpdate = LocalePreferencesUpdate
+  { lpuLocale :: Text
+  , lpuCurrency :: Text
+  , lpuTimezone :: Text
+  , lpuCountryCode :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON LocalePreferencesUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+    { fieldLabelModifier = \field ->
+        case drop 3 field of
+          [] -> field
+          first : rest -> toLower first : rest
+    }
+
+data CurrencyConversionAuditCreate = CurrencyConversionAuditCreate
+  { ccaSourceCurrency :: Text
+  , ccaTargetCurrency :: Text
+  , ccaSourceMinorUnits :: Int64
+  , ccaTargetMinorUnits :: Int64
+  , ccaExchangeRate :: Double
+  , ccaRateSource :: Text
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON CurrencyConversionAuditCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
+    { fieldLabelModifier = dtoCamelDrop 3 }
 
 -- ============================================================================
 -- FAN CLUB DTOs

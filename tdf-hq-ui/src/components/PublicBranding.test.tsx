@@ -17,7 +17,7 @@ const renderBranding = async (container: HTMLElement, route: string) => {
     root?.render(
       <MemoryRouter initialEntries={[route]}>
         <PublicBranding>
-          <main>Contenido publico</main>
+          <div>Contenido publico</div>
         </PublicBranding>
       </MemoryRouter>,
     );
@@ -105,6 +105,24 @@ describe('PublicBranding Instagram entry links', () => {
     try {
       expect(container.textContent).not.toContain('TDF desde Instagram');
       expect(container.textContent).not.toContain('Reservar servicios');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('provides semantic landmarks and a keyboard skip target', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/tdf');
+
+    try {
+      const skipLink = container.querySelector<HTMLAnchorElement>('a[href="#main-content"]');
+      const main = container.querySelector<HTMLElement>('main#main-content');
+      expect(skipLink?.textContent).toContain('Saltar al contenido principal');
+      expect(main?.getAttribute('tabindex')).toBe('-1');
+      expect(container.querySelector('header')).not.toBeNull();
+      expect(container.querySelector('nav[aria-label="Navegación principal"]')).not.toBeNull();
+      expect(container.querySelector('footer')).not.toBeNull();
     } finally {
       await cleanup();
     }
