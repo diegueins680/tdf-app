@@ -854,11 +854,11 @@ adminServer user =
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
       now <- liftIO getCurrentTime
-      case createArtistPromoSlotRecord artistKey payload now of
-        Left errMsg ->
-          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right action ->
-          withPool action
+      action <- either
+        (\errMsg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        (createArtistPromoSlotRecord artistKey payload now)
+      withPool action
 
     updateArtistPromoSlotAdmin rawArtistId rawPromotionId payload = do
       ensureModule ModuleAdmin user
@@ -867,12 +867,12 @@ adminServer user =
       artistKey <- resolveArtistKey rawArtistId
       let promotionKey = toSqlKey promotionId
       now <- liftIO getCurrentTime
-      case updateArtistPromoSlotRecord artistKey promotionKey payload now of
-        Left errMsg ->
-          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right action -> do
-          mDto <- withPool action
-          maybe (throwError err404) pure mDto
+      action <- either
+        (\errMsg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        (updateArtistPromoSlotRecord artistKey promotionKey payload now)
+      mDto <- withPool action
+      maybe (throwError err404) pure mDto
 
     deleteArtistPromoSlotAdmin rawArtistId rawPromotionId = do
       ensureModule ModuleAdmin user
@@ -899,19 +899,19 @@ adminServer user =
       mReport <- withPool $ loadArtistPromoDayReport locale timezone artistKey dayVal
       report <- maybe (throwError err404) pure mReport
       pdfResult <- liftIO (generateArtistPromoDayReportPdf report)
-      case pdfResult of
-        Left errMsg ->
-          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right pdf -> do
-          let rawFileName = T.concat
-                [ "promo-diario-artista-"
-                , T.pack (show artistId)
-                , "-"
-                , T.pack (show dayVal)
-                ]
-              fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
-              disposition = T.concat ["attachment; filename=\"", fileName, "\""]
-          pure (addHeader disposition pdf)
+      pdf <- either
+        (\errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        pdfResult
+      let rawFileName = T.concat
+            [ "promo-diario-artista-"
+            , T.pack (show artistId)
+            , "-"
+            , T.pack (show dayVal)
+            ]
+          fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
+          disposition = T.concat ["attachment; filename=\"", fileName, "\""]
+      pure (addHeader disposition pdf)
 
     artistPromoLocalePreferences = do
       cfg <- asks envConfig

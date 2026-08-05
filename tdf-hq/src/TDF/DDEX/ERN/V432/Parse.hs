@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Time (UTCTime, parseTimeM, defaultTimeLocale)
 import Data.Maybe (mapMaybe, fromMaybe, catMaybes, listToMaybe)
+import Control.Applicative ((<|>))
 import Control.Monad (foldM)
 import Text.XML.Light
 import TDF.DDEX.ERN.V432.Types
@@ -60,38 +61,36 @@ parseXmlDocument = parseXMLDoc . BL8.unpack
 -- | Parse MessageHeader from root element
 parseMessageHeader :: Element -> Either ParseError MessageHeader
 parseMessageHeader root =
-  case findLocalElement (unqual "MessageHeader") root of
-    Nothing -> Left $ ParseError "Missing MessageHeader" Nothing Nothing
-    Just headerElem -> do
+  maybe missingMessageHeader parseHeader $ findLocalElement (unqual "MessageHeader") root
+  where
+    missingMessageHeader = Left $ ParseError "Missing MessageHeader" Nothing Nothing
+    parseHeader headerElem = do
       messageId <- requireText "MessageId" headerElem
       senderId <- requireText "MessageSender/PartyId" headerElem
       recipientId <- requireText "MessageRecipient/PartyId" headerElem
       createdDateTimeText <- requireText "MessageCreatedDateTime" headerElem
-      case parseDateTime createdDateTimeText of
-        Nothing ->
-          Left $ ParseError
+      let invalidCreatedDateTime = Left $ ParseError
             "Invalid MessageCreatedDateTime format"
             (Just "MessageCreatedDateTime")
             Nothing
-        Just createdDateTime -> do
-          let threadId = findElementText (unqual "MessageThreadId") headerElem
-          Right MessageHeader
-            { mhMessageId = messageId
-            , mhMessageThreadId = threadId
-            , mhSenderPartyId = PartyIdDPID senderId
-            , mhRecipientPartyId = PartyIdDPID recipientId
-            , mhMessageCreatedDateTime = createdDateTime
-            , mhMessageAuditTrail = Nothing
-            }
+          buildHeader createdDateTime =
+            let threadId = findElementText (unqual "MessageThreadId") headerElem
+            in Right MessageHeader
+                { mhMessageId = messageId
+                , mhMessageThreadId = threadId
+                , mhSenderPartyId = PartyIdDPID senderId
+                , mhRecipientPartyId = PartyIdDPID recipientId
+                , mhMessageCreatedDateTime = createdDateTime
+                , mhMessageAuditTrail = Nothing
+                }
+      maybe invalidCreatedDateTime buildHeader (parseDateTime createdDateTimeText)
 
 -- | Parse PartyList from root element
 parsePartyList :: Element -> Either ParseError [Party]
 parsePartyList root =
-  case findLocalElement (unqual "PartyList") root of
-    Nothing -> Right []  -- PartyList is optional
-    Just partyListElem ->
-      let partyElems = findLocalChildren (unqual "Party") partyListElem
-      in Right $ mapMaybe parseParty partyElems
+  maybe (Right []) parseParties $ findLocalElement (unqual "PartyList") root
+  where
+    parseParties = Right . mapMaybe parseParty . findLocalChildren (unqual "Party")
 
 -- | Parse a single Party element
 parseParty :: Element -> Maybe Party
@@ -113,19 +112,13 @@ parseParty partyElem = do
 
 -- | Parse PartyId from various formats
 parsePartyId :: Element -> Maybe PartyId
-parsePartyId elem =
-  case findLocalElement (unqual "PartyId") elem of
-    Nothing -> Nothing
-    Just pidElem ->
-      case findElementText (unqual "DPID") pidElem of
-        Just dpid -> Just (PartyIdDPID dpid)
-        Nothing -> case findElementText (unqual "IPI") pidElem of
-          Just ipi -> Just (PartyIdIPI ipi)
-          Nothing -> case findElementText (unqual "ISNI") pidElem of
-            Just isni -> Just (PartyIdISNI isni)
-            Nothing -> case findElementText (unqual "ProprietaryId") pidElem of
-              Just propId -> Just (PartyIdProprietary "Proprietary" propId)
-              Nothing -> Nothing
+parsePartyId elem = do
+  pidElem <- findLocalElement (unqual "PartyId") elem
+  PartyIdDPID <$> findElementText (unqual "DPID") pidElem
+    <|> PartyIdIPI <$> findElementText (unqual "IPI") pidElem
+    <|> PartyIdISNI <$> findElementText (unqual "ISNI") pidElem
+    <|> PartyIdProprietary "Proprietary"
+          <$> findElementText (unqual "ProprietaryId") pidElem
 
 -- | Parse PartyName element
 parsePartyName :: Element -> Maybe PartyName
@@ -141,9 +134,10 @@ parsePartyName elem = do
 -- | Parse ResourceList from root element
 parseResourceList :: Element -> Either ParseError [Resource]
 parseResourceList root =
-  case findLocalElement (unqual "ResourceList") root of
-    Nothing -> Left $ ParseError "Missing ResourceList" Nothing Nothing
-    Just resourceListElem ->
+  maybe missingResourceList parseResources $ findLocalElement (unqual "ResourceList") root
+  where
+    missingResourceList = Left $ ParseError "Missing ResourceList" Nothing Nothing
+    parseResources resourceListElem =
       let soundRecs = findLocalChildren (unqual "SoundRecording") resourceListElem
           videos = findLocalChildren (unqual "MusicVideo") resourceListElem
           images = findLocalChildren (unqual "Image") resourceListElem
@@ -262,11 +256,10 @@ parseContributor elem = do
 -- | Parse ReleaseList from root element
 parseReleaseList :: Element -> Either ParseError [Release]
 parseReleaseList root =
-  case findLocalElement (unqual "ReleaseList") root of
-    Nothing -> Left $ ParseError "Missing ReleaseList" Nothing Nothing
-    Just releaseListElem ->
-      let releaseElems = findLocalChildren (unqual "Release") releaseListElem
-      in Right $ mapMaybe parseRelease releaseElems
+  maybe missingReleaseList parseReleases $ findLocalElement (unqual "ReleaseList") root
+  where
+    missingReleaseList = Left $ ParseError "Missing ReleaseList" Nothing Nothing
+    parseReleases = Right . mapMaybe parseRelease . findLocalChildren (unqual "Release")
 
 -- | Parse a single Release element
 parseRelease :: Element -> Maybe Release
@@ -356,9 +349,7 @@ parseReleaseType _ = Nothing
 -- | Parse ResourceGroups from root element
 parseResourceGroups :: Element -> Maybe [ResourceGroup]
 parseResourceGroups root =
-  case findLocalElement (unqual "ResourceGroup") root of
-    Nothing -> Nothing
-    Just groupElem -> Just [parseResourceGroup groupElem]
+  fmap ((: []) . parseResourceGroup) $ findLocalElement (unqual "ResourceGroup") root
 
 -- | Parse a single ResourceGroup (supports nested groups for multi-disc albums)
 parseResourceGroup :: Element -> ResourceGroup
@@ -440,9 +431,8 @@ parseDealTerms elem = do
   termsElem <- findLocalElement (unqual "DealTerms") elem
   territoryCodes <- parseTerritoryCodes termsElem
   let usage = findLocalElement (unqual "Usage") termsElem
-  usageType <- case usage >>= findElementText (unqual "UseType") of
-    Just useType -> Just useType
-    Nothing -> findElementText (unqual "CommercialModelType") termsElem
+  usageType <- (usage >>= findElementText (unqual "UseType"))
+    <|> findElementText (unqual "CommercialModelType") termsElem
   let priceType = findElementText (unqual "PriceType") termsElem
       wholesalePrice = findElementText (unqual "WholesalePricePerUnit") termsElem
       retailPrice = findElementText (unqual "RetailPricePerUnit") termsElem
@@ -535,9 +525,10 @@ findPathText path elem = do
 -- | Require text from element, returning error if missing
 requireText :: Text -> Element -> Either ParseError Text
 requireText path elem =
-  case findPathText path elem of
-    Just t -> Right t
-    Nothing -> Left $ ParseError ("Missing required field: " <> path) Nothing Nothing
+  maybe
+    (Left $ ParseError ("Missing required field: " <> path) Nothing Nothing)
+    Right
+    (findPathText path elem)
 
 -- | Safe read for Int, returns Nothing on failure
 safeReadInt :: Text -> Maybe Int

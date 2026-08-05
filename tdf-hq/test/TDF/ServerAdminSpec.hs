@@ -49,7 +49,7 @@ import TDF.API.Types
     , UserAccountUpdate (..)
     )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Config (loadConfig, seedTriggerToken)
+import TDF.Config (defaultLocale, defaultTimezone, loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
 import TDF.DTO
     ( ArtistProfileDTO
@@ -1219,37 +1219,29 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         ("Expected invalid artist release id to be rejected, got " <> show value)
 
             createPromotionResult <- runAdminTest (createArtistPromotion validArtistPromotionPayload)
-            case createPromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "artistId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion artist id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "artistId must be a positive integer"
+                createPromotionResult
 
             updatePromotionResult <- runAdminTest (updateArtistPromotion 0 validArtistPromotionPayload)
-            case updatePromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "promotionId must be a positive integer"
+                updatePromotionResult
 
             deletePromotionResult <- runAdminTest (deleteArtistPromotion 0)
-            case deletePromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion delete id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "promotionId must be a positive integer"
+                deletePromotionResult
 
         it "returns artist promotion report previews ordered by Ecuador schedule time" $ do
             pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
             runSqlPool initializeArtistPromotionSchema pool
             cfg <- loadConfig
-            let env = dummyEnv { envPool = pool, envConfig = cfg }
+            let reportConfig = cfg
+                    { defaultLocale = "es"
+                    , defaultTimezone = "America/Guayaquil"
+                    }
+                env = dummyEnv { envPool = pool, envConfig = reportConfig }
                 _artistProfiles :<|> _artistReleases :<|> _connectOnboarding
                     :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
                 now = UTCTime (fromGregorian 2026 4 23) (secondsToDiffTime 0)
@@ -1341,7 +1333,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right report -> do
                     apdArtistId report `shouldBe` artistId
                     apdArtistName report `shouldBe` "La Ruta"
-                    apdTimezone report `shouldBe` "Hora de Ecuador (America/Guayaquil)"
+                    apdTimezone report `shouldBe` "America/Guayaquil"
                     map apsStartTime (apdEntries report) `shouldBe` ["08:15", "11:30"]
 
     describe "admin user creation invariants" $ do
@@ -1827,6 +1819,15 @@ mkUser roles =
         , auModules = modulesForRoles roles
         }
 
+expectBadRequestContaining :: Show a => String -> Either ServerError a -> Expectation
+expectBadRequestContaining expectedMessage =
+    either
+        (\err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` expectedMessage)
+        (\value -> expectationFailure
+            ("Expected bad request containing " <> show expectedMessage <> ", got " <> show value))
+
 runAdminTest :: AdminTestM a -> IO (Either ServerError a)
 runAdminTest action = runExceptT (runReaderT action dummyEnv)
 
@@ -1938,6 +1939,18 @@ initializeArtistPromotionSchema = do
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_locale_preferences\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"user_id\" INTEGER NOT NULL UNIQUE,\
+        \\"locale\" VARCHAR NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"timezone\" VARCHAR NOT NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
     rawExecute

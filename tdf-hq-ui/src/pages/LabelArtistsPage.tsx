@@ -143,22 +143,22 @@ const buildPromotionPdfFilename = (artist: ArtistProfileDTO | null, day: string)
 };
 
 const triggerBlobDownload = (blob: Blob, fileName: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(url);
+  const downloadObjectUrl = URL.createObjectURL(blob);
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.href = downloadObjectUrl;
+  downloadAnchor.download = fileName;
+  downloadAnchor.click();
+  URL.revokeObjectURL(downloadObjectUrl);
 };
 
 const openBlobPreview = (blob: Blob, fallbackFileName: string) => {
-  const url = URL.createObjectURL(blob);
-  const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
+  const previewObjectUrl = URL.createObjectURL(blob);
+  const previewWindow = window.open(previewObjectUrl, '_blank', 'noopener,noreferrer');
   if (!previewWindow) {
     triggerBlobDownload(blob, fallbackFileName);
     return false;
   }
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  window.setTimeout(() => URL.revokeObjectURL(previewObjectUrl), 60_000);
   return true;
 };
 
@@ -1205,9 +1205,9 @@ export default function LabelArtistsPage() {
               label="Subir portada a Drive"
               helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
               onComplete={(files) => {
-                const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-                if (link) {
-                  setForm((prev) => ({ ...prev, heroImageUrl: link }));
+                const uploadedHeroImageUrl = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                if (uploadedHeroImageUrl) {
+                  setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
                   setHeroImageFileName('Imagen en Drive');
                 }
               }}

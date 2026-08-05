@@ -161,9 +161,9 @@ loadArtistPromoDayReport
   -> SqlPersistT m (Maybe ArtistPromoDayReportDTO)
 loadArtistPromoDayReport locale timezone artistKey dayVal = do
   mParty <- get artistKey
-  case mParty of
-    Nothing -> pure Nothing
-    Just party -> do
+  maybe (pure Nothing) buildReport mParty
+  where
+    buildReport party = do
       entries <- listArtistPromoSlotsForDay artistKey dayVal
       pure $
         Just ArtistPromoDayReportDTO
@@ -303,18 +303,18 @@ normalizeCellText = T.unwords . T.words
 latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar . normalizeCellText
   where
-    escapeChar c = case c of
-      '&'  -> "\\&"
-      '%'  -> "\\%"
-      '$'  -> "\\$"
-      '#'  -> "\\#"
-      '_'  -> "\\_"
-      '{'  -> "\\{"
-      '}'  -> "\\}"
-      '~'  -> "\\textasciitilde{}"
-      '^'  -> "\\textasciicircum{}"
-      '\\' -> "\\textbackslash{}"
-      _    -> T.singleton c
+    escapeChar c = fromMaybe (T.singleton c) $ lookup c
+      [ ('&', "\\&")
+      , ('%', "\\%")
+      , ('$', "\\$")
+      , ('#', "\\#")
+      , ('_', "\\_")
+      , ('{', "\\{")
+      , ('}', "\\}")
+      , ('~', "\\textasciitilde{}")
+      , ('^', "\\textasciicircum{}")
+      , ('\\', "\\textbackslash{}")
+      ]
 
 maybeToList :: Maybe a -> [a]
 maybeToList Nothing = []
