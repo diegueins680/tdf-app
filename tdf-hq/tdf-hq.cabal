@@ -48,6 +48,7 @@ executable tdf-hq-exe
     TDF.API.ServiceStorefront
     TDF.API.ServiceStorefrontTypes
     TDF.Artists.Promotion
+    TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Config
@@ -236,6 +237,8 @@ test-suite tdf-hq-test
     TDF.APITypesSpec
     TDF.Artists.Promotion
     TDF.Artists.PromotionSpec
+    TDF.Artists.Enrichment
+    TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
     TDF.Config

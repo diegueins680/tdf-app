@@ -343,6 +343,30 @@ initializeTestSchema = do
         \)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_profile_enrichment\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"official_name\" VARCHAR NULL,\
+        \\"country\" VARCHAR NULL,\
+        \\"instagram_url\" VARCHAR NULL,\
+        \\"social_links\" VARCHAR NULL,\
+        \\"discography\" VARCHAR NULL,\
+        \\"achievements\" VARCHAR NULL,\
+        \\"hero_original_url\" VARCHAR NULL,\
+        \\"hero_square_url\" VARCHAR NULL,\
+        \\"hero_landscape_url\" VARCHAR NULL,\
+        \\"hero_responsive_urls\" VARCHAR NULL,\
+        \\"hero_focal_point\" VARCHAR NULL,\
+        \\"last_verified_at\" TIMESTAMP NULL,\
+        \\"confidence\" REAL NULL,\
+        \\"review_status\" VARCHAR NOT NULL DEFAULT 'unverified',\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_artist_profile_enrichment\" UNIQUE (\"artist_party_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"fan_party_id\" INTEGER NOT NULL,\

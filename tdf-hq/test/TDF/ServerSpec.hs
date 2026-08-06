@@ -5986,6 +5986,7 @@ spec = describe "TDF.Server helpers" $ do
                     [ ("folderId", "  folder-123  ")
                     , ("name", "  Contract.pdf  ")
                     , ("accessToken", "  token-123  ")
+                    , ("idempotencyKey", T.replicate 64 "a")
                     ]
                     [mkDriveUploadFile "original.pdf"]
                 ) :: Either String DriveUploadForm of
@@ -5996,6 +5997,16 @@ spec = describe "TDF.Server helpers" $ do
                     duFolderId payload `shouldBe` Just "folder-123"
                     duName payload `shouldBe` Just "Contract.pdf"
                     duAccessToken payload `shouldBe` Just "token-123"
+                    duIdempotencyKey payload `shouldBe` Just (T.replicate 64 "a")
+
+        it "rejects malformed Drive idempotency keys before upload" $ do
+            let multipart = mkDriveMultipart
+                    [("idempotencyKey", "not-a-sha256")]
+                    [mkDriveUploadFile "artist.webp"]
+            case fromMultipart multipart :: Either String DriveUploadForm of
+                Left err -> err `shouldContain` "64-character SHA-256"
+                Right payload -> expectationFailure
+                    ("Expected invalid idempotency key to be rejected, got: " <> show (duIdempotencyKey payload))
 
         it "rejects blank upload overrides instead of silently using fallback folder or filename" $ do
             let assertInvalid :: String -> MultipartData Tmp -> Expectation
@@ -14442,6 +14453,11 @@ marketplaceTestConfig seedFlag =
         , googleRoutesApiKey = Nothing
         , googleRoutesApiBase = "https://routes.googleapis.com"
         , eventLogisticsRecheckEnabled = False
+        , artistEnrichmentEnabled = False
+        , artistEnrichmentAutoPublish = False
+        , artistEnrichmentHourLocal = 4
+        , artistEnrichmentBatchSize = 500
+        , artistEnrichmentStaleDays = 90
         , defaultCurrency = "USD"
         , supportedCurrencies = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "BRL"]
         , defaultTimezone = "UTC"

@@ -84,6 +84,7 @@ import TDF.API.WhatsApp
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
+import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -14543,6 +14544,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
     EventDiscoverySpec.spec
     ArtistSpec.spec

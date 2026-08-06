@@ -325,6 +325,18 @@ BEGIN
   ) NOT IN (0, 3) THEN
     RAISE EXCEPTION 'Social-sync runtime tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'artist_profile_enrichment', 'artist_inventory_reference',
+        'artist_research_source', 'artist_enrichment_suggestion',
+        'artist_field_change', 'artist_enrichment_run',
+        'artist_identity_candidate', 'artist_media_asset'
+      )
+  ) NOT IN (0, 8) THEN
+    RAISE EXCEPTION 'Artist enrichment tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -338,6 +350,7 @@ DECLARE
   discovery_table TEXT;
   social_table TEXT;
   ticketing_table TEXT;
+  enrichment_table TEXT;
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
@@ -877,6 +890,79 @@ BEGIN
     ) AND contype = 'f' AND convalidated
   ) <> 7 THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
+  END IF;
+
+  FOREACH enrichment_table IN ARRAY ARRAY[
+    'artist_profile_enrichment',
+    'artist_inventory_reference',
+    'artist_research_source',
+    'artist_enrichment_suggestion',
+    'artist_field_change',
+    'artist_enrichment_run',
+    'artist_identity_candidate',
+    'artist_media_asset'
+  ] LOOP
+    IF to_regclass('public.' || enrichment_table) IS NULL THEN
+      RAISE EXCEPTION 'Artist enrichment relation public.% is missing', enrichment_table;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('artist_profile_enrichment', 'last_verified_at', 'timestamp with time zone', 'YES'),
+        ('artist_profile_enrichment', 'confidence', 'double precision', 'YES'),
+        ('artist_research_source', 'supported_fields', 'text', 'NO'),
+        ('artist_research_source', 'content_hash', 'text', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_by', 'bigint', 'YES'),
+        ('artist_enrichment_suggestion', 'decision_note', 'text', 'YES'),
+        ('artist_identity_candidate', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_identity_candidate', 'decided_by', 'bigint', 'YES'),
+        ('artist_identity_candidate', 'decision_note', 'text', 'YES'),
+        ('artist_media_asset', 'source_content_hash', 'text', 'NO'),
+        ('artist_media_asset', 'source_attribution', 'text', 'NO'),
+        ('artist_media_asset', 'source_width', 'integer', 'NO'),
+        ('artist_media_asset', 'source_height', 'integer', 'NO'),
+        ('artist_media_asset', 'source_mime_type', 'text', 'NO'),
+        ('artist_media_asset', 'source_byte_size', 'bigint', 'NO'),
+        ('artist_media_asset', 'drive_file_id', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Artist enrichment columns do not match the runtime schema';
+  END IF;
+
+  IF to_regclass('public.uq_artist_profile_slug_ci') IS NULL
+     OR to_regclass('public.uq_artist_enrichment_active_full_run') IS NULL
+     OR to_regclass('public.idx_artist_suggestion_queue') IS NULL
+     OR to_regclass('public.idx_artist_field_change_history') IS NULL
+     OR to_regclass('public.idx_artist_media_asset_hash') IS NULL
+     OR to_regclass('public.unique_artist_media_drive_file') IS NULL THEN
+    RAISE EXCEPTION 'Artist enrichment indexes are incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.artist_profile_enrichment'::regclass,
+      'public.artist_inventory_reference'::regclass,
+      'public.artist_research_source'::regclass,
+      'public.artist_enrichment_suggestion'::regclass,
+      'public.artist_field_change'::regclass,
+      'public.artist_enrichment_run'::regclass,
+      'public.artist_identity_candidate'::regclass,
+      'public.artist_media_asset'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 16 THEN
+    RAISE EXCEPTION 'An artist enrichment foreign key is missing or invalid';
   END IF;
 END
 $verify$;`;

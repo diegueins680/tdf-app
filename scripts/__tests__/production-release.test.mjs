@@ -228,6 +228,17 @@ test('buildSchemaVerificationSql fails closed over the ticketing, discovery, and
     'unique_social_sync_account',
     'unique_social_sync_post',
     'unique_social_discovery_review',
+    'artist_profile_enrichment',
+    'artist_inventory_reference',
+    'artist_research_source',
+    'artist_enrichment_suggestion',
+    'artist_field_change',
+    'artist_enrichment_run',
+    'artist_identity_candidate',
+    'artist_media_asset',
+    'uq_artist_profile_slug_ci',
+    'uq_artist_enrichment_active_full_run',
+    'unique_artist_media_drive_file',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
