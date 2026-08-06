@@ -23,6 +23,22 @@ const fr = {
     cancel: 'Annuler', rejectRefund: 'Refuser le remboursement',
     statuses: { pending: 'En attente', approved: 'Approuvé', rejected: 'Refusé', processed: 'Traité' },
   },
+  artistFans: {
+    loading: 'Chargement des fans…', loadError: 'Impossible de charger les fans.',
+    empty: "Cet artiste n'a pas encore de fans.", followedSince: 'Fan depuis le {{date}}',
+  },
+  partyRelated: {
+    unavailable: 'Contact indisponible', contact: 'Contact', subtitle: "Navigation rapide dans l'historique associé",
+    organization: 'Organisation', user: 'Utilisateur', profile: 'Profil', customerBookings: 'Réservations (client)',
+    engineerBookings: 'Réservations (ingénieur)', studentClasses: 'Cours (élève)', teacherClasses: 'Cours (professeur)',
+    tracks: 'Titres', bookings: 'Réservations', customer: 'Client', engineer: 'Ingénieur', classes: 'Cours',
+    student: 'Élève', teacher: 'Professeur', bookingFallback: 'Réservation n° {{id}}', subjectFallback: 'Matière n° {{id}}',
+    studentFallback: 'Élève n° {{id}}', updated: 'Mis à jour : {{date}}', loading: "Chargement de l'historique associé",
+    loadError: "Impossible de charger l'historique associé.",
+    empty: "Il n'y a pas encore d'historique associé. Utilisez Profil pour consulter ou compléter ce contact.",
+    bookingItems: 'réservations', classItems: 'cours', trackItems: 'titres',
+    statuses: { confirmed: 'Confirmée', confirmada: 'Confirmée', scheduled: 'Planifiée', programada: 'Planifiée', mix: 'Mixage' },
+  },
   sessionMenu: { noRoles: 'Aucun rôle attribué', logout: 'Se déconnecter', open: 'Ouvrir le menu de session' },
   preferences: {
     title: 'Langue et région', subtitle: "Choisissez l'affichage de la langue, de la monnaie, des dates et des heures.",

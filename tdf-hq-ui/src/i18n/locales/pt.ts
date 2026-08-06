@@ -23,6 +23,22 @@ const pt = {
     cancel: 'Cancelar', rejectRefund: 'Rejeitar reembolso',
     statuses: { pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado', processed: 'Processado' },
   },
+  artistFans: {
+    loading: 'Carregando fãs…', loadError: 'Não foi possível carregar os fãs.',
+    empty: 'Este artista ainda não tem fãs.', followedSince: 'Fã desde {{date}}',
+  },
+  partyRelated: {
+    unavailable: 'Contato indisponível', contact: 'Contato', subtitle: 'Navegação rápida pelo histórico relacionado',
+    organization: 'Organização', user: 'Usuário', profile: 'Perfil', customerBookings: 'Reservas (cliente)',
+    engineerBookings: 'Reservas (engenheiro)', studentClasses: 'Aulas (aluno)', teacherClasses: 'Aulas (professor)',
+    tracks: 'Faixas', bookings: 'Reservas', customer: 'Cliente', engineer: 'Engenheiro', classes: 'Aulas',
+    student: 'Aluno', teacher: 'Professor', bookingFallback: 'Reserva nº {{id}}', subjectFallback: 'Matéria nº {{id}}',
+    studentFallback: 'Aluno nº {{id}}', updated: 'Atualizado: {{date}}', loading: 'Carregando histórico relacionado',
+    loadError: 'Não foi possível carregar o histórico relacionado.',
+    empty: 'Ainda não há histórico relacionado. Use Perfil para revisar ou completar este contato.',
+    bookingItems: 'reservas', classItems: 'aulas', trackItems: 'faixas',
+    statuses: { confirmed: 'Confirmada', confirmada: 'Confirmada', scheduled: 'Agendada', programada: 'Agendada', mix: 'Mixagem' },
+  },
   sessionMenu: { noRoles: 'Nenhuma função atribuída', logout: 'Sair', open: 'Abrir menu da sessão' },
   preferences: {
     title: 'Idioma e região', subtitle: 'Escolha como idioma, dinheiro, datas e horários são exibidos.',

@@ -17,6 +17,7 @@ import {
 import type { PartyDTO, PartyRelatedDTO } from '../api/types';
 import { Parties } from '../api/parties';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LazyPaginatedList from './LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
 
@@ -34,6 +35,13 @@ const byStartDesc = <T,>(getIso: (value: T) => string) => (a: T, b: T) => {
   const tb = new Date(getIso(b)).getTime();
   return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
 };
+
+const BOOKING_CUSTOMER_ROLES = new Set(['customer', 'cliente']);
+const BOOKING_ENGINEER_ROLES = new Set(['engineer', 'ingeniero']);
+const CLASS_STUDENT_ROLES = new Set(['student', 'estudiante']);
+const CLASS_TEACHER_ROLES = new Set(['teacher', 'profesor']);
+const hasRelatedRole = (role: string, supportedRoles: ReadonlySet<string>) =>
+  supportedRoles.has(role.trim().toLowerCase());
 
 type GoToPath = (path: string) => void;
 type RelatedBooking = PartyRelatedDTO['prBookings'][number];
@@ -92,6 +100,7 @@ interface BookingColumnProps {
 
 function BookingColumn(props: BookingColumnProps) {
   const { title, count, bookings, onGo } = props;
+  const { t } = useTranslation();
 
   if (count === 0) return null;
 
@@ -102,14 +111,19 @@ function BookingColumn(props: BookingColumnProps) {
       </Typography>
       <LazyPaginatedList
         items={bookings}
-        pagination={{ itemLabel: 'reservas', initialRowsPerPage: 5 }}
+        pagination={{ itemLabel: t('partyRelated.bookingItems'), initialRowsPerPage: 5 }}
         renderItems={(visibleBookings) => (
           <List dense disablePadding>
             {visibleBookings.map((booking) => (
               <RelatedListItem
                 key={booking.prbBookingId}
-                primary={booking.prbServiceType ?? booking.prbTitle ?? `Booking #${booking.prbBookingId}`}
-                secondary={`${fmtDateTime(booking.prbStartsAt)} · ${booking.prbStatus}`}
+                primary={booking.prbServiceType ?? booking.prbTitle ?? t('partyRelated.bookingFallback', {
+                  id: booking.prbBookingId,
+                })}
+                secondary={`${fmtDateTime(booking.prbStartsAt)} · ${t(
+                  `partyRelated.statuses.${booking.prbStatus.trim().toLowerCase()}`,
+                  { defaultValue: booking.prbStatus },
+                )}`}
                 path={`/estudio/calendario?bookingId=${booking.prbBookingId}`}
                 onGo={onGo}
               />
@@ -131,17 +145,18 @@ interface BookingsSectionProps {
 
 function BookingsSection(props: BookingsSectionProps) {
   const { customerCount, engineerCount, customerBookings, engineerBookings, onGo } = props;
+  const { t } = useTranslation();
 
   if (customerCount === 0 && engineerCount === 0) return null;
 
   return (
     <Box>
       <Typography variant="overline" color="text.secondary">
-        Reservas
+        {t('partyRelated.bookings')}
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-        <BookingColumn title="Cliente" count={customerCount} bookings={customerBookings} onGo={onGo} />
-        <BookingColumn title="Ingeniero" count={engineerCount} bookings={engineerBookings} onGo={onGo} />
+        <BookingColumn title={t('partyRelated.customer')} count={customerCount} bookings={customerBookings} onGo={onGo} />
+        <BookingColumn title={t('partyRelated.engineer')} count={engineerCount} bookings={engineerBookings} onGo={onGo} />
       </Stack>
     </Box>
   );
@@ -157,6 +172,7 @@ interface ClassColumnProps {
 
 function ClassColumn(props: ClassColumnProps) {
   const { title, count, sessions, classRole, onGo } = props;
+  const { t } = useTranslation();
 
   if (count === 0) return null;
 
@@ -167,23 +183,26 @@ function ClassColumn(props: ClassColumnProps) {
       </Typography>
       <LazyPaginatedList
         items={sessions}
-        pagination={{ itemLabel: 'clases', initialRowsPerPage: 5 }}
+        pagination={{ itemLabel: t('partyRelated.classItems'), initialRowsPerPage: 5 }}
         renderItems={(visibleClasses) => (
           <List dense disablePadding>
             {visibleClasses.map((session) => {
               const partyParam = classRole === 'student' ? `studentId=${session.prcStudentId}` : `teacherId=${session.prcTeacherId}`;
               const primary =
                 classRole === 'student'
-                  ? session.prcSubjectName ?? `Materia #${session.prcSubjectId}`
-                  : `${session.prcSubjectName ?? `Materia #${session.prcSubjectId}`} · ${
-                      session.prcStudentName ?? `Alumno #${session.prcStudentId}`
+                  ? session.prcSubjectName ?? t('partyRelated.subjectFallback', { id: session.prcSubjectId })
+                  : `${session.prcSubjectName ?? t('partyRelated.subjectFallback', { id: session.prcSubjectId })} · ${
+                      session.prcStudentName ?? t('partyRelated.studentFallback', { id: session.prcStudentId })
                     }`;
 
               return (
                 <RelatedListItem
                   key={`${classRole}-${session.prcClassSessionId}`}
                   primary={primary}
-                  secondary={`${fmtDateTime(session.prcStartAt)} · ${session.prcStatus}`}
+                  secondary={`${fmtDateTime(session.prcStartAt)} · ${t(
+                    `partyRelated.statuses.${session.prcStatus.trim().toLowerCase()}`,
+                    { defaultValue: session.prcStatus },
+                  )}`}
                   path={`/escuela/clases?${partyParam}&classSessionId=${session.prcClassSessionId}&at=${encodeURIComponent(
                     session.prcStartAt,
                   )}`}
@@ -208,17 +227,18 @@ interface ClassesSectionProps {
 
 function ClassesSection(props: ClassesSectionProps) {
   const { studentCount, teacherCount, studentClasses, teacherClasses, onGo } = props;
+  const { t } = useTranslation();
 
   if (studentCount === 0 && teacherCount === 0) return null;
 
   return (
     <Box>
       <Typography variant="overline" color="text.secondary">
-        Clases
+        {t('partyRelated.classes')}
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
-        <ClassColumn title="Estudiante" count={studentCount} sessions={studentClasses} classRole="student" onGo={onGo} />
-        <ClassColumn title="Profesor" count={teacherCount} sessions={teacherClasses} classRole="teacher" onGo={onGo} />
+        <ClassColumn title={t('partyRelated.student')} count={studentCount} sessions={studentClasses} classRole="student" onGo={onGo} />
+        <ClassColumn title={t('partyRelated.teacher')} count={teacherCount} sessions={teacherClasses} classRole="teacher" onGo={onGo} />
       </Stack>
     </Box>
   );
@@ -231,23 +251,26 @@ interface TracksSectionProps {
 }
 
 function TracksSection({ tracks, partyId, onGo }: TracksSectionProps) {
+  const { t } = useTranslation();
   if (tracks.length === 0) return null;
 
   return (
     <Box>
       <Typography variant="overline" color="text.secondary">
-        Tracks
+        {t('partyRelated.tracks')}
       </Typography>
       <LazyPaginatedList
         items={tracks}
-        pagination={{ itemLabel: 'tracks', initialRowsPerPage: 10 }}
+        pagination={{ itemLabel: t('partyRelated.trackItems'), initialRowsPerPage: 10 }}
         renderItems={(visibleTracks) => (
           <List dense disablePadding>
             {visibleTracks.map((track) => (
               <RelatedListItem
                 key={track.prtId}
                 primary={track.prtTitle}
-                secondary={`${track.prtStatus} · actualizado: ${fmtDateTime(track.prtUpdatedAt)}`}
+                secondary={`${t(`partyRelated.statuses.${track.prtStatus.trim().toLowerCase()}`, {
+                  defaultValue: track.prtStatus,
+                })} · ${t('partyRelated.updated', { date: fmtDateTime(track.prtUpdatedAt) })}`}
                 path={`/label/tracks?ownerId=${partyId}&trackId=${encodeURIComponent(track.prtId)}`}
                 onGo={onGo}
               />
@@ -317,12 +340,13 @@ interface PartyRelatedPopoverProps {
 
 export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyRelatedPopoverProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const open = Boolean(party && anchorEl);
 
   const relatedQuery = useQuery<PartyRelatedDTO>({
     queryKey: ['party-related', party?.partyId ?? 'none'],
     queryFn: () => {
-      if (!party) throw new Error('Party no disponible');
+      if (!party) throw new Error(t('partyRelated.unavailable'));
       return Parties.related(party.partyId);
     },
     enabled: open,
@@ -337,7 +361,7 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
   const bookingsCustomer = useMemo(
     () =>
       bookings
-        .filter((b) => b.prbRole === 'cliente')
+        .filter((b) => hasRelatedRole(b.prbRole, BOOKING_CUSTOMER_ROLES))
         .sort(byStartDesc((b) => b.prbStartsAt))
         .slice(0, 8),
     [bookings],
@@ -345,7 +369,7 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
   const bookingsEngineer = useMemo(
     () =>
       bookings
-        .filter((b) => b.prbRole === 'ingeniero')
+        .filter((b) => hasRelatedRole(b.prbRole, BOOKING_ENGINEER_ROLES))
         .sort(byStartDesc((b) => b.prbStartsAt))
         .slice(0, 8),
     [bookings],
@@ -353,7 +377,7 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
   const classesStudent = useMemo(
     () =>
       classSessions
-        .filter((c) => c.prcRole === 'estudiante')
+        .filter((c) => hasRelatedRole(c.prcRole, CLASS_STUDENT_ROLES))
         .sort(byStartDesc((c) => c.prcStartAt))
         .slice(0, 8),
     [classSessions],
@@ -361,7 +385,7 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
   const classesTeacher = useMemo(
     () =>
       classSessions
-        .filter((c) => c.prcRole === 'profesor')
+        .filter((c) => hasRelatedRole(c.prcRole, CLASS_TEACHER_ROLES))
         .sort(byStartDesc((c) => c.prcStartAt))
         .slice(0, 8),
     [classSessions],
@@ -373,10 +397,10 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
         .slice(0, 10),
     [tracks],
   );
-  const bookingsCustomerCount = bookings.filter((b) => b.prbRole === 'cliente').length;
-  const bookingsEngineerCount = bookings.filter((b) => b.prbRole === 'ingeniero').length;
-  const classesStudentCount = classSessions.filter((c) => c.prcRole === 'estudiante').length;
-  const classesTeacherCount = classSessions.filter((c) => c.prcRole === 'profesor').length;
+  const bookingsCustomerCount = bookings.filter((b) => hasRelatedRole(b.prbRole, BOOKING_CUSTOMER_ROLES)).length;
+  const bookingsEngineerCount = bookings.filter((b) => hasRelatedRole(b.prbRole, BOOKING_ENGINEER_ROLES)).length;
+  const classesStudentCount = classSessions.filter((c) => hasRelatedRole(c.prcRole, CLASS_STUDENT_ROLES)).length;
+  const classesTeacherCount = classSessions.filter((c) => hasRelatedRole(c.prcRole, CLASS_TEACHER_ROLES)).length;
   const hasBookings = bookingsCustomerCount > 0 || bookingsEngineerCount > 0;
   const hasClasses = classesStudentCount > 0 || classesTeacherCount > 0;
   const hasTracks = tracks.length > 0;
@@ -399,39 +423,39 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
           <Stack spacing={0}>
-            <Typography fontWeight={800}>{party?.displayName ?? 'Contacto'}</Typography>
+            <Typography fontWeight={800}>{party?.displayName ?? t('partyRelated.contact')}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Navegación rápida por historial relacionado
+              {t('partyRelated.subtitle')}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
-            {party?.isOrg && <Chip size="small" label="ORG" />}
-            {party?.hasUserAccount && <Chip size="small" label="Usuario" color="primary" variant="outlined" />}
+            {party?.isOrg && <Chip size="small" label={t('partyRelated.organization')} />}
+            {party?.hasUserAccount && <Chip size="small" label={t('partyRelated.user')} color="primary" variant="outlined" />}
           </Stack>
         </Stack>
 
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {party?.partyId != null && (
             <>
-              <QuickNavButton label="Perfil" path={`/perfil/${party.partyId}`} onGo={go} />
+              <QuickNavButton label={t('partyRelated.profile')} path={`/perfil/${party.partyId}`} onGo={go} />
               {bookingsCustomerCount > 0 && (
-                <QuickNavButton label="Reservas (cliente)" path={`/estudio/calendario?partyId=${party.partyId}`} onGo={go} />
+                <QuickNavButton label={t('partyRelated.customerBookings')} path={`/estudio/calendario?partyId=${party.partyId}`} onGo={go} />
               )}
               {bookingsEngineerCount > 0 && (
                 <QuickNavButton
-                  label="Reservas (ingeniero)"
+                  label={t('partyRelated.engineerBookings')}
                   path={`/estudio/calendario?engineerPartyId=${party.partyId}`}
                   onGo={go}
                 />
               )}
               {classesStudentCount > 0 && (
-                <QuickNavButton label="Clases (estudiante)" path={`/escuela/clases?studentId=${party.partyId}`} onGo={go} />
+                <QuickNavButton label={t('partyRelated.studentClasses')} path={`/escuela/clases?studentId=${party.partyId}`} onGo={go} />
               )}
               {classesTeacherCount > 0 && (
-                <QuickNavButton label="Clases (profesor)" path={`/escuela/clases?teacherId=${party.partyId}`} onGo={go} />
+                <QuickNavButton label={t('partyRelated.teacherClasses')} path={`/escuela/clases?teacherId=${party.partyId}`} onGo={go} />
               )}
               {hasTracks && (
-                <QuickNavButton label="Tracks" path={`/label/tracks?ownerId=${party.partyId}`} onGo={go} />
+                <QuickNavButton label={t('partyRelated.tracks')} path={`/label/tracks?ownerId=${party.partyId}`} onGo={go} />
               )}
             </>
           )}
@@ -441,12 +465,12 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
 
         {relatedQuery.isLoading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            <CircularProgress size={22} />
+            <CircularProgress aria-label={t('partyRelated.loading')} size={22} />
           </Box>
         )}
         {relatedQuery.isError && (
           <Alert severity="error">
-            {relatedQuery.error instanceof Error ? relatedQuery.error.message : 'No se pudieron cargar los relacionados.'}
+            {t('partyRelated.loadError')}
           </Alert>
         )}
 
@@ -467,7 +491,7 @@ export default function PartyRelatedPopover({ party, anchorEl, onClose }: PartyR
             />
           ) : (
             <Alert severity="info" variant="outlined">
-              No hay historial relacionado todavía. Usa Perfil para revisar o completar este contacto.
+              {t('partyRelated.empty')}
             </Alert>
           )
         )}
