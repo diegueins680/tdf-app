@@ -235,6 +235,9 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  if (path.startsWith('/admin/artistas-enriquecimiento')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
   if (path.startsWith('/configuracion/roles-permisos') || path.startsWith('/configuracion/usuarios-admin')) {
     return hasStrictAdminAccess(roles, modules);
   }

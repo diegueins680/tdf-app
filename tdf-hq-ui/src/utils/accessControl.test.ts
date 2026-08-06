@@ -151,6 +151,8 @@ describe('canAccessPath', () => {
     expect(canAccessPath('/configuracion/roles-permisos', ['Webmaster'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/usuarios-admin', ['Studio Manager'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/usuarios-admin', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/admin/artistas-enriquecimiento', ['Admin'], ['admin'])).toBe(true);
+    expect(canAccessPath('/admin/artistas-enriquecimiento', ['Studio Manager'], ['admin'])).toBe(false);
     expect(canAccessPath('/label/artistas', ['LabelRep'], [])).toBe(false);
     expect(canAccessPath('/configuracion/cms', ['Studio Manager'], ['admin'])).toBe(false);
     expect(canAccessPath('/configuracion/cms', ['Webmaster'], ['admin'])).toBe(true);

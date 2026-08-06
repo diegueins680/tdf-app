@@ -213,6 +213,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Logs', path: '/configuracion/logs' },
       { label: 'Estado sistema', path: '/configuracion/estado' },
       { label: 'Diagnósticos', path: '/admin/diagnosticos' },
+      { label: 'Enriquecimiento artistas', path: '/admin/artistas-enriquecimiento' },
       { label: 'Brain y RAG', path: '/configuracion/brain' },
       { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
       { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },

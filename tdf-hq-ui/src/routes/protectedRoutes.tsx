@@ -11,6 +11,7 @@ const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
 const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
 const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
+const ArtistEnrichmentReviewPage = lazy(() => import('../pages/ArtistEnrichmentReviewPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
@@ -112,6 +113,7 @@ export function renderProtectedRoutes() {
         <Route path="/fans/clubs/:artistId/members/:partyId" element={<FanClubMemberProfilePage />} />
         <Route path="/practicas" element={<InternshipsPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
+        <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
         <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
         <Route path="/herramientas/token-admin" element={<AdminTokenPage />} />

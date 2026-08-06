@@ -561,6 +561,204 @@ export interface paths {
         patch: operations["updateCourseRegistrationStatus"];
         trace?: never;
     };
+    "/admin/artists/enrichment/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inspect artist enrichment inventory and review queues */
+        get: operations["getArtistEnrichmentOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List artist enrichment runs */
+        get: operations["listArtistEnrichmentRuns"];
+        put?: never;
+        /** Start or safely resume artist enrichment */
+        post: operations["runArtistEnrichment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Checkpoint an external enrichment run */
+        patch: operations["updateArtistEnrichmentRun"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/artists/{artistId}/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rerun enrichment for one artist */
+        post: operations["rerunArtistEnrichment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestions/{suggestionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve, edit, or reject one field suggestion */
+        patch: operations["decideArtistEnrichmentSuggestion"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Persist field-level research provenance */
+        post: operations["createArtistResearchSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an idempotent field suggestion */
+        post: operations["createArtistEnrichmentSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register a validated Google Drive artist image derivative */
+        post: operations["createArtistMediaAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestion-sets/{artistId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve or reject all pending suggestions for one artist */
+        patch: operations["decideArtistEnrichmentSuggestionSet"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/identity-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Persist an idempotent externally researched identity candidate */
+        post: operations["createArtistIdentityCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/identity-candidates/{candidateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resolve an ambiguous artist identity candidate */
+        patch: operations["decideArtistIdentityCandidate"];
+        trace?: never;
+    };
     "/fans/artists": {
         parameters: {
             query?: never;
@@ -1301,9 +1499,11 @@ export interface components {
             /** Format: int64 */
             apArtistId?: number;
             apDisplayName?: string;
+            apOfficialName?: string | null;
             apSlug?: string | null;
             apBio?: string | null;
             apCity?: string | null;
+            apCountry?: string | null;
             /** Format: uri */
             apHeroImageUrl?: string | null;
             apSpotifyArtistId?: string | null;
@@ -1318,6 +1518,28 @@ export interface components {
             apFeaturedVideoUrl?: string | null;
             apGenres?: string | null;
             apHighlights?: string | null;
+            /** Format: uri */
+            apInstagramUrl?: string | null;
+            /** @description JSON object containing additional official social URLs. */
+            apSocialLinks?: string | null;
+            /** @description JSON array of corroborated relevant releases. */
+            apDiscography?: string | null;
+            apAchievements?: string | null;
+            /** Format: uri */
+            apHeroOriginalUrl?: string | null;
+            /** Format: uri */
+            apHeroSquareUrl?: string | null;
+            /** Format: uri */
+            apHeroLandscapeUrl?: string | null;
+            /** @description JSON responsive AVIF/WebP source set. */
+            apHeroResponsiveUrls?: string | null;
+            apHeroFocalPoint?: string | null;
+            /** Format: date-time */
+            apLastVerifiedAt?: string | null;
+            /** Format: double */
+            apConfidence?: number | null;
+            /** @enum {string} */
+            apReviewStatus?: "unverified" | "pending" | "verified" | "rejected" | "ambiguous";
             /**
              * Format: int64
              * @description Total followers captured in the Fan Hub.
@@ -1325,6 +1547,305 @@ export interface components {
             apFollowerCount?: number;
             /** @description Whether this artist is already assigned to a user account. */
             apHasUserAccount?: boolean;
+        };
+        ArtistEnrichmentRunRequest: {
+            /** @enum {string} */
+            aerrMode: "dry_run" | "production";
+            /** Format: int64 */
+            aerrArtistId?: number | null;
+            aerrResumeRunKey?: string | null;
+            aerrBatchSize?: number | null;
+            aerrStaleDays?: number | null;
+        };
+        ArtistEnrichmentRunUpdate: {
+            /** @enum {string} */
+            aeruStatus?: "running" | "completed" | "failed" | "cancelled" | "blocked";
+            aeruPhase?: string;
+            aeruCheckpoint?: string;
+            aeruCounters?: string;
+            aeruErrorSummary?: string;
+        };
+        ArtistEnrichmentRun: {
+            /** Format: int64 */
+            aerId: number;
+            aerRunKey: string;
+            /** @enum {string} */
+            aerMode: "dry_run" | "production";
+            aerScope: string;
+            /** Format: int64 */
+            aerRequestedArtistId?: number | null;
+            /** @enum {string} */
+            aerStatus: "running" | "completed" | "failed" | "cancelled" | "blocked";
+            aerPhase: string;
+            aerCheckpoint?: string | null;
+            aerCounters?: string | null;
+            aerErrorSummary?: string | null;
+            /** Format: date-time */
+            aerStartedAt: string;
+            /** Format: date-time */
+            aerHeartbeatAt: string;
+            /** Format: date-time */
+            aerFinishedAt?: string | null;
+        };
+        ArtistEnrichmentDecision: {
+            /** @enum {string} */
+            aedDecision: "approve" | "reject";
+            /** @description Edited field value for suggestions; for identity approval, an existing artist party ID or `new` to explicitly create a distinct profile. */
+            aedEditedValue?: string | null;
+            aedNote?: string | null;
+        };
+        ArtistEnrichmentSuggestion: {
+            /** Format: int64 */
+            aesId: number;
+            /** Format: int64 */
+            aesArtistId?: number | null;
+            /** Format: int64 */
+            aesInventoryReferenceId?: number | null;
+            aesArtistName?: string | null;
+            aesFieldName: string;
+            aesCurrentValue?: string | null;
+            aesProposedValue?: string | null;
+            /** Format: double */
+            aesConfidence: number;
+            /** @enum {string} */
+            aesStatus: "pending" | "approved" | "rejected" | "superseded" | "auto_applied";
+            aesAutoPublish: boolean;
+            aesEvidence: string;
+            /** Format: date-time */
+            aesCreatedAt: string;
+            /** Format: date-time */
+            aesUpdatedAt: string;
+            /** Format: date-time */
+            aesDecidedAt?: string | null;
+            /** Format: int64 */
+            aesDecidedBy?: number | null;
+            aesDecisionNote?: string | null;
+        };
+        ArtistEnrichmentSuggestionCreate: {
+            /** Format: int64 */
+            aescArtistId?: number | null;
+            /** Format: int64 */
+            aescInventoryReferenceId?: number | null;
+            aescFieldName: string;
+            aescCurrentValue?: string | null;
+            aescProposedValue?: string | null;
+            /** Format: double */
+            aescConfidence: number;
+            aescAutoPublish?: boolean | null;
+            aescEvidence: string;
+        };
+        ArtistInventoryReference: {
+            /** Format: int64 */
+            airId: number;
+            airSourceType: string;
+            airSourceRecordId: string;
+            airOriginalName: string;
+            airNormalizedName: string;
+            /** Format: int64 */
+            airArtistId?: number | null;
+            /** Format: int64 */
+            airSocialArtistId?: number | null;
+            /** @description JSON array retaining original spellings. */
+            airAliases?: string | null;
+            airEvidence?: string | null;
+            /** Format: double */
+            airConfidence?: number | null;
+            airDisposition: string;
+            /** Format: date-time */
+            airFirstSeenAt: string;
+            /** Format: date-time */
+            airLastSeenAt: string;
+        };
+        ArtistResearchSourceCreate: {
+            /** Format: int64 */
+            arscArtistId?: number | null;
+            /** Format: int64 */
+            arscInventoryReferenceId?: number | null;
+            /** Format: uri */
+            arscSourceUrl: string;
+            arscSourceType: string;
+            /** Format: date-time */
+            arscRetrievedAt?: string | null;
+            /** @description Comma-separated field names supported by this source. */
+            arscSupportedFields: string;
+            arscAttribution?: string | null;
+            arscContentHash?: string | null;
+        };
+        ArtistResearchSource: {
+            /** Format: int64 */
+            arsId: number;
+            /** Format: int64 */
+            arsArtistId?: number | null;
+            /** Format: int64 */
+            arsInventoryReferenceId?: number | null;
+            /** Format: uri */
+            arsSourceUrl: string;
+            arsSourceType: string;
+            /** Format: date-time */
+            arsRetrievedAt: string;
+            arsSupportedFields: string;
+            arsAttribution?: string | null;
+            arsContentHash?: string | null;
+        };
+        ArtistFieldChange: {
+            /** Format: int64 */
+            afcId: number;
+            /** Format: int64 */
+            afcArtistId: number;
+            /** Format: int64 */
+            afcSuggestionId?: number | null;
+            afcFieldName: string;
+            afcPreviousValue?: string | null;
+            afcNewValue?: string | null;
+            afcEvidence: string;
+            /** Format: double */
+            afcConfidence: number;
+            afcActor: string;
+            /** Format: date-time */
+            afcChangedAt: string;
+        };
+        ArtistProfileEnrichment: {
+            /** Format: int64 */
+            apeArtistId: number;
+            apeArtistName: string;
+            apeOfficialName?: string | null;
+            apeCountry?: string | null;
+            /** Format: uri */
+            apeInstagramUrl?: string | null;
+            apeSocialLinks?: string | null;
+            apeDiscography?: string | null;
+            apeAchievements?: string | null;
+            /** Format: uri */
+            apeHeroOriginalUrl?: string | null;
+            /** Format: uri */
+            apeHeroSquareUrl?: string | null;
+            /** Format: uri */
+            apeHeroLandscapeUrl?: string | null;
+            apeHeroResponsiveUrls?: string | null;
+            apeHeroFocalPoint?: string | null;
+            /** Format: date-time */
+            apeLastVerifiedAt?: string | null;
+            /** Format: double */
+            apeConfidence?: number | null;
+            /** @enum {string} */
+            apeReviewStatus: "unverified" | "pending" | "verified" | "rejected" | "ambiguous";
+            apeMissingFields: string[];
+            apeBrokenFields: string[];
+        };
+        ArtistIdentityCandidate: {
+            /** Format: int64 */
+            aicId: number;
+            /** Format: int64 */
+            aicInventoryReferenceId: number;
+            /** Format: int64 */
+            aicArtistId?: number | null;
+            aicProvider: string;
+            aicExternalId?: string | null;
+            /** Format: uri */
+            aicCandidateUrl?: string | null;
+            aicEvidence: string;
+            /** Format: double */
+            aicConfidence: number;
+            /** @enum {string} */
+            aicStatus: "pending" | "approved" | "rejected" | "superseded";
+            /** Format: date-time */
+            aicCreatedAt: string;
+            /** Format: date-time */
+            aicUpdatedAt: string;
+            /** Format: date-time */
+            aicDecidedAt?: string | null;
+            /** Format: int64 */
+            aicDecidedBy?: number | null;
+            aicDecisionNote?: string | null;
+        };
+        ArtistIdentityCandidateCreate: {
+            /** Format: int64 */
+            aiccInventoryReferenceId: number;
+            /** Format: int64 */
+            aiccArtistId?: number | null;
+            aiccProvider: string;
+            aiccExternalId?: string | null;
+            /** Format: uri */
+            aiccCandidateUrl?: string | null;
+            aiccEvidence: string;
+            /** Format: double */
+            aiccConfidence: number;
+        };
+        ArtistMediaAssetCreate: {
+            /** Format: int64 */
+            amacArtistId: number;
+            /** @enum {string} */
+            amacAssetKind: "original" | "square" | "landscape" | "responsive";
+            /** Format: uri */
+            amacSourceUrl: string;
+            amacSourceAttribution: string;
+            /** Format: date-time */
+            amacRetrievedAt?: string | null;
+            amacSourceContentHash: string;
+            amacSourceWidth: number;
+            amacSourceHeight: number;
+            /** @enum {string} */
+            amacSourceMimeType: "image/jpeg" | "image/png" | "image/avif" | "image/webp";
+            /** Format: int64 */
+            amacSourceByteSize: number;
+            amacContentHash: string;
+            amacWidth: number;
+            amacHeight: number;
+            /** @enum {string} */
+            amacMimeType: "image/avif" | "image/webp";
+            /** Format: int64 */
+            amacByteSize: number;
+            /** @enum {string} */
+            amacRightsStatus: "authorized" | "licensed";
+            amacDriveFileId: string;
+            /** Format: uri */
+            amacPublicUrl: string;
+            /** Format: int64 */
+            amacParentAssetId?: number | null;
+            amacFocalPoint?: string | null;
+        };
+        ArtistMediaAsset: {
+            /** Format: int64 */
+            amaId: number;
+            /** Format: int64 */
+            amaArtistId: number;
+            amaAssetKind: string;
+            /** Format: uri */
+            amaSourceUrl: string;
+            amaSourceAttribution: string;
+            /** Format: date-time */
+            amaRetrievedAt: string;
+            amaSourceContentHash: string;
+            amaSourceWidth: number;
+            amaSourceHeight: number;
+            amaSourceMimeType: string;
+            /** Format: int64 */
+            amaSourceByteSize: number;
+            amaContentHash: string;
+            amaWidth: number;
+            amaHeight: number;
+            amaMimeType: string;
+            /** Format: int64 */
+            amaByteSize: number;
+            amaRightsStatus: string;
+            amaDriveFileId: string;
+            /** Format: uri */
+            amaPublicUrl: string;
+            /** Format: int64 */
+            amaParentAssetId?: number | null;
+            amaFocalPoint?: string | null;
+            /** Format: date-time */
+            amaCreatedAt: string;
+        };
+        ArtistEnrichmentOverview: {
+            aeoProfiles: components["schemas"]["ArtistProfileEnrichment"][];
+            aeoInventory: components["schemas"]["ArtistInventoryReference"][];
+            aeoSources: components["schemas"]["ArtistResearchSource"][];
+            aeoSuggestions: components["schemas"]["ArtistEnrichmentSuggestion"][];
+            aeoChanges: components["schemas"]["ArtistFieldChange"][];
+            aeoRuns: components["schemas"]["ArtistEnrichmentRun"][];
+            aeoIdentityCandidates: components["schemas"]["ArtistIdentityCandidate"][];
+            aeoMedia: components["schemas"]["ArtistMediaAsset"][];
         };
         ArtistProfileUpsert: {
             /** Format: int64 */
@@ -2299,6 +2820,313 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getArtistEnrichmentOverview: {
+        parameters: {
+            query?: {
+                status?: string;
+                artistId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Complete enrichment overview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentOverview"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listArtistEnrichmentRuns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recent runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"][];
+                };
+            };
+        };
+    };
+    runArtistEnrichment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Run result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    updateArtistEnrichmentRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Durable updated run state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    rerunArtistEnrichment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Artist-scoped run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    decideArtistEnrichmentSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Idempotent decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"];
+                };
+            };
+        };
+    };
+    createArtistResearchSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistResearchSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent provenance record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistResearchSource"];
+                };
+            };
+        };
+    };
+    createArtistEnrichmentSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentSuggestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or existing suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"];
+                };
+            };
+        };
+    };
+    createArtistMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistMediaAssetCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or existing media asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistMediaAsset"];
+                };
+            };
+        };
+    };
+    decideArtistEnrichmentSuggestionSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated suggestion set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"][];
+                };
+            };
+        };
+    };
+    createArtistIdentityCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistIdentityCandidateCreate"];
+            };
+        };
+        responses: {
+            /** @description Candidate queued for review or automatic approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistIdentityCandidate"];
+                };
+            };
+        };
+    };
+    decideArtistIdentityCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistIdentityCandidate"];
+                };
             };
         };
     };

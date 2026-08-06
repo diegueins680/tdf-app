@@ -454,6 +454,20 @@ export interface ArtistProfileDTO {
   apFeaturedVideoUrl?: string | null;
   apGenres?: string | null;
   apHighlights?: string | null;
+  apOfficialName?: string | null;
+  apCountry?: string | null;
+  apInstagramUrl?: string | null;
+  apSocialLinks?: string | null;
+  apDiscography?: string | null;
+  apAchievements?: string | null;
+  apHeroOriginalUrl?: string | null;
+  apHeroSquareUrl?: string | null;
+  apHeroLandscapeUrl?: string | null;
+  apHeroResponsiveUrls?: string | null;
+  apHeroFocalPoint?: string | null;
+  apLastVerifiedAt?: string | null;
+  apConfidence?: number | null;
+  apReviewStatus?: string | null;
   apFollowerCount: number;
   apHasUserAccount?: boolean;
 }
