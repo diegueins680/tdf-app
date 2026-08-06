@@ -9,6 +9,7 @@ import type {
   StripePaymentIntentDTO,
   TicketPurchaseWithPromoDTO,
 } from '../../api/socialEvents';
+import '../../i18n/index';
 
 const validatePromoCode =
   jest.fn<(eventId: string, codeId: string, code?: string, tierId?: string) => Promise<PromoCodeDTO>>();
