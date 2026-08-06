@@ -147,6 +147,7 @@ const PartnerManagementPage: React.FC = () => {
                   <IconButton
                     size="small"
                     color="primary"
+                    aria-label={`Edit partner ${partner.ddexPartnerName}`}
                     onClick={() => handleOpenDialog(partner)}
                   >
                     <EditIcon />
