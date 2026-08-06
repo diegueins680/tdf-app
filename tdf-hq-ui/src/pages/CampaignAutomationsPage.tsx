@@ -892,6 +892,7 @@ export default function CampaignAutomationsPage() {
                             <Tooltip title="Marcar convertido">
                               <IconButton
                                 color="success"
+                                aria-label={`Marcar a ${enrollment.partyName} como convertido`}
                                 onClick={() =>
                                   enrollmentStatusMutation.mutate({
                                     automationId: recipientsAutomation.id,
