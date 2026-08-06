@@ -1,0 +1,96 @@
+name: Daily artist enrichment
+
+on:
+  schedule:
+    # 05:00 America/Guayaquil (UTC-5, no daylight-saving changes).
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Run mode
+        type: choice
+        required: true
+        default: dry-run
+        options: [dry-run, production]
+      auto_publish:
+        description: Publish only matches that satisfy the corroboration policy
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-artist-enrichment
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      TDF_API_BASE: https://tdf-hq.fly.dev
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN || secrets.API_TOKEN }}
+      SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+      SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      DISCOGS_TOKEN: ${{ secrets.DISCOGS_TOKEN }}
+      MUSICBRAINZ_USER_AGENT: TDFArtistEnrichment/1.0 (https://tdfrecords.com)
+      DRIVE_CLIENT_ID: ${{ secrets.DRIVE_CLIENT_ID }}
+      DRIVE_CLIENT_SECRET: ${{ secrets.DRIVE_CLIENT_SECRET }}
+      DRIVE_REFRESH_TOKEN: ${{ secrets.DRIVE_REFRESH_TOKEN }}
+      DRIVE_UPLOAD_FOLDER_ID: ${{ secrets.DRIVE_UPLOAD_FOLDER_ID }}
+      GDRIVE_CLIENT_EMAIL: ${{ secrets.GDRIVE_CLIENT_EMAIL }}
+      GDRIVE_PRIVATE_KEY: ${{ secrets.GDRIVE_PRIVATE_KEY }}
+      GDRIVE_PARENT_ID: ${{ secrets.GDRIVE_PARENT_ID }}
+      ARTIST_ENRICHMENT_STALE_DAYS: '90'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install media tools
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Validate required authentication
+        run: |
+          test -n "$ADMIN_TOKEN"
+
+      - name: Run scheduled production enrichment
+        if: github.event_name == 'schedule'
+        run: >-
+          node scripts/artist-enrichment.mjs
+          --mode production
+          --scope full
+          --batch-size 500
+          --concurrency 3
+          --no-resume
+          --checkpoint artifacts/artist-enrichment/daily-checkpoint.json
+          --report artifacts/artist-enrichment/daily-report.json
+
+      - name: Run requested enrichment
+        if: github.event_name == 'workflow_dispatch'
+        run: >-
+          node scripts/artist-enrichment.mjs
+          --mode ${{ inputs.mode }}
+          --scope full
+          --batch-size 500
+          --concurrency 3
+          --no-resume
+          ${{ inputs.mode == 'production' && inputs.auto_publish && '--auto-publish' || '' }}
+          --checkpoint artifacts/artist-enrichment/manual-checkpoint.json
+          --report artifacts/artist-enrichment/manual-report.json
+
+      - name: Preserve redacted run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artist-enrichment-${{ github.run_id }}
+          path: artifacts/artist-enrichment/
+          if-no-files-found: warn
+          retention-days: 30
