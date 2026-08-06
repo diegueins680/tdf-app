@@ -906,6 +906,7 @@ export default function CampaignAutomationsPage() {
                             <Tooltip title="Detener seguimiento">
                               <IconButton
                                 color="warning"
+                                aria-label={`Detener seguimiento de ${enrollment.partyName}`}
                                 onClick={() =>
                                   enrollmentStatusMutation.mutate({
                                     automationId: recipientsAutomation.id,
