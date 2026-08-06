@@ -92,7 +92,8 @@ RUN set -eu; \
     echo "$BUILD_TS" > /app/BUILD_TIME
 
 # Build and export the binary
-RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
+RUN --mount=type=cache,target=/root/.stack,sharing=locked \
+    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
 
 # -------- Stage 2: slim runtime ----------
 FROM debian:bookworm-slim
