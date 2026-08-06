@@ -1,0 +1,1032 @@
+{
+  "runId": 5,
+  "runKey": "operator:dry_run:full:full:2026-08-06",
+  "mode": "dry_run",
+  "scope": "full",
+  "generatedAt": "2026-08-06T13:46:03.278Z",
+  "inventory": {
+    "profiles": 48,
+    "references": 332,
+    "candidates": 12,
+    "pendingSuggestions": 63
+  },
+  "inventoryCandidates": [
+    {
+      "inventoryReferenceIds": [
+        291,
+        288,
+        268,
+        267,
+        200,
+        192
+      ],
+      "artistName": "Diego Saá",
+      "aliases": [
+        "Diego Saá",
+        "Diego Saa"
+      ],
+      "sources": [
+        "https://www.discogs.com/artist/5310153",
+        "https://musicbrainz.org/search?query=Diego+Sa%C3%A1&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [
+        9,
+        28
+      ],
+      "possibleAliasTdfProfileIds": [
+        9,
+        28
+      ],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        183
+      ],
+      "artistName": "Holger Quiñonez - Input List",
+      "aliases": [
+        "Holger Quiñonez - Input List"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=Holger+Qui%C3%B1onez+-+Input+List&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Holger+Qui%C3%B1onez+-+Input+List&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [],
+      "possibleAliasTdfProfileIds": [],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        286,
+        191
+      ],
+      "artistName": "Jam Estepez",
+      "aliases": [
+        "Jam Estepez"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=Jam+Estepez&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Jam+Estepez&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [],
+      "possibleAliasTdfProfileIds": [],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        309,
+        276,
+        226
+      ],
+      "artistName": "JOSSEFINA",
+      "aliases": [
+        "JOSSEFINA"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=JOSSEFINA&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=JOSSEFINA&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [
+        63
+      ],
+      "possibleAliasTdfProfileIds": [
+        63
+      ],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        285,
+        190
+      ],
+      "artistName": "Lord Ethnic",
+      "aliases": [
+        "Lord Ethnic"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=Lord+Ethnic&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Lord+Ethnic&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [],
+      "possibleAliasTdfProfileIds": [],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        289,
+        274,
+        235
+      ],
+      "artistName": "OSPINA",
+      "aliases": [
+        "OSPINA"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=OSPINA&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=OSPINA&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [
+        73
+      ],
+      "possibleAliasTdfProfileIds": [
+        73
+      ],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        187
+      ],
+      "artistName": "Quimika Soul",
+      "aliases": [
+        "Quimika Soul"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=Quimika+Soul&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Quimika+Soul&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [],
+      "possibleAliasTdfProfileIds": [
+        64
+      ],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    },
+    {
+      "inventoryReferenceIds": [
+        188
+      ],
+      "artistName": "Skanka Fe",
+      "aliases": [
+        "Skanka Fe"
+      ],
+      "sources": [
+        "https://musicbrainz.org/search?query=Skanka+Fe&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Skanka+Fe&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "action": "withhold",
+      "candidateId": null,
+      "createdArtistId": null,
+      "exactNameTdfProfileIds": [],
+      "possibleAliasTdfProfileIds": [
+        65
+      ],
+      "externallyLinkedTdfProfileId": null,
+      "withheldReason": "fewer_than_two_independent_matching_signals"
+    }
+  ],
+  "artists": [
+    {
+      "artistId": 9,
+      "artistName": "Diego Saa",
+      "sources": [
+        "https://www.discogs.com/artist/5310153",
+        "https://musicbrainz.org/search?query=Diego+Saa&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {
+        "heroImageUrl": {
+          "url": "[inline-data-url-redacted]",
+          "valid": true,
+          "status": 200
+        },
+        "spotifyUrl": {
+          "url": "https://open.spotify.com/artist/30Y5uTVIFPzghfG3Dbmyug",
+          "valid": true,
+          "status": 200
+        }
+      },
+      "missingImage": false,
+      "mediaWithheldReason": "existing_third_party_hotlink_requires_authorized_ingestion"
+    },
+    {
+      "artistId": 21,
+      "artistName": "Federico Molinari",
+      "sources": [
+        "https://musicbrainz.org/artist/4549732e-8ed4-4e23-a53e-0562938593c2",
+        "https://www.discogs.com/artist/550288"
+      ],
+      "signals": [
+        "discogs_cross_link"
+      ],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 22,
+      "artistName": "Categal",
+      "sources": [
+        "https://musicbrainz.org/artist/5bd41ca0-3862-490d-8ae1-259bb61ab90e",
+        "https://www.discogs.com/search/?q=Categal&type=artist",
+        "https://www.instagram.com/categal_music/",
+        "https://categal.bandcamp.com/"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 23,
+      "artistName": "Los Morrison",
+      "sources": [
+        "https://musicbrainz.org/search?query=Los+Morrison&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Los+Morrison&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 24,
+      "artistName": "Barrelshots",
+      "sources": [
+        "https://musicbrainz.org/search?query=Barrelshots&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Barrelshots&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 25,
+      "artistName": "Machaka",
+      "sources": [
+        "https://musicbrainz.org/artist/eb99d6ac-3fb0-4db8-bd1f-bc1afd7fa8a5",
+        "https://www.discogs.com/search/?q=Machaka&type=artist",
+        "https://www.instagram.com/machakaunique/"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 26,
+      "artistName": "Just One Nite",
+      "sources": [
+        "https://musicbrainz.org/search?query=Just+One+Nite&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Just+One+Nite&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 27,
+      "artistName": "Morex",
+      "sources": [
+        "https://www.discogs.com/artist/98939",
+        "https://musicbrainz.org/search?query=Morex&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 28,
+      "artistName": "Diego Saá",
+      "sources": [
+        "https://www.discogs.com/artist/5310153",
+        "https://musicbrainz.org/search?query=Diego+Sa%C3%A1&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 29,
+      "artistName": "Everaldo Vasco",
+      "sources": [
+        "https://musicbrainz.org/search?query=Everaldo+Vasco&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Everaldo+Vasco&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 30,
+      "artistName": "Cohema",
+      "sources": [
+        "https://www.discogs.com/artist/15515634",
+        "https://musicbrainz.org/search?query=Cohema&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 31,
+      "artistName": "AVR",
+      "sources": [
+        "https://musicbrainz.org/artist/6ba46775-793f-4014-ba76-b03929aa651e",
+        "https://www.discogs.com/search/?q=AVR&type=artist",
+        "https://www.instagram.com/__annavr__/"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 32,
+      "artistName": "Owen",
+      "sources": [
+        "http://owenmusic.com/",
+        "https://musicbrainz.org/artist/2b0ce8c8-9c9a-4807-9414-24b22af7a679",
+        "https://www.discogs.com/search/?q=Owen&type=artist",
+        "https://owenmusic.bandcamp.com/"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 33,
+      "artistName": "Melania",
+      "sources": [
+        "https://musicbrainz.org/artist/c25655aa-deaa-4b4f-b30c-8295e245be6f",
+        "https://www.discogs.com/artist/981601"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 34,
+      "artistName": "Eli Lasso",
+      "sources": [
+        "https://musicbrainz.org/search?query=Eli+Lasso&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Eli+Lasso&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 35,
+      "artistName": "Lysergicman",
+      "sources": [
+        "https://musicbrainz.org/search?query=Lysergicman&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Lysergicman&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 36,
+      "artistName": "Semiazas",
+      "sources": [
+        "https://musicbrainz.org/artist/2ec84584-8422-4bb3-ab87-cd0a629f5711",
+        "https://www.discogs.com/artist/3081100"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 37,
+      "artistName": "Juan Diego",
+      "sources": [
+        "https://musicbrainz.org/artist/809e9ad7-129d-4807-8325-1945a2d6fdd2",
+        "https://www.discogs.com/artist/2522709"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 38,
+      "artistName": "Mood Pattern",
+      "sources": [
+        "https://musicbrainz.org/artist/88481a2a-62c9-4f55-baa3-23e1f75fe1e5",
+        "https://www.discogs.com/artist/5682051",
+        "https://www.instagram.com/moodpatternmusic/"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 39,
+      "artistName": "Le Chu",
+      "sources": [
+        "https://musicbrainz.org/search?query=Le+Chu&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Le+Chu&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 40,
+      "artistName": "Labii",
+      "sources": [
+        "https://musicbrainz.org/search?query=Labii&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Labii&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 41,
+      "artistName": "Alejandro Romero",
+      "sources": [
+        "https://musicbrainz.org/artist/5214a70b-85d7-4ca8-b548-2afa7eb2d442",
+        "https://www.discogs.com/artist/1757482"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 42,
+      "artistName": "La Bestia Quiñonez",
+      "sources": [
+        "https://musicbrainz.org/search?query=La+Bestia+Qui%C3%B1onez&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=La+Bestia+Qui%C3%B1onez&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 43,
+      "artistName": "Esteban Muñoz",
+      "sources": [
+        "https://musicbrainz.org/artist/b59f75c1-dceb-40ec-85fd-ea2043701a68",
+        "https://www.discogs.com/artist/2475844"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 44,
+      "artistName": "Julio Diaz",
+      "sources": [
+        "https://musicbrainz.org/artist/478e3db4-1c4a-40f6-969f-fb7851025882",
+        "https://www.discogs.com/artist/1157013"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 45,
+      "artistName": "Fabricio Alomía",
+      "sources": [
+        "https://musicbrainz.org/search?query=Fabricio+Alom%C3%ADa&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Fabricio+Alom%C3%ADa&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 46,
+      "artistName": "Dati Dice",
+      "sources": [
+        "https://musicbrainz.org/search?query=Dati+Dice&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Dati+Dice&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 47,
+      "artistName": "Agus",
+      "sources": [
+        "https://musicbrainz.org/artist/131dad0b-3ba3-4ee4-9328-08234b514e0e",
+        "https://www.discogs.com/artist/813121"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 48,
+      "artistName": "La Clau",
+      "sources": [
+        "https://musicbrainz.org/search?query=La+Clau&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=La+Clau&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 49,
+      "artistName": "Juano Ledesma (duplicado)",
+      "sources": [
+        "https://musicbrainz.org/search?query=Juano+Ledesma+%28duplicado%29&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Juano+Ledesma+%28duplicado%29&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 50,
+      "artistName": "Dani Alban",
+      "sources": [
+        "https://musicbrainz.org/search?query=Dani+Alban&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Dani+Alban&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 51,
+      "artistName": "Liquid Paper Girl",
+      "sources": [
+        "https://musicbrainz.org/search?query=Liquid+Paper+Girl&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Liquid+Paper+Girl&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 57,
+      "artistName": "Emanuele Pilo-Pais",
+      "sources": [
+        "https://musicbrainz.org/search?query=Emanuele+Pilo-Pais&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Emanuele+Pilo-Pais&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {
+        "spotifyUrl": {
+          "url": "https://open.spotify.com/artist/6348Nu8zc4gZC8vtHzPP8R?si=zhRxVi8bRSmd3HWsdSZztg",
+          "valid": true,
+          "status": 200
+        }
+      },
+      "missingImage": true
+    },
+    {
+      "artistId": 61,
+      "artistName": "Rizlo",
+      "sources": [
+        "https://musicbrainz.org/artist/d88588a4-3928-4280-8b9f-624a256d8107",
+        "https://www.discogs.com/artist/161992"
+      ],
+      "signals": [
+        "discogs_cross_link"
+      ],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 63,
+      "artistName": "JOSSEFINA",
+      "sources": [
+        "https://musicbrainz.org/search?query=JOSSEFINA&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=JOSSEFINA&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 64,
+      "artistName": "E Quimika Soul",
+      "sources": [
+        "https://musicbrainz.org/search?query=E+Quimika+Soul&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=E+Quimika+Soul&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 65,
+      "artistName": "Skankafe",
+      "sources": [
+        "https://musicbrainz.org/search?query=Skankafe&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Skankafe&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 66,
+      "artistName": "HNO",
+      "sources": [
+        "https://musicbrainz.org/artist/9cf756ff-f146-4f49-8b85-a707ccd3423e",
+        "https://www.discogs.com/artist/505323"
+      ],
+      "signals": [
+        "discogs_cross_link"
+      ],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 67,
+      "artistName": "Llama Este Pez",
+      "sources": [
+        "https://musicbrainz.org/search?query=Llama+Este+Pez&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Llama+Este+Pez&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 68,
+      "artistName": "Ruz",
+      "sources": [
+        "https://musicbrainz.org/artist/d9c0440a-2969-4b90-b5a4-dda4ef502b2d",
+        "https://www.discogs.com/artist/3277220"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 69,
+      "artistName": "La Gente Naranja",
+      "sources": [
+        "https://musicbrainz.org/search?query=La+Gente+Naranja&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=La+Gente+Naranja&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 70,
+      "artistName": "Double OG",
+      "sources": [
+        "https://musicbrainz.org/search?query=Double+OG&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=Double+OG&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 72,
+      "artistName": "El Bloque",
+      "sources": [
+        "https://musicbrainz.org/artist/ead983f4-bf62-418f-80ef-4eae70001e9e",
+        "https://www.discogs.com/artist/6626168"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 73,
+      "artistName": "OSPINA",
+      "sources": [
+        "https://musicbrainz.org/search?query=OSPINA&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=OSPINA&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 74,
+      "artistName": "R de Nexo",
+      "sources": [
+        "https://www.discogs.com/artist/17024242",
+        "https://musicbrainz.org/search?query=R+de+Nexo&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 75,
+      "artistName": "Arkabuz",
+      "sources": [
+        "https://www.discogs.com/artist/6574343",
+        "https://musicbrainz.org/search?query=Arkabuz&type=artist&method=indexed"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 115,
+      "artistName": "Verde 70",
+      "sources": [
+        "https://musicbrainz.org/artist/2b477d4a-84e8-4f23-a6d3-ece9a94b237b",
+        "https://www.discogs.com/search/?q=Verde+70&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    },
+    {
+      "artistId": 137,
+      "artistName": "CELAYA",
+      "sources": [
+        "https://musicbrainz.org/search?query=CELAYA&type=artist&method=indexed",
+        "https://www.discogs.com/search/?q=CELAYA&type=artist"
+      ],
+      "signals": [],
+      "confidence": 0.55,
+      "reliable": false,
+      "suggestions": [],
+      "media": [],
+      "withheldReason": "fewer_than_two_independent_matching_signals",
+      "linkChecks": {},
+      "missingImage": true
+    }
+  ],
+  "errors": [],
+  "haltedBySafetyThreshold": false
+}

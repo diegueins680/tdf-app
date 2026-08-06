@@ -122,7 +122,8 @@ and redacted error summary. Correct the cause and rerun with the same checkpoint
 
 ## Review interface
 
-Strict administrators can open `/admin/artists/enrichment`. The screen supports
+Strict administrators can open `/admin/artists/enrichment` (the localized alias
+is `/admin/artistas-enriquecimiento`). The screen supports
 status/confidence/missing-field filters, current-versus-proposed comparison,
 source and evidence inspection, image previews, individual or set decisions,
 ambiguous identity review, historical decisions, and artist-scoped reruns.
