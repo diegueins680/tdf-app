@@ -4,7 +4,9 @@ import es from './locales/es';
 import fr from './locales/fr';
 import pt from './locales/pt';
 
-type TranslationTree = { readonly [key: string]: string | TranslationTree };
+interface TranslationTree {
+  readonly [key: string]: string | TranslationTree;
+}
 
 const flattenKeys = (tree: TranslationTree, prefix = ''): string[] =>
   Object.entries(tree).flatMap(([key, value]) => {
@@ -52,7 +54,7 @@ describe('localized component resources', () => {
 function flattenInterpolationValues(
   tree: TranslationTree,
   prefix = '',
-): ReadonlyArray<readonly [string, string[]]> {
+): readonly (readonly [string, string[]])[] {
   return Object.entries(tree).flatMap(([key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     return typeof value === 'string'
