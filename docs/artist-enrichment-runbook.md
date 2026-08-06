@@ -46,6 +46,10 @@ Secrets must be supplied only by the process environment or authenticated
 integration. Never place their values in command arguments, logs, reports, Git,
 or pull-request text.
 
+Production database logging suppresses Persistent's debug-level SQL bind values
+so bearer tokens and provider credentials cannot appear in application logs;
+database warnings and errors remain enabled.
+
 - `ADMIN_TOKEN` (or `API_TOKEN`): active bearer token for a strict Admin with the
   Admin module.
 - `TDF_API_BASE`: defaults to `https://tdf-hq.fly.dev`.
