@@ -4,7 +4,9 @@ import es from './locales/es';
 import fr from './locales/fr';
 import pt from './locales/pt';
 
-type TranslationTree = { readonly [key: string]: string | TranslationTree };
+interface TranslationTree {
+  readonly [key: string]: string | TranslationTree;
+}
 
 const flattenKeys = (tree: TranslationTree, prefix = ''): string[] =>
   Object.entries(tree).flatMap(([key, value]) => {
@@ -15,9 +17,9 @@ const flattenKeys = (tree: TranslationTree, prefix = ''): string[] =>
 const interpolationVariables = (value: string): string[] =>
   Array.from(value.matchAll(/{{\s*([^},\s]+)[^}]*}}/g), (match) => match[1] ?? '').sort();
 
-describe('payment locale resources', () => {
+describe('localized component resources', () => {
   const resources = { en, es, fr, de, pt } as const;
-  const namespaces = ['pagination', 'promoCode', 'refunds'] as const;
+  const namespaces = ['pagination', 'promoCode', 'refunds', 'artistFans', 'partyRelated'] as const;
 
   it.each(namespaces)('keeps the %s namespace complete in every supported locale', (namespace) => {
     const englishTree = en[namespace] as TranslationTree;
@@ -52,7 +54,7 @@ describe('payment locale resources', () => {
 function flattenInterpolationValues(
   tree: TranslationTree,
   prefix = '',
-): ReadonlyArray<readonly [string, string[]]> {
+): readonly (readonly [string, string[]])[] {
   return Object.entries(tree).flatMap(([key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     return typeof value === 'string'

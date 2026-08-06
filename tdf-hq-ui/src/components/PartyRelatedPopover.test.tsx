@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { PartyDTO, PartyRelatedDTO } from '../api/types';
+import '../i18n/index';
 
 const relatedMock = jest.fn<(id: number) => Promise<PartyRelatedDTO>>();
 
@@ -124,13 +125,13 @@ describe('PartyRelatedPopover', () => {
       await waitForExpectation(() => {
         expect(relatedMock).toHaveBeenCalledWith(7);
         expect(document.body.textContent).toContain(
-          'No hay historial relacionado todavía. Usa Perfil para revisar o completar este contacto.',
+          'There is no related history yet. Use Profile to review or complete this contact.',
         );
-        expect(getButtonsByText(document.body, 'Perfil')).toHaveLength(1);
-        expect(getButtonsByText(document.body, 'Reservas (cliente)')).toHaveLength(0);
-        expect(getButtonsByText(document.body, 'Reservas (ingeniero)')).toHaveLength(0);
-        expect(getButtonsByText(document.body, 'Clases (estudiante)')).toHaveLength(0);
-        expect(getButtonsByText(document.body, 'Clases (profesor)')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Profile')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Bookings (customer)')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Bookings (engineer)')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Classes (student)')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Classes (teacher)')).toHaveLength(0);
         expect(getButtonsByText(document.body, 'Tracks')).toHaveLength(0);
         expect(document.body.textContent).not.toContain('No hay reservas asociadas.');
         expect(document.body.textContent).not.toContain('No hay clases asociadas.');
@@ -146,7 +147,7 @@ describe('PartyRelatedPopover', () => {
       prBookings: [
         {
           prbBookingId: 31,
-          prbRole: 'cliente',
+          prbRole: 'customer',
           prbTitle: 'Sesión vocal',
           prbServiceType: 'Grabación',
           prbStartsAt: '2026-05-05T16:00:00Z',
@@ -157,7 +158,7 @@ describe('PartyRelatedPopover', () => {
       prClassSessions: [
         {
           prcClassSessionId: 44,
-          prcRole: 'profesor',
+          prcRole: 'teacher',
           prcSubjectId: 2,
           prcSubjectName: 'Piano',
           prcTeacherId: 7,
@@ -182,23 +183,23 @@ describe('PartyRelatedPopover', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(getButtonsByText(document.body, 'Perfil')).toHaveLength(1);
-        expect(getButtonsByText(document.body, 'Reservas (cliente)')).toHaveLength(1);
-        expect(getButtonsByText(document.body, 'Clases (profesor)')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Profile')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Bookings (customer)')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Classes (teacher)')).toHaveLength(1);
         expect(getButtonsByText(document.body, 'Tracks')).toHaveLength(1);
-        expect(getButtonsByText(document.body, 'Reservas (ingeniero)')).toHaveLength(0);
-        expect(getButtonsByText(document.body, 'Clases (estudiante)')).toHaveLength(0);
-        expect(document.body.textContent).toContain('Reservas');
-        expect(document.body.textContent).toContain('Cliente (1)');
+        expect(getButtonsByText(document.body, 'Bookings (engineer)')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Classes (student)')).toHaveLength(0);
+        expect(document.body.textContent).toContain('Bookings');
+        expect(document.body.textContent).toContain('Customer (1)');
         expect(document.body.textContent).toContain('Grabación');
-        expect(document.body.textContent).toContain('Clases');
-        expect(document.body.textContent).toContain('Profesor (1)');
+        expect(document.body.textContent).toContain('Classes');
+        expect(document.body.textContent).toContain('Teacher (1)');
         expect(document.body.textContent).toContain('Piano · Grace Hopper');
         expect(document.body.textContent).toContain('Tracks');
         expect(document.body.textContent).toContain('Pulso');
-        expect(document.body.textContent).not.toContain('No hay historial relacionado todavía.');
-        expect(document.body.textContent).not.toContain('Ingeniero (0)');
-        expect(document.body.textContent).not.toContain('Estudiante (0)');
+        expect(document.body.textContent).not.toContain('There is no related history yet.');
+        expect(document.body.textContent).not.toContain('Engineer (0)');
+        expect(document.body.textContent).not.toContain('Student (0)');
       });
     } finally {
       await cleanup();

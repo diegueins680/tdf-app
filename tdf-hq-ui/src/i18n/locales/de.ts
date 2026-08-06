@@ -21,6 +21,22 @@ const de = {
     cancel: 'Abbrechen', rejectRefund: 'Erstattung ablehnen',
     statuses: { pending: 'Ausstehend', approved: 'Genehmigt', rejected: 'Abgelehnt', processed: 'Verarbeitet' },
   },
+  artistFans: {
+    loading: 'Fans werden geladen…', loadError: 'Fans konnten nicht geladen werden.',
+    empty: 'Dieser Künstler hat noch keine Fans.', followedSince: 'Fan seit {{date}}',
+  },
+  partyRelated: {
+    unavailable: 'Kontakt nicht verfügbar', contact: 'Kontakt', subtitle: 'Schnellnavigation durch den zugehörigen Verlauf',
+    organization: 'Organisation', user: 'Benutzer', profile: 'Profil', customerBookings: 'Buchungen (Kunde)',
+    engineerBookings: 'Buchungen (Toningenieur)', studentClasses: 'Kurse (Schüler)', teacherClasses: 'Kurse (Lehrer)',
+    tracks: 'Tracks', bookings: 'Buchungen', customer: 'Kunde', engineer: 'Toningenieur', classes: 'Kurse',
+    student: 'Schüler', teacher: 'Lehrer', bookingFallback: 'Buchung Nr. {{id}}', subjectFallback: 'Fach Nr. {{id}}',
+    studentFallback: 'Schüler Nr. {{id}}', updated: 'Aktualisiert: {{date}}', loading: 'Zugehöriger Verlauf wird geladen',
+    loadError: 'Der zugehörige Verlauf konnte nicht geladen werden.',
+    empty: 'Es gibt noch keinen zugehörigen Verlauf. Verwenden Sie Profil, um diesen Kontakt zu prüfen oder zu vervollständigen.',
+    bookingItems: 'Buchungen', classItems: 'Kurse', trackItems: 'Tracks',
+    statuses: { confirmed: 'Bestätigt', confirmada: 'Bestätigt', scheduled: 'Geplant', programada: 'Geplant', mix: 'Mix' },
+  },
   sessionMenu: { noRoles: 'Keine Rollen zugewiesen', logout: 'Abmelden', open: 'Sitzungsmenü öffnen' },
   preferences: {
     title: 'Sprache und Region', subtitle: 'Wähle die Darstellung von Sprache, Währung, Datum und Uhrzeit.',

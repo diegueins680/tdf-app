@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
+import { useTranslation } from 'react-i18next';
 import { Fans } from '../api/fans';
 import { formatDateForUser } from '../utils/formatters';
 
@@ -58,6 +59,7 @@ const FAN_AVATAR_SX: SquareFanAvatarSx = {
 };
 
 export default function ArtistFansList({ artistId }: ArtistFansListProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
@@ -77,9 +79,9 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
   if (fansQuery.isLoading && page === 1) {
     return (
       <Box display="flex" alignItems="center" gap={1.5} py={2}>
-        <CircularProgress size={LOADING_SPINNER_SIZE_PX} />
+        <CircularProgress aria-label={t('artistFans.loading')} size={LOADING_SPINNER_SIZE_PX} />
         <Typography variant="body2" color="text.secondary">
-          Cargando fans...
+          {t('artistFans.loading')}
         </Typography>
       </Box>
     );
@@ -88,7 +90,7 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
   if (fansQuery.isError) {
     return (
       <Typography variant="body2" color="error" sx={{ py: 1 }}>
-        No se pudieron cargar los fans.
+        {t('artistFans.loadError')}
       </Typography>
     );
   }
@@ -96,7 +98,7 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
   if (fans.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
-        Este artista aún no tiene fans.
+        {t('artistFans.empty')}
       </Typography>
     );
   }
@@ -130,10 +132,12 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
                 {fan.afDisplayName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Fan desde {formatDateForUser(fan.afFollowedAt, {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
+                {t('artistFans.followedSince', {
+                  date: formatDateForUser(fan.afFollowedAt, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  }),
                 })}
               </Typography>
             </Box>
