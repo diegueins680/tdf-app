@@ -435,6 +435,8 @@ export const reportableLinkUrl = (url) => /^data:/i.test(String(url ?? ''))
   ? '[inline-data-url-redacted]'
   : url;
 
+export const isPersistableResearchUrl = (url) => /^https?:\/\//i.test(String(url ?? ''));
+
 async function buildLinkCheck(url) {
   if (/^data:/i.test(String(url))) {
     return { url: reportableLinkUrl(url), valid: true, status: null, skipped: 'inline_data' };
@@ -481,6 +483,7 @@ async function persistInventorySource(api, inventoryReferenceId, source) {
 
 async function persistLinkChecks(api, profile, linkChecks) {
   for (const [field, check] of Object.entries(linkChecks)) {
+    if (!isPersistableResearchUrl(check.url)) continue;
     await persistSource(api, profile, {
       url: check.url,
       type: check.valid ? 'link_validation_valid' : 'link_validation_broken',

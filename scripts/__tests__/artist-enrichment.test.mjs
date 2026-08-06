@@ -11,6 +11,7 @@ import {
   automaticMatchAllowed,
   artistNameAliasCandidate,
   detectImageMime,
+  isPersistableResearchUrl,
   meaningfulSignals,
   normalizeName,
   parseArgs,
@@ -60,6 +61,10 @@ test('permite ampliar de forma segura el timeout de la API de TDF', () => {
 test('redacta imágenes inline de los reportes sin alterar enlaces externos', () => {
   assert.equal(reportableLinkUrl('data:image/png;base64,secret-bytes'), '[inline-data-url-redacted]');
   assert.equal(reportableLinkUrl('https://official.example/artist.webp'), 'https://official.example/artist.webp');
+  assert.equal(isPersistableResearchUrl('https://official.example/artist.webp'), true);
+  assert.equal(isPersistableResearchUrl('http://official.example/artist.webp'), true);
+  assert.equal(isPersistableResearchUrl('[inline-data-url-redacted]'), false);
+  assert.equal(isPersistableResearchUrl('data:image/png;base64,secret-bytes'), false);
 });
 
 test('bloquea ingestión de imágenes sin derechos y atribución explícitos', () => {
