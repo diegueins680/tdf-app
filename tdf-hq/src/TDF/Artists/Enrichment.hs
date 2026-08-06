@@ -278,7 +278,7 @@ discoverArtistReferences = do
     catMaybes <$> forM rows (\(Entity rowId row) ->
       mkPartyRef "artist_promo_slot.artist_party_id" (intKeyText rowId)
         (artistPromoSlotArtistPartyId row))
-  engagementRefs <- do
+  engagementRefs <- whenTableExists "engagement_event" $ do
     rows <- selectList [EngagementEventTargetArtistId !=. Nothing] []
     catMaybes <$> forM rows (\(Entity rowId row) ->
       maybe (pure Nothing) (mkPartyRef "engagement_event.target_artist_id" (intKeyText rowId))
