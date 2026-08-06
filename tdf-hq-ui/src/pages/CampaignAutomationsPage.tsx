@@ -791,8 +791,15 @@ export default function CampaignAutomationsPage() {
                         {row.providerTemplateName} · {row.languageCode}
                       </Typography>
                     </Box>
-                    <Tooltip title="Copiar">
-                      <IconButton onClick={() => void copyText(row.renderedBody)}>
+                    <Tooltip title="Copiar mensaje">
+                      <IconButton
+                        tabIndex={0}
+                        onClick={(event) => {
+                          event.currentTarget.focus();
+                          void copyText(row.renderedBody);
+                        }}
+                        aria-label={`Copiar mensaje personalizado para ${row.partyName}`}
+                      >
                         <ContentCopyIcon />
                       </IconButton>
                     </Tooltip>
