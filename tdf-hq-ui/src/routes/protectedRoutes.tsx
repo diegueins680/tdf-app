@@ -114,6 +114,7 @@ export function renderProtectedRoutes() {
         <Route path="/practicas" element={<InternshipsPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
         <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
+        <Route path="/admin/artists/enrichment" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
         <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
         <Route path="/herramientas/token-admin" element={<AdminTokenPage />} />

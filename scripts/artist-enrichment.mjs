@@ -421,6 +421,17 @@ async function validateLink(url) {
   }
 }
 
+export const reportableLinkUrl = (url) => /^data:/i.test(String(url ?? ''))
+  ? '[inline-data-url-redacted]'
+  : url;
+
+async function buildLinkCheck(url) {
+  if (/^data:/i.test(String(url))) {
+    return { url: reportableLinkUrl(url), valid: true, status: null, skipped: 'inline_data' };
+  }
+  return { url: reportableLinkUrl(url), ...await validateLink(url) };
+}
+
 function evidenceFor(profile, sources, signals, details = {}) {
   return JSON.stringify({
     artistId: profile.apArtistId,
@@ -1008,7 +1019,7 @@ async function researchArtist(api, profile, enrichment, spotifyToken, options) {
     ['websiteUrl', profile.apWebsiteUrl],
     ['instagramUrl', enrichment?.apeInstagramUrl],
   ]) {
-    if (url) linkChecks[field] = { url, ...await validateLink(url) };
+    if (url) linkChecks[field] = await buildLinkCheck(url);
   }
   if (options.mode === 'production') {
     await persistLinkChecks(api, profile, linkChecks);
@@ -1085,7 +1096,7 @@ async function auditArtistLinks(profile, enrichment) {
     ['websiteUrl', profile.apWebsiteUrl],
     ['instagramUrl', enrichment?.apeInstagramUrl],
   ]) {
-    if (url) linkChecks[field] = { url, ...await validateLink(url) };
+    if (url) linkChecks[field] = await buildLinkCheck(url);
   }
   return {
     artistId: profile.apArtistId,

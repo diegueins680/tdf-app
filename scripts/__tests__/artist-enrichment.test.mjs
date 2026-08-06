@@ -14,6 +14,7 @@ import {
   normalizeName,
   parseArgs,
   probeImage,
+  reportableLinkUrl,
   retryDelayMs,
   retryFetch,
   runPipeline,
@@ -46,6 +47,11 @@ test('calcula backoff exponencial acotado', () => {
   assert.equal(retryDelayMs(0), 500);
   assert.equal(retryDelayMs(3), 4000);
   assert.equal(retryDelayMs(20), 30000);
+});
+
+test('redacta imágenes inline de los reportes sin alterar enlaces externos', () => {
+  assert.equal(reportableLinkUrl('data:image/png;base64,secret-bytes'), '[inline-data-url-redacted]');
+  assert.equal(reportableLinkUrl('https://official.example/artist.webp'), 'https://official.example/artist.webp');
 });
 
 test('bloquea ingestión de imágenes sin derechos y atribución explícitos', () => {

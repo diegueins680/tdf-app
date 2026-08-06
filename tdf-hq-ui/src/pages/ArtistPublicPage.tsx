@@ -26,6 +26,7 @@ import { Fans } from '../api/fans';
 import type { ArtistReleaseDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
@@ -253,6 +254,8 @@ export default function ArtistPublicPage() {
     (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
   const officialLinks = parseOfficialLinks(artist.apSocialLinks);
   const discography = parseDiscography(artist.apDiscography);
+  const highlights = parseArtistTextItems(artist.apHighlights);
+  const achievements = parseArtistTextItems(artist.apAchievements);
   const avifSourceSet = responsiveSourceSet(artist.apHeroResponsiveUrls, 'avif');
   const webpSourceSet = responsiveSourceSet(artist.apHeroResponsiveUrls, 'webp');
 
@@ -445,24 +448,32 @@ export default function ArtistPublicPage() {
               </Box>
             </Stack>
 
-            {[artist.apHighlights, artist.apAchievements].some((value) => Boolean(value)) && (
+            {highlights.length + achievements.length > 0 && (
               <>
                 <Divider />
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
-                  {artist.apHighlights && (
+                  {highlights.length > 0 && (
                     <Box>
                       <Typography variant="h6" fontWeight={800}>Highlights</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
-                        {artist.apHighlights}
-                      </Typography>
+                      <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+                        {highlights.map((highlight, index) => (
+                          <Typography component="li" variant="body2" color="text.secondary" key={`${highlight}:${index}`}>
+                            {highlight}
+                          </Typography>
+                        ))}
+                      </Stack>
                     </Box>
                   )}
-                  {artist.apAchievements && (
+                  {achievements.length > 0 && (
                     <Box>
                       <Typography variant="h6" fontWeight={800}>Logros</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
-                        {artist.apAchievements}
-                      </Typography>
+                      <Stack component="ul" spacing={0.75} sx={{ pl: 2.5, mt: 1, mb: 0 }}>
+                        {achievements.map((achievement, index) => (
+                          <Typography component="li" variant="body2" color="text.secondary" key={`${achievement}:${index}`}>
+                            {achievement}
+                          </Typography>
+                        ))}
+                      </Stack>
                     </Box>
                   )}
                 </Box>
