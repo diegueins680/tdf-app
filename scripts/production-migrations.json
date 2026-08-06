@@ -45,6 +45,11 @@
       "id": "2026-08-05_artist_promotion_slots",
       "path": "tdf-hq/sql/2026-08-05_artist_promotion_slots.sql",
       "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
+    },
+    {
+      "id": "2026-08-05_artist_enrichment",
+      "path": "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
+      "introducedBy": "84447f16b2467b72bd24c42b4e86b0076cbbcc41"
     }
   ]
 }
