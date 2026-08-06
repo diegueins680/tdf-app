@@ -217,6 +217,10 @@ test('audita, persiste checkpoints y finaliza el run sin consultar proveedores e
     assert.equal(requests.filter((item) => item.method === 'PATCH').length, 3);
     assert.equal(JSON.parse(requests.find((item) => item.method === 'PATCH').body).aeruPhase, 'external_research_claim');
     assert.equal(JSON.parse(requests.at(-1).body).aeruStatus, 'completed');
+    assert.deepEqual(
+      JSON.parse(JSON.parse(requests.at(-1).body).aeruErrorSummary),
+      { artists: [], execution: null },
+    );
     assert.ok(requests.every((item) => !item.body.includes('test-token-never-logged')));
   } finally {
     if (previousToken == null) delete process.env.ADMIN_TOKEN;

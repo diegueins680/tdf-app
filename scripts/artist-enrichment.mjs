@@ -1308,12 +1308,12 @@ export async function runPipeline(options) {
       suggestions: report.artists.reduce((total, artist) => total + artist.suggestions.length, 0),
       media: report.artists.reduce((total, artist) => total + artist.media.length, 0),
     }),
-    ...(checkpoint.errors.length > 0 || executionError
-      ? { aeruErrorSummary: JSON.stringify({
-        artists: checkpoint.errors.slice(0, 20),
-        execution: executionError?.message ?? null,
-      }) }
-      : {}),
+    // A resumed successful run must replace, rather than retain, an error
+    // summary written by an earlier failed attempt with the same run key.
+    aeruErrorSummary: JSON.stringify({
+      artists: checkpoint.errors.slice(0, 20),
+      execution: executionError?.message ?? null,
+    }),
   });
   log('info', 'run_completed', { runId: report.runId, artists: report.artists.length, errors: report.errors.length, report: options.report });
   if (executionError) throw executionError;
