@@ -178,8 +178,18 @@ export async function retryFetch(url, options = {}, policy = {}) {
   throw new Error('retry policy exhausted');
 }
 
+export function apiRequestTimeoutMs(rawValue = process.env.TDF_API_TIMEOUT_MS) {
+  if (rawValue == null || String(rawValue).trim() === '') return 180_000;
+  const parsed = Number(rawValue);
+  if (!Number.isSafeInteger(parsed) || parsed < 1_000 || parsed > 900_000) {
+    throw new Error('TDF_API_TIMEOUT_MS must be an integer between 1000 and 900000');
+  }
+  return parsed;
+}
+
 function createApiClient(baseUrl, adminToken) {
   const normalizedBase = baseUrl.replace(/\/+$/, '');
+  const timeoutMs = apiRequestTimeoutMs();
   return async function api(method, route, body) {
     const response = await retryFetch(`${normalizedBase}${route}`, {
       method,
@@ -189,7 +199,7 @@ function createApiClient(baseUrl, adminToken) {
         ...(body == null ? {} : { 'Content-Type': 'application/json' }),
       },
       ...(body == null ? {} : { body: JSON.stringify(body) }),
-    });
+    }, { attempts: 4, timeoutMs });
     const text = await response.text();
     if (!response.ok) throw new Error(`TDF API ${method} ${route} failed (${response.status}): ${text.slice(0, 500)}`);
     return text ? JSON.parse(text) : null;

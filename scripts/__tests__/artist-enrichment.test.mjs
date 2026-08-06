@@ -7,6 +7,7 @@ import test from 'node:test';
 import { promisify } from 'node:util';
 
 import {
+  apiRequestTimeoutMs,
   automaticMatchAllowed,
   artistNameAliasCandidate,
   detectImageMime,
@@ -47,6 +48,13 @@ test('calcula backoff exponencial acotado', () => {
   assert.equal(retryDelayMs(0), 500);
   assert.equal(retryDelayMs(3), 4000);
   assert.equal(retryDelayMs(20), 30000);
+});
+
+test('permite ampliar de forma segura el timeout de la API de TDF', () => {
+  assert.equal(apiRequestTimeoutMs(), 180_000);
+  assert.equal(apiRequestTimeoutMs('300000'), 300_000);
+  assert.throws(() => apiRequestTimeoutMs('999'), /between 1000 and 900000/);
+  assert.throws(() => apiRequestTimeoutMs('not-a-number'), /between 1000 and 900000/);
 });
 
 test('redacta imágenes inline de los reportes sin alterar enlaces externos', () => {

@@ -31,6 +31,9 @@ jobs:
     timeout-minutes: 120
     env:
       TDF_API_BASE: https://tdf-hq.fly.dev
+      # Full-platform discovery runs in one protected transaction before the
+      # external-provider phase and may exceed a short HTTP client timeout.
+      TDF_API_TIMEOUT_MS: '300000'
       ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN || secrets.API_TOKEN }}
       SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
       SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}

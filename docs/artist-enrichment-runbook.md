@@ -49,6 +49,9 @@ or pull-request text.
 - `ADMIN_TOKEN` (or `API_TOKEN`): active bearer token for a strict Admin with the
   Admin module.
 - `TDF_API_BASE`: defaults to `https://tdf-hq.fly.dev`.
+- `TDF_API_TIMEOUT_MS`: protected TDF API request timeout; defaults to 180000 ms
+  and is 300000 ms in the daily workflow so full discovery can complete. This
+  does not relax the shorter timeouts used for external providers.
 - Spotify: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`.
 - YouTube: `YOUTUBE_API_KEY`.
 - Optional Discogs: `DISCOGS_TOKEN`.
