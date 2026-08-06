@@ -103,17 +103,8 @@ import           TDF.API.Admin          ( AdminAPI
                                         , AdminWhatsAppResendRequest(..)
                                         , AdminWhatsAppSendRequest(..)
                                         , AdminWhatsAppSendResponse(..)
-                                        , ArtistEnrichmentDecision(..)
                                         , ArtistEnrichmentOverviewDTO(..)
-                                        , ArtistEnrichmentRunDTO
                                         , ArtistEnrichmentRunRequest(..)
-                                        , ArtistEnrichmentSuggestionCreate
-                                        , ArtistEnrichmentSuggestionDTO
-                                        , ArtistIdentityCandidateDTO
-                                        , ArtistMediaAssetCreate
-                                        , ArtistMediaAssetDTO
-                                        , ArtistResearchSourceCreate
-                                        , ArtistResearchSourceDTO
                                         , BrainEntryCreate(..)
                                         , BrainEntryDTO(..)
                                         , BrainEntryUpdate(..)

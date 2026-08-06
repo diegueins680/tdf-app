@@ -313,7 +313,7 @@ export default function ArtistPublicPage() {
                   {artist.apDisplayName}
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 1 }}>
-                  {(artist.apCity || artist.apCountry) && (
+                  {[artist.apCity, artist.apCountry].some((value) => Boolean(value)) && (
                     <Chip
                       size="small"
                       label={[artist.apCity, artist.apCountry].filter(Boolean).join(', ')}
@@ -445,7 +445,7 @@ export default function ArtistPublicPage() {
               </Box>
             </Stack>
 
-            {(artist.apHighlights || artist.apAchievements) && (
+            {[artist.apHighlights, artist.apAchievements].some((value) => Boolean(value)) && (
               <>
                 <Divider />
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2.5 }}>
