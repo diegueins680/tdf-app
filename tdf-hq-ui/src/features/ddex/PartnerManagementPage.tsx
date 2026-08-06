@@ -155,6 +155,7 @@ const PartnerManagementPage: React.FC = () => {
                   <IconButton
                     size="small"
                     color="error"
+                    aria-label={`Delete partner ${partner.ddexPartnerName}`}
                     onClick={() => console.log('Delete', partner.ddexPartnerId)}
                   >
                     <DeleteIcon />
