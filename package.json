@@ -68,6 +68,13 @@
     "node": ">=20.19.4"
   },
   "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "9.0.9"
+    },
+    "brace-expansion@^2.0.0": "2.1.4",
+    "glob@^10.0.0": {
+      "minimatch": "9.0.9"
+    },
     "react-native-reanimated": "~4.1.1"
   },
   "author": "TDF Records",
@@ -77,7 +84,6 @@
     "url": "https://github.com/diegueins680/tdf-app"
   },
   "devDependencies": {
-    "@testomatio/reporter": "^0.7.6",
     "audit-ci": "^7.1.0",
     "detox": "^20.51.1",
     "jest-environment-node": "^30.4.1",
