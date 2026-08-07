@@ -11,7 +11,6 @@ import {
   Typography,
   Button,
   Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -21,23 +20,18 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
-import type { DdexPartnerDTO, DdexPartnerCreateRequest } from '../../api/ddex';
+import type { DdexPartnerCreateRequest } from '../../api/ddex';
 
 const PartnerManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<DdexPartnerDTO | null>(null);
   const [formData, setFormData] = useState<DdexPartnerCreateRequest>({
     partnerName: '',
     partnerDpid: null,
-    partnerAllowedVersions: ['4.3.2'],
+    partnerAllowedVersions: ['4.3'],
   });
 
   const { data: partners, isLoading, error } = useQuery({
@@ -53,32 +47,21 @@ const PartnerManagementPage: React.FC = () => {
     },
   });
 
-  const handleOpenDialog = (partner?: DdexPartnerDTO) => {
-    if (partner) {
-      setEditingPartner(partner);
-      setFormData({
-        partnerName: partner.ddexPartnerName,
-        partnerDpid: partner.ddexPartnerDpid,
-        partnerAllowedVersions: partner.ddexPartnerAllowedVersions,
-      });
-    } else {
-      setEditingPartner(null);
-      setFormData({
-        partnerName: '',
-        partnerDpid: null,
-        partnerAllowedVersions: ['4.3.2'],
-      });
-    }
+  const handleOpenDialog = () => {
+    setFormData({
+      partnerName: '',
+      partnerDpid: null,
+      partnerAllowedVersions: ['4.3'],
+    });
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setEditingPartner(null);
     setFormData({
       partnerName: '',
       partnerDpid: null,
-      partnerAllowedVersions: ['4.3.2'],
+      partnerAllowedVersions: ['4.3'],
     });
   };
 
@@ -111,7 +94,8 @@ const PartnerManagementPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+          onClick={handleOpenDialog}
+          sx={{ minHeight: 44 }}
         >
           Add Partner
         </Button>
@@ -124,7 +108,6 @@ const PartnerManagementPage: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell>DPID</TableCell>
               <TableCell>Allowed Versions</TableCell>
-              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -143,29 +126,11 @@ const PartnerManagementPage: React.FC = () => {
                     ))}
                   </Stack>
                 </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={`Edit partner ${partner.ddexPartnerName}`}
-                    onClick={() => handleOpenDialog(partner)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    aria-label={`Delete partner ${partner.ddexPartnerName}`}
-                    onClick={() => console.log('Delete', partner.ddexPartnerId)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
               </TableRow>
             ))}
             {(!partners || partners.length === 0) && (
               <TableRow>
-                <TableCell colSpan={4} align="center">
+                <TableCell colSpan={3} align="center">
                   <Typography color="text.secondary" py={4}>
                     No partners configured
                   </Typography>
@@ -179,7 +144,7 @@ const PartnerManagementPage: React.FC = () => {
       {/* Add/Edit Dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingPartner ? 'Edit Partner' : 'Add Partner'}
+          Add Partner
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -189,6 +154,7 @@ const PartnerManagementPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
               fullWidth
               required
+              inputProps={{ maxLength: 160 }}
             />
             <TextField
               label="DPID"
@@ -197,6 +163,7 @@ const PartnerManagementPage: React.FC = () => {
               fullWidth
               placeholder="DPID:XXXXXXXX"
               helperText="DDEX Party Identifier (optional)"
+              inputProps={{ maxLength: 200 }}
             />
             <TextField
               label="Allowed Versions"
@@ -206,16 +173,18 @@ const PartnerManagementPage: React.FC = () => {
                 partnerAllowedVersions: e.target.value.split(',').map(v => v.trim()).filter(Boolean),
               })}
               fullWidth
-              helperText="Comma-separated list (e.g., 4.3.2, 4.2)"
+              error={formData.partnerAllowedVersions.length === 0 || formData.partnerAllowedVersions.some((version) => !['3.8.2', '4.2', '4.3'].includes(version))}
+              helperText="Valores admitidos: 3.8.2, 4.2, 4.3"
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog} sx={{ minHeight: 44 }}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={!formData.partnerName || createMutation.isPending}
+            disabled={!formData.partnerName.trim() || createMutation.isPending || formData.partnerAllowedVersions.length === 0 || formData.partnerAllowedVersions.some((version) => !['3.8.2', '4.2', '4.3'].includes(version))}
+            sx={{ minHeight: 44 }}
           >
             {createMutation.isPending ? 'Saving...' : 'Save'}
           </Button>

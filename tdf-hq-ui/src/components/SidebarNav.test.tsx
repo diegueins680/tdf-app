@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { NavGroup } from './SidebarNav';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
+import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 const session = {
   username: 'admin',
@@ -18,10 +19,19 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({
     session,
   }),
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('../hooks/useChatUnreadCount', () => ({
   useChatUnreadCount: () => chatUnreadCount,
+}));
+
+jest.unstable_mockModule('../hooks/useNavigationPreferences', () => ({
+  useNavigationPreferences: () => ({
+    query: { data: [] },
+    update: { mutate: jest.fn(), mutateAsync: jest.fn() },
+    visit: { mutate: jest.fn() },
+  }),
 }));
 
 const {
@@ -267,6 +277,17 @@ describe('SidebarNav', () => {
       expect(container.textContent).not.toContain('ATAJOS');
       expect(container.querySelector('a[href="/configuracion/usuarios-admin"]')).not.toBeNull();
       expect(container.querySelector('a[href="/configuracion/inscripciones-curso"]')).toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('has no serious automated accessibility violations in the expanded navigation', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/inicio');
+    try {
+      await expectNoSeriousAccessibilityViolations(container);
     } finally {
       await cleanup();
     }

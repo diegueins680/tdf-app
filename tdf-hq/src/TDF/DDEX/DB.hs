@@ -139,12 +139,16 @@ getDocumentById docId = do
 
 -- | List documents with optional filters (returns Entities with keys)
 listDocuments :: Maybe Text -> Maybe Text -> SqlPersistT IO [Entity DdexDocument]
-listDocuments mStatus _mPartner = do
-  let filters = case mStatus of
+listDocuments mStatus mPartner = do
+  let statusFilters = case mStatus of
         Nothing -> []
         Just s -> case parseStatus s of
           Nothing -> []
           Just st -> [DdexDocumentStatus ==. st]
+      partnerFilters = case mPartner of
+        Nothing -> []
+        Just partner -> [DdexDocumentSenderId ==. Just partner]
+      filters = statusFilters <> partnerFilters
   selectList filters [Desc DdexDocumentCreatedAt]
   where
     parseStatus "received" = Just StatusReceived
@@ -286,7 +290,6 @@ claimJob jobType leaseSeconds = do
     [] -> return Nothing
     (jobEntity:_) -> do
       let jobId = entityKey jobEntity
-          job = entityVal jobEntity
       now <- liftIO getCurrentTime
       let leaseUntil = addUTCTime (fromIntegral leaseSeconds) now
       -- Update job to processing status with lease
@@ -325,9 +328,9 @@ failJob jobId errorMsg = do
 -- ============================================================
 
 -- | Insert a partner
-insertPartner :: Text -> Maybe Text -> [Text] -> SqlPersistT IO DdexPartnerId
+insertPartner :: Text -> Maybe Text -> [Text] -> SqlPersistT IO (Maybe DdexPartnerId)
 insertPartner name dpid allowedVersions = do
-  insert $ DdexPartner
+  insertUnique $ DdexPartner
     { ddexPartnerName = name
     , ddexPartnerDpid = dpid
     , ddexPartnerAllowedVersions = allowedVersions

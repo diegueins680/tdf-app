@@ -16,7 +16,8 @@ restart:
 	@docker compose restart app
 
 seed:
-	@curl -s -X POST http://localhost:8080/admin/seed -H "Authorization: Bearer admin-token" -w "\n%{http_code}\n"
+	@test -n "$(TDF_ADMIN_TOKEN)" || (echo "Set TDF_ADMIN_TOKEN in the runtime secret store" >&2; exit 1)
+	@curl -s -X POST http://localhost:8080/admin/seed -H "Authorization: Bearer $(TDF_ADMIN_TOKEN)" -w "\n%{http_code}\n"
 
 health:
 	@curl -s http://localhost:8080/health | jq . || curl -s http://localhost:8080/health

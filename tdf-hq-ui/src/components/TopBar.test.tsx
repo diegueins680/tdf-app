@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
+import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 const session = {
   username: 'admin',
@@ -148,6 +149,18 @@ describe('TopBar command palette', () => {
       const renderedItems = dialog?.querySelectorAll('.MuiListItemButton-root') ?? [];
       expect(renderedItems.length).toBeLessThanOrEqual(QUICK_NAV_VISIBLE_RESULT_LIMIT);
       expect(dialog?.textContent).toContain(`Mostrando ${QUICK_NAV_VISIBLE_RESULT_LIMIT} de`);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('has no serious automated accessibility violations when the command palette is open', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderTopBar(container);
+    try {
+      await openPalette(container);
+      await expectNoSeriousAccessibilityViolations(document.body);
     } finally {
       await cleanup();
     }

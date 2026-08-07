@@ -76,6 +76,13 @@ const UserRoleManagement = lazy(() => import('../components/UserRoleManagement')
 const UxOptionsPage = lazy(() => import('../pages/UxOptionsPage'));
 const UserActivityPage = lazy(() => import('../pages/UserActivityPage'));
 const WhatsAppConsentPage = lazy(() => import('../pages/WhatsAppConsentPage'));
+const AccessRequestsPage = lazy(() => import('../pages/AccessRequestsPage'));
+const NewAccessRequestPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.NewAccessRequestPage,
+})));
+const AccessRequestReviewPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.AccessRequestReviewPage,
+})));
 
 export function renderProtectedRoutes() {
   return (
@@ -107,6 +114,9 @@ export function renderProtectedRoutes() {
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/solicitudes-acceso" element={<AccessRequestsPage />} />
+        <Route path="/solicitudes-acceso/nueva" element={<NewAccessRequestPage />} />
+        <Route path="/solicitudes-acceso/revision" element={<AccessRequestReviewPage />} />
         <Route path="/fans/clubs/:artistId" element={<FanClubPage />} />
         <Route path="/fans/clubs/:artistId/members" element={<FanClubMemberProfilePage />} />
         <Route path="/fans/clubs/:artistId/members/:partyId" element={<FanClubMemberProfilePage />} />

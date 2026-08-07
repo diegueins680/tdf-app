@@ -1008,6 +1008,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the current user's feature access requests */
+        get: operations["listFeatureAccessRequests"];
+        put?: never;
+        /**
+         * Request one feature action
+         * @description Creates a scoped, auditable request. Approval does not grant a broader role or module.
+         */
+        post: operations["createFeatureAccessRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List requests within the reviewer's exact grant scope */
+        get: operations["listFeatureAccessRequestsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/{requestId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve or reject one requested feature action */
+        patch: operations["decideFeatureAccessRequest"];
+        trace?: never;
+    };
+    "/access-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Cancel one of the current user's pending requests */
+        patch: operations["cancelFeatureAccessRequest"];
+        trace?: never;
+    };
+    "/navigation/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the current user's authorized navigation preferences */
+        get: operations["listNavigationPreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/navigation/preferences/{featureId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update favorite and pin state for one currently authorized feature */
+        put: operations["updateNavigationPreference"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/navigation/preferences/{featureId}/visit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an authorized feature visit */
+        post: operations["recordNavigationVisit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1037,10 +1160,7 @@ export interface components {
              * @example admin@tdf.com
              */
             username: string;
-            /**
-             * Format: password
-             * @example changeme123
-             */
+            /** Format: password */
             password: string;
         };
         GoogleLoginRequest: {
@@ -1059,10 +1179,7 @@ export interface components {
             email: string;
             /** @example +1 415 555 2671 */
             phone?: string | null;
-            /**
-             * Format: password
-             * @example changeme123
-             */
+            /** Format: password */
             password: string;
             /** @description Optional roles (non-admin) to assign during signup. */
             roles?: components["schemas"]["Role"][];
@@ -1089,6 +1206,8 @@ export interface components {
             partyId: number;
             roles: components["schemas"]["Role"][];
             modules: string[];
+            /** @description Enabled public feature-flag identifiers; never contains configuration secrets. */
+            featureFlags: string[];
             preferences: components["schemas"]["LocalePreferences"];
         };
         LocalePreferences: {
@@ -1485,9 +1604,81 @@ export interface components {
             /** @description Parsed track title when StreamTitle includes a separator. */
             rnpTrack?: string | null;
         };
+        /** @enum {string} */
+        FeatureAccessRequestStatus: "pending" | "approved" | "rejected" | "cancelled" | "expired";
+        FeatureAccessRequestHistory: {
+            /** Format: int64 */
+            id: number;
+            transition: string;
+            fromStatus?: components["schemas"]["FeatureAccessRequestStatus"] | null;
+            toStatus: components["schemas"]["FeatureAccessRequestStatus"];
+            note?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FeatureAccessRequest: {
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int64
+             * @description Internal subject identifier; clients must not expose it unnecessarily.
+             */
+            requesterPartyId: number;
+            featureId: string;
+            action: string;
+            roleContext: string[];
+            moduleContext: string[];
+            status: components["schemas"]["FeatureAccessRequestStatus"];
+            reviewerGroup: string;
+            justification?: string | null;
+            reviewerNotes?: string | null;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            decidedAt?: string | null;
+            /** Format: date-time */
+            cancelledAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            history: components["schemas"]["FeatureAccessRequestHistory"][];
+        };
+        FeatureAccessRequestCreate: {
+            featureId: string;
+            action: string;
+            justification?: string | null;
+        };
+        FeatureAccessRequestDecision: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            notes?: string | null;
+        };
+        FeatureAccessRequestCancel: {
+            cancellationNote?: string | null;
+        };
+        NavigationPreference: {
+            featureId: string;
+            favorite: boolean;
+            pinned: boolean;
+            pinOrder?: number | null;
+            /** Format: date-time */
+            lastVisitedAt?: string | null;
+            useCount: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        NavigationPreferenceUpdate: {
+            favorite: boolean;
+            pinned: boolean;
+            pinOrder?: number | null;
+        };
     };
     responses: never;
-    parameters: never;
+    parameters: {
+        AccessRequestId: number;
+        FeatureId: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -3062,6 +3253,297 @@ export interface operations {
             };
             /** @description Invalid stream url */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFeatureAccessRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access requests created by the authenticated user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Created request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Invalid, unavailable, or already-authorized feature action */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An equivalent pending request already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFeatureAccessRequestsForReview: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["FeatureAccessRequestStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reviewable requests without protected record contents */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Reviewer privileges are absent or incoherent */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: components["parameters"]["AccessRequestId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated request and audit history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description The reviewer cannot grant this exact action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request is no longer pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: components["parameters"]["AccessRequestId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCancel"];
+            };
+        };
+        responses: {
+            /** @description Cancelled request and audit history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Only the requester may cancel the request */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request is no longer pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listNavigationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Preferences filtered against current effective access */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationPreference"][];
+                };
+            };
+        };
+    };
+    updateNavigationPreference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                featureId: components["parameters"]["FeatureId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NavigationPreferenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated preference */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationPreference"];
+                };
+            };
+            /** @description Favorite or pin is not supported by this feature */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The feature is not currently authorized */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown or concealed feature */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordNavigationVisit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                featureId: components["parameters"]["FeatureId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Updated privacy-conscious preference aggregate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationPreference"];
+                };
+            };
+            /** @description The feature is not currently authorized */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, concealed, or non-recent feature */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

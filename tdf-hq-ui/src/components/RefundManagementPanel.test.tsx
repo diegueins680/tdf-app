@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { RefundDTO, RejectionReasonDTO } from '../api/socialEvents';
-import '../i18n/index';
+import appI18n from '../i18n/index';
 
 const listRefundsMock = jest.fn<(eventId: string) => Promise<RefundDTO[]>>();
 const approveRefundMock = jest.fn<(eventId: string, refundId: string) => Promise<RefundDTO>>();
@@ -134,6 +134,8 @@ const renderPanel = async (container: HTMLElement, eventId = 'event-7') => {
 };
 
 describe('RefundManagementPanel', () => {
+  beforeAll(async () => appI18n.changeLanguage('en'));
+  afterAll(async () => appI18n.changeLanguage('es'));
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });

@@ -75,6 +75,7 @@ library:
     - TDF.Server
     - TDF.Config
     - TDF.Cors
+    - TDF.FeatureRegistry
     - TDF.ModelsExtra
     - TDF.Seed
     - TDF.Services.EventLogisticsRoutes

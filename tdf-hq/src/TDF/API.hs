@@ -478,6 +478,24 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> ReqBody '[JSON] LocalePreferencesUpdate :> Put '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "currency-conversions" :> ReqBody '[JSON] CurrencyConversionAuditCreate :> Post '[JSON] NoContent
 
+type AccessRequestsAPI =
+       Get '[JSON] [FeatureAccessRequestDTO]
+  :<|> ReqBody '[JSON] FeatureAccessRequestCreate :> Post '[JSON] FeatureAccessRequestDTO
+  :<|> "review" :> QueryParam "status" Text :> Get '[JSON] [FeatureAccessRequestDTO]
+  :<|> Capture "requestId" Int64 :> "decision"
+         :> ReqBody '[JSON] FeatureAccessRequestDecision
+         :> Patch '[JSON] FeatureAccessRequestDTO
+  :<|> Capture "requestId" Int64 :> "cancel"
+         :> ReqBody '[JSON] FeatureAccessRequestCancel
+         :> Patch '[JSON] FeatureAccessRequestDTO
+
+type NavigationPreferencesAPI =
+       Get '[JSON] [NavigationPreferenceDTO]
+  :<|> Capture "featureId" Text
+         :> ReqBody '[JSON] NavigationPreferenceUpdate
+         :> Put '[JSON] NavigationPreferenceDTO
+  :<|> Capture "featureId" Text :> "visit" :> Post '[JSON] NavigationPreferenceDTO
+
 -- Stripe must be able to deliver this endpoint without an application bearer
 -- token. RawJSON preserves the exact bytes covered by Stripe's signature.
 type StripeWebhookAPI =
@@ -535,6 +553,8 @@ type ProtectedAPI =
   :<|> "ddex" :> DDEXAPI
   :<|> "catalog" :> CatalogAPI
   :<|> ServiceStorefrontAdminAPI
+  :<|> "access-requests" :> AccessRequestsAPI
+  :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
 
 type API =
        VersionAPI
