@@ -152,6 +152,16 @@ targets.
   artist 9 and resumed completion run `11`. The reconciled execution covered all
   48 profiles and 34 unmatched normalized inventory groups with zero remaining
   checkpoint errors and no safety halt.
+- Post-deployment identity reconciliation: run `13`, key
+  `operator:production:identity-reconciliation:fc09aed0899476d3617933e6103d7c00995d1fdd`,
+  completed in production after the identity-preserving upsert fix. It processed
+  all 344 references and 54 normalized candidate groups, matched 44 groups,
+  retained 10 for review, created 0 profiles, applied 0 additional profile
+  corrections, and reported no error. After the run, all 303 references marked
+  `matched` had a non-null TDF party ID; 40 `needs_review` references and the
+  single `obsolete_review` marker remained intentionally withheld. The
+  administrative token created for this bounded operation was revoked and the
+  database confirmed zero active tokens with its label.
 - A non-HTTP inline-image placeholder initially reached source persistence for
   artist 9 after its valid MusicBrainz and Discogs sources had been saved. The
   retry succeeded after non-HTTP validation sources were excluded. Regression
@@ -177,7 +187,8 @@ targets.
   was introduced.
 
 The committed `production-enrichment-runs.json` contains the redacted batch
-receipts. The complete `restored-production-full-dry-run.json` records every
+receipts, and `production-reconciliation.json` records run 13 and its post-run
+invariants. The complete `restored-production-full-dry-run.json` records every
 profile's source URLs, field support, link checks, confidence, signals, and
 withholding reason. Retrieval timestamps are retained by the report and durable
 source rows.
@@ -264,9 +275,17 @@ policy, so the cases remain in the administrative queue.
 
 Fly now performs the internal discovery/audit once daily. The external-provider
 workflow is committed at `.github/workflows/artist-enrichment-daily.yml`, uses a
-non-overlapping concurrency group, has the repository `ADMIN_TOKEN` secret, and
-is manually runnable on this branch. GitHub only activates a scheduled
-workflow from the default branch. Cloudflare and Vercel previews passed for this
-branch; the production frontend/admin navigation and default-branch schedule
-therefore remain intentionally blocked on review and merge of the draft pull
-request.
+non-overlapping concurrency group, and has the repository `ADMIN_TOKEN` secret.
+GitHub rejected the branch dispatch because a new workflow cannot be dispatched
+until its file exists on the default branch; scheduled workflows are subject to
+the same boundary. The repository currently lacks the Spotify, YouTube, Discogs,
+and Google Drive secrets named by that workflow, so full provider/media coverage
+also remains disabled. Cloudflare and Vercel previews passed for this branch;
+the production frontend/admin navigation and external daily schedule therefore
+remain intentionally blocked on review and merge of the draft pull request.
+
+Exact activation action: review and merge PR 139 without bypassing branch
+protection; configure `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`,
+`YOUTUBE_API_KEY`, `DISCOGS_TOKEN`, and either the OAuth or service-account Drive
+secret set in GitHub Actions; then dispatch `Daily artist enrichment` once in
+`dry-run` mode and confirm its retained artifact before enabling publication.
