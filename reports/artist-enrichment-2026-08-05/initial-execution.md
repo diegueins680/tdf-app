@@ -264,9 +264,9 @@ policy, so the cases remain in the administrative queue.
 
 Fly now performs the internal discovery/audit once daily. The external-provider
 workflow is committed at `.github/workflows/artist-enrichment-daily.yml`, uses a
-non-overlapping concurrency group, and is manually runnable on this branch once
-its repository secrets are configured. GitHub only activates a scheduled
+non-overlapping concurrency group, has the repository `ADMIN_TOKEN` secret, and
+is manually runnable on this branch. GitHub only activates a scheduled
 workflow from the default branch. Cloudflare and Vercel previews passed for this
 branch; the production frontend/admin navigation and default-branch schedule
-therefore remain intentionally blocked on review, secret configuration, and
-merge of the draft pull request.
+therefore remain intentionally blocked on review and merge of the draft pull
+request.
