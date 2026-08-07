@@ -3,7 +3,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module TDF.Artists.Enrichment
-  ( normalizeArtistName
+  ( DiscoveryReference(..)
+  , normalizeArtistName
   , normalizeDiscoveredName
   , artistNameAliasCandidate
   , slugifyArtistName
@@ -21,6 +22,7 @@ module TDF.Artists.Enrichment
   , decideArtistSuggestionSet
   , decideArtistIdentityCandidate
   , createArtistMediaAsset
+  , persistDiscoveryReference
   ) where
 
 import           Control.Applicative            ((<|>))
@@ -398,12 +400,16 @@ persistDiscoveryReference now DiscoveryReference{..} = do
         , artistInventoryReferenceFirstSeenAt = now
         , artistInventoryReferenceLastSeenAt = now
         }
-  _ <- upsert record
+  -- Indirect discovery sources often do not carry a party or social ID. Once a
+  -- later matching pass has resolved either identity, a repeated discovery must
+  -- not erase it with NULL. A non-null source identity may still promote the
+  -- stored reference deterministically.
+  _ <- upsert record $
     [ ArtistInventoryReferenceOriginalName =. T.strip drOriginalName
-    , ArtistInventoryReferenceArtistPartyId =. drArtistPartyId
-    , ArtistInventoryReferenceSocialArtistId =. drSocialArtistId
     , ArtistInventoryReferenceLastSeenAt =. now
     ]
+    <> maybe [] (pure . (ArtistInventoryReferenceArtistPartyId =.) . Just) drArtistPartyId
+    <> maybe [] (pure . (ArtistInventoryReferenceSocialArtistId =.) . Just) drSocialArtistId
   found <- getBy (UniqueArtistInventoryReference idem)
   maybe (liftIO (fail "artist inventory upsert did not return a row")) pure found
 
