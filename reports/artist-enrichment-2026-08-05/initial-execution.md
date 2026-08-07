@@ -1,4 +1,4 @@
-# Initial artist enrichment execution — 2026-08-05/06
+# Initial artist enrichment execution — 2026-08-05/07
 
 ## Safety baseline
 
@@ -8,6 +8,7 @@
 - Pre-change fleet: two healthy Machines (`ord`, `lax`)
 - Pre-change profiles/releases/event-artist links: 48 / 65 / 89
 - Fly PostgreSQL volume snapshot: `vs_8G6Y36yAqZ9io05MMgDG`
+- Source volume: `vol_re89q7o0w7ynpx1r` (`tdf-hq-db`, `pg_data`, `gru`)
 - Snapshot state: completed; 84,224,754 bytes; retention 5 days
 - Snapshot digest: `c068c2f0c89c391149ac98e22776551f227d56a5a21fdacf9a2769d204f64c7e`
 - Access-controlled operator dump (outside Git):
@@ -75,6 +76,11 @@ checks, is committed beside this document as
 - Long biography and structured profile content desktop: passed with a
   browser-only response fixture, without changing database values. This check
   found and fixed JSON-list presentation for highlights and achievements.
+- Production API-backed Cloudflare preview: passed for Diego Saa by stable ID
+  after correcting the branch build's retired Koyeb API variable fallback. The
+  rendered profile uses production name, artwork, fan count, Spotify link, and
+  deterministic slug. Fly returned 200 for both ID and slug public lookups and
+  explicitly allowed the preview origin.
 
 Screenshots are committed under
 `docs/evidence/artist-enrichment-2026-08-05/`. The restored historical database
@@ -82,6 +88,13 @@ lacks newer session-preference tables, so unrelated `/session` and
 `/session/preferences` requests returned 500 during visual QA. The enrichment
 overview, health, countries, radio, and public artist endpoints returned 200 and
 the pages under test rendered successfully.
+
+The production-backed public screenshot is
+`artist-public-production-preview-2026-08-07.png`. The admin desktop/mobile
+screenshots use the restored production database and a browser-only strict-admin
+session fixture; production overview counts and authorization were separately
+verified through the protected API. No real credential is stored in a screenshot
+or repository artifact.
 
 ## Migration rollback verification
 
@@ -99,6 +112,161 @@ it does not delete or rewrite artist, catalog, event, or party records.
 
 ## Production rollout and enrichment
 
-Pending the guarded release. This section will record the immutable deployed
-revision, health checks, production run ID, per-artist changes, media results,
-and any infrastructure blocker before the draft pull request is opened.
+### Deployed schema and application
+
+- Guarded release status: complete, no rollback invoked.
+- First enrichment-capable production revision: `a212acaed553eb47b02cadc77cee7a1cc979351e`.
+- Immutable image: `diegueins680/tdf-hq:a212acaed553eb47b02cadc77cee7a1cc979351e`.
+- Resolved image digest: `sha256:ae8a6e8d7f39cfd9a7c7cf97cf5bd907e515add8ac0642ec45abc186816e527a`.
+- Canary/fleet Machines: `0807ee9cd34668` (`ord`) and `3d8d2500c67168` (`lax`).
+- Deployment window: 2026-08-06 17:56:22–17:59:27 UTC.
+- Health after canary and fleet rollout: `{"db":"ok","status":"ok"}` on both Machines.
+- All registered migrations, including `2026-08-05_artist_enrichment`, were
+  checksum-verified. The eight enrichment tables were present and usable.
+- Runtime startup migrations remained disabled. Daily internal discovery was
+  enabled with auto-publication disabled, a 500-reference batch, 04:00 local
+  execution hour, and a 90-day stale threshold.
+- Final hardened production revision:
+  `fc09aed0899476d3617933e6103d7c00995d1fdd`; Fly releases `2077` (`ord`) and
+  `2078` (`lax`), both with 1/1 health checks passing. Both Machines use
+  `sha256:37b57e165ba9f756b12fab90418eaf1cb6d76462670bc07f2a331335cbfd4d37`.
+  `/health` returned database/application `ok`, and `/version` reported the
+  exact final commit and build time `2026-08-07T08:20:05Z`.
+- Final image workflow `31160103791`: quality, API contracts, production
+  migration verification, and Docker publication all passed.
+
+The redacted initial and final deployment receipts are committed as
+`production-release.json` and `production-release-final.json`.
+The immediately preceding Machine image/config remains the application rollback
+target; the database snapshot and custom-format dump above are the data rollback
+targets.
+
+### Production runs
+
+- Initial production dry-run: run `1`, key
+  `operator:dry_run:full:full:2026-08-06`; 48 profiles, 332 references, 12
+  initial candidates, 63 discovery suggestions, 112 distinct source/search
+  URLs, zero profile/media publication, and zero final errors. Durable inventory,
+  provenance, candidates, suggestions, and run state were retained for review.
+- Bounded production execution: run `9`, followed by scoped retry run `10` for
+  artist 9 and resumed completion run `11`. The reconciled execution covered all
+  48 profiles and 34 unmatched normalized inventory groups with zero remaining
+  checkpoint errors and no safety halt.
+- A non-HTTP inline-image placeholder initially reached source persistence for
+  artist 9 after its valid MusicBrainz and Discogs sources had been saved. The
+  retry succeeded after non-HTTP validation sources were excluded. Regression
+  coverage prevents recurrence. Historical run 9 retains that original error as
+  audit evidence; retry run 10 and final full run 11 completed, and run 11's
+  error summary is explicitly empty. Successful same-key resumes now clear stale
+  error summaries.
+- Final durable production totals: 48 profiles, 344 source references, 175
+  field-level research/validation source records covering all 48 profiles, 46
+  pending identity candidates, 63 suggestion records (15 auto-applied and 48
+  pending), 15 field-change records, and 0 media assets. The production batch
+  receipts contain at least one source for every profile and 102 distinct
+  consulted external URLs. Of 34 initially unlinked normalized groups, stable
+  TDF identifiers attached 26 to existing profiles and 8 remain unlinked.
+- Profiles created: 0. Existing profiles externally enriched automatically: 0.
+  Safe deterministic slug corrections: 15 profiles. Ambiguous or substantive
+  profile changes remained pending for staff review. All 48 external-research
+  results scored 0.55—below the automatic match threshold—and retained an
+  explicit withholding reason.
+- Missing main images in the dry-run: 47. Images downloaded, optimized, uploaded
+  to Drive, or derived: 0 / 0 / 0 / 0. This was intentional: no researched image
+  had explicit `authorized` or `licensed` reuse evidence. No third-party hotlink
+  was introduced.
+
+The committed `production-enrichment-runs.json` contains the redacted batch
+receipts. The complete `restored-production-full-dry-run.json` records every
+profile's source URLs, field support, link checks, confidence, signals, and
+withholding reason. Retrieval timestamps are retained by the report and durable
+source rows.
+
+### Applied field changes
+
+Only the following 0.99-confidence, deterministic slug normalizations were
+published; all were actor-attributed to the strict administrator running job 9:
+
+| Artist ID | Artist | Previous slug | Published slug |
+| ---: | --- | --- | --- |
+| 9 | Diego Saa | `Diego Saa` | `diego-saa` |
+| 57 | Emanuele Pilo-Pais | `Skanka Fe` | `emanuele-pilo-pais` |
+| 61 | Rizlo | absent | `rizlo` |
+| 63 | JOSSEFINA | absent | `jossefina` |
+| 64 | E Quimika Soul | absent | `e-quimika-soul` |
+| 65 | Skankafe | absent | `skankafe` |
+| 66 | HNO | absent | `hno` |
+| 67 | Llama Este Pez | absent | `llama-este-pez` |
+| 68 | Ruz | absent | `ruz` |
+| 69 | La Gente Naranja | absent | `la-gente-naranja` |
+| 70 | Double OG | absent | `double-og` |
+| 72 | El Bloque | absent | `el-bloque` |
+| 73 | OSPINA | absent | `ospina` |
+| 74 | R de Nexo | absent | `r-de-nexo` |
+| 75 | Arkabuz | absent | `arkabuz` |
+
+Previous values, evidence, confidence, actor, suggestion ID, idempotency key, and
+timestamp remain queryable in `artist_field_change` and
+`artist_enrichment_suggestion`.
+
+### Artists discovered outside the profile endpoint
+
+The bounded production run examined 36 original labels representing 34
+normalized groups that were initially unlinked to a profile. After the final
+identity-preserving rediscovery, 26 groups were attached to existing profiles
+through non-null TDF party/social identifiers; none was linked by name alone and
+no new profile was required. Those internally resolved labels were `Arkabuz`,
+`Barrelshots - Input List`, `El Bloque`, `Juano Ledesma (duplicado)`, `Julio
+Diaz`, `Just One Nite`, `La Bestia Quiñonez`, `La Clau`, `La Gente Naranja`,
+`Labii`, `Le Chu`, `Liquid Paper Girl`, `Llama Este Pez`, `Los Morrison`,
+`Lysergicman`, `Machaka`, `Machaka - Input List`, `Melania`, `Mood Pattern`,
+`Morex`, `Owen`, `R de Nexo`, `Rizlo`, `Ruz`, `Semiazas`, `Skankafe`, and
+`Verde 70` (the two Machaka labels normalize to one group).
+
+Eight normalized groups remain unlinked and pending review:
+
+- `Diego Saa` / `Diego Saá` — event and social records point at more than one
+  TDF identity; 0.99 internal-reference confidence does not resolve the alias.
+- `Holger Quiñonez - Input List` — one intake-only reference, confidence 0.70.
+- `Jam Estepez` — event/social references, confidence 0.78, without an
+  independently cross-linked external identity.
+- `JOSSEFINA` — event/social references are strong internally (0.99), but more
+  than one TDF party uses the artist name.
+- `Lord Ethnic` — event/social references, confidence 0.78; external music pages
+  do not tie the specific TDF party to that identity.
+- `OSPINA` — event/social references are strong internally (0.99), but more than
+  one TDF party uses the artist name.
+- `Quimika Soul` — pipeline-only alias candidate for `E Quimika Soul`, confidence
+  0.70; name and independently unlinked pages are insufficient.
+- `Skanka Fe` — pipeline-only alias candidate for `Skankafe`, confidence 0.70;
+  name similarity is insufficient.
+
+`Test Delete Me` was classified as an obsolete/test review marker and was not
+deleted or published. No new artist was created, no substantive external field
+was overwritten, and no artist record was merged from an item above.
+
+Additional manual corroboration attempts included [Diego Saa at Isla
+Viva](https://islaviva.org/project/diego-saa/), Quimika Soul's
+[Bandcamp](https://qsydf.bandcamp.com/album/date) and
+[SoundCloud](https://soundcloud.com/qimika-soul),
+[RadioCocoa](https://radiococoa.com/sesiones-al-parque-da-un-nuevo-paso/) and
+[La Hora](https://www.lahora.com.ec/archivo/El-ska-se-vive--en-Ambato-20190607-0143.html)
+coverage, relevant Spotify playlists
+([one](https://open.spotify.com/playlist/4kJM6hsCdZlUtaFcy0kE6c),
+[two](https://open.spotify.com/playlist/1frOhZBICOdl4gwwBtpscv)), and Lord Ethnic
+pages on [Apple Music](https://music.apple.com/us/artist/lord-ethnic/1518668207),
+[Amazon Music](https://music.amazon.in/albums/B09G77M4N3), and
+[SoundCloud](https://soundcloud.com/lord-ethnic/walk-this-way-remix-aerosmith/sets).
+These were insufficient to connect a specific TDF party under the two-signal
+policy, so the cases remain in the administrative queue.
+
+### Automation and remaining publication boundary
+
+Fly now performs the internal discovery/audit once daily. The external-provider
+workflow is committed at `.github/workflows/artist-enrichment-daily.yml`, uses a
+non-overlapping concurrency group, and is manually runnable on this branch once
+its repository secrets are configured. GitHub only activates a scheduled
+workflow from the default branch. Cloudflare and Vercel previews passed for this
+branch; the production frontend/admin navigation and default-branch schedule
+therefore remain intentionally blocked on review, secret configuration, and
+merge of the draft pull request.

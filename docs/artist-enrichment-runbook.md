@@ -164,6 +164,13 @@ Disable the external job by disabling the `Daily artist enrichment` workflow.
 Rerun it with `workflow_dispatch`; default manual mode is dry-run. GitHub schedule
 activation requires this workflow to exist on the default branch.
 
+Cloudflare Pages must target `https://tdf-hq.fly.dev`. The UI deliberately
+ignores the retired `https://the-dream-factory.koyeb.app` value when that stale
+value is injected into a `*.tdf-app.pages.dev` build, while retaining other
+explicit API overrides for local or alternate deployments. Remove the retired
+dashboard variable when Cloudflare account access is available; the repository
+fallback prevents it from breaking previews in the meantime.
+
 ## Backup, rollout, and verification
 
 Before a production migration or data write:
