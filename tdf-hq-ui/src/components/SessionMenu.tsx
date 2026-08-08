@@ -37,7 +37,7 @@ export default function SessionMenu() {
   return (
     <>
       <Tooltip title={session.displayName} placement="bottom">
-        <IconButton color="inherit" onClick={handleOpen} size="small" aria-label={t('sessionMenu.open')}>
+        <IconButton color="inherit" onClick={handleOpen} size="small" aria-label={t('sessionMenu.open')} sx={{ minWidth: 44, minHeight: 44 }}>
           <Avatar sx={{ width: 32, height: 32, fontSize: 16 }}>{initials}</Avatar>
         </IconButton>
       </Tooltip>

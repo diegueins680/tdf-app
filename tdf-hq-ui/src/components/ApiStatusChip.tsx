@@ -53,6 +53,7 @@ export default function ApiStatusChip() {
       color={chipColor}
       size="small"
       variant={chipVariant}
+      sx={!refreshingStatus && !healthy ? { color: '#7a4100', borderColor: '#9a5200' } : undefined}
     />
   );
 }

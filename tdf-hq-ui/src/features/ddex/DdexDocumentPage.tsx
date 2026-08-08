@@ -23,8 +23,6 @@ import {
   ArrowBack as BackIcon,
   CheckCircle as ValidIcon,
   Error as InvalidIcon,
-  Download as DownloadIcon,
-  PlayArrow as ImportIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { DDEX, getStatusColor } from '../../api/ddex';
@@ -57,12 +55,6 @@ const DdexDocumentPage: React.FC = () => {
   const { data: validationReport } = useQuery({
     queryKey: ['ddex-validation', documentId],
     queryFn: () => DDEX.getValidationReport(documentId),
-    enabled: documentId > 0,
-  });
-
-  const { data: preview } = useQuery({
-    queryKey: ['ddex-preview', documentId],
-    queryFn: () => DDEX.getPreview(documentId),
     enabled: documentId > 0,
   });
 
@@ -102,35 +94,19 @@ const DdexDocumentPage: React.FC = () => {
           <Chip
             label={document.ddexDocumentStatus}
             color={getStatusColor(document.ddexDocumentStatus)}
+            variant="outlined"
+            sx={getStatusColor(document.ddexDocumentStatus) === 'warning' ? { color: '#7a4100', borderColor: '#9a5200' } : undefined}
           />
         </Stack>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={() => console.log('Download raw')}
-          >
-            Download XML
-          </Button>
-          {document.ddexDocumentStatus === 'valid' && (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ImportIcon />}
-              onClick={() => console.log('Start import')}
-            >
-              Start Import
-            </Button>
-          )}
-        </Stack>
       </Stack>
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        La descarga original, vista previa e importación permanecen deshabilitadas mientras sus operaciones de almacenamiento y confirmación transaccional estén incompletas.
+      </Alert>
 
       <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Summary" />
           <Tab label="Validation" />
-          <Tab label="Preview" />
-          <Tab label="History" />
         </Tabs>
       </Paper>
 
@@ -142,15 +118,15 @@ const DdexDocumentPage: React.FC = () => {
                 <Typography variant="h6" gutterBottom>
                   Document Information
                 </Typography>
-                <List dense>
-                  <ListItem>
+                <List component="div" dense>
+                  <ListItem component="div">
                     <ListItemText
                       primary="File Name"
                       secondary={document.ddexDocumentFileName}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="SHA-256"
                       secondary={
@@ -161,21 +137,21 @@ const DdexDocumentPage: React.FC = () => {
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Family"
                       secondary={document.ddexDocumentFamily}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Version"
                       secondary={document.ddexDocumentVersion}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Received"
                       secondary={new Date(document.ddexDocumentCreatedAt).toLocaleString()}
@@ -191,8 +167,8 @@ const DdexDocumentPage: React.FC = () => {
                 <Typography variant="h6" gutterBottom>
                   Message Header
                 </Typography>
-                <List dense>
-                  <ListItem>
+                <List component="div" dense>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Message ID"
                       secondary={
@@ -203,14 +179,14 @@ const DdexDocumentPage: React.FC = () => {
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Sender DPID"
                       secondary={document.ddexDocumentSenderId || '-'}
                     />
                   </ListItem>
                   <Divider />
-                  <ListItem>
+                  <ListItem component="div">
                     <ListItemText
                       primary="Recipient DPID"
                       secondary={document.ddexDocumentRecipientId || '-'}
@@ -255,6 +231,8 @@ const DdexDocumentPage: React.FC = () => {
                             label={issue.issueSeverity}
                             size="small"
                             color={issue.issueSeverity === 'Error' ? 'error' : 'warning'}
+                            variant="outlined"
+                            sx={issue.issueSeverity === 'Error' ? undefined : { color: '#7a4100', borderColor: '#9a5200' }}
                           />
                           <Chip label={issue.issueLayer} size="small" variant="outlined" />
                           <Typography>{issue.issueMessage}</Typography>
@@ -278,77 +256,6 @@ const DdexDocumentPage: React.FC = () => {
         </Card>
       </TabPanel>
 
-      <TabPanel value={tabValue} index={2}>
-        {preview ? (
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Import Preview
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="body2" color="text.secondary">
-                    Message ID
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
-                    {preview.previewMessageId}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="body2" color="text.secondary">
-                    Sender
-                  </Typography>
-                  <Typography variant="body1">{preview.previewSender}</Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Releases
-                  </Typography>
-                  <Typography variant="h4">{preview.previewReleaseCount}</Typography>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Resources
-                  </Typography>
-                  <Typography variant="h4">{preview.previewResourceCount}</Typography>
-                </Grid>
-              </Grid>
-              
-              {preview.previewWarnings.length > 0 && (
-                <Box mt={3}>
-                  <Typography variant="subtitle2" color="warning.main" gutterBottom>
-                    Warnings
-                  </Typography>
-                  <List dense>
-                    {preview.previewWarnings.map((warning, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemText primary={warning} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Alert severity="info">
-            Preview not available. Run validation first.
-          </Alert>
-        )}
-      </TabPanel>
-
-      <TabPanel value={tabValue} index={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Document History
-            </Typography>
-            <Typography color="text.secondary">
-              History tracking not yet implemented
-            </Typography>
-          </CardContent>
-        </Card>
-      </TabPanel>
     </Box>
   );
 };

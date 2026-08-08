@@ -42,6 +42,10 @@ seedAll :: SqlPersistT IO ()
 seedAll = do
     now <- liftIO getCurrentTime
     allowSeededCredentials <- liftIO seededCredentialSeedingAllowedFromEnv
+    seededSecrets <-
+        if allowSeededCredentials
+            then liftIO loadSeedCredentialSecrets
+            else pure Nothing
 
     -- Parties: Artists & Teachers
     let artists =
@@ -194,40 +198,28 @@ seedAll = do
 
     -- Staff accounts + API tokens for authentication examples
     let staffAccounts =
-            [ ("TDF Admin", Just "TDF Admin", Admin, "admin-token", "admin", "password123")
-            , ("Front Desk Manager", Nothing, Manager, "manager-token", "manager", "password123")
-            , ("Reception", Nothing, Reception, "reception-token", "reception", "password123")
-            , ("Accounting", Nothing, Accounting, "accounting-token", "accounting", "password123")
-            , ("Scheduling", Nothing, Engineer, "scheduling-token", "scheduling", "password123")
-            , ("Packages", Nothing, Customer, "packages-token", "packages", "password123")
-            , ("tdf-owner", Nothing, Manager, "tdf-owner-token", "tdf-owner", "TDFowner2025!")
+            [ ("TDF Admin", Just "TDF Admin", Admin, "admin")
+            , ("Front Desk Manager", Nothing, Manager, "manager")
+            , ("Reception", Nothing, Reception, "reception")
+            , ("Accounting", Nothing, Accounting, "accounting")
+            , ("Scheduling", Nothing, Engineer, "scheduling")
+            , ("Packages", Nothing, Customer, "packages")
             ]
-    if allowSeededCredentials
-        then
+    case seededSecrets of
+        Just (seedPassword, seedTokenPrefix) ->
             mapM_
-                ( \(disp, mlegal, role, token, uname, pwd) -> do
-                    _ <- ensureStaff now disp mlegal role token uname pwd
+                ( \(disp, mlegal, role, uname) -> do
+                    let token = seedTokenPrefix <> "-" <> uname
+                    _ <- ensureStaff now disp mlegal role token uname seedPassword
                     pure ()
                 )
                 staffAccounts
-        else
+        Nothing ->
             liftIO $
                 putStrLn
-                    "Skipping static demo staff credentials/tokens in hosted or production runtime."
+                    "Skipping demo credentials: hosted/production runtime or TDF_SEED_DEMO_PASSWORD/TDF_SEED_TOKEN_PREFIX is missing or too short."
 
-    seedCoreStaffRoles allowSeededCredentials now
-
-    -- Ensure tdf-owner test account has Manager, Fan and Customer roles
-    when allowSeededCredentials $ do
-        mTdfOwnerCred <- getBy (UniqueCredentialUsername "tdf-owner")
-        case mTdfOwnerCred of
-            Just (Entity _ cred) -> do
-                let tdfPid = userCredentialPartyId cred
-                _ <- upsert (PartyRole tdfPid Manager True) [PartyRoleActive =. True]
-                _ <- upsert (PartyRole tdfPid Fan True) [PartyRoleActive =. True]
-                _ <- upsert (PartyRole tdfPid Customer True) [PartyRoleActive =. True]
-                pure ()
-            Nothing -> pure ()
+    seedCoreStaffRoles (fst <$> seededSecrets) now
 
     -- Dropdown options for admin-managed metadata
     let dropdowns =
@@ -919,9 +911,6 @@ data StaffSeed = StaffSeed
     , ssRoles :: [RoleEnum]
     }
 
-coreStaffDefaultPassword :: Text
-coreStaffDefaultPassword = "changeme123"
-
 coreStaffSeeds :: [StaffSeed]
 coreStaffSeeds =
     [ StaffSeed "Esteban Muñoz" "mixandlivesound@gmail.com" [Engineer, Teacher, StudioManager]
@@ -945,6 +934,22 @@ data CredentialStatus
 
 seededCredentialSeedingAllowedFromEnv :: IO Bool
 seededCredentialSeedingAllowedFromEnv = seededCredentialSeedingAllowed <$> getEnvironment
+
+loadSeedCredentialSecrets :: IO (Maybe (Text, Text))
+loadSeedCredentialSecrets = seededCredentialSecrets <$> getEnvironment
+
+seededCredentialSecrets :: [(String, String)] -> Maybe (Text, Text)
+seededCredentialSecrets env =
+    case (lookupText "TDF_SEED_DEMO_PASSWORD", lookupText "TDF_SEED_TOKEN_PREFIX") of
+        (Just password, Just tokenPrefix)
+            | T.length password >= 16 && T.length tokenPrefix >= 24 ->
+                Just (password, tokenPrefix)
+        _ -> Nothing
+  where
+    lookupText key =
+        case lookup key env of
+            Just raw | not (T.null (T.strip (T.pack raw))) -> Just (T.strip (T.pack raw))
+            _ -> Nothing
 
 seededCredentialSeedingAllowed :: [(String, String)] -> Bool
 seededCredentialSeedingAllowed env =
@@ -977,21 +982,20 @@ seededCredentialSeedingAllowed env =
     isProductionValue raw =
         T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
 
-seedCoreStaffRoles :: Bool -> UTCTime -> SqlPersistT IO ()
-seedCoreStaffRoles allowCredentials now = do
+seedCoreStaffRoles :: Maybe Text -> UTCTime -> SqlPersistT IO ()
+seedCoreStaffRoles mPassword now = do
     liftIO $ putStrLn "Seeding core staff roles..."
-    mapM_ (seedStaff allowCredentials now) coreStaffSeeds
+    mapM_ (seedStaff mPassword now) coreStaffSeeds
 
-seedStaff :: Bool -> UTCTime -> StaffSeed -> SqlPersistT IO ()
-seedStaff allowCredentials now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles = rolesVal} = do
+seedStaff :: Maybe Text -> UTCTime -> StaffSeed -> SqlPersistT IO ()
+seedStaff mPassword now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles = rolesVal} = do
     let normalizedEmail = normalizeEmail emailVal
         cleanName = T.strip nameVal
     (pid, partyChange) <- ensureStaffParty now cleanName normalizedEmail
     newRoles <- ensureStaffRoles pid rolesVal
-    credStatus <-
-        if allowCredentials
-            then ensureStaffCredential pid normalizedEmail
-            else pure CredentialSkipped
+    credStatus <- case mPassword of
+        Just password -> ensureStaffCredential pid normalizedEmail password
+        Nothing -> pure CredentialSkipped
     logStaffSeed cleanName rolesVal partyChange newRoles credStatus
 
 ensureStaffParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)
@@ -1070,12 +1074,12 @@ ensureStaffRoles pid rolesList = do
                     update roleId [PartyRoleActive =. True]
                     pure (Just role)
 
-ensureStaffCredential :: PartyId -> Text -> SqlPersistT IO CredentialStatus
-ensureStaffCredential pid username = do
+ensureStaffCredential :: PartyId -> Text -> Text -> SqlPersistT IO CredentialStatus
+ensureStaffCredential pid username password = do
     mCred <- getBy (UniqueCredentialUsername username)
     case mCred of
         Nothing -> do
-            hashed <- liftIO (hashPasswordText coreStaffDefaultPassword)
+            hashed <- liftIO (hashPasswordText password)
             void $
                 insert
                     UserCredential

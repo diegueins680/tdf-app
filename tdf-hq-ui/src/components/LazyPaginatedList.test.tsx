@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import '../i18n/index';
+import appI18n from '../i18n/index';
 
 const { default: LazyPaginatedList } = await import('./LazyPaginatedList');
 
@@ -46,6 +46,8 @@ const renderList = async (
 };
 
 describe('LazyPaginatedList', () => {
+  beforeAll(async () => appI18n.changeLanguage('en'));
+  afterAll(async () => appI18n.changeLanguage('es'));
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   });

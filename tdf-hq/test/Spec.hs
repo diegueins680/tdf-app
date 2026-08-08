@@ -20,6 +20,7 @@ import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (isNothing)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text
 import qualified Data.Text.Encoding as TE
@@ -140,11 +141,19 @@ import TDF.Models.SocialEventsModels
       EventTicketTier (..),
       SocialEvent (..),
       SocialEventId )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.FeatureRegistry
+    ( RegistryFeature(registryFeatureId),
+      allRegistryFeatures,
+      findRegistryFeature,
+      registryFeatureAllows,
+      registryFeatureRequestable,
+      registryReviewerCanDecide )
 import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
@@ -384,6 +393,10 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
     validateArtistName,
+    validateSocialEventsFeatureAction,
+    validateArtistProfileCreateParty,
+    validateArtistProfileWriteAccess,
+    validateAuthenticatedPartyReference,
     validateRsvpStatus,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -472,7 +485,7 @@ import TDF.Config
       smtpUseTLS,
       supportedCurrencies )
 import TDF.Version (VersionInfo (..), getVersionInfo)
-import TDF.Seed (seededCredentialSeedingAllowed)
+import TDF.Seed (seededCredentialSeedingAllowed, seededCredentialSecrets)
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
@@ -709,6 +722,84 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "central feature registry authorization" $ do
+        let modulesFor roleValues = map moduleName (Set.toList (modulesForRoles roleValues))
+            registryUser roleValues = AuthedUser
+                { auPartyId = toSqlKey 1
+                , auRoles = roleValues
+                , auModules = modulesForRoles roleValues
+                }
+
+        it "loads every embedded feature with a unique stable id" $ do
+            let featureIds = map registryFeatureId allRegistryFeatures
+            length featureIds `shouldBe` length (nub featureIds)
+            length featureIds `shouldSatisfy` (>= 99)
+
+        it "keeps DDEX viewing separate from DDEX importing" $ do
+            case findRegistryFeature "label.ddex.inbox" of
+                Nothing -> expectationFailure "Missing DDEX inbox feature"
+                Just feature -> do
+                    registryFeatureAllows [ReadOnly] (modulesFor [ReadOnly]) feature "view" `shouldBe` True
+                    registryFeatureAllows [ReadOnly] (modulesFor [ReadOnly]) feature "import" `shouldBe` False
+                    registryFeatureAllows [Admin, Customer, Fan] (modulesFor [Admin, Customer, Fan]) feature "import"
+                        `shouldBe` True
+
+        it "does not inherit view access for an undeclared action" $ do
+            case findRegistryFeature "label.ddex.document" of
+                Nothing -> expectationFailure "Missing DDEX document feature"
+                Just feature ->
+                    registryFeatureAllows [Admin, Customer, Fan] (modulesFor [Admin, Customer, Fan]) feature "publish"
+                        `shouldBe` False
+
+        it "rejects known DDEX endpoint actions even when a read-only user knows the URL" $ do
+            let readOnlyUser = registryUser [ReadOnly]
+            DDEXServer.validateDdexAccess "label.ddex.document" "view" readOnlyUser `shouldSatisfy` isRight
+            case DDEXServer.validateDdexAccess "label.ddex.import" "import" readOnlyUser of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right () -> expectationFailure "ReadOnly unexpectedly obtained DDEX import access"
+            case DDEXServer.validateDdexAccess "label.ddex.partners" "view" readOnlyUser of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right () -> expectationFailure "ReadOnly unexpectedly obtained DDEX partner administration"
+
+        it "never accepts technical or incomplete capabilities for access requests" $ do
+            case findRegistryFeature "technical.auth-login" of
+                Nothing -> expectationFailure "Missing technical login feature"
+                Just technical -> registryFeatureRequestable technical "view" `shouldBe` False
+
+        it "requires reviewers to already possess the exact requested action" $ do
+            case findRegistryFeature "label.ddex.inbox" of
+                Nothing -> expectationFailure "Missing DDEX inbox feature"
+                Just feature -> do
+                    registryReviewerCanDecide (registryUser [Manager]) feature "import" `shouldBe` True
+                    registryReviewerCanDecide (registryUser [StudioManager]) feature "import" `shouldBe` True
+                    registryReviewerCanDecide (registryUser [Fan]) feature "import" `shouldBe` False
+
+        it "rejects venue writes when a user knows the endpoint but lacks the action" $ do
+            let readOnlyUser = registryUser [ReadOnly, Customer, Fan]
+                producerUser = registryUser [Producer, Customer, Fan]
+            case validateSocialEventsFeatureAction "social.venue.create" "create" readOnlyUser of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right () -> expectationFailure "ReadOnly unexpectedly obtained venue creation access"
+            validateSocialEventsFeatureAction "social.venue.create" "create" producerUser
+                `shouldSatisfy` isRight
+
+        it "enforces artist profile and follower record ownership" $ do
+            let artistUser = registryUser [Artist, Customer, Fan]
+                strictAdmin = registryUser [Admin, Customer, Fan]
+                anotherParty = "2"
+            validateArtistProfileCreateParty artistUser (Just "1") `shouldBe` Right "1"
+            case validateArtistProfileCreateParty artistUser (Just "2") of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right _ -> expectationFailure "Artist unexpectedly created a profile for another party"
+            validateArtistProfileCreateParty strictAdmin (Just "2") `shouldBe` Right "2"
+            validateArtistProfileWriteAccess artistUser (Just "1") `shouldSatisfy` isRight
+            case validateArtistProfileWriteAccess artistUser (Just "2") of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right () -> expectationFailure "Artist unexpectedly edited another profile"
+            case validateAuthenticatedPartyReference artistUser anotherParty of
+                Left serverError -> errHTTPCode serverError `shouldBe` 403
+                Right () -> expectationFailure "Artist unexpectedly changed another follower identity"
+
     describe "internationalization primitives" $ do
         it "validates ISO 4217 currency codes and currency precision" $ do
             normalizeCurrencyCode " eur " `shouldBe` Just "EUR"
@@ -843,6 +934,19 @@ main = hspec $ do
                 `shouldBe` False
             seededCredentialSeedingAllowed [("NODE_ENV", "test")]
                 `shouldBe` True
+
+        it "requires strong runtime-only secrets before creating demo credentials" $ do
+            seededCredentialSecrets [] `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "too-short")
+                , ("TDF_SEED_TOKEN_PREFIX", "also-too-short")
+                ]
+                `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "isolated-fixture-password")
+                , ("TDF_SEED_TOKEN_PREFIX", "isolated-fixture-token-prefix")
+                ]
+                `shouldBe` Just ("isolated-fixture-password", "isolated-fixture-token-prefix")
 
     describe "validateSeedDatabaseStartup" $ do
         it "allows database seeding in local development" $
