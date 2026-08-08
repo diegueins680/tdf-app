@@ -623,7 +623,7 @@ async function ensureDriveFolder(token, parentId, name) {
   return (await created.json()).id;
 }
 
-async function uploadDriveFile(token, folderId, fileName, mimeType, bytes) {
+export async function uploadDriveFile(token, folderId, fileName, mimeType, bytes) {
   const query = `name='${escapeDriveQuery(fileName)}' and '${escapeDriveQuery(folderId)}' in parents and trashed=false`;
   const found = await retryFetch(`${DRIVE_API}/files?${new URLSearchParams({ q: query, fields: 'files(id,name)', pageSize: '2' })}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -645,11 +645,12 @@ async function uploadDriveFile(token, folderId, fileName, mimeType, bytes) {
     if (!uploaded.ok) throw new Error(`Drive upload failed (${uploaded.status})`);
     fileId = (await uploaded.json()).id;
   }
-  await retryFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}/permissions`, {
+  const permission = await retryFetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}/permissions`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ role: 'reader', type: 'anyone', allowFileDiscovery: false }),
   });
+  if (!permission.ok) throw new Error(`Drive public sharing failed (${permission.status})`);
   return { id: fileId, publicUrl: `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}` };
 }
 

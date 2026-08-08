@@ -122,6 +122,20 @@ spec = describe "artist enrichment identity policy" $ do
     artistInventoryReferenceArtistPartyId rediscovered `shouldBe` Just (toSqlKey 42)
     artistInventoryReferenceSocialArtistId rediscovered `shouldBe` Just 7
 
+  it "holds explicit bracketed test references for obsolete review before punctuation normalization" $ do
+    pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+    (testRow, legitimateRow) <- runSqlPool (do
+      createInventorySchema
+      _ <- persistDiscoveryReference fixedTime
+        (DiscoveryReference "seed" "test-1" "Test Artist" Nothing Nothing)
+      marked <- persistDiscoveryReference fixedTime
+        (DiscoveryReference "seed" "test-1" "  [Test Artist]  " Nothing Nothing)
+      legitimate <- persistDiscoveryReference fixedTime
+        (DiscoveryReference "seed" "test-2" "Testament" Nothing Nothing)
+      pure (entityVal marked, entityVal legitimate)) pool
+    artistInventoryReferenceDisposition testRow `shouldBe` "obsolete_review"
+    artistInventoryReferenceDisposition legitimateRow `shouldBe` "discovered"
+
   it "claims external execution atomically and rejects a recent second runner" $ do
     pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
     runId <- runSqlPool (do

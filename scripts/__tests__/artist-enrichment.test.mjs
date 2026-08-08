@@ -23,6 +23,7 @@ import {
   runPipeline,
   selectRunBatch,
   transcodeWithinBudget,
+  uploadDriveFile,
   uploadTdfDriveFile,
 } from '../artist-enrichment.mjs';
 
@@ -145,6 +146,36 @@ test('propaga fallos del proxy de Google Drive sin incluir el token en el error'
       (error) => error instanceof Error
         && error.message.includes('502')
         && !error.message.includes('secret-admin-token'),
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('no publica una URL de Drive cuando la política rechaza compartir el archivo', async () => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (rawUrl) => {
+    const url = new URL(rawUrl);
+    if (url.pathname.endsWith('/permissions')) {
+      return new Response('{"error":"sharing disabled"}', { status: 403 });
+    }
+    return new Response('{"files":[{"id":"private-drive-file"}]}', {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    await assert.rejects(
+      uploadDriveFile(
+        'drive-token-never-logged',
+        'artist-folder',
+        'artist.webp',
+        'image/webp',
+        Buffer.from('image'),
+      ),
+      (error) => error instanceof Error
+        && error.message.includes('403')
+        && !error.message.includes('drive-token-never-logged'),
     );
   } finally {
     globalThis.fetch = previousFetch;

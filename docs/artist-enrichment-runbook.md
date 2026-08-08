@@ -69,6 +69,9 @@ not have complete Drive credentials, image ingestion uses the authenticated TDF
 `/drive/upload` proxy so the existing Fly Drive integration remains the sole
 secret holder. It fails closed if neither direct Drive authentication nor that
 backend proxy is available.
+Direct uploads also require Google Drive to confirm the public-reader permission;
+if Workspace policy rejects sharing, the run fails before storing or publishing
+the generated Drive URL.
 
 ## Operator commands
 

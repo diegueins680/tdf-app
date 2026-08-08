@@ -48,7 +48,7 @@ import           Data.Time                      (UTCTime, addUTCTime, defaultTim
 import           Database.Persist
 import           Database.Persist.Sql           (SqlBackend, SqlPersistT,
                                                   Single(..), fromSqlKey,
-                                                  rawSql, toSqlKey,
+                                                  rawExecute, rawSql, toSqlKey,
                                                   updateWhereCount)
 import           Text.Read                      (readMaybe)
 
@@ -377,16 +377,18 @@ persistDiscoveryReference
   -> DiscoveryReference
   -> SqlPersistT IO (Entity ArtistInventoryReference)
 persistDiscoveryReference now DiscoveryReference{..} = do
-  let normalized = normalizeDiscoveredName drSourceType drOriginalName
+  let originalName = T.strip drOriginalName
+      originalMarker = T.toLower originalName
+      normalized = normalizeDiscoveredName drSourceType originalName
       idem = digestText (T.intercalate "|" [drSourceType, drSourceRecordId, normalized])
       disposition
-        | "delete me" `T.isInfixOf` normalized || "[test" `T.isPrefixOf` normalized = "obsolete_review"
+        | "delete me" `T.isInfixOf` normalized || "[test" `T.isPrefixOf` originalMarker = "obsolete_review"
         | otherwise = "discovered"
       record = ArtistInventoryReference
         { artistInventoryReferenceIdempotencyKey = idem
         , artistInventoryReferenceSourceType = drSourceType
         , artistInventoryReferenceSourceRecordId = drSourceRecordId
-        , artistInventoryReferenceOriginalName = T.strip drOriginalName
+        , artistInventoryReferenceOriginalName = originalName
         , artistInventoryReferenceNormalizedName = normalized
         , artistInventoryReferenceArtistPartyId = drArtistPartyId
         , artistInventoryReferenceSocialArtistId = drSocialArtistId
@@ -405,11 +407,14 @@ persistDiscoveryReference now DiscoveryReference{..} = do
   -- not erase it with NULL. A non-null source identity may still promote the
   -- stored reference deterministically.
   _ <- upsert record $
-    [ ArtistInventoryReferenceOriginalName =. T.strip drOriginalName
+    [ ArtistInventoryReferenceOriginalName =. originalName
     , ArtistInventoryReferenceLastSeenAt =. now
     ]
     <> maybe [] (pure . (ArtistInventoryReferenceArtistPartyId =.) . Just) drArtistPartyId
     <> maybe [] (pure . (ArtistInventoryReferenceSocialArtistId =.) . Just) drSocialArtistId
+    <> if disposition == "obsolete_review"
+      then [ArtistInventoryReferenceDisposition =. disposition]
+      else []
   found <- getBy (UniqueArtistInventoryReference idem)
   maybe (liftIO (fail "artist inventory upsert did not return a row")) pure found
 
@@ -1047,6 +1052,14 @@ applySuggestion
 applySuggestion actor now mDecider (Entity suggestionId suggestion) = do
   partyId <- maybe (liftIO (fail "approved suggestion requires artistId")) pure
     (artistEnrichmentSuggestionArtistPartyId suggestion)
+  -- A no-op update takes a row lock in PostgreSQL (and a write lock in the
+  -- SQLite test backend). Competing approvals for this artist must therefore
+  -- re-read the field after the first transaction commits instead of both
+  -- accepting the same stale researched value.
+  _ <- ensureProfile partyId now
+  rawExecute
+    "UPDATE artist_profile SET updated_at = updated_at WHERE artist_party_id = ?"
+    [toPersistValue partyId]
   oldValue <- readArtistField partyId (artistEnrichmentSuggestionFieldName suggestion)
   let expectedValue = cleanOptional (artistEnrichmentSuggestionCurrentValue suggestion)
       newValue = artistEnrichmentSuggestionProposedValue suggestion
