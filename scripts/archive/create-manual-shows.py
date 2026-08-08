@@ -13,12 +13,15 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
-BASE = "https://tdf-hq.fly.dev"
-LOGIN = {"username": "admin", "password": "password123"}
+BASE = os.environ.get("TDF_API_BASE", "http://127.0.0.1:8080").rstrip("/")
 
 
 def login() -> str:
-    r = requests.post(f"{BASE}/login", json=LOGIN, timeout=15)
+    username = os.environ.get("TDF_USERNAME", "").strip()
+    password = os.environ.get("TDF_PASSWORD", "")
+    if not username or not password:
+        raise RuntimeError("Set TDF_USERNAME and TDF_PASSWORD in the runtime secret store.")
+    r = requests.post(f"{BASE}/login", json={"username": username, "password": password}, timeout=15)
     r.raise_for_status()
     return r.json()["token"]
 

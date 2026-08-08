@@ -41,7 +41,7 @@ import           Data.Char
   )
 import           Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe, maybeToList)
 import qualified Data.Set as Set
-import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
+import           Data.Aeson (ToJSON(..), Value(..), Object, defaultOptions, object, (.=), decodeStrict', eitherDecode, FromJSON(..), Result(..), encode, fromJSON, genericParseJSON, genericToJSON)
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKeyMap
 import           Data.Aeson.Types (Parser, camelTo2, fieldLabelModifier, parseEither, parseMaybe, withObject, (.:), (.:?), (.!=))
@@ -79,7 +79,7 @@ import           Text.Read (readMaybe)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
 
 import           Database.Persist
-import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (SqlBackend, SqlPersistT, Single(..), fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey, updateWhereCount)
 import           Database.Persist.Postgresql ()
 import           Database.PostgreSQL.Simple (SqlError (..))
 
@@ -115,6 +115,14 @@ import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
+import           TDF.FeatureRegistry
+  ( RegistryFeature(..)
+  , findRegistryFeature
+  , registryFeatureAllows
+  , registryFeatureRequestable
+  , registryReviewerCanDecide
+  , supportedFeatureActions
+  )
 import           TDF.DTO
 import qualified TDF.DTO as DTO
 import           TDF.Auth
@@ -124,6 +132,7 @@ import           TDF.Auth
   , hasAiToolingAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
+  , moduleName
   , modulesForRoles
   , validateModuleAccess
   )
@@ -3722,6 +3731,474 @@ protectedServer user =
   :<|> DDEXServer.ddexServer user
   :<|> CatalogServer.catalogServer user
   :<|> serviceStorefrontAdminServer
+  :<|> accessRequestsServer user
+  :<|> navigationPreferencesServer user
+
+navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
+navigationPreferencesServer user =
+       listPreferences
+  :<|> updatePreference
+  :<|> recordVisit
+  where
+    currentModules = map moduleName (Set.toList (auModules user))
+
+    featureForPreference rawFeatureId = do
+      feature <- maybe
+        (throwError err404 { errBody = "Feature is unavailable" })
+        pure
+        (findRegistryFeature (T.strip rawFeatureId))
+      unless (navigationFeatureAllowed user currentModules feature) $
+        throwError err404 { errBody = "Feature is unavailable" }
+      pure feature
+
+    listPreferences = do
+      rows <- runDB $ selectList
+        [ME.FeatureNavigationPreferencePartyId ==. auPartyId user]
+        [Asc ME.FeatureNavigationPreferencePinOrder, Desc ME.FeatureNavigationPreferenceLastVisitedAt]
+      pure $ mapMaybe (visiblePreference currentModules) rows
+
+    updatePreference rawFeatureId NavigationPreferenceUpdate{..} = do
+      feature <- featureForPreference rawFeatureId
+      when (npuFavorite && not (registryFeatureFavoriteEligible feature)) $
+        throwError err400 { errBody = "Feature cannot be favorited" }
+      when (npuPinned && not (registryFeaturePinEligible feature)) $
+        throwError err400 { errBody = "Feature cannot be pinned" }
+      when (not npuPinned && isJust npuPinOrder) $
+        throwError err400 { errBody = "pinOrder requires pinned=true" }
+      when (maybe False (\value -> value < 0 || value > 1000) npuPinOrder) $
+        throwError err400 { errBody = "pinOrder must be between 0 and 1000" }
+      now <- liftIO getCurrentTime
+      let featureIdValue = registryFeatureId feature
+          pinOrderValue = if npuPinned then Just (fromMaybe 0 npuPinOrder) else Nothing
+          initial = ME.FeatureNavigationPreference
+            { ME.featureNavigationPreferencePartyId = auPartyId user
+            , ME.featureNavigationPreferenceFeatureId = featureIdValue
+            , ME.featureNavigationPreferenceFavorite = npuFavorite
+            , ME.featureNavigationPreferencePinned = npuPinned
+            , ME.featureNavigationPreferencePinOrder = pinOrderValue
+            , ME.featureNavigationPreferenceLastVisitedAt = Nothing
+            , ME.featureNavigationPreferenceUseCount = 0
+            , ME.featureNavigationPreferenceUpdatedAt = now
+            }
+      entity <- runDB $ upsertBy
+        (ME.UniqueFeatureNavigationPreference (auPartyId user) featureIdValue)
+        initial
+        [ ME.FeatureNavigationPreferenceFavorite =. npuFavorite
+        , ME.FeatureNavigationPreferencePinned =. npuPinned
+        , ME.FeatureNavigationPreferencePinOrder =. pinOrderValue
+        , ME.FeatureNavigationPreferenceUpdatedAt =. now
+        ]
+      pure (navigationPreferenceToDTO entity)
+
+    recordVisit rawFeatureId = do
+      feature <- featureForPreference rawFeatureId
+      when (registryFeatureRecentBehavior feature == "none") $
+        throwError err400 { errBody = "Feature does not support recent visits" }
+      now <- liftIO getCurrentTime
+      let featureIdValue = registryFeatureId feature
+          unique = ME.UniqueFeatureNavigationPreference (auPartyId user) featureIdValue
+      entity <- runDB $ do
+        existing <- getBy unique
+        case existing of
+          Nothing -> do
+            preferenceId <- insert ME.FeatureNavigationPreference
+              { ME.featureNavigationPreferencePartyId = auPartyId user
+              , ME.featureNavigationPreferenceFeatureId = featureIdValue
+              , ME.featureNavigationPreferenceFavorite = False
+              , ME.featureNavigationPreferencePinned = False
+              , ME.featureNavigationPreferencePinOrder = Nothing
+              , ME.featureNavigationPreferenceLastVisitedAt = Just now
+              , ME.featureNavigationPreferenceUseCount = 1
+              , ME.featureNavigationPreferenceUpdatedAt = now
+              }
+            getJustEntity preferenceId
+          Just (Entity preferenceId _) -> do
+            update preferenceId
+              [ ME.FeatureNavigationPreferenceLastVisitedAt =. Just now
+              , ME.FeatureNavigationPreferenceUseCount +=. 1
+              , ME.FeatureNavigationPreferenceUpdatedAt =. now
+              ]
+            getJustEntity preferenceId
+      pure (navigationPreferenceToDTO entity)
+
+    visiblePreference modules entity@(Entity _ preferenceValue) = do
+      feature <- findRegistryFeature (ME.featureNavigationPreferenceFeatureId preferenceValue)
+      if navigationFeatureAllowed user modules feature
+        then Just (navigationPreferenceToDTO entity)
+        else Nothing
+
+navigationFeatureAllowed :: AuthedUser -> [Text] -> RegistryFeature -> Bool
+navigationFeatureAllowed user modules feature =
+  not (registryFeatureTechnical feature)
+    && registryFeatureMaturity feature `notElem` ["broken", "incomplete"]
+    && registryFeatureAllows (auRoles user) modules feature "view"
+
+navigationPreferenceToDTO :: Entity ME.FeatureNavigationPreference -> NavigationPreferenceDTO
+navigationPreferenceToDTO (Entity _ preferenceValue) = NavigationPreferenceDTO
+  { npFeatureId = ME.featureNavigationPreferenceFeatureId preferenceValue
+  , npFavorite = ME.featureNavigationPreferenceFavorite preferenceValue
+  , npPinned = ME.featureNavigationPreferencePinned preferenceValue
+  , npPinOrder = ME.featureNavigationPreferencePinOrder preferenceValue
+  , npLastVisitedAt = ME.featureNavigationPreferenceLastVisitedAt preferenceValue
+  , npUseCount = ME.featureNavigationPreferenceUseCount preferenceValue
+  , npUpdatedAt = ME.featureNavigationPreferenceUpdatedAt preferenceValue
+  }
+
+accessRequestsServer :: AuthedUser -> ServerT AccessRequestsAPI AppM
+accessRequestsServer user =
+       listMine
+  :<|> createRequest
+  :<|> listReviewQueue
+  :<|> decideRequest
+  :<|> cancelRequest
+  where
+    listMine = do
+      now <- liftIO getCurrentTime
+      runDB (expireFeatureAccessRequests now)
+      rows <- runDB $ selectList
+        [ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user]
+        [Desc ME.FeatureAccessRequestRequestedAt]
+      mapM loadFeatureAccessRequestDTO rows
+
+    createRequest (FeatureAccessRequestCreate requestedFeatureId requestedAction requestedJustification) = do
+      feature <- maybe
+        (throwError err400 { errBody = "Unknown or unavailable feature" })
+        pure
+        (findRegistryFeature (T.strip requestedFeatureId))
+      let actionName = T.toLower (T.strip requestedAction)
+      unless (actionName `Set.member` supportedFeatureActions) $
+        throwError err400 { errBody = "Unsupported feature action" }
+      unless (registryFeatureRequestable feature actionName) $
+        throwError err400 { errBody = "This feature action cannot be requested" }
+      let currentModules = map moduleName (Set.toList (auModules user))
+      when (registryFeatureAllows (auRoles user) currentModules feature actionName) $
+        throwError err409 { errBody = "You already have access to this feature action" }
+      justificationText <- either throwError pure (validateAccessRequestNote False requestedJustification)
+      now <- liftIO getCurrentTime
+      let featureIdValue = registryFeatureId feature
+          reviewerGroupValue = reviewerGroupFor feature
+          requestRecord = ME.FeatureAccessRequest
+            { ME.featureAccessRequestRequesterPartyId = auPartyId user
+            , ME.featureAccessRequestFeatureId = featureIdValue
+            , ME.featureAccessRequestAction = actionName
+            , ME.featureAccessRequestRoleContext = encodeAccessContext (map roleToText (auRoles user))
+            , ME.featureAccessRequestModuleContext = encodeAccessContext currentModules
+            , ME.featureAccessRequestJustification = justificationText
+            , ME.featureAccessRequestStatus = "pending"
+            , ME.featureAccessRequestReviewerGroup = reviewerGroupValue
+            , ME.featureAccessRequestReviewerPartyId = Nothing
+            , ME.featureAccessRequestReviewerNotes = Nothing
+            , ME.featureAccessRequestRequestedAt = now
+            , ME.featureAccessRequestUpdatedAt = now
+            , ME.featureAccessRequestDecidedAt = Nothing
+            , ME.featureAccessRequestCancelledAt = Nothing
+            , ME.featureAccessRequestExpiresAt = Just (addUTCTime (30 * 24 * 60 * 60) now)
+            }
+      existing <- runDB $ selectFirst
+        [ ME.FeatureAccessRequestRequesterPartyId ==. auPartyId user
+        , ME.FeatureAccessRequestFeatureId ==. featureIdValue
+        , ME.FeatureAccessRequestAction ==. actionName
+        , ME.FeatureAccessRequestStatus ==. "pending"
+        ] []
+      when (isJust existing) $
+        throwError err409 { errBody = "An active request already exists for this feature action" }
+      Env{envPool} <- ask
+      createdResult <- liftIO $ try $ flip runSqlPool envPool $ do
+          requestId <- insert requestRecord
+          insert_ (featureAccessRequestHistoryRecord requestId (Just (auPartyId user)) "submitted" Nothing "pending" justificationText now)
+          insert_ Notification
+            { notificationRecipientPartyId = auPartyId user
+            , notificationNotifType = "access_request_submitted"
+            , notificationTitle = "Solicitud de acceso recibida"
+            , notificationBody = "Tu solicitud fue enviada al grupo revisor correspondiente."
+            , notificationTargetType = Just "feature_access_request"
+            , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+            , notificationIsRead = False
+            , notificationCreatedAt = now
+            }
+          writeFeatureAccessRequestAudit (Just (auPartyId user)) requestId "access_request_submitted" featureIdValue actionName "pending" now
+          notifyEligibleFeatureReviewers user feature actionName requestId now
+          pure (Entity requestId requestRecord)
+      created <- case createdResult of
+        Right value -> pure value
+        Left exception
+          | isFeatureAccessRequestDuplicateConflict exception ->
+              throwError err409 { errBody = "An active request already exists for this feature action" }
+          | otherwise -> liftIO (throwIO exception)
+      loadFeatureAccessRequestDTO created
+
+    listReviewQueue requestedStatus = do
+      unless (isFeatureAccessReviewer user) $
+        throwError err403 { errBody = "Access request reviewer role required" }
+      statusFilter <- either throwError pure (validateAccessRequestStatus requestedStatus)
+      now <- liftIO getCurrentTime
+      runDB (expireFeatureAccessRequests now)
+      rows <- runDB $ selectList
+        [ME.FeatureAccessRequestStatus ==. statusFilter]
+        [Asc ME.FeatureAccessRequestRequestedAt]
+      let visibleRows = filter (reviewerCanSeeRequest user . entityVal) rows
+      mapM loadFeatureAccessRequestDTO visibleRows
+
+    decideRequest requestIdValue (FeatureAccessRequestDecision requestedDecision requestedNotes) = do
+      unless (isFeatureAccessReviewer user) $
+        throwError err403 { errBody = "Access request reviewer role required" }
+      decisionValue <- either throwError pure (validateAccessRequestDecision requestedDecision)
+      notesValue <- either throwError pure (validateAccessRequestNote (decisionValue == "rejected") requestedNotes)
+      let requestKey = toSqlKey requestIdValue
+      requestEntity <- runDB (getEntity requestKey) >>= maybe (throwError err404) pure
+      let requestValue = entityVal requestEntity
+      when (ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user) $
+        throwError err403 { errBody = "Reviewers cannot decide their own access requests" }
+      feature <- maybe (throwError err404) pure (findRegistryFeature (ME.featureAccessRequestFeatureId requestValue))
+      unless (registryReviewerCanDecide user feature (ME.featureAccessRequestAction requestValue)) $
+        throwError err403 { errBody = "Reviewer is not authorized to grant the requested feature action" }
+      now <- liftIO getCurrentTime
+      changed <- runDB $ updateWhereCount
+        [ ME.FeatureAccessRequestId ==. requestKey
+        , ME.FeatureAccessRequestStatus ==. "pending"
+        ]
+        [ ME.FeatureAccessRequestStatus =. decisionValue
+        , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
+        , ME.FeatureAccessRequestReviewerNotes =. notesValue
+        , ME.FeatureAccessRequestUpdatedAt =. now
+        , ME.FeatureAccessRequestDecidedAt =. Just now
+        ]
+      when (changed /= 1) $
+        throwError err409 { errBody = "Access request is no longer pending" }
+      updated <- runDB $ do
+        insert_ (featureAccessRequestHistoryRecord requestKey (Just (auPartyId user)) decisionValue (Just "pending") decisionValue notesValue now)
+        insert_ Notification
+          { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
+          , notificationNotifType = "access_request_decided"
+          , notificationTitle = if decisionValue == "approved" then "Solicitud de acceso aprobada" else "Solicitud de acceso rechazada"
+          , notificationBody = if decisionValue == "approved"
+              then "La solicitud fue aprobada para provisión. El acceso efectivo no cambia hasta que se aplique un permiso compatible."
+              else "La solicitud fue revisada. Consulta las notas del revisor para más información."
+          , notificationTargetType = Just "feature_access_request"
+          , notificationTargetId = Just (fromIntegral requestIdValue)
+          , notificationIsRead = False
+          , notificationCreatedAt = now
+          }
+        writeFeatureAccessRequestAudit (Just (auPartyId user)) requestKey ("access_request_" <> decisionValue)
+          (ME.featureAccessRequestFeatureId requestValue) (ME.featureAccessRequestAction requestValue) decisionValue now
+        getJustEntity requestKey
+      loadFeatureAccessRequestDTO updated
+
+    cancelRequest requestIdValue (FeatureAccessRequestCancel requestedNote) = do
+      noteValue <- either throwError pure (validateAccessRequestNote False requestedNote)
+      let requestKey = toSqlKey requestIdValue
+      requestEntity <- runDB (getEntity requestKey) >>= maybe (throwError err404) pure
+      let requestValue = entityVal requestEntity
+      unless (ME.featureAccessRequestRequesterPartyId requestValue == auPartyId user) $
+        throwError err404
+      now <- liftIO getCurrentTime
+      changed <- runDB $ updateWhereCount
+        [ ME.FeatureAccessRequestId ==. requestKey
+        , ME.FeatureAccessRequestStatus ==. "pending"
+        ]
+        [ ME.FeatureAccessRequestStatus =. "cancelled"
+        , ME.FeatureAccessRequestUpdatedAt =. now
+        , ME.FeatureAccessRequestCancelledAt =. Just now
+        ]
+      when (changed /= 1) $
+        throwError err409 { errBody = "Only pending access requests can be cancelled" }
+      updated <- runDB $ do
+        insert_ (featureAccessRequestHistoryRecord requestKey (Just (auPartyId user)) "cancelled" (Just "pending") "cancelled" noteValue now)
+        writeFeatureAccessRequestAudit (Just (auPartyId user)) requestKey "access_request_cancelled"
+          (ME.featureAccessRequestFeatureId requestValue) (ME.featureAccessRequestAction requestValue) "cancelled" now
+        getJustEntity requestKey
+      loadFeatureAccessRequestDTO updated
+
+loadFeatureAccessRequestDTO :: Entity ME.FeatureAccessRequest -> AppM FeatureAccessRequestDTO
+loadFeatureAccessRequestDTO (Entity requestId requestValue) = do
+  historyRows <- runDB $ selectList
+    [ME.FeatureAccessRequestHistoryRequestId ==. requestId]
+    [Asc ME.FeatureAccessRequestHistoryCreatedAt]
+  pure FeatureAccessRequestDTO
+    { farId = fromSqlKey requestId
+    , farRequesterPartyId = fromSqlKey (ME.featureAccessRequestRequesterPartyId requestValue)
+    , farFeatureId = ME.featureAccessRequestFeatureId requestValue
+    , farAction = ME.featureAccessRequestAction requestValue
+    , farRoleContext = decodeAccessContext (ME.featureAccessRequestRoleContext requestValue)
+    , farModuleContext = decodeAccessContext (ME.featureAccessRequestModuleContext requestValue)
+    , farStatus = ME.featureAccessRequestStatus requestValue
+    , farReviewerGroup = ME.featureAccessRequestReviewerGroup requestValue
+    , farJustification = ME.featureAccessRequestJustification requestValue
+    , farReviewerNotes = ME.featureAccessRequestReviewerNotes requestValue
+    , farRequestedAt = ME.featureAccessRequestRequestedAt requestValue
+    , farUpdatedAt = ME.featureAccessRequestUpdatedAt requestValue
+    , farDecidedAt = ME.featureAccessRequestDecidedAt requestValue
+    , farCancelledAt = ME.featureAccessRequestCancelledAt requestValue
+    , farExpiresAt = ME.featureAccessRequestExpiresAt requestValue
+    , farHistory = map featureAccessRequestHistoryToDTO historyRows
+    }
+
+featureAccessRequestHistoryToDTO
+  :: Entity ME.FeatureAccessRequestHistory
+  -> FeatureAccessRequestHistoryDTO
+featureAccessRequestHistoryToDTO (Entity historyId historyValue) = FeatureAccessRequestHistoryDTO
+  { farhId = fromSqlKey historyId
+  , farhTransition = ME.featureAccessRequestHistoryTransition historyValue
+  , farhFromStatus = ME.featureAccessRequestHistoryFromStatus historyValue
+  , farhToStatus = ME.featureAccessRequestHistoryToStatus historyValue
+  , farhNote = ME.featureAccessRequestHistoryNote historyValue
+  , farhCreatedAt = ME.featureAccessRequestHistoryCreatedAt historyValue
+  }
+
+featureAccessRequestHistoryRecord
+  :: ME.FeatureAccessRequestId
+  -> Maybe PartyId
+  -> Text
+  -> Maybe Text
+  -> Text
+  -> Maybe Text
+  -> UTCTime
+  -> ME.FeatureAccessRequestHistory
+featureAccessRequestHistoryRecord requestId actorId transitionName fromStatusValue toStatusValue noteValue now =
+  ME.FeatureAccessRequestHistory
+    { ME.featureAccessRequestHistoryRequestId = requestId
+    , ME.featureAccessRequestHistoryActorPartyId = actorId
+    , ME.featureAccessRequestHistoryTransition = transitionName
+    , ME.featureAccessRequestHistoryFromStatus = fromStatusValue
+    , ME.featureAccessRequestHistoryToStatus = toStatusValue
+    , ME.featureAccessRequestHistoryNote = noteValue
+    , ME.featureAccessRequestHistoryCreatedAt = now
+    }
+
+validateAccessRequestNote :: Bool -> Maybe Text -> Either ServerError (Maybe Text)
+validateAccessRequestNote required rawValue =
+  let cleaned = cleanOptional rawValue
+  in case cleaned of
+      Nothing
+        | required -> Left err400 { errBody = "Reviewer notes are required for rejection" }
+        | otherwise -> Right Nothing
+      Just value
+        | T.length value > 2000 -> Left err400 { errBody = "Access request notes must be 2000 characters or fewer" }
+        | T.any isUnsafeAccessRequestTextChar value -> Left err400 { errBody = "Access request notes contain unsupported control characters" }
+        | otherwise -> Right (Just value)
+
+isUnsafeAccessRequestTextChar :: Char -> Bool
+isUnsafeAccessRequestTextChar char =
+  (isControl char && char `notElem` ['\n', '\r', '\t'])
+    || generalCategory char `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateAccessRequestDecision :: Text -> Either ServerError Text
+validateAccessRequestDecision rawValue =
+  case T.toLower (T.strip rawValue) of
+    "approved" -> Right "approved"
+    "rejected" -> Right "rejected"
+    _ -> Left err400 { errBody = "Decision must be approved or rejected" }
+
+validateAccessRequestStatus :: Maybe Text -> Either ServerError Text
+validateAccessRequestStatus rawValue =
+  let statusValue = T.toLower (T.strip (fromMaybe "pending" rawValue))
+  in if statusValue `elem` ["pending", "approved", "rejected", "cancelled", "expired"]
+      then Right statusValue
+      else Left err400 { errBody = "Unsupported access request status" }
+
+reviewerGroupFor :: RegistryFeature -> Text
+reviewerGroupFor feature =
+  maybe "platform-reviewers" (<> "-reviewers") (registryFeatureNavigationGroup feature)
+
+isFeatureAccessReviewer :: AuthedUser -> Bool
+isFeatureAccessReviewer AuthedUser{..} =
+  any (`elem` auRoles) [Admin, Manager, StudioManager]
+    && auModules == modulesForRoles auRoles
+
+isFeatureAccessRequestDuplicateConflict :: SomeException -> Bool
+isFeatureAccessRequestDuplicateConflict exception =
+  case fromException exception of
+    Just sqlErr ->
+      sqlState sqlErr == "23505"
+        && "feature_access_requests_one_pending_idx"
+          `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
+    Nothing -> False
+
+reviewerCanSeeRequest :: AuthedUser -> ME.FeatureAccessRequest -> Bool
+reviewerCanSeeRequest reviewer requestValue =
+  maybe False
+    (\feature -> registryReviewerCanDecide reviewer feature (ME.featureAccessRequestAction requestValue))
+    (findRegistryFeature (ME.featureAccessRequestFeatureId requestValue))
+
+encodeAccessContext :: [Text] -> Text
+encodeAccessContext = TE.decodeUtf8 . BL.toStrict . encode
+
+decodeAccessContext :: Text -> [Text]
+decodeAccessContext = fromMaybe [] . decodeStrict' . TE.encodeUtf8
+
+expireFeatureAccessRequests :: UTCTime -> SqlPersistT IO ()
+expireFeatureAccessRequests now = do
+  expired <- selectList
+    [ ME.FeatureAccessRequestStatus ==. "pending"
+    , ME.FeatureAccessRequestExpiresAt <=. Just now
+    ] []
+  forM_ expired $ \(Entity requestId requestValue) -> do
+    changed <- updateWhereCount
+      [ ME.FeatureAccessRequestId ==. requestId
+      , ME.FeatureAccessRequestStatus ==. "pending"
+      ]
+      [ ME.FeatureAccessRequestStatus =. "expired"
+      , ME.FeatureAccessRequestUpdatedAt =. now
+      ]
+    when (changed == 1) $ do
+      insert_ (featureAccessRequestHistoryRecord requestId Nothing "expired" (Just "pending") "expired" Nothing now)
+      writeFeatureAccessRequestAudit Nothing requestId "access_request_expired"
+        (ME.featureAccessRequestFeatureId requestValue) (ME.featureAccessRequestAction requestValue) "expired" now
+
+writeFeatureAccessRequestAudit
+  :: Maybe PartyId
+  -> ME.FeatureAccessRequestId
+  -> Text
+  -> Text
+  -> Text
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+writeFeatureAccessRequestAudit actorId requestId actionName featureIdValue featureAction statusValue now =
+  insert_ AuditLog
+    { auditLogActorId = actorId
+    , auditLogEntity = "feature_access_request"
+    , auditLogEntityId = T.pack (show (fromSqlKey requestId))
+    , auditLogAction = actionName
+    , auditLogDiff = Just (TE.decodeUtf8 (BL.toStrict (encode (object
+        [ "featureId" .= featureIdValue
+        , "action" .= featureAction
+        , "status" .= statusValue
+        ]))))
+    , auditLogCreatedAt = now
+    }
+
+notifyEligibleFeatureReviewers
+  :: AuthedUser
+  -> RegistryFeature
+  -> Text
+  -> ME.FeatureAccessRequestId
+  -> UTCTime
+  -> SqlPersistT IO ()
+notifyEligibleFeatureReviewers requester feature actionName requestId now = do
+  reviewerRoles <- selectList
+    [ PartyRoleActive ==. True
+    , PartyRoleRole <-. [Admin, Manager, StudioManager]
+    ] []
+  let reviewerPartyIds = Set.toList (Set.fromList (map (partyRolePartyId . entityVal) reviewerRoles))
+  forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
+    roleRows <- selectList
+      [ PartyRolePartyId ==. reviewerPartyId
+      , PartyRoleActive ==. True
+      ] []
+    let roles = nub (map (partyRoleRole . entityVal) roleRows)
+        reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    when (registryReviewerCanDecide reviewer feature actionName) $
+      insert_ Notification
+        { notificationRecipientPartyId = reviewerPartyId
+        , notificationNotifType = "access_request_review"
+        , notificationTitle = "Nueva solicitud de acceso"
+        , notificationBody = "Hay una solicitud compatible con tu ámbito de revisión."
+        , notificationTargetType = Just "feature_access_request"
+        , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
+        , notificationIsRead = False
+        , notificationCreatedAt = now
+        }
 
 validateCalendarRedirectUri :: Text -> Either ServerError Text
 validateCalendarRedirectUri rawRedirect =

@@ -282,7 +282,11 @@ DB_PASS=your_password
 DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
-SEED_DB=true
+SEED_DB=false
+# Optional, local-only demo credential seeding. Supply through a secret store;
+# never commit values or configure them in hosted/production environments.
+TDF_SEED_DEMO_PASSWORD=
+TDF_SEED_TOKEN_PREFIX=
 HQ_APP_URL=http://localhost:5173
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587

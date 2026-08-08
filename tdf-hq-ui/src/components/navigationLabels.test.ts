@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getStoredSessionToken: () => null,
   useSession: () => ({ session: null }),
 }));
 

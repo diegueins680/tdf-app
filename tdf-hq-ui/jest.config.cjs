@@ -25,6 +25,6 @@ module.exports = {
   setupFilesAfterEnv: [],
   reporters: [
     'default',
-    [require.resolve('@testomatio/reporter/lib/adapter/jest'), { apiKey: process.env.TESTOMATIO }],
+    [require.resolve('@testomatio/reporter/jest'), { apiKey: process.env.TESTOMATIO }],
   ],
 };

@@ -12,9 +12,9 @@ import {
 } from './accessControl';
 
 const BACKEND_ROLE_MODULES: Record<string, readonly string[]> = {
-  Admin: ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops'],
-  Manager: ['crm', 'scheduling', 'packages', 'invoicing', 'internships', 'ops'],
-  'Studio Manager': ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops'],
+  Admin: ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops', 'catalog'],
+  Manager: ['crm', 'scheduling', 'packages', 'invoicing', 'internships', 'ops', 'catalog'],
+  'Studio Manager': ['crm', 'scheduling', 'packages', 'invoicing', 'admin', 'internships', 'ops', 'catalog'],
   Reception: ['crm', 'scheduling'],
   Accounting: ['invoicing'],
   Engineer: ['scheduling'],
@@ -31,14 +31,14 @@ const BACKEND_ROLE_MODULES: Record<string, readonly string[]> = {
   DJ: [],
   Publicist: [],
   TourManager: [],
-  LabelRep: [],
+  LabelRep: ['catalog'],
   StageManager: [],
   RoadCrew: [],
   Photographer: [],
-  'A&R': ['crm', 'scheduling'],
+  'A&R': ['crm', 'scheduling', 'catalog'],
   Student: ['scheduling'],
   Vendor: ['packages'],
-  ReadOnly: ['crm'],
+  ReadOnly: ['crm', 'catalog'],
   Customer: ['packages'],
   Fan: [],
   Maintenance: ['packages', 'scheduling', 'ops'],
@@ -74,7 +74,7 @@ const hasBackendAiToolingAccess = (roles: readonly string[]) =>
   roles.some((role) => ['Admin', 'Manager', 'Studio Manager', 'Webmaster', 'Maintenance'].includes(role));
 
 const hasBackendStrictAdminAccess = (roles: readonly string[]) =>
-  roles.some((role) => ['Admin'].includes(role));
+  roles.includes('Admin') && roles.every((role) => ['Admin', 'Fan', 'Customer'].includes(role));
 
 describe('buildAccessibleModuleSet', () => {
   it('only trusts modules that the backend explicitly published', () => {
@@ -173,9 +173,9 @@ describe('canAccessPath', () => {
 
   it('matches route-specific backend access rules for operations and label tracks', () => {
     expect(canAccessPath('/operacion/inventario', ['Manager'], ['CRM', 'Scheduling', 'Packages', 'Ops'])).toBe(true);
-    expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages'])).toBe(true);
-    expect(canAccessPath('/label/assets', [], ['ops'])).toBe(true);
-    expect(canAccessPath('/herramientas/chatkit', [], ['ops'])).toBe(true);
+    expect(canAccessPath('/label/assets', ['Maintenance'], ['Packages', 'Scheduling', 'Ops'])).toBe(true);
+    expect(canAccessPath('/label/assets', [], ['ops'])).toBe(false);
+    expect(canAccessPath('/herramientas/chatkit', [], ['ops'])).toBe(false);
     expect(canAccessPath('/label/tracks', ['Artist'], ['Scheduling', 'Packages'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Admin'], ['admin'])).toBe(true);
     expect(canAccessPath('/label/tracks', ['Studio Manager'], ['admin'])).toBe(false);
@@ -258,8 +258,7 @@ describe('canAccessPath', () => {
       },
       {
         path: '/configuracion/integraciones/calendario',
-        expected: (roles: readonly string[]) =>
-          roles.some((role) => ['Admin'].includes(role)),
+        expected: (roles: readonly string[]) => hasBackendStrictAdminAccess(roles),
       },
       {
         path: '/configuracion/roles-permisos',

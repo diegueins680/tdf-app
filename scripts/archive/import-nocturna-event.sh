@@ -3,10 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-API_BASE="${API_BASE:-https://tdf-hq.fly.dev}"
+API_BASE="${API_BASE:-http://127.0.0.1:8080}"
 API_BASE="${API_BASE%/}"
-TDF_USERNAME="${TDF_USERNAME:-admin}"
-TDF_PASSWORD="${TDF_PASSWORD:-password123}"
+TDF_USERNAME="${TDF_USERNAME:?Set TDF_USERNAME in the runtime secret store}"
+TDF_PASSWORD="${TDF_PASSWORD:?Set TDF_PASSWORD in the runtime secret store}"
 EVENT_IMAGE_URL="${EVENT_IMAGE_URL:-}"
 EVENT_IMAGE_FILE="${EVENT_IMAGE_FILE:-}"
 DRY_RUN="${DRY_RUN:-false}"

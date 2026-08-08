@@ -1592,6 +1592,176 @@ paths:
                 $ref: '#/components/schemas/RadioNowPlayingResult'
         '400':
           description: Invalid stream url
+  /access-requests:
+    get:
+      tags: [Access requests]
+      summary: List the current user's feature access requests
+      operationId: listFeatureAccessRequests
+      responses:
+        '200':
+          description: Access requests created by the authenticated user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureAccessRequest'
+        '401':
+          description: Authentication required
+    post:
+      tags: [Access requests]
+      summary: Request one feature action
+      description: Creates a scoped, auditable request. Approval does not grant a broader role or module.
+      operationId: createFeatureAccessRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureAccessRequestCreate'
+      responses:
+        '200':
+          description: Created request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureAccessRequest'
+        '400':
+          description: Invalid, unavailable, or already-authorized feature action
+        '409':
+          description: An equivalent pending request already exists
+  /access-requests/review:
+    get:
+      tags: [Access requests]
+      summary: List requests within the reviewer's exact grant scope
+      operationId: listFeatureAccessRequestsForReview
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FeatureAccessRequestStatus'
+      responses:
+        '200':
+          description: Reviewable requests without protected record contents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeatureAccessRequest'
+        '403':
+          description: Reviewer privileges are absent or incoherent
+  /access-requests/{requestId}/decision:
+    patch:
+      tags: [Access requests]
+      summary: Approve or reject one requested feature action
+      operationId: decideFeatureAccessRequest
+      parameters:
+        - $ref: '#/components/parameters/AccessRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureAccessRequestDecision'
+      responses:
+        '200':
+          description: Updated request and audit history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureAccessRequest'
+        '403':
+          description: The reviewer cannot grant this exact action
+        '404':
+          description: Request not found
+        '409':
+          description: Request is no longer pending
+  /access-requests/{requestId}/cancel:
+    patch:
+      tags: [Access requests]
+      summary: Cancel one of the current user's pending requests
+      operationId: cancelFeatureAccessRequest
+      parameters:
+        - $ref: '#/components/parameters/AccessRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureAccessRequestCancel'
+      responses:
+        '200':
+          description: Cancelled request and audit history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureAccessRequest'
+        '403':
+          description: Only the requester may cancel the request
+        '404':
+          description: Request not found
+        '409':
+          description: Request is no longer pending
+  /navigation/preferences:
+    get:
+      tags: [Navigation]
+      summary: List the current user's authorized navigation preferences
+      operationId: listNavigationPreferences
+      responses:
+        '200':
+          description: Preferences filtered against current effective access
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NavigationPreference'
+  /navigation/preferences/{featureId}:
+    put:
+      tags: [Navigation]
+      summary: Update favorite and pin state for one currently authorized feature
+      operationId: updateNavigationPreference
+      parameters:
+        - $ref: '#/components/parameters/FeatureId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NavigationPreferenceUpdate'
+      responses:
+        '200':
+          description: Updated preference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavigationPreference'
+        '400':
+          description: Favorite or pin is not supported by this feature
+        '403':
+          description: The feature is not currently authorized
+        '404':
+          description: Unknown or concealed feature
+  /navigation/preferences/{featureId}/visit:
+    post:
+      tags: [Navigation]
+      summary: Record an authorized feature visit
+      operationId: recordNavigationVisit
+      parameters:
+        - $ref: '#/components/parameters/FeatureId'
+      responses:
+        '200':
+          description: Updated privacy-conscious preference aggregate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavigationPreference'
+        '403':
+          description: The feature is not currently authorized
+        '404':
+          description: Unknown, concealed, or non-recent feature
 security:
   - bearerAuth: [ ]
 
@@ -1601,6 +1771,23 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  parameters:
+    AccessRequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    FeatureId:
+      name: featureId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 160
   schemas:
     Version:
       type: object
@@ -1641,7 +1828,6 @@ components:
         password:
           type: string
           format: password
-          example: changeme123
     GoogleLoginRequest:
       type: object
       required: [idToken]
@@ -1670,7 +1856,6 @@ components:
         password:
           type: string
           format: password
-          example: changeme123
         roles:
           type: array
           items:
@@ -1707,7 +1892,7 @@ components:
             description: Enabled modules for the user.
     SessionResponse:
       type: object
-      required: [username, displayName, partyId, roles, modules, preferences]
+      required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
       properties:
         username:
           type: string
@@ -1725,6 +1910,11 @@ components:
           items:
             type: string
             description: Enabled modules for the user.
+        featureFlags:
+          type: array
+          description: Enabled public feature-flag identifiers; never contains configuration secrets.
+          items:
+            type: string
         preferences:
           $ref: '#/components/schemas/LocalePreferences'
     LocalePreferences:
@@ -2875,3 +3065,170 @@ components:
           type: string
           nullable: true
           description: Parsed track title when StreamTitle includes a separator.
+    FeatureAccessRequestStatus:
+      type: string
+      enum: [pending, approved, rejected, cancelled, expired]
+    FeatureAccessRequestHistory:
+      type: object
+      required: [id, transition, toStatus, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        transition:
+          type: string
+        fromStatus:
+          allOf:
+            - $ref: '#/components/schemas/FeatureAccessRequestStatus'
+          nullable: true
+        toStatus:
+          $ref: '#/components/schemas/FeatureAccessRequestStatus'
+        note:
+          type: string
+          nullable: true
+          maxLength: 2000
+        createdAt:
+          type: string
+          format: date-time
+    FeatureAccessRequest:
+      type: object
+      required:
+        - id
+        - requesterPartyId
+        - featureId
+        - action
+        - roleContext
+        - moduleContext
+        - status
+        - reviewerGroup
+        - requestedAt
+        - updatedAt
+        - history
+      properties:
+        id:
+          type: integer
+          format: int64
+        requesterPartyId:
+          type: integer
+          format: int64
+          description: Internal subject identifier; clients must not expose it unnecessarily.
+        featureId:
+          type: string
+        action:
+          type: string
+        roleContext:
+          type: array
+          items:
+            type: string
+        moduleContext:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/FeatureAccessRequestStatus'
+        reviewerGroup:
+          type: string
+        justification:
+          type: string
+          nullable: true
+          maxLength: 2000
+        reviewerNotes:
+          type: string
+          nullable: true
+          maxLength: 2000
+        requestedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureAccessRequestHistory'
+    FeatureAccessRequestCreate:
+      type: object
+      required: [featureId, action]
+      additionalProperties: false
+      properties:
+        featureId:
+          type: string
+          minLength: 1
+          maxLength: 160
+        action:
+          type: string
+          minLength: 1
+          maxLength: 40
+        justification:
+          type: string
+          nullable: true
+          maxLength: 2000
+    FeatureAccessRequestDecision:
+      type: object
+      required: [decision]
+      additionalProperties: false
+      properties:
+        decision:
+          type: string
+          enum: [approved, rejected]
+        notes:
+          type: string
+          nullable: true
+          maxLength: 2000
+    FeatureAccessRequestCancel:
+      type: object
+      additionalProperties: false
+      properties:
+        cancellationNote:
+          type: string
+          nullable: true
+          maxLength: 2000
+    NavigationPreference:
+      type: object
+      required: [featureId, favorite, pinned, useCount, updatedAt]
+      properties:
+        featureId:
+          type: string
+        favorite:
+          type: boolean
+        pinned:
+          type: boolean
+        pinOrder:
+          type: integer
+          nullable: true
+          minimum: 0
+        lastVisitedAt:
+          type: string
+          format: date-time
+          nullable: true
+        useCount:
+          type: integer
+          minimum: 0
+        updatedAt:
+          type: string
+          format: date-time
+    NavigationPreferenceUpdate:
+      type: object
+      required: [favorite, pinned]
+      additionalProperties: false
+      properties:
+        favorite:
+          type: boolean
+        pinned:
+          type: boolean
+        pinOrder:
+          type: integer
+          nullable: true
+          minimum: 0

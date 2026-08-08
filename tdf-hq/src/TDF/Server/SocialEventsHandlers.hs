@@ -85,6 +85,10 @@ module TDF.Server.SocialEventsHandlers (
     validateEventImageUploadSize,
     validateEventTitleInput,
     validateArtistName,
+    validateSocialEventsFeatureAction,
+    validateArtistProfileCreateParty,
+    validateArtistProfileWriteAccess,
+    validateAuthenticatedPartyReference,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
@@ -158,10 +162,11 @@ import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
-import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
+import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
+import TDF.FeatureRegistry (findRegistryFeature, registryFeatureAllows)
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
     ArtistFollowRequest (..),
@@ -244,6 +249,35 @@ import TDF.Services.EventLogisticsRoutes
 import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
+
+validateSocialEventsFeatureAction :: T.Text -> T.Text -> AuthedUser -> Either ServerError ()
+validateSocialEventsFeatureAction featureId action user =
+    let moduleNames = map moduleName (Set.toList (auModules user))
+        allowed = maybe False
+            (\feature -> registryFeatureAllows (auRoles user) moduleNames feature action)
+            (findRegistryFeature featureId)
+     in if allowed
+            then Right ()
+            else Left err403{errBody = "This feature action is not permitted"}
+
+validateArtistProfileCreateParty :: AuthedUser -> Maybe T.Text -> Either ServerError T.Text
+validateArtistProfileCreateParty user requestedPartyId
+    | hasStrictAdminAccess user = Right (fromMaybe authenticatedParty cleanedRequest)
+    | maybe True (== authenticatedParty) cleanedRequest = Right authenticatedParty
+    | otherwise = Left err403{errBody = "Artist profiles can only be created for the authenticated party"}
+  where
+    authenticatedParty = renderPartyId user
+    cleanedRequest = cleanMaybeText requestedPartyId
+
+validateArtistProfileWriteAccess :: AuthedUser -> Maybe T.Text -> Either ServerError ()
+validateArtistProfileWriteAccess user ownerPartyId
+    | ownerPartyId == Just (renderPartyId user) || hasStrictAdminAccess user = Right ()
+    | otherwise = Left err403{errBody = "Artist profile ownership is required"}
+
+validateAuthenticatedPartyReference :: AuthedUser -> T.Text -> Either ServerError ()
+validateAuthenticatedPartyReference user referencedPartyId
+    | normalizePositivePartyIdText referencedPartyId == Just (renderPartyId user) = Right ()
+    | otherwise = Left err403{errBody = "Followers can only be changed for the authenticated party"}
 
 parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
 parseStripePaymentIntentResponse paymentIntent =
@@ -1793,6 +1827,10 @@ socialEventsServer user =
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
 
+    requireFeatureAction :: T.Text -> T.Text -> AppM ()
+    requireFeatureAction featureId action =
+        either throwError pure (validateSocialEventsFeatureAction featureId action user)
+
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
     eventsServer =
@@ -2475,6 +2513,7 @@ socialEventsServer user =
 
     createVenue :: VenueDTO -> AppM VenueDTO
     createVenue dto = do
+        requireFeatureAction "social.venue.create" "create"
         Env{..} <- ask
         now <- liftIO getCurrentTime
         either throwError pure $
@@ -2547,6 +2586,7 @@ socialEventsServer user =
 
     updateVenue :: T.Text -> VenueUpdateDTO -> AppM VenueDTO
     updateVenue rawId VenueUpdateDTO{..} = do
+        requireFeatureAction "social.venues" "edit"
         Env{..} <- ask
         now <- liftIO getCurrentTime
         venueKey <- parseKeyOr400 "venue" rawId
@@ -2680,16 +2720,22 @@ socialEventsServer user =
 
     createArtist :: ArtistDTO -> AppM ArtistDTO
     createArtist dto = do
+        requireFeatureAction "artist.onboarding" "create"
         Env{..} <- ask
         now <- liftIO getCurrentTime
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
         let genreList = normalizeArtistGenres (artistGenres dto)
+            requestedPartyId = cleanMaybeText (artistPartyId dto)
+        targetPartyId <- either throwError pure (validateArtistProfileCreateParty user requestedPartyId)
+        duplicate <- liftIO $ runSqlPool (selectFirst [ArtistProfilePartyId ==. Just targetPartyId] []) envPool
+        when (isJust duplicate) $
+            throwError err409{errBody = "An artist profile already exists for this party"}
         key <-
             liftIO $
                 runSqlPool
                     ( insert
                         ArtistProfile
-                            { artistProfilePartyId = cleanMaybeText (artistPartyId dto)
+                            { artistProfilePartyId = Just targetPartyId
                             , artistProfileName = artistNameVal
                             , artistProfileBio = artistBio dto
                             , artistProfileAvatarUrl = artistAvatarUrl dto
@@ -2715,7 +2761,7 @@ socialEventsServer user =
         pure
             ArtistDTO
                 { artistId = Just (renderKeyText key)
-                , artistPartyId = cleanMaybeText (artistPartyId dto)
+                , artistPartyId = Just targetPartyId
                 , artistName = artistNameVal
                 , artistGenres = genreList
                 , artistBio = artistBio dto
@@ -2739,12 +2785,14 @@ socialEventsServer user =
 
     updateArtist :: T.Text -> ArtistDTO -> AppM ArtistDTO
     updateArtist idStr dto = do
+        requireFeatureAction "artist.profile.edit" "edit"
         Env{..} <- ask
         artistKey <- parseArtistId idStr
         now <- liftIO getCurrentTime
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
         mExisting <- liftIO $ runSqlPool (get artistKey) envPool
         existing <- maybe (throwError err404{errBody = "Artist not found"}) pure mExisting
+        either throwError pure (validateArtistProfileWriteAccess user (artistProfilePartyId existing))
         importedRef <-
             liftIO $
                 runSqlPool
@@ -2753,7 +2801,10 @@ socialEventsServer user =
         when (isJust importedRef) $
             throwError err403{errBody = "Imported artists are managed automatically"}
         let genreList = normalizeArtistGenres (artistGenres dto)
-        let nextPartyId = cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
+        let nextPartyId =
+                if hasStrictAdminAccess user
+                    then cleanMaybeText (artistPartyId dto) <|> artistProfilePartyId existing
+                    else Just currentPartyId
         liftIO $
             runSqlPool
                 ( update
@@ -2797,6 +2848,7 @@ socialEventsServer user =
         followerParty <-
             liftIO (resolveExistingPartyIdText envPool "followerPartyId" afrFollowerPartyId)
                 >>= either throwError pure
+        either throwError pure (validateAuthenticatedPartyReference user followerParty)
         liftIO $ followArtistDb envPool artistKey followerParty
 
     unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
@@ -2806,6 +2858,7 @@ socialEventsServer user =
         mArtist <- liftIO $ runSqlPool (get artistKey) envPool
         when (isNothing mArtist) $ throwError err404{errBody = "Artist not found"}
         followerParty <- either throwError pure (parseFollowerQueryParamEither mFollower)
+        either throwError pure (validateAuthenticatedPartyReference user followerParty)
         liftIO $
             runSqlPool
                 (deleteWhere [ArtistFollowArtistId ==. artistKey, ArtistFollowFollowerPartyId ==. followerParty])

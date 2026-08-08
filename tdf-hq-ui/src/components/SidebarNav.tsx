@@ -1,8 +1,7 @@
-import { Component, useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Component, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Box,
-  Button,
   Collapse,
   IconButton,
   List,
@@ -12,6 +11,7 @@ import {
   Typography,
   TextField,
   InputAdornment,
+  Tooltip,
 } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -25,30 +25,54 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import StarBorderOutlinedIcon from '@mui/icons-material/StarBorderOutlined';
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import type { ErrorInfo, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { useChatUnreadCount } from '../hooks/useChatUnreadCount';
 import {
-  canAccessPath,
-  pathRequiresModule,
-} from '../utils/accessControl';
-import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
+  accessRequestPath,
+  evaluateFeatureAccess,
+  featureGroups,
+  featureLabel,
+  featureRegistry,
+  featureSearchText,
+  getFeatureById,
+  normalizeFeatureToken,
+} from '../features/featureRegistry';
+import appI18n from '../i18n';
+import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
+import type { NavigationPreferenceDTO } from '../api/navigationPreferences';
+import { getAnalyticsClient } from '../analytics/posthog';
 
 export interface NavItem {
+  featureId: string;
   label: string;
   path: string;
+  searchText: string;
+  locked?: boolean;
+  accessPath?: string;
+  missingAccess?: string;
 }
-
 export interface NavGroup {
   title: string;
   items: NavItem[];
   icon?: ReactNode;
 }
 
-type NavGroupView = NavGroup & { restricted?: boolean; requiredModule?: string | null };
-type NavShortcutItem = NavItem & { group: string };
+type NavGroupView = NavGroup;
+type NavShortcutItem = NavItem & {
+  group: string;
+  shortcutKind?: 'pinned' | 'favorite' | 'recent';
+  pinOrder?: number | null;
+};
 type PositivePixelDimension = number;
 type PositiveSafeInteger = number;
 
@@ -134,120 +158,40 @@ const GROUP_HEADER_ICON_SX = {
 } as const;
 const REQUEST_ACCESS_LABEL = 'Solicitar acceso';
 
-export const NAV_GROUPS: NavGroup[] = [
-  {
-    title: 'CREAR',
-    icon: <AutoAwesomeOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'Inicio', path: '/inicio' },
-      { label: 'Calendario', path: '/estudio/calendario' },
-      { label: 'Salas y recursos', path: '/estudio/salas' },
-      { label: 'Órdenes estudio', path: '/estudio/ordenes' },
-      { label: 'Servicios', path: '/estudio/servicios' },
-      { label: 'Pipelines', path: '/estudio/pipelines' },
-      { label: 'Sesiones en vivo', path: '/estudio/live-sessions' },
-      { label: 'Campaña Domo', path: '/estudio/campanas/tdf-sessions-domo' },
-      { label: 'Reportes', path: '/estudio/reportes' },
-      { label: 'Profesores', path: '/escuela/profesores' },
-      { label: 'Clases', path: '/escuela/clases' },
-      { label: 'Clases de prueba', path: '/escuela/trial-lessons' },
-      { label: 'Solicitudes de prueba', path: '/escuela/trial-queue' },
-      { label: 'Portal del profesor', path: '/mi-profesor' },
-      { label: 'Panel de pasantes', path: '/practicas' },
-    ],
-  },
-  {
-    title: 'GENTE',
-    icon: <PeopleAltOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'Comunidad', path: '/fans' },
-      { label: 'Tienda', path: '/marketplace' },
-      { label: 'Lanzamientos públicos', path: '/records' },
-      { label: 'Reservar estudio', path: '/reservar' },
-      { label: 'Agenda de pruebas', path: '/trials' },
-      { label: 'Registro live sessions', path: '/live-sessions/registro' },
-      { label: 'Donaciones', path: '/donar' },
-      { label: 'Domo Pululahua', path: '/domo-del-pululahua' },
-      { label: 'Conexiones', path: '/social' },
-      { label: 'Instagram', path: '/social/instagram' },
-      { label: 'Chat', path: '/chat' },
-      { label: 'Inbox social', path: '/social/inbox' },
-      { label: 'Eventos sociales', path: '/social/eventos' },
-      { label: 'Eventos descubiertos', path: '/social/eventos-descubiertos' },
-      { label: 'Contactos', path: '/crm/contactos' },
-      { label: 'Empresas', path: '/crm/empresas' },
-      { label: 'Leads', path: '/crm/leads' },
-    ],
-  },
-  {
-    title: 'SELLO',
-    icon: <AlbumOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'Artistas', path: '/label/artistas' },
-      { label: 'Proyectos', path: '/label/proyectos' },
-      { label: 'Lanzamientos', path: '/label/releases' },
-      { label: 'Activos', path: '/label/assets' },
-      { label: 'Pistas', path: '/label/tracks' },
-    ],
-  },
-  {
-    title: 'OPERAR',
-    icon: <Inventory2OutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'Inventario', path: '/operacion/inventario' },
-      { label: 'Órdenes tienda', path: '/operacion/ordenes-marketplace' },
-      { label: 'Reservas equipo', path: '/operacion/reservas-equipo' },
-      { label: 'Pagos', path: '/finanzas/pagos' },
-      { label: 'Creador de reportes', path: '/finanzas/creador-reporte-cuenta' },
-      { label: 'Reporte Esteban', path: '/finanzas/reporte-esteban-munoz' },
-      { label: 'Reporte David', path: '/finanzas/reporte-david-celaya' },
-    ],
-  },
-  {
-    title: 'ADMIN',
-    icon: <AdminPanelSettingsOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: COURSE_REGISTRATIONS_NAV_LABEL, path: '/configuracion/inscripciones-curso' },
-      { label: 'Cursos', path: '/configuracion/cursos' },
-      { label: 'Actividad', path: '/configuracion/actividad' },
-      { label: 'Logs', path: '/configuracion/logs' },
-      { label: 'Estado sistema', path: '/configuracion/estado' },
-      { label: 'Diagnósticos', path: '/admin/diagnosticos' },
-      { label: 'Enriquecimiento artistas', path: '/admin/artistas-enriquecimiento' },
-      { label: 'Brain y RAG', path: '/configuracion/brain' },
-      { label: 'Usuarios admin', path: '/configuracion/usuarios-admin' },
-      { label: 'Roles y permisos', path: '/configuracion/roles-permisos' },
-      { label: 'Calendario Google', path: '/configuracion/integraciones/calendario' },
-      { label: 'CMS', path: '/configuracion/cms' },
-      { label: 'Campañas automáticas', path: '/configuracion/campanas-automaticas' },
-      { label: 'Fuentes de eventos', path: '/configuracion/fuentes-eventos' },
-      { label: 'WhatsApp consentimiento', path: '/configuracion/whatsapp-consentimiento' },
-      { label: 'Opciones UX', path: '/configuracion/opciones-ux' },
-      { label: 'Preferencias', path: '/configuracion/preferencias' },
-    ],
-  },
-  {
-    title: 'HERRAMIENTAS',
-    icon: <BuildOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'ChatKit', path: '/herramientas/chatkit' },
-      { label: 'Agente Tidal', path: '/herramientas/tidal-agent' },
-      { label: 'Creador musical', path: '/herramientas/creador-musical' },
-      { label: 'Token API', path: '/herramientas/token-admin' },
-    ],
-  },
-  {
-    title: 'AYUDA',
-    icon: <HelpOutlineOutlinedIcon sx={GROUP_HEADER_ICON_SX} />,
-    items: [
-      { label: 'Manual', path: '/manual' },
-      { label: 'Documentación', path: '/docs' },
-      { label: 'Acerca de', path: '/acerca' },
-      { label: 'Seguridad', path: '/seguridad' },
-      { label: 'Sugerencias', path: '/feedback' },
-    ],
-  },
-];
+const groupIcon = (groupId: string): ReactNode => {
+  switch (groupId) {
+    case 'create': return <AutoAwesomeOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'people': return <PeopleAltOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'label': return <AlbumOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'operate': return <Inventory2OutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'admin': return <AdminPanelSettingsOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'tools': return <BuildOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    case 'help': return <HelpOutlineOutlinedIcon sx={GROUP_HEADER_ICON_SX} />;
+    default: return undefined;
+  }
+};
+
+export function buildRegistryNavGroups(locale = 'es'): NavGroup[] {
+  return featureGroups.map((group) => ({
+    title: locale.toLowerCase().startsWith('en') ? group.labelEn : group.labelEs,
+    icon: groupIcon(group.id),
+    items: featureRegistry
+      .filter((feature) =>
+        feature.navigationGroup === group.id
+        && feature.globalMenu
+        && !feature.technical
+        && typeof feature.webRoute === 'string',
+      )
+      .map((feature) => ({
+        featureId: feature.id,
+        label: featureLabel(feature, locale),
+        path: feature.webRoute!,
+        searchText: featureSearchText(feature),
+      })),
+  })).filter((group) => group.items.length > 0);
+}
+
+export const NAV_GROUPS: NavGroup[] = buildRegistryNavGroups('es');
 
 interface SidebarNavProps {
   open: boolean;
@@ -334,7 +278,7 @@ function SidebarSearch(props: SidebarSearchProps) {
 
   return (
     <Stack spacing={2} sx={{ px: 2.5, pt: 3, pb: 2, flexShrink: 0 }}>
-      <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 2 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', letterSpacing: 2 }}>
         MENÚ
       </Typography>
       <TextField
@@ -362,7 +306,7 @@ function SidebarSearch(props: SidebarSearchProps) {
                 }}
                 size="small"
                 aria-label="Limpiar búsqueda"
-                sx={{ color: 'text.secondary' }}
+                sx={{ color: 'text.secondary', width: 44, height: 44 }}
               >
                 <ClearIcon fontSize="small" />
               </IconButton>
@@ -390,13 +334,13 @@ function SectionCaption(props: SectionCaptionProps) {
   const { label, icon } = props;
 
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, color: 'text.disabled' }}>
+    <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, color: 'text.secondary' }}>
       {icon ? (
         <Box component="span" aria-hidden="true" sx={{ display: 'inline-flex' }}>
           {icon}
         </Box>
       ) : null}
-      <Typography variant="caption" sx={{ color: 'text.disabled', letterSpacing: 1 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', letterSpacing: 1 }}>
         {label}
       </Typography>
     </Stack>
@@ -452,11 +396,12 @@ interface ShortcutSectionProps {
   items: NavShortcutItem[];
   activePath: string;
   chatUnreadCount: number;
-  onVisit: (path: string) => void;
+  onMovePin: (featureId: string, direction: -1 | 1) => void;
+  onVisit: (featureId: string, path: string) => void;
 }
 
 function ShortcutSection(props: ShortcutSectionProps) {
-  const { items, activePath, chatUnreadCount, onVisit } = props;
+  const { items, activePath, chatUnreadCount, onMovePin, onVisit } = props;
   if (items.length === 0) return null;
 
   return (
@@ -472,6 +417,7 @@ function ShortcutSection(props: ShortcutSectionProps) {
             isLast={index === items.length - 1}
             activePath={activePath}
             unreadCount={chatBadgeCountForPath(item.path, chatUnreadCount)}
+            onMovePin={onMovePin}
             onVisit={onVisit}
           />
         ))}
@@ -485,44 +431,57 @@ interface ShortcutLinkProps {
   isLast: boolean;
   activePath: string;
   unreadCount: number;
-  onVisit: (path: string) => void;
+  onMovePin: (featureId: string, direction: -1 | 1) => void;
+  onVisit: (featureId: string, path: string) => void;
 }
 
 function ShortcutLink(props: ShortcutLinkProps) {
-  const { item, isLast, activePath, unreadCount, onVisit } = props;
+  const { item, isLast, activePath, unreadCount, onMovePin, onVisit } = props;
   const isShortcutActive = isRouteActive(activePath, item.path);
 
   return (
-    <ListItemButton
-      tabIndex={0}
-      onClick={(event) => {
-        event.currentTarget.focus();
-        onVisit(item.path);
-      }}
-      component={RouterLink}
-      to={item.path}
-      selected={isShortcutActive}
-      aria-current={isShortcutActive ? 'page' : undefined}
-      sx={{
-        borderRadius: 1.5,
-        mb: isLast ? 0 : 0.5,
-        bgcolor: isShortcutActive ? 'action.selected' : 'transparent',
-        color: isShortcutActive ? 'primary.main' : 'text.primary',
-        '&:hover': { bgcolor: 'action.hover' },
-      }}
-    >
-      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isShortcutActive ? 'primary.main' : 'text.disabled' }} />
-      <ListItemText
-        primary={(
-          <UnreadBadge count={unreadCount}>
-            {item.label}
-          </UnreadBadge>
-        )}
-        secondary={`Reciente · ${item.group}`}
-        primaryTypographyProps={{ fontSize: 13, fontWeight: 600 }}
-        secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
-      />
-    </ListItemButton>
+    <Stack component="li" direction="row" alignItems="center" sx={{ mb: isLast ? 0 : 0.5, listStyle: 'none' }}>
+      <ListItemButton
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onVisit(item.featureId, item.path);
+        }}
+        component={RouterLink}
+        to={item.path}
+        selected={isShortcutActive}
+        aria-current={isShortcutActive ? 'page' : undefined}
+        sx={{
+          minWidth: 0,
+          borderRadius: 1.5,
+          bgcolor: isShortcutActive ? 'action.selected' : 'transparent',
+          color: isShortcutActive ? 'primary.main' : 'text.primary',
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
+      >
+        <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isShortcutActive ? 'primary.main' : 'text.disabled' }} />
+        <ListItemText
+          primary={(
+            <UnreadBadge count={unreadCount}>
+              {item.label}
+            </UnreadBadge>
+          )}
+          secondary={`${item.shortcutKind === 'pinned' ? 'Fijado' : item.shortcutKind === 'favorite' ? 'Favorito' : 'Reciente'} · ${item.group}`}
+          primaryTypographyProps={{ fontSize: 13, fontWeight: 600, noWrap: true }}
+          secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary', noWrap: true }}
+        />
+      </ListItemButton>
+      {item.shortcutKind === 'pinned' ? (
+        <Stack>
+          <IconButton size="small" aria-label={`Subir ${item.label}`} onClick={() => onMovePin(item.featureId, -1)} sx={{ width: 44, height: 44 }}>
+            <ArrowUpwardIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label={`Bajar ${item.label}`} onClick={() => onMovePin(item.featureId, 1)} sx={{ width: 44, height: 44 }}>
+            <ArrowDownwardIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      ) : null}
+    </Stack>
   );
 }
 
@@ -604,25 +563,29 @@ function NavGroupHeader(props: NavGroupHeaderProps) {
 interface NavGroupSectionProps {
   activePath: string;
   chatUnreadCount: number;
-  getAccessHref: (group: NavGroupView) => string;
   group: NavGroupView;
   highlightedPath: string | null;
   isExpanded: boolean;
   searchQuery: string;
   onToggle: (title: string) => void;
-  onVisit: (path: string) => void;
+  locale: string;
+  preferences: ReadonlyMap<string, NavigationPreferenceDTO>;
+  onPreferenceChange: (featureId: string, kind: 'favorite' | 'pinned') => void;
+  onVisit: (featureId: string, path: string) => void;
 }
 
 function NavGroupSection(props: NavGroupSectionProps) {
   const {
     activePath,
     chatUnreadCount,
-    getAccessHref,
     group,
     highlightedPath,
     isExpanded,
     searchQuery,
     onToggle,
+    locale,
+    preferences,
+    onPreferenceChange,
     onVisit,
   } = props;
 
@@ -640,12 +603,12 @@ function NavGroupSection(props: NavGroupSectionProps) {
               highlighted={highlightedPath === item.path}
               searchQuery={searchQuery}
               unreadCount={chatBadgeCountForPath(item.path, chatUnreadCount)}
+              locale={locale}
+              preference={preferences.get(item.featureId)}
+              onPreferenceChange={onPreferenceChange}
               onVisit={onVisit}
             />
           ))}
-          {group.items.length === 0 && group.restricted ? (
-            <RestrictedGroupNotice href={getAccessHref(group)} />
-          ) : null}
         </List>
       </Collapse>
     </Box>
@@ -659,65 +622,81 @@ interface NavItemLinkProps {
   item: NavItem;
   searchQuery: string;
   unreadCount: number;
-  onVisit: (path: string) => void;
+  locale: string;
+  preference?: NavigationPreferenceDTO;
+  onPreferenceChange: (featureId: string, kind: 'favorite' | 'pinned') => void;
+  onVisit: (featureId: string, path: string) => void;
 }
 
 function NavItemLink(props: NavItemLinkProps) {
-  const { activePath, groupTitle, highlighted, item, searchQuery, unreadCount, onVisit } = props;
-  const isNavItemActive = isRouteActive(activePath, item.path);
+  const { activePath, groupTitle, highlighted, item, searchQuery, unreadCount, locale, preference, onPreferenceChange, onVisit } = props;
+  const destination = item.locked ? item.accessPath ?? item.path : item.path;
+  const isNavItemActive = !item.locked && isRouteActive(activePath, item.path);
   const selected = highlighted || (!searchQuery && isNavItemActive);
+  const feature = getFeatureById(item.featureId);
+  const english = locale.toLowerCase().startsWith('en');
 
   return (
-    <ListItemButton
-      tabIndex={0}
-      onClick={(event) => {
-        event.currentTarget.focus();
-        onVisit(item.path);
-      }}
-      component={RouterLink}
-      to={item.path}
-      selected={selected}
-      aria-current={isNavItemActive ? 'page' : undefined}
-      sx={{
-        borderRadius: 1.5,
-        mb: 0.5,
-        color: isNavItemActive ? 'primary.main' : 'text.primary',
-        bgcolor: highlighted ? 'action.hover' : isNavItemActive ? 'action.selected' : 'transparent',
-        '&:hover': { bgcolor: 'action.hover' },
-      }}
-    >
-      <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isNavItemActive ? 'primary.main' : 'text.disabled' }} />
-      <ListItemText
-        primary={(
-          <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            <UnreadBadge count={unreadCount}>
-              <HighlightedLabel label={item.label} searchQuery={searchQuery} />
-            </UnreadBadge>
-          </Box>
+    <Stack component="li" direction="row" alignItems="center" sx={{ mb: 0.5, listStyle: 'none' }}>
+      <ListItemButton
+        tabIndex={0}
+        onClick={(event) => {
+          event.currentTarget.focus();
+          onVisit(item.locked ? '' : item.featureId, destination);
+        }}
+        component={RouterLink}
+        to={destination}
+        selected={selected}
+        aria-current={isNavItemActive ? 'page' : undefined}
+        aria-label={item.locked ? `${item.label}. ${item.missingAccess ?? REQUEST_ACCESS_LABEL}` : undefined}
+        sx={{
+          minWidth: 0,
+          borderRadius: 1.5,
+          color: isNavItemActive ? 'primary.main' : 'text.primary',
+          bgcolor: highlighted ? 'action.hover' : isNavItemActive ? 'action.selected' : 'transparent',
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
+      >
+        {item.locked ? (
+          <LockOutlinedIcon aria-hidden="true" sx={{ fontSize: 16, mr: 1.5, color: 'text.secondary' }} />
+        ) : (
+          <FiberManualRecordIcon sx={{ fontSize: 8, mr: 1.5, color: isNavItemActive ? 'primary.main' : 'text.disabled' }} />
         )}
-        secondary={searchQuery ? groupTitle : undefined}
-        primaryTypographyProps={{ fontSize: 13 }}
-        secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
-      />
-    </ListItemButton>
-  );
-}
-
-interface RestrictedGroupNoticeProps {
-  href: string;
-}
-
-function RestrictedGroupNotice(props: RestrictedGroupNoticeProps) {
-  const { href } = props;
-
-  return (
-    <Stack spacing={1} sx={{ px: 2, py: 1.5 }}>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        No tienes acceso a esta sección.
-      </Typography>
-      <Button size="small" variant="outlined" disabled={!href} sx={{ alignSelf: 'flex-start' }} href={href}>
-        {REQUEST_ACCESS_LABEL}
-      </Button>
+        <ListItemText
+          primary={(
+            <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <UnreadBadge count={unreadCount}>
+                <HighlightedLabel label={item.label} searchQuery={searchQuery} />
+              </UnreadBadge>
+            </Box>
+          )}
+          secondary={item.locked ? item.missingAccess ?? REQUEST_ACCESS_LABEL : searchQuery ? groupTitle : undefined}
+          primaryTypographyProps={{ fontSize: 13, noWrap: true }}
+          secondaryTypographyProps={{ fontSize: 11, color: 'text.secondary' }}
+        />
+      </ListItemButton>
+      {!item.locked && feature?.favoriteEligible ? (
+        <Tooltip title={preference?.favorite ? (english ? 'Remove favorite' : 'Quitar favorito') : (english ? 'Favorite' : 'Favorito')}>
+          <IconButton
+            aria-label={preference?.favorite ? `${english ? 'Remove favorite' : 'Quitar favorito'} ${item.label}` : `${english ? 'Favorite' : 'Favorito'} ${item.label}`}
+            onClick={() => onPreferenceChange(item.featureId, 'favorite')}
+            sx={{ width: 44, height: 44 }}
+          >
+            {preference?.favorite ? <StarOutlinedIcon fontSize="small" /> : <StarBorderOutlinedIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      ) : null}
+      {!item.locked && feature?.pinEligible ? (
+        <Tooltip title={preference?.pinned ? (english ? 'Unpin' : 'Desfijar') : (english ? 'Pin' : 'Fijar')}>
+          <IconButton
+            aria-label={preference?.pinned ? `${english ? 'Unpin' : 'Desfijar'} ${item.label}` : `${english ? 'Pin' : 'Fijar'} ${item.label}`}
+            onClick={() => onPreferenceChange(item.featureId, 'pinned')}
+            sx={{ width: 44, height: 44 }}
+          >
+            {preference?.pinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      ) : null}
     </Stack>
   );
 }
@@ -725,57 +704,61 @@ function RestrictedGroupNotice(props: RestrictedGroupNoticeProps) {
 export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const location = useLocation();
   const { session } = useSession();
+  const [featureLocale, setFeatureLocale] = useState(
+    () => appI18n.resolvedLanguage ?? appI18n.language ?? 'es',
+  );
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [recentPaths, setRecentPaths] = useState(() => readStoredPathList(QUICK_RECENTS_KEY));
   const searchRef = useRef(null as HTMLInputElement | null);
-  const canUsePath = useCallback(
-    (path: string) => canAccessPath(path, session?.roles, session?.modules),
-    [session?.modules, session?.roles],
-  );
   const { unreadCount: chatUnreadCount } = useChatUnreadCount({ enabled: open });
+  const navigationPreferences = useNavigationPreferences(Boolean(session));
 
-  const buildAccessMailto = useCallback(
-    (group: NavGroupView) => {
-      const module = group.requiredModule ?? 'acceso';
-      const subject = encodeURIComponent(`Acceso ${group.title} (${module})`);
-      const bodyLines = [
-        'Hola equipo, necesito acceso a esta sección.',
-        `Sección: ${group.title}`,
-        `Módulo: ${module}`,
-        session ? `Usuario: ${session.displayName} (${session.username})` : null,
-      ].filter(Boolean);
-      const body = encodeURIComponent(bodyLines.join('\n'));
-      return `mailto:soporte@tdf.com?subject=${subject}&body=${body}`;
-    },
-    [session],
-  );
+  useEffect(() => {
+    const handleLanguageChanged = (language: string) => setFeatureLocale(language || 'es');
+    appI18n.on('languageChanged', handleLanguageChanged);
+    return () => appI18n.off('languageChanged', handleLanguageChanged);
+  }, []);
 
   const allowedNavGroups = useMemo((): NavGroupView[] => {
-    return NAV_GROUPS.map((group) => {
-      const hiddenItems = group.items.filter((item) => !canUsePath(item.path));
-      const filteredItems = group.items.filter((item) => canUsePath(item.path));
-      const requiredModule = hiddenItems[0] ? pathRequiresModule(hiddenItems[0].path) : null;
-      const restricted = filteredItems.length === 0 && hiddenItems.length > 0;
-      return { ...group, items: filteredItems, restricted, requiredModule };
-    }).filter((group) => group.items.length > 0 || group.restricted);
-  }, [canUsePath]);
+    const currentSession = {
+      authenticated: Boolean(session),
+      roles: session?.roles,
+      modules: session?.modules,
+      featureFlags: session?.featureFlags,
+    };
+    return buildRegistryNavGroups(featureLocale).map((group) => ({
+      ...group,
+      items: group.items.flatMap((item) => {
+        const feature = getFeatureById(item.featureId);
+        if (!feature) return [];
+        const decision = evaluateFeatureAccess(feature, currentSession, 'discover');
+        if (decision.state === 'concealed') return [];
+        if (decision.state === 'allowed') return [item];
+        const missingCategory = decision.missingModules[0] ?? decision.missingRoles[0] ?? 'permiso';
+        return [{
+          ...item,
+          locked: true,
+          accessPath: accessRequestPath(feature, 'view'),
+          missingAccess: `Requiere ${missingCategory} · ${REQUEST_ACCESS_LABEL}`,
+        }];
+      }),
+    })).filter((group) => group.items.length > 0);
+  }, [featureLocale, session]);
 
   const filteredNavGroups = useMemo((): NavGroupView[] => {
-    const normalizedSearchQuery = filter.trim().toLowerCase();
+    const normalizedSearchQuery = normalizeFeatureToken(filter);
     if (!normalizedSearchQuery) return allowedNavGroups;
     return allowedNavGroups
       .map((group) => ({
         ...group,
         items: group.items.filter(
           (item) =>
-            item.label.toLowerCase().includes(normalizedSearchQuery) ||
-            item.path.toLowerCase().includes(normalizedSearchQuery),
+            item.searchText.includes(normalizedSearchQuery),
         ),
-        restricted: group.restricted,
       }))
-      .filter((group) => group.items.length > 0 || group.restricted);
+      .filter((group) => group.items.length > 0);
   }, [allowedNavGroups, filter]);
 
   const flatFilteredItems = useMemo(
@@ -783,24 +766,41 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     [filteredNavGroups],
   );
   const flatAllowedItems = useMemo(
-    (): NavShortcutItem[] => allowedNavGroups.flatMap((group) => group.items.map((item) => ({ ...item, group: group.title }))),
+    (): NavShortcutItem[] => allowedNavGroups.flatMap((group) => group.items
+      .filter((item) => !item.locked)
+      .map((item) => ({ ...item, group: group.title }))),
     [allowedNavGroups],
   );
+  const preferenceMap = useMemo(
+    () => new Map((navigationPreferences.query.data ?? []).map((preference) => [preference.featureId, preference])),
+    [navigationPreferences.query.data],
+  );
   const shortcutItems = useMemo((): NavShortcutItem[] => {
+    const itemByFeature = new Map(flatAllowedItems.map((item) => [item.featureId, item]));
     const itemByPath = new Map(flatAllowedItems.map((item) => [item.path, item]));
     const currentPath = location.pathname;
-    const seen = new Set();
-    return recentPaths
-      .filter((path) => path !== currentPath)
-      .map((path) => itemByPath.get(path))
-      .filter((item): item is NavShortcutItem => item != null)
-      .filter((item) => {
-        if (seen.has(item.path)) return false;
-        seen.add(item.path);
-        return true;
-      })
-      .slice(0, MAX_SHORTCUT_RECENTS);
-  }, [flatAllowedItems, location.pathname, recentPaths]);
+    const preferences = navigationPreferences.query.data ?? [];
+    const serverShortcuts = [
+      ...preferences.filter((preference) => preference.pinned).sort((left, right) => (left.pinOrder ?? 0) - (right.pinOrder ?? 0)).map((preference) => ({ preference, shortcutKind: 'pinned' as const })),
+      ...preferences.filter((preference) => preference.favorite && !preference.pinned).sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)).map((preference) => ({ preference, shortcutKind: 'favorite' as const })),
+      ...preferences.filter((preference) => preference.lastVisitedAt && !preference.pinned && !preference.favorite).sort((left, right) => (right.lastVisitedAt ?? '').localeCompare(left.lastVisitedAt ?? '')).map((preference) => ({ preference, shortcutKind: 'recent' as const })),
+    ].flatMap(({ preference, shortcutKind }) => {
+      const item = itemByFeature.get(preference.featureId);
+      return item && item.path !== currentPath ? [{ ...item, shortcutKind, pinOrder: preference.pinOrder }] : [];
+    });
+    const localFallback = preferences.length === 0
+      ? recentPaths.flatMap((path) => {
+          const item = itemByPath.get(path);
+          return item && path !== currentPath ? [{ ...item, shortcutKind: 'recent' as const }] : [];
+        })
+      : [];
+    const seen = new Set<string>();
+    return [...serverShortcuts, ...localFallback].filter((item) => {
+      if (seen.has(item.featureId)) return false;
+      seen.add(item.featureId);
+      return true;
+    }).slice(0, MAX_SHORTCUT_RECENTS);
+  }, [flatAllowedItems, location.pathname, navigationPreferences.query.data, recentPaths]);
 
   const ensureExpandedDefaults = (groups: NavGroupView[]) => {
     const next = new Set();
@@ -809,7 +809,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       const matchesRoute = group.items.some(
         (item) => isRouteActive(location.pathname, item.path),
       );
-      if (hasSingle || matchesRoute || group.restricted) next.add(group.title);
+      if (hasSingle || matchesRoute) next.add(group.title);
     });
     return next;
   };
@@ -897,9 +897,50 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     setRecentPaths((prev) => [path, ...prev.filter((existing) => existing !== path)].slice(0, MAX_SHORTCUT_RECENTS));
   };
 
-  const handleVisit = (path: string) => {
+  const handleVisit = (featureId: string, path: string) => {
     registerRecentPath(path);
+    if (featureId) {
+      getAnalyticsClient().capture('feature_navigation_selected', { feature_id: featureId, platform: 'web', source: 'sidebar' });
+    }
     onNavigate?.();
+  };
+
+  const handlePreferenceChange = (featureId: string, kind: 'favorite' | 'pinned') => {
+    const current = preferenceMap.get(featureId);
+    const pinnedPreferences = (navigationPreferences.query.data ?? []).filter((preference) => preference.pinned);
+    const next = {
+      featureId,
+      favorite: kind === 'favorite' ? !current?.favorite : Boolean(current?.favorite),
+      pinned: kind === 'pinned' ? !current?.pinned : Boolean(current?.pinned),
+      pinOrder: kind === 'pinned' && !current?.pinned
+        ? Math.max(-1, ...pinnedPreferences.map((preference) => preference.pinOrder ?? 0)) + 1
+        : current?.pinned ? current.pinOrder ?? 0 : null,
+    };
+    if (!next.pinned) next.pinOrder = null;
+    navigationPreferences.update.mutate(next);
+    getAnalyticsClient().capture(kind === 'favorite' ? 'feature_favorite_changed' : 'feature_pin_changed', {
+      feature_id: featureId,
+      enabled: kind === 'favorite' ? next.favorite : next.pinned,
+      platform: 'web',
+    });
+  };
+
+  const handleMovePin = (featureId: string, direction: -1 | 1) => {
+    const pinned = (navigationPreferences.query.data ?? [])
+      .filter((preference) => preference.pinned)
+      .sort((left, right) => (left.pinOrder ?? 0) - (right.pinOrder ?? 0));
+    const index = pinned.findIndex((preference) => preference.featureId === featureId);
+    const swapIndex = index + direction;
+    if (index < 0 || swapIndex < 0 || swapIndex >= pinned.length) return;
+    const current = pinned[index];
+    const other = pinned[swapIndex];
+    if (!current || !other) return;
+    const currentOrder = current.pinOrder ?? index;
+    const otherOrder = other.pinOrder ?? swapIndex;
+    void Promise.all([
+      navigationPreferences.update.mutateAsync({ ...current, pinOrder: otherOrder }),
+      navigationPreferences.update.mutateAsync({ ...other, pinOrder: currentOrder }),
+    ]);
   };
 
   const handleSearchKeyDown = (event: ReactKeyboardEvent) => {
@@ -926,9 +967,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
       event.preventDefault();
       const target = flatFilteredItems[highlightIndex];
       if (target) {
-        registerRecentPath(target.path);
-        navigate(target.path);
-        onNavigate?.();
+        handleVisit(target.locked ? '' : target.featureId, target.path);
+        navigate(target.locked ? target.accessPath ?? target.path : target.path);
       }
     }
   };
@@ -944,12 +984,13 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         onChange={setFilter}
         onKeyDown={handleSearchKeyDown}
       />
-      <List disablePadding sx={{ flex: 1, overflowY: 'auto', px: 1.5 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', px: 1.5 }}>
         {searchQuery ? null : (
           <ShortcutSection
             items={shortcutItems}
             activePath={location.pathname}
             chatUnreadCount={chatUnreadCount}
+            onMovePin={handleMovePin}
             onVisit={handleVisit}
           />
         )}
@@ -959,7 +1000,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
           </SidebarNavErrorBoundary>
         ) : null}
         {filteredNavGroups.map((group) => {
-          const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title) || Boolean(group.restricted);
+          const isExpanded = searchQuery.length > 0 || expandedGroups.has(group.title);
           return (
             <NavGroupSection
               key={group.title}
@@ -969,13 +1010,15 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
               isExpanded={isExpanded}
               searchQuery={searchQuery}
               chatUnreadCount={chatUnreadCount}
-              getAccessHref={buildAccessMailto}
+              locale={featureLocale}
+              preferences={preferenceMap}
+              onPreferenceChange={handlePreferenceChange}
               onToggle={toggleGroup}
               onVisit={handleVisit}
             />
           );
         })}
-      </List>
+      </Box>
     </SidebarFrame>
   );
 }
