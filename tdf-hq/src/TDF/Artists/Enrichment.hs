@@ -1257,39 +1257,95 @@ decideArtistIdentityCandidate decider rawCandidateId ArtistEnrichmentDecision{..
   if artistIdentityCandidateStatus candidate /= "pending"
     then pure (identityEntityToDTO (Entity candidateId candidate))
     else do
-      update candidateId
-        [ ArtistIdentityCandidateStatus =. if decision == "approve" then "approved" else "rejected"
-        , ArtistIdentityCandidateUpdatedAt =. now
-        , ArtistIdentityCandidateDecidedAt =. Just now
-        , ArtistIdentityCandidateDecidedBy =. Just decider
-        , ArtistIdentityCandidateDecisionNote =. cleanOptional aedNote
-        ]
-      when (decision == "approve") $ do
-        inventory <- getJust (artistIdentityCandidateInventoryReferenceId candidate)
-        partyId <- case artistIdentityCandidateArtistPartyId candidate of
-          Just existingPartyId -> pure existingPartyId
-          Nothing -> resolveIdentityDecisionTarget inventory now (cleanOptional aedEditedValue)
-        ensureArtistProfileForParty partyId (artistInventoryReferenceOriginalName inventory) now
-        ensureEnrichmentRow now partyId
-        groupRows <- selectList
-          [ ArtistInventoryReferenceNormalizedName ==. artistInventoryReferenceNormalizedName inventory ] []
-        setRowsArtist (artistIdentityCandidateConfidence candidate) partyId groupRows
-        linkSocialProfiles partyId groupRows
-        update candidateId [ArtistIdentityCandidateArtistPartyId =. Just partyId]
-        recordFieldChange partyId Nothing "profile" Nothing
-          (Just (artistInventoryReferenceOriginalName inventory))
-          (artistIdentityCandidateEvidence candidate)
-          (artistIdentityCandidateConfidence candidate)
-          ("admin:" <> T.pack (show (fromSqlKey decider))) now
+      inventory <- getJust (artistIdentityCandidateInventoryReferenceId candidate)
+      groupRows <- selectList
+        [ ArtistInventoryReferenceNormalizedName ==. artistInventoryReferenceNormalizedName inventory ] []
+      groupCandidates <- selectList
+        [ ArtistIdentityCandidateInventoryReferenceId <-. map entityKey groupRows ] []
+      let approvedSiblings =
+            [ siblingId
+            | Entity siblingId sibling <- groupCandidates
+            , siblingId /= candidateId
+            , artistIdentityCandidateStatus sibling == "approved"
+            ]
+      case (decision, listToMaybe approvedSiblings) of
+        ("approve", Just approvedSiblingId) ->
+          liftIO (fail ("identity group already resolved by candidate "
+            <> show (fromSqlKey approvedSiblingId)))
+        _ -> pure ()
+      if decision == "reject"
+        then update candidateId
+          [ ArtistIdentityCandidateStatus =. "rejected"
+          , ArtistIdentityCandidateUpdatedAt =. now
+          , ArtistIdentityCandidateDecidedAt =. Just now
+          , ArtistIdentityCandidateDecidedBy =. Just decider
+          , ArtistIdentityCandidateDecisionNote =. cleanOptional aedNote
+          ]
+        else do
+          partyId <- case artistIdentityCandidateArtistPartyId candidate of
+            Just existingPartyId -> pure existingPartyId
+            Nothing -> resolveIdentityDecisionTarget inventory now (cleanOptional aedEditedValue)
+          claimedRows <- claimIdentityGroup
+            (artistInventoryReferenceNormalizedName inventory)
+            (artistIdentityCandidateConfidence candidate)
+            partyId
+          ensureArtistProfileForParty partyId (artistInventoryReferenceOriginalName inventory) now
+          ensureEnrichmentRow now partyId
+          linkSocialProfiles partyId claimedRows
+          update candidateId
+            [ ArtistIdentityCandidateArtistPartyId =. Just partyId
+            , ArtistIdentityCandidateStatus =. "approved"
+            , ArtistIdentityCandidateUpdatedAt =. now
+            , ArtistIdentityCandidateDecidedAt =. Just now
+            , ArtistIdentityCandidateDecidedBy =. Just decider
+            , ArtistIdentityCandidateDecisionNote =. cleanOptional aedNote
+            ]
+          let supersededNote = Just ("Superseded by approved identity candidate "
+                <> T.pack (show (fromSqlKey candidateId)))
+          forM_ groupCandidates $ \(Entity siblingId sibling) ->
+            when (siblingId /= candidateId && artistIdentityCandidateStatus sibling == "pending") $
+              update siblingId
+                [ ArtistIdentityCandidateStatus =. "superseded"
+                , ArtistIdentityCandidateUpdatedAt =. now
+                , ArtistIdentityCandidateDecidedAt =. Just now
+                , ArtistIdentityCandidateDecidedBy =. Just decider
+                , ArtistIdentityCandidateDecisionNote =. supersededNote
+                ]
+          recordFieldChange partyId Nothing "profile" Nothing
+            (Just (artistInventoryReferenceOriginalName inventory))
+            (artistIdentityCandidateEvidence candidate)
+            (artistIdentityCandidateConfidence candidate)
+            ("admin:" <> T.pack (show (fromSqlKey decider))) now
       updated <- getJust candidateId
       pure (identityEntityToDTO (Entity candidateId updated))
   where
-    setRowsArtist confidence partyId rows = forM_ rows $ \(Entity rowId _) ->
-      update rowId
+    claimIdentityGroup normalizedName confidence partyId = do
+      updateWhere
+        [ ArtistInventoryReferenceNormalizedName ==. normalizedName
+        , ArtistInventoryReferenceArtistPartyId ==. Nothing
+        ]
         [ ArtistInventoryReferenceArtistPartyId =. Just partyId
         , ArtistInventoryReferenceDisposition =. "matched_external"
         , ArtistInventoryReferenceConfidence =. Just confidence
         ]
+      claimedRows <- selectList
+        [ArtistInventoryReferenceNormalizedName ==. normalizedName] []
+      let conflictingParties = nub
+            [ conflictingPartyId
+            | Entity _ row <- claimedRows
+            , Just conflictingPartyId <- [artistInventoryReferenceArtistPartyId row]
+            , conflictingPartyId /= partyId
+            ]
+      unless (null conflictingParties) $
+        liftIO (fail "identity group was resolved by another decision")
+      updateWhere
+        [ ArtistInventoryReferenceNormalizedName ==. normalizedName
+        , ArtistInventoryReferenceArtistPartyId ==. Just partyId
+        ]
+        [ ArtistInventoryReferenceDisposition =. "matched_external"
+        , ArtistInventoryReferenceConfidence =. Just confidence
+        ]
+      pure claimedRows
     resolveIdentityDecisionTarget inventory now explicitTarget =
       case fmap T.toLower explicitTarget of
         Just "new" -> ensureCoreArtistProfile (artistInventoryReferenceOriginalName inventory) now

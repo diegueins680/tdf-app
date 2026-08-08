@@ -15,11 +15,13 @@ import {
   meaningfulSignals,
   normalizeName,
   parseArgs,
+  prepareCheckpointForAttempt,
   probeImage,
   reportableLinkUrl,
   retryDelayMs,
   retryFetch,
   runPipeline,
+  selectRunBatch,
   transcodeWithinBudget,
   uploadTdfDriveFile,
 } from '../artist-enrichment.mjs';
@@ -49,6 +51,34 @@ test('calcula backoff exponencial acotado', () => {
   assert.equal(retryDelayMs(0), 500);
   assert.equal(retryDelayMs(3), 4000);
   assert.equal(retryDelayMs(20), 30000);
+});
+
+test('reinicia el contador de errores al reanudar y conserva el historial', () => {
+  const checkpoint = prepareCheckpointForAttempt({
+    completedArtists: [7],
+    completedInventory: ['audit artist'],
+    previousErrors: [{ artistId: 1, message: 'older failure' }],
+    errors: [
+      { artistId: 2, message: 'provider timeout' },
+      { artistId: 3, message: 'provider timeout' },
+      { artistId: 4, message: 'provider timeout' },
+    ],
+  });
+  assert.deepEqual(checkpoint.completedArtists, [7]);
+  assert.deepEqual(checkpoint.completedInventory, ['audit artist']);
+  assert.equal(checkpoint.previousErrors.length, 4);
+  assert.deepEqual(checkpoint.errors, []);
+});
+
+test('rota lotes diarios para no dejar perfiles posteriores al límite sin procesar', () => {
+  const profiles = Array.from({ length: 501 }, (_, index) => index + 1);
+  const firstDay = selectRunBatch(profiles, 500, '2026-08-07', true);
+  const secondDay = selectRunBatch(profiles, 500, '2026-08-08', true);
+  assert.equal(firstDay.length, 500);
+  assert.equal(secondDay.length, 500);
+  assert.equal(new Set([...firstDay, ...secondDay]).size, 501);
+  assert.deepEqual(selectRunBatch(profiles, 500, '2026-08-07', false), profiles.slice(0, 500));
+  assert.equal(parseArgs(['--rotate-batches']).rotateBatches, true);
 });
 
 test('permite ampliar de forma segura el timeout de la API de TDF', () => {

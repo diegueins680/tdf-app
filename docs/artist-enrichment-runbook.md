@@ -126,6 +126,8 @@ value, source/fields, content hash, and media variant.
 The safety circuit stops production research after three errors, or above a 10%
 error rate after at least five attempts. The backend run retains the checkpoint
 and redacted error summary. Correct the cause and rerun with the same checkpoint.
+Historical errors remain in the report as `previousAttemptErrors`, but only
+errors from the current attempt count toward the circuit breaker.
 
 ## Review interface
 
@@ -137,6 +139,8 @@ ambiguous identity review, historical decisions, and artist-scoped reruns.
 Approval and rejection are safe to repeat. Approving an externally corroborated
 candidate without an existing party creates the missing Party, Artist role,
 profile, and enrichment row atomically; a matching existing profile is reused.
+Approval also supersedes every pending candidate for the same normalized-name
+group, preventing a later decision from silently reassigning its references.
 
 ## Daily maintenance
 
@@ -149,8 +153,11 @@ Two complementary layers run daily in `America/Guayaquil`:
   group `production-artist-enrichment`, bounded provider concurrency, and a
   120-minute timeout. It validates links, researches identities, queues
   corroborated changes, and stores a redacted artifact for 30 days. The
-  scheduled job does not auto-publish or ingest an image without explicit rights;
-  a strict administrator can approve queued fields or launch an authorized image run.
+  external-research window rotates deterministically by UTC date, so platforms
+  larger than the 500-record safety batch eventually cover every profile rather
+  than repeatedly selecting the first 500. The scheduled job does not
+  auto-publish or ingest an image without explicit rights; a strict administrator
+  can approve queued fields or launch an authorized image run.
 
 Fly variables:
 

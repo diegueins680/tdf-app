@@ -73,6 +73,7 @@ jobs:
           --batch-size 500
           --concurrency 3
           --no-resume
+          --rotate-batches
           --checkpoint artifacts/artist-enrichment/daily-checkpoint.json
           --report artifacts/artist-enrichment/daily-report.json
 

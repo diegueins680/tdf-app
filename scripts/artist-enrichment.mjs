@@ -55,6 +55,27 @@ export const automaticMatchAllowed = (signals, homonymCount = 1) =>
 export const retryDelayMs = (attempt, baseMs = 500) =>
   Math.min(30_000, baseMs * (2 ** Math.max(0, attempt)));
 
+export function selectRunBatch(items, batchSize, runDate, rotate = false) {
+  if (!rotate || items.length <= batchSize) return items.slice(0, batchSize);
+  const dayNumber = Math.floor(Date.parse(`${runDate}T00:00:00Z`) / 86_400_000);
+  if (!Number.isSafeInteger(dayNumber)) throw new Error('run date must use YYYY-MM-DD');
+  const start = (dayNumber * batchSize) % items.length;
+  return Array.from({ length: batchSize }, (_, index) => items[(start + index) % items.length]);
+}
+
+export function prepareCheckpointForAttempt(checkpoint) {
+  const previousErrors = [
+    ...(Array.isArray(checkpoint.previousErrors) ? checkpoint.previousErrors : []),
+    ...(Array.isArray(checkpoint.errors) ? checkpoint.errors : []),
+  ];
+  return {
+    completedArtists: Array.isArray(checkpoint.completedArtists) ? checkpoint.completedArtists : [],
+    completedInventory: Array.isArray(checkpoint.completedInventory) ? checkpoint.completedInventory : [],
+    previousErrors,
+    errors: [],
+  };
+}
+
 export function detectImageMime(bytes) {
   if (bytes.length >= 12 && bytes.subarray(0, 4).toString('hex') === '52494646'
     && bytes.subarray(8, 12).toString() === 'WEBP') return 'image/webp';
@@ -93,6 +114,7 @@ export function parseArgs(argv) {
     imageAttribution: null,
     focalPoint: 'center',
     resume: true,
+    rotateBatches: false,
     checkpoint: path.resolve('.tmp/artist-enrichment/checkpoint.json'),
     report: path.resolve('.tmp/artist-enrichment/report.json'),
   };
@@ -112,6 +134,7 @@ export function parseArgs(argv) {
     else if (arg === '--image-attribution') options.imageAttribution = next();
     else if (arg === '--focal-point') options.focalPoint = next();
     else if (arg === '--no-resume') options.resume = false;
+    else if (arg === '--rotate-batches') options.rotateBatches = true;
     else if (arg === '--help') options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -152,7 +175,8 @@ function help() {
     + `  --focal-point VALUE          Crop/focal metadata (default center)\n`
     + `  --checkpoint PATH           Resumable checkpoint file\n`
     + `  --report PATH               Structured report output\n`
-    + `  --no-resume                 Ignore an existing checkpoint\n`);
+    + `  --no-resume                 Ignore an existing checkpoint\n`
+    + `  --rotate-batches            Rotate bounded full-platform batches by UTC date\n`);
 }
 
 export async function retryFetch(url, options = {}, policy = {}) {
@@ -207,16 +231,17 @@ function createApiClient(baseUrl, adminToken) {
 }
 
 async function readCheckpoint(filePath, enabled) {
-  if (!enabled) return { completedArtists: [], completedInventory: [], errors: [] };
+  if (!enabled) return { completedArtists: [], completedInventory: [], previousErrors: [], errors: [] };
   try {
     const parsed = JSON.parse(await readFile(filePath, 'utf8'));
     return {
       completedArtists: Array.isArray(parsed.completedArtists) ? parsed.completedArtists : [],
       completedInventory: Array.isArray(parsed.completedInventory) ? parsed.completedInventory : [],
+      previousErrors: Array.isArray(parsed.previousErrors) ? parsed.previousErrors : [],
       errors: Array.isArray(parsed.errors) ? parsed.errors : [],
     };
   } catch (error) {
-    if (error?.code === 'ENOENT') return { completedArtists: [], completedInventory: [], errors: [] };
+    if (error?.code === 'ENOENT') return { completedArtists: [], completedInventory: [], previousErrors: [], errors: [] };
     throw error;
   }
 }
@@ -1166,13 +1191,19 @@ export async function runPipeline(options) {
     api('GET', overviewRoute),
   ]);
   const enrichmentById = new Map(overview.aeoProfiles.map((profile) => [profile.apeArtistId, profile]));
-  const checkpoint = await readCheckpoint(options.checkpoint, options.resume);
+  const checkpoint = prepareCheckpointForAttempt(await readCheckpoint(options.checkpoint, options.resume));
   const completed = new Set(checkpoint.completedArtists);
   const completedInventory = new Set(checkpoint.completedInventory);
-  const selected = profiles
+  const eligibleProfiles = profiles
     .filter((profile) => options.artistId == null || profile.apArtistId === options.artistId)
     .filter((profile) => !completed.has(profile.apArtistId))
-    .slice(0, options.batchSize);
+    .sort((left, right) => left.apArtistId - right.apArtistId);
+  const selected = selectRunBatch(
+    eligibleProfiles,
+    options.batchSize,
+    runDate,
+    options.artistId == null && options.rotateBatches === true,
+  );
   const spotifyToken = ['research', 'media', 'full'].includes(options.scope) ? await spotifyAccessToken() : null;
   const artistReports = [];
   const inventoryReports = [];
@@ -1185,7 +1216,15 @@ export async function runPipeline(options) {
       inventoryGroups.set(row.airNormalizedName, rows);
     }
   }
-  const selectedInventory = [...inventoryGroups.values()].slice(0, options.batchSize);
+  const eligibleInventory = [...inventoryGroups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, rows]) => rows);
+  const selectedInventory = selectRunBatch(
+    eligibleInventory,
+    options.batchSize,
+    runDate,
+    options.artistId == null && options.rotateBatches === true,
+  );
   let checkpointWrite = Promise.resolve();
   let attempted = 0;
   let halted = false;
@@ -1201,6 +1240,7 @@ export async function runPipeline(options) {
         aeruCheckpoint: JSON.stringify({
           completedArtists: checkpoint.completedArtists,
           completedInventory: checkpoint.completedInventory,
+          previousErrors: checkpoint.previousErrors.length,
           errors: checkpoint.errors.length,
           halted,
         }),
@@ -1208,6 +1248,7 @@ export async function runPipeline(options) {
           attempted,
           completed: completed.size,
           inventoryCompleted: completedInventory.size,
+          previousErrors: checkpoint.previousErrors.length,
           errors: checkpoint.errors.length,
         }),
       });
@@ -1288,6 +1329,7 @@ export async function runPipeline(options) {
     },
     inventoryCandidates: inventoryReports.sort((a, b) => a.artistName.localeCompare(b.artistName)),
     artists: artistReports.sort((a, b) => a.artistId - b.artistId),
+    previousAttemptErrors: checkpoint.previousErrors,
     errors: checkpoint.errors,
     haltedBySafetyThreshold: halted,
   };
@@ -1298,12 +1340,14 @@ export async function runPipeline(options) {
     aeruCheckpoint: JSON.stringify({
       completedArtists: checkpoint.completedArtists,
       completedInventory: checkpoint.completedInventory,
+      previousErrors: checkpoint.previousErrors.length,
       halted,
     }),
     aeruCounters: JSON.stringify({
       attempted,
       completed: completed.size,
       inventoryCompleted: completedInventory.size,
+      previousErrors: checkpoint.previousErrors.length,
       errors: checkpoint.errors.length,
       suggestions: report.artists.reduce((total, artist) => total + artist.suggestions.length, 0),
       media: report.artists.reduce((total, artist) => total + artist.media.length, 0),
