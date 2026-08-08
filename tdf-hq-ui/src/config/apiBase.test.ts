@@ -21,6 +21,14 @@ describe('resolveApiBase', () => {
     expect(resolveApiBase({ hostname: 'tdf-app.pages.dev' })).toBe('https://api.tdf.test');
   });
 
+  it('ignores the retired Koyeb API value on Cloudflare Pages builds', () => {
+    envReadMock.mockReturnValue('https://the-dream-factory.koyeb.app/');
+
+    expect(resolveApiBase({ hostname: 'tdf-app.pages.dev' })).toBe(DEFAULT_DEPLOYED_API_BASE);
+    expect(resolveApiBase({ hostname: 'feature.tdf-app.pages.dev' })).toBe(DEFAULT_DEPLOYED_API_BASE);
+    expect(resolveApiBase({ hostname: 'localhost' })).toBe('https://the-dream-factory.koyeb.app');
+  });
+
   it('falls back to the Fly backend on the public Cloudflare Pages host', () => {
     expect(resolveApiBase({ hostname: 'tdf-app.pages.dev' })).toBe(DEFAULT_DEPLOYED_API_BASE);
   });

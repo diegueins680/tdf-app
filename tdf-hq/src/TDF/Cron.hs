@@ -7,6 +7,7 @@ module TDF.Cron
   , startInstagramSyncJob
   , startSocialAutoReplyJob
   , startEventLogisticsRecheckJob
+  , startArtistEnrichmentJob
   , Directive(..)
   , parseDirective
   , selectInstagramSyncAccessToken
@@ -40,6 +41,8 @@ import           Data.Time               ( LocalTime(..)
                                          , addUTCTime
                                          , addDays
                                          , diffUTCTime
+                                         , defaultTimeLocale
+                                         , formatTime
                                          , getCurrentTime
                                          , getZonedTime
                                          , secondsToDiffTime
@@ -72,6 +75,8 @@ import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
 import           TDF.DB                  (Env(..), ConnectionPool)
+import           TDF.API.Admin           (ArtistEnrichmentRunRequest(..))
+import           TDF.Artists.Enrichment  (runArtistEnrichmentWithKey)
 import qualified TDF.Email.Service       as EmailSvc
 import qualified TDF.LogBuffer           as LogBuf
 import qualified TDF.ModelsExtra         as ME
@@ -120,6 +125,11 @@ import           TDF.Config
   , instagramAppToken
   , ticketmasterApiKey
   , eventLogisticsRecheckEnabled
+  , artistEnrichmentEnabled
+  , artistEnrichmentAutoPublish
+  , artistEnrichmentHourLocal
+  , artistEnrichmentBatchSize
+  , artistEnrichmentStaleDays
   , googleRoutesApiBase
   , googleRoutesApiKey
   , defaultCurrency
@@ -224,6 +234,60 @@ waitUntil targetUtc = do
   let diffSeconds = diffUTCTime targetUtc now
       waitMicros = max 0 (ceiling (realToFrac diffSeconds * (1e6 :: Double)) :: Int)
   when (waitMicros > 0) (threadDelay waitMicros)
+
+-- | Run the safe artist inventory/enrichment audit once per local day. Every
+-- replica starts the scheduler; a session advisory lock and deterministic run
+-- key ensure one execution per day and safe recovery after restarts.
+startArtistEnrichmentJob :: Env -> IO ()
+startArtistEnrichmentJob env@Env{envConfig}
+  | not (artistEnrichmentEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][ArtistEnrichment] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (artistEnrichmentLoop env))
+      LogBuf.addLog LogBuf.LogInfo
+        ("[Cron][ArtistEnrichment] Scheduled daily at local hour "
+          <> T.pack (show (artistEnrichmentHourLocal envConfig)) <> ".")
+
+artistEnrichmentLoop :: Env -> IO ()
+artistEnrichmentLoop env@Env{envConfig} = forever $ do
+  target <- nextLocalTimeUtc (TimeOfDay (artistEnrichmentHourLocal envConfig) 0 0)
+  waitUntil target
+  result <- tryNonAsync (runArtistEnrichmentWithLeaderLock env)
+  case result of
+    Left err -> LogBuf.addLog LogBuf.LogError
+      ("[Cron][ArtistEnrichment] Daily run failed: " <> T.pack (displayException err))
+    Right () -> pure ()
+
+runArtistEnrichmentWithLeaderLock :: Env -> IO ()
+runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn
+      (rawSql "SELECT pg_try_advisory_lock(8401320260805)" [] :: SqlPersistT IO [Single Bool])
+      backend
+    case lockRows of
+      [Single True] -> do
+        now <- getCurrentTime
+        let mode = if artistEnrichmentAutoPublish envConfig then "production" else "dry_run"
+            runKey = "daily:" <> T.pack (formatTime defaultTimeLocale "%F" now)
+            request = ArtistEnrichmentRunRequest
+              { aerrMode = mode
+              , aerrArtistId = Nothing
+              , aerrBatchSize = Just (artistEnrichmentBatchSize envConfig)
+              , aerrStaleDays = Just (artistEnrichmentStaleDays envConfig)
+              , aerrResumeRunKey = Just runKey
+              }
+        outcome <- tryNonAsync
+          (runSqlConn (runArtistEnrichmentWithKey "daily-enrichment" runKey request) backend)
+          `finally` void
+            (runSqlConn
+              (rawSql "SELECT pg_advisory_unlock(8401320260805)" [] :: SqlPersistT IO [Single Bool])
+              backend)
+        case outcome of
+          Left err -> throwIO err
+          Right _ -> LogBuf.addLog LogBuf.LogInfo
+            ("[Cron][ArtistEnrichment] Completed " <> runKey <> " in " <> mode <> " mode.")
+      _ -> LogBuf.addLog LogBuf.LogInfo
+        "[Cron][ArtistEnrichment] Another API replica owns this run; skipping."
 
 -- | Import external events for cities with active subscriptions. Every API
 -- replica starts the loop, while a PostgreSQL advisory lock and per-source

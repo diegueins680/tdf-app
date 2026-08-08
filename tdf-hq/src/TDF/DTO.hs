@@ -83,6 +83,20 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apFeaturedVideoUrl :: Maybe Text
   , apGenres          :: Maybe Text
   , apHighlights      :: Maybe Text
+  , apOfficialName    :: Maybe Text
+  , apCountry         :: Maybe Text
+  , apInstagramUrl    :: Maybe Text
+  , apSocialLinks     :: Maybe Text
+  , apDiscography     :: Maybe Text
+  , apAchievements    :: Maybe Text
+  , apHeroOriginalUrl :: Maybe Text
+  , apHeroSquareUrl   :: Maybe Text
+  , apHeroLandscapeUrl :: Maybe Text
+  , apHeroResponsiveUrls :: Maybe Text
+  , apHeroFocalPoint  :: Maybe Text
+  , apLastVerifiedAt  :: Maybe UTCTime
+  , apConfidence      :: Maybe Double
+  , apReviewStatus    :: Maybe Text
   , apFollowerCount   :: Int
   , apHasUserAccount  :: Bool
   } deriving (Show, Generic)

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "productionApi": "https://tdf-hq.fly.dev",
+  "deployedRevision": "fc09aed0899476d3617933e6103d7c00995d1fdd",
+  "run": {
+    "id": 13,
+    "runKey": "operator:production:identity-reconciliation:fc09aed0899476d3617933e6103d7c00995d1fdd",
+    "mode": "production",
+    "scope": "full",
+    "status": "completed",
+    "phase": "reporting",
+    "checkpoint": "complete",
+    "startedAt": "2026-08-07T15:54:12.340266Z",
+    "finishedAt": "2026-08-07T15:59:16.571435Z",
+    "errorSummary": null,
+    "counters": {
+      "candidateGroups": 54,
+      "created": 0,
+      "matched": 44,
+      "profileCorrections": 0,
+      "referencesDiscovered": 344,
+      "referencesProcessed": 344,
+      "reviewQueued": 10,
+      "staleProfiles": 48
+    }
+  },
+  "postRunInvariants": {
+    "profiles": 48,
+    "inventory": {
+      "matched": {
+        "total": 303,
+        "nullArtistPartyId": 0
+      },
+      "needsReview": {
+        "total": 40,
+        "nullArtistPartyId": 19
+      },
+      "obsoleteReview": {
+        "total": 1,
+        "nullArtistPartyId": 1
+      }
+    },
+    "researchSources": 175,
+    "pendingIdentityCandidates": 46,
+    "suggestions": {
+      "autoApplied": 15,
+      "pending": 48
+    },
+    "fieldChanges": 15,
+    "mediaAssets": 0,
+    "ephemeralAdminTokensActive": 0
+  }
+}

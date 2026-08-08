@@ -1316,6 +1316,34 @@
       "apiScopes": [{ "pathPrefix": "/admin/social", "methods": { "GET": "view", "POST": "administer" } }, { "pathPrefix": "/admin/email-test", "methods": { "POST": "administer" } }, { "pathPrefix": "/admin/seed", "methods": { "POST": "administer" } }, { "pathPrefix": "/meta/backfill", "methods": { "POST": "administer" } }]
     },
     {
+      "id": "admin.artist-enrichment",
+      "parentId": "admin.system-status",
+      "webRoute": "/admin/artistas-enriquecimiento",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Enriquecimiento de artistas", "en": "Artist enrichment" },
+      "synonyms": { "es": ["investigación de artistas", "revisión de artistas"], "en": ["artist research", "artist review"] },
+      "keywords": ["artist", "enrichment", "identity", "provenance", "media"],
+      "description": { "es": "Investigar, verificar y revisar perfiles e identidades de artistas.", "en": "Research, verify, and review artist profiles and identities." },
+      "navigationGroup": "admin",
+      "icon": "person-search",
+      "breadcrumb": ["admin.system-status"],
+      "requiredRoles": ["Admin"],
+      "requiredModules": ["Admin"],
+      "permissions": {
+        "discover": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "view": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "create": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true },
+        "edit": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true }
+      },
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "safeLockedDisclosure": false,
+      "mobilePresentation": { "kind": "security-concealed", "destination": null, "documentedException": "Artist enrichment review is restricted to strict administrators on the web." },
+      "aliases": ["/admin/artists/enrichment"],
+      "apiScopes": [{ "pathPrefix": "/admin/artists/enrichment", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }]
+    },
+    {
       "id": "admin.brain",
       "parentId": "admin.system-status",
       "webRoute": "/configuracion/brain",

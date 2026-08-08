@@ -17,7 +17,7 @@
 
 ## Backend capabilities without a mapped interface
 
-The generated backend inventory contains no unresolved interface decisions. Of 400 concrete endpoints, 350 map to an expected user/admin interface, 32 are intentionally documented API-only, 3 are security-sensitive and concealed, 11 are technical API-only, and 4 are technical/static. Each row includes method, path shape, authentication boundary, stable feature/action where applicable, source alias, and final disposition.
+The generated backend inventory contains no unresolved interface decisions. Of 408 concrete endpoints, 358 map to an expected user/admin interface, 32 are intentionally documented API-only, 3 are security-sensitive and concealed, 11 are technical API-only, and 4 are technical/static. Each row includes method, path shape, authentication boundary, stable feature/action where applicable, source alias, and final disposition.
 
 API-only status is deliberate rather than an invitation to expose an endpoint. Public handlers still require their existing validation, signature, or rate-limit controls; authenticated handlers still require exact action and record-scope enforcement. Any later proposal to add an interface must update the registry, permission rules, route mapping, and consistency tests together.
 

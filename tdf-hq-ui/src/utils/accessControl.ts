@@ -82,7 +82,6 @@ export function normalizeAccessRoles(roles: readonly string[] | undefined): stri
 
   return normalized;
 }
-
 export function buildAccessibleModuleSet(
   _roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,

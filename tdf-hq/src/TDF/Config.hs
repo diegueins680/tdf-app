@@ -99,6 +99,11 @@ data AppConfig = AppConfig
   , googleRoutesApiKey :: Maybe Text
   , googleRoutesApiBase :: Text
   , eventLogisticsRecheckEnabled :: Bool
+  , artistEnrichmentEnabled :: Bool
+  , artistEnrichmentAutoPublish :: Bool
+  , artistEnrichmentHourLocal :: Int
+  , artistEnrichmentBatchSize :: Int
+  , artistEnrichmentStaleDays :: Int
   , defaultCurrency :: Text
   , supportedCurrencies :: [Text]
   , defaultTimezone :: Text
@@ -783,6 +788,11 @@ loadConfig = do
   googleRoutesApiKeyEnv <- lookupEnv "GOOGLE_ROUTES_API_KEY"
   googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
   eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
+  artistEnrichmentEnabledEnv <- lookupEnv "ARTIST_ENRICHMENT_ENABLED"
+  artistEnrichmentAutoPublishEnv <- lookupEnv "ARTIST_ENRICHMENT_AUTO_PUBLISH"
+  artistEnrichmentHourEnv <- lookupEnv "ARTIST_ENRICHMENT_HOUR_LOCAL"
+  artistEnrichmentBatchSizeEnv <- lookupEnv "ARTIST_ENRICHMENT_BATCH_SIZE"
+  artistEnrichmentStaleDaysEnv <- lookupEnv "ARTIST_ENRICHMENT_STALE_DAYS"
   defaultCurrencyEnv <- lookupEnv "DEFAULT_CURRENCY"
   supportedCurrenciesEnv <- lookupEnv "SUPPORTED_CURRENCIES"
   defaultTimezoneEnv <- lookupEnv "DEFAULT_TIMEZONE"
@@ -875,6 +885,37 @@ loadConfig = do
       "EVENT_LOGISTICS_RECHECK_ENABLED"
       False
       eventLogisticsRecheckEnabledEnv
+  artistEnrichmentEnabledVal <-
+    validateStartupBooleanFlag
+      "ARTIST_ENRICHMENT_ENABLED"
+      False
+      artistEnrichmentEnabledEnv
+  artistEnrichmentAutoPublishVal <-
+    validateStartupBooleanFlag
+      "ARTIST_ENRICHMENT_AUTO_PUBLISH"
+      False
+      artistEnrichmentAutoPublishEnv
+  artistEnrichmentHourVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_HOUR_LOCAL"
+      4
+      0
+      23
+      artistEnrichmentHourEnv
+  artistEnrichmentBatchSizeVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_BATCH_SIZE"
+      500
+      1
+      500
+      artistEnrichmentBatchSizeEnv
+  artistEnrichmentStaleDaysVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_STALE_DAYS"
+      90
+      7
+      730
+      artistEnrichmentStaleDaysEnv
   supportedCurrenciesVal <- validateSupportedCurrencies supportedCurrenciesEnv
   defaultCurrencyVal <- validateDefaultCurrency supportedCurrenciesVal defaultCurrencyEnv
   defaultTimezoneVal <- validateDefaultTimezone defaultTimezoneEnv
@@ -998,6 +1039,11 @@ loadConfig = do
     , googleRoutesApiKey = googleRoutesApiKeyVal
     , googleRoutesApiBase = googleRoutesApiBaseVal
     , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
+    , artistEnrichmentEnabled = artistEnrichmentEnabledVal
+    , artistEnrichmentAutoPublish = artistEnrichmentAutoPublishVal
+    , artistEnrichmentHourLocal = artistEnrichmentHourVal
+    , artistEnrichmentBatchSize = artistEnrichmentBatchSizeVal
+    , artistEnrichmentStaleDays = artistEnrichmentStaleDaysVal
     , defaultCurrency = defaultCurrencyVal
     , supportedCurrencies = supportedCurrenciesVal
     , defaultTimezone = defaultTimezoneVal

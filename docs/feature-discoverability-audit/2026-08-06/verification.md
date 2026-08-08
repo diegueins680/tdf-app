@@ -6,10 +6,10 @@ This is branch evidence, not production-deployment evidence. All browser and mob
 
 | Gate | Result |
 | --- | --- |
-| Registry drift audit | Pass: 114 features, 125 web routes, 35 Expo routes |
-| Generated capability audit | Pass: 400 endpoints, 385 mapped to stable feature/actions, 0 undecided dispositions |
+| Registry drift audit | Pass: 115 features, 127 web routes, 35 Expo routes |
+| Generated capability audit | Pass: 408 endpoints, 393 mapped to stable feature/actions, 0 undecided dispositions |
 | Authorized primary discoverability | Pass: 466 fixture assertions; every allowed primary feature resolves through global navigation or safe search within two interactions |
-| Role/action/platform matrix | Generated: 2,508 rows for 11 user types and 17 actions |
+| Role/action/platform matrix | Generated: 2,530 rows for 11 user types and 17 actions |
 | Web tests | Pass: 124 suites, 1,538 tests |
 | Mobile tests | Pass: 38 suites, 206 tests, including empty credential defaults and stale-route handling |
 | Backend tests | Pass: 2,264 Hspec examples, 0 failures |

@@ -7,7 +7,8 @@ module TDF.DB
   , sharedTlsManager
   ) where
 
-import           Control.Monad.Logger (runStdoutLoggingT)
+import           Control.Monad.Logger (LogLevel (LevelDebug), filterLogger,
+                                       runStdoutLoggingT)
 import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (SqlPersistT, runMigration)
 import qualified Database.Persist.Sql as Sql
@@ -37,7 +38,9 @@ sharedTlsManager = unsafePerformIO (newManager tlsManagerSettings)
 {-# NOINLINE sharedTlsManager #-}
 
 makePool :: ByteString -> IO ConnectionPool
-makePool conn = runStdoutLoggingT $ createPostgresqlPool conn 10
+makePool conn = runStdoutLoggingT
+  $ filterLogger (\_ level -> level /= LevelDebug)
+  $ createPostgresqlPool conn 10
 
 runExtraMigrations :: SqlPersistT IO () -> SqlPersistT IO ()
 runExtraMigrations base = base >> runMigration migrateTrials >> runMigration migrateCMS >> runMigration migrateCalendar

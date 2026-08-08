@@ -208,6 +208,20 @@ emptyDto artistKey hasAccount = ArtistProfileDTO
   , apFeaturedVideoUrl = Nothing
   , apGenres           = Nothing
   , apHighlights       = Nothing
+  , apOfficialName     = Nothing
+  , apCountry          = Nothing
+  , apInstagramUrl     = Nothing
+  , apSocialLinks      = Nothing
+  , apDiscography      = Nothing
+  , apAchievements     = Nothing
+  , apHeroOriginalUrl  = Nothing
+  , apHeroSquareUrl    = Nothing
+  , apHeroLandscapeUrl = Nothing
+  , apHeroResponsiveUrls = Nothing
+  , apHeroFocalPoint   = Nothing
+  , apLastVerifiedAt   = Nothing
+  , apConfidence       = Nothing
+  , apReviewStatus     = Nothing
   , apFollowerCount    = 0
   , apHasUserAccount   = hasAccount
   }
@@ -324,7 +338,8 @@ buildArtistProfileDTOs profiles = do
   nameMap <- fetchPartyNameMap artistIds
   followerCounts <- fetchFollowerCounts artistIds
   accountMap <- fetchArtistAccountMap artistIds
-  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap) profiles)
+  enrichmentMap <- fetchArtistEnrichmentMap artistIds
+  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap enrichmentMap) profiles)
 
 fetchArtistAccountMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Bool)
 fetchArtistAccountMap ids
@@ -353,17 +368,29 @@ fetchArtistProfileMap ids
       profiles <- selectList [ArtistProfileArtistPartyId <-. ids] []
       pure $ Map.fromList [ (artistProfileArtistPartyId (entityVal ap), entityVal ap) | ap <- profiles ]
 
+fetchArtistEnrichmentMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId ArtistProfileEnrichment)
+fetchArtistEnrichmentMap ids
+  | null ids = pure Map.empty
+  | otherwise = do
+      rows <- selectList [ArtistProfileEnrichmentArtistPartyId <-. ids] []
+      pure $ Map.fromList
+        [ (artistProfileEnrichmentArtistPartyId (entityVal row), entityVal row)
+        | row <- rows
+        ]
+
 artistProfileEntityToDTO
   :: Map.Map PartyId Text
   -> Map.Map PartyId Int
   -> Map.Map PartyId Bool
+  -> Map.Map PartyId ArtistProfileEnrichment
   -> Entity ArtistProfile
   -> ArtistProfileDTO
-artistProfileEntityToDTO nameMap followMap accountMap (Entity _ prof) =
+artistProfileEntityToDTO nameMap followMap accountMap enrichmentMap (Entity _ prof) =
   let artistId = artistProfileArtistPartyId prof
       displayName = Map.findWithDefault "Artista" artistId nameMap
       followerCount = Map.findWithDefault 0 artistId followMap
       hasAccount = Map.findWithDefault False artistId accountMap
+      enrichment = Map.lookup artistId enrichmentMap
   in ArtistProfileDTO
       { apArtistId         = fromSqlKey artistId
       , apDisplayName      = displayName
@@ -379,6 +406,20 @@ artistProfileEntityToDTO nameMap followMap accountMap (Entity _ prof) =
       , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
       , apGenres           = artistProfileGenres prof
       , apHighlights       = artistProfileHighlights prof
+      , apOfficialName     = enrichment >>= artistProfileEnrichmentOfficialName
+      , apCountry          = enrichment >>= artistProfileEnrichmentCountry
+      , apInstagramUrl     = enrichment >>= artistProfileEnrichmentInstagramUrl
+      , apSocialLinks      = enrichment >>= artistProfileEnrichmentSocialLinks
+      , apDiscography      = enrichment >>= artistProfileEnrichmentDiscography
+      , apAchievements     = enrichment >>= artistProfileEnrichmentAchievements
+      , apHeroOriginalUrl  = enrichment >>= artistProfileEnrichmentHeroOriginalUrl
+      , apHeroSquareUrl    = enrichment >>= artistProfileEnrichmentHeroSquareUrl
+      , apHeroLandscapeUrl = enrichment >>= artistProfileEnrichmentHeroLandscapeUrl
+      , apHeroResponsiveUrls = enrichment >>= artistProfileEnrichmentHeroResponsiveUrls
+      , apHeroFocalPoint   = enrichment >>= artistProfileEnrichmentHeroFocalPoint
+      , apLastVerifiedAt   = enrichment >>= artistProfileEnrichmentLastVerifiedAt
+      , apConfidence       = enrichment >>= artistProfileEnrichmentConfidence
+      , apReviewStatus     = artistProfileEnrichmentReviewStatus <$> enrichment
       , apFollowerCount    = followerCount
       , apHasUserAccount   = hasAccount
       }

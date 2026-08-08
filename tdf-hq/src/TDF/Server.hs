@@ -3046,7 +3046,7 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder) ::
+      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
@@ -16148,6 +16148,14 @@ instance FromJSON DriveApiResp where
       darResourceKey
     pure DriveApiResp{..}
 
+newtype DriveListResp = DriveListResp { dlrFiles :: [DriveApiResp] }
+  deriving (Show, Generic)
+
+instance FromJSON DriveListResp where
+  parseJSON = withObject "DriveListResp" $ \o -> do
+    rejectUnexpectedDriveResponseKeys "Drive list response" ["files"] o
+    DriveListResp <$> (o .:? "files" .!= [])
+
 validateDriveResponseResourceKeyConsistency :: Maybe Text -> Maybe Text -> Maybe Text -> Parser ()
 validateDriveResponseResourceKeyConsistency mWebViewLink mWebContentLink mResourceKey =
   case dedupeStable resourceKeys of
@@ -16246,8 +16254,9 @@ uploadToDrive
   -> Text            -- ^ Normalized file MIME type
   -> Maybe Text      -- ^ Optional override name
   -> Maybe Text      -- ^ Optional folder id
+  -> Maybe Text      -- ^ Optional deterministic idempotency key
   -> IO DriveUploadDTO
-uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
+uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
   uuid <- nextRandom
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
@@ -16257,6 +16266,7 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
         [ "name" .= fileName
         , "mimeType" .= mimeTypeTxt
         ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
+          <> maybe [] (\key -> ["appProperties" .= object ["tdfIdempotencyKey" .= key]]) mIdempotencyKey
 
   fileBytes <- BL.readFile (fdPayload file)
   let metaPart = BL.intercalate "\r\n"
@@ -16286,13 +16296,19 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
             ]
         , requestBody = RequestBodyLBS body
         }
-  resp <- httpLbs req manager
-  let uploadStatus = statusCode (responseStatus resp)
-  when (uploadStatus >= 400) $ do
-    fail (formatDriveUploadFailure uploadStatus (responseBody resp))
-  driveResp <- case eitherDecode (responseBody resp) of
-    Left err -> fail ("No pudimos interpretar la respuesta de Drive: " <> err)
-    Right ok -> pure (ok :: DriveApiResp)
+  existing <- case mIdempotencyKey of
+    Nothing -> pure Nothing
+    Just key -> findDriveUploadByIdempotencyKey manager accessToken key mFolder
+  driveResp <- case existing of
+    Just found -> pure found
+    Nothing -> do
+      resp <- httpLbs req manager
+      let uploadStatus = statusCode (responseStatus resp)
+      when (uploadStatus >= 400) $ do
+        fail (formatDriveUploadFailure uploadStatus (responseBody resp))
+      case eitherDecode (responseBody resp) of
+        Left err -> fail ("No pudimos interpretar la respuesta de Drive: " <> err)
+        Right ok -> pure (ok :: DriveApiResp)
 
   -- Best-effort: make the file public.
   let permBody = encode (object ["role" .= ("reader" :: Text), "type" .= ("anyone" :: Text)])
@@ -16344,6 +16360,30 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder = do
     , duWebContentLink = darWebContentLink driveResp
     , duPublicUrl = publicUrl
     }
+
+findDriveUploadByIdempotencyKey
+  :: Manager -> Text -> Text -> Maybe Text -> IO (Maybe DriveApiResp)
+findDriveUploadByIdempotencyKey manager accessToken key mFolder = do
+  let baseQuery = "appProperties has { key='tdfIdempotencyKey' and value='" <> key <> "' } and trashed=false"
+      scopedQuery = maybe baseQuery (\folder -> baseQuery <> " and '" <> folder <> "' in parents") mFolder
+      query = renderQuery True
+        [ ("q", Just (TE.encodeUtf8 scopedQuery))
+        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey)")
+        , ("pageSize", Just "2")
+        ]
+  req0 <- parseRequest ("https://www.googleapis.com/drive/v3/files" <> BS8.unpack query)
+  let req = req0 { requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 accessToken)] }
+  resp <- httpLbs req manager
+  let responseStatusCode = statusCode (responseStatus resp)
+  when (responseStatusCode >= 400) $
+    fail (formatDriveUploadFailure responseStatusCode (responseBody resp))
+  DriveListResp files <- case eitherDecode (responseBody resp) of
+    Left err -> fail ("No pudimos interpretar la búsqueda idempotente de Drive: " <> err)
+    Right parsed -> pure parsed
+  case files of
+    [] -> pure Nothing
+    [found] -> pure (Just found)
+    _ -> fail "Drive contains multiple files for one TDF idempotency key"
 
 formatDriveUploadFailure :: Int -> BL.ByteString -> String
 formatDriveUploadFailure uploadStatus responseBodyBytes =

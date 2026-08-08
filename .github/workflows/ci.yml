@@ -141,3 +141,16 @@ jobs:
             echo "checksum mismatch was accepted" >&2
             exit 1
           fi
+
+      - name: Verify artist enrichment migration rollback preserves base profiles
+        env:
+          PGROLLBACK: postgresql://postgres:postgres@127.0.0.1:5432/artist_enrichment_rollback_test
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE artist_enrichment_rollback_test'
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -c 'CREATE TABLE party (id BIGSERIAL PRIMARY KEY); CREATE TABLE artist_profile (id BIGSERIAL PRIMARY KEY, artist_party_id BIGINT REFERENCES party(id), slug TEXT);'
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment.sql
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment.sql
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -c "INSERT INTO party DEFAULT VALUES; INSERT INTO artist_profile (artist_party_id, slug) VALUES (1, 'rollback-proof');"
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment_rollback.sql
+          test "$(psql "$PGROLLBACK" -Atqc "SELECT count(*) FROM artist_profile WHERE slug = 'rollback-proof'")" = '1'
+          test "$(psql "$PGROLLBACK" -Atqc "SELECT count(*) FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relname IN ('artist_profile_enrichment','artist_inventory_reference','artist_research_source','artist_enrichment_suggestion','artist_field_change','artist_enrichment_run','artist_identity_candidate','artist_media_asset')")" = '0'

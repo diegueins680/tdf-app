@@ -6,12 +6,12 @@ This directory is the reproducible, anonymized audit packet for the web applicat
 
 ## Inventory
 
-- 114 product, contextual, incomplete, and technical feature records.
-- 37 primary destinations, 49 important submodules, 19 record/context routes, and 9 technical routes.
+- 115 product, contextual, incomplete, and technical feature records.
+- 37 primary destinations, 50 important submodules, 19 record/context routes, and 9 technical routes.
 - 125 composed React Router paths or redirects checked against the registry.
 - 35 Expo Router screen paths checked against the registry.
-- 400 concrete endpoints expanded from the root Servant `API` type. All have an explicit disposition: 350 map to a user/admin interface, 32 remain documented API-only capabilities, 3 are security-sensitive and concealed, 11 are technical API-only routes, and 4 are technical/static routes. In total, 385 map to a stable feature/action and zero remain undecided. Technical endpoints are deliberately not turned into navigation entries.
-- 2,508 role/module/feature/action/platform matrix rows, covering 11 representative user types on web and mobile and 17 distinct actions.
+- 408 concrete endpoints expanded from the root Servant `API` type. All have an explicit disposition: 358 map to a user/admin interface, 32 remain documented API-only capabilities, 3 are security-sensitive and concealed, 11 are technical API-only routes, and 4 are technical/static routes. In total, 393 map to a stable feature/action and zero remain undecided. Technical endpoints are deliberately not turned into navigation entries.
+- 2,530 role/module/feature/action/platform matrix rows, covering 11 representative user types on web and mobile and 17 distinct actions.
 
 Generated deliverables:
 

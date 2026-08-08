@@ -61,6 +61,7 @@ import TDF.Cron (
     startCoursePaymentReminderJob,
     startEventDiscoveryJob,
     startEventLogisticsRecheckJob,
+    startArtistEnrichmentJob,
     startInstagramSyncJob,
     startSocialAutoReplyJob,
   )
@@ -174,6 +175,7 @@ runBootServer = do
         startCoursePaymentReminderJob env
         startEventDiscoveryJob env
         startEventLogisticsRecheckJob env
+        startArtistEnrichmentJob env
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env

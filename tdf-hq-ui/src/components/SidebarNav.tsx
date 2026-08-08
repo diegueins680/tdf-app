@@ -61,7 +61,6 @@ export interface NavItem {
   accessPath?: string;
   missingAccess?: string;
 }
-
 export interface NavGroup {
   title: string;
   items: NavItem[];

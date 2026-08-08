@@ -68,6 +68,7 @@ admin.system-status,important-submodule,/configuracion/estado,,web-only,,,,,true
 admin.activity,important-submodule,/configuracion/actividad,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
 admin.logs,important-submodule,/configuracion/logs,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
 admin.diagnostics,important-submodule,/admin/diagnosticos,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
+admin.artist-enrichment,important-submodule,/admin/artistas-enriquecimiento,/admin/artists/enrichment,security-concealed,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
 admin.brain,important-submodule,/configuracion/brain,,web-only,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
 admin.calendar-integration,important-submodule,/configuracion/integraciones/calendario,,security-concealed,,,admin.system-status,admin.system-status,true,global-menu,1,false,false
 admin.cms,primary-destination,/configuracion/cms,,web-only,,,,,true,global-menu,1,false,false

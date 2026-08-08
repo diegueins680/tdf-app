@@ -996,7 +996,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the example action for custom slugs and replaces it with custom-slug guidance', async () => {
+  it('hides the example action for a published custom slug and points to the live version', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',
       JSON.stringify({ slug: 'promo-landing', locale: 'es' }),
@@ -1016,7 +1016,7 @@ describe('CmsAdminPage', () => {
       expect(getPublicMock).toHaveBeenCalledWith('promo-landing', 'es');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
       expect(container.textContent).toContain(
-        'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(container.textContent).toContain(
         'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.',
