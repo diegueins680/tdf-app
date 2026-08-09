@@ -65,6 +65,8 @@ import { FollowedArtists } from '../features/fans/FollowedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
+import { useAnalytics } from '../analytics/useAnalytics';
+import { captureGrowthEvent } from '../analytics/growthAttribution';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -134,6 +136,7 @@ const FAN_HUB_RECOVERY_CARDS: CatalogRecoveryCard[] = [
 ];
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
+  const analytics = useAnalytics();
   const { session, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
@@ -240,6 +243,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   } = useFanProfile({
     enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
     viewerId,
+    onProfileSaved: (profile) => {
+      const completedFields = Object.values(profile).filter((value) => Boolean(String(value ?? '').trim())).length;
+      captureGrowthEvent(analytics, 'fan_profile_saved', {
+        party_id: viewerId,
+        completed_fields: completedFields,
+      });
+    },
   });
 
   const followsQuery = useQuery({
@@ -332,8 +342,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   const updateArtistProfileMutation = useMutation({
     mutationFn: Fans.updateMyArtistProfile,
-    onSuccess: () => {
+    onSuccess: (_profile, payload) => {
       void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+      const completedFields = Object.values(payload).filter((value) => Boolean(String(value ?? '').trim())).length;
+      captureGrowthEvent(analytics, 'artist_profile_saved', {
+        party_id: viewerId,
+        completed_fields: completedFields,
+        has_public_slug: Boolean(payload.apuSlug?.trim()),
+      });
       setArtistToast('Perfil de artista actualizado.');
     },
     onError: (error) => {
@@ -350,23 +366,33 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       await qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
     },
     onSuccess: () => {
+      captureGrowthEvent(analytics, 'fan_role_enabled', { party_id: viewerId });
       setFanRoleToast('Rol Fan activado. Refrescamos tu feed.');
     },
   });
 
   const followMutation = useMutation({
     mutationFn: (artistId: number) => Fans.follow(artistId),
-    onSuccess: () => {
+    onSuccess: (_follow, artistId) => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      captureGrowthEvent(analytics, 'artist_followed', {
+        party_id: viewerId,
+        artist_id: artistId,
+        is_first_follow: followsQuery.data?.length === 0,
+      });
     },
   });
 
   const unfollowMutation = useMutation({
     mutationFn: (artistId: number) => Fans.unfollow(artistId),
-    onSuccess: () => {
+    onSuccess: (_result, artistId) => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      captureGrowthEvent(analytics, 'artist_unfollowed', {
+        party_id: viewerId,
+        artist_id: artistId,
+      });
     },
   });
 
