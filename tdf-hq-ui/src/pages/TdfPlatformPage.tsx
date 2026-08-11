@@ -25,10 +25,11 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useQuery } from '@tanstack/react-query';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 import { Fans } from '../api/fans';
 import { useAnalytics } from '../analytics/useAnalytics';
+import { captureGrowthAttribution, captureGrowthEvent } from '../analytics/growthAttribution';
 import type { ArtistProfileDTO } from '../api/types';
 import { STUDIO_MAP_URL } from '../config/appConfig';
 import { recordings, releases } from '../constants/recordsContent';
@@ -618,6 +619,7 @@ function ArtistCarousel({
 }
 
 export default function TdfPlatformPage() {
+  const location = useLocation();
   const { t } = useTranslation();
   const analytics = useAnalytics();
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -647,8 +649,9 @@ export default function TdfPlatformPage() {
   }, []);
 
   useEffect(() => {
-    analytics.capture('acquisition_landing_viewed', { route: '/tdf' });
-  }, [analytics]);
+    captureGrowthAttribution({ search: location.search, pathname: location.pathname });
+    captureGrowthEvent(analytics, 'acquisition_landing_viewed', { route: '/tdf' });
+  }, [analytics, location.pathname, location.search]);
 
   const toggleHeroVideo = () => {
     const video = heroVideoRef.current;
@@ -795,7 +798,7 @@ export default function TdfPlatformPage() {
                 variant="contained"
                 size="large"
                 startIcon={<AccountCircleIcon />}
-                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'general' })}
+                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'general' })}
                 sx={{
                   bgcolor: COLOR_TDF_GOLD,
                   color: COLOR_ON_GOLD,
@@ -813,7 +816,7 @@ export default function TdfPlatformPage() {
                 to={FAN_SIGNUP_PATH}
                 variant="outlined"
                 size="large"
-                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'fan' })}
+                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'fan' })}
                 sx={{ color: COLOR_TEXT_PRIMARY, borderColor: COLOR_OUTLINE_ON_DARK, textTransform: 'none' }}
               >
                 {copy.fanProfile}
@@ -824,7 +827,7 @@ export default function TdfPlatformPage() {
                 to={ARTIST_SIGNUP_PATH}
                 variant="text"
                 size="large"
-                onClick={() => analytics.capture('acquisition_cta_clicked', { route: '/tdf', intent: 'artist' })}
+                onClick={() => captureGrowthEvent(analytics, 'acquisition_cta_clicked', { route: '/tdf', intent: 'artist' })}
                 sx={{ color: COLOR_CYAN_TEXT, textTransform: 'none' }}
               >
                 {copy.artistProfile}

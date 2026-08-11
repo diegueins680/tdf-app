@@ -40,6 +40,25 @@ Both keys are **client-side** PostHog project keys (start with `phc_`). They are
 | `experiment_assigned` | mobile (web TODO when ExperimentProvider lands on web) | `ExperimentProvider` on first assignment | `experimentId`, `variant`, `source: 'client_local'` |
 | `experiment_viewed`, `experiment_converted`, … | mobile + web | wherever `useExperimentEvent().track(...)` is called | `experimentId`, `variant`, free-form metadata |
 
+### Community growth funnel (web)
+
+The acquisition and activation surfaces now attach the latest explicit
+UTM/referral attribution to every growth event. Direct navigation keeps the
+previous attribution. Only an allowlist of campaign parameters is persisted;
+arbitrary query parameters, emails, and phone numbers are ignored.
+
+| Funnel stage | Events |
+|---|---|
+| Landing | `acquisition_landing_viewed`, `acquisition_cta_clicked` |
+| Auth entry | `auth_page_viewed`, `login_submitted`, `login_completed`, `login_failed` |
+| Signup | `signup_started`, `signup_roles_selected`, `signup_submitted`, `signup_completed`, `signup_failed`, `signup_abandoned` |
+| Activation | `fan_profile_saved`, `artist_profile_saved`, `fan_role_enabled`, `artist_followed`, `artist_unfollowed` |
+
+Stable attribution properties are `attribution_source`,
+`attribution_medium`, `attribution_campaign`, `attribution_content`,
+`attribution_term`, `referral_code`, `attribution_landing_path`, and
+`attribution_captured_at`.
+
 ### "First meaningful action" events
 
 These are the ones #128 will read. They are NOT emitted by this PR — they land with the implementation PR for #128. Calling them out so the shapes are agreed up front:
