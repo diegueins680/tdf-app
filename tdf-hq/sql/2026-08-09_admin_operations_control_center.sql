@@ -969,19 +969,64 @@ FROM unnest(ARRAY[
 ]) AS provider
 ON CONFLICT (organization_id, provider, country_code, currency) DO NOTHING;
 
-INSERT INTO operations_scope_member (organization_id, branch_id, party_id)
-SELECT DISTINCT
-  '00000000-0000-4000-8000-000000000001'::uuid,
-  '00000000-0000-4000-8000-000000000002'::uuid,
-  role.party_id
-FROM party_role role
-WHERE role.active = TRUE
-  AND role.role::text IN (
-    'Admin', 'Manager', 'StudioManager', 'Accounting', 'Reception', 'Teacher',
-    'Engineer', 'LiveSessionsProducer', 'Producer', 'AandR', 'Maintenance', 'ReadOnly'
-  )
-ON CONFLICT (organization_id, branch_id, party_id) DO UPDATE SET
-  active = TRUE, updated_at = now();
+CREATE OR REPLACE FUNCTION operations_install_capture_trigger(
+  p_table_name TEXT,
+  p_trigger_name TEXT,
+  p_create_sql TEXT,
+  p_required_columns TEXT[]
+) RETURNS BOOLEAN LANGUAGE plpgsql AS $$
+DECLARE
+  target_table REGCLASS;
+BEGIN
+  target_table := to_regclass(format('public.%I', p_table_name));
+  IF target_table IS NULL OR EXISTS (
+    SELECT 1
+    FROM unnest(p_required_columns) AS required(column_name)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM information_schema.columns existing
+      WHERE existing.table_schema = 'public'
+        AND existing.table_name = p_table_name
+        AND existing.column_name = required.column_name
+    )
+  ) THEN
+    RETURN FALSE;
+  END IF;
+  EXECUTE format('DROP TRIGGER IF EXISTS %I ON %s', p_trigger_name, target_table);
+  EXECUTE p_create_sql;
+  RETURN TRUE;
+END;
+$$;
+
+DO $$
+BEGIN
+  IF to_regclass('public.party_role') IS NOT NULL
+    AND NOT EXISTS (
+      SELECT 1 FROM unnest(ARRAY['party_id','active','role']) AS required(column_name)
+      WHERE NOT EXISTS (
+        SELECT 1 FROM information_schema.columns existing
+        WHERE existing.table_schema = 'public'
+          AND existing.table_name = 'party_role'
+          AND existing.column_name = required.column_name
+      )
+    ) THEN
+    EXECUTE $scope$
+      INSERT INTO operations_scope_member (organization_id, branch_id, party_id)
+      SELECT DISTINCT
+        '00000000-0000-4000-8000-000000000001'::uuid,
+        '00000000-0000-4000-8000-000000000002'::uuid,
+        role.party_id
+      FROM party_role role
+      WHERE role.active = TRUE
+        AND role.role::text IN (
+          'Admin', 'Manager', 'StudioManager', 'Accounting', 'Reception', 'Teacher',
+          'Engineer', 'LiveSessionsProducer', 'Producer', 'AandR', 'Maintenance', 'ReadOnly'
+        )
+      ON CONFLICT (organization_id, branch_id, party_id) DO UPDATE SET
+        active = TRUE, updated_at = now()
+    $scope$;
+  END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION operations_sync_scope_member_from_role()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1002,10 +1047,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_party_role_scope_sync ON party_role;
-CREATE TRIGGER operations_party_role_scope_sync
-  AFTER INSERT OR UPDATE OF role, active ON party_role
-  FOR EACH ROW EXECUTE FUNCTION operations_sync_scope_member_from_role();
+SELECT operations_install_capture_trigger(
+  'party_role', 'operations_party_role_scope_sync',
+  $trigger$CREATE TRIGGER operations_party_role_scope_sync
+    AFTER INSERT OR UPDATE OF role, active ON party_role
+    FOR EACH ROW EXECUTE FUNCTION operations_sync_scope_member_from_role()$trigger$,
+  ARRAY['party_id','role','active']
+);
 
 CREATE OR REPLACE FUNCTION operations_course_registration_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1033,10 +1081,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_course_registration_capture ON course_registration;
-CREATE TRIGGER operations_course_registration_capture
-  AFTER INSERT OR UPDATE OF status ON course_registration
-  FOR EACH ROW EXECUTE FUNCTION operations_course_registration_event();
+SELECT operations_install_capture_trigger(
+  'course_registration', 'operations_course_registration_capture',
+  $trigger$CREATE TRIGGER operations_course_registration_capture
+    AFTER INSERT OR UPDATE OF status ON course_registration
+    FOR EACH ROW EXECUTE FUNCTION operations_course_registration_event()$trigger$,
+  ARRAY['id','status','source','course_slug','updated_at','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_booking_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1065,10 +1116,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_booking_capture ON booking;
-CREATE TRIGGER operations_booking_capture
-  AFTER INSERT OR UPDATE OF status, starts_at, ends_at ON booking
-  FOR EACH ROW EXECUTE FUNCTION operations_booking_event();
+SELECT operations_install_capture_trigger(
+  'booking', 'operations_booking_capture',
+  $trigger$CREATE TRIGGER operations_booking_capture
+    AFTER INSERT OR UPDATE OF status, starts_at, ends_at ON booking
+    FOR EACH ROW EXECUTE FUNCTION operations_booking_event()$trigger$,
+  ARRAY['id','status','starts_at','ends_at','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_invoice_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1101,10 +1155,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_invoice_capture ON invoice;
-CREATE TRIGGER operations_invoice_capture
-  AFTER INSERT OR UPDATE OF status, due_date ON invoice
-  FOR EACH ROW EXECUTE FUNCTION operations_invoice_event();
+SELECT operations_install_capture_trigger(
+  'invoice', 'operations_invoice_capture',
+  $trigger$CREATE TRIGGER operations_invoice_capture
+    AFTER INSERT OR UPDATE OF status, due_date ON invoice
+    FOR EACH ROW EXECUTE FUNCTION operations_invoice_event()$trigger$,
+  ARRAY['id','status','due_date','total_cents','currency','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_payment_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1123,10 +1180,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_payment_capture ON payment;
-CREATE TRIGGER operations_payment_capture
-  AFTER INSERT ON payment
-  FOR EACH ROW EXECUTE FUNCTION operations_payment_event();
+SELECT operations_install_capture_trigger(
+  'payment', 'operations_payment_capture',
+  $trigger$CREATE TRIGGER operations_payment_capture
+    AFTER INSERT ON payment
+    FOR EACH ROW EXECUTE FUNCTION operations_payment_event()$trigger$,
+  ARRAY['id','method','amount_cents','currency','invoice_id','created_at','received_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_registration_receipt_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1144,10 +1204,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_registration_receipt_capture ON course_registration_receipt;
-CREATE TRIGGER operations_registration_receipt_capture
-  AFTER INSERT ON course_registration_receipt
-  FOR EACH ROW EXECUTE FUNCTION operations_registration_receipt_event();
+SELECT operations_install_capture_trigger(
+  'course_registration_receipt', 'operations_registration_receipt_capture',
+  $trigger$CREATE TRIGGER operations_registration_receipt_capture
+    AFTER INSERT ON course_registration_receipt
+    FOR EACH ROW EXECUTE FUNCTION operations_registration_receipt_event()$trigger$,
+  ARRAY['id','registration_id','mime_type','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_marketplace_order_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1167,10 +1230,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_marketplace_order_capture ON marketplace_order;
-CREATE TRIGGER operations_marketplace_order_capture
-  AFTER INSERT OR UPDATE OF status ON marketplace_order
-  FOR EACH ROW EXECUTE FUNCTION operations_marketplace_order_event();
+SELECT operations_install_capture_trigger(
+  'marketplace_order', 'operations_marketplace_order_capture',
+  $trigger$CREATE TRIGGER operations_marketplace_order_capture
+    AFTER INSERT OR UPDATE OF status ON marketplace_order
+    FOR EACH ROW EXECUTE FUNCTION operations_marketplace_order_event()$trigger$,
+  ARRAY['id','status','total_usd_cents','currency','updated_at','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_maintenance_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1190,10 +1256,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_maintenance_capture ON maintenance_ticket;
-CREATE TRIGGER operations_maintenance_capture
-  AFTER INSERT OR UPDATE OF status ON maintenance_ticket
-  FOR EACH ROW EXECUTE FUNCTION operations_maintenance_event();
+SELECT operations_install_capture_trigger(
+  'maintenance_ticket', 'operations_maintenance_capture',
+  $trigger$CREATE TRIGGER operations_maintenance_capture
+    AFTER INSERT OR UPDATE OF status ON maintenance_ticket
+    FOR EACH ROW EXECUTE FUNCTION operations_maintenance_event()$trigger$,
+  ARRAY['id','status','summary','asset_id','opened_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_service_order_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1217,10 +1286,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_service_order_capture ON service_order;
-CREATE TRIGGER operations_service_order_capture
-  AFTER INSERT OR UPDATE OF status, scheduled_start, scheduled_end ON service_order
-  FOR EACH ROW EXECUTE FUNCTION operations_service_order_event();
+SELECT operations_install_capture_trigger(
+  'service_order', 'operations_service_order_capture',
+  $trigger$CREATE TRIGGER operations_service_order_capture
+    AFTER INSERT OR UPDATE OF status, scheduled_start, scheduled_end ON service_order
+    FOR EACH ROW EXECUTE FUNCTION operations_service_order_event()$trigger$,
+  ARRAY['id','status','scheduled_start','scheduled_end','description','title','service_kind','price_quoted_cents','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_package_purchase_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1246,10 +1318,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_package_purchase_capture ON package_purchase;
-CREATE TRIGGER operations_package_purchase_capture
-  AFTER INSERT OR UPDATE OF status, remaining_units, expires_at ON package_purchase
-  FOR EACH ROW EXECUTE FUNCTION operations_package_purchase_event();
+SELECT operations_install_capture_trigger(
+  'package_purchase', 'operations_package_purchase_capture',
+  $trigger$CREATE TRIGGER operations_package_purchase_capture
+    AFTER INSERT OR UPDATE OF status, remaining_units, expires_at ON package_purchase
+    FOR EACH ROW EXECUTE FUNCTION operations_package_purchase_event()$trigger$,
+  ARRAY['id','status','remaining_units','expires_at','buyer_id','purchased_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_lead_interest_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1270,10 +1345,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_lead_interest_capture ON lead_interest;
-CREATE TRIGGER operations_lead_interest_capture
-  AFTER INSERT OR UPDATE OF status ON lead_interest
-  FOR EACH ROW EXECUTE FUNCTION operations_lead_interest_event();
+SELECT operations_install_capture_trigger(
+  'lead_interest', 'operations_lead_interest_capture',
+  $trigger$CREATE TRIGGER operations_lead_interest_capture
+    AFTER INSERT OR UPDATE OF status ON lead_interest
+    FOR EACH ROW EXECUTE FUNCTION operations_lead_interest_event()$trigger$,
+  ARRAY['id','status','source','details','party_id','interest_type','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_trial_request_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1296,10 +1374,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_trial_request_capture ON trial_request;
-CREATE TRIGGER operations_trial_request_capture
-  AFTER INSERT OR UPDATE OF status, assigned_teacher_id ON trial_request
-  FOR EACH ROW EXECUTE FUNCTION operations_trial_request_event();
+SELECT operations_install_capture_trigger(
+  'trial_request', 'operations_trial_request_capture',
+  $trigger$CREATE TRIGGER operations_trial_request_capture
+    AFTER INSERT OR UPDATE OF status, assigned_teacher_id ON trial_request
+    FOR EACH ROW EXECUTE FUNCTION operations_trial_request_event()$trigger$,
+  ARRAY['id','status','assigned_teacher_id','pref1_start','party_id','subject_id','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_artist_profile_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1317,10 +1398,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_artist_profile_capture ON artist_profile;
-CREATE TRIGGER operations_artist_profile_capture
-  AFTER INSERT ON artist_profile
-  FOR EACH ROW EXECUTE FUNCTION operations_artist_profile_event();
+SELECT operations_install_capture_trigger(
+  'artist_profile', 'operations_artist_profile_capture',
+  $trigger$CREATE TRIGGER operations_artist_profile_capture
+    AFTER INSERT ON artist_profile
+    FOR EACH ROW EXECUTE FUNCTION operations_artist_profile_event()$trigger$,
+  ARRAY['id','artist_party_id','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_intern_task_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1343,10 +1427,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_intern_task_capture ON intern_task;
-CREATE TRIGGER operations_intern_task_capture
-  AFTER INSERT OR UPDATE OF status, assigned_to, due_at ON intern_task
-  FOR EACH ROW EXECUTE FUNCTION operations_intern_task_event();
+SELECT operations_install_capture_trigger(
+  'intern_task', 'operations_intern_task_capture',
+  $trigger$CREATE TRIGGER operations_intern_task_capture
+    AFTER INSERT OR UPDATE OF status, assigned_to, due_at ON intern_task
+    FOR EACH ROW EXECUTE FUNCTION operations_intern_task_event()$trigger$,
+  ARRAY['id','status','assigned_to','due_at','description','title','project_id','created_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_integration_failure_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1390,10 +1477,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_whatsapp_inbound_capture ON whats_app_message;
-CREATE TRIGGER operations_whatsapp_inbound_capture
-  AFTER INSERT ON whats_app_message
-  FOR EACH ROW EXECUTE FUNCTION operations_whatsapp_inbound_event();
+SELECT operations_install_capture_trigger(
+  'whats_app_message', 'operations_whatsapp_inbound_capture',
+  $trigger$CREATE TRIGGER operations_whatsapp_inbound_capture
+    AFTER INSERT ON whats_app_message
+    FOR EACH ROW EXECUTE FUNCTION operations_whatsapp_inbound_event()$trigger$,
+  ARRAY['direction','party_id','sender_id','reply_status','created_at','external_id']
+);
 
 CREATE OR REPLACE FUNCTION operations_social_inbound_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1414,14 +1504,20 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_instagram_inbound_capture ON instagram_message;
-CREATE TRIGGER operations_instagram_inbound_capture
-  AFTER INSERT ON instagram_message
-  FOR EACH ROW EXECUTE FUNCTION operations_social_inbound_event();
-DROP TRIGGER IF EXISTS operations_facebook_inbound_capture ON facebook_message;
-CREATE TRIGGER operations_facebook_inbound_capture
-  AFTER INSERT ON facebook_message
-  FOR EACH ROW EXECUTE FUNCTION operations_social_inbound_event();
+SELECT operations_install_capture_trigger(
+  'instagram_message', 'operations_instagram_inbound_capture',
+  $trigger$CREATE TRIGGER operations_instagram_inbound_capture
+    AFTER INSERT ON instagram_message
+    FOR EACH ROW EXECUTE FUNCTION operations_social_inbound_event()$trigger$,
+  ARRAY['direction','sender_id','reply_status','created_at','external_id']
+);
+SELECT operations_install_capture_trigger(
+  'facebook_message', 'operations_facebook_inbound_capture',
+  $trigger$CREATE TRIGGER operations_facebook_inbound_capture
+    AFTER INSERT ON facebook_message
+    FOR EACH ROW EXECUTE FUNCTION operations_social_inbound_event()$trigger$,
+  ARRAY['direction','sender_id','reply_status','created_at','external_id']
+);
 
 CREATE OR REPLACE FUNCTION operations_feature_access_request_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1441,10 +1537,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_feature_access_request_capture ON feature_access_requests;
-CREATE TRIGGER operations_feature_access_request_capture
-  AFTER INSERT OR UPDATE OF status, reviewer_party_id ON feature_access_requests
-  FOR EACH ROW EXECUTE FUNCTION operations_feature_access_request_event();
+SELECT operations_install_capture_trigger(
+  'feature_access_requests', 'operations_feature_access_request_capture',
+  $trigger$CREATE TRIGGER operations_feature_access_request_capture
+    AFTER INSERT OR UPDATE OF status, reviewer_party_id ON feature_access_requests
+    FOR EACH ROW EXECUTE FUNCTION operations_feature_access_request_event()$trigger$,
+  ARRAY['id','status','reviewer_party_id','expires_at','requester_party_id','feature_id','action','updated_at','requested_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_proposal_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1464,10 +1563,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_proposal_capture ON proposal;
-CREATE TRIGGER operations_proposal_capture
-  AFTER INSERT OR UPDATE OF status, client_party_id ON proposal
-  FOR EACH ROW EXECUTE FUNCTION operations_proposal_event();
+SELECT operations_install_capture_trigger(
+  'proposal', 'operations_proposal_capture',
+  $trigger$CREATE TRIGGER operations_proposal_capture
+    AFTER INSERT OR UPDATE OF status, client_party_id ON proposal
+    FOR EACH ROW EXECUTE FUNCTION operations_proposal_event()$trigger$,
+  ARRAY['id','status','client_party_id','service_kind','updated_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_stock_item_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1487,10 +1589,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_stock_item_capture ON stock_item;
-CREATE TRIGGER operations_stock_item_capture
-  AFTER INSERT OR UPDATE OF on_hand, reorder_point ON stock_item
-  FOR EACH ROW WHEN (NEW.reorder_point IS NOT NULL) EXECUTE FUNCTION operations_stock_item_event();
+SELECT operations_install_capture_trigger(
+  'stock_item', 'operations_stock_item_capture',
+  $trigger$CREATE TRIGGER operations_stock_item_capture
+    AFTER INSERT OR UPDATE OF on_hand, reorder_point ON stock_item
+    FOR EACH ROW WHEN (NEW.reorder_point IS NOT NULL) EXECUTE FUNCTION operations_stock_item_event()$trigger$,
+  ARRAY['id','on_hand','reorder_point']
+);
 
 CREATE OR REPLACE FUNCTION operations_intern_project_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1509,10 +1614,13 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_intern_project_capture ON intern_project;
-CREATE TRIGGER operations_intern_project_capture
-  AFTER INSERT OR UPDATE OF status, due_at ON intern_project
-  FOR EACH ROW EXECUTE FUNCTION operations_intern_project_event();
+SELECT operations_install_capture_trigger(
+  'intern_project', 'operations_intern_project_capture',
+  $trigger$CREATE TRIGGER operations_intern_project_capture
+    AFTER INSERT OR UPDATE OF status, due_at ON intern_project
+    FOR EACH ROW EXECUTE FUNCTION operations_intern_project_event()$trigger$,
+  ARRAY['id','status','due_at','updated_at']
+);
 
 CREATE OR REPLACE FUNCTION operations_social_event_event()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -1532,10 +1640,15 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS operations_social_event_capture ON social_event;
-CREATE TRIGGER operations_social_event_capture
-  AFTER INSERT OR UPDATE OF start_time, end_time, venue_id ON social_event
-  FOR EACH ROW EXECUTE FUNCTION operations_social_event_event();
+SELECT operations_install_capture_trigger(
+  'social_event', 'operations_social_event_capture',
+  $trigger$CREATE TRIGGER operations_social_event_capture
+    AFTER INSERT OR UPDATE OF start_time, end_time, venue_id ON social_event
+    FOR EACH ROW EXECUTE FUNCTION operations_social_event_event()$trigger$,
+  ARRAY['id','start_time','end_time','venue_id','updated_at']
+);
+
+DROP FUNCTION operations_install_capture_trigger(TEXT, TEXT, TEXT, TEXT[]);
 
 CREATE OR REPLACE FUNCTION operations_validate_entity_reference()
 RETURNS trigger LANGUAGE plpgsql AS $$
