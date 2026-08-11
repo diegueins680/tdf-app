@@ -862,6 +862,7 @@
       "permissions": { "discover": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "view": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "self-or-internship-admin" }, "create": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "edit": { "rolesAny": ["Intern", "Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"], "recordScope": "self-or-internship-admin" }, "delete": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] }, "approve": { "rolesAny": ["Admin", "Manager", "StudioManager"], "modulesAll": ["Internships"] } },
       "globalMenu": true,
       "mobilePresentation": { "kind": "web-only", "destination": null, "documentedException": "Intern time/project management is web only." },
+      "aliases": ["/practicas/tareas/:taskId"],
       "apiScopes": [{ "pathPrefix": "/internships", "methods": { "GET": "view", "POST": "create", "PATCH": "edit", "DELETE": "delete" } }]
     },
     {

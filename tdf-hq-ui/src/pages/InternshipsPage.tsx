@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import { Internships } from '../api/internships';
 import type {
   InternProfileUpdate,
@@ -1349,7 +1350,21 @@ export default function InternshipsPage() {
                   <Stack spacing={1}>
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
                       <Box>
-                        <Typography fontWeight={700}>{task.itTitle}</Typography>
+                        <Typography
+                          component={RouterLink}
+                          to={`/practicas/tareas/${encodeURIComponent(task.itId)}`}
+                          fontWeight={700}
+                          color="primary"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 44,
+                            textDecoration: 'none',
+                            '&:hover': { textDecoration: 'underline' },
+                          }}
+                        >
+                          {task.itTitle}
+                        </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {task.itProjectName}
                           {task.itDescription ? ` · ${task.itDescription}` : ''}

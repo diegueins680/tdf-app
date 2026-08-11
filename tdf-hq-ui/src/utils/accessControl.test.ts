@@ -184,6 +184,8 @@ describe('canAccessPath', () => {
     expect(hasInternshipsAccess(['Studio Manager'], ['internships', 'admin'])).toBe(true);
     expect(canAccessPath('/practicas', ['Studio Manager'], ['internships', 'admin'])).toBe(true);
     expect(canAccessPath('/practicas', [], ['internships'])).toBe(false);
+    expect(canAccessPath('/practicas/tareas/task-123', ['Intern'], ['internships'])).toBe(true);
+    expect(canAccessPath('/practicas/tareas/task-123', ['Customer'], ['internships'])).toBe(false);
   });
 
   it('keeps the token page restricted to strict admins even for broader admin-module roles', () => {

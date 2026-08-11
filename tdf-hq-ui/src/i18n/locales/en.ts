@@ -8,6 +8,9 @@ const en = {
     saved: 'Preferences saved.',
     error: 'Something went wrong.',
   },
+  internships: {
+    taskDetail: { instructions: 'Instructions' },
+  },
   pagination: {
     items: 'items',
     rowsPerPage: 'Per page',

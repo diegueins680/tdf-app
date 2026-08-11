@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 
 const listInternsMock = jest.fn<() => Promise<unknown[]>>();
 const getProfileMock = jest.fn<() => Promise<Record<string, unknown> | null>>();
@@ -87,7 +88,9 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={qc}>
-        <InternshipsPage />
+        <MemoryRouter>
+          <InternshipsPage />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     await flushPromises();
@@ -291,6 +294,30 @@ describe('InternshipsPage', () => {
         );
         expect(hasLabel(container, 'Asignar plan a')).toBe(false);
         expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses the task title as the single, uncluttered link to its canonical ID route', async () => {
+    listTasksMock.mockResolvedValue([
+      buildTask({ itId: '7e1f7364-8e02-453e-bdf9-b3f17a165fa2' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const expectedPath = '/practicas/tareas/7e1f7364-8e02-453e-bdf9-b3f17a165fa2';
+        const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'))
+          .filter((link) => link.getAttribute('href') === expectedPath);
+
+        expect(links).toHaveLength(1);
+        expect(links[0]?.textContent?.trim()).toBe('Armar calendario editorial');
+        expect(container.textContent).not.toContain('Ver detalle');
       });
     } finally {
       await cleanup();

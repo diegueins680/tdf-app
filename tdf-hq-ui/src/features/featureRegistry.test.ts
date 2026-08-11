@@ -35,6 +35,7 @@ describe('featureRegistry', () => {
     expect(getFeatureByPath('/label/ddex/documents/42/import')?.id).toBe('label.ddex.import');
     expect(getFeatureByPath('/social/eventos/nuevo')?.id).toBe('social.events.create');
     expect(getFeatureByPath('/social/eventos/abc')?.id).toBe('social.event.detail');
+    expect(getFeatureByPath('/practicas/tareas/task-123')?.id).toBe('internships');
     expect(getFeatureByPath('/not-a-real-route')).toBeNull();
   });
 

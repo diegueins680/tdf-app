@@ -1,5 +1,6 @@
 const de = {
   common: { save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Einstellungen gespeichert.', error: 'Ein Fehler ist aufgetreten.' },
+  internships: { taskDetail: { instructions: 'Anweisungen' } },
   pagination: {
     items: 'Einträge', rowsPerPage: 'Pro Seite', loading: 'Ergebnisse werden geladen…', updating: 'Ergebnisse werden aktualisiert…',
     displayed: '{{from}}–{{to}} von {{count}} {{itemLabel}}', displayedMoreThan: '{{from}}–{{to}} von mehr als {{count}} {{itemLabel}}',
