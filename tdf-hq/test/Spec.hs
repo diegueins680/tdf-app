@@ -984,6 +984,20 @@ main = hspec $ do
             migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
             migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
 
+    describe "operations control-center migrations" $ do
+        it "limits rollback updates to rows whose enabled state changes" $ do
+            rollback <- readFile "sql/2026-08-09_admin_operations_control_center_rollback.sql"
+            rollback `shouldContain`
+                "UPDATE operations_organization SET operations_enabled = FALSE, updated_at = now()\nWHERE operations_enabled IS DISTINCT FROM FALSE;"
+            rollback `shouldContain`
+                "UPDATE operations_provider_config SET enabled = FALSE, updated_at = now()\nWHERE enabled IS DISTINCT FROM FALSE;"
+
+        it "keeps the backfill record projection explicit" $ do
+            migration <- readFile "sql/2026-08-09_admin_operations_control_center.sql"
+            migration `shouldContain`
+                "SELECT entity_type, entity_id, correlation_key, occurred_at,\n        priority, title_es, title_en, metadata"
+            migration `shouldNotContain` "SELECT * FROM ("
+
     describe "getVersionInfo" $ do
         let clearEnv keys = map (\key -> (key, Nothing)) keys
             commitEnvKeys =

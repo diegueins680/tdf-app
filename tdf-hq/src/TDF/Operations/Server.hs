@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Operations.Server (operationsServer) where
 
@@ -12,7 +13,7 @@ import Control.Exception (SomeException, displayException, try)
 import Control.Monad (forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
-import Data.Aeson (FromJSON, ToJSON, Value, decodeStrict', encode)
+import Data.Aeson (FromJSON, ToJSON(..), Value, decodeStrict', encode)
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
 import Data.List (find)
@@ -355,10 +356,10 @@ validateCursor (Just raw) = case T.breakOnEnd "|" raw of
   where invalid = throwError err400 {errBody = "Invalid cursor"}
 
 cursorForLast :: [Ops.WorkItemDTO] -> Maybe Text
-cursorForLast [] = Nothing
-cursorForLast values =
-  let item = last values
-  in Just (T.pack (show (item.updatedAt)) <> "|" <> UUID.toText (item.id))
+cursorForLast = fmap renderCursor . foldl' (\_ item -> Just item) Nothing
+  where
+    renderCursor :: Ops.WorkItemDTO -> Text
+    renderCursor item = T.pack (show (item.updatedAt)) <> "|" <> UUID.toText (item.id)
 
 metricsHandler :: AuthedUser -> Maybe UUID -> Maybe UUID -> OperationsM Ops.OperationsMetricsDTO
 metricsHandler user organizationFilter branchFilter = do
@@ -947,7 +948,7 @@ createPushSubscriptionHandler user command = do
     _ -> throwError err503 {errBody = "Push token encryption is not configured"}
 
 toJson :: ToJSON value => value -> Value
-toJson value = fromMaybe (error "JSON encoding failed") (decodeStrict' (BL.toStrict (encode value)))
+toJson = toJSON
 
 conflict :: OperationsM a
 conflict = throwError err409 {errBody = "Work item changed; refresh and retry"}

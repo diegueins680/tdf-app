@@ -2,8 +2,10 @@ BEGIN;
 
 -- Safe rollback: stop visibility, capture, and provider delivery while retaining
 -- all events, work, approvals, delivery attempts, and immutable audit evidence.
-UPDATE operations_organization SET operations_enabled = FALSE, updated_at = now();
-UPDATE operations_provider_config SET enabled = FALSE, updated_at = now();
+UPDATE operations_organization SET operations_enabled = FALSE, updated_at = now()
+WHERE operations_enabled IS DISTINCT FROM FALSE;
+UPDATE operations_provider_config SET enabled = FALSE, updated_at = now()
+WHERE enabled IS DISTINCT FROM FALSE;
 
 DROP TRIGGER IF EXISTS operations_course_registration_capture ON course_registration;
 DROP TRIGGER IF EXISTS operations_booking_capture ON booking;

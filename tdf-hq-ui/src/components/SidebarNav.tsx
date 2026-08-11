@@ -731,16 +731,16 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     return buildRegistryNavGroups(featureLocale).map((group) => ({
       ...group,
       items: group.items.flatMap((item) => {
-        const feature = getFeatureById(item.featureId);
-        if (!feature) return [];
-        const decision = evaluateFeatureAccess(feature, currentSession, 'discover');
+        const navFeature = getFeatureById(item.featureId);
+        if (!navFeature) return [];
+        const decision = evaluateFeatureAccess(navFeature, currentSession, 'discover');
         if (decision.state === 'concealed') return [];
         if (decision.state === 'allowed') return [item];
         const missingCategory = decision.missingModules[0] ?? decision.missingRoles[0] ?? 'permiso';
         return [{
           ...item,
           locked: true,
-          accessPath: accessRequestPath(feature, 'view'),
+          accessPath: accessRequestPath(navFeature, 'view'),
           missingAccess: `Requiere ${missingCategory} · ${REQUEST_ACCESS_LABEL}`,
         }];
       }),
@@ -790,8 +790,8 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     });
     const localFallback = preferences.length === 0
       ? recentPaths.flatMap((path) => {
-          const item = itemByPath.get(path);
-          return item && path !== currentPath ? [{ ...item, shortcutKind: 'recent' as const }] : [];
+          const recentItem = itemByPath.get(path);
+          return recentItem && path !== currentPath ? [{ ...recentItem, shortcutKind: 'recent' as const }] : [];
         })
       : [];
     const seen = new Set<string>();
@@ -908,7 +908,7 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
   const handlePreferenceChange = (featureId: string, kind: 'favorite' | 'pinned') => {
     const current = preferenceMap.get(featureId);
     const pinnedPreferences = (navigationPreferences.query.data ?? []).filter((preference) => preference.pinned);
-    const next = {
+    const nextPreference = {
       featureId,
       favorite: kind === 'favorite' ? !current?.favorite : Boolean(current?.favorite),
       pinned: kind === 'pinned' ? !current?.pinned : Boolean(current?.pinned),
@@ -916,11 +916,11 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
         ? Math.max(-1, ...pinnedPreferences.map((preference) => preference.pinOrder ?? 0)) + 1
         : current?.pinned ? current.pinOrder ?? 0 : null,
     };
-    if (!next.pinned) next.pinOrder = null;
-    navigationPreferences.update.mutate(next);
+    if (!nextPreference.pinned) nextPreference.pinOrder = null;
+    navigationPreferences.update.mutate(nextPreference);
     getAnalyticsClient().capture(kind === 'favorite' ? 'feature_favorite_changed' : 'feature_pin_changed', {
       feature_id: featureId,
-      enabled: kind === 'favorite' ? next.favorite : next.pinned,
+      enabled: kind === 'favorite' ? nextPreference.favorite : nextPreference.pinned,
       platform: 'web',
     });
   };
@@ -932,13 +932,13 @@ export default function SidebarNav({ open, onNavigate }: SidebarNavProps) {
     const index = pinned.findIndex((preference) => preference.featureId === featureId);
     const swapIndex = index + direction;
     if (index < 0 || swapIndex < 0 || swapIndex >= pinned.length) return;
-    const current = pinned[index];
+    const currentPreference = pinned[index];
     const other = pinned[swapIndex];
-    if (!current || !other) return;
-    const currentOrder = current.pinOrder ?? index;
+    if (!currentPreference || !other) return;
+    const currentOrder = currentPreference.pinOrder ?? index;
     const otherOrder = other.pinOrder ?? swapIndex;
     void Promise.all([
-      navigationPreferences.update.mutateAsync({ ...current, pinOrder: otherOrder }),
+      navigationPreferences.update.mutateAsync({ ...currentPreference, pinOrder: otherOrder }),
       navigationPreferences.update.mutateAsync({ ...other, pinOrder: currentOrder }),
     ]);
   };

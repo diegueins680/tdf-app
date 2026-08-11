@@ -255,34 +255,34 @@ export function evaluateFeatureAccess(
   session: FeatureSession,
   action: FeatureAction = 'view',
 ): FeatureAccessDecision {
-  const feature = typeof featureOrId === 'string' ? getFeatureById(featureOrId) : featureOrId;
-  if (!feature) throw new Error(`Unknown feature: ${featureOrId as string}`);
+  const resolvedFeature = typeof featureOrId === 'string' ? getFeatureById(featureOrId) : featureOrId;
+  if (!resolvedFeature) throw new Error(`Unknown feature: ${featureOrId as string}`);
 
-  if (feature.technical || feature.maturity === 'incomplete' || feature.maturity === 'broken') {
-    return { state: 'concealed', feature, missingRoles: [], missingModules: [], reason: 'concealed' };
+  if (resolvedFeature.technical || resolvedFeature.maturity === 'incomplete' || resolvedFeature.maturity === 'broken') {
+    return { state: 'concealed', feature: resolvedFeature, missingRoles: [], missingModules: [], reason: 'concealed' };
   }
-  if (feature.requiredAuth === 'authenticated' && !session.authenticated) {
+  if (resolvedFeature.requiredAuth === 'authenticated' && !session.authenticated) {
     return {
-      state: feature.safeLockedDisclosure ? 'locked' : 'concealed',
-      feature,
+      state: resolvedFeature.safeLockedDisclosure ? 'locked' : 'concealed',
+      feature: resolvedFeature,
       missingRoles: [],
       missingModules: [],
       reason: 'authentication',
     };
   }
-  if (feature.featureFlag && !normalizedSet(session.featureFlags).has(normalizeFeatureToken(feature.featureFlag))) {
-    return { state: 'concealed', feature, missingRoles: [], missingModules: [], reason: 'feature-flag' };
+  if (resolvedFeature.featureFlag && !normalizedSet(session.featureFlags).has(normalizeFeatureToken(resolvedFeature.featureFlag))) {
+    return { state: 'concealed', feature: resolvedFeature, missingRoles: [], missingModules: [], reason: 'feature-flag' };
   }
 
   const roles = normalizedSet(session.roles);
   const modules = normalizedSet(session.modules);
-  const actionRule = feature.permissions[action];
+  const actionRule = resolvedFeature.permissions[action];
   if (!actionRule) {
-    return { state: 'concealed', feature, missingRoles: [], missingModules: [], reason: 'concealed' };
+    return { state: 'concealed', feature: resolvedFeature, missingRoles: [], missingModules: [], reason: 'concealed' };
   }
   const baseRule: AccessRule = {
-    ...(feature.requiredRoles.length > 0 ? { rolesAny: feature.requiredRoles } : {}),
-    ...(feature.requiredModules.length > 0 ? { modulesAll: feature.requiredModules } : {}),
+    ...(resolvedFeature.requiredRoles.length > 0 ? { rolesAny: resolvedFeature.requiredRoles } : {}),
+    ...(resolvedFeature.requiredModules.length > 0 ? { modulesAll: resolvedFeature.requiredModules } : {}),
   };
   const result = matchesRule(
     {
@@ -297,12 +297,12 @@ export function evaluateFeatureAccess(
   );
 
   if (result.allowed) {
-    return { state: 'allowed', feature, missingRoles: [], missingModules: [], reason: 'allowed' };
+    return { state: 'allowed', feature: resolvedFeature, missingRoles: [], missingModules: [], reason: 'allowed' };
   }
-  const state = feature.safeLockedDisclosure && feature.accessRequestEligible ? 'locked' : 'concealed';
+  const state = resolvedFeature.safeLockedDisclosure && resolvedFeature.accessRequestEligible ? 'locked' : 'concealed';
   return {
     state,
-    feature,
+    feature: resolvedFeature,
     missingRoles: result.missingRoles,
     missingModules: result.missingModules,
     reason: result.missingModules.length > 0 ? 'module' : 'role',
@@ -314,8 +314,8 @@ export function evaluatePathAccess(
   session: FeatureSession,
   action?: FeatureAction,
 ): FeatureAccessDecision | null {
-  const feature = getFeatureByPath(pathname);
-  return feature ? evaluateFeatureAccess(feature, session, action ?? feature.routeAction) : null;
+  const pathFeature = getFeatureByPath(pathname);
+  return pathFeature ? evaluateFeatureAccess(pathFeature, session, action ?? pathFeature.routeAction) : null;
 }
 
 export function featureLabel(feature: FeatureDefinition, locale: string | null | undefined): string {

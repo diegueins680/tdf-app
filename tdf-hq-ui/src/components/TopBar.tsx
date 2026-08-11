@@ -148,26 +148,26 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
   }, [quickNavItems, quickQuery]);
 
   const quickCreateItems = useMemo(() => {
-    const currentSession = {
+    const quickCreateSession = {
       authenticated: Boolean(session),
       roles: session?.roles,
       modules: session?.modules,
       featureFlags: session?.featureFlags,
     };
-    const english = featureLocale.toLowerCase().startsWith('en');
+    const usesEnglishLabels = featureLocale.toLowerCase().startsWith('en');
     return featureRegistry.flatMap((feature) => {
       if (!feature.quickCreate) return [];
       const action = feature.quickCreate.action;
-      const decision = evaluateFeatureAccess(feature, currentSession, action);
-      if (decision.state === 'concealed') return [];
+      const accessDecision = evaluateFeatureAccess(feature, quickCreateSession, action);
+      if (accessDecision.state === 'concealed') return [];
       return [{
         featureId: feature.id,
-        label: feature.quickCreate.label[english ? 'en' : 'es'],
-        locked: decision.state === 'locked',
-        destination: decision.state === 'locked'
+        label: feature.quickCreate.label[usesEnglishLabels ? 'en' : 'es'],
+        locked: accessDecision.state === 'locked',
+        destination: accessDecision.state === 'locked'
           ? accessRequestPath(feature, action)
           : feature.quickCreate.webDestination,
-        missingAccess: decision.missingModules[0] ?? decision.missingRoles[0] ?? null,
+        missingAccess: accessDecision.missingModules[0] ?? accessDecision.missingRoles[0] ?? null,
       }];
     });
   }, [featureLocale, session]);

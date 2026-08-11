@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Artists.Enrichment
   ( DiscoveryReference(..)
