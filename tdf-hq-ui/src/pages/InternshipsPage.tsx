@@ -204,21 +204,21 @@ const normalizeOptionalInt = (value?: string | null) => {
   return parsed;
 };
 
-type InternProjectForm = {
+interface InternProjectForm {
   ipcTitle: string;
   ipcDescription: string;
   ipcStatus: string;
   ipcStartAt: string;
   ipcDueAt: string;
-};
+}
 
-type InternTaskForm = {
+interface InternTaskForm {
   itcProjectId: string;
   itcTitle: string;
   itcDescription: string;
   itcAssignedTo: number | null;
   itcDueAt: string;
-};
+}
 
 const buildEmptyTaskForm = (): InternTaskForm => ({
   itcProjectId: '',
