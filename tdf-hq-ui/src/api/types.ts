@@ -700,10 +700,10 @@ export interface InternProjectDTO {
 
 export interface InternProjectCreate {
   ipcTitle: string;
-  ipcDescription?: string | null;
-  ipcStatus?: string | null;
-  ipcStartAt?: string | null;
-  ipcDueAt?: string | null;
+  ipcDescription?: string;
+  ipcStatus?: string;
+  ipcStartAt?: string;
+  ipcDueAt?: string;
 }
 
 export interface InternProjectUpdate {
@@ -732,9 +732,9 @@ export interface InternTaskDTO {
 export interface InternTaskCreate {
   itcProjectId: string;
   itcTitle: string;
-  itcDescription?: string | null;
-  itcAssignedTo?: number | null;
-  itcDueAt?: string | null;
+  itcDescription?: string;
+  itcAssignedTo?: number;
+  itcDueAt?: string;
 }
 
 export interface InternTaskUpdate {
