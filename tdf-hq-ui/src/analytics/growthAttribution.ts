@@ -33,8 +33,9 @@ interface CaptureGrowthAttributionOptions {
 }
 
 const cleanValue = (value: string | null): string | undefined => {
+  // eslint-disable-next-line no-control-regex -- intentionally strip C0/C1 control characters
   const cleaned = value?.trim().replace(/[\u0000-\u001f\u007f]/g, '').slice(0, MAX_VALUE_LENGTH);
-  return cleaned ? cleaned : undefined;
+  return cleaned ?? undefined;
 };
 
 const safePath = (pathname: string): string => {
