@@ -64,6 +64,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
+import           TDF.Operations.API (OperationsAPI)
 
 type InventoryItem = ME.Asset
 type InputListEntry = ME.InputRow
@@ -555,6 +556,7 @@ type ProtectedAPI =
   :<|> ServiceStorefrontAdminAPI
   :<|> "access-requests" :> AccessRequestsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
+  :<|> OperationsAPI
 
 type API =
        VersionAPI

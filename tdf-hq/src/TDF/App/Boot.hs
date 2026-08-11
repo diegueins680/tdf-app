@@ -87,6 +87,7 @@ import TDF.Internationalization
   ( CurrencyDefinition (..)
   , currencyDefinition
   )
+import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
 import TDF.Seed (seedAll, seedRecordsCmsContent, seededCredentialSeedingAllowed)
@@ -179,6 +180,7 @@ runBootServer = do
         startInstagramSyncJob env
         startSocialAutoReplyJob env
         startCampaignAutomationJob env
+        startOperationsWorker env
 
   _ <-
     forkFinally
