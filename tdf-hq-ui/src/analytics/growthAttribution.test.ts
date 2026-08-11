@@ -87,6 +87,13 @@ describe('growth attribution', () => {
     });
   });
 
+  it('ignores malformed stored attribution', () => {
+    const storage = makeStorage();
+    storage.values.set(__growthAttributionTestUtils.storageKey, '{"source":');
+
+    expect(getGrowthAttribution(storage)).toBeNull();
+  });
+
   it('flattens attribution into stable analytics properties', () => {
     expect(growthAttributionProperties({
       source: 'instagram',
