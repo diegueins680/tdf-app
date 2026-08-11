@@ -111,6 +111,7 @@ import           TDF.Config ( AppConfig(..)
                             )
 import           TDF.DB
 import qualified TDF.CampaignAutomation as CampaignAutomation
+import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
@@ -3733,6 +3734,7 @@ protectedServer user =
   :<|> serviceStorefrontAdminServer
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
+  :<|> OperationsServer.operationsServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =

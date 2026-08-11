@@ -1762,6 +1762,199 @@ paths:
           description: The feature is not currently authorized
         '404':
           description: Unknown, concealed, or non-recent feature
+  /operations/metrics:
+    get:
+      tags: [Operations]
+      summary: Get organization-scoped operational KPIs
+      operationId: getOperationsMetrics
+      parameters:
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+        - { name: branchId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Authorized operational metrics
+          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsMetrics' } } }
+        '403': { description: No enabled operations scope }
+  /operations/work-items:
+    get:
+      tags: [Operations]
+      summary: Search and filter the operational inbox
+      operationId: listOperationsWorkItems
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: seen, in: query, schema: { type: boolean } }
+        - { name: entityType, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/OperationsStatus' } }
+        - { name: priority, in: query, schema: { $ref: '#/components/schemas/OperationsPriority' } }
+        - { name: slaState, in: query, schema: { $ref: '#/components/schemas/OperationsSlaState' } }
+        - { name: assigneePartyId, in: query, schema: { type: integer, format: int64 } }
+        - { name: customerPartyId, in: query, schema: { type: integer, format: int64 } }
+        - { name: service, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: minAmountMinor, in: query, schema: { type: integer, format: int64 } }
+        - { name: maxAmountMinor, in: query, schema: { type: integer, format: int64 } }
+        - { name: paymentState, in: query, schema: { type: string } }
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+        - { name: branchId, in: query, schema: { type: string, format: uuid } }
+        - { name: sourceChannel, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Scope-filtered page; restricted fields and records are omitted server-side
+          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItemPage' } } }
+    post:
+      tags: [Operations]
+      summary: Create a manual correlated or explicitly uncorrelated work item
+      operationId: createOperationsWorkItem
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/OperationsManualWorkItemCreate' } } }
+      responses:
+        '201':
+          description: Durable work item
+          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } }
+        '422': { description: Correlation or entity-reference invariant failed }
+  /operations/work-items/{workItemId}:
+    get:
+      tags: [Operations]
+      summary: Get an authorized work-item thread
+      operationId: getOperationsWorkItem
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      responses:
+        '200':
+          description: Work item, immutable domain history, notes, and authorized actions
+          content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItemDetail' } } }
+        '404': { description: Missing or concealed work item }
+  /operations/work-items/{workItemId}/seen:
+    patch:
+      tags: [Operations]
+      summary: Mark shared first-seen state without mutating the source entity
+      operationId: markOperationsWorkItemSeen
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsVersionedCommand' } } } }
+      responses:
+        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
+        '409': { description: Optimistic-concurrency conflict }
+  /operations/work-items/{workItemId}/transition:
+    patch:
+      tags: [Operations]
+      summary: Apply an audited lifecycle transition only
+      operationId: transitionOperationsWorkItem
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsTransitionCommand' } } } }
+      responses:
+        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
+        '409': { description: Optimistic-concurrency conflict }
+        '422': { description: State-machine guard rejected the transition }
+  /operations/work-items/{workItemId}/assignment:
+    patch:
+      tags: [Operations]
+      summary: Assign a scoped staff member or team
+      operationId: assignOperationsWorkItem
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsAssignmentCommand' } } } }
+      responses:
+        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
+        '422': { description: Assignee is outside the organization and branch scope }
+  /operations/work-items/{workItemId}/priority:
+    patch:
+      tags: [Operations]
+      summary: Override recommended priority with a required reason
+      operationId: prioritizeOperationsWorkItem
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPriorityCommand' } } } }
+      responses:
+        '200': { description: Updated work item, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsWorkItem' } } } }
+        '403': { description: Manager permission required }
+  /operations/work-items/{workItemId}/notes:
+    post:
+      tags: [Operations]
+      summary: Add an internal note with scoped mentions
+      operationId: addOperationsWorkItemNote
+      parameters: [ { $ref: '#/components/parameters/OperationsWorkItemId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsNoteCreate' } } } }
+      responses:
+        '201': { description: Created note, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsNote' } } } }
+  /operations/approvals:
+    post:
+      tags: [Operations]
+      summary: Request a consequential action requiring a second person
+      operationId: createOperationsApproval
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApprovalCreate' } } } }
+      responses:
+        '201': { description: Pending approval, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApproval' } } } }
+  /operations/approvals/{approvalId}/decision:
+    patch:
+      tags: [Operations]
+      summary: Approve or reject with a distinct authorized person
+      operationId: decideOperationsApproval
+      parameters:
+        - { name: approvalId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApprovalDecision' } } } }
+      responses:
+        '200': { description: Decided approval, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsApproval' } } } }
+        '409': { description: Changed, expired, unavailable, or self-approval attempted }
+  /operations/integration-failures:
+    get:
+      tags: [Operations]
+      summary: List the admin-visible provider and dead-letter failure queue
+      operationId: listOperationsIntegrationFailures
+      parameters:
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+      responses:
+        '200':
+          description: Redacted failure summaries
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OperationsIntegrationFailure' } } } }
+  /operations/integration-failures/{failureId}/replay:
+    post:
+      tags: [Operations]
+      summary: Audit and schedule an idempotent manual replay
+      operationId: replayOperationsIntegrationFailure
+      parameters:
+        - { name: failureId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsReplayCommand' } } } }
+      responses:
+        '202': { description: Replay scheduled, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsIntegrationFailure' } } } }
+  /operations/events:
+    get:
+      tags: [Operations]
+      summary: Replay missed authorized real-time effects and provide bounded polling fallback
+      operationId: listOperationsStreamEvents
+      parameters:
+        - { name: afterId, in: query, schema: { type: integer, format: int64, minimum: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 250 } }
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Ordered resumable event batch, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsStreamBatch' } } } }
+  /operations/saved-views:
+    get:
+      tags: [Operations]
+      summary: List personal and shared operational views
+      operationId: listOperationsSavedViews
+      parameters:
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Authorized saved views, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OperationsSavedView' } } } } }
+    post:
+      tags: [Operations]
+      summary: Persist or replace an operational view
+      operationId: createOperationsSavedView
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsSavedViewCreate' } } } }
+      responses:
+        '201': { description: Saved view, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsSavedView' } } } }
+  /operations/push-subscriptions:
+    post:
+      tags: [Operations]
+      summary: Register an encrypted staff push token
+      operationId: createOperationsPushSubscription
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPushSubscriptionCreate' } } } }
+      responses:
+        '201': { description: Push subscription metadata, content: { application/json: { schema: { $ref: '#/components/schemas/OperationsPushSubscription' } } } }
+        '503': { description: Token encryption key is not configured }
 security:
   - bearerAuth: [ ]
 
@@ -1788,6 +1981,11 @@ components:
         type: string
         minLength: 1
         maxLength: 160
+    OperationsWorkItemId:
+      name: workItemId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
   schemas:
     Version:
       type: object
@@ -3232,3 +3430,354 @@ components:
           type: integer
           nullable: true
           minimum: 0
+    OperationsStatus:
+      type: string
+      enum: [new, seen, assigned, in_progress, waiting, resolved, archived]
+    OperationsPriority:
+      type: string
+      enum: [urgent, high, normal, low]
+    OperationsSlaState:
+      type: string
+      enum: [on_track, at_risk, due, breached, paused]
+    OperationsWorkItem:
+      type: object
+      required:
+        - id
+        - organizationId
+        - sourceSystem
+        - sourceChannel
+        - entityType
+        - uncorrelated
+        - correlationKey
+        - titleEs
+        - titleEn
+        - descriptionEs
+        - descriptionEn
+        - status
+        - priority
+        - recommendedPriority
+        - severity
+        - seen
+        - createdAt
+        - updatedAt
+        - waitingExternalDependency
+        - slaState
+        - version
+        - metadata
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        sourceSystem: { type: string }
+        sourceChannel: { type: string }
+        entityType: { type: string }
+        entityId: { type: string, nullable: true }
+        uncorrelated: { type: boolean }
+        correlationKey: { type: string }
+        titleEs: { type: string }
+        titleEn: { type: string }
+        descriptionEs: { type: string }
+        descriptionEn: { type: string }
+        status: { $ref: '#/components/schemas/OperationsStatus' }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        recommendedPriority: { $ref: '#/components/schemas/OperationsPriority' }
+        severity: { type: string, enum: [critical, error, warning, info] }
+        seen: { type: boolean }
+        firstSeenBy: { type: integer, format: int64, nullable: true }
+        firstSeenAt: { type: string, format: date-time, nullable: true }
+        assigneePartyId: { type: integer, format: int64, nullable: true }
+        responsibleTeam: { type: string, nullable: true }
+        customerPartyId: { type: integer, format: int64, nullable: true }
+        serviceKey: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, minLength: 3, maxLength: 3, nullable: true }
+        paymentState: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        dueAt: { type: string, format: date-time, nullable: true }
+        snoozedUntil: { type: string, format: date-time, nullable: true }
+        waitingReason: { type: string, nullable: true }
+        waitingExternalDependency: { type: boolean }
+        resumeAt: { type: string, format: date-time, nullable: true }
+        resolvedAt: { type: string, format: date-time, nullable: true }
+        archivedAt: { type: string, format: date-time, nullable: true }
+        slaState: { $ref: '#/components/schemas/OperationsSlaState' }
+        version: { type: integer, format: int64, minimum: 1 }
+        metadata: { type: object, additionalProperties: true }
+    OperationsWorkItemPage:
+      type: object
+      required: [items, hasMore]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/OperationsWorkItem' } }
+        nextCursor: { type: string, nullable: true }
+        hasMore: { type: boolean }
+    OperationsWorkItemEvent:
+      type: object
+      required: [id, eventType, bodyEs, bodyEn, metadata, occurredAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventType: { type: string }
+        actorPartyId: { type: integer, format: int64, nullable: true }
+        actorRole: { type: string, nullable: true }
+        bodyEs: { type: string }
+        bodyEn: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        occurredAt: { type: string, format: date-time }
+    OperationsNote:
+      type: object
+      required: [id, authorPartyId, body, mentionedPartyIds, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        authorPartyId: { type: integer, format: int64 }
+        body: { type: string }
+        mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
+        createdAt: { type: string, format: date-time }
+        editedAt: { type: string, format: date-time, nullable: true }
+    OperationsWorkItemDetail:
+      type: object
+      required: [workItem, events, notes, allowedTransitions, quickActions]
+      properties:
+        workItem: { $ref: '#/components/schemas/OperationsWorkItem' }
+        events: { type: array, items: { $ref: '#/components/schemas/OperationsWorkItemEvent' } }
+        notes: { type: array, items: { $ref: '#/components/schemas/OperationsNote' } }
+        allowedTransitions: { type: array, items: { $ref: '#/components/schemas/OperationsStatus' } }
+        sourceRecordUrl: { type: string, nullable: true }
+        quickActions: { type: array, items: { type: string } }
+    OperationsMetrics:
+      type: object
+      required:
+        - newRegistrations
+        - registrationsRequiringAttention
+        - reservationsAwaitingConfirmation
+        - todaySessions
+        - schedulingConflicts
+        - unpaidInvoices
+        - overdueInvoices
+        - paymentsAwaitingVerification
+        - revenueReceivedTodayMinor
+        - unassignedWork
+        - slaBreaches
+        - integrationFailures
+        - currency
+        - calculatedAt
+      properties:
+        newRegistrations: { type: integer, format: int64 }
+        registrationsRequiringAttention: { type: integer, format: int64 }
+        reservationsAwaitingConfirmation: { type: integer, format: int64 }
+        todaySessions: { type: integer, format: int64 }
+        schedulingConflicts: { type: integer, format: int64 }
+        unpaidInvoices: { type: integer, format: int64 }
+        overdueInvoices: { type: integer, format: int64 }
+        paymentsAwaitingVerification: { type: integer, format: int64 }
+        revenueReceivedTodayMinor: { type: integer, format: int64 }
+        unassignedWork: { type: integer, format: int64 }
+        slaBreaches: { type: integer, format: int64 }
+        averageFirstResponseSeconds: { type: number, format: double, nullable: true }
+        averageResolutionSeconds: { type: number, format: double, nullable: true }
+        integrationFailures: { type: integer, format: int64 }
+        currency: { type: string }
+        calculatedAt: { type: string, format: date-time }
+    OperationsVersionedCommand:
+      type: object
+      required: [expectedVersion, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 1 }
+        reason: { type: string, nullable: true }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
+    OperationsTransitionCommand:
+      allOf:
+        - $ref: '#/components/schemas/OperationsVersionedCommand'
+        - type: object
+          required: [targetStatus]
+          properties:
+            targetStatus: { $ref: '#/components/schemas/OperationsStatus' }
+            waitingExternalDependency: { type: boolean, nullable: true }
+            resumeAt: { type: string, format: date-time, nullable: true }
+    OperationsAssignmentCommand:
+      allOf:
+        - $ref: '#/components/schemas/OperationsVersionedCommand'
+        - type: object
+          properties:
+            assigneePartyId: { type: integer, format: int64, nullable: true }
+            responsibleTeam: { type: string, nullable: true }
+    OperationsPriorityCommand:
+      type: object
+      required: [expectedVersion, priority, reason, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 1 }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        reason: { type: string, minLength: 1 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
+    OperationsNoteCreate:
+      type: object
+      required: [body, mentionedPartyIds, requestId, sourceClient]
+      additionalProperties: false
+      properties:
+        body: { type: string, minLength: 1, maxLength: 5000 }
+        mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsManualWorkItemCreate:
+      type: object
+      required: [organizationId, entityType, uncorrelated, correlationKey, titleEs, titleEn, descriptionEs, descriptionEn, priority, metadata, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        entityType: { type: string }
+        entityId: { type: string, nullable: true }
+        uncorrelated: { type: boolean }
+        correlationKey: { type: string }
+        titleEs: { type: string }
+        titleEn: { type: string }
+        descriptionEs: { type: string }
+        descriptionEn: { type: string }
+        priority: { $ref: '#/components/schemas/OperationsPriority' }
+        responsibleTeam: { type: string, nullable: true }
+        customerPartyId: { type: integer, format: int64, nullable: true }
+        serviceKey: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        metadata: { type: object, additionalProperties: true }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApprovalCreate:
+      type: object
+      required: [organizationId, actionType, targetEntityType, targetEntityId, reason, idempotencyKey, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        workItemId: { type: string, format: uuid, nullable: true }
+        actionType: { type: string }
+        targetEntityType: { type: string }
+        targetEntityId: { type: string }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        reason: { type: string, minLength: 1 }
+        idempotencyKey: { type: string, minLength: 1 }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApprovalDecision:
+      type: object
+      required: [decision, reason, expectedDecision, requestId, sourceClient]
+      properties:
+        decision: { type: string, enum: [approved, rejected] }
+        reason: { type: string, minLength: 1 }
+        expectedDecision: { type: string, enum: [pending] }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsApproval:
+      type: object
+      required: [id, organizationId, actionType, targetEntityType, targetEntityId, requesterPartyId, requesterRole, requestReason, requestedAt, decision, executionStatus]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        workItemId: { type: string, format: uuid, nullable: true }
+        actionType: { type: string }
+        targetEntityType: { type: string }
+        targetEntityId: { type: string }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, nullable: true }
+        requesterPartyId: { type: integer, format: int64 }
+        requesterRole: { type: string }
+        requestReason: { type: string }
+        requestedAt: { type: string, format: date-time }
+        approverPartyId: { type: integer, format: int64, nullable: true }
+        approverRole: { type: string, nullable: true }
+        decision: { type: string }
+        decisionReason: { type: string, nullable: true }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        executionStatus: { type: string }
+    OperationsIntegrationFailure:
+      type: object
+      required: [id, organizationId, provider, direction, sourceRecordType, sourceRecordId, failureCode, redactedSummary, retryable, status, attemptCount, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        branchId: { type: string, format: uuid, nullable: true }
+        provider: { type: string }
+        direction: { type: string }
+        sourceRecordType: { type: string }
+        sourceRecordId: { type: string }
+        failureCode: { type: string }
+        redactedSummary: { type: string }
+        retryable: { type: boolean }
+        status: { type: string }
+        attemptCount: { type: integer }
+        lastAttemptAt: { type: string, format: date-time, nullable: true }
+        nextAttemptAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    OperationsReplayCommand:
+      type: object
+      required: [reason, requestId, sourceClient]
+      properties:
+        reason: { type: string, minLength: 1 }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsStreamEvent:
+      type: object
+      required: [id, eventType, payload, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        eventType: { type: string }
+        workItemId: { type: string, format: uuid, nullable: true }
+        payload: { type: object, additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+    OperationsStreamBatch:
+      type: object
+      required: [events, retryAfterMs]
+      properties:
+        events: { type: array, items: { $ref: '#/components/schemas/OperationsStreamEvent' } }
+        lastEventId: { type: integer, format: int64, nullable: true }
+        retryAfterMs: { type: integer, minimum: 1000 }
+    OperationsSavedView:
+      type: object
+      required: [id, organizationId, name, shared, filters, columns, widgets, subscribedEventTypes, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        ownerPartyId: { type: integer, format: int64, nullable: true }
+        name: { type: string }
+        shared: { type: boolean }
+        filters: { type: object, additionalProperties: true }
+        columns: { type: array, items: { type: string } }
+        widgets: { type: array, items: { type: string } }
+        subscribedEventTypes: { type: array, items: { type: string } }
+        updatedAt: { type: string, format: date-time }
+    OperationsSavedViewCreate:
+      type: object
+      required: [organizationId, name, shared, filters, columns, widgets, subscribedEventTypes, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 120 }
+        shared: { type: boolean }
+        filters: { type: object, additionalProperties: true }
+        columns: { type: array, items: { type: string } }
+        widgets: { type: array, items: { type: string } }
+        subscribedEventTypes: { type: array, items: { type: string } }
+        requestId: { type: string }
+        sourceClient: { type: string }
+    OperationsPushSubscriptionCreate:
+      type: object
+      required: [organizationId, platform, deviceToken, requestId, sourceClient]
+      properties:
+        organizationId: { type: string, format: uuid }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceToken: { type: string, minLength: 16, maxLength: 4096, writeOnly: true }
+        requestId: { type: string, minLength: 1, maxLength: 200 }
+        sourceClient: { type: string, minLength: 1, maxLength: 100 }
+    OperationsPushSubscription:
+      type: object
+      required: [id, organizationId, platform, active, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string, format: uuid }
+        platform: { type: string }
+        active: { type: boolean }
+        updatedAt: { type: string, format: date-time }

@@ -51,6 +51,7 @@ const ManualPage = lazy(() => import('../pages/ManualPage'));
 const MarketplaceOrdersPage = lazy(() => import('../pages/MarketplaceOrdersPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const OrdersPage = lazy(() => import('../pages/OrdersPage'));
+const OperationsControlCenterPage = lazy(() => import('../pages/OperationsControlCenterPage'));
 const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
@@ -98,8 +99,10 @@ export function renderProtectedRoutes() {
         <Route path="/contactos" element={<Navigate to="/crm/contactos" replace />} />
         <Route path="/system" element={<Navigate to="/configuracion/preferencias" replace />} />
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
+        <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
         <Route path="/inicio" element={<FanHubPage />} />
+        <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/social" element={<SocialPageView />} />

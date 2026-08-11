@@ -72,6 +72,11 @@ executable tdf-hq-exe
     TDF.Leads.Model
     TDF.Email.Service
     TDF.FeatureRegistry
+    TDF.Operations.API
+    TDF.Operations.Model
+    TDF.Operations.Server
+    TDF.Operations.Types
+    TDF.Operations.Worker
     TDF.Services
     TDF.Services.InstagramSync
     TDF.Services.InstagramMessaging
@@ -275,6 +280,12 @@ test-suite tdf-hq-test
     TDF.DDEX.Models
     TDF.DDEX.Types
     TDF.FeatureRegistry
+    TDF.Operations.API
+    TDF.Operations.Model
+    TDF.Operations.Server
+    TDF.Operations.Types
+    TDF.Operations.Worker
+    TDF.Operations.ModelSpec
     TDF.Pipelines
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec

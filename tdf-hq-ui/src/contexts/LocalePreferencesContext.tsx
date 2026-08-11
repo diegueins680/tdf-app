@@ -13,14 +13,6 @@ function envList(name: string, fallback: string[]): string[] {
   return values.length > 0 ? [...new Set(values)] : fallback;
 }
 
-function browserTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-  } catch {
-    return 'UTC';
-  }
-}
-
 function defaults(): LocalePreferences {
   const supportedLocales = envList('VITE_SUPPORTED_LOCALES', [...SUPPORTED_LOCALES])
     .map((value) => normalizeLocale(value))
@@ -32,7 +24,7 @@ function defaults(): LocalePreferences {
   return {
     locale,
     currency: supportedCurrencies.includes(requestedCurrency) ? requestedCurrency : supportedCurrencies[0] ?? 'USD',
-    timezone: browserTimezone() || import.meta.env.VITE_DEFAULT_TIMEZONE || 'UTC',
+    timezone: import.meta.env.VITE_DEFAULT_TIMEZONE ?? 'America/Guayaquil',
     countryCode: null,
     supportedLocales,
     supportedCurrencies,
