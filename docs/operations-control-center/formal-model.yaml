@@ -1,0 +1,103 @@
+version: 1
+feature: operations.control-center
+source_of_truth: existing_business_entities
+
+lifecycle:
+  states: [new, seen, assigned, in_progress, waiting, resolved, archived]
+  initial: new
+  transitions:
+    - { from: new, to: seen, roles: [operator], reason_required: false, effects: [shared_first_seen, audit, stream] }
+    - { from: new, to: assigned, roles: [operator], guards: [assignee_in_scope], effects: [assignment, audit, stream] }
+    - { from: new, to: in_progress, roles: [operator], effects: [audit, stream] }
+    - { from: new, to: resolved, roles: [operator], reason_required: true, effects: [complete_sla, audit, stream] }
+    - { from: seen, to: assigned, roles: [operator], guards: [assignee_in_scope], effects: [assignment, audit, stream] }
+    - { from: seen, to: in_progress, roles: [operator], effects: [audit, stream] }
+    - { from: seen, to: waiting, roles: [operator], reason_required: true, guards: [dependency_classified], effects: [conditional_sla_pause, audit, stream] }
+    - { from: seen, to: resolved, roles: [operator], reason_required: true, effects: [complete_sla, audit, stream] }
+    - { from: assigned, to: in_progress, roles: [operator], effects: [audit, stream] }
+    - { from: assigned, to: waiting, roles: [operator], reason_required: true, guards: [dependency_classified], effects: [conditional_sla_pause, audit, stream] }
+    - { from: assigned, to: resolved, roles: [operator], reason_required: true, effects: [complete_sla, audit, stream] }
+    - { from: in_progress, to: assigned, roles: [operator], guards: [assignee_in_scope], effects: [audit, stream] }
+    - { from: in_progress, to: waiting, roles: [operator], reason_required: true, guards: [dependency_classified], effects: [conditional_sla_pause, audit, stream] }
+    - { from: in_progress, to: resolved, roles: [operator], reason_required: true, effects: [complete_sla, audit, stream] }
+    - { from: waiting, to: in_progress, roles: [operator], effects: [resume_sla, audit, stream] }
+    - { from: waiting, to: assigned, roles: [operator], guards: [assignee_in_scope], effects: [resume_sla, audit, stream] }
+    - { from: waiting, to: resolved, roles: [operator], reason_required: true, effects: [complete_sla, audit, stream] }
+    - { from: resolved, to: in_progress, roles: [operator], reason_required: false, effects: [reopen_preserving_history, audit, stream] }
+    - { from: resolved, to: archived, roles: [operator], reason_required: true, effects: [audit, stream] }
+    - { from: archived, to: in_progress, roles: [operator], effects: [reopen_preserving_history, audit, stream] }
+  conditions:
+    snoozed: { lifecycle_state: unchanged, visible_after: snoozed_until }
+    waiting_external: { lifecycle_state: waiting, sla_paused: true }
+    waiting_internal: { lifecycle_state: waiting, sla_paused: false }
+
+priority_sla:
+  urgent: { clock: elapsed, acknowledge_minutes: 15, mitigate_minutes: 60, resolve_minutes: 240 }
+  high: { clock: business, acknowledge_minutes: 60, resolve_minutes: 480 }
+  normal: { clock: business, acknowledge_minutes: 240, resolve_minutes: 1440 }
+  low: { clock: business, acknowledge_minutes: 480, resolve_minutes: 2400 }
+  reminders:
+    - { percent: 50, target: responsible_team }
+    - { percent: 80, target: responsible_team }
+    - { percent: 100, target: Manager }
+    - { percent: 150, target: Admin, marks_breached: true }
+
+dual_approval:
+  states: [pending, approved, rejected, expired, cancelled]
+  request_roles: [Admin, Manager, Accounting]
+  approve_roles: [Admin, Manager, Accounting]
+  guards:
+    - requester_party_id != approver_party_id
+    - decision == pending
+    - approver_in_same_organization_and_branch
+    - action_requires_dual_approval
+  actions:
+    - refund
+    - payment_reversal
+    - payment_void
+    - chargeback_resolution
+    - cancel_paid_reservation
+    - cancel_near_term_reservation
+    - credit_note
+    - debit_note
+    - modify_issued_document
+    - privacy_erasure
+    - permanent_deletion
+
+invariants:
+  - id: I1
+    statement: correlated_work_item_references_existing_entity
+    enforcement: deferred_database_constraint
+  - id: I2
+    statement: same_event_has_no_duplicate_thread_or_business_effect
+    enforcement: [domain_event_dedup_key, provider_event_unique_key, work_item_correlation_unique_key]
+  - id: I3
+    statement: work_item_seen_or_resolved_never_mutates_source_entity
+    enforcement: separate_commands_and_tables
+  - id: I4
+    statement: restricted_data_never_reaches_api_stream_push_search_count_or_export
+    enforcement: [server_scope, role_projection, metadata_redaction, minimal_push_payload]
+  - id: I5
+    statement: cross_organization_access_is_impossible
+    enforcement: organization_branch_membership_on_every_query
+  - id: I6
+    statement: committed_payment_event_is_atomic
+    enforcement: source_table_trigger_to_domain_event_and_transactional_outbox
+  - id: I7
+    statement: external_delivery_failure_never_rolls_back_business_transaction
+    enforcement: asynchronous_outbound_delivery
+  - id: I8
+    statement: self_approval_is_impossible
+    enforcement: [database_check, conditional_update, role_guard]
+  - id: I9
+    statement: paid_or_tax_authorized_documents_are_not_rewritten_as_drafts
+    enforcement: existing_invoice_guards_plus_credit_debit_note_approval
+  - id: I10
+    statement: audit_is_append_only
+    enforcement: reject_update_delete_trigger
+  - id: I11
+    statement: backfill_rerun_has_no_duplicates
+    enforcement: backfill_version_and_domain_deduplication
+  - id: I12
+    statement: reconnect_has_no_lost_or_duplicate_visible_effect
+    enforcement: monotonic_stream_event_id_and_after_id_replay
