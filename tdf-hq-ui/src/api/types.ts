@@ -738,6 +738,7 @@ export interface InternTaskCreate {
 }
 
 export interface InternTaskUpdate {
+  ituProjectId?: string | null;
   ituTitle?: string | null;
   ituDescription?: string | null;
   ituStatus?: string | null;

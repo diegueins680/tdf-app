@@ -24,8 +24,10 @@ type InternshipsAPI =
             (    Get '[JSON] [InternTaskDTO]
             :<|> ReqBody '[JSON] InternTaskCreate :> PostCreated '[JSON] InternTaskDTO
             )
-    :<|> "tasks" :> Capture "taskId" Text
-            :> ReqBody '[JSON] InternTaskUpdate :> Patch '[JSON] InternTaskDTO
+    :<|> "tasks" :> Capture "taskId" Text :>
+            (    ReqBody '[JSON] InternTaskUpdate :> Patch '[JSON] InternTaskDTO
+            :<|> DeleteNoContent
+            )
     :<|> "todos" :>
             (    Get '[JSON] [InternTodoDTO]
             :<|> ReqBody '[JSON] InternTodoCreate :> PostCreated '[JSON] InternTodoDTO

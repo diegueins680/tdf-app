@@ -2048,7 +2048,8 @@ instance FromJSON InternTaskCreate where
     genericParseJSON strictObjectOptions value
 
 data InternTaskUpdate = InternTaskUpdate
-  { ituTitle       :: Maybe Text
+  { ituProjectId   :: Maybe Text
+  , ituTitle       :: Maybe Text
   , ituDescription :: Maybe (Maybe Text)
   , ituStatus      :: Maybe Text
   , ituProgress    :: Maybe Int
@@ -2059,7 +2060,8 @@ instance ToJSON InternTaskUpdate
 instance FromJSON InternTaskUpdate where
   parseJSON = withObject "InternTaskUpdate" $ \o -> do
     let allowedKeys =
-          [ "ituTitle"
+          [ "ituProjectId"
+          , "ituTitle"
           , "ituDescription"
           , "ituStatus"
           , "ituProgress"
@@ -2076,7 +2078,8 @@ instance FromJSON InternTaskUpdate where
             fail "InternTaskUpdate must include at least one field"
         | otherwise ->
             InternTaskUpdate
-              <$> o .:? "ituTitle"
+              <$> o .:? "ituProjectId"
+              <*> o .:? "ituTitle"
               <*> o .:! "ituDescription"
               <*> o .:? "ituStatus"
               <*> o .:? "ituProgress"

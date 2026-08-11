@@ -42,6 +42,8 @@ export const Internships = {
     post<InternTaskDTO>('/internships/tasks', payload),
   updateTask: (taskId: string, payload: InternTaskUpdate) =>
     patch<InternTaskDTO>(`/internships/tasks/${taskId}`, payload),
+  deleteTask: (taskId: string) =>
+    del<void>(`/internships/tasks/${taskId}`),
   listTodos: () => get<InternTodoDTO[]>('/internships/todos'),
   createTodo: (payload: InternTodoCreate) =>
     post<InternTodoDTO>('/internships/todos', payload),
