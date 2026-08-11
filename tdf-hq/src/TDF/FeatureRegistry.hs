@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.FeatureRegistry
   ( FeatureRule(..)

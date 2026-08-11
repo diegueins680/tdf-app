@@ -43,7 +43,7 @@ interface EditDialogState {
 }
 
 const formatConfidence = (value?: number | null) =>
-  value == null ? '—' : `${Math.round(value * 100)}%`;
+  value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`;
 
 const formatDate = (value?: string | null) =>
   value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
@@ -100,7 +100,7 @@ export default function ArtistEnrichmentReviewPage() {
   };
 
   const runMutation = useMutation({
-    mutationFn: (targetArtistId: number | null) => targetArtistId == null
+    mutationFn: (targetArtistId: number | null) => targetArtistId === null
       ? ArtistEnrichment.run({ aerrMode: 'dry_run', aerrBatchSize: 50 })
       : ArtistEnrichment.rerunArtist(targetArtistId, { aerrMode: 'dry_run', aerrArtistId: targetArtistId, aerrBatchSize: 50 }),
     onSuccess: async (run) => {
@@ -153,7 +153,7 @@ export default function ArtistEnrichmentReviewPage() {
   const groupedPending = useMemo(() => {
     const groups = new Map<number, ArtistEnrichmentSuggestion[]>();
     pendingSuggestions.forEach((suggestion) => {
-      if (suggestion.aesArtistId == null) return;
+      if (suggestion.aesArtistId === null || suggestion.aesArtistId === undefined) return;
       groups.set(suggestion.aesArtistId, [...(groups.get(suggestion.aesArtistId) ?? []), suggestion]);
     });
     return groups;
@@ -183,7 +183,7 @@ export default function ArtistEnrichmentReviewPage() {
             onClick={() => runMutation.mutate(artistId)}
             disabled={runMutation.isPending}
           >
-            {artistId == null ? 'Auditar plataforma' : 'Auditar artista'}
+            {artistId === null ? 'Auditar plataforma' : 'Auditar artista'}
           </Button>
         </>
       )}
@@ -476,7 +476,7 @@ export default function ArtistEnrichmentReviewPage() {
                       )}
                       {candidate.aicStatus === 'pending' && (
                         <Stack spacing={1}>
-                          {candidate.aicArtistId == null && (
+                          {(candidate.aicArtistId === null || candidate.aicArtistId === undefined) && (
                             <FormControl size="small" sx={{ maxWidth: 420 }}>
                               <InputLabel id={`identity-target-${candidate.aicId}`}>Destino aprobado</InputLabel>
                               <Select
@@ -501,12 +501,13 @@ export default function ArtistEnrichmentReviewPage() {
                           <Button
                             variant="contained"
                             color="success"
-                            disabled={candidate.aicArtistId == null && !identityTargets[candidate.aicId]}
+                            disabled={(candidate.aicArtistId === null || candidate.aicArtistId === undefined)
+                              && !identityTargets[candidate.aicId]}
                             onClick={() => identityMutation.mutate({
                               candidateId: candidate.aicId,
                               decision: {
                                 aedDecision: 'approve',
-                                aedEditedValue: candidate.aicArtistId == null
+                                aedEditedValue: candidate.aicArtistId === null || candidate.aicArtistId === undefined
                                   ? identityTargets[candidate.aicId]
                                   : undefined,
                               },

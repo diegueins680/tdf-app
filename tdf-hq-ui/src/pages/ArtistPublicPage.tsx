@@ -26,7 +26,7 @@ import { Fans } from '../api/fans';
 import type { ArtistReleaseDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
-import { parseArtistTextItems } from '../utils/artistProfileContent';
+import { parseArtistJson, parseArtistTextItems } from '../utils/artistProfileContent';
 import ArtistFansList from '../components/ArtistFansList';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
@@ -47,12 +47,10 @@ const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
 
 const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
   if (!raw) return {};
-  try {
-    const value: unknown = JSON.parse(raw);
-    return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-  } catch {
-    return {};
-  }
+  const parsed = parseArtistJson(raw);
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : {};
 };
 
 const parseOfficialLinks = (raw?: string | null) => Object.entries(parseJsonObject(raw))
@@ -60,34 +58,31 @@ const parseOfficialLinks = (raw?: string | null) => Object.entries(parseJsonObje
 
 const parseDiscography = (raw?: string | null) => {
   if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    if (Array.isArray(value)) {
-      return value.flatMap((item) => {
-        if (typeof item === 'string') return [{ title: item, detail: '' }];
-        if (!item || typeof item !== 'object') return [];
-        const record = item as Record<string, unknown>;
-        if (typeof record['title'] !== 'string') return [];
-        const detail = [record['type'], record['firstReleaseDate']]
-          .filter((part) => typeof part === 'string')
-          .join(' · ');
-        return [{ title: record['title'], detail }];
-      });
-    }
-  } catch {
-    // Legacy profiles may contain plain text rather than structured releases.
+  const parsedDiscography = parseArtistJson(raw);
+  if (Array.isArray(parsedDiscography)) {
+    return parsedDiscography.flatMap((item) => {
+      if (typeof item === 'string') return [{ title: item, detail: '' }];
+      if (!item || typeof item !== 'object') return [];
+      const releaseRecord = item as Record<string, unknown>;
+      if (typeof releaseRecord['title'] !== 'string') return [];
+      const detail = [releaseRecord['type'], releaseRecord['firstReleaseDate']]
+        .filter((part) => typeof part === 'string')
+        .join(' · ');
+      return [{ title: releaseRecord['title'], detail }];
+    });
   }
+  // Legacy profiles may contain plain text rather than structured releases.
   return [{ title: raw, detail: '' }];
 };
 
 const responsiveSourceSet = (raw: string | null | undefined, format: 'avif' | 'webp') => {
   const values = parseJsonObject(raw)[format];
   if (!Array.isArray(values)) return null;
-  const sourceSet = values.flatMap((value) => {
-    if (!value || typeof value !== 'object') return [];
-    const record = value as Record<string, unknown>;
-    return typeof record['url'] === 'string' && typeof record['width'] === 'number'
-      ? [`${record['url']} ${record['width']}w`]
+  const sourceSet = values.flatMap((sourceCandidate) => {
+    if (!sourceCandidate || typeof sourceCandidate !== 'object') return [];
+    const sourceRecord = sourceCandidate as Record<string, unknown>;
+    return typeof sourceRecord['url'] === 'string' && typeof sourceRecord['width'] === 'number'
+      ? [`${sourceRecord['url']} ${sourceRecord['width']}w`]
       : [];
   }).join(', ');
   return sourceSet || null;

@@ -96,6 +96,17 @@ test('logical audit ignores reachable catch blocks and returned object methods',
         '  };',
         '}',
         '',
+        'function validNestedCallback(values) {',
+        '  return values.map((value) => {',
+        '    return value * 2;',
+        '  }).join(",");',
+        '}',
+        '',
+        'useEffect(() => {',
+        '  register();',
+        '  return () => unregister();',
+        '}, []);',
+        '',
         'function invalid() {',
         '  return;',
         '  doCleanup();',
@@ -119,10 +130,71 @@ test('logical audit ignores reachable catch blocks and returned object methods',
       })),
       [
         {
-          line: 20,
+          line: 31,
           snippet: 'doCleanup();',
         },
       ],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('logical audit recognizes idiomatic spaced Haskell catch-all patterns', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-haskell-case-test-'));
+  const sourcePath = path.join(tempRoot, 'Cases.hs');
+
+  try {
+    await fs.writeFile(
+      sourcePath,
+      [
+        'module Cases where',
+        '',
+        'safeLookup value = case value of',
+        '  Just result -> result',
+        '  _ -> "fallback"',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: tempRoot });
+    await execFileAsync('git', ['add', 'Cases.hs'], { cwd: tempRoot });
+
+    const findings = await collectLogicalFindings(tempRoot);
+    assert.deepEqual(
+      findings.filter((finding) => finding.rule === 'incomplete-pattern-match'),
+      [],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('logical audit defers to GHC when incomplete patterns are compiler errors', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-haskell-ghc-test-'));
+  const sourcePath = path.join(tempRoot, 'CompilerChecked.hs');
+
+  try {
+    await fs.writeFile(
+      sourcePath,
+      [
+        '{-# OPTIONS_GHC -Werror=incomplete-patterns #-}',
+        'module CompilerChecked where',
+        '',
+        'render value = case value of',
+        '  Left message -> message',
+        '  Right result -> result',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: tempRoot });
+    await execFileAsync('git', ['add', 'CompilerChecked.hs'], { cwd: tempRoot });
+
+    const findings = await collectLogicalFindings(tempRoot);
+    assert.deepEqual(
+      findings.filter((finding) => finding.rule === 'incomplete-pattern-match'),
+      [],
     );
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });

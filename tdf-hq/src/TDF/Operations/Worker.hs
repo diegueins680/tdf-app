@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Operations.Worker
   ( OperationsWorkerStats(..)

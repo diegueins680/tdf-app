@@ -297,6 +297,39 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('omits unset optional fields when generating the playbook project and tasks', async () => {
+    createProjectMock.mockResolvedValue({ ipId: 'playbook-project' });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Generar plan base sin asignar')[0]!);
+
+      await waitForExpectation(() => {
+        expect(createProjectMock).toHaveBeenCalledWith({
+          ipcTitle: 'Plan de prácticas',
+          ipcDescription: 'Plan base de prácticas con rotaciones, proyecto estrella y rituales de seguimiento.',
+          ipcStatus: 'active',
+        });
+        expect(createTaskMock).toHaveBeenCalledTimes(12);
+      });
+
+      for (const [payload] of createTaskMock.mock.calls) {
+        expect(payload).toEqual(expect.objectContaining({ itcProjectId: 'playbook-project' }));
+        expect(payload).not.toHaveProperty('itcAssignedTo');
+        expect(payload).not.toHaveProperty('itcDueAt');
+      }
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the project form collapsed behind one CTA and one contextual empty state until an admin opens it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

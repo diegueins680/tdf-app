@@ -143,22 +143,22 @@ describe('internal access request flow', () => {
   });
 
   it('does not create requests for technical routes', async () => {
-    const view = await renderPage('/solicitudes-acceso/nueva?feature=technical.auth-login&action=view');
+    const technicalView = await renderPage('/solicitudes-acceso/nueva?feature=technical.auth-login&action=view');
     try {
-      expect(view.container.textContent).toContain('no admite solicitudes de acceso');
-      expect(view.container.querySelector('form')).toBeNull();
+      expect(technicalView.container.textContent).toContain('no admite solicitudes de acceso');
+      expect(technicalView.container.querySelector('form')).toBeNull();
       expect(createMock).not.toHaveBeenCalled();
     } finally {
-      await view.cleanup();
+      await technicalView.cleanup();
     }
   });
 
   it('has no serious automated accessibility violations in the request form', async () => {
-    const view = await renderPage('/solicitudes-acceso/nueva?feature=label.ddex.inbox&action=import');
+    const accessibilityView = await renderPage('/solicitudes-acceso/nueva?feature=label.ddex.inbox&action=import');
     try {
-      await expectNoSeriousAccessibilityViolations(view.container);
+      await expectNoSeriousAccessibilityViolations(accessibilityView.container);
     } finally {
-      await view.cleanup();
+      await accessibilityView.cleanup();
     }
   });
 });

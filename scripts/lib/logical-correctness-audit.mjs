@@ -270,6 +270,10 @@ function isPotentiallyReachableLine(trimmed) {
   );
 }
 
+function leadingWhitespaceLength(line) {
+  return line.match(/^\s*/)?.[0].length ?? 0;
+}
+
 // ─── JS/TS Logical Audits ───
 
 function auditJsTsLogical(source, filePath, isTest) {
@@ -508,6 +512,9 @@ function auditJsTsLogical(source, filePath, isTest) {
 
     const nextLine = lines[line] ?? '';
     const trimmed = nextLine.trim();
+    const closesNestedExpression = /^[}\])]/.test(trimmed)
+      && leadingWhitespaceLength(nextLine) < leadingWhitespaceLength(lines[line - 1] ?? '');
+    if (closesNestedExpression) continue;
     if (isPotentiallyReachableLine(trimmed)) {
       findings.push({
         rule: 'potentially-unreachable-code',
@@ -550,21 +557,27 @@ function auditHaskellLogical(source, filePath) {
   const findings = [];
   const lines = source.split(/\r?\n/);
 
-  // 1. Incomplete pattern matches (no exhaustive match)
-  const casePattern = /\bcase\b/g;
-  for (const match of source.matchAll(casePattern)) {
-    const line = lineNumberAt(source, match.index);
-    const surrounding = lines.slice(Math.max(0, line - 1), line + 5).join('\n');
-    if (!/_->/.test(surrounding) && !/otherwise\b/.test(surrounding)) {
-      findings.push({
-        rule: 'incomplete-pattern-match',
-        severity: 'error',
-        file: filePath,
-        line,
-        message: 'case expression may lack an exhaustive catch-all pattern (_ or otherwise).',
-        snippet: compactSnippet(lines[line - 1] ?? ''),
-        importance: scoreImportance('error', 1, 2),
-      });
+  // 1. Incomplete pattern matches (no exhaustive match). Prefer GHC's typed
+  // exhaustiveness checker when a module makes it fatal; the fallback below is
+  // necessarily conservative because source text cannot infer imported ADTs.
+  const compilerEnforcesCompletePatterns =
+    /\{-#\s*OPTIONS_GHC\b[^#]*-Werror=incomplete-patterns[^#]*#-}/.test(source);
+  if (!compilerEnforcesCompletePatterns) {
+    const casePattern = /\bcase\b/g;
+    for (const match of source.matchAll(casePattern)) {
+      const line = lineNumberAt(source, match.index);
+      const surrounding = lines.slice(Math.max(0, line - 1), line + 5).join('\n');
+      if (!/_\s*->/.test(surrounding) && !/otherwise\b/.test(surrounding)) {
+        findings.push({
+          rule: 'incomplete-pattern-match',
+          severity: 'error',
+          file: filePath,
+          line,
+          message: 'case expression may lack an exhaustive catch-all pattern (_ or otherwise).',
+          snippet: compactSnippet(lines[line - 1] ?? ''),
+          importance: scoreImportance('error', 1, 2),
+        });
+      }
     }
   }
 

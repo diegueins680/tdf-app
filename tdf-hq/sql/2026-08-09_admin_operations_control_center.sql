@@ -1784,7 +1784,9 @@ BEGIN
 
   IF NOT p_dry_run THEN
     FOR source IN
-      SELECT * FROM (
+      SELECT entity_type, entity_id, correlation_key, occurred_at,
+        priority, title_es, title_en, metadata
+      FROM (
         SELECT 'course_registration'::text AS entity_type, id::text AS entity_id,
           'course_registration:' || id::text AS correlation_key, created_at AS occurred_at,
           'high'::text AS priority, 'Inscripción existente requiere atención'::text AS title_es,

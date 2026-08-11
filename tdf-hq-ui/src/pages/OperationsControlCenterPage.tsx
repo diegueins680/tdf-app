@@ -377,8 +377,8 @@ export default function OperationsControlCenterPage() {
           <KpiCard label={t('operations.kpi.revenueToday')} value={metrics ? currencyFormatter.format(metrics.revenueReceivedTodayMinor / 100) : '—'} />
           <KpiCard label={t('operations.kpi.unassigned')} value={metrics?.unassignedWork ?? '—'} critical />
           <KpiCard label={t('operations.kpi.slaBreaches')} value={metrics?.slaBreaches ?? '—'} critical />
-          <KpiCard label={t('operations.kpi.firstResponse')} value={metrics?.averageFirstResponseSeconds == null ? '—' : `${Math.round(metrics.averageFirstResponseSeconds / 60)} min`} />
-          <KpiCard label={t('operations.kpi.resolution')} value={metrics?.averageResolutionSeconds == null ? '—' : `${Math.round(metrics.averageResolutionSeconds / 3600)} h`} />
+          <KpiCard label={t('operations.kpi.firstResponse')} value={metrics?.averageFirstResponseSeconds === null || metrics?.averageFirstResponseSeconds === undefined ? '—' : `${Math.round(metrics.averageFirstResponseSeconds / 60)} min`} />
+          <KpiCard label={t('operations.kpi.resolution')} value={metrics?.averageResolutionSeconds === null || metrics?.averageResolutionSeconds === undefined ? '—' : `${Math.round(metrics.averageResolutionSeconds / 3600)} h`} />
           <KpiCard label={t('operations.kpi.integrationFailures')} value={metrics?.integrationFailures ?? '—'} critical />
           <KpiCard label={t('operations.kpi.unpaidInvoices')} value={metrics?.unpaidInvoices ?? '—'} />
         </Box>
@@ -472,9 +472,9 @@ export default function OperationsControlCenterPage() {
                   edge="start"
                   checked={checkedIds.has(item.id)}
                   onChange={(event) => setCheckedIds((current) => {
-                    const updated = new Set(current);
-                    if (event.target.checked) updated.add(item.id); else updated.delete(item.id);
-                    return updated;
+                    const inboxSelection = new Set(current);
+                    if (event.target.checked) inboxSelection.add(item.id); else inboxSelection.delete(item.id);
+                    return inboxSelection;
                   })}
                   inputProps={{ 'aria-label': t('operations.selectItem', { title: localizedTitle(item) }) }}
                   sx={{ ml: 1 }}

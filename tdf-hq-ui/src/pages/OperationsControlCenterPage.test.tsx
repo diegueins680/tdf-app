@@ -36,7 +36,7 @@ jest.unstable_mockModule('../api/operations', () => ({
     }),
     list: () => Promise.resolve({ items: [item], nextCursor: null, hasMore: false }),
     detail: () => Promise.resolve({ workItem: item, events: [], notes: [], allowedTransitions: ['seen'], sourceRecordUrl: null, quickActions: ['review'] }),
-    markSeen: () => new Promise(() => undefined),
+    markSeen: () => Promise.resolve(item),
     events: () => Promise.resolve({ events: [], lastEventId: null, retryAfterMs: 15000 }),
     savedViews: () => Promise.resolve([]),
     transition: jest.fn(), assign: jest.fn(), addNote: jest.fn(), saveView: jest.fn(),

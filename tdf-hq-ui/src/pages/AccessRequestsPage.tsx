@@ -259,18 +259,19 @@ export function NewAccessRequestPage() {
   const requestedFeatureId = searchParams.get('feature')?.trim() ?? '';
   const actionParam = searchParams.get('action')?.trim().toLowerCase() ?? 'view';
   const action = supportedActions.has(actionParam as FeatureAction) ? actionParam as FeatureAction : null;
-  const feature = getFeatureById(requestedFeatureId);
-  const decision = feature && action
-    ? evaluateFeatureAccess(feature, {
+  const requestedFeature = getFeatureById(requestedFeatureId);
+  const decision = requestedFeature && action
+    ? evaluateFeatureAccess(requestedFeature, {
         authenticated: Boolean(session),
         roles: session?.roles,
         modules: session?.modules,
       }, action)
     : null;
-  const requestable = Boolean(feature && action && feature.accessRequestEligible && !feature.technical && decision?.state === 'locked');
+  const requestable = Boolean(requestedFeature && action && requestedFeature.accessRequestEligible
+    && !requestedFeature.technical && decision?.state === 'locked');
   const createMutation = useMutation({
     mutationFn: () => AccessRequests.create({
-      featureId: feature?.id ?? '',
+      featureId: requestedFeature?.id ?? '',
       action: action ?? 'view',
       justification: justification.trim() || null,
     }),
@@ -286,15 +287,15 @@ export function NewAccessRequestPage() {
   return (
     <Stack spacing={3} component="section" aria-labelledby="new-access-request-title" sx={{ maxWidth: 720 }}>
       <Typography id="new-access-request-title" variant="h4" component="h1">{text.createTitle}</Typography>
-      {!feature || !action || !feature.accessRequestEligible || feature.technical ? (
+      {!requestedFeature || !action || !requestedFeature.accessRequestEligible || requestedFeature.technical ? (
         <Alert severity="error">{text.missingTarget}</Alert>
       ) : null}
       {decision?.state === 'allowed' ? <Alert severity="info">{text.alreadyAllowed}</Alert> : null}
-      {decision?.state === 'locked' && feature ? (
+      {decision?.state === 'locked' && requestedFeature ? (
         <Card variant="outlined">
           <CardContent>
-            <Typography variant="h6" component="h2">{featureLabel(feature, locale)}</Typography>
-            <Typography>{feature.description[locale]}</Typography>
+            <Typography variant="h6" component="h2">{featureLabel(requestedFeature, locale)}</Typography>
+            <Typography>{requestedFeature.description[locale]}</Typography>
             <Typography sx={{ mt: 2 }}>
               <strong>{text.action}:</strong> {action}
             </Typography>
@@ -406,7 +407,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO; 
 
 export function AccessRequestReviewPage() {
   const { text } = useAccessCopy();
-  const queryClient = useQueryClient();
+  const reviewQueryClient = useQueryClient();
   const [status, setStatus] = useState<FeatureAccessRequestStatus>('pending');
   const reviewQuery = useQuery({
     queryKey: ['access-requests', 'review', status],
@@ -440,7 +441,7 @@ export function AccessRequestReviewPage() {
           <ReviewCard
             key={request.id}
             request={request}
-            onChanged={() => { void queryClient.invalidateQueries({ queryKey: ['access-requests'] }); }}
+            onChanged={() => { void reviewQueryClient.invalidateQueries({ queryKey: ['access-requests'] }); }}
           />
         ))}
       </Stack>
