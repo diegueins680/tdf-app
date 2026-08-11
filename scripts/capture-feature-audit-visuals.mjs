@@ -122,7 +122,7 @@ async function installFixtures(page, { locale = 'es', profile = 'admin', mobile 
     if (path === '/ddex/partners') return route.fulfill(jsonResponse([{ ddexPartnerId: 1, ddexPartnerName: 'Partner sintético', ddexPartnerDpid: 'DPID-SYNTH-A', ddexPartnerAllowedVersions: ['4.3'] }]));
     if (path === '/access-requests' || path === '/access-requests/reviewable' || path === '/notifications') return route.fulfill(jsonResponse([]));
     if (path.startsWith('/notifications/') || path === '/analytics/events') return route.fulfill({ status: 204, body: '' });
-    if (request.url().startsWith('https://api.frankfurter.app/')) return route.fulfill(jsonResponse({ amount: 1, base: 'USD', date: '2026-08-06', rates: { USD: 1 } }));
+    if (request.url().startsWith('https://api.frankfurter.dev/v1/')) return route.fulfill(jsonResponse({ amount: 1, base: 'USD', date: '2026-08-06', rates: { USD: 1 } }));
     if (request.resourceType() === 'fetch' || request.resourceType() === 'xhr') return route.fulfill(jsonResponse([]));
     return route.continue();
   });

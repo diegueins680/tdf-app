@@ -202,7 +202,7 @@ test('buildMigrationBatchSql validates every path before rendering psql input', 
   );
 });
 
-test('buildSchemaVerificationSql fails closed over the ticketing, discovery, and social schema contract', () => {
+test('buildSchemaVerificationSql fails closed over every registered runtime schema contract', () => {
   const sql = buildSchemaVerificationSql();
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
@@ -239,6 +239,11 @@ test('buildSchemaVerificationSql fails closed over the ticketing, discovery, and
     'uq_artist_profile_slug_ci',
     'uq_artist_enrichment_active_full_run',
     'unique_artist_media_drive_file',
+    'catalog_release',
+    'ddex_document',
+    'message_id',
+    'sender_id',
+    'recipient_id',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }

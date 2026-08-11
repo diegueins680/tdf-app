@@ -348,6 +348,7 @@ export function buildSchemaVerificationSql(options = {}) {
   return `${header}DO $verify$
 DECLARE
   discovery_table TEXT;
+  ddex_table TEXT;
   social_table TEXT;
   ticketing_table TEXT;
   enrichment_table TEXT;
@@ -963,6 +964,66 @@ BEGIN
     ) AND contype = 'f' AND convalidated
   ) <> 16 THEN
     RAISE EXCEPTION 'An artist enrichment foreign key is missing or invalid';
+  END IF;
+
+  FOREACH ddex_table IN ARRAY ARRAY[
+    'catalog_release',
+    'catalog_resource',
+    'catalog_release_resource',
+    'catalog_identifier',
+    'catalog_credit',
+    'catalog_deal',
+    'catalog_deal_territory',
+    'catalog_asset',
+    'catalog_source_link',
+    'ddex_document',
+    'ddex_message_header',
+    'ddex_validation_run',
+    'ddex_validation_issue',
+    'ddex_import_plan',
+    'ddex_import_run',
+    'ddex_import_change',
+    'ddex_export',
+    'ddex_partner',
+    'ddex_job'
+  ] LOOP
+    IF to_regclass('public.' || ddex_table) IS NULL THEN
+      RAISE EXCEPTION 'DDEX/catalog relation public.% is missing', ddex_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ddex_document'
+  ) <> 15 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('id', 'integer', 'NO'),
+        ('file_name', 'text', 'NO'),
+        ('private_uri', 'text', 'NO'),
+        ('sha256', 'text', 'NO'),
+        ('size_bytes', 'bigint', 'NO'),
+        ('family', 'text', 'NO'),
+        ('version', 'text', 'NO'),
+        ('namespace', 'text', 'YES'),
+        ('message_type', 'text', 'YES'),
+        ('status', 'text', 'NO'),
+        ('uploaded_by', 'integer', 'NO'),
+        ('message_id', 'text', 'YES'),
+        ('sender_id', 'text', 'YES'),
+        ('recipient_id', 'text', 'YES'),
+        ('created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'ddex_document'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
   END IF;
 END
 $verify$;`;

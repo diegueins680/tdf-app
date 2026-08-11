@@ -129,6 +129,7 @@ jobs:
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_event_discovery_imports.sql
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql
           psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_discovery_reviews.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-02_ddex_catalog_core.sql
           node scripts/render-production-schema-verification.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
           node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
 
