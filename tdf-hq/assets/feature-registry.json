@@ -1042,6 +1042,36 @@
       "apiScopes": [{ "pathPrefix": "/ddex/partners", "methods": { "GET": "view", "POST": "create", "PUT": "edit", "DELETE": "delete" } }]
     },
     {
+      "id": "operations.control-center",
+      "parentId": null,
+      "webRoute": "/dashboard/operations",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": { "es": "Centro de operaciones", "en": "Operations center" },
+      "synonyms": { "es": ["bandeja operativa", "control administrativo", "notificaciones"], "en": ["operational inbox", "admin control", "notifications"] },
+      "keywords": ["operations", "inbox", "sla", "kanban", "alerts"],
+      "description": { "es": "Vista central de trabajo, prioridades, asignación, SLA e integraciones.", "en": "Central work, priority, assignment, SLA, and integration view." },
+      "navigationGroup": "operate",
+      "icon": "kanban",
+      "breadcrumb": [],
+      "requiredRoles": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "Teacher", "Engineer", "LiveSessionsProducer", "Producer", "AandR", "Maintenance", "ReadOnly"],
+      "permissions": {
+        "discover": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "Teacher", "Engineer", "LiveSessionsProducer", "Producer", "AandR", "Maintenance", "ReadOnly"] },
+        "view": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "Teacher", "Engineer", "LiveSessionsProducer", "Producer", "AandR", "Maintenance", "ReadOnly"], "recordScope": "organization-branch-role-assignment" },
+        "create": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "Teacher", "Engineer", "LiveSessionsProducer", "Producer", "AandR", "Maintenance"] },
+        "edit": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "Teacher", "Engineer", "LiveSessionsProducer", "Producer", "AandR", "Maintenance"], "recordScope": "organization-branch-role-assignment" },
+        "assign": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting", "Reception", "LiveSessionsProducer", "Producer", "AandR", "Maintenance"] },
+        "approve": { "rolesAny": ["Admin", "Manager", "StudioManager", "Accounting"] },
+        "administer": { "rolesAny": ["Admin", "Manager", "StudioManager"] }
+      },
+      "recordScope": "organization-branch-role-assignment",
+      "featureFlag": "operations_enabled",
+      "globalMenu": true,
+      "mobilePresentation": { "kind": "native", "destination": "/operations", "documentedException": null },
+      "aliases": ["/operacion/control"],
+      "apiScopes": [{ "pathPrefix": "/operations", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }]
+    },
+    {
       "id": "operations.inventory",
       "parentId": null,
       "webRoute": "/operacion/inventario",
