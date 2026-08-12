@@ -57,8 +57,7 @@ export function Shell() {
   useEffect(() => {
     if (sidebarCollapsed) return;
     const handler = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (!isDesktop) {
+      if (event.key === 'Escape' && !sidebarCollapsed) {
         setSidebarCollapsed(true);
       }
     };

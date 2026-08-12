@@ -113,7 +113,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
     return () => appI18n.off('languageChanged', handleLanguageChanged);
   }, []);
 
-  const quickNavItems = useMemo(() => {
+  const { quickNavItems, quickCreateItems } = useMemo(() => {
     const currentSession = {
       authenticated: Boolean(session),
       roles: session?.roles,
@@ -125,22 +125,61 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
       group.id,
       english ? group.labelEn : group.labelEs,
     ]));
-    return featureRegistry.flatMap((feature) => {
-      if (!feature.searchable || feature.technical || !feature.webRoute || feature.webRoute.includes(':')) return [];
-      const decision = evaluateFeatureAccess(feature, currentSession, 'discover');
-      if (decision.state === 'concealed') return [];
-      return [{
-        featureId: feature.id,
-        label: featureLabel(feature, featureLocale),
-        path: feature.webRoute,
-        searchText: featureSearchText(feature),
-        group: feature.navigationGroup ? groupById.get(feature.navigationGroup) ?? feature.navigationGroup : (english ? 'Other' : 'Otros'),
-        groupIcon: undefined,
-        locked: decision.state === 'locked',
-        destination: decision.state === 'locked' ? accessRequestPath(feature, 'view') : feature.webRoute,
-        missingAccess: decision.missingModules[0] ?? decision.missingRoles[0] ?? null,
-      }];
-    });
+    const nav: {
+      featureId: string;
+      label: string;
+      path: string;
+      searchText: string;
+      group: string;
+      groupIcon: undefined;
+      locked: boolean;
+      destination: string;
+      missingAccess: string | null;
+    }[] = [];
+    const create: {
+      featureId: string;
+      label: string;
+      locked: boolean;
+      destination: string;
+      missingAccess: string | null;
+    }[] = [];
+    for (const feature of featureRegistry) {
+      const isNavCandidate = feature.searchable && !feature.technical && feature.webRoute && !feature.webRoute.includes(':');
+      const isCreateCandidate = Boolean(feature.quickCreate);
+      if (!isNavCandidate && !isCreateCandidate) continue;
+      if (isNavCandidate) {
+        const decision = evaluateFeatureAccess(feature, currentSession, 'discover');
+        if (decision.state !== 'concealed') {
+          nav.push({
+            featureId: feature.id,
+            label: featureLabel(feature, featureLocale),
+            path: feature.webRoute!,
+            searchText: featureSearchText(feature),
+            group: feature.navigationGroup ? groupById.get(feature.navigationGroup) ?? feature.navigationGroup : (english ? 'Other' : 'Otros'),
+            groupIcon: undefined,
+            locked: decision.state === 'locked',
+            destination: decision.state === 'locked' ? accessRequestPath(feature, 'view') : feature.webRoute!,
+            missingAccess: decision.missingModules[0] ?? decision.missingRoles[0] ?? null,
+          });
+        }
+      }
+      if (isCreateCandidate) {
+        const action = feature.quickCreate!.action;
+        const accessDecision = evaluateFeatureAccess(feature, currentSession, action);
+        if (accessDecision.state !== 'concealed') {
+          create.push({
+            featureId: feature.id,
+            label: feature.quickCreate!.label[english ? 'en' : 'es'],
+            locked: accessDecision.state === 'locked',
+            destination: accessDecision.state === 'locked'
+              ? accessRequestPath(feature, action)
+              : feature.quickCreate!.webDestination,
+            missingAccess: accessDecision.missingModules[0] ?? accessDecision.missingRoles[0] ?? null,
+          });
+        }
+      }
+    }
+    return { quickNavItems: nav, quickCreateItems: create };
   }, [featureLocale, session]);
 
   const filteredQuickItems = useMemo(() => {
@@ -148,31 +187,6 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
     if (!query) return quickNavItems;
     return quickNavItems.filter((item) => item.searchText.includes(query));
   }, [quickNavItems, quickQuery]);
-
-  const quickCreateItems = useMemo(() => {
-    const quickCreateSession = {
-      authenticated: Boolean(session),
-      roles: session?.roles,
-      modules: session?.modules,
-      featureFlags: session?.featureFlags,
-    };
-    const usesEnglishLabels = featureLocale.toLowerCase().startsWith('en');
-    return featureRegistry.flatMap((feature) => {
-      if (!feature.quickCreate) return [];
-      const action = feature.quickCreate.action;
-      const accessDecision = evaluateFeatureAccess(feature, quickCreateSession, action);
-      if (accessDecision.state === 'concealed') return [];
-      return [{
-        featureId: feature.id,
-        label: feature.quickCreate.label[usesEnglishLabels ? 'en' : 'es'],
-        locked: accessDecision.state === 'locked',
-        destination: accessDecision.state === 'locked'
-          ? accessRequestPath(feature, action)
-          : feature.quickCreate.webDestination,
-        missingAccess: accessDecision.missingModules[0] ?? accessDecision.missingRoles[0] ?? null,
-      }];
-    });
-  }, [featureLocale, session]);
 
   const visibleQuickItems = useMemo(
     () => limitQuickNavItems(filteredQuickItems),

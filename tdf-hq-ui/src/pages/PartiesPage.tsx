@@ -61,6 +61,10 @@ interface CreatePartyDialogProps {
   onClose: () => void;
 }
 
+function normalizeSearch(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 const normalizePartyContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -389,12 +393,12 @@ export default function PartiesPage() {
   const showInitialLoadingState = partiesQuery.isLoading && partiesQuery.data == null;
 
   const filtered = useMemo(() => {
-    const term = trimmedSearch.toLowerCase();
+    const term = normalizeSearch(trimmedSearch);
     if (!term) return parties;
     return parties.filter((party) => {
-      const haystack = [party.displayName, party.primaryEmail ?? '', party.instagram ?? '']
-        .join(' ')
-        .toLowerCase();
+      const haystack = normalizeSearch(
+        [party.displayName, party.primaryEmail ?? '', party.instagram ?? ''].join(' '),
+      );
       return haystack.includes(term);
     });
   }, [parties, trimmedSearch]);

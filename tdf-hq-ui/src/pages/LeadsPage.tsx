@@ -42,6 +42,10 @@ type LeadStatus = (typeof STATUS_OPTIONS)[number];
 const isLeadStatus = (value: string): value is LeadStatus =>
   STATUS_OPTIONS.some((status) => status === value);
 
+function normalizeSearch(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 const normalizeLeadFieldValue = (value?: string | null) => {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -243,15 +247,15 @@ export default function LeadsPage() {
   const trimmedSearch = search.trim();
   const allLeads = useMemo(() => (data ?? []).filter((party) => !party.isOrg), [data]);
   const leads = useMemo(() => {
-    const term = trimmedSearch.toLowerCase();
+    const term = normalizeSearch(trimmedSearch);
     return allLeads
       .filter((p) => {
         if (!term) return true;
         return (
-          p.displayName.toLowerCase().includes(term) ||
-          (p.primaryEmail?.toLowerCase().includes(term) ?? false) ||
-          (p.notes?.toLowerCase().includes(term) ?? false) ||
-          (p.primaryPhone?.toLowerCase().includes(term) ?? false)
+          normalizeSearch(p.displayName).includes(term) ||
+          (p.primaryEmail ? normalizeSearch(p.primaryEmail).includes(term) : false) ||
+          (p.notes ? normalizeSearch(p.notes).includes(term) : false) ||
+          (p.primaryPhone ? normalizeSearch(p.primaryPhone).includes(term) : false)
         );
       });
   }, [allLeads, trimmedSearch]);
