@@ -1023,6 +1023,7 @@ export default function TrialLessonsPage() {
               fullWidth
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentForm.phone}
               onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}

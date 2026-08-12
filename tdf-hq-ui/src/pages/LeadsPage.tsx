@@ -118,7 +118,7 @@ function LeadCreateDialog({ open, onClose }: LeadCreateDialogProps) {
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre" value={name} onChange={(e) => setName(e.target.value)} required />
           <TextField label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <TextField label="Fuente (campaña, referidor)" value={source} onChange={(e) => setSource(e.target.value)} />
           <FormControl>
             <InputLabel id="status-label">Estado</InputLabel>
@@ -209,7 +209,7 @@ function LeadEditDialog({ lead, open, onClose }: LeadEditDialogProps) {
         <Stack gap={2} sx={{ mt: 1 }}>
           <TextField label="Nombre" value={name} onChange={(e) => setName(e.target.value)} />
           <TextField label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <TextField
             label="Notas / Estado"
             value={notes}

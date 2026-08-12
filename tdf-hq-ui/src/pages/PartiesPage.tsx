@@ -205,7 +205,7 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
             helperText="Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones."
           />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Stack>
       </DialogContent>
       <DialogActions>

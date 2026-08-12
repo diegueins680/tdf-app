@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { DateTime } from 'luxon';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -20,8 +20,7 @@ import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
 import { resolveRuntimeCurrency } from '../utils/formatters';
-
-const COURSE_DRAFT_STORAGE_KEY = 'tdf-course-builder-draft';
+import { useAutoSave } from '../hooks/useAutoSave';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -269,10 +268,19 @@ export default function CourseBuilderPage() {
     whatsappCtaUrl,
   ]);
 
+  const payload = buildPayload();
+  const { loadDraft, saveDraft, clearDraft } = useAutoSave('course-builder', payload, {
+    enabled: hasLocalEditsRef.current,
+    debounceMs: 2000,
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
-      const payload = buildPayload();
-      await Courses.upsert(payload);
+      const p = buildPayload();
+      await Courses.upsert(p);
+    },
+    onSuccess: () => {
+      clearDraft();
     },
   });
 
@@ -321,62 +329,51 @@ export default function CourseBuilderPage() {
     : `Slug sugerido: ${slug}.`;
   const existingCourseLoaderOpen = showExistingCourseLoader || Boolean(loadError);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (draftLoadedRef.current) return;
-    try {
-      const raw = window.localStorage.getItem(COURSE_DRAFT_STORAGE_KEY);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as Partial<CourseUpsert>;
-      if (!draft.title && !draft.slug) return;
-      setTitle((prev) => draft.title ?? prev);
-      setSubtitle((prev) => draft.subtitle ?? prev);
-      setFormat((prev) => draft.format ?? prev);
-      setDuration((prev) => draft.duration ?? prev);
-      setPrice((prev) =>
-        draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
-      );
-      setCurrency((prev) => draft.currency ?? prev);
-      setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
-      setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
-      setSessionDurationHours((prev) =>
-        draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
-      );
-      setLocationLabel((prev) => draft.locationLabel ?? prev);
-      setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
-      setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
-      setLandingUrl((prev) => draft.landingUrl ?? prev);
-      setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
-      setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
-      setInstructorName((prev) => draft.instructorName ?? prev);
-      setInstructorBio((prev) => draft.instructorBio ?? prev);
-      setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
-      setSessions((prev) =>
-        draft.sessions
-          ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
-          : prev,
-      );
-      setSyllabus((prev) =>
-        draft.syllabus
-          ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
-          : prev,
-      );
-      draftLoadedRef.current = true;
-      hasLocalEditsRef.current = true;
-      setHasDraft(true);
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
+    const draft = loadDraft() as Partial<CourseUpsert> | null;
+    if (!draft || (!draft.title && !draft.slug)) return;
+    setTitle((prev) => draft.title ?? prev);
+    setSubtitle((prev) => draft.subtitle ?? prev);
+    setFormat((prev) => draft.format ?? prev);
+    setDuration((prev) => draft.duration ?? prev);
+    setPrice((prev) =>
+      draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
+    );
+    setCurrency((prev) => draft.currency ?? prev);
+    setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
+    setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
+    setSessionDurationHours((prev) =>
+      draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
+    );
+    setLocationLabel((prev) => draft.locationLabel ?? prev);
+    setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
+    setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
+    setLandingUrl((prev) => draft.landingUrl ?? prev);
+    setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
+    setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
+    setInstructorName((prev) => draft.instructorName ?? prev);
+    setInstructorBio((prev) => draft.instructorBio ?? prev);
+    setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
+    setSessions((prev) =>
+      draft.sessions
+        ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
+        : prev,
+    );
+    setSyllabus((prev) =>
+      draft.syllabus
+        ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
+        : prev,
+    );
+    draftLoadedRef.current = true;
+    hasLocalEditsRef.current = true;
+    setHasDraft(true);
+  }, [loadDraft]);
 
   useEffect(() => {
     if (!hasLocalEditsRef.current) return;
-    const payload = buildPayload();
-    try {
-      window.localStorage.setItem(COURSE_DRAFT_STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
-  }, [buildPayload]);
+    saveDraft(payload);
+  }, [payload, saveDraft]);
 
   const applyMetadata = (meta: CourseMetadata) => {
     const sanitizedSessions =
@@ -459,11 +456,7 @@ export default function CourseBuilderPage() {
   };
 
   const handleClearDraft = () => {
-    try {
-      window.localStorage.removeItem(COURSE_DRAFT_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    clearDraft();
     hasLocalEditsRef.current = false;
     draftLoadedRef.current = false;
     setHasDraft(false);

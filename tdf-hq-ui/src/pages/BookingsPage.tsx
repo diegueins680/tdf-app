@@ -1096,6 +1096,7 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, email: e.target.value }))}
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={createContactForm.phone}
               onChange={(e) => setCreateContactForm((prev) => ({ ...prev, phone: e.target.value }))}

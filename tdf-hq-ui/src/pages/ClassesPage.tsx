@@ -681,6 +681,7 @@ export default function ClassesPage() {
               fullWidth
             />
             <TextField
+              type="tel"
               label="Celular (opcional)"
               value={studentForm.phone}
               onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}

@@ -440,6 +440,7 @@ export default function SocialPage() {
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TextField
+                  type="tel"
                   label="Teléfono / WhatsApp"
                   value={sharePhone}
                   onChange={(e) => setSharePhone(e.target.value)}
