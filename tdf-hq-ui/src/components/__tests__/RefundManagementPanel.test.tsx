@@ -211,7 +211,6 @@ describe('RefundManagementPanel', () => {
   it('invokes approval even though the panel has no inline error surface', async () => {
     listRefunds.mockResolvedValue(mockRefunds);
     approveRefund.mockRejectedValue(new Error('Stripe refund failed'));
-    global.confirm = jest.fn(() => true);
 
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
@@ -223,6 +222,7 @@ describe('RefundManagementPanel', () => {
 
     const rejectedApproveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(rejectedApproveButton);
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar/i }));
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');

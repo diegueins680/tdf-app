@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,6 +19,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { SocialEventsAPI, type SocialTicketDTO } from '../api/socialEvents';
+import { emailSchema, requiredString } from '../lib/schemas';
 
 type TicketWithRequiredId = SocialTicketDTO & { ticketId: string };
 
@@ -29,6 +33,12 @@ interface TicketTransferDialogProps {
 
 const TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS = 5 * 10 - 2;
 const TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX = 2 * 10 + 4;
+
+const transferSchema = z.object({
+  email: emailSchema,
+  name: requiredString('Nombre del destinatario'),
+});
+type TransferFormData = z.infer<typeof transferSchema>;
 
 /**
  * Contract:
@@ -45,16 +55,17 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
    */
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [recipientName, setRecipientName] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const previousFocusRef = useRef<Element | null>(null);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<TransferFormData>({
+    resolver: zodResolver(transferSchema),
+    defaultValues: { email: '', name: '' },
+  });
 
   const transferMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (data: { email: string; name: string }) =>
       SocialEventsAPI.createTransfer(eventId, ticket.ticketId, {
-        ttcToEmail: recipientEmail,
-        ttcToName: recipientName,
+        ttcToEmail: data.email,
+        ttcToName: data.name,
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['tickets', eventId] });
@@ -62,34 +73,14 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
       onSuccess();
       handleClose();
     },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : t('ticketTransfer.errors.initFailed'));
-    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!recipientEmail || !recipientName) {
-      setError(t('ticketTransfer.errors.requiredFields'));
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(recipientEmail)) {
-      setError(t('ticketTransfer.errors.invalidEmail'));
-      return;
-    }
-
-    setError(null);
-    transferMutation.mutate();
-  };
+  const onSubmit = handleSubmit((data) => {
+    transferMutation.mutate({ email: data.email, name: data.name });
+  });
 
   const handleClose = () => {
-    setRecipientEmail('');
-    setRecipientName('');
-    setError(null);
+    reset();
     onClose();
     // Restore focus to the element that triggered the dialog
     if (previousFocusRef.current instanceof HTMLElement) {
@@ -123,24 +114,25 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
         <Divider sx={{ my: 2 }} />
 
-        <Box component="form" id="transfer-form" onSubmit={handleSubmit}>
+        <Box component="form" id="transfer-form" onSubmit={onSubmit} noValidate>
           <TextField
+            {...register('email')}
             label={t('ticketTransfer.recipientEmail')}
             type="email"
             fullWidth
             required
-            value={recipientEmail}
-            onChange={(e) => setRecipientEmail(e.target.value)}
             margin="normal"
-            helperText={t('ticketTransfer.recipientEmailHelper')}
+            error={Boolean(errors.email)}
+            helperText={errors.email?.message || t('ticketTransfer.recipientEmailHelper')}
           />
           <TextField
+            {...register('name')}
             label={t('ticketTransfer.recipientName')}
             fullWidth
             required
-            value={recipientName}
-            onChange={(e) => setRecipientName(e.target.value)}
             margin="normal"
+            error={Boolean(errors.name)}
+            helperText={errors.name?.message}
           />
 
           <Alert severity="info" sx={{ mt: 2 }}>
@@ -149,9 +141,9 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
             </Typography>
           </Alert>
 
-          {error && (
+          {transferMutation.isError && (
             <Alert severity="error" role="alert" sx={{ mt: 2 }}>
-              {error}
+              {transferMutation.error instanceof Error ? transferMutation.error.message : t('ticketTransfer.errors.initFailed')}
             </Alert>
           )}
         </Box>

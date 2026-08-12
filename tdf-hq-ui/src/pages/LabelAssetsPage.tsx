@@ -45,6 +45,7 @@ import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import { buildPublicContentUrl } from '../services/googleDrive';
+import { useToast } from '../contexts/ToastContext';
 import { useSession } from '../session/SessionContext';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 
@@ -171,6 +172,8 @@ function getAssetMovementState(status: string) {
 export default function LabelAssetsPage() {
   const qc = useQueryClient();
   const { session } = useSession();
+  const { showUndo } = useToast();
+  const deletedAssetRef = useRef<AssetDTO | null>(null);
   const modules = useMemo(
     () => buildAccessibleModuleSet(session?.roles, session?.modules),
     [session?.modules, session?.roles],
@@ -326,7 +329,19 @@ export default function LabelAssetsPage() {
     mutationFn: (assetId: string) => Inventory.remove(assetId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
-      setFeedback('Asset eliminado.');
+      const deletedAsset = deletedAssetRef.current;
+      if (deletedAsset) {
+        showUndo('Asset eliminado', () => {
+          void Inventory.create({
+            cName: deletedAsset.name,
+            cCategory: deletedAsset.category,
+            cPhotoUrl: deletedAsset.photoUrl ?? null,
+          }).then(() => {
+            void qc.invalidateQueries({ queryKey: ['assets'] });
+          });
+        });
+      }
+      deletedAssetRef.current = null;
     },
     onError: (err) => setFeedback(err instanceof Error ? err.message : 'No se pudo eliminar el asset.'),
   });
@@ -558,6 +573,7 @@ export default function LabelAssetsPage() {
 
   const handleDeleteConfirm = () => {
     if (pendingDeleteAsset) {
+      deletedAssetRef.current = pendingDeleteAsset;
       deleteMutation.mutate(pendingDeleteAsset.assetId);
     }
     setDeleteConfirmOpen(false);
@@ -1219,7 +1235,7 @@ export default function LabelAssetsPage() {
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={handleDeleteConfirm}
         title="Eliminar activo"
-        description={`¿Eliminar ${pendingDeleteAsset?.name ?? ''}? Esta acción no se puede deshacer.`}
+        description={`¿Eliminar ${pendingDeleteAsset?.name ?? ''}? Podrás deshacer la acción durante unos segundos.`}
         severity="danger"
         confirming={deleteMutation.isPending}
       />

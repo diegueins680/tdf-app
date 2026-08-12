@@ -659,7 +659,7 @@ export default function SocialEventsPage() {
       );
       return { previousInvitations };
     },
-    onSuccess: (_resp, { eventId }) => {
+    onSuccess: () => {
       setFeedback({ kind: 'success', message: 'Respuesta enviada.' });
     },
     onError: (err: Error, _vars, context) => {

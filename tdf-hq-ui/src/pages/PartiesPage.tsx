@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { requiredString } from '../lib/schemas';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
@@ -46,7 +50,7 @@ import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
-import PageShell, { EmptyState } from '../components/PageShell';
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -87,33 +91,44 @@ const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1
 const hasPartyPrimaryEmail = (party?: Pick<PartyDTO, 'primaryEmail'> | null) =>
   normalizePartyContactValue(party?.primaryEmail) != null;
 
+const createPartySchema = z.object({
+  name: requiredString('Nombre'),
+});
+type CreatePartyFormData = z.infer<typeof createPartySchema>;
+
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
-  const [name, setName] = useState('');
   const [isOrg, setIsOrg] = useState(false);
-  const [nameTouched, setNameTouched] = useState(false);
-  const nameError = nameTouched && !name.trim() ? 'Campo obligatorio' : '';
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreatePartyFormData>({
+    resolver: zodResolver(createPartySchema),
+    defaultValues: { name: '' },
+  });
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
     mutationFn: (body) => Parties.create(body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['parties'] });
-      setName('');
+      reset();
       onClose();
     },
   });
 
-  const handleSubmit = () => {
-    if (!name) return;
-    mutation.mutate({ cDisplayName: name, cIsOrg: isOrg });
-  };
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
+  });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Nuevo contacto</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
-          <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required error={Boolean(nameError)} helperText={nameError} onBlur={() => setNameTouched(true)} />
+          <TextField
+            {...register('name')}
+            label="Nombre / Display"
+            required
+            error={Boolean(errors.name)}
+            helperText={errors.name?.message}
+          />
           <Typography variant="body2" color="text.secondary">
             {`Tipo actual: ${isOrg ? 'Empresa' : 'Persona'}. Usa Persona para individuos y Empresa para bandas, sellos o negocios.`}
           </Typography>
@@ -130,11 +145,11 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-          <Button onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" disabled={!name || mutation.isPending}>
-            Crear
-          </Button>
-        </DialogActions>
+        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onSubmit} variant="contained" disabled={mutation.isPending}>
+          Crear
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }
@@ -456,6 +471,7 @@ export default function PartiesPage() {
     <PageShell
       title="Contactos"
       subtitle="Gestiona personas, empresas y roles en un solo lugar."
+      loading={showInitialLoadingState}
       actions={(
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
           Nuevo contacto
@@ -502,9 +518,7 @@ export default function PartiesPage() {
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
         {showInitialLoadingState ? (
-          <Alert severity="info" variant="outlined">
-            Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
-          </Alert>
+          <SkeletonCards count={3} />
         ) : !partiesQuery.error && !hasContacts ? (
           <EmptyState
             title="Sin contactos aún"

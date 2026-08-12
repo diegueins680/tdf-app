@@ -1611,7 +1611,9 @@ export default function MarketplaceOrdersPage() {
       <ConfirmDialog
         open={statusConfirmOpen}
         onClose={() => setStatusConfirmOpen(false)}
-        onConfirm={handleStatusConfirm}
+        onConfirm={() => {
+          void handleStatusConfirm();
+        }}
         title="Confirmar cambio de estado"
         description={`¿Confirmas cambiar el estado a "${pendingSavePayload?.payload.mouStatus ?? ''}"?`}
         severity="warning"

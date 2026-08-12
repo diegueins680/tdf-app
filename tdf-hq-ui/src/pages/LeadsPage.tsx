@@ -33,6 +33,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
+import PageShell, { SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -277,18 +278,16 @@ export default function LeadsPage() {
     : `Mostrando ${leads.length} de ${allLeads.length} leads para "${trimmedSearch}".`;
 
   return (
-    <Stack gap={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} gap={2}>
-        <Stack spacing={0.5}>
-          <Typography variant="h4" fontWeight={800}>CRM / Leads</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Captura y gestiona leads rápido. Usa notas para estado, fuente o siguiente paso.
-          </Typography>
-        </Stack>
+    <PageShell
+      title="CRM / Leads"
+      subtitle="Captura y gestiona leads rápido. Usa notas para estado, fuente o siguiente paso."
+      loading={showInitialLoadingState}
+      actions={(
         <Button variant="contained" startIcon={<PersonAddAltIcon />} onClick={() => setCreateOpen(true)}>
           Nuevo lead
         </Button>
-      </Stack>
+      )}
+    >
 
       <Paper sx={{ p: 2.5, borderRadius: 3, boxShadow: '0 10px 30px rgba(15,23,42,0.12)' }}>
         <Stack spacing={2}>
@@ -326,9 +325,7 @@ export default function LeadsPage() {
 
           {isError && <Alert severity="error">{error?.message ?? 'No se pudieron cargar los leads'}</Alert>}
           {showInitialLoadingState ? (
-            <Alert severity="info" variant="outlined">
-              Cargando leads… El buscador y la tabla aparecerán cuando termine esta primera carga.
-            </Alert>
+            <SkeletonCards count={3} />
           ) : !isLoading && !isError && !hasLeads ? (
             <Alert severity="info" variant="outlined">
               Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar.
@@ -480,6 +477,6 @@ export default function LeadsPage() {
           setRelatedAnchor(null);
         }}
       />
-    </Stack>
+    </PageShell>
   );
 }

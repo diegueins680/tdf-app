@@ -38,6 +38,7 @@ import { Bookings, type BookingUpdatePayload } from '../api/bookings';
 import { Parties } from '../api/parties';
 import type { BookingDTO, BookingResourceDTO, PartyDTO } from '../api/types';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import PageShell, { SkeletonCards } from '../components/PageShell';
 
 type StatusValue = 'Tentative' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'NoShow';
 
@@ -559,15 +560,12 @@ export default function OrdersPage() {
   };
 
   return (
-    <Stack gap={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2} alignItems={{ md: 'center' }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>Sesiones</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {pageSummary}
-          </Typography>
-        </Box>
-        <Stack direction="row" gap={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+    <PageShell
+      title="Sesiones"
+      subtitle={pageSummary}
+      loading={showInitialLoadingState}
+      actions={(
+        <Stack direction="row" gap={1}>
           {showRefreshAction && (
             <Tooltip title="Actualizar lista">
               <span>
@@ -593,7 +591,8 @@ export default function OrdersPage() {
             </Button>
           )}
         </Stack>
-      </Stack>
+      )}
+    >
 
       {showStaleErrorState && bookingsQuery.error && (
         <Alert
@@ -622,15 +621,7 @@ export default function OrdersPage() {
             </Button>
           </Stack>
         ) : showInitialLoadingState ? (
-          <Stack spacing={1} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={700}>
-              Cargando sesiones…
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking,
-              recursos y estado desde una sola vista.
-            </Typography>
-          </Stack>
+          <SkeletonCards count={3} />
         ) : showFirstSessionEmptyState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
@@ -861,7 +852,7 @@ export default function OrdersPage() {
         saving={updateMutation.isPending}
         errorMessage={mutationError}
       />
-    </Stack>
+    </PageShell>
   );
 }
 

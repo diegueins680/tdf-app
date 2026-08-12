@@ -283,7 +283,6 @@ describe('InternTaskDetailPage', () => {
 
   it('requires confirmation before an admin can permanently delete a task', async () => {
     listTasksMock.mockResolvedValue([task]);
-    const confirmMock = jest.spyOn(window, 'confirm').mockReturnValue(true);
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container, task.itId);
@@ -291,13 +290,13 @@ describe('InternTaskDetailPage', () => {
     try {
       await waitForExpectation(() => expect(container.textContent).toContain('Eliminar tarea'));
       await clickButton(getButtonByText(container, 'Eliminar tarea'));
+      await waitForExpectation(() => expect(document.body.textContent).toContain(task.itTitle));
+      await clickButton(getButtonByText(document.body, 'Confirmar'));
       await waitForExpectation(() => {
-        expect(confirmMock).toHaveBeenCalledWith(expect.stringContaining(task.itTitle));
         expect(deleteTaskMock).toHaveBeenCalledWith(task.itId);
         expect(container.textContent).toContain('Página de prácticas');
       });
     } finally {
-      confirmMock.mockRestore();
       await cleanup();
     }
   });
