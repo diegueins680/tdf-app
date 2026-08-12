@@ -45,9 +45,9 @@ psql_exec() {
 psql_exec -c 'CREATE TABLE party (id BIGSERIAL PRIMARY KEY);' >/dev/null
 psql_exec -c 'INSERT INTO party DEFAULT VALUES;' >/dev/null
 docker exec -i "$TDF_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_feature_migration_test \
-  < "$TDF_MIGRATION_ROOT/tdf-hq/db/migrations/2026-08-06_feature_access_requests.sql" >/dev/null
+  < "$TDF_MIGRATION_ROOT/tdf-hq/sql/2026-08-06_feature_access_requests.sql" >/dev/null
 docker exec -i "$TDF_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_feature_migration_test \
-  < "$TDF_MIGRATION_ROOT/tdf-hq/db/migrations/2026-08-06_feature_navigation_preferences.sql" >/dev/null
+  < "$TDF_MIGRATION_ROOT/tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql" >/dev/null
 
 psql_exec -c "INSERT INTO feature_access_requests (requester_party_id, feature_id, action, role_context, module_context, status, reviewer_group, requested_at, updated_at) VALUES (1, 'crm.contacts', 'view', '[]', '[]', 'pending', 'crm-reviewers', now(), now());" >/dev/null
 if psql_exec -c "INSERT INTO feature_access_requests (requester_party_id, feature_id, action, role_context, module_context, status, reviewer_group, requested_at, updated_at) VALUES (1, 'crm.contacts', 'view', '[]', '[]', 'pending', 'crm-reviewers', now(), now());" >/dev/null 2>&1; then
@@ -68,8 +68,8 @@ if [ "$remaining" != "0" ]; then
 fi
 
 docker exec -i "$TDF_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_feature_migration_test \
-  < "$TDF_MIGRATION_ROOT/tdf-hq/db/migrations/2026-08-06_feature_access_requests.sql" >/dev/null
+  < "$TDF_MIGRATION_ROOT/tdf-hq/sql/2026-08-06_feature_access_requests.sql" >/dev/null
 docker exec -i "$TDF_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_feature_migration_test \
-  < "$TDF_MIGRATION_ROOT/tdf-hq/db/migrations/2026-08-06_feature_navigation_preferences.sql" >/dev/null
+  < "$TDF_MIGRATION_ROOT/tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql" >/dev/null
 
 echo "Feature migrations passed forward, constraint, rollback, and reapply checks."

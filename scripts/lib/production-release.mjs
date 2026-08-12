@@ -246,7 +246,9 @@ BEGIN
   IF current_setting('default_transaction_read_only') <> 'off' THEN
     RAISE EXCEPTION 'Production migration target is read-only';
   END IF;
-  IF to_regclass('public.event_ticket_order') IS NULL
+  IF to_regclass('public.party') IS NULL
+     OR to_regclass('public.campaign') IS NULL
+     OR to_regclass('public.event_ticket_order') IS NULL
      OR to_regclass('public.venue') IS NULL
      OR to_regclass('public.social_artist_profile') IS NULL
      OR to_regclass('public.artist_profile') IS NULL
@@ -337,6 +339,26 @@ BEGIN
   ) NOT IN (0, 8) THEN
     RAISE EXCEPTION 'Artist enrichment tables are partially present';
   END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'campaign_automation', 'campaign_automation_step',
+        'campaign_enrollment', 'campaign_delivery'
+      )
+  ) NOT IN (0, 4) THEN
+    RAISE EXCEPTION 'Campaign automation tables are partially present';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name IN (
+        'feature_access_requests', 'feature_access_request_history',
+        'feature_navigation_preferences'
+      )
+  ) NOT IN (0, 3) THEN
+    RAISE EXCEPTION 'Feature discovery tables are partially present';
+  END IF;
 END
 $preflight$;
 ROLLBACK;
@@ -347,8 +369,10 @@ export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
   return `${header}DO $verify$
 DECLARE
+  campaign_table TEXT;
   discovery_table TEXT;
   ddex_table TEXT;
+  feature_table TEXT;
   social_table TEXT;
   ticketing_table TEXT;
   enrichment_table TEXT;
@@ -964,6 +988,76 @@ BEGIN
     ) AND contype = 'f' AND convalidated
   ) <> 16 THEN
     RAISE EXCEPTION 'An artist enrichment foreign key is missing or invalid';
+  END IF;
+
+  FOREACH campaign_table IN ARRAY ARRAY[
+    'campaign_automation',
+    'campaign_automation_step',
+    'campaign_enrollment',
+    'campaign_delivery'
+  ] LOOP
+    IF to_regclass('public.' || campaign_table) IS NULL THEN
+      RAISE EXCEPTION 'Campaign automation relation public.% is missing', campaign_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation'
+  ) <> 9 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation_step'
+  ) <> 12 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_enrollment'
+  ) <> 11 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_delivery'
+  ) <> 15 THEN
+    RAISE EXCEPTION 'A campaign automation relation has an unexpected column count';
+  END IF;
+
+  FOREACH feature_table IN ARRAY ARRAY[
+    'feature_access_requests',
+    'feature_access_request_history',
+    'feature_navigation_preferences'
+  ] LOOP
+    IF to_regclass('public.' || feature_table) IS NULL THEN
+      RAISE EXCEPTION 'Feature discovery relation public.% is missing', feature_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_requests'
+  ) <> 16 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_request_history'
+  ) <> 8 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_navigation_preferences'
+  ) <> 9 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('party_id', 'bigint', 'NO'),
+        ('feature_id', 'text', 'NO'),
+        ('favorite', 'boolean', 'NO'),
+        ('pinned', 'boolean', 'NO'),
+        ('pin_order', 'integer', 'YES'),
+        ('last_visited_at', 'timestamp with time zone', 'YES'),
+        ('use_count', 'integer', 'NO'),
+        ('updated_at', 'timestamp with time zone', 'NO')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'feature_navigation_preferences'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Feature discovery tables do not match the runtime schema';
   END IF;
 
   FOREACH ddex_table IN ARRAY ARRAY[

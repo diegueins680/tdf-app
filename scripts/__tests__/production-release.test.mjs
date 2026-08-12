@@ -244,6 +244,11 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'message_id',
     'sender_id',
     'recipient_id',
+    'campaign_automation',
+    'campaign_delivery',
+    'feature_access_requests',
+    'feature_access_request_history',
+    'feature_navigation_preferences',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
@@ -257,6 +262,8 @@ test('buildSchemaPreflightSql is read-only and accepts unapplied release tables'
   assert.match(sql, /default_transaction_read_only/i);
   assert.match(sql, /information_schema\.columns[\s\S]*checkout_idempotency_key/i);
   assert.match(sql, /social_sync_account[\s\S]*social_sync_post[\s\S]*social_sync_run/i);
+  assert.match(sql, /campaign_automation[\s\S]*campaign_delivery/i);
+  assert.match(sql, /feature_access_requests[\s\S]*feature_navigation_preferences/i);
   assert.match(sql, /ROLLBACK/i);
   assert.doesNotMatch(sql, /ALTER\s+TABLE|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM/i);
 });

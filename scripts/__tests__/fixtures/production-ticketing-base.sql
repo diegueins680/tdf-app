@@ -6,6 +6,10 @@ CREATE TABLE party (
     id BIGSERIAL PRIMARY KEY
 );
 
+CREATE TABLE campaign (
+    id BIGSERIAL PRIMARY KEY
+);
+
 CREATE TABLE notification (
     id BIGSERIAL PRIMARY KEY,
     recipient_party_id BIGINT NOT NULL REFERENCES party(id),
