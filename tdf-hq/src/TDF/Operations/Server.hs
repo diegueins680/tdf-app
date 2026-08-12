@@ -487,15 +487,15 @@ quickActionsFor entityType = case entityType of
   "uncorrelated_inbound" -> ["correlate_identity", "assign", "reply", "add_note"]
   _ -> ["open_source", "assign", "add_note"]
 
-fetchUpdatedItem :: UUID -> SqlPersistT IO Ops.WorkItemDTO
+fetchUpdatedItem :: UUID -> SqlPersistT IO (Maybe Ops.WorkItemDTO)
 fetchUpdatedItem itemId = do
   rows <- rawSql
     ("SELECT (" <> workItemJson "item" <> ")::text FROM operations_work_item item WHERE item.id = ?::uuid")
     [uuidValue itemId] :: SqlPersistT IO [Single Text]
   case rows of
     [Single payload] ->
-      maybe (fail "invalid work item projection") pure (decodeStrict' (TE.encodeUtf8 payload))
-    _ -> fail "work item not found after update"
+      pure (decodeStrict' (TE.encodeUtf8 payload))
+    _ -> pure Nothing
 
 recordWorkItemEffect
   :: AuthedUser
@@ -542,11 +542,12 @@ markSeenHandler user itemId command = do
       \ first_seen_at = COALESCE(first_seen_at, ?), status = CASE WHEN status = 'new' THEN 'seen' ELSE status END, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
       [partyIdValue user, PersistUTCTime now, PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)]
-    after <- fetchUpdatedItem itemId
-    recordWorkItemEffect user scope itemId "mark_seen" "work_item.seen" (command.requestId)
-      (command.reason) (toJson before) (toJson after)
-    pure after
-  pure updated
+    mAfter <- fetchUpdatedItem itemId
+    forM_ mAfter $ \after ->
+      recordWorkItemEffect user scope itemId "mark_seen" "work_item.seen" (command.requestId)
+        (command.reason) (toJson before) (toJson after)
+    pure mAfter
+  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
 
 transitionHandler :: AuthedUser -> UUID -> Ops.TransitionCommand -> OperationsM Ops.WorkItemDTO
 transitionHandler user itemId command = do
