@@ -69,6 +69,17 @@ describe('API query/id validation', () => {
     await Parties.update(8, { uDisplayName: 'Nombre actualizado' });
     expect(putMock).toHaveBeenCalledWith('/parties/8', { uDisplayName: 'Nombre actualizado' });
 
+    await Parties.update(10, {
+      uDisplayName: 'Blue Records',
+      uPrimaryEmail: null,
+      uPrimaryPhone: null,
+      uInstagram: 'blue_records333',
+    });
+    expect(putMock).toHaveBeenCalledWith('/parties/10', {
+      uDisplayName: 'Blue Records',
+      uInstagram: 'blue_records333',
+    });
+
     await Parties.addRole(9, 'teacher');
     expect(postMock).toHaveBeenCalledWith('/parties/9/roles', 'teacher');
 

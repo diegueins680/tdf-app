@@ -196,7 +196,7 @@ export default function ArtistPublicPage() {
   useMetaTags({
     title: artist?.apDisplayName ?? 'Artista',
     description: artist?.apBio?.slice(0, 160),
-    ogImage: artist?.apImageUrl,
+    ogImage: artist?.apHeroImageUrl ?? undefined,
     ogType: 'profile',
   });
 
