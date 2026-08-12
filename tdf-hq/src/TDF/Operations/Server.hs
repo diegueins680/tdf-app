@@ -601,11 +601,12 @@ transitionHandler user itemId command = do
       , PersistBool isArchived, PersistUTCTime now, PersistBool (target == Ops.WorkInProgress)
       , PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)
       ]
-    after <- fetchUpdatedItem itemId
-    recordWorkItemEffect user scope itemId "transition" "work_item.transitioned"
-      (command.requestId) (command.reason) (toJson before) (toJson after)
-    pure after
-  pure updated
+    mAfter <- fetchUpdatedItem itemId
+    forM_ mAfter $ \after ->
+      recordWorkItemEffect user scope itemId "transition" "work_item.transitioned"
+        (command.requestId) (command.reason) (toJson before) (toJson after)
+    pure mAfter
+  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
 
 assignmentHandler :: AuthedUser -> UUID -> Ops.AssignmentCommand -> OperationsM Ops.WorkItemDTO
 assignmentHandler user itemId command = do
@@ -630,11 +631,12 @@ assignmentHandler user itemId command = do
       , maybeInt64Value (command.assigneePartyId), PersistUTCTime now, uuidValue itemId
       , PersistInt64 (command.expectedVersion)
       ]
-    after <- fetchUpdatedItem itemId
-    recordWorkItemEffect user scope itemId "assign" "work_item.assigned"
-      (command.requestId) (command.reason) (toJson before) (toJson after)
-    pure after
-  pure updated
+    mAfter <- fetchUpdatedItem itemId
+    forM_ mAfter $ \after ->
+      recordWorkItemEffect user scope itemId "assign" "work_item.assigned"
+        (command.requestId) (command.reason) (toJson before) (toJson after)
+    pure mAfter
+  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
 
 priorityHandler :: AuthedUser -> UUID -> Ops.PriorityCommand -> OperationsM Ops.WorkItemDTO
 priorityHandler user itemId command = do
@@ -651,11 +653,12 @@ priorityHandler user itemId command = do
       [ PersistText (Ops.workPriorityText (command.priority)), PersistText (T.strip (command.reason))
       , PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)
       ]
-    after <- fetchUpdatedItem itemId
-    recordWorkItemEffect user scope itemId "override_priority" "work_item.priority_overridden"
-      (command.requestId) (Just (command.reason)) (toJson before) (toJson after)
-    pure after
-  pure updated
+    mAfter <- fetchUpdatedItem itemId
+    forM_ mAfter $ \after ->
+      recordWorkItemEffect user scope itemId "override_priority" "work_item.priority_overridden"
+        (command.requestId) (Just (command.reason)) (toJson before) (toJson after)
+    pure mAfter
+  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
 
 createNoteHandler :: AuthedUser -> UUID -> Ops.NoteCreate -> OperationsM Ops.WorkItemNoteDTO
 createNoteHandler user itemId command = do
@@ -664,8 +667,8 @@ createNoteHandler user itemId command = do
   let noteBody = T.strip (command.body)
   when (T.null noteBody || T.length noteBody > 5000) $
     throwError err422 {errBody = "Note body must contain 1 to 5000 characters"}
-  rows <- runOperationsDb $ do
-    forM_ (command.mentionedPartyIds) $ \mentionedPartyId -> do
+  (invalidMention, rows) <- runOperationsDb $ do
+    mentionCheck <- fmap or $ forM (command.mentionedPartyIds) $ \mentionedPartyId -> do
       membership <- rawSql
         "SELECT count(*) FROM operations_scope_member member \
         \WHERE member.organization_id = ?::uuid AND member.branch_id = ?::uuid \
@@ -673,33 +676,37 @@ createNoteHandler user itemId command = do
         [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
         , PersistInt64 mentionedPartyId
         ] :: SqlPersistT IO [Single Int64]
-      unless (membership == [Single 1]) (fail "mention outside operations scope")
-    inserted <- rawSql
-      "INSERT INTO operations_note (organization_id, work_item_id, author_party_id, body) \
-      \VALUES (?::uuid, ?::uuid, ?, ?::text) RETURNING id::text, created_at"
-      [uuidValue (scopeOrganizationId scope), uuidValue itemId, partyIdValue user, PersistText noteBody]
-      :: SqlPersistT IO [(Single Text, Single UTCTime)]
-    case inserted of
-      [(Single noteIdText, Single created)] -> do
-        forM_ (command.mentionedPartyIds) $ \mentionedPartyId ->
-          rawExecute
-            "INSERT INTO operations_mention (note_id, mentioned_party_id) \
-            \VALUES (?::uuid, ?) ON CONFLICT DO NOTHING"
-            [PersistText noteIdText, PersistInt64 mentionedPartyId]
-        rawExecute
-          "INSERT INTO operations_stream_event (organization_id, branch_id, event_type, work_item_id, payload) \
-          \VALUES (?::uuid, ?::uuid, 'work_item.note_added', ?::uuid, jsonb_build_object('workItemId', ?::uuid, 'noteId', ?::uuid))"
-          [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), uuidValue itemId, uuidValue itemId, PersistText noteIdText]
-        rawExecute
-          "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
-          \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'add_note', 'operations_note', ?::text, jsonb_build_object('workItemId', ?::uuid), ?::text, ?::text)"
-          [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user,
-           PersistText (auditRole user), PersistText (command.sourceClient), PersistText noteIdText,
-           uuidValue itemId, PersistText (command.requestId), PersistText (UUID.toText itemId)]
-        case UUID.fromText noteIdText of
-          Just noteId -> pure [Ops.WorkItemNoteDTO noteId (fromSqlKey (auPartyId user)) noteBody (command.mentionedPartyIds) created Nothing]
-          Nothing -> fail "invalid note identifier"
-      _ -> fail "could not create note"
+      pure (membership /= [Single 1])
+    if mentionCheck
+      then pure (True, [])
+      else do
+        inserted <- rawSql
+          "INSERT INTO operations_note (organization_id, work_item_id, author_party_id, body) \
+          \VALUES (?::uuid, ?::uuid, ?, ?::text) RETURNING id::text, created_at"
+          [uuidValue (scopeOrganizationId scope), uuidValue itemId, partyIdValue user, PersistText noteBody]
+          :: SqlPersistT IO [(Single Text, Single UTCTime)]
+        case inserted of
+          [(Single noteIdText, Single created)] -> do
+            forM_ (command.mentionedPartyIds) $ \mentionedPartyId ->
+              rawExecute
+                "INSERT INTO operations_mention (note_id, mentioned_party_id) \
+                \VALUES (?::uuid, ?) ON CONFLICT DO NOTHING"
+                [PersistText noteIdText, PersistInt64 mentionedPartyId]
+            rawExecute
+              "INSERT INTO operations_stream_event (organization_id, branch_id, event_type, work_item_id, payload) \
+              \VALUES (?::uuid, ?::uuid, 'work_item.note_added', ?::uuid, jsonb_build_object('workItemId', ?::uuid, 'noteId', ?::uuid))"
+              [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), uuidValue itemId, uuidValue itemId, PersistText noteIdText]
+            rawExecute
+              "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
+              \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'add_note', 'operations_note', ?::text, jsonb_build_object('workItemId', ?::uuid), ?::text, ?::text)"
+              [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user,
+               PersistText (auditRole user), PersistText (command.sourceClient), PersistText noteIdText,
+               uuidValue itemId, PersistText (command.requestId), PersistText (UUID.toText itemId)]
+            case UUID.fromText noteIdText of
+              Just noteId -> pure (False, [Ops.WorkItemNoteDTO noteId (fromSqlKey (auPartyId user)) noteBody (command.mentionedPartyIds) created Nothing])
+              Nothing -> pure (False, [])
+          _ -> pure (False, [])
+  when invalidMention $ throwError err422 {errBody = "Mentioned party is outside the operations scope"}
   case rows of
     [note] -> pure note
     _ -> throwError err500 {errBody = "Could not create note"}
@@ -712,7 +719,7 @@ createManualWorkItemHandler user command = do
     throwError err422 {errBody = "Correlation key is required"}
   when (command.uncorrelated /= not (isJust (command.entityId))) $
     throwError err422 {errBody = "Uncorrelated items must omit entityId; correlated items must include it"}
-  item <- runOperationsDb $ do
+  mItem <- runOperationsDb $ do
     now <- liftIO getCurrentTime
     let aggregateId = fromMaybe (UUID.toText (command.organizationId) <> ":uncorrelated") (command.entityId)
         eventType = if command.uncorrelated then "manual.uncorrelated_created" else "manual.created"
@@ -733,9 +740,9 @@ createManualWorkItemHandler user command = do
       ("SELECT (" <> workItemJson "item" <> ")::text FROM operations_work_item item WHERE item.organization_id = ?::uuid AND item.correlation_key = ?::text")
       [uuidValue (scopeOrganizationId scope), PersistText (command.correlationKey)] :: SqlPersistT IO [Single Text]
     case rows of
-      [Single payloadText] -> maybe (fail "invalid manual work item") pure (decodeStrict' (TE.encodeUtf8 payloadText))
-      _ -> fail "manual work item projection unavailable"
-  pure item
+      [Single payloadText] -> pure (decodeStrict' (TE.encodeUtf8 payloadText))
+      _ -> pure Nothing
+  maybe (throwError err404 {errBody = "Manual work item projection unavailable"}) pure mItem
 
 createApprovalHandler :: AuthedUser -> Ops.ApprovalCreate -> OperationsM Ops.ApprovalDTO
 createApprovalHandler user command = do
