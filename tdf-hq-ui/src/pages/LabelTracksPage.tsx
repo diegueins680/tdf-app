@@ -28,9 +28,11 @@ import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { parsePositiveSafeInt } from '../utils/ids';
 
 export default function LabelTracksPage() {
+  useDocumentTitle('Label / Pistas');
   const location = useLocation();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const ownerIdOverride = useMemo(() => parsePositiveSafeInt(searchParams.get('ownerId')), [searchParams]);

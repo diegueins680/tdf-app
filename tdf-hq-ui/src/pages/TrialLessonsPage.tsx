@@ -28,6 +28,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Bookings } from '../api/bookings';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type {
   ClassSessionDTO,
   ClassSessionUpdate,
@@ -144,6 +145,7 @@ const formatDateTime = (iso: string) => formatDateForUser(iso, {
 });
 
 export default function TrialLessonsPage() {
+  useDocumentTitle('Escuela / Clases de prueba');
   const qc = useQueryClient();
   const navigate = useNavigate();
   const subjectsQuery = useQuery({

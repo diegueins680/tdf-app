@@ -87,7 +87,7 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
   }
 
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center" aria-busy={loading ? true : undefined}>
+    <Stack direction="row" spacing={0.5} alignItems="center" role="group" aria-label="Reacciones" aria-busy={loading ? true : undefined}>
       {reactionOptions.map(({ key, emoji, label }) => {
         const count = getCount(reactions, key);
         const isActive = reactions.rsMyReaction === key;
@@ -101,6 +101,8 @@ export default function ReactionBar({ reactions, onReact, disabled, loading = fa
               aria-label={count > 0 ? `${label} (${count})` : label}
               aria-pressed={isActive}
               sx={{
+                minWidth: 44,
+                minHeight: 44,
                 borderRadius: '16px',
                 px: 1,
                 py: 0.25,

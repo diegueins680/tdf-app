@@ -69,7 +69,7 @@ export default function DonationPage() {
                     Copiar dirección
                   </Button>
                   {copyMsg && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" component="span" role="status" aria-live="polite">
                       {copyMsg}
                     </Typography>
                   )}

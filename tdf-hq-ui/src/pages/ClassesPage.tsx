@@ -25,6 +25,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type {
   ClassSessionCreate,
   ClassSessionDTO,
@@ -125,6 +126,7 @@ const formatDateTime = (iso: string) => formatDateForUser(iso, {
 });
 
 export default function ClassesPage() {
+  useDocumentTitle('Escuela / Clases');
   const location = useLocation();
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const queryTeacherId = useMemo(() => parsePositiveInt(query.get('teacherId')), [query]);

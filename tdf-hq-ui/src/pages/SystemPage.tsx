@@ -18,6 +18,7 @@ import PageShell from '../components/PageShell';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useThemeMode } from '../theme/AppThemeProvider';
 import { formatDateTime } from '../utils/formatters';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const COMMON_TIMEZONES = [
   'UTC',
@@ -60,6 +61,7 @@ function availableTimezones(): string[] {
 }
 
 export default function SystemPage() {
+  useDocumentTitle('Configuración / Sistema');
   const { t } = useTranslation();
   const preferences = useLocalePreferences();
   const { preference: themePreference, setMode: setThemeMode } = useThemeMode();

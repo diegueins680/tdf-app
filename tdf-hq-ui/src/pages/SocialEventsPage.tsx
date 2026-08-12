@@ -28,6 +28,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -392,6 +393,7 @@ const buildEventFinanceCsvRows = (
 };
 
 export default function SocialEventsPage() {
+  useDocumentTitle('Social / Eventos');
   const qc = useQueryClient();
   const { session } = useSession();
   const preferredCurrency = resolveRuntimeCurrency();

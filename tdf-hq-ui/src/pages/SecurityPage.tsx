@@ -1,6 +1,8 @@
 import { Box, Card, CardContent, Divider, Link, Stack, Typography } from '@mui/material';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function SecurityPage() {
+  useDocumentTitle('Configuración / Seguridad');
   return (
     <Stack spacing={3}>
       <Stack spacing={0.5}>

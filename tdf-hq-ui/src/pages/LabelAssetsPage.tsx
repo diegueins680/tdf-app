@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import QrCodeIcon from '@mui/icons-material/QrCode';
@@ -170,6 +171,7 @@ function getAssetMovementState(status: string) {
 }
 
 export default function LabelAssetsPage() {
+  useDocumentTitle('Label / Activos');
   const qc = useQueryClient();
   const { session } = useSession();
   const { showUndo } = useToast();

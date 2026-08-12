@@ -21,6 +21,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import { Cms, type CmsContentDTO } from '../api/cms';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import PageShell from '../components/PageShell';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface ProjectNote {
   id: string;
@@ -265,6 +266,7 @@ function SaveActions({ saving, onSave }: SaveActionsProps) {
 }
 
 export default function LabelProjectsPage() {
+  useDocumentTitle('Label / Proyectos');
   const qc = useQueryClient();
   const [input, setInput] = useState('');
   const [notes, setNotes] = useState<ProjectNote[]>([]);

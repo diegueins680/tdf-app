@@ -28,6 +28,7 @@ import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
 const localeOptions = [
@@ -232,6 +233,7 @@ const formatLocaleLabel = (value: string) =>
   localeOptions.find((option) => option.value === value)?.label ?? value;
 
 export default function CmsAdminPage() {
+  useDocumentTitle('Configuración / CMS');
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const querySlug = searchParams.get('slug')?.trim() ?? '';

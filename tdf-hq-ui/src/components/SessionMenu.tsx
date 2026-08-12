@@ -47,6 +47,7 @@ export default function SessionMenu() {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        MenuListProps={{ 'aria-label': 'Menú de sesión' }}
       >
         <MenuItem disabled>
           <Stack spacing={0.5}>

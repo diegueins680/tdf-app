@@ -1581,7 +1581,7 @@ export default function LoginPage() {
               value={signupForm.password}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
               fullWidth
-              helperText={passwordHint}
+              inputProps={{ 'aria-describedby': 'password-hint' }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -1599,6 +1599,9 @@ export default function LoginPage() {
               }}
               sx={dialogFieldSx}
             />
+            <span id="password-hint" style={{ color: 'rgba(15,23,42,0.6)', fontSize: '0.75rem' }}>
+              {passwordHint}
+            </span>
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
                 {signupFeedback.message}

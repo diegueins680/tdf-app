@@ -76,6 +76,7 @@ export default function ChatKitLauncher() {
           },
         }}
       >
+        <Stack aria-hidden={!open}>
         <Stack
           direction="row"
           alignItems="center"
@@ -121,6 +122,7 @@ export default function ChatKitLauncher() {
             </Alert>
           )}
         </Box>
+        </Stack>
       </Drawer>
     </>
   );

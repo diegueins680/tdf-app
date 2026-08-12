@@ -33,6 +33,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { SocialInboxAPI, type SocialChannel, type SocialMessage } from '../api/socialInbox';
 import { assertNever } from '../utils/assertNever';
 import {
@@ -1380,6 +1381,7 @@ const ChannelPanel = ({
 };
 
 export default function SocialInboxPage() {
+  useDocumentTitle('Social / Bandeja');
   const location = useLocation();
   const reviewMode = useMemo(() => new URLSearchParams(location.search).get('review') === '1', [location.search]);
   const [filter, setFilter] = useState<FilterKey>('pending');

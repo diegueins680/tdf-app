@@ -28,6 +28,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -84,6 +85,7 @@ const formatPrice = (svc: ServiceType) => {
 };
 
 export default function ServiceTypesPage() {
+  useDocumentTitle('Estudio / Servicios');
   const qc = useQueryClient();
   const servicesQuery = useQuery<ServiceCatalogDTO[]>({
     queryKey: SERVICE_QUERY_KEY,
