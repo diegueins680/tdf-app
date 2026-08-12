@@ -34,6 +34,7 @@ import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const STATUS_OPTIONS = ['Nuevo', 'Contactado', 'En progreso', 'Ganado', 'Perdido'] as const;
 type LeadStatus = (typeof STATUS_OPTIONS)[number];
@@ -225,6 +226,7 @@ function LeadEditDialog({ lead, open, onClose }: LeadEditDialogProps) {
 }
 
 export default function LeadsPage() {
+  useDocumentTitle('CRM / Leads');
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);

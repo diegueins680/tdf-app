@@ -5,7 +5,9 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import ApiActivityIndicator from '../components/ApiActivityIndicator';
 import ApiStatusChip from '../components/ApiStatusChip';
 import ChatKitLauncher from '../components/ChatKitLauncher';
+import { OfflineBanner } from '../components/OfflineBanner';
 import RegistryBreadcrumbs from '../components/RegistryBreadcrumbs';
+import RouteErrorBoundary from '../components/RouteErrorBoundary';
 import SidebarNav from '../components/SidebarNav';
 import TopBar from '../components/TopBar';
 import { useSession } from '../session/SessionContext';
@@ -232,6 +234,7 @@ export function Shell() {
           sidebarOpen={!sidebarCollapsed}
           toggleButtonRef={sidebarToggleRef}
         />
+        <OfflineBanner />
         <ApiActivityIndicator />
         <Box
           component="main"
@@ -248,7 +251,7 @@ export function Shell() {
         >
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <RegistryBreadcrumbs />
-            {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <Outlet />}
+            {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}
           </Container>
           {!forbiddenDecision && !hideFloatingAssistants && (
             <Box

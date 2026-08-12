@@ -35,6 +35,7 @@ import SessionInvoiceGeneratorCard from '../components/SessionInvoiceGeneratorCa
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
@@ -442,6 +443,7 @@ function PaymentForm({
 }
 
 export default function PaymentsPage() {
+  useDocumentTitle('Finanzas / Pagos');
   const { formatMoney } = useCurrency();
   const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
   const [partyFilterInput, setPartyFilterInput] = useState<string>('');

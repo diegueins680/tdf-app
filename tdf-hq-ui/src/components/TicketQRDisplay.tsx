@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   Dialog,
@@ -44,6 +45,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
    * invariant: actions wait for QR generation.
    * postcondition: generated canvas can be saved or printed.
    */
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [qrGenerated, setQrGenerated] = useState(false);
 
@@ -90,7 +92,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
   const dialogContent = (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        Ticket QR Code
+        {t('ticketQR.title')}
         <Typography variant="body2" color="text.secondary">
           {eventTitle}
         </Typography>
@@ -105,7 +107,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
 
         {ticketQRQuery.isError && (
           <Alert severity="error">
-            Failed to load QR code. Please try again.
+            {t('ticketQR.loadError')}
           </Alert>
         )}
 
@@ -153,7 +155,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
               <Box sx={{ textAlign: 'center', width: '100%' }}>
                 {ticketQRQuery.data.twqTicket.ticketTierId && (
                   <Typography variant="body2" color="text.secondary">
-                    Tier ID: {ticketQRQuery.data.twqTicket.ticketTierId}
+                    {t('ticketQR.tierId')} {ticketQRQuery.data.twqTicket.ticketTierId}
                   </Typography>
                 )}
               </Box>
@@ -161,7 +163,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
 
             <Alert severity="info" sx={{ mt: 2, '@media print': { display: 'none' } }}>
               <Typography variant="body2">
-                Present this QR code at the event entrance for check-in. You can download or print this ticket.
+                {t('ticketQR.instructions')}
               </Typography>
             </Alert>
           </Box>
@@ -169,13 +171,13 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
       </DialogContent>
 
       <DialogActions sx={{ '@media print': { display: 'none' } }}>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('ticketQR.close')}</Button>
         <Button
           onClick={handleDownload}
           startIcon={<DownloadIcon />}
           disabled={!qrGenerated}
         >
-          Download
+          {t('ticketQR.download')}
         </Button>
         <Button
           onClick={handlePrint}
@@ -183,7 +185,7 @@ export function TicketQRDisplay({ open, onClose, eventId, eventTitle, ticket }: 
           variant="contained"
           disabled={!qrGenerated}
         >
-          Print
+          {t('ticketQR.print')}
         </Button>
       </DialogActions>
     </Dialog>

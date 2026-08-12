@@ -594,10 +594,35 @@ export default function SocialEventsPage() {
       if (!sessionPartyId) throw new Error('Inicia sesión para confirmar asistencia.');
       return SocialEventsAPI.rsvp(eventId, sessionPartyId, status);
     },
+    onMutate: async ({ eventId, status }) => {
+      await qc.cancelQueries({ queryKey: ['social-invitations', eventId] });
+      const previousInvitations = qc.getQueryData<SocialInvitationDTO[]>(['social-invitations', eventId]);
+      qc.setQueryData<SocialInvitationDTO[]>(['social-invitations', eventId], (old) => {
+        const filtered = (old ?? []).filter((inv) => String(inv.invitationToPartyId) !== String(sessionPartyId));
+        return [
+          ...filtered,
+          {
+            invitationToPartyId: String(sessionPartyId),
+            invitationStatus: status,
+            invitationEventId: eventId,
+          },
+        ];
+      });
+      return { previousInvitations };
+    },
     onSuccess: () => {
       setFeedback({ kind: 'success', message: 'RSVP registrado.' });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+    onError: (err: Error, _vars, context) => {
+      const eventId = (_vars as { eventId: string })?.eventId;
+      if (context?.previousInvitations !== undefined && eventId) {
+        qc.setQueryData(['social-invitations', eventId], context.previousInvitations);
+      }
+      setFeedback({ kind: 'error', message: err.message });
+    },
+    onSettled: (_data, _err, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
+    },
   });
 
   const inviteMutation = useMutation({
@@ -624,11 +649,29 @@ export default function SocialEventsPage() {
       if (!sessionPartyId) throw new Error('Inicia sesión para responder invitaciones.');
       return SocialEventsAPI.respondInvitation(eventId, invitationId, status);
     },
+    onMutate: async ({ eventId, invitationId, status }) => {
+      await qc.cancelQueries({ queryKey: ['social-invitations', eventId] });
+      const previousInvitations = qc.getQueryData<SocialInvitationDTO[]>(['social-invitations', eventId]);
+      qc.setQueryData<SocialInvitationDTO[]>(['social-invitations', eventId], (old) =>
+        (old ?? []).map((inv) =>
+          inv.invitationId === invitationId ? { ...inv, invitationStatus: status } : inv,
+        ),
+      );
+      return { previousInvitations };
+    },
     onSuccess: (_resp, { eventId }) => {
-      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
       setFeedback({ kind: 'success', message: 'Respuesta enviada.' });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+    onError: (err: Error, _vars, context) => {
+      const eventId = (_vars as { eventId: string })?.eventId;
+      if (context?.previousInvitations !== undefined && eventId) {
+        qc.setQueryData(['social-invitations', eventId], context.previousInvitations);
+      }
+      setFeedback({ kind: 'error', message: err.message });
+    },
+    onSettled: (_data, _err, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
+    },
   });
 
   const createTierMutation = useMutation({

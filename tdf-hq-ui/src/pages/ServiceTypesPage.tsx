@@ -27,6 +27,7 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import ConfirmDialog from '../components/ConfirmDialog';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -104,6 +105,8 @@ export default function ServiceTypesPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ price?: string; tax?: string }>({});
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -177,11 +180,18 @@ export default function ServiceTypesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (!window.confirm('¿Desactivar este servicio del catálogo?')) return;
-    deleteMutation.mutate(id, {
+    setPendingDeleteId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!pendingDeleteId) return;
+    deleteMutation.mutate(pendingDeleteId, {
       onError: (err) =>
         setError(err instanceof Error ? err.message : 'No se pudo desactivar el servicio.'),
     });
+    setDeleteConfirmOpen(false);
+    setPendingDeleteId(null);
   };
 
   const handleSubmit = async (evt: React.FormEvent) => {
@@ -472,6 +482,15 @@ export default function ServiceTypesPage() {
           </DialogActions>
         </form>
       </Dialog>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Desactivar servicio"
+        description="¿Desactivar este servicio del catálogo?"
+        severity="warning"
+        confirming={deleteMutation.isPending}
+      />
     </Box>
   );
 }

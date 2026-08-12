@@ -130,9 +130,7 @@ describe('RefundManagementPanel', () => {
       refundProcessedAt: MUTATED_REFUND_PROCESSED_AT_ISO,
     });
 
-    // Approval is gated behind a window.confirm.
-    global.confirm = jest.fn(() => true);
-
+    // Approval is gated behind a ConfirmDialog.
     render(<RefundManagementPanel eventId="event-1" />, {
       wrapper: createWrapper(),
     });
@@ -143,6 +141,10 @@ describe('RefundManagementPanel', () => {
 
     const confirmApproveButton = screen.getByRole('button', { name: /Approve/i });
     fireEvent.click(confirmApproveButton);
+
+    // Confirm the action in the dialog.
+    const dialogConfirmButton = await screen.findByRole('button', { name: /Confirmar/i });
+    fireEvent.click(dialogConfirmButton);
 
     await waitFor(() => {
       expect(approveRefund).toHaveBeenCalledWith('event-1', 'refund-1');

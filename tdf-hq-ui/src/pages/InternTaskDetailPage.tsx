@@ -1,3 +1,4 @@
+import ConfirmDialog from '../components/ConfirmDialog';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -98,6 +99,7 @@ export default function InternTaskDetailPage() {
   const [editing, setEditing] = useState(false);
   const [taskForm, setTaskForm] = useState<TaskEditForm | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const tasksQuery = useQuery({
     queryKey: ['internships', 'tasks'],
@@ -231,10 +233,12 @@ export default function InternTaskDetailPage() {
 
   const confirmDeleteTask = () => {
     if (!task || !isAdmin) return;
-    const confirmed = window.confirm(
-      `¿Eliminar definitivamente la tarea “${task.itTitle}”? Esta acción no se puede deshacer.`,
-    );
-    if (confirmed) deleteTaskMutation.mutate();
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteTaskMutation.mutate();
+    setDeleteConfirmOpen(false);
   };
 
   return (
@@ -541,6 +545,15 @@ export default function InternTaskDetailPage() {
           </Card>
         )}
       </Stack>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar tarea"
+        description={`¿Eliminar definitivamente la tarea "${task?.itTitle ?? ''}"? Esta acción no se puede deshacer.`}
+        severity="danger"
+        confirming={deleteTaskMutation.isPending}
+      />
     </PageShell>
   );
 }

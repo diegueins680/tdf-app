@@ -117,6 +117,8 @@ export class ApiError extends Error {
   }
 }
 
+export const HTTP_STATUS_REQUEST_TIMEOUT = 408 satisfies ApiError['status'];
+
 async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const endApiRequest = beginApiRequest();
 
@@ -128,14 +130,26 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     }
 
     let res: Response;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
     try {
       res = await fetch(joinRequestUrl(API_BASE, path), {
         ...init,
         credentials: 'include',
         headers,
+        signal: controller.signal,
       });
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new ApiError(
+          'La solicitud tardó demasiado. Verifica tu conexión e inténtalo de nuevo.',
+          HTTP_STATUS_REQUEST_TIMEOUT,
+        );
+      }
       throw normalizeNetworkError(err);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!res.ok) {

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -42,10 +43,12 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
    * invariant: transfer payload mirrors validated form fields.
    * postcondition: success resets state.
    */
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const previousFocusRef = useRef<Element | null>(null);
 
   const transferMutation = useMutation({
     mutationFn: () =>
@@ -60,7 +63,7 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
       handleClose();
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : 'Failed to initiate transfer');
+      setError(err instanceof Error ? err.message : t('ticketTransfer.errors.initFailed'));
     },
   });
 
@@ -68,14 +71,14 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
     e.preventDefault();
 
     if (!recipientEmail || !recipientName) {
-      setError('Please fill in all fields');
+      setError(t('ticketTransfer.errors.requiredFields'));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(recipientEmail)) {
-      setError('Please enter a valid email address');
+      setError(t('ticketTransfer.errors.invalidEmail'));
       return;
     }
 
@@ -88,37 +91,51 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
     setRecipientName('');
     setError(null);
     onClose();
+    // Restore focus to the element that triggered the dialog
+    if (previousFocusRef.current instanceof HTMLElement) {
+      previousFocusRef.current.focus();
+    }
   };
 
+  const handleOpen = () => {
+    previousFocusRef.current = document.activeElement;
+  };
+
+  useEffect(() => {
+    if (open) {
+      handleOpen();
+    }
+  }, [open]);
+
   const dialogContent = (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Transfer Ticket</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth aria-labelledby="transfer-title">
+      <DialogTitle id="transfer-title">{t('ticketTransfer.title')}</DialogTitle>
 
       <DialogContent>
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            Transferring ticket: <strong>{ticket.ticketCode}</strong>
+            {t('ticketTransfer.transferringTicket')} <strong>{ticket.ticketCode}</strong>
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Current holder: {ticket.ticketHolderName} ({ticket.ticketHolderEmail})
+            {t('ticketTransfer.currentHolder')} {ticket.ticketHolderName} ({ticket.ticketHolderEmail})
           </Typography>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
-        <Box component="form" onSubmit={handleSubmit}>
+        <Box component="form" id="transfer-form" onSubmit={handleSubmit}>
           <TextField
-            label="Recipient Email"
+            label={t('ticketTransfer.recipientEmail')}
             type="email"
             fullWidth
             required
             value={recipientEmail}
             onChange={(e) => setRecipientEmail(e.target.value)}
             margin="normal"
-            helperText="The new ticket holder will receive an email with an acceptance link"
+            helperText={t('ticketTransfer.recipientEmailHelper')}
           />
           <TextField
-            label="Recipient Name"
+            label={t('ticketTransfer.recipientName')}
             fullWidth
             required
             value={recipientName}
@@ -128,12 +145,12 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              The recipient will have {TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS} hours to accept the transfer. You can cancel the transfer at any time before it&apos;s accepted.
+              {t('ticketTransfer.acceptanceWindow', { hours: TICKET_TRANSFER_ACCEPTANCE_WINDOW_HOURS })}
             </Typography>
           </Alert>
 
           {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity="error" role="alert" sx={{ mt: 2 }}>
               {error}
             </Alert>
           )}
@@ -142,15 +159,16 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
 
       <DialogActions>
         <Button onClick={handleClose} disabled={transferMutation.isPending}>
-          Cancel
+          {t('ticketTransfer.cancel')}
         </Button>
         <Button
-          onClick={handleSubmit}
+          type="submit"
+          form="transfer-form"
           variant="contained"
           startIcon={<SendIcon />}
           disabled={transferMutation.isPending}
         >
-          {transferMutation.isPending ? <CircularProgress size={TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX} /> : 'Send Transfer'}
+          {transferMutation.isPending ? <CircularProgress size={TICKET_TRANSFER_ACTION_SPINNER_SIZE_PX} /> : t('ticketTransfer.sendTransfer')}
         </Button>
       </DialogActions>
     </Dialog>

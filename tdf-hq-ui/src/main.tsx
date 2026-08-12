@@ -12,6 +12,7 @@ import { getAnalyticsClient } from './analytics/posthog';
 import { startWebVitalsTracking } from './analytics/webVitals';
 import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 const qc = new QueryClient({
   defaultOptions: {
@@ -40,15 +41,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
       <AppThemeProvider>
-        <BrowserRouter>
-          <SessionProvider>
-            <LocalePreferencesProvider>
-              <CurrencyProvider>
-                <App />
-              </CurrencyProvider>
-            </LocalePreferencesProvider>
-          </SessionProvider>
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <SessionProvider>
+              <LocalePreferencesProvider>
+                <CurrencyProvider>
+                  <App />
+                </CurrencyProvider>
+              </LocalePreferencesProvider>
+            </SessionProvider>
+          </BrowserRouter>
+        </ToastProvider>
       </AppThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>

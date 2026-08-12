@@ -22,6 +22,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
   '-',
@@ -1116,6 +1117,7 @@ const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
 };
 
 export default function AdminUsersPage() {
+  useDocumentTitle('Configuración / Usuarios');
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);

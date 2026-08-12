@@ -40,6 +40,7 @@ import { Admin } from '../api/admin';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import ConfirmDialog from '../components/ConfirmDialog';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildInventoryScanUrl } from '../config/appConfig';
@@ -197,6 +198,8 @@ export default function LabelAssetsPage() {
   const [editingAsset, setEditingAsset] = useState<AssetDTO | null>(null);
   const [assetForm, setAssetForm] = useState<AssetFormState>(buildEmptyForm);
   const [assetFormError, setAssetFormError] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteAsset, setPendingDeleteAsset] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const latestHistoryAssetIdRef = useRef<string | null>(null);
@@ -549,9 +552,16 @@ export default function LabelAssetsPage() {
   };
 
   const handleDelete = (asset: AssetDTO) => {
-    const confirm = window.confirm(`¿Eliminar ${asset.name}? Esta acción no se puede deshacer.`);
-    if (!confirm) return;
-    deleteMutation.mutate(asset.assetId);
+    setPendingDeleteAsset(asset);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (pendingDeleteAsset) {
+      deleteMutation.mutate(pendingDeleteAsset.assetId);
+    }
+    setDeleteConfirmOpen(false);
+    setPendingDeleteAsset(null);
   };
 
   const clearFilters = () => {
@@ -1204,6 +1214,15 @@ export default function LabelAssetsPage() {
           </CardContent>
         </Card>
       )}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar activo"
+        description={`¿Eliminar ${pendingDeleteAsset?.name ?? ''}? Esta acción no se puede deshacer.`}
+        severity="danger"
+        confirming={deleteMutation.isPending}
+      />
     </Box>
   );
 }

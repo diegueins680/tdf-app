@@ -48,6 +48,7 @@ import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type RoleValue = Role | (string & Record<never, never>);
 
@@ -90,6 +91,8 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
   const [name, setName] = useState('');
   const [isOrg, setIsOrg] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameError = nameTouched && !name.trim() ? 'Campo obligatorio' : '';
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
     mutationFn: (body) => Parties.create(body),
@@ -110,7 +113,7 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
       <DialogTitle>Nuevo contacto</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
-          <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required />
+          <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required error={Boolean(nameError)} helperText={nameError} onBlur={() => setNameTouched(true)} />
           <Typography variant="body2" color="text.secondary">
             {`Tipo actual: ${isOrg ? 'Empresa' : 'Persona'}. Usa Persona para individuos y Empresa para bandas, sellos o negocios.`}
           </Typography>
@@ -347,6 +350,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
 }
 
 export default function PartiesPage() {
+  useDocumentTitle('CRM / Contactos');
   const navigate = useNavigate();
   const { session } = useSession();
   const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({

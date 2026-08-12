@@ -38,6 +38,7 @@ import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -517,6 +518,7 @@ function InventoryAssetSummaryCard({
 }
 
 export default function InventoryPage() {
+  useDocumentTitle('Operación / Inventario');
   const qc = useQueryClient();
   const handleRefreshAssets = () => {
     void qc.invalidateQueries({ queryKey: ['assets'] });

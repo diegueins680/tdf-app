@@ -25,6 +25,10 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
     window.location.reload();
   };
 
+  private handleGoHome = () => {
+    window.location.href = '/inicio';
+  };
+
   override render() {
     if (!this.state.error) {
       return this.props.children;
@@ -44,9 +48,14 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
         <Alert
           severity="error"
           action={(
-            <Button color="inherit" size="small" onClick={this.handleReload}>
-              Recargar
-            </Button>
+            <Stack direction="row" spacing={1}>
+              <Button color="inherit" size="small" onClick={this.handleGoHome}>
+                Ir al inicio
+              </Button>
+              <Button color="inherit" size="small" onClick={this.handleReload}>
+                Recargar
+              </Button>
+            </Stack>
           )}
           sx={{ width: '100%', maxWidth: 640 }}
         >
@@ -54,6 +63,9 @@ export default class AppErrorBoundary extends Component<AppErrorBoundaryProps, A
             <Typography fontWeight={800}>No pudimos cargar esta vista.</Typography>
             <Typography variant="body2">
               Recarga la página para usar la versión más reciente de TDF Records.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Si el problema persiste, vuelve al inicio o contacta a soporte.
             </Typography>
           </Stack>
         </Alert>

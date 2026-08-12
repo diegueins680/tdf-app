@@ -13,6 +13,7 @@ import PageShell, { SkeletonCards } from '../components/PageShell';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pipelines } from '../api/pipelines';
 import type { PipelineCardDTO } from '../api/types';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const PIPELINE_TYPES = [
   { slug: 'mixing', label: 'Mixing' },
@@ -25,6 +26,7 @@ type ColumnsState = Record<string, string[]>;
 const DEFAULT_PIPELINE_TYPE = PIPELINE_TYPES[0]?.slug ?? 'mixing';
 
 export default function KanbanPage() {
+  useDocumentTitle('Estudio / Kanban');
   const [activeType, setActiveType] = useState<string>(DEFAULT_PIPELINE_TYPE);
   const [columns, setColumns] = useState<ColumnsState>({});
   const [cards, setCards] = useState<Record<string, PipelineCardDTO>>({});

@@ -53,6 +53,7 @@ import {
 } from './bookingsPageLogic';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -65,6 +66,7 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+  useDocumentTitle('Estudio / Reservas');
   const { timezone: zone, locale } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const location = useLocation();
