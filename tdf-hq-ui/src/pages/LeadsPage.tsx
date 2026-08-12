@@ -33,7 +33,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
 import { Parties } from '../api/parties';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
-import PageShell, { SkeletonCards } from '../components/PageShell';
+import PageShell, { SkeletonCards, EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
@@ -327,13 +327,19 @@ export default function LeadsPage() {
           {showInitialLoadingState ? (
             <SkeletonCards count={3} />
           ) : !isLoading && !isError && !hasLeads ? (
-            <Alert severity="info" variant="outlined">
-              Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar.
-            </Alert>
+            <EmptyState
+              icon={<PersonAddAltIcon />}
+              title="Sin leads"
+              description="Todavía no hay leads. Crea el primero desde Nuevo lead. El primer lead aparecerá aquí como resumen y la tabla volverá cuando exista un segundo para comparar."
+              actionLabel="Nuevo lead"
+              actionOnClick={() => setCreateOpen(true)}
+            />
           ) : showSearchEmptyState ? (
-            <Alert severity="info" variant="outlined">
-              {`No hay leads que coincidan con "${trimmedSearch}". Limpia o ajusta la búsqueda desde el campo de arriba para volver a la lista completa.`}
-            </Alert>
+            <EmptyState
+              icon={<SearchIcon />}
+              title="Sin resultados"
+              description={`No hay leads que coincidan con "${trimmedSearch}". Limpia o ajusta la búsqueda desde el campo de arriba para volver a la lista completa.`}
+            />
           ) : showSingleLeadSummary && singleLead ? (
             <Box
               sx={{

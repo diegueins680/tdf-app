@@ -28,6 +28,8 @@ import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink } from 'react-router-dom';
 import { Fans } from '../api/fans';
+import { EmptyState } from '../components/PageShell';
+import GroupIcon from '@mui/icons-material/Group';
 import { SocialAPI } from '../api/social';
 import type { PartyFollowDTO, SocialPartyProfileDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
@@ -588,7 +590,11 @@ export default function SocialPage() {
                 <Typography color="text.secondary">Buscando conexiones...</Typography>
               </Stack>
             ) : (suggestionsQuery.data?.length ?? 0) === 0 ? (
-              <Alert severity="info">No tenemos sugerencias todavía. Conecta con más personas y vuelve a intentar.</Alert>
+              <EmptyState
+                icon={<GroupIcon />}
+                title="Sin sugerencias"
+                description="No tenemos sugerencias todavía. Conecta con más personas y vuelve a intentar."
+              />
             ) : (
               <Stack divider={<Divider flexItem />} spacing={1}>
                 {suggestionsQuery.data?.map((suggestion) => {
@@ -645,7 +651,11 @@ export default function SocialPage() {
           ) : (
             <>
               {activeData.length === 0 ? (
-                <Alert severity="info">{tabData[activeTab].empty}</Alert>
+                <EmptyState
+                  icon={<GroupIcon />}
+                  title="Vacío"
+                  description={tabData[activeTab].empty}
+                />
               ) : (
                 <Stack divider={<Divider flexItem />} spacing={1}>
                   {activeData.map((row) => {

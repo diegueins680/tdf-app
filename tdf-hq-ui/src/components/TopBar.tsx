@@ -31,6 +31,7 @@ import type { Ref } from 'react';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
+import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 import NotificationBell from './NotificationBell';
 import {
   accessRequestPath,
@@ -104,6 +105,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
   const quickItemRefs = useRef<(HTMLElement | null)[]>([]);
   const quickSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [quickCreateAnchor, setQuickCreateAnchor] = useState<HTMLElement | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
     const handleLanguageChanged = (language: string) => setFeatureLocale(language || 'es');
@@ -192,10 +194,14 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) return;
+      const isEditable = tag === 'input' || tag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable;
+      if (isEditable) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         openQuickNav();
+      }
+      if (event.key === '?') {
+        setShortcutsOpen(true);
       }
     };
     window.addEventListener('keydown', handler);
@@ -480,6 +486,8 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButt
           </Typography>
         </DialogActions>
       </Dialog>
+
+      <KeyboardShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </AppBar>
   );
 }

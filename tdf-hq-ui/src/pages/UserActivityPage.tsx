@@ -21,6 +21,8 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { Admin, type UserActivity } from '../api/admin';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { EmptyState } from '../components/PageShell';
+import HistoryIcon from '@mui/icons-material/History';
 import { formatTimestampForDisplay } from '../utils/dateTime';
 
 interface ActorActivitySummary {
@@ -158,9 +160,11 @@ export default function UserActivityPage() {
       )}
 
       {!activityQuery.isLoading && !activityQuery.isError && !hasActivity && (
-        <Alert severity="info" variant="outlined" data-testid="user-activity-empty-state">
-          Todavía no hay actividad registrada.
-        </Alert>
+        <EmptyState
+          icon={<HistoryIcon />}
+          title="Sin actividad"
+          description="Todavía no hay actividad registrada."
+        />
       )}
 
       {(activityQuery.isLoading || hasActivity) && (

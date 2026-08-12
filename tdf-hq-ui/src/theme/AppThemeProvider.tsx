@@ -117,10 +117,6 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
               root: {
                 borderRadius: 8,
                 transition: 'all 0.15s ease',
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                },
               },
               containedPrimary: {
                 backgroundColor: '#7c3aed',
@@ -136,14 +132,6 @@ export function AppThemeProvider({ children }: AppThemeProviderProps) {
             styleOverrides: {
               root: {
                 borderRadius: 12,
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow:
-                    mode === 'light'
-                      ? '0 8px 24px rgba(0,0,0,0.06)'
-                      : '0 8px 24px rgba(0,0,0,0.25)',
-                },
               },
             },
           },

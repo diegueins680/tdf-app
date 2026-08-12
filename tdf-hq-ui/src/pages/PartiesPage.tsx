@@ -525,9 +525,11 @@ export default function PartiesPage() {
             description="Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto. El tipo se elige dentro del formulario de alta."
           />
         ) : showSearchEmptyState ? (
-          <Alert severity="info" variant="outlined">
-            {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
-          </Alert>
+          <EmptyState
+            icon={<SearchIcon />}
+            title="Sin resultados"
+            description={`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
+          />
         ) : showSingleContactSummary && singleContact ? (
           <Box
             sx={{

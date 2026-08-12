@@ -9,7 +9,8 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import PageShell, { SkeletonCards } from '../components/PageShell';
+import PageShell, { SkeletonCards, EmptyState } from '../components/PageShell';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pipelines } from '../api/pipelines';
 import type { PipelineCardDTO } from '../api/types';
@@ -173,7 +174,11 @@ export default function KanbanPage() {
       {isLoading ? (
         <SkeletonCards count={4} />
       ) : columnOrder.length === 0 ? (
-        <Alert severity="info">No hay etapas definidas para este pipeline.</Alert>
+        <EmptyState
+          icon={<ViewColumnIcon />}
+          title="Sin etapas"
+          description="No hay etapas definidas para este pipeline."
+        />
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
           <Stack direction="row" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>

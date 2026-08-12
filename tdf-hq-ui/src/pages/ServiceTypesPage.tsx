@@ -32,6 +32,8 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Services } from '../api/services';
+import { EmptyState } from '../components/PageShell';
+import RoomServiceIcon from '@mui/icons-material/RoomService';
 import type {
   PricingModel,
   ServiceCatalogCreate,
@@ -282,7 +284,11 @@ export default function ServiceTypesPage() {
             </Alert>
           )}
           {sortedItems.length === 0 ? (
-            <Alert severity="info">Aún no tienes servicios. Crea el primero.</Alert>
+            <EmptyState
+              icon={<RoomServiceIcon />}
+              title="Sin servicios"
+              description="Aún no tienes servicios. Crea el primero."
+            />
           ) : (
             <LazyPaginatedList
               items={sortedItems}
