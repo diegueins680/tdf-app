@@ -13,6 +13,7 @@ import { startWebVitalsTracking } from './analytics/webVitals';
 import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import { ToastProvider } from './contexts/ToastContext';
+import './styles/print.css';
 
 const qc = new QueryClient({
   defaultOptions: {
