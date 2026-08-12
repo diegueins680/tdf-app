@@ -861,17 +861,16 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected empty party update to fail, got: " <> show payload)
 
-        it "rejects explicit null CRM party update fields instead of treating them as omissions" $ do
-            let assertNullRejected fieldName rawPayload =
-                    case decodePartyUpdate rawPayload of
-                        Left decodeErr ->
-                            decodeErr `shouldContain` (fieldName <> " must be omitted instead of null")
-                        Right payload ->
-                            expectationFailure
-                                ("Expected null party update field to fail, got: " <> show payload)
-
-            assertNullRejected "uDisplayName" "{\"uDisplayName\":null}"
-            assertNullRejected "uIsOrg" "{\"uIsOrg\":null}"
+        it "accepts nullable optional fields in mixed CRM party updates" $
+            case decodePartyUpdate
+                "{\"uDisplayName\":\"Blue Records\",\"uPrimaryEmail\":null,\"uPrimaryPhone\":null,\"uInstagram\":\"blue_records333\"}" of
+                Left decodeErr ->
+                    expectationFailure ("Expected nullable update payload to decode, got: " <> decodeErr)
+                Right (DTO.PartyUpdate _ displayNameValue _ _ primaryEmailValue primaryPhoneValue _ instagramValue _ _) -> do
+                    displayNameValue `shouldBe` Just "Blue Records"
+                    primaryEmailValue `shouldBe` Nothing
+                    primaryPhoneValue `shouldBe` Nothing
+                    instagramValue `shouldBe` Just "blue_records333"
 
         it "normalizes valid CRM display names before persistence" $ do
             validatePartyDisplayName "  Ada Lovelace  "

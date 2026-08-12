@@ -694,7 +694,6 @@ data PartyUpdate = PartyUpdate
   } deriving (Show, Generic)
 instance FromJSON PartyUpdate where
   parseJSON value = do
-    rejectNullOptionalFields "PartyUpdate" partyUpdateFieldNames value
     update <- genericParseJSON strictDecodeOptions value
     if partyUpdateHasAnyField update
       then pure update
