@@ -414,6 +414,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
+                type="tel"
                 label="Teléfono de contacto"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
@@ -525,6 +526,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', requireTerms }: Li
                   </Grid>
                   <Grid item xs={12} md={3}>
                     <TextField
+                      type="tel"
                       label="Teléfono"
                       value={musician.phone}
                       onChange={(e) => handleMusicianChange(musician.id, { phone: e.target.value })}

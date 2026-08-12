@@ -2062,6 +2062,7 @@ export default function MarketplacePage() {
                           helperText={Boolean(buyerEmail) && !isValidEmail ? 'Correo no válido' : undefined}
                         />
                         <TextField
+                          type="tel"
                           label="Teléfono (opcional)"
                           value={buyerPhone}
                           onChange={(e) => setBuyerPhone(e.target.value)}

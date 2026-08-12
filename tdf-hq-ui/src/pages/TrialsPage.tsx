@@ -329,6 +329,7 @@ export default function TrialsPage() {
                       sx={fieldSx}
                     />
                     <TextField
+                      type="tel"
                       label="WhatsApp o teléfono"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}

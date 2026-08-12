@@ -420,6 +420,7 @@ export default function InventoryScanPage() {
                         fullWidth
                       />
                       <TextField
+                        type="tel"
                         label="Teléfono"
                         value={checkoutForm.coHolderPhone ?? ''}
                         onChange={(e) => setCheckoutForm((prev) => ({ ...prev, coHolderPhone: e.target.value }))}

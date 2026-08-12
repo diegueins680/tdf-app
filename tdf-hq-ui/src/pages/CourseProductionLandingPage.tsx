@@ -815,6 +815,7 @@ function FormCard({
                 InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
               />
               <TextField
+                type="tel"
                 label="WhatsApp (opcional)"
                 value={phone}
                 onChange={(e) => onPhoneChange(e.target.value)}

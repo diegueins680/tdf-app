@@ -1433,6 +1433,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                           </Grid>
                           <Grid item xs={12}>
                             <TextField
+                              type="tel"
                               label="WhatsApp / Teléfono"
                               value={form.phone}
                               onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}

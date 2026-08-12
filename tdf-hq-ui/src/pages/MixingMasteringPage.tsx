@@ -562,6 +562,7 @@ export default function MixingMasteringPage() {
               helperText="Te enviaremos la confirmación y las instrucciones aquí"
             />
             <TextField
+              type="tel"
               label="Teléfono (opcional)"
               value={formData.buyerPhone}
               onChange={handleFormChange('buyerPhone')}
