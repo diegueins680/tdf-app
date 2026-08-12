@@ -1,11 +1,6 @@
 # -------- Stage 1: build with Stack (no GHCR) ----------
-ARG SOURCE_COMMIT=dev
-ARG BUILD_TIME=unknown
-
 # Use the exact GHC version required by lts-24.42 to avoid Stack re-downloading it.
 FROM haskell:9.10.3-bookworm AS builder
-ARG SOURCE_COMMIT
-ARG BUILD_TIME
 WORKDIR /app
 
 # OS deps for building persistent-postgresql + basic tools
@@ -18,9 +13,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libpq-dev pkg-config git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-ENV SOURCE_COMMIT=${SOURCE_COMMIT}
-ENV GIT_SHA=${SOURCE_COMMIT}
-ENV BUILD_TIME=${BUILD_TIME}
 ENV STACK_ROOT=/root/.stack
 ENV STACK_SETUP_PATH=/tmp/stack-setup-2.yaml
 ENV STACK_SYSTEM_GHC=true
@@ -73,32 +65,28 @@ COPY tdf-hq/config/default.env.example config/default.env
 COPY tdf-hq/docs docs
 COPY tdf-hq/assets assets
 
-# Capture commit and build time inside the image for the /version endpoint.
-# Prefer the actual repo metadata when it's available; otherwise, fall back to
-# the provided build args (which default to dev/unknown).
-RUN set -eu; \
-    COMMIT_VAL="${SOURCE_COMMIT:-}"; \
-    if [ -z "$COMMIT_VAL" ] || [ "$COMMIT_VAL" = "dev" ] || [ "$COMMIT_VAL" = "unknown" ]; then \
-      if git rev-parse --verify HEAD >/dev/null 2>&1; then \
-        COMMIT_VAL="$(git rev-parse --short=12 HEAD)"; \
-      fi; \
-    fi; \
-    if [ -z "$COMMIT_VAL" ]; then COMMIT_VAL="dev"; fi; \
-    echo "$COMMIT_VAL" > /app/COMMIT; \
-    BUILD_TS="${BUILD_TIME:-}"; \
-    if [ -z "$BUILD_TS" ] || [ "$BUILD_TS" = "unknown" ]; then \
-      BUILD_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"; \
-    fi; \
-    echo "$BUILD_TS" > /app/BUILD_TIME
-
 # Build and export the binary
 RUN --mount=type=cache,target=/root/.stack,sharing=locked \
     stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
 
-# -------- Stage 2: slim runtime ----------
-FROM debian:bookworm-slim
+# Release metadata changes for every commit. Introduce it only after compilation
+# so a new SHA cannot invalidate dependency or source build layers.
 ARG SOURCE_COMMIT=dev
 ARG BUILD_TIME=unknown
+RUN set -eu; \
+    COMMIT_VAL="${SOURCE_COMMIT:-}"; \
+    if [ -z "$COMMIT_VAL" ] || [ "$COMMIT_VAL" = "dev" ] || [ "$COMMIT_VAL" = "unknown" ]; then \
+      COMMIT_VAL="dev"; \
+    fi; \
+    printf '%s\n' "$COMMIT_VAL" > /app/COMMIT; \
+    BUILD_TS="${BUILD_TIME:-}"; \
+    if [ -z "$BUILD_TS" ] || [ "$BUILD_TS" = "unknown" ]; then \
+      BUILD_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"; \
+    fi; \
+    printf '%s\n' "$BUILD_TS" > /app/BUILD_TIME
+
+# -------- Stage 2: slim runtime ----------
+FROM debian:bookworm-slim
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
@@ -110,7 +98,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libpq5 ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 
-ARG SOURCE_COMMIT=UNKNOWN
+ARG SOURCE_COMMIT=dev
+ARG BUILD_TIME=unknown
 ENV SOURCE_COMMIT=${SOURCE_COMMIT}
 ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
