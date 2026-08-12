@@ -47,6 +47,11 @@
       "introducedBy": "185f94510ff6d96e0027b0c699fbde2b11c8deb9"
     },
     {
+      "id": "2026-08-04_service_storefront",
+      "path": "tdf-hq/sql/2026-08-04_service_storefront.sql",
+      "introducedBy": "11a6687be"
+    },
+    {
       "id": "2026-08-05_platform_internationalization",
       "path": "tdf-hq/sql/2026-08-05_platform_internationalization.sql",
       "introducedBy": "6f5ef3468c6d8fe3a0f8de754430459b3af66569"
