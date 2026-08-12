@@ -16,7 +16,7 @@ import Control.Monad.Reader (ReaderT, ask)
 import Data.Aeson (FromJSON, ToJSON(..), Value, decodeStrict', encode)
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
-import Data.List (find)
+import Data.List (find, foldl')
 import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -668,7 +668,7 @@ createNoteHandler user itemId command = do
   when (T.null noteBody || T.length noteBody > 5000) $
     throwError err422 {errBody = "Note body must contain 1 to 5000 characters"}
   (invalidMention, rows) <- runOperationsDb $ do
-    mentionCheck <- fmap or $ forM (command.mentionedPartyIds) $ \mentionedPartyId -> do
+    mentionCheck <- fmap or $ mapM (\mentionedPartyId -> do
       membership <- rawSql
         "SELECT count(*) FROM operations_scope_member member \
         \WHERE member.organization_id = ?::uuid AND member.branch_id = ?::uuid \
@@ -676,7 +676,7 @@ createNoteHandler user itemId command = do
         [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
         , PersistInt64 mentionedPartyId
         ] :: SqlPersistT IO [Single Int64]
-      pure (membership /= [Single 1])
+      pure (membership /= [Single 1])) (command.mentionedPartyIds)
     if mentionCheck
       then pure (True, [])
       else do
