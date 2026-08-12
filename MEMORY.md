@@ -48,3 +48,10 @@
 - separate purchase options without duplicating the public event. Ticketmaster, Buen Plan, and venue sources use configurable priorities. [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:9-10]
 <!-- openclaw-memory-promotion:memory:memory/2026-07-30.md:12:13 -->
 - defaults to subscribed cities, supports Explore-all and saved-event scopes, and lets users add/remove global cities by ISO-2 country code. [score=0.804 recalls=0 avg=0.620 source=memory/2026-07-30.md:12-13]
+
+## Promoted From Short-Term Memory (2026-08-12)
+
+<!-- openclaw-memory-promotion:memory:memory/2026-08-05.md:14:14 -->
+- Verification in the cached main checkout passed: HQ UI TypeScript typecheck, HQ executable Stack [score=0.874 recalls=0 avg=0.620 source=memory/2026-08-05.md:14-14]
+<!-- openclaw-memory-promotion:memory:memory/2026-08-05.md:15:16 -->
+- build, DDEX parser tests (20 examples), DDEX business-rule tests (11 examples), and the complete Haskell suite (2,272 examples). `git diff --check` also passed in the repair worktree. [score=0.874 recalls=0 avg=0.620 source=memory/2026-08-05.md:15-16]

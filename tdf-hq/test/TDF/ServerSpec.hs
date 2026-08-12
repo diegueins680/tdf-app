@@ -11179,6 +11179,32 @@ spec = describe "TDF.Server helpers" $ do
 
             resolved `shouldBe` [liveRoomId, controlRoomId]
 
+        it "resolves studio-room UUIDs emitted by the room catalog" $ do
+            let startsAt = UTCTime (fromGregorian 2026 8 15) (secondsToDiffTime 54000)
+                endsAt = UTCTime (fromGregorian 2026 8 15) (secondsToDiffTime 59400)
+                studioRoomId = "a0130c03-3527-41b3-b370-a65e66823f77"
+            case (fromPathPiece studioRoomId :: Maybe (Key ME.Room)) of
+                Nothing -> expectationFailure "Expected the production-shaped room UUID to parse"
+                Just studioRoomKey -> do
+                    (liveRoomId, resolved) <- runResourceSqlite $ do
+                        liveRoomId <- insertBookingResourceFixture "Live Room" "live-room"
+                        insertKey studioRoomKey ME.Room
+                            { ME.roomName = "Live Room"
+                            , ME.roomIsBookable = True
+                            , ME.roomCapacity = Nothing
+                            , ME.roomChannelCount = Nothing
+                            , ME.roomDefaultSampleRate = Nothing
+                            , ME.roomPatchbayNotes = Nothing
+                            }
+                        resolved <- resolveResourcesForBooking
+                            (Just "Rehearsal")
+                            [studioRoomId]
+                            startsAt
+                            endsAt
+                        pure (liveRoomId, resolved)
+
+                    resolved `shouldBe` [liveRoomId]
+
         it "rejects unknown explicit room ids instead of silently falling back to default room selection" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -14770,6 +14796,18 @@ initializeChatSchema = do
 initializeResourceSchema :: SqlPersistT IO ()
 initializeResourceSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"room\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"is_bookable\" BOOLEAN NOT NULL,\
+        \\"capacity\" INTEGER NULL,\
+        \\"channel_count\" INTEGER NULL,\
+        \\"default_sample_rate\" INTEGER NULL,\
+        \\"patchbay_notes\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_room_name\" UNIQUE (\"name\")\
+        \)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"resource\" (\
         \\"id\" INTEGER PRIMARY KEY,\

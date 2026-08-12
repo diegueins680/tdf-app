@@ -264,7 +264,7 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
-    expect(payload?.pbResourceIds).toEqual(['room-live', 'room-control']);
+    expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
 
     await cleanup();
     document.body.removeChild(container);
@@ -322,7 +322,7 @@ describe('PublicBookingPage', () => {
     expect(createPublicMock).toHaveBeenCalledWith(
       expect.objectContaining({
         pbServiceType: 'Práctica en DJ Booth',
-        pbResourceIds: ['room-dj'],
+        pbResourceIds: ['DJ Booth'],
       }),
     );
 
@@ -353,7 +353,7 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
-  it('drops auto-assigned room ids when a public room label is ambiguous', async () => {
+  it('uses the shared room name when legacy room UUIDs are ambiguous', async () => {
     listPublicRoomsMock.mockResolvedValueOnce([
       { roomId: 'room-live-a', rName: 'Live Room', rBookable: true },
       { roomId: 'room-live-b', rName: 'Live Room', rBookable: true },
@@ -403,7 +403,7 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
-    expect(payload?.pbResourceIds).toBeNull();
+    expect(payload?.pbResourceIds).toEqual(['Live Room', 'Control Room']);
 
     await cleanup();
     document.body.removeChild(container);
