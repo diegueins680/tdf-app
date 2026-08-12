@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Avatar,
@@ -191,6 +192,13 @@ export default function ArtistPublicPage() {
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
+
+  useMetaTags({
+    title: artist?.apDisplayName ?? 'Artista',
+    description: artist?.apBio?.slice(0, 160),
+    ogImage: artist?.apImageUrl,
+    ogType: 'profile',
+  });
 
   const profileLink = useMemo(() => {
     if (!artist) return null;

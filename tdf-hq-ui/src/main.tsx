@@ -17,14 +17,15 @@ import { ToastProvider } from './contexts/ToastContext';
 const qc = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2,
-      refetchOnWindowFocus: false,
+      staleTime: 30_000, // 30 seconds
+      refetchOnWindowFocus: true, // Re-fetch when user returns to tab
       retry: (failureCount, error) => {
         if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
           return false;
         }
         return failureCount < 3;
       },
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30_000),
     },
   },
 });

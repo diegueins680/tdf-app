@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Box,
@@ -387,6 +388,11 @@ const fireCartMetaEvent = () => {
 };
 
 export default function MarketplacePage() {
+  useMetaTags({
+    title: 'Marketplace',
+    description: 'Descubre equipos, instrumentos y servicios disponibles en TDF Records.',
+  });
+
   const qc = useQueryClient();
   const { session } = useSession();
   const modules = useMemo(

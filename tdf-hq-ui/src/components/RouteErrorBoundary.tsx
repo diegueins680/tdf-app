@@ -19,6 +19,19 @@ export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProp
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Route render failure', error, info.componentStack);
+
+    // Report to error tracking service
+    try {
+      // PostHog error capture (already integrated in the app)
+      if (typeof window !== 'undefined' && (window as any).posthog) {
+        (window as any).posthog.captureException(error, {
+          componentStack: info.componentStack,
+          url: window.location.href,
+        });
+      }
+    } catch {
+      // Silently fail — don't let error reporting crash the error handler
+    }
   }
 
   private handleRetry = () => {
