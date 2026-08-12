@@ -1,5 +1,45 @@
 const normalizeServiceType = (serviceType: string) => serviceType.trim().toLowerCase();
 
+interface BookingRoomOption {
+  roomId: string;
+  rName: string;
+}
+
+interface BookingRoomResource {
+  brRoomId: string;
+  brRoomName: string;
+}
+
+export const normalizeBookingRoomReference = (value: string) => value.trim().toLocaleLowerCase();
+
+const uniqueRoomReferences = (values: string[]) => {
+  const seen = new Set<string>();
+  return values.flatMap((value) => {
+    const trimmed = value.trim();
+    const normalized = normalizeBookingRoomReference(trimmed);
+    if (!normalized || seen.has(normalized)) return [];
+    seen.add(normalized);
+    return [trimmed];
+  });
+};
+
+// The studio-room catalog uses UUIDs while booking resources have their own IDs.
+// Room names are the shared, backend-supported reference between both catalogs.
+export const bookingRoomReferencesFromOptions = (rooms: BookingRoomOption[]) =>
+  uniqueRoomReferences(rooms.map((room) => room.rName));
+
+export const bookingRoomReferencesFromResources = (resources: BookingRoomResource[]) =>
+  uniqueRoomReferences(resources.map((resource) => resource.brRoomName || resource.brRoomId));
+
+export const bookingSharesAssignedRoom = (
+  assignedRoomReferences: string[],
+  resources: BookingRoomResource[],
+) => {
+  const assigned = new Set(assignedRoomReferences.map(normalizeBookingRoomReference));
+  return bookingRoomReferencesFromResources(resources)
+    .some((roomReference) => assigned.has(normalizeBookingRoomReference(roomReference)));
+};
+
 interface BookingCustomerFieldState {
   helperText: string;
   dialogTitle: string;

@@ -1,4 +1,7 @@
 import {
+  bookingRoomReferencesFromOptions,
+  bookingRoomReferencesFromResources,
+  bookingSharesAssignedRoom,
   defaultMinutesForService,
   describeServiceDefaults,
   getBookingCalendarStatusState,
@@ -16,6 +19,26 @@ import {
 } from './bookingsPageLogic';
 
 describe('bookingsPageLogic', () => {
+  it('uses room names instead of incompatible studio-room UUIDs in booking payloads', () => {
+    expect(bookingRoomReferencesFromOptions([
+      {
+        roomId: 'a0130c03-3527-41b3-b370-a65e66823f77',
+        rName: ' Live Room ',
+      },
+    ])).toEqual(['Live Room']);
+  });
+
+  it('restores booking rooms and detects conflicts by their shared room names', () => {
+    const resources = [
+      { brRoomId: '5', brRoomName: 'Live Room' },
+      { brRoomId: '6', brRoomName: 'Control Room' },
+    ];
+
+    expect(bookingRoomReferencesFromResources(resources)).toEqual(['Live Room', 'Control Room']);
+    expect(bookingSharesAssignedRoom([' live room '], resources)).toBe(true);
+    expect(bookingSharesAssignedRoom(['Vocal Booth'], resources)).toBe(false);
+  });
+
   it('keeps the service prompt generic until a service is chosen', () => {
     expect(describeServiceDefaults('')).toBe('Elige el tipo de servicio asociado a la sesión.');
   });

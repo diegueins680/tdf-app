@@ -36,6 +36,9 @@ import {
   defaultMinutesForService,
   describeServiceDefaults,
   getBookingCalendarStatusState,
+  bookingRoomReferencesFromOptions,
+  bookingRoomReferencesFromResources,
+  bookingSharesAssignedRoom,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
   getBookingEngineerFieldState,
@@ -105,7 +108,10 @@ export default function BookingsPage() {
   });
   const qc = useQueryClient();
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
+  const rooms = useMemo<RoomDTO[]>(
+    () => (roomsQuery.data ?? []).filter((room) => room.rBookable),
+    [roomsQuery.data],
+  );
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
   const handleClearBookingFilters = useCallback(() => {
@@ -221,7 +227,7 @@ export default function BookingsPage() {
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
   const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState('');
-  const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
+  const [assignedRoomReferences, setAssignedRoomReferences] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [courseNotice, setCourseNotice] = useState<string | null>(null);
@@ -267,7 +273,6 @@ export default function BookingsPage() {
     const start = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
     const end = DateTime.fromFormat(endInput, "yyyy-LL-dd'T'HH:mm", { zone });
     if (!start.isValid || !end.isValid) return [];
-    const assigned = new Set(assignedRoomIds);
     const isOverlap = (aStart: string, aEnd: string) => {
       const s = DateTime.fromISO(aStart);
       const e = DateTime.fromISO(aEnd);
@@ -282,11 +287,9 @@ export default function BookingsPage() {
       if (!isActive(b.status ?? '')) return false;
       if (editingId && b.bookingId === editingId) return false;
       if (!isOverlap(b.startsAt, b.endsAt)) return false;
-      const roomIds = (b.resources ?? []).map((r) => r.brRoomId);
-      if (roomIds.length === 0) return false;
-      return roomIds.some((rid) => assigned.has(rid));
+      return bookingSharesAssignedRoom(assignedRoomReferences, b.resources ?? []);
     });
-  }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
+  }, [assignedRoomReferences, bookings, editingId, endInput, startInput, zone]);
 
   const categorizeRooms = useMemo(() => {
     const map = {
@@ -343,8 +346,13 @@ export default function BookingsPage() {
   }, [categorizeRooms]);
 
   const assignedRooms = useMemo(
-    () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
-    [rooms, assignedRoomIds],
+    () => assignedRoomReferences.map((reference) =>
+      rooms.find((room) => room.rName.trim().toLocaleLowerCase() === reference.trim().toLocaleLowerCase()) ?? {
+        roomId: `booking-room:${reference}`,
+        rName: reference,
+        rBookable: true,
+      }),
+    [assignedRoomReferences, rooms],
   );
 
   const engineerOptions = useMemo(
@@ -418,12 +426,12 @@ export default function BookingsPage() {
   );
   const roomsFieldState = useMemo(
     () => getBookingRoomsFieldState({
-      hasAssignedRooms: assignedRoomIds.length > 0,
+      hasAssignedRooms: assignedRoomReferences.length > 0,
       roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
       roomCount: rooms.length,
       serviceType,
     }),
-    [assignedRoomIds.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, serviceType],
+    [assignedRoomReferences.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, serviceType],
   );
   const optionalDetailsState = useMemo(
     () => getBookingOptionalDetailsState({
@@ -465,20 +473,20 @@ export default function BookingsPage() {
   });
 
 useEffect(() => {
-  if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
+  if (!serviceType || rooms.length === 0 || assignedRoomReferences.length > 0) return;
   const defaults = defaultRoomsForService(serviceType);
   if (defaults.length) {
-    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
     setRoomsManuallyAdjusted(false);
   }
-}, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
+}, [serviceType, rooms, assignedRoomReferences.length, defaultRoomsForService]);
 
 useEffect(() => {
   if (serviceType || !defaultServiceName) return;
   setServiceType(defaultServiceName);
   const defaults = defaultRoomsForService(defaultServiceName);
   if (defaults.length) {
-    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
     setRoomsManuallyAdjusted(false);
   }
 }, [defaultRoomsForService, defaultServiceName, serviceType]);
@@ -540,7 +548,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setCustomerName('');
     setCustomerPartyId(null);
     const defaults = defaultRoomsForService(initialService);
-    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
     setStatus('Confirmed');
     setManualServiceFallbackOpen(false);
     openDialogForRange(start, end);
@@ -559,7 +567,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setCustomerName('');
     setCustomerPartyId(null);
     const defaults = defaultRoomsForService(initialService);
-    setAssignedRoomIds(defaults.map((room) => room.roomId));
+    setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
     setStatus('Confirmed');
     setManualServiceFallbackOpen(false);
     openDialogForRange(
@@ -581,7 +589,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setTemplate('');
     setServiceType('');
     setManualServiceFallbackOpen(false);
-    setAssignedRoomIds([]);
+    setAssignedRoomReferences([]);
     setEngineerName('');
     setEngineerPartyId(null);
     setPrefillNotice(false);
@@ -639,7 +647,7 @@ const openDialogForRange = (start: Date, end: Date) => {
           return trimmed === '' ? null : trimmed;
         })(),
         cbPartyId: customerPartyId,
-        cbResourceIds: assignedRoomIds,
+        cbResourceIds: assignedRoomReferences,
         cbEngineerPartyId: engineerPartyId,
         cbEngineerName: engineerName.trim() || null,
       }),
@@ -655,7 +663,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setStatus('Confirmed');
       setEditingId(null);
       setMode('create');
-      setAssignedRoomIds([]);
+      setAssignedRoomReferences([]);
       setEngineerName('');
       setEngineerPartyId(null);
       setCustomerName('');
@@ -720,7 +728,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Todavía no hay salas registradas. Abre Salas y recursos antes de guardar la sesión.');
       return;
     }
-    if (assignedRoomIds.length === 0) {
+    if (assignedRoomReferences.length === 0) {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
     }
@@ -735,7 +743,7 @@ const openDialogForRange = (start: Date, end: Date) => {
           ubStatus: status,
           ubStartsAt: startIso,
           ubEndsAt: endIso,
-          ubResourceIds: assignedRoomIds,
+          ubResourceIds: assignedRoomReferences,
           ubPartyId: customerPartyId,
           ubEngineerPartyId: engineerPartyId,
           ubEngineerName: engineerName.trim() || null,
@@ -774,7 +782,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setStatus(booking.status ?? 'Confirmed');
       setStartInput(formatForInput(new Date(booking.startsAt)));
       setEndInput(formatForInput(new Date(booking.endsAt)));
-      setAssignedRoomIds((booking.resources ?? []).map((r) => r.brRoomId));
+      setAssignedRoomReferences(bookingRoomReferencesFromResources(booking.resources ?? []));
       setManualServiceFallbackOpen(false);
       const baseStart = DateTime.fromISO(booking.startsAt).setZone(zone);
       const suggestedDuplicate = baseStart.isValid ? baseStart.plus({ days: 7 }) : DateTime.now().setZone(zone);
@@ -1258,7 +1266,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                         setNotes((prev) => (prev ? prev : preset.note));
                         const defaults = defaultRoomsForService(preset.svc);
                         if (defaults.length) {
-                          setAssignedRoomIds(defaults.map((r) => r.roomId));
+                          setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
                           setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
                         }
                       }
@@ -1330,10 +1338,10 @@ const openDialogForRange = (start: Date, end: Date) => {
                       setRoomsManuallyAdjusted(false);
                       setServiceType(value);
                       const messageParts: string[] = [];
-                      if (!wasRoomsManual || assignedRoomIds.length === 0) {
+                      if (!wasRoomsManual || assignedRoomReferences.length === 0) {
                         const defaults = defaultRoomsForService(value);
                         if (defaults.length) {
-                          setAssignedRoomIds(defaults.map((room) => room.roomId));
+                          setAssignedRoomReferences(bookingRoomReferencesFromOptions(defaults));
                           messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
                           setRoomsManuallyAdjusted(false);
                         }
@@ -1482,9 +1490,12 @@ const openDialogForRange = (start: Date, end: Date) => {
                   multiple
                   options={rooms}
                   getOptionLabel={(option) => option.rName}
+                  isOptionEqualToValue={(option, value) =>
+                    option.rName.trim().toLocaleLowerCase() === value.rName.trim().toLocaleLowerCase()
+                  }
                   value={assignedRooms}
                   onChange={(_, value) => {
-                    setAssignedRoomIds(value.map((room) => room.roomId));
+                    setAssignedRoomReferences(bookingRoomReferencesFromOptions(value));
                     setRoomsManuallyAdjusted(true);
                   }}
                   renderTags={(value, getTagProps) =>

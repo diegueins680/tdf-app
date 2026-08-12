@@ -11033,15 +11033,27 @@ duplicateRequestedResourceIds = go Set.empty Set.empty []
 resolveRequestedResources :: [Text] -> UTCTime -> UTCTime -> SqlPersistT IO [Key Resource]
 resolveRequestedResources requestedIds start end = do
   rooms <- selectList [ResourceResourceType ==. Room, ResourceActive ==. True] [Asc ResourceId]
+  studioRooms <- selectList [ME.RoomIsBookable ==. True] [Asc ME.RoomName]
   let indexById = Map.fromList $ map (\(Entity k room) -> (k, room)) rooms
       indexBySlug = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceSlug room), k)) rooms
       indexByName = Map.fromList $ map (\(Entity k room) -> (T.toLower (resourceName room), k)) rooms
+      indexByStudioRoomId = Map.fromList $ mapMaybe
+        (\(Entity roomKey room) ->
+          case Map.lookup (T.toLower (ME.roomName room)) indexByName of
+            Nothing -> Nothing
+            Just resourceKey -> Just (roomKey, resourceKey))
+        studioRooms
+      resolveStudioRoomId rid = do
+        roomKey <- fromPathPiece rid :: Maybe (Key ME.Room)
+        Map.lookup roomKey indexByStudioRoomId
       resolveOne rid =
         case fromPathPiece rid of
           Just key | Map.member key indexById -> Just key
           _ ->
             let normalized = T.toLower rid
-            in Map.lookup normalized indexBySlug <|> Map.lookup normalized indexByName
+            in Map.lookup normalized indexBySlug
+                <|> Map.lookup normalized indexByName
+                <|> resolveStudioRoomId rid
       unresolved = [rid | rid <- requestedIds, isNothing (resolveOne rid)]
   case dedupeStable unresolved of
     [] -> do

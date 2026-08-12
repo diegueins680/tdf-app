@@ -357,21 +357,6 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const unique = Array.from(new Set(apiRooms));
     return unique.length ? unique : [...ROOM_FALLBACKS];
   }, [publicRooms]);
-  const roomIdByLabel = useMemo(() => {
-    const lookup = new Map<string, string | null>();
-    publicRooms.forEach((room) => {
-      const label = room.rName.trim();
-      const existing = lookup.get(label);
-      if (existing === undefined) {
-        lookup.set(label, room.roomId);
-        return;
-      }
-      if (existing !== room.roomId) {
-        lookup.set(label, null);
-      }
-    });
-    return lookup;
-  }, [publicRooms]);
   const defaultService = presetService?.name ?? services[0]?.name ?? 'Reserva';
   const publicRoutePath = presetConfig?.path ?? '/reservar';
   const loginPath = `/login?redirect=${encodeURIComponent(publicRoutePath)}`;
@@ -736,9 +721,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
     const roomsToSend =
       autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
-    const resolvedRoomIds = roomsToSend.map((label) => roomIdByLabel.get(label.trim()) ?? null);
-    const roomIdsToSend = resolvedRoomIds.every((roomId): roomId is string => typeof roomId === 'string' && roomId.trim() !== '')
-      ? resolvedRoomIds
+    const roomReferencesToSend = publicRooms.length > 0
+      ? roomsToSend.map((label) => label.trim()).filter(Boolean)
       : null;
     if (roomsToSend.length > 0) {
       setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
@@ -757,7 +741,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         pbNotes: form.notes.trim() || null,
         pbEngineerPartyId: engineerPartyId,
         pbEngineerName: engineerName,
-        pbResourceIds: roomIdsToSend,
+        pbResourceIds: roomReferencesToSend,
       });
       setSuccess(dto);
     } catch (err) {
