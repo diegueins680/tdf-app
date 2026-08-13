@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-13T16:49:47.949Z",
+  "generatedAt": "2026-08-13T18:20:59.725Z",
   "repositoryRoot": ".",
   "filesScanned": 971,
   "candidateCount": 660,
@@ -7820,7 +7820,7 @@
       "lines": [
         340
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/WhatsApp.hs",
         "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -7836,6 +7836,7 @@
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/utils/tidalAgent.test.ts"
       ],
@@ -9123,7 +9124,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 35,
+      "consumerCount": 36,
       "backendConsumers": [
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
@@ -9146,6 +9147,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
@@ -10157,7 +10159,7 @@
       "lines": [
         129
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -10213,6 +10215,7 @@
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
@@ -16985,7 +16988,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [],
       "webConsumers": [
         "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
@@ -16994,7 +16997,8 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
-        "tdf-hq-ui/src/routes/AppShell.tsx"
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/utils/accessControl.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -22087,7 +22091,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -22187,10 +22191,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -25914,7 +25918,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -26014,10 +26018,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -27087,12 +27091,13 @@
       "lines": [
         40
       ],
-      "consumerCount": 12,
+      "consumerCount": 13,
       "backendConsumers": [
         "tdf-hq/src/TDF/Server.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/pages/ClassesPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
@@ -29075,7 +29080,7 @@
       "lines": [
         222
       ],
-      "consumerCount": 41,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
@@ -29107,6 +29112,8 @@
         "tdf-hq-ui/src/components/__tests__/PromoCodeField.test.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq-ui/src/components/__tests__/TicketTransferDialog.test.tsx",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/socialEventsPageState.test.ts"
@@ -30280,7 +30287,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -30380,10 +30387,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -30537,7 +30544,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -30637,10 +30644,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -31319,7 +31326,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -31419,10 +31426,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -32101,7 +32108,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 277,
+      "consumerCount": 279,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -32200,11 +32207,11 @@
         "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
         "tdf-hq-ui/src/features/finance/estebanMunozReport.ts",
         "tdf-hq-ui/src/hooks/useNavigationPreferences.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -32352,7 +32359,7 @@
         238,
         479
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -32409,6 +32416,7 @@
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/InstagramEntryLinks.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
@@ -41260,7 +41268,7 @@
       "lines": [
         124
       ],
-      "consumerCount": 54,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/001_multi_role_migration.sql",
@@ -41273,7 +41281,6 @@
         "tdf-hq/sql/test_admin_operations_control_center.sql",
         "tdf-hq/src/TDF/API/Catalog.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
-        "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
@@ -43777,11 +43784,13 @@
       "lines": [
         260
       ],
-      "consumerCount": 4,
+      "consumerCount": 5,
       "backendConsumers": [
         "tdf-hq/src/TDF/Catalog/Seed.hs"
       ],
-      "webConsumers": [],
+      "webConsumers": [
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
       "mobileConsumers": [
         "tdf-mobile/app/operations.tsx",
         "tdf-mobile/src/i18n/index.ts"
@@ -48270,13 +48279,16 @@
       "lines": [
         89
       ],
-      "consumerCount": 3,
+      "consumerCount": 5,
       "backendConsumers": [
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
-      "webConsumers": [],
+      "webConsumers": [
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts"
+      ],
       "mobileConsumers": [],
       "automationConsumers": [],
       "apiAndIntegrationConsumers": [],
@@ -48474,7 +48486,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "holgerInputSeeds",
-      "line": 1965,
+      "line": 1964,
       "values": [
         "Kick In",
         "M1",
@@ -48573,7 +48585,7 @@
       "valueCount": 93,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1965
+        1964
       ],
       "consumerCount": 3,
       "backendConsumers": [
@@ -48602,7 +48614,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2399,
+      "line": 2401,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -48610,7 +48622,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2399
+        2401
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -48642,7 +48654,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4463,
+      "line": 4459,
       "values": [
         "confirmed",
         "tentative",
@@ -48651,7 +48663,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4463
+        4459
       ],
       "consumerCount": 11,
       "backendConsumers": [
@@ -48692,7 +48704,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 5829,
+      "line": 5825,
       "values": [
         "note",
         "call",
@@ -48705,7 +48717,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        5829
+        5825
       ],
       "consumerCount": 68,
       "backendConsumers": [
@@ -50651,7 +50663,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 275,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -50751,10 +50763,10 @@
         "tdf-hq-ui/src/hooks/useInstagramAuth.test.tsx",
         "tdf-hq-ui/src/hooks/useInstagramAuth.ts",
         "tdf-hq-ui/src/hooks/useLocalValue.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
-        "tdf-hq-ui/src/pages/AdminUsersPage.tsx"
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -51262,12 +51274,14 @@
       "lines": [
         61
       ],
-      "consumerCount": 7,
+      "consumerCount": 9,
       "backendConsumers": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/client.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
         "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx",
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
@@ -52387,7 +52401,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [],
       "webConsumers": [
         "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
@@ -52397,7 +52411,8 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
-        "tdf-hq-ui/src/routes/AppShell.tsx"
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/utils/accessControl.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -52666,7 +52681,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "6b9652335998e2a8fc04",
+      "id": "7d0e6cdadf29e41514ec",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "sourceKind": "production",
       "surface": "mobile",
@@ -52737,6 +52752,13 @@
         "{id=finance.account-report-builder, parentId=finance.payments, webRoute=/finanzas/creador-reporte-cuenta, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=operate, ic",
         "{id=finance.esteban-report, parentId=finance.payments, webRoute=/finanzas/reporte-esteban-munoz, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=operate, icon=report",
         "{id=finance.david-report, parentId=finance.payments, webRoute=/finanzas/reporte-david-celaya, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=operate, icon=report, b",
+        "{id=admin.catalogs, parentId=null, webRoute=/configuracion/catalogos, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=admin, icon=catalog, breadcrumb, requiredAuth=authenticated",
+        "{id=admin.catalogs.radio-auto-stop, parentId=admin.catalogs, webRoute=/configuracion/catalogos/radio-auto-stop, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin",
+        "{id=admin.catalogs.appearance, parentId=admin.catalogs, webRoute=/configuracion/catalogos/apariencia, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=cat",
+        "{id=admin.catalogs.feedback, parentId=admin.catalogs, webRoute=/configuracion/catalogos/feedback, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=catalog",
+        "{id=admin.catalogs.reactions, parentId=admin.catalogs, webRoute=/configuracion/catalogos/reacciones, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=cata",
+        "{id=admin.catalogs.content-reactions, parentId=admin.catalogs, webRoute=/configuracion/catalogos/reacciones-contenido, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGrou",
+        "{id=admin.catalogs.creator-badges, parentId=admin.catalogs, webRoute=/configuracion/catalogos/insignias-creadores, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=ad",
         "{id=admin.course-registrations, parentId=null, webRoute=/configuracion/inscripciones-curso, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=admin, icon=school, breadcrumb, requi",
         "{id=admin.courses, parentId=admin.course-registrations, webRoute=/configuracion/cursos, routeType=important-submodule, classification=important-submodule, label, synonyms, keywords, description, navigationGroup=admin, icon=school, breadcrum",
         "{id=admin.users, parentId=null, webRoute=/configuracion/usuarios-admin, routeType=primary, classification=primary-destination, label, synonyms, keywords, description, navigationGroup=admin, icon=admin, breadcrumb, requiredAuth=authenticated",
@@ -52792,7 +52814,7 @@
         "{id=technical.whatsapp-consent-public, parentId=admin.whatsapp-consent, webRoute=/whatsapp/consentimiento, routeType=contextual, classification=record-detail-contextual-action, label, synonyms, keywords, description, navigationGroup=help, i",
         "{id=experimental.future-stubs, parentId=null, webRoute=null, routeType=technical, classification=technical-route, label, synonyms, keywords, description, navigationGroup=null, icon=technical, breadcrumb, requiredAuth=authenticated, routeAct"
       ],
-      "valueCount": 116,
+      "valueCount": 123,
       "recommendedClassification": "security-system-registry",
       "lines": [
         55
@@ -52837,9 +52859,9 @@
       "recommendedClassification": "security-system-registry",
       "lines": [
         486,
-        8208,
-        8215,
-        8223
+        8892,
+        8899,
+        8907
       ],
       "consumerCount": 42,
       "backendConsumers": [
@@ -52930,17 +52952,17 @@
       "recommendedClassification": "security-system-registry",
       "lines": [
         1302,
-        3761,
-        3770,
-        3779,
-        3788,
-        3797,
-        6550,
-        6559,
-        6568,
-        6577,
-        6586,
-        6595
+        3763,
+        3772,
+        3781,
+        3790,
+        3799,
+        7234,
+        7243,
+        7252,
+        7261,
+        7270,
+        7279
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -53214,15 +53236,15 @@
         3535,
         3557,
         3567,
-        4034,
-        4743,
-        4996,
-        5020,
-        5031,
-        8913,
-        8925,
-        8937,
-        8949
+        4036,
+        4745,
+        4998,
+        5022,
+        5033,
+        9597,
+        9609,
+        9621,
+        9633
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -53305,30 +53327,30 @@
       "recommendedClassification": "security-system-registry",
       "lines": [
         1864,
-        4823,
-        4836,
-        4849,
-        4862,
-        4872,
-        4885,
-        4898,
-        4977,
-        4990,
-        5001,
-        5014,
-        5025,
-        5036,
-        5049,
-        5126,
-        5139,
-        5152,
-        5165,
-        7098,
-        7111,
-        7124,
-        7201,
-        7214,
-        7227
+        4825,
+        4838,
+        4851,
+        4864,
+        4874,
+        4887,
+        4900,
+        4979,
+        4992,
+        5003,
+        5016,
+        5027,
+        5038,
+        5051,
+        5128,
+        5141,
+        5154,
+        5167,
+        7782,
+        7795,
+        7808,
+        7885,
+        7898,
+        7911
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -53402,7 +53424,7 @@
       "recommendedClassification": "security-system-registry",
       "lines": [
         2014,
-        4868
+        4870
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -54111,7 +54133,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 3631,
+      "line": 3633,
       "values": [
         "Admin",
         "StudioManager",
@@ -54120,7 +54142,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        3631
+        3633
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -54190,7 +54212,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 3641,
+      "line": 3643,
       "values": [
         "Admin",
         "StudioManager",
@@ -54199,8 +54221,8 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        3641,
-        3651
+        3643,
+        3653
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -54269,7 +54291,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 3661,
+      "line": 3663,
       "values": [
         "Admin",
         "StudioManager"
@@ -54277,17 +54299,17 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        3661,
-        3670,
-        3679,
-        3688,
-        3873,
-        3882,
-        3891,
-        3900,
-        3910,
-        3919,
-        3928
+        3663,
+        3672,
+        3681,
+        3690,
+        3875,
+        3884,
+        3893,
+        3902,
+        3912,
+        3921,
+        3930
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -54355,7 +54377,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 3752,
+      "line": 3754,
       "values": [
         "Admin",
         "Webmaster"
@@ -54363,8 +54385,8 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        3752,
-        6541
+        3754,
+        7225
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -54434,7 +54456,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 3864,
+      "line": 3866,
       "values": [
         "Admin",
         "StudioManager"
@@ -54442,7 +54464,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        3864
+        3866
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -54511,7 +54533,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 4002,
+      "line": 4004,
       "values": [
         "Admin",
         "Manager",
@@ -54522,12 +54544,12 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4002,
-        4806,
-        4960,
-        5109,
-        7081,
-        7184
+        4004,
+        4808,
+        4962,
+        5111,
+        7765,
+        7868
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -54598,7 +54620,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 4097,
+      "line": 4099,
       "values": [
         "Artist",
         "Artista",
@@ -54607,7 +54629,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4097
+        4099
       ],
       "consumerCount": 43,
       "backendConsumers": [
@@ -54690,7 +54712,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4105,
+      "line": 4107,
       "values": [
         "Artist",
         "Artista",
@@ -54699,11 +54721,11 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4105,
-        4112,
-        4120,
-        4128,
-        4136
+        4107,
+        4114,
+        4122,
+        4130,
+        4138
       ],
       "consumerCount": 42,
       "backendConsumers": [
@@ -54785,7 +54807,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4221,
+      "line": 4223,
       "values": [
         "Admin",
         "Manager",
@@ -54796,12 +54818,12 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4221,
-        4238,
-        4402,
-        4414,
-        4426,
-        4438
+        4223,
+        4240,
+        4404,
+        4416,
+        4428,
+        4440
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -54871,7 +54893,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 4390,
+      "line": 4392,
       "values": [
         "Admin",
         "Manager",
@@ -54882,7 +54904,7 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4390
+        4392
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -54953,7 +54975,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 4506,
+      "line": 4508,
       "values": [
         "Admin",
         "StudioManager",
@@ -54963,7 +54985,7 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4506
+        4508
       ],
       "consumerCount": 31,
       "backendConsumers": [
@@ -55029,7 +55051,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4517,
+      "line": 4519,
       "values": [
         "Admin",
         "StudioManager",
@@ -55039,12 +55061,12 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4517,
-        4528,
-        4539,
-        4550,
-        4561,
-        4572
+        4519,
+        4530,
+        4541,
+        4552,
+        4563,
+        4574
       ],
       "consumerCount": 30,
       "backendConsumers": [
@@ -55109,7 +55131,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 4641,
+      "line": 4643,
       "values": [
         "Admin",
         "Manager",
@@ -55127,7 +55149,7 @@
       "valueCount": 12,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4641
+        4643
       ],
       "consumerCount": 38,
       "backendConsumers": [
@@ -55202,7 +55224,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4658,
+      "line": 4660,
       "values": [
         "Admin",
         "Manager",
@@ -55220,8 +55242,8 @@
       "valueCount": 12,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4658,
-        4674
+        4660,
+        4676
       ],
       "consumerCount": 37,
       "backendConsumers": [
@@ -55295,7 +55317,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4691,
+      "line": 4693,
       "values": [
         "Admin",
         "Manager",
@@ -55312,8 +55334,8 @@
       "valueCount": 11,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4691,
-        4706
+        4693,
+        4708
       ],
       "consumerCount": 37,
       "backendConsumers": [
@@ -55383,7 +55405,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4722,
+      "line": 4724,
       "values": [
         "Admin",
         "Manager",
@@ -55398,7 +55420,7 @@
       "valueCount": 9,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4722
+        4724
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -55466,7 +55488,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4735,
+      "line": 4737,
       "values": [
         "Admin",
         "Manager",
@@ -55476,7 +55498,7 @@
       "valueCount": 4,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4735
+        4737
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -55548,7 +55570,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 4816,
+      "line": 4818,
       "values": [
         "Admin",
         "Manager",
@@ -55559,26 +55581,26 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        4816,
-        4829,
-        4842,
-        4855,
-        4878,
-        4891,
-        4970,
-        4983,
-        5007,
-        5042,
-        5119,
-        5132,
-        5145,
-        5158,
-        7091,
-        7104,
-        7117,
-        7194,
-        7207,
-        7220
+        4818,
+        4831,
+        4844,
+        4857,
+        4880,
+        4893,
+        4972,
+        4985,
+        5009,
+        5044,
+        5121,
+        5134,
+        5147,
+        5160,
+        7775,
+        7788,
+        7801,
+        7878,
+        7891,
+        7904
       ],
       "consumerCount": 32,
       "backendConsumers": [
@@ -55648,7 +55670,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 7935,
+      "line": 8619,
       "values": [
         "Admin",
         "Manager",
@@ -55661,11 +55683,11 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        7935,
-        7951,
-        8097,
-        8113,
-        8129
+        8619,
+        8635,
+        8781,
+        8797,
+        8813
       ],
       "consumerCount": 35,
       "backendConsumers": [
@@ -55740,7 +55762,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "modulesAny",
-      "line": 7944,
+      "line": 8628,
       "values": [
         "Admin",
         "CRM",
@@ -55749,11 +55771,11 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        7944,
-        7960,
-        8106,
-        8122,
-        8138
+        8628,
+        8644,
+        8790,
+        8806,
+        8822
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -55826,7 +55848,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 8085,
+      "line": 8769,
       "values": [
         "Admin",
         "Manager",
@@ -55839,7 +55861,7 @@
       "valueCount": 7,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8085
+        8769
       ],
       "consumerCount": 36,
       "backendConsumers": [
@@ -55915,7 +55937,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 8200,
+      "line": 8884,
       "values": [
         "Admin",
         "Artist",
@@ -55924,7 +55946,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8200
+        8884
       ],
       "consumerCount": 43,
       "backendConsumers": [
@@ -56007,7 +56029,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 8494,
+      "line": 9178,
       "values": [
         "Admin",
         "Manager",
@@ -56018,8 +56040,8 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8494,
-        8586
+        9178,
+        9270
       ],
       "consumerCount": 44,
       "backendConsumers": [
@@ -56102,7 +56124,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "rolesAny",
-      "line": 8504,
+      "line": 9188,
       "values": [
         "Admin",
         "Manager",
@@ -56113,11 +56135,11 @@
       "valueCount": 5,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8504,
-        8513,
-        8522,
-        8596,
-        8605
+        9188,
+        9197,
+        9206,
+        9280,
+        9289
       ],
       "consumerCount": 43,
       "backendConsumers": [
@@ -56199,7 +56221,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "requiredRoles",
-      "line": 8905,
+      "line": 9589,
       "values": [
         "Admin",
         "Manager",
@@ -56208,7 +56230,7 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8905
+        9589
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -56283,7 +56305,7 @@
       "domain": "security-authorization",
       "kind": "array",
       "name": "modulesAny",
-      "line": 8918,
+      "line": 9602,
       "values": [
         "Admin",
         "Ops",
@@ -56292,10 +56314,10 @@
       "valueCount": 3,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8918,
-        8930,
-        8942,
-        8954
+        9602,
+        9614,
+        9626,
+        9638
       ],
       "consumerCount": 32,
       "backendConsumers": [
