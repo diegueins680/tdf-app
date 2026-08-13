@@ -6,6 +6,8 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.Aeson as A
 import Data.Char (chr)
 import Data.Int (Int64)
+import Data.Either (isLeft)
+import qualified Data.Set as Set
 import qualified Data.Text as T
 import Database.Persist (Entity (..), Key)
 import Database.Persist.Sql (toSqlKey)
@@ -36,7 +38,6 @@ import TDF.ServerAuth
   , validateGoogleIdTokenInfo
   , validatePasswordChangeUsernameInput
   , validatePasswordResetToken
-  , validateRequestedSignupRoles
   , validateSignupArtistClaimEmail
   , validateSignupDisplayName
   , validateSignupFanArtistIds
@@ -53,7 +54,7 @@ spec = do
   passwordChangeUsernameSpec
   passwordChangeAuthHeaderSpec
   tokenLabelUsernameSpec
-  signupRoleSpec
+  signupContractSpec
   signupDisplayNameSpec
   signupGoogleIdTokenSpec
   signupPhoneSpec
@@ -131,17 +132,19 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
       "Missing access to module: Admin"
       (validateModuleAccess ModuleAdmin (mkUser [Agency]))
 
-  it "denies direct module checks for impossible party ids, stale grants, or duplicates" $ do
+  it "denies direct module checks for impossible party ids or duplicate roles" $ do
     hasModuleAccess ModuleAdmin (mkUser [Admin]) `shouldBe` True
     hasModuleAccess
       ModuleAdmin
       ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
       `shouldBe` False
     hasModuleAccess ModuleAdmin (mkUser [Admin, Admin]) `shouldBe` False
-    hasModuleAccess
-      ModuleAdmin
-      ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
-      `shouldBe` False
+
+  it "honors persisted module grants independently of legacy role-to-module defaults" $ do
+    let persistedGrantUser =
+          (mkUser [Fan, Customer]) { auModules = Set.singleton ModuleAdmin }
+    hasModuleAccess ModuleAdmin persistedGrantUser `shouldBe` True
+    validateModuleAccess ModuleAdmin persistedGrantUser `shouldBe` Right ()
 
   it "rejects impossible party ids or incoherent grants before handler authorization" $ do
     assertRejected "Valid authenticated party required" $
@@ -152,10 +155,6 @@ moduleAccessSpec = describe "validateModuleAccess" $ do
       validateModuleAccess ModuleAdmin (mkUser [Fan])
     assertRejected "Role grants must be unique" $
       validateModuleAccess ModuleAdmin (mkUser [Admin, Admin])
-    assertRejected "Module grants must match roles" $
-      validateModuleAccess
-        ModuleAdmin
-        ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
 
 loginRequestSpec :: Spec
 loginRequestSpec = describe "validateLoginRequest" $ do
@@ -292,22 +291,17 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
     resolveUsernameFromLabel ("password-login:" <> T.replicate 255 "a")
       `shouldBe` Nothing
 
-signupRoleSpec :: Spec
-signupRoleSpec = describe "validateRequestedSignupRoles" $ do
-  it "keeps default signup roles and accepted requested roles" $
-    validateRequestedSignupRoles (Just [Artist])
-      `shouldBe` Right [Customer, Fan, Artist]
-
-  it "rejects explicit null signup roles instead of using the default role fallback" $
-    let rawSignup =
-          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
-            <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
-            <> "\"roles\":null}"
-    in case A.eitherDecode rawSignup :: Either String SignupRequest of
-      Left err ->
-        err `shouldContain` "roles must be omitted instead of null"
-      Right value ->
-        expectationFailure ("Expected null signup roles to be rejected, got " <> show value)
+signupContractSpec :: Spec
+signupContractSpec = describe "SignupRequest canonical security contract" $ do
+  it "rejects caller-selected roles instead of accepting a legacy string list" $ do
+    let withRoleList = A.eitherDecode
+          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"TempPass123!\",\"roles\":[\"Admin\"]}"
+          :: Either String SignupRequest
+        withRoleId = A.eitherDecode
+          "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"TempPass123!\",\"roleId\":\"f683a8fc-39aa-4635-a56d-b1e43e603a9f\"}"
+          :: Either String SignupRequest
+    withRoleList `shouldSatisfy` isLeft
+    withRoleId `shouldSatisfy` isLeft
 
   it "rejects null signup artist relationship fields instead of using empty fallbacks" $ do
     let assertNullRejected :: String -> Expectation
@@ -330,38 +324,11 @@ signupRoleSpec = describe "validateRequestedSignupRoles" $ do
     assertNullRejected "fanArtistIds"
     assertNullRejected "claimArtistId"
 
-  it "rejects null signup internship fields instead of using empty onboarding fallbacks" $ do
-    let assertNullRejected :: String -> Expectation
-        assertNullRejected fieldName =
-          let rawSignup =
-                BL8.pack $
-                  "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\","
-                    <> "\"email\":\"ada@example.com\",\"password\":\"TempPass123!\","
-                    <> "\"" <> fieldName <> "\":null}"
-          in case A.eitherDecode rawSignup :: Either String SignupRequest of
-            Left err ->
-              err `shouldContain` (fieldName <> " must be omitted instead of null")
-            Right value ->
-              expectationFailure
-                ( "Expected null signup "
-                    <> fieldName
-                    <> " to be rejected, got "
-                    <> show value
-                )
-    assertNullRejected "internshipStartAt"
-    assertNullRejected "internshipEndAt"
-    assertNullRejected "internshipRequiredHours"
-    assertNullRejected "internshipSkills"
-    assertNullRejected "internshipAreas"
-
-  it "rejects duplicate requested roles instead of silently collapsing signup intent" $
-    case validateRequestedSignupRoles (Just [Artist, Fan, Artist]) of
-      Left err -> do
-        errHTTPCode err `shouldBe` 400
-        BL8.unpack (errBody err)
-          `shouldContain` "Requested signup roles must not contain duplicates: Artist"
-      Right value ->
-        expectationFailure ("Expected duplicate signup roles to be rejected, got " <> show value)
+  it "rejects removed role-dependent internship fields" $
+    ( A.eitherDecode
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"TempPass123!\",\"internshipStartAt\":\"2026-08-07\"}"
+        :: Either String SignupRequest
+    ) `shouldSatisfy` isLeft
 
 signupDisplayNameSpec :: Spec
 signupDisplayNameSpec = describe "validateSignupDisplayName" $ do

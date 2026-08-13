@@ -584,7 +584,7 @@ validateDefaultLocale supported rawValue = do
   let configured = T.pack (fromMaybe "en" rawValue)
   normalized <-
     maybe
-      (fail "DEFAULT_LOCALE must be one of: en, es, fr, de, pt")
+      (fail "DEFAULT_LOCALE must start with a two- or three-letter language code")
       pure
       (normalizeLocaleCode configured)
   if normalized `elem` supported

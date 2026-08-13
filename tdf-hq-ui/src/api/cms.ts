@@ -3,6 +3,7 @@ const CMS_ADMIN_BASE = '/cms/admin/content';
 
 type WireCmsContentDTO = Partial<CmsContentDTO> & {
   id?: number;
+  contentId?: string | null;
   slug?: string;
   locale?: string;
   version?: number;
@@ -15,6 +16,7 @@ type WireCmsContentDTO = Partial<CmsContentDTO> & {
 
 export interface CmsContentDTO {
   ccdId: number;
+  ccdContentId?: string | null;
   ccdSlug: string;
   ccdLocale: string;
   ccdVersion: number;
@@ -26,7 +28,7 @@ export interface CmsContentDTO {
 }
 
 export interface CmsContentIn {
-  cciSlug: string;
+  cciContentId: string;
   cciLocale: string;
   cciTitle?: string | null;
   cciStatus?: string | null;
@@ -35,6 +37,7 @@ export interface CmsContentIn {
 
 const normalizeCmsContent = (content: WireCmsContentDTO): CmsContentDTO => ({
   ccdId: content.ccdId ?? content.id ?? 0,
+  ccdContentId: content.ccdContentId ?? content.contentId ?? null,
   ccdSlug: content.ccdSlug ?? content.slug ?? '',
   ccdLocale: content.ccdLocale ?? content.locale ?? 'es',
   ccdVersion: content.ccdVersion ?? content.version ?? 0,
@@ -46,7 +49,7 @@ const normalizeCmsContent = (content: WireCmsContentDTO): CmsContentDTO => ({
 });
 
 const toWireCmsContentIn = (payload: CmsContentIn) => ({
-  slug: payload.cciSlug,
+  contentId: payload.cciContentId,
   locale: payload.cciLocale,
   title: payload.cciTitle,
   status: payload.cciStatus,
@@ -65,9 +68,9 @@ export const Cms = {
     return get<WireCmsContentDTO[]>(`/cms/contents${qs ? `?${qs}` : ''}`)
       .then((items) => items.map(normalizeCmsContent));
   },
-  list: (params?: { slug?: string; locale?: string }) => {
+  list: (params?: { contentId?: string; locale?: string }) => {
     const search = new URLSearchParams();
-    if (params?.slug) search.set('slug', params.slug);
+    if (params?.contentId) search.set('contentId', params.contentId);
     if (params?.locale) search.set('locale', params.locale);
     const qs = search.toString();
     return get<WireCmsContentDTO[]>(`${CMS_ADMIN_BASE}${qs ? `?${qs}` : ''}`)

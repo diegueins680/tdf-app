@@ -29,12 +29,7 @@ import {
   Alert,
   InputAdornment,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  OutlinedInput,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import EditIcon from '@mui/icons-material/Edit';
 import SchoolIcon from '@mui/icons-material/School';
 import AddIcon from '@mui/icons-material/Add';
@@ -43,18 +38,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useNavigate } from 'react-router-dom';
-import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
-import { ALL_ROLES } from '../constants/roles';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
-import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-
-type RoleValue = Role | (string & Record<never, never>);
 
 interface CreatePartyDialogProps {
   open: boolean;
@@ -238,7 +228,6 @@ interface CreateUserFromPartyDialogProps {
 function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromPartyDialogProps) {
   const qc = useQueryClient();
   const [username, setUsername] = useState('');
-  const [roles, setRoles] = useState<RoleValue[]>([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -247,7 +236,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   useEffect(() => {
     setUsername('');
     setEmail(party?.primaryEmail ?? '');
-    setRoles([]);
     setError(null);
     setSuccess(null);
   }, [party, open]);
@@ -257,12 +245,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   const usernameHelperText = trimmedEmail
     ? `Déjalo vacío para usar ${trimmedEmail} como usuario de acceso.`
     : 'Déjalo vacío y usaremos el correo del contacto cuando lo completes arriba.';
-
-  const selectRoles = (value: string | string[]) => normalizeRolesInput(value, ALL_ROLES);
-
-  const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
-    setRoles(selectRoles(event.target.value));
-  };
 
   const handleCreateUser = async () => {
     if (!party) return;
@@ -280,7 +262,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
       await Admin.createUser({
         partyId: party.partyId,
         username: username.trim() || undefined,
-        roles: roles.length ? roles : undefined,
       });
       setSuccess('Se creó la cuenta y se envió la contraseña temporal por correo.');
       await qc.invalidateQueries({ queryKey: ['parties'] });
@@ -318,29 +299,10 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
             placeholder={trimmedEmail || 'Se completará con el correo principal'}
             fullWidth
           />
-          <FormControl fullWidth>
-            <InputLabel id="create-user-roles-label">Roles iniciales</InputLabel>
-            <Select<RoleValue[]>
-              labelId="create-user-roles-label"
-              multiple
-              value={roles}
-              onChange={handleRoleChange}
-              input={<OutlinedInput label="Roles iniciales" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((role) => (
-                    <Chip key={role} label={role} size="small" />
-                  ))}
-                </Box>
-              )}
-            >
-              {ALL_ROLES.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Alert severity="info">
+            La cuenta se crea sin asignaciones administrativas. Los roles se solicitan después en Roles y permisos
+            mediante revisión y aprobación separada.
+          </Alert>
           {error && <Alert severity="error">{error}</Alert>}
           {success && <Alert severity="success">{success}</Alert>}
           <Alert severity="info">

@@ -3,6 +3,9 @@ import { del, get, post, postForm, put } from './client';
 export interface SocialArtistDTO {
   artistId?: string | null;
   artistName: string;
+  /** Canonical relationship identifiers used by writes and filters. */
+  artistGenreIds?: string[];
+  /** Localized presentation labels returned by the API; never submit as identity. */
   artistGenres?: string[];
   artistBio?: string | null;
   artistAvatarUrl?: string | null;
@@ -37,8 +40,13 @@ export interface SocialEventDTO {
   eventVenueId?: string | null;
   eventPriceCents?: number | null;
   eventCapacity?: number | null;
-  eventType?: string | null;
-  eventStatus?: string | null;
+  eventTypeId?: string | null;
+  eventWorkflowStateId?: string | null;
+  eventWorkflowStateCode?: string | null;
+  eventWorkflowStateNameEs?: string | null;
+  eventWorkflowStateNameEn?: string | null;
+  eventPublicListable?: boolean | null;
+  eventTicketPurchaseEnabled?: boolean | null;
   eventCurrency?: string | null;
   eventBudgetCents?: number | null;
   eventTicketUrl?: string | null;
@@ -476,12 +484,12 @@ const buildQuery = (params: QueryParams) => {
 };
 
 export const SocialEventsAPI = {
-  listEvents: async (opts?: { city?: string; startAfter?: string; eventType?: string; eventStatus?: string; artistId?: string; venueId?: string }) => {
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({
       city: opts?.city,
       start_after: opts?.startAfter,
-      event_type: opts?.eventType,
-      event_status: opts?.eventStatus,
+      event_type_id: opts?.eventTypeId,
+      workflow_state_id: opts?.workflowStateId,
       artistId: opts?.artistId,
       venueId: opts?.venueId,
     });

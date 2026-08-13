@@ -4,19 +4,88 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { CmsContentDTO } from '../api/cms';
+import type { AuthoredContent, CatalogItem, WorkflowState } from '../api/catalogs';
 
 jest.setTimeout(15000);
 
-const listMock = jest.fn<(params?: { slug?: string; locale?: string }) => Promise<CmsContentDTO[]>>();
+const FAN_HUB_CONTENT_ID = '20000000-0000-4000-8000-000000000001';
+const COURSE_CONTENT_ID = '20000000-0000-4000-8000-000000000002';
+const authoredContents: AuthoredContent[] = [
+  {
+    id: FAN_HUB_CONTENT_ID,
+    code: 'fan-hub',
+    contentTypeId: '30000000-0000-4000-8000-000000000001',
+    contentTypeCode: 'fan-hub-page',
+    entityKind: 'authored_page',
+    name: 'Fan Hub',
+    nameEs: 'Fan Hub',
+    nameEn: 'Fan Hub',
+    currentSlug: 'fan-hub',
+    publicRoute: '/fans',
+    schema: {
+      type: 'object',
+      required: ['heroTitle', 'heroSubtitle', 'sections'],
+      example: {
+        heroTitle: 'Descubre artistas emergentes',
+        heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+        sections: [],
+      },
+    },
+    schemaVersion: 2,
+    sortOrder: 10,
+    active: true,
+    workflowState: 'published',
+    revision: 1,
+    version: 1,
+  },
+  {
+    id: COURSE_CONTENT_ID,
+    code: 'course-production',
+    contentTypeId: '30000000-0000-4000-8000-000000000002',
+    contentTypeCode: 'course-production-page',
+    entityKind: 'authored_page',
+    name: 'Curso de producción',
+    nameEs: 'Curso de producción',
+    nameEn: 'Production course',
+    currentSlug: 'course-production',
+    publicRoute: '/curso/produccion-musical',
+    schema: { type: 'object', required: ['heroTitle', 'heroSubtitle', 'sessions'] },
+    schemaVersion: 2,
+    sortOrder: 20,
+    active: true,
+    workflowState: 'published',
+    revision: 1,
+    version: 1,
+  },
+];
+const localeItems = [
+  { id: 'locale-es', code: 'es', name: 'Español' },
+  { id: 'locale-en', code: 'en', name: 'English' },
+] as CatalogItem[];
+const workflowStates: WorkflowState[] = [
+  { id: 'state-draft', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'draft', name: 'Borrador', nameEs: 'Borrador', nameEn: 'Draft', sortOrder: 10, terminal: false, active: true, version: 1 },
+  { id: 'state-published', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'published', name: 'Publicado', nameEs: 'Publicado', nameEn: 'Published', sortOrder: 50, terminal: true, active: true, version: 1 },
+  { id: 'state-archived', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'archived', name: 'Archivado', nameEs: 'Archivado', nameEn: 'Archived', sortOrder: 60, terminal: false, active: true, version: 1 },
+];
+
+const listMock = jest.fn<(params?: { contentId?: string; locale?: string }) => Promise<CmsContentDTO[]>>();
 const getPublicMock = jest.fn<(slug: string, locale?: string) => Promise<CmsContentDTO>>();
 
 jest.unstable_mockModule('../api/cms', () => ({
   Cms: {
-    list: (params?: { slug?: string; locale?: string }) => listMock(params),
+    list: (params?: { contentId?: string; locale?: string }) => listMock(params),
     getPublic: (slug: string, locale?: string) => getPublicMock(slug, locale),
     create: jest.fn(() => Promise.resolve(null)),
     publish: jest.fn(() => Promise.resolve(null)),
     remove: jest.fn(() => Promise.resolve(null)),
+  },
+}));
+
+jest.unstable_mockModule('../api/catalogs', () => ({
+  Catalogs: {
+    listAuthoredContents: jest.fn(() => Promise.resolve(authoredContents)),
+    listItems: jest.fn(() => Promise.resolve({ items: localeItems })),
+    listWorkflowStates: jest.fn(() => Promise.resolve(workflowStates)),
   },
 }));
 
@@ -71,7 +140,8 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 
 const buildContent = (overrides: Partial<CmsContentDTO> = {}): CmsContentDTO => ({
   ccdId: 101,
-  ccdSlug: 'records-public',
+  ccdContentId: FAN_HUB_CONTENT_ID,
+  ccdSlug: 'fan-hub',
   ccdLocale: 'es',
   ccdVersion: 4,
   ccdStatus: 'published',
@@ -100,6 +170,11 @@ const renderPage = async (container: HTMLElement) => {
     );
     await flushPromises();
     await flushPromises();
+  });
+
+  await waitForExpectation(() => {
+    expect(container.textContent).toContain('fan-hub · esquema v2');
+    expect(container.textContent).toContain('Español (es)');
   });
 
   return {
@@ -233,7 +308,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas.',
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas.',
       );
       expect(container.textContent).not.toContain('Guardar borrador local');
     });
@@ -249,7 +324,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(window.localStorage.getItem('tdf-cms-admin:draft:records-public:es')).toBe(
+      expect(window.localStorage.getItem(`tdf-cms-admin:draft:${FAN_HUB_CONTENT_ID}:es`)).toBe(
         JSON.stringify({
           title: 'Landing actualizada',
           payload: updatedPayload,
@@ -271,7 +346,7 @@ describe('CmsAdminPage', () => {
       expect(countLabelsByText(container, 'Locale')).toBe(0);
       expect(container.textContent).toContain('Español (es)');
       expect(container.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es).',
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es).',
       );
       expect(container.textContent).not.toContain('slug y locale');
       expect(container.textContent).not.toContain('locale es');
@@ -289,7 +364,7 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
       expect(guidance?.textContent).not.toContain('Usar versión en vivo');
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
@@ -438,7 +513,7 @@ describe('CmsAdminPage', () => {
         'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -456,7 +531,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(container.textContent).toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -468,13 +543,13 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
-      expect(getInputByLabel(container, 'Título').value).toBe('Lanzamientos destacados');
+      expect(getInputByLabel(container, 'Título').value).toBe('Descubre artistas emergentes');
       expect(getInputByLabel(container, 'Payload JSON').value).toBe(
         JSON.stringify(
           {
-            heroTitle: 'Lanzamientos destacados',
-            heroSubtitle: 'Explora los releases recientes del sello.',
-            locale: 'es',
+            heroTitle: 'Descubre artistas emergentes',
+            heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+            sections: [],
           },
           null,
           2,
@@ -484,7 +559,7 @@ describe('CmsAdminPage', () => {
         'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -505,7 +580,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getPublicMock).toHaveBeenCalledWith('records-public', 'es');
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
       expect(container.textContent).toContain(
@@ -519,7 +594,7 @@ describe('CmsAdminPage', () => {
         'No pudimos confirmar si ya existe una versión en vivo. Reintenta la carga en vivo antes de partir de un ejemplo.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -593,7 +668,7 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.',
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.',
       );
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(container.textContent).not.toContain(
@@ -719,7 +794,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
       expect(container.textContent).toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -739,7 +814,7 @@ describe('CmsAdminPage', () => {
         'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -774,7 +849,7 @@ describe('CmsAdminPage', () => {
         'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -996,43 +1071,40 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the example action for a published custom slug and points to the live version', async () => {
+  it('does not restore an arbitrary legacy slug as an administrative relationship', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',
-      JSON.stringify({ slug: 'promo-landing', locale: 'es' }),
+      JSON.stringify({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' }),
     );
-    listMock.mockResolvedValue([
-      buildContent({ ccdSlug: 'promo-landing' }),
-      buildContent({ ccdId: 102, ccdSlug: 'promo-landing', ccdVersion: 3, ccdStatus: 'draft', ccdPublishedAt: null }),
-    ]);
-    getPublicMock.mockResolvedValue(buildContent({ ccdSlug: 'promo-landing' }));
+    listMock.mockResolvedValue([buildContent()]);
+    getPublicMock.mockResolvedValue(buildContent());
 
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: 'promo-landing', locale: 'es' });
-      expect(getPublicMock).toHaveBeenCalledWith('promo-landing', 'es');
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
-      expect(container.textContent).toContain(
-        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
-      );
-      expect(container.textContent).toContain(
-        'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.',
-      );
+      expect(container.textContent).toContain('fan-hub · esquema v2');
+      expect(container.textContent).not.toContain('promo-landing');
     });
 
     await cleanup();
   });
 
-  it('starts a different built-in slug from a blank editor when no local draft exists', async () => {
-    listMock.mockImplementation((params) => Promise.resolve([
-      buildContent({
-        ccdSlug: params?.slug ?? 'records-public',
-        ccdTitle: params?.slug === 'fan-hub' ? 'Fan Hub publicado' : 'Landing principal',
-      }),
-    ]));
+  it('switches between persisted authored-content IDs without using slugs as relationships', async () => {
+    listMock.mockImplementation((params) => {
+      const courseSelected = params?.contentId === COURSE_CONTENT_ID;
+      return Promise.resolve([
+        buildContent({
+          ccdContentId: params?.contentId ?? FAN_HUB_CONTENT_ID,
+          ccdSlug: courseSelected ? 'course-production' : 'fan-hub',
+          ccdTitle: courseSelected ? 'Curso publicado' : 'Fan Hub publicado',
+        }),
+      ]);
+    });
     getPublicMock.mockImplementation((slug) => Promise.resolve(buildContent({
       ccdSlug: slug,
       ccdTitle: slug === 'fan-hub' ? 'Fan Hub publicado' : 'Landing principal',
@@ -1056,16 +1128,16 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getInputByLabel(container, 'Título').value).toBe('Landing principal');
-      expect(getInputByLabel(container, 'Payload JSON').value).toContain('Lanzamientos destacados');
+      expect(getInputByLabel(container, 'Título').value).toBe('Fan Hub publicado');
+      expect(getInputByLabel(container, 'Payload JSON').value).toContain('Fans destacados');
       expect(container.textContent).toContain('Base: v4');
     });
 
-    await selectComboboxOption(container, 'records-public', 'fan-hub');
+    await selectComboboxOption(container, 'Fan Hub', 'Curso de producción');
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: 'fan-hub', locale: 'es' });
-      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
+      expect(listMock).toHaveBeenCalledWith({ contentId: COURSE_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('course-production', 'es');
       expect(getInputByLabel(container, 'Título').value).toBe('');
       expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
       expect(container.textContent).not.toContain('Base: v4');
@@ -1078,7 +1150,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('replaces blank custom-slug dead ends with one helper and keeps save disabled until the slug exists', async () => {
+  it('recovers a blank legacy selection from the first persisted authored-content definition', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',
       JSON.stringify({ slug: '', locale: 'es' }),
@@ -1089,22 +1161,10 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).not.toHaveBeenCalled();
-      expect(getPublicMock).not.toHaveBeenCalled();
-      expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
-      expect(container.textContent).toContain(
-        'Completa este slug para habilitar el guardado y Abrir página en vivo.',
-      );
-      expect(container.textContent).toContain(
-        'Elige un slug para consultar la versión publicada de esa página.',
-      );
-      expect(container.textContent).toContain('Completa el slug para habilitar el estado y el guardado.');
-      expect(container.textContent).not.toContain('Sin contenido publicado');
-      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
-      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).toBeNull();
-      expect(countLabelsByText(container, 'Estado')).toBe(0);
-      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
-      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
+      expect(container.textContent).toContain('fan-hub · esquema v2');
+      expect(container.textContent).not.toContain('Slug personalizado');
     });
 
     await cleanup();
@@ -1200,8 +1260,8 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
-      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).toBeNull();
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
       expect(container.textContent).toContain(
         'Guardará esta versión como borrador sin cambiar la página en vivo.',
       );
@@ -1222,8 +1282,8 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: 'records-public', locale: 'es' });
-      expect(getPublicMock).toHaveBeenCalledWith('records-public', 'es');
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
       expect(container.textContent).toContain(
         'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.',
       );
@@ -1349,13 +1409,13 @@ describe('CmsAdminPage', () => {
       const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
       expect(history).not.toBeNull();
       expect(history?.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es).',
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es).',
       );
       expect((history?.textContent ?? '').split('Landing principal').length - 1).toBe(1);
       expect(history?.textContent).toContain('Versión v4');
       expect(history?.textContent).toContain('Versión v3');
-      expect(countExactText(container, 'records-public')).toBe(1);
-      expect(countExactText(container, 'Español (es)')).toBe(1);
+      expect(history?.textContent).toContain('slug fan-hub');
+      expect(history?.textContent).toContain('idioma Español (es)');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
     });
@@ -1382,7 +1442,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('makes the primary save action explicit so first-time admins can tell draft saves from live publishes', async () => {
+  it('keeps CMS writes draft-only even when legacy local storage requested direct publication', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let rendered = await renderPage(container);
@@ -1408,7 +1468,7 @@ describe('CmsAdminPage', () => {
     await rendered.cleanup();
 
     window.localStorage.setItem(
-      'tdf-cms-admin:draft:records-public:es',
+      `tdf-cms-admin:draft:${FAN_HUB_CONTENT_ID}:es`,
       JSON.stringify({
         title: 'Landing publicada',
         payload: JSON.stringify({ heroTitle: 'Landing publicada' }, null, 2),
@@ -1421,10 +1481,11 @@ describe('CmsAdminPage', () => {
     rendered = await renderPage(secondContainer);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(secondContainer, 'Guardar y publicar')).toBeTruthy();
+      expect(getButtonByText(secondContainer, 'Guardar borrador')).toBeTruthy();
       expect(secondContainer.textContent).toContain(
-        'Publicará esta versión al guardar y actualizará la página en vivo.',
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
       );
+      expect(secondContainer.textContent).not.toContain('Guardar y publicar');
       expect(secondContainer.textContent).not.toContain('Guardar versión');
     });
 
@@ -1596,7 +1657,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('3 versiones');
-      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(1);
     });
 
@@ -1659,7 +1720,7 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).toContain('3 versiones');
     });
 
-    await selectComboboxOption(container, 'Todos', 'Archivados');
+    await selectComboboxOption(container, 'Todos', 'Archivado');
 
     await waitForExpectation(() => {
       const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
@@ -1692,7 +1753,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · idioma Español (es) · estado Publicado.',
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es) · estado Publicado.',
       );
       expect(countExactText(container, 'Publicado')).toBe(1);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);

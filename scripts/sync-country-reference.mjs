@@ -1,0 +1,184 @@
+#!/usr/bin/env node
+
+import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import process from 'node:process';
+
+const SOURCE_URL = 'https://unstats.un.org/unsd/methodology/m49/overview/';
+const DEFAULT_OUTPUT = 'tdf-hq/src/TDF/Catalog/CountryReferenceSeed.hs';
+
+// UN M49 intentionally omits TW. ISO 3166/MA assigns TW/TWN/158; keep this
+// single reviewed supplement explicit so the imported ISO identity set is
+// complete and its provenance can be audited independently.
+const ISO_SUPPLEMENTS = [
+  {
+    alpha2: 'TW',
+    alpha3: 'TWN',
+    numericCode: '158',
+    nameEs: 'Taiwán',
+    nameEn: 'Taiwan, Province of China',
+  },
+];
+
+function parseArgs(argv) {
+  const options = { check: false, input: null, output: DEFAULT_OUTPUT, snapshotDate: null };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--check') options.check = true;
+    else if (arg === '--input') options.input = argv[++index];
+    else if (arg === '--output') options.output = argv[++index];
+    else if (arg === '--snapshot-date') options.snapshotDate = argv[++index];
+    else throw new Error(`Unknown argument: ${arg}`);
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(options.snapshotDate ?? '')) {
+    throw new Error('--snapshot-date YYYY-MM-DD is required');
+  }
+  return options;
+}
+
+function decodeHtml(raw) {
+  return raw
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&#x([0-9a-f]+);/gi, (_, value) => String.fromCodePoint(Number.parseInt(value, 16)))
+    .replace(/&#(\d+);/g, (_, value) => String.fromCodePoint(Number(value)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;|&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseLanguageTable(html, language) {
+  const tablePattern = new RegExp(
+    `<table[^>]+id\\s*=\\s*["']downloadTable${language}["'][^>]*>([\\s\\S]*?)<\\/table>`,
+    'i',
+  );
+  const table = html.match(tablePattern)?.[1];
+  if (!table) throw new Error(`Missing UN M49 ${language} table`);
+
+  return [...table.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)]
+    .map((row) => [...row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
+      .map((cell) => decodeHtml(cell[1])))
+    .filter((cells) => cells.length >= 12
+      && /^\d{3}$/.test(cells[9])
+      && /^[A-Z]{2}$/.test(cells[10])
+      && /^[A-Z]{3}$/.test(cells[11]))
+    .map((cells) => ({
+      name: cells[8],
+      numericCode: cells[9],
+      alpha2: cells[10],
+      alpha3: cells[11],
+    }));
+}
+
+function assertUnique(rows, field) {
+  const seen = new Set();
+  for (const row of rows) {
+    if (seen.has(row[field])) throw new Error(`Duplicate ${field}: ${row[field]}`);
+    seen.add(row[field]);
+  }
+}
+
+function buildSnapshot(html) {
+  const english = parseLanguageTable(html, 'EN');
+  const spanish = parseLanguageTable(html, 'ES');
+  const spanishByAlpha2 = new Map(spanish.map((row) => [row.alpha2, row]));
+
+  if (english.length !== 248 || spanish.length !== 248) {
+    throw new Error(`Expected 248 UN M49 rows per language, got EN=${english.length}, ES=${spanish.length}`);
+  }
+  assertUnique(english, 'alpha2');
+  assertUnique(english, 'alpha3');
+  assertUnique(english, 'numericCode');
+  assertUnique(spanish, 'alpha2');
+
+  const merged = english.map((row) => {
+    const translated = spanishByAlpha2.get(row.alpha2);
+    if (!translated) throw new Error(`Missing Spanish identity for ${row.alpha2}`);
+    if (row.alpha3 !== translated.alpha3 || row.numericCode !== translated.numericCode) {
+      throw new Error(`Cross-language code mismatch for ${row.alpha2}`);
+    }
+    return { ...row, nameEn: row.name, nameEs: translated.name };
+  });
+
+  for (const supplement of ISO_SUPPLEMENTS) {
+    if (!merged.some((row) => row.alpha2 === supplement.alpha2)) merged.push(supplement);
+  }
+  if (merged.length !== 249) throw new Error(`Expected 249 ISO identities, got ${merged.length}`);
+  assertUnique(merged, 'alpha2');
+  assertUnique(merged, 'alpha3');
+  assertUnique(merged, 'numericCode');
+
+  return merged
+    .sort((left, right) => left.nameEs < right.nameEs ? -1 : left.nameEs > right.nameEs ? 1 : left.alpha2.localeCompare(right.alpha2))
+    .map((row, sortOrder) => ({ ...row, sortOrder }));
+}
+
+function haskellString(value) {
+  return JSON.stringify(value);
+}
+
+function renderModule(rows, snapshotDate) {
+  const sourceVersion = `UN M49 ${snapshotDate} + ISO 3166/MA TW`;
+  const renderedRows = rows.map((row) =>
+    `  , CountryReferenceSeed ${haskellString(row.alpha2)} ${haskellString(row.alpha3)} ${haskellString(row.numericCode)} ${haskellString(row.nameEs)} ${haskellString(row.nameEn)} ${row.sortOrder}`,
+  );
+  renderedRows[0] = renderedRows[0].replace('  ,', '  [');
+  renderedRows[renderedRows.length - 1] += '\n  ]';
+
+  return `-- This file is generated by scripts/sync-country-reference.mjs.\n` +
+    `-- Source: ${SOURCE_URL}\n` +
+    `-- ISO supplement evidence: ISO 3166/MA TW/TWN/158.\n` +
+    `{-# LANGUAGE OverloadedStrings #-}\n\n` +
+    `module TDF.Catalog.CountryReferenceSeed\n` +
+    `  ( CountryReferenceSeed(..)\n` +
+    `  , countryReferenceSnapshotDate\n` +
+    `  , countryReferenceSourceVersion\n` +
+    `  , countryReferenceSeeds\n` +
+    `  ) where\n\n` +
+    `import Data.Text (Text)\n\n` +
+    `data CountryReferenceSeed = CountryReferenceSeed\n` +
+    `  { countrySeedAlpha2 :: Text\n` +
+    `  , countrySeedAlpha3 :: Text\n` +
+    `  , countrySeedNumericCode :: Text\n` +
+    `  , countrySeedNameEs :: Text\n` +
+    `  , countrySeedNameEn :: Text\n` +
+    `  , countrySeedSortOrder :: Int\n` +
+    `  } deriving (Eq, Show)\n\n` +
+    `countryReferenceSnapshotDate :: Text\n` +
+    `countryReferenceSnapshotDate = ${haskellString(snapshotDate)}\n\n` +
+    `countryReferenceSourceVersion :: Text\n` +
+    `countryReferenceSourceVersion = ${haskellString(sourceVersion)}\n\n` +
+    `countryReferenceSeeds :: [CountryReferenceSeed]\n` +
+    `countryReferenceSeeds =\n${renderedRows.join('\n')}\n`;
+}
+
+async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const html = options.input
+    ? await readFile(path.resolve(options.input), 'utf8')
+    : await fetch(SOURCE_URL).then((response) => {
+      if (!response.ok) throw new Error(`UN M49 request failed with ${response.status}`);
+      return response.text();
+    });
+  const output = path.resolve(options.output);
+  const generated = renderModule(buildSnapshot(html), options.snapshotDate);
+
+  if (options.check) {
+    const current = await readFile(output, 'utf8');
+    if (current !== generated) throw new Error(`${options.output} is stale; run the sync command`);
+    process.stdout.write(`Verified 249 country identities in ${options.output}\n`);
+    return;
+  }
+  await writeFile(output, generated, 'utf8');
+  process.stdout.write(`Wrote 249 country identities to ${options.output}\n`);
+}
+
+main().catch((error) => {
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+  process.exitCode = 1;
+});

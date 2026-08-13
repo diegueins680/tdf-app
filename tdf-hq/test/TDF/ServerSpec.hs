@@ -16,9 +16,10 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
-import Database.Persist (Entity(..), Key, count, get, insert, insert_, insertKey, (==.))
+import Database.Persist (Entity(..), Key, PersistValue(PersistText), count, get, insert, insert_, insertKey, toPersistValue, (==.))
 import Database.Persist.Sql
     ( SqlPersistT
     , fromSqlKey
@@ -85,9 +86,14 @@ import TDF.Config
 import qualified TDF.Courses.Production as ProductionCourse
 import qualified TDF.Calendar.Models as Cal
 import qualified TDF.CMS.Models as CMS
+import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (ArtistDTO (..))
-import TDF.Handlers.InputList (AssetField (..), renderInputListLatex)
+import TDF.Handlers.InputList
+    ( AssetField (..)
+    , renderInputListLatex
+    , renderInputListLatexWithAssets
+    )
 import TDF.Models
     ( ApiToken (..)
     , ArtistProfile (..)
@@ -98,7 +104,6 @@ import TDF.Models
     , ChatThread (..)
     , PackageProduct (..)
     , Party (..)
-    , PartyRole (..)
     , PaymentMethod (..)
     , PricingModel (..)
     , Resource (..)
@@ -168,9 +173,7 @@ import TDF.Server
     , validatePartyPrimaryEmail
     , validatePartyPrimaryEmailUpdate
     , validatePublicBookingDurationMinutes
-    , validateRolePayload
     , validateStrictAdminAccess
-    , validateUserRoleUserId
     , validateServiceAdCatalogId
     , validateServiceAdCurrency
     , validateReceiptCurrency
@@ -289,8 +292,6 @@ import TDF.Server
     , validatePublicBookingFullName
     , validateBookingNotes
     , validatePublicBookingNotes
-    , validatePublicBookingServiceType
-    , validateOptionalBookingServiceType
     , validateRequiredBookingTitle
     , validateOptionalBookingTitleUpdate
     , validateRequiredCmsField
@@ -335,7 +336,6 @@ import TDF.Server
     , getParty
     , updateParty
     , getReceipt
-    , resolvePartyRoleAssignmentTarget
     , resolvePartyRelatedTarget
     , resolveFanFollowArtistTarget
     , fanListFollows
@@ -411,9 +411,6 @@ import TDF.ServerAuth
     , validateSignupDisplayName
     , validateOptionalSignupClaimArtistId
     , validateOptionalSignupPhone
-    , validateSignupArtistClaimIntent
-    , validateSignupInternshipFields
-    , validateRequestedSignupRoles
     , validateSignupFanArtistIds
     , validateSignupFanArtistTargets
     )
@@ -504,7 +501,7 @@ import TDF.Services.InstagramSync
     , buildUserMediaRequestUrl
     )
 import Test.Hspec
-import Web.PathPieces (fromPathPiece, toPathPiece)
+import Web.PathPieces (PathPiece, fromPathPiece, toPathPiece)
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
@@ -826,15 +823,14 @@ spec = describe "TDF.Server helpers" $ do
     describe "Party request FromJSON" $ do
         it "accepts canonical CRM party create and update bodies" $ do
             case decodePartyCreate
-                "{\"cDisplayName\":\"Ada Lovelace\",\"cIsOrg\":false,\"cLegalName\":\"Ada Byron\",\"cPrimaryEmail\":\"ada@example.com\",\"cRoles\":[\"Customer\"]}" of
+                "{\"cDisplayName\":\"Ada Lovelace\",\"cIsOrg\":false,\"cLegalName\":\"Ada Byron\",\"cPrimaryEmail\":\"ada@example.com\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical party create payload to decode, got: " <> decodeErr)
-                Right (DTO.PartyCreate legalNameValue displayNameValue isOrgValue _ primaryEmailValue _ _ _ _ _ rolesValue) -> do
+                Right (DTO.PartyCreate legalNameValue displayNameValue isOrgValue _ primaryEmailValue _ _ _ _ _) -> do
                     legalNameValue `shouldBe` Just "Ada Byron"
                     displayNameValue `shouldBe` "Ada Lovelace"
                     isOrgValue `shouldBe` False
                     primaryEmailValue `shouldBe` Just "ada@example.com"
-                    rolesValue `shouldBe` Just [Customer]
 
             case decodePartyUpdate
                 "{\"uDisplayName\":\"Ada Updated\",\"uPrimaryEmail\":\"ada.updated@example.com\",\"uNotes\":\"VIP\"}" of
@@ -914,7 +910,6 @@ spec = describe "TDF.Server helpers" $ do
                                         Nothing
                                         rawDisplayName
                                         False
-                                        Nothing
                                         Nothing
                                         Nothing
                                         Nothing
@@ -1017,6 +1012,7 @@ spec = describe "TDF.Server helpers" $ do
                         , artistPartyId = Nothing
                         , artistName = "Ada Lovelace"
                         , artistGenres = []
+                        , artistGenreIds = []
                         , artistBio = Nothing
                         , artistAvatarUrl = Nothing
                         , artistSocialLinks = Nothing
@@ -1058,21 +1054,6 @@ spec = describe "TDF.Server helpers" $ do
                     | n <- [1 .. 51]
                     ]
                 )
-
-    describe "validateUserRoleUserId" $
-        it "rejects non-positive admin user-role path ids before credential lookup" $ do
-            validateUserRoleUserId 42 `shouldBe` Right 42
-            let assertInvalid rawUserId =
-                    case validateUserRoleUserId rawUserId of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr)
-                                `shouldContain` "userId must be a positive integer"
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid user-role id to be rejected, got: " <> show value)
-            assertInvalid 0
-            assertInvalid (-1)
 
     describe "validatePartyListPagination" $ do
         it "keeps CRM party list defaults only when pagination is omitted" $ do
@@ -1232,7 +1213,7 @@ spec = describe "TDF.Server helpers" $ do
                 "channel requires sessionId"
                 (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
 
-    describe "renderInputListLatex" $
+    describe "renderInputListLatex" $ do
         it "keeps generated headings single-line by neutralizing control and formatting characters" $ do
             let latex =
                     renderInputListLatex
@@ -1244,6 +1225,39 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldBe`
                     [ "\\section*{Input List --- Session \\textbackslash{}input\\{secret\\} x}"
                     ]
+
+        it "renders the canonical microphone asset name instead of the legacy copied instrument text" $ do
+            let parseUuidKey label raw =
+                    case fromPathPiece raw of
+                        Just key -> key
+                        Nothing -> error ("invalid UUID fixture for " <> label)
+                rowKey = parseUuidKey "input row" "00000000-0000-4000-8000-000000000041" :: ME.InputRowId
+                versionKey = parseUuidKey "input-list version" "00000000-0000-4000-8000-000000000042" :: ME.InputListVersionId
+                micKey = parseUuidKey "microphone asset" "00000000-0000-4000-8000-000000000043" :: ME.AssetId
+                row = ME.InputRow
+                    { ME.inputRowVersionId = versionKey
+                    , ME.inputRowChannelNumber = 7
+                    , ME.inputRowTrackName = Just "OH L"
+                    , ME.inputRowInstrument = Just "AKG C414 (HC)"
+                    , ME.inputRowInstrumentId = Nothing
+                    , ME.inputRowMicId = Just micKey
+                    , ME.inputRowStandId = Nothing
+                    , ME.inputRowCableId = Nothing
+                    , ME.inputRowPreampId = Nothing
+                    , ME.inputRowInsertOutboardId = Nothing
+                    , ME.inputRowConverterChannel = Nothing
+                    , ME.inputRowPhantom = Just True
+                    , ME.inputRowPolarity = Nothing
+                    , ME.inputRowHpf = Nothing
+                    , ME.inputRowPad = Nothing
+                    , ME.inputRowNotes = Nothing
+                    }
+                latex = renderInputListLatexWithAssets
+                    "Session"
+                    (Map.singleton micKey "AKG C414")
+                    [Entity rowKey row]
+            T.unpack latex `shouldContain` "OH L & AKG C414"
+            T.unpack latex `shouldNotContain` "AKG C414 (HC)"
 
     describe "parseMcpRequest" $ do
         it "accepts canonical JSON-RPC 2.0 MCP requests" $ do
@@ -1494,6 +1508,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 resolved <- resolveInvoiceCustomerId (fromSqlKey partyId)
@@ -1871,55 +1887,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "followUpId must be a positive integer"
                 (validateCourseRegistrationFollowUpId (-3))
 
-    describe "resolvePartyRoleAssignmentTarget" $ do
-        it "rejects non-positive party ids before attempting any role assignment" $ do
-            result <- runAuthSqlite $
-                resolvePartyRoleAssignmentTarget 0
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "partyId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid party id to be rejected, got: " <> show value)
-
-        it "returns 404 for unknown parties instead of surfacing a database foreign-key failure" $ do
-            result <- runAuthSqlite $
-                resolvePartyRoleAssignmentTarget 999999
-            case result of
-                Left serverErr ->
-                    errHTTPCode serverErr `shouldBe` 404
-                Right value ->
-                    expectationFailure
-                        ("Expected unknown party role assignment to be rejected, got: " <> show value)
-
-        it "resolves existing parties before the role upsert runs" $ do
-            (expectedPartyId, result) <- runAuthSqlite $ do
-                now <- liftIO getCurrentTime
-                partyId <- insert Party
-                    { partyLegalName = Nothing
-                    , partyDisplayName = "Role Assignment Target"
-                    , partyIsOrg = False
-                    , partyTaxId = Nothing
-                    , partyPrimaryEmail = Just "roles@example.com"
-                    , partyPrimaryPhone = Nothing
-                    , partyWhatsapp = Nothing
-                    , partyInstagram = Nothing
-                    , partyEmergencyContact = Nothing
-                    , partyNotes = Nothing
-                    , partyStripeCustomerId = Nothing
-                    , partyCreatedAt = now
-                    }
-                resolved <- resolvePartyRoleAssignmentTarget (fromSqlKey partyId)
-                pure (partyId, resolved)
-            case result of
-                Left serverErr ->
-                    expectationFailure
-                        ("Expected existing party role assignment target to resolve, got: " <> show serverErr)
-                Right resolvedKey ->
-                    resolvedKey `shouldBe` expectedPartyId
-
     describe "resolvePartyRelatedTarget" $ do
         it "rejects non-positive party ids before related lookups can return empty fallback data" $ do
             result <- runAuthSqlite $
@@ -1983,6 +1950,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 resolved <- resolveSocialTargetPartyId (fromSqlKey partyId)
@@ -2022,7 +1991,7 @@ spec = describe "TDF.Server helpers" $ do
                 DTO.FanProfileUpdate
                     { DTO.fpuDisplayName = displayName
                     , DTO.fpuAvatarUrl = Nothing
-                    , DTO.fpuFavoriteGenres = Nothing
+                    , DTO.fpuFavoriteGenreIds = []
                     , DTO.fpuBio = Nothing
                     , DTO.fpuCity = Nothing
                     }
@@ -2081,6 +2050,8 @@ spec = describe "TDF.Server helpers" $ do
                                     , partyEmergencyContact = Nothing
                                     , partyNotes = Nothing
                                     , partyStripeCustomerId = Nothing
+                                    , partyCountryCode = Nothing
+                                    , partyCountryId = Nothing
                                     , partyCreatedAt = now
                                     }
                         insertArtistProfile artistKey =
@@ -2100,6 +2071,8 @@ spec = describe "TDF.Server helpers" $ do
                                     , artistProfileGenres = Nothing
                                     , artistProfileHighlights = Nothing
                                     , artistProfileStripeAccountId = Nothing
+                                    , artistProfileCountryCode = Nothing
+                                    , artistProfileCountryId = Nothing
                                     , artistProfileCreatedAt = now
                                     , artistProfileUpdatedAt = Nothing
                                     }
@@ -2131,11 +2104,11 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected 400 "artistId must be a positive integer" invalidResult
 
     describe "fanUnfollowArtist" $ do
-        it "rejects malformed fan grants before loading follow fallback data" $ do
-            let staleFan =
-                    (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
-                duplicatedFan =
+        it "rejects invalid or duplicated fan grants before loading follow fallback data" $ do
+            let duplicatedFan =
                     mkUser [Fan, Fan]
+                invalidPartyFan =
+                    (mkUser [Fan]) { auPartyId = toSqlKey 0 }
                 assertRejected user = do
                     result <-
                         runHandler $
@@ -2150,8 +2123,8 @@ spec = describe "TDF.Server helpers" $ do
                         Right _ ->
                             expectationFailure
                                 "Expected malformed fan auth scope to be rejected"
-            assertRejected staleFan
             assertRejected duplicatedFan
+            assertRejected invalidPartyFan
 
         it "rejects invalid fan follow targets before deleting can return a misleading no-op" $ do
             let user = mkUser [Fan]
@@ -2172,11 +2145,11 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid 1 "No puedes dejar de seguirte a ti mismo"
 
     describe "artistGetOwnProfile" $
-        it "rejects malformed artist grants before loading profile fallback data" $ do
-            let staleArtist =
-                    (mkUser [Artist]) { auModules = modulesForRoles [Admin] }
-                duplicatedArtist =
+        it "rejects invalid or duplicated artist grants before loading profile fallback data" $ do
+            let duplicatedArtist =
                     mkUser [Artist, Artist]
+                invalidPartyArtist =
+                    (mkUser [Artist]) { auPartyId = toSqlKey 0 }
                 assertRejected user = do
                     result <-
                         runHandler $
@@ -2191,8 +2164,8 @@ spec = describe "TDF.Server helpers" $ do
                         Right _ ->
                             expectationFailure
                                 "Expected malformed artist auth scope to be rejected"
-            assertRejected staleArtist
             assertRejected duplicatedArtist
+            assertRejected invalidPartyArtist
 
     describe "validateServiceMarketplaceBookingRefs" $ do
         it "accepts positive ad and slot identifiers before marketplace booking lookups" $
@@ -2510,6 +2483,9 @@ spec = describe "TDF.Server helpers" $ do
                     , bookingStatus = Confirmed
                     , bookingCreatedBy = Nothing
                     , bookingNotes = Nothing
+                    , bookingServiceOfferingId = Nothing
+                    , bookingBookingTypeId = Nothing
+                    , bookingWorkflowStateId = Nothing
                     , bookingCreatedAt = now
                     }
                 resolved <- resolveServiceMarketplaceBookingEntity (fromSqlKey bookingId)
@@ -2620,6 +2596,8 @@ spec = describe "TDF.Server helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                     friendPartyId <- insert Party
@@ -2634,6 +2612,8 @@ spec = describe "TDF.Server helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                     outsiderPartyId <- insert Party
@@ -2648,6 +2628,8 @@ spec = describe "TDF.Server helpers" $ do
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
                         , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                     threadId <- insert ChatThread
@@ -2714,6 +2696,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 omitted <- resolveOptionalBookingPartyReference "engineerPartyId" Nothing
@@ -2784,15 +2768,20 @@ spec = describe "TDF.Server helpers" $ do
                                 , partyEmergencyContact = Nothing
                                 , partyNotes = Nothing
                                 , partyStripeCustomerId = Nothing
+                                , partyCountryCode = Nothing
+                                , partyCountryId = Nothing
                                 , partyCreatedAt = now
                                 }
                     customerId <- insertTestParty "Studio Customer" "customer@example.com"
                     inactiveEngineerId <-
                         insertTestParty "Inactive Engineer" "inactive-engineer@example.com"
                     activeEngineerId <- insertTestParty "Active Engineer" "engineer@example.com"
-                    _ <- insert (PartyRole customerId Customer True)
-                    _ <- insert (PartyRole inactiveEngineerId Engineer False)
-                    _ <- insert (PartyRole activeEngineerId Engineer True)
+                    rawExecute
+                        "INSERT INTO security_role (id,code,name_es,name_en,sort_order,system_role,emergency_administrator,self_assignable,automatic_assignable,active,workflow_state_id,created_at,updated_at,published_revision,version) VALUES ('00000000-0000-4000-8000-000000000003','engineer','Ingeniero','Engineer',3,1,0,0,0,1,'00000000-0000-4000-8000-000000000099',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1) ON CONFLICT(code) DO NOTHING"
+                        []
+                    rawExecute
+                        "INSERT INTO party_security_role (id,party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) VALUES ('00000000-0000-4000-8000-000000000011',?,'00000000-0000-4000-8000-000000000003',NULL,NULL,'bootstrap',NULL,NULL,NULL,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000012',?,'00000000-0000-4000-8000-000000000003',NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1)"
+                        [toPersistValue inactiveEngineerId, toPersistValue activeEngineerId]
                     omitted <- resolveOptionalBookingEngineerReference Nothing
                     active <-
                         resolveOptionalBookingEngineerReference
@@ -2851,6 +2840,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
                             }
             resolveBookingEngineerName (Just "Manual Override") (Just engineerParty)
@@ -2876,6 +2867,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = UTCTime (fromGregorian 2026 4 20) 0
                             }
 
@@ -2904,6 +2897,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 omitted <- resolveOptionalProposalClientPartyReference Nothing
@@ -2934,12 +2929,14 @@ spec = describe "TDF.Server helpers" $ do
                     Just key -> pure key
                     Nothing -> fail "invalid proposal pipeline card fixture key"
                 insertKey pipelineCardId ME.PipelineCard
-                    { ME.pipelineCardServiceKind = Recording
+                    { ME.pipelineCardServiceKind = Just Recording
                     , ME.pipelineCardTitle = "Proposal pipeline card"
                     , ME.pipelineCardArtist = Just "Ada"
-                    , ME.pipelineCardStage = "discovery"
+                    , ME.pipelineCardStage = Just "discovery"
                     , ME.pipelineCardSortOrder = 1
                     , ME.pipelineCardNotes = Just "Inbound lead"
+                    , ME.pipelineCardServiceOfferingId = Nothing
+                    , ME.pipelineCardWorkflowStateId = Nothing
                     , ME.pipelineCardCreatedAt = now
                     , ME.pipelineCardUpdatedAt = now
                     }
@@ -2958,12 +2955,14 @@ spec = describe "TDF.Server helpers" $ do
                     Just key -> pure key
                     Nothing -> fail "invalid whitespace proposal pipeline card fixture key"
                 insertKey pipelineCardId ME.PipelineCard
-                    { ME.pipelineCardServiceKind = Recording
+                    { ME.pipelineCardServiceKind = Just Recording
                     , ME.pipelineCardTitle = "Whitespace pipeline card"
                     , ME.pipelineCardArtist = Nothing
-                    , ME.pipelineCardStage = "qualified"
+                    , ME.pipelineCardStage = Just "qualified"
                     , ME.pipelineCardSortOrder = 3
                     , ME.pipelineCardNotes = Nothing
+                    , ME.pipelineCardServiceOfferingId = Nothing
+                    , ME.pipelineCardWorkflowStateId = Nothing
                     , ME.pipelineCardCreatedAt = now
                     , ME.pipelineCardUpdatedAt = now
                     }
@@ -3016,12 +3015,14 @@ spec = describe "TDF.Server helpers" $ do
                     Just key -> pure key
                     Nothing -> fail "invalid updated proposal pipeline card fixture key"
                 insertKey insertedPipelineCardId ME.PipelineCard
-                    { ME.pipelineCardServiceKind = Mixing
+                    { ME.pipelineCardServiceKind = Just Mixing
                     , ME.pipelineCardTitle = "Updated pipeline card"
                     , ME.pipelineCardArtist = Nothing
-                    , ME.pipelineCardStage = "quoted"
+                    , ME.pipelineCardStage = Just "quoted"
                     , ME.pipelineCardSortOrder = 2
                     , ME.pipelineCardNotes = Nothing
+                    , ME.pipelineCardServiceOfferingId = Nothing
+                    , ME.pipelineCardWorkflowStateId = Nothing
                     , ME.pipelineCardCreatedAt = now
                     , ME.pipelineCardUpdatedAt = now
                     }
@@ -3073,6 +3074,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 productKey <- insert PackageProduct
@@ -3148,6 +3151,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 resolvePackagePurchaseRefs
@@ -3174,6 +3179,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 productKey <- insert PackageProduct
@@ -4041,32 +4048,25 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (-7)
 
     describe "cms admin publish handler" $
-        it "archives only currently published siblings when publishing a draft version" $ do
+        it "rejects legacy slug-only drafts that have no canonical authored-content relationship" $ do
             pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
             runSqlPool (runMigration CMS.migrateCMS) pool
             let now = UTCTime (fromGregorian 2026 5 18) (secondsToDiffTime 36000)
-                cmsContent versionVal statusVal =
-                    CMS.CmsContent
-                        { CMS.cmsContentSlug = "home"
-                        , CMS.cmsContentLocale = "es"
-                        , CMS.cmsContentVersion = versionVal
-                        , CMS.cmsContentStatus = statusVal
-                        , CMS.cmsContentTitle = Nothing
-                        , CMS.cmsContentPayload = Nothing
-                        , CMS.cmsContentCreatedBy = Nothing
-                        , CMS.cmsContentCreatedAt = now
-                        , CMS.cmsContentUpdatedAt = now
-                        , CMS.cmsContentPublishedAt =
-                            if statusVal == "published" then Just now else Nothing
-                        }
-            (publishedId, targetDraftId, siblingDraftId) <- runSqlPool
-                ( do
-                    previousPublished <- insert (cmsContent 1 "published")
-                    targetDraft <- insert (cmsContent 2 "draft")
-                    siblingDraft <- insert (cmsContent 3 "draft")
-                    pure (previousPublished, targetDraft, siblingDraft)
-                )
-                pool
+                cmsContent =
+                  CMS.CmsContent
+                    { CMS.cmsContentAuthoredContentId = Nothing
+                    , CMS.cmsContentSlug = "home"
+                    , CMS.cmsContentLocale = "es"
+                    , CMS.cmsContentVersion = 1
+                    , CMS.cmsContentStatus = "draft"
+                    , CMS.cmsContentTitle = Nothing
+                    , CMS.cmsContentPayload = Nothing
+                    , CMS.cmsContentCreatedBy = Nothing
+                    , CMS.cmsContentCreatedAt = now
+                    , CMS.cmsContentUpdatedAt = now
+                    , CMS.cmsContentPublishedAt = Nothing
+                    }
+            targetDraftId <- runSqlPool (insert cmsContent) pool
             let _listContent :<|> _createContent :<|> publishContent :<|> _deleteContent =
                     cmsAdminServer (mkUser [Webmaster])
                 env =
@@ -4077,25 +4077,15 @@ spec = describe "TDF.Server helpers" $ do
             result <- runHandler $
                 runReaderT (publishContent (fromIntegral (fromSqlKey targetDraftId))) env
             case result of
-                Left serverErr ->
-                    expectationFailure
-                        ("Expected CMS draft publish to succeed, got: " <> show serverErr)
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr) `shouldContain` "canonical authored content ID"
                 Right publishedDto ->
-                    ccdStatus publishedDto `shouldBe` "published"
+                    expectationFailure
+                        ("Expected legacy CMS draft publication to fail, got: " <> show (ccdStatus publishedDto))
 
-            statuses <- runSqlPool
-                ( do
-                    previousPublished <- get publishedId
-                    targetDraft <- get targetDraftId
-                    siblingDraft <- get siblingDraftId
-                    pure
-                        ( fmap CMS.cmsContentStatus previousPublished
-                        , fmap CMS.cmsContentStatus targetDraft
-                        , fmap CMS.cmsContentStatus siblingDraft
-                        )
-                )
-                pool
-            statuses `shouldBe` (Just "archived", Just "published", Just "draft")
+            persistedStatus <- fmap CMS.cmsContentStatus <$> runSqlPool (get targetDraftId) pool
+            persistedStatus `shouldBe` Just "draft"
 
     describe "cms admin delete handler" $
         it "returns 404 for valid ids that do not map to CMS content rows" $ do
@@ -4254,6 +4244,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                 expectedId <- insert (mkParty "Single Email" "single@example.com")
@@ -4301,6 +4293,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                     emailInquiry =
@@ -4363,6 +4357,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                 expectedId <- insert (mkParty "Single Course Lead" "+593991111111")
@@ -4628,6 +4624,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -4655,6 +4653,9 @@ spec = describe "TDF.Server helpers" $ do
                         , userCredentialPasswordHash = "hash"
                         , userCredentialActive = True
                         }
+                rawExecute
+                    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1 FROM security_role WHERE code IN ('fan','customer')"
+                    [toPersistValue partyId]
                 sessionUser <- loadAuthedUser "session-token"
                 resetUser <- loadAuthedUser "reset-token"
                 mixedResetUser <- loadAuthedUser "mixed-reset-token"
@@ -4681,7 +4682,10 @@ spec = describe "TDF.Server helpers" $ do
                     ) = authResults
 
             case sessionResult of
-                Just user -> auPartyId user `shouldBe` expectedPartyId
+                Just user -> do
+                    auPartyId user `shouldBe` expectedPartyId
+                    auRoles user `shouldMatchList` [Fan, Customer]
+                    auModules user `shouldBe` Set.singleton ModulePackages
                 Nothing -> expectationFailure "Expected session token to authenticate"
             resetResult `shouldBe` Nothing
             mixedResetResult `shouldBe` Nothing
@@ -4706,6 +4710,8 @@ spec = describe "TDF.Server helpers" $ do
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
                             , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                     insertCredential partyId username =
@@ -4744,7 +4750,7 @@ spec = describe "TDF.Server helpers" $ do
             (ambiguousPartyId, googlePartyId, ambiguousResult, googleResult) <-
                 ( runNoLoggingT $ do
                     pool <- createSqlitePool ":memory:" 1
-                    liftIO $ runSqlPool initializeAuthSchema pool
+                    liftIO $ runSqlPool (initializeAuthSchema >> initializeLocalePreferenceReferenceSchema) pool
                     seededIds <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
                     let env =
                             Env
@@ -4800,23 +4806,6 @@ spec = describe "TDF.Server helpers" $ do
                 "google@example.com"
                 googlePartyId
                 googleResult
-
-    describe "validateRequestedSignupRoles" $ do
-        it "preserves allowed self-signup roles while still enforcing baseline customer/fan access" $ do
-            validateRequestedSignupRoles (Just [Student, Fan, Customer, Vendor])
-                `shouldBe` Right [Customer, Fan, Student, Vendor]
-            validateRequestedSignupRoles Nothing
-                `shouldBe` Right [Customer, Fan]
-
-        it "rejects forbidden self-signup roles instead of silently dropping them" $
-            case validateRequestedSignupRoles (Just [Student, Admin, Manager]) of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Requested signup roles are not allowed for self-signup: Admin, Manager"
-                Right rolesVal ->
-                    expectationFailure
-                        ("Expected forbidden signup roles to be rejected, got: " <> show rolesVal)
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -4893,17 +4882,21 @@ spec = describe "TDF.Server helpers" $ do
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $
             case decodeSignup
-                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"roles\":[\"Student\"],\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical signup payload to decode, got: " <> decodeErr)
-                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ _ _ _ rolesValue fanArtistIdsValue claimArtistIdValue) -> do
+                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ fanArtistIdsValue claimArtistIdValue) -> do
                     firstNameValue `shouldBe` "Ada"
                     lastNameValue `shouldBe` "Lovelace"
                     emailValue `shouldBe` "ada@example.com"
                     phoneValue `shouldBe` Just "+593991234567"
-                    rolesValue `shouldBe` Just [Student]
                     fanArtistIdsValue `shouldBe` Just [7, 11]
                     claimArtistIdValue `shouldBe` Just 42
+
+        it "rejects caller-selected security roles" $
+            decodeSignup
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":\"supersecret\",\"roles\":[\"Admin\"]}"
+                `shouldSatisfy` isLeft
 
         it "rejects unexpected signup keys instead of silently ignoring typoed client payloads" $ do
             decodeSignup
@@ -7077,8 +7070,8 @@ spec = describe "TDF.Server helpers" $ do
                 (mkUser [Admin, Admin])
                 "Admin role grants must be unique"
             assertRejected
-                ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
-                "Admin module grants must match roles"
+                ((mkUser [Admin]) { auPartyId = toSqlKey 0 })
+                "Valid admin party required"
 
     describe "validateCalendarAuthorizationCode" $ do
         it "normalizes valid Google Calendar OAuth codes before token exchange" $
@@ -7648,24 +7641,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateOptionalSignupClaimArtistId (Just 0))
             assertInvalid (validateOptionalSignupClaimArtistId (Just (-7)))
 
-    describe "validateSignupArtistClaimIntent" $ do
-        it "requires artist signup intent before accepting an artist profile claim" $ do
-            validateSignupArtistClaimIntent [Customer, Fan] Nothing
-                `shouldBe` Right ()
-            validateSignupArtistClaimIntent [Customer, Fan, Artist] (Just 42)
-                `shouldBe` Right ()
-            validateSignupArtistClaimIntent [Customer, Fan, Artista] (Just 42)
-                `shouldBe` Right ()
-
-            case validateSignupArtistClaimIntent [Customer, Fan, Student] (Just 42) of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "claimArtistId requires requesting the Artist or Artista role"
-                Right value ->
-                    expectationFailure
-                        ("Expected artist claims without artist intent to be rejected, got: " <> show value)
-
     describe "validateSignupFanArtistIds" $ do
         it "preserves omission and accepts positive artist ids before signup follows are created" $ do
             validateSignupFanArtistIds Nothing `shouldBe` Right []
@@ -7708,6 +7683,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ArtistProfile
@@ -7725,6 +7702,8 @@ spec = describe "TDF.Server helpers" $ do
                     , artistProfileGenres = Nothing
                     , artistProfileHighlights = Nothing
                     , artistProfileStripeAccountId = Nothing
+                    , artistProfileCountryCode = Nothing
+                    , artistProfileCountryId = Nothing
                     , artistProfileCreatedAt = now
                     , artistProfileUpdatedAt = Nothing
                     }
@@ -7747,6 +7726,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ArtistProfile
@@ -7764,6 +7745,8 @@ spec = describe "TDF.Server helpers" $ do
                     , artistProfileGenres = Nothing
                     , artistProfileHighlights = Nothing
                     , artistProfileStripeAccountId = Nothing
+                    , artistProfileCountryCode = Nothing
+                    , artistProfileCountryId = Nothing
                     , artistProfileCreatedAt = now
                     , artistProfileUpdatedAt = Nothing
                     }
@@ -7779,6 +7762,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 validateSignupFanArtistTargets
@@ -7799,136 +7784,6 @@ spec = describe "TDF.Server helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected unavailable fanArtistIds to be rejected, got: " <> show value)
-
-    describe "validateSignupInternshipFields" $ do
-        it "allows internship metadata only when the Intern role is part of signup intent" $ do
-            let startAt = Just (fromGregorian 2026 4 1)
-            validateSignupInternshipFields [Customer, Fan] Nothing Nothing Nothing (Just "   ") Nothing
-                `shouldBe` Right ()
-            validateSignupInternshipFields [Customer, Fan, Intern] startAt Nothing (Just 120)
-                (Just "Production, marketing") (Just "Events")
-                `shouldBe` Right ()
-
-        it "rejects reversed internship signup dates instead of persisting impossible availability windows" $ do
-            let result =
-                    validateSignupInternshipFields
-                        [Customer, Fan, Intern]
-                        (Just (fromGregorian 2026 4 10))
-                        (Just (fromGregorian 2026 4 1))
-                        Nothing
-                        Nothing
-                        Nothing
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "internshipEndAt must be on or after internshipStartAt"
-                Right value ->
-                    expectationFailure
-                        ("Expected reversed internship signup dates to be rejected, got: " <> show value)
-
-        it "rejects non-positive internship hours instead of storing ambiguous commitments" $ do
-            let assertInvalid hours =
-                    case
-                        validateSignupInternshipFields
-                            [Customer, Fan, Intern]
-                            Nothing
-                            Nothing
-                            (Just hours)
-                            Nothing
-                            Nothing
-                    of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr)
-                                `shouldContain`
-                                    "internshipRequiredHours must be a positive integer"
-                        Right value ->
-                            expectationFailure
-                                ( "Expected non-positive internship hours to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid 0
-            assertInvalid (-5)
-
-        it "rejects internship-only fields when the signup is not requesting the Intern role" $ do
-            let result =
-                    validateSignupInternshipFields
-                        [Customer, Fan]
-                        (Just (fromGregorian 2026 4 1))
-                        Nothing
-                        (Just 120)
-                        (Just "  Production support  ")
-                        Nothing
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Internship fields require requesting the Intern role"
-                    BL8.unpack (errBody serverErr) `shouldContain` "internshipStartAt"
-                    BL8.unpack (errBody serverErr) `shouldContain` "internshipRequiredHours"
-                    BL8.unpack (errBody serverErr) `shouldContain` "internshipSkills"
-                Right value ->
-                    expectationFailure
-                        ("Expected internship-only signup fields to be rejected, got: " <> show value)
-
-        it "rejects control characters in internship free-text fields before signup can persist ambiguous intern profile metadata" $ do
-            let assertInvalid expectedMessage skills areas =
-                    case
-                        validateSignupInternshipFields
-                            [Customer, Fan, Intern]
-                            Nothing
-                            Nothing
-                            Nothing
-                            skills
-                            areas
-                    of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ( "Expected internship control characters to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid "internshipSkills must not contain control characters" (Just "Stage\NULplotting") Nothing
-            assertInvalid "internshipAreas must not contain control characters" Nothing (Just "Eventos\nLogistica\NUL")
-            assertInvalid
-                "hidden formatting characters"
-                (Just "Stage\x200Dplanning")
-                Nothing
-            assertInvalid
-                "hidden formatting characters"
-                Nothing
-                (Just "Eventos\x2028Logistica")
-
-        it "rejects oversized internship signup text before profile metadata is created" $ do
-            let assertInvalid expectedMessage skills areas =
-                    case
-                        validateSignupInternshipFields
-                            [Customer, Fan, Intern]
-                            Nothing
-                            Nothing
-                            Nothing
-                            skills
-                            areas
-                    of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ( "Expected oversized internship signup text to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid
-                "internshipSkills must be 1000 characters or fewer"
-                (Just (T.replicate 1001 "x"))
-                Nothing
-            assertInvalid
-                "internshipAreas must be 1000 characters or fewer"
-                Nothing
-                (Just (T.replicate 1001 "x"))
 
     describe "parsePasswordChangeAuthToken" $ do
         it "accepts standard bearer headers" $ do
@@ -7975,6 +7830,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -8002,6 +7859,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -8034,6 +7893,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -8066,6 +7927,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert UserCredential
@@ -8096,6 +7959,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 credId <- insert UserCredential
@@ -8141,6 +8006,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 credId <- insert UserCredential
@@ -8188,6 +8055,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -8221,6 +8090,8 @@ spec = describe "TDF.Server helpers" $ do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
                 _ <- insert ApiToken
@@ -8358,22 +8229,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "endsAt must be after startsAt"
                 (validateServiceAdSlotWindow 45 startsAt startsAt)
-
-    describe "validateRolePayload" $ do
-        it "normalizes known role labels before party-role assignment" $ do
-            validateRolePayload " teacher " `shouldBe` Right Teacher
-            validateRolePayload "studio-manager" `shouldBe` Right StudioManager
-            validateRolePayload "readonly" `shouldBe` Right ReadOnly
-
-        it "rejects unknown roles instead of silently downgrading them to ReadOnly" $
-            case validateRolePayload "not-a-role" of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "role must be one of:"
-                    BL8.unpack (errBody serverErr) `shouldContain` "ReadOnly"
-                    BL8.unpack (errBody serverErr) `shouldContain` "Teacher"
-                Right roleVal ->
-                    expectationFailure ("Expected invalid role payload to be rejected, got: " <> show roleVal)
 
     describe "parsePaymentMethodText" $ do
         it "defaults omitted payment methods to OtherM while normalizing supported values" $ do
@@ -11005,60 +10860,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "---" "nombre debe incluir letras o números"
             assertInvalid (T.replicate 161 "A") "nombre debe tener 160 caracteres o menos"
 
-    describe "validatePublicBookingServiceType" $ do
-        it "trims required public-booking service types before title and resource fallback handling" $
-            validatePublicBookingServiceType "  mezcla vocal  " `shouldBe` Right "mezcla vocal"
-
-        it "rejects blank, unsafe Unicode, or oversized service types before persistence" $ do
-            let assertInvalid rawServiceType expected = case validatePublicBookingServiceType rawServiceType of
-                    Left serverErr -> do
-                        errHTTPCode serverErr `shouldBe` 400
-                        BL8.unpack (errBody serverErr) `shouldContain` expected
-                    Right serviceTypeVal ->
-                        expectationFailure
-                            ("Expected invalid public-booking service type to be rejected, got: " <> show serviceTypeVal)
-            assertInvalid "   " "serviceType requerido"
-            assertInvalid "mixing\nmastering" "serviceType no debe contener caracteres de control"
-            assertInvalid
-                ("mixing" <> T.singleton '\x200B')
-                "marcas Unicode invisibles"
-            assertInvalid
-                ("mixing" <> T.singleton '\x2029')
-                "marcas Unicode invisibles"
-            assertInvalid
-                ("mixing" <> T.singleton '\x00A0' <> "mastering")
-                "espacios Unicode ambiguos"
-            assertInvalid "---" "serviceType debe incluir letras o números"
-            assertInvalid (T.replicate 121 "A") "serviceType debe tener 120 caracteres o menos"
-
-    describe "validateOptionalBookingServiceType" $ do
-        it "normalizes optional protected booking service types before resource fallback handling" $ do
-            validateOptionalBookingServiceType Nothing `shouldBe` Right Nothing
-            validateOptionalBookingServiceType (Just "   ") `shouldBe` Right Nothing
-            validateOptionalBookingServiceType (Just "  mezcla vocal  ")
-                `shouldBe` Right (Just "mezcla vocal")
-
-        it "rejects unsafe or oversized protected booking service types before persistence" $ do
-            let assertInvalid rawServiceType expected =
-                    case validateOptionalBookingServiceType (Just rawServiceType) of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expected
-                        Right serviceTypeVal ->
-                            expectationFailure
-                                ( "Expected invalid optional booking service type to be rejected, got: "
-                                    <> show serviceTypeVal
-                                )
-            assertInvalid "mixing\nmastering" "serviceType must not contain control characters"
-            assertInvalid
-                ("mixing" <> T.singleton '\x202E')
-                "hidden formatting characters"
-            assertInvalid
-                ("mixing" <> T.singleton '\x00A0' <> "mastering")
-                "Unicode separator spaces"
-            assertInvalid "---" "serviceType must include letters or numbers"
-            assertInvalid (T.replicate 121 "A") "serviceType must be 120 characters or fewer"
-
     describe "validatePublicBookingContactDetails" $ do
         it "normalizes the public-booking email and optional phone before party creation" $
             validatePublicBookingContactDetails
@@ -11105,14 +10906,14 @@ spec = describe "TDF.Server helpers" $ do
     describe "PublicBookingReq FromJSON" $ do
         it "accepts canonical public booking payloads used by the public booking form" $
             case decodePublicBookingRequest
-                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbPhone\":\"+593991234567\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"pbDurationMinutes\":90,\"pbNotes\":\"Needs vocal tuning\",\"pbEngineerPartyId\":7,\"pbEngineerName\":\"Alex\",\"pbResourceIds\":[\"room-a\",\"booth-b\"]}" of
+                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbPhone\":\"+593991234567\",\"pbServiceOfferingId\":\"11111111-1111-4111-8111-111111111111\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"pbDurationMinutes\":90,\"pbNotes\":\"Needs vocal tuning\",\"pbEngineerPartyId\":7,\"pbEngineerName\":\"Alex\",\"pbResourceIds\":[\"room-a\",\"booth-b\"]}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical public booking payload to decode, got: " <> decodeErr)
                 Right payload -> do
                     pbFullName payload `shouldBe` "Ana Perez"
                     pbEmail payload `shouldBe` "ana@example.com"
                     pbPhone payload `shouldBe` Just "+593991234567"
-                    pbServiceType payload `shouldBe` "mixing"
+                    show (pbServiceOfferingId payload) `shouldBe` "11111111-1111-4111-8111-111111111111"
                     pbStartsAt payload `shouldBe` UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                     pbDurationMinutes payload `shouldBe` Just 90
                     pbNotes payload `shouldBe` Just "Needs vocal tuning"
@@ -11122,7 +10923,7 @@ spec = describe "TDF.Server helpers" $ do
 
         it "rejects unexpected booking keys so typoed public forms cannot create partially-understood bookings" $ do
             decodePublicBookingRequest
-                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
+                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceOfferingId\":\"11111111-1111-4111-8111-111111111111\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
         it "rejects null duration fallbacks so public forms must omit the field for the default" $
@@ -11130,7 +10931,7 @@ spec = describe "TDF.Server helpers" $ do
                 ( "{"
                     <> "\"pbFullName\":\"Ana Perez\","
                     <> "\"pbEmail\":\"ana@example.com\","
-                    <> "\"pbServiceType\":\"mixing\","
+                    <> "\"pbServiceOfferingId\":\"11111111-1111-4111-8111-111111111111\","
                     <> "\"pbStartsAt\":\"2026-04-20T15:00:00Z\","
                     <> "\"pbDurationMinutes\":null"
                     <> "}"
@@ -11171,7 +10972,7 @@ spec = describe "TDF.Server helpers" $ do
                 liveRoomId <- insertBookingResourceFixture "Live Room" "room-live"
                 controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
                 resolved <- resolveResourcesForBooking
-                    (Just "mixing")
+                    Nothing
                     ["room-live", "room-control"]
                     startsAt
                     endsAt
@@ -11212,7 +11013,7 @@ spec = describe "TDF.Server helpers" $ do
                 runResourceSqlite $ do
                     _ <- insertBookingResourceFixture "Control Room" "room-control"
                     resolveResourcesForBooking
-                        (Just "mixing")
+                        Nothing
                         ["missing-room"]
                         startsAt
                         endsAt
@@ -11243,6 +11044,9 @@ spec = describe "TDF.Server helpers" $ do
                         , bookingStatus = Confirmed
                         , bookingCreatedBy = Nothing
                         , bookingNotes = Nothing
+                        , bookingServiceOfferingId = Nothing
+                        , bookingBookingTypeId = Nothing
+                        , bookingWorkflowStateId = Nothing
                         , bookingCreatedAt = startsAt
                         }
                     _ <- insert BookingResource
@@ -11251,7 +11055,7 @@ spec = describe "TDF.Server helpers" $ do
                         , bookingResourceRole = "primary"
                         }
                     resolveResourcesForBooking
-                        (Just "mixing")
+                        Nothing
                         ["room-control"]
                         startsAt
                         endsAt
@@ -11270,13 +11074,20 @@ spec = describe "TDF.Server helpers" $ do
             result <- try $
                 runResourceSqlite $ do
                     controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
+                    let offering = bookingServiceOfferingFixture "mixing" True
+                    insertBookingDefaultResourceFixture
+                        "31000000-0000-4000-8000-000000000001"
+                        offering
+                        controlRoomId
+                        "all"
+                        10
                     insertBookingResourceHoldFixture
                         "Existing mixing booking"
                         controlRoomId
                         startsAt
                         endsAt
                     resolveResourcesForBooking
-                        (Just "mixing")
+                        (Just offering)
                         []
                         startsAt
                         endsAt
@@ -11297,6 +11108,19 @@ spec = describe "TDF.Server helpers" $ do
                 runResourceSqlite $ do
                     boothOneId <- insertBookingResourceFixture "DJ Booth 1" "dj-booth-1"
                     boothTwoId <- insertBookingResourceFixture "DJ Booth 2" "dj-booth-2"
+                    let offering = bookingServiceOfferingFixture "dj-booth-practice" False
+                    insertBookingDefaultResourceFixture
+                        "31000000-0000-4000-8000-000000000002"
+                        offering
+                        boothOneId
+                        "first-available"
+                        10
+                    insertBookingDefaultResourceFixture
+                        "31000000-0000-4000-8000-000000000003"
+                        offering
+                        boothTwoId
+                        "first-available"
+                        20
                     insertBookingResourceHoldFixture
                         "Existing DJ booking 1"
                         boothOneId
@@ -11308,7 +11132,7 @@ spec = describe "TDF.Server helpers" $ do
                         startsAt
                         endsAt
                     resolveResourcesForBooking
-                        (Just "dj practice")
+                        (Just offering)
                         []
                         startsAt
                         endsAt
@@ -11317,7 +11141,7 @@ spec = describe "TDF.Server helpers" $ do
                     errHTTPCode serverErr `shouldBe` 409
                     BL8.unpack (errBody serverErr)
                         `shouldContain`
-                            "default resources for service dj practice are unavailable: DJ Booth 1, DJ Booth 2"
+                            "default resources for service dj-booth-practice are unavailable: DJ Booth 1, DJ Booth 2"
                 Right resourceKeys ->
                     expectationFailure
                         ("Expected unavailable DJ fallback rooms to be rejected, got: " <> show resourceKeys)
@@ -11331,6 +11155,19 @@ spec = describe "TDF.Server helpers" $ do
                 (do
                     boothOneId <- insertBookingResourceFixture "DJ Booth 1" "dj-booth-1"
                     boothTwoId <- insertBookingResourceFixture "DJ Booth 2" "dj-booth-2"
+                    let offering = bookingServiceOfferingFixture "dj-booth-practice" False
+                    insertBookingDefaultResourceFixture
+                        "31000000-0000-4000-8000-000000000002"
+                        offering
+                        boothOneId
+                        "first-available"
+                        10
+                    insertBookingDefaultResourceFixture
+                        "31000000-0000-4000-8000-000000000003"
+                        offering
+                        boothTwoId
+                        "first-available"
+                        20
                     insertBookingResourceHoldFixture
                         "Existing DJ booking 1"
                         boothOneId
@@ -11346,7 +11183,7 @@ spec = describe "TDF.Server helpers" $ do
             result <-
                 runHandler $
                     runReaderT
-                        (runDb $ resolveResourcesForBooking (Just "dj practice") [] startsAt endsAt)
+                        (runDb $ resolveResourcesForBooking (Just (bookingServiceOfferingFixture "dj-booth-practice" False)) [] startsAt endsAt)
                         Env
                             { envPool = pool
                             , envConfig = marketplaceTestConfig False
@@ -11357,7 +11194,7 @@ spec = describe "TDF.Server helpers" $ do
                     errHTTPCode serverErr `shouldBe` 409
                     BL8.unpack (errBody serverErr)
                         `shouldContain`
-                            "default resources for service dj practice are unavailable: DJ Booth 1, DJ Booth 2"
+                            "default resources for service dj-booth-practice are unavailable: DJ Booth 1, DJ Booth 2"
                 Right resourceKeys ->
                     expectationFailure
                         ("Expected Handler to return the booking conflict, got: " <> show resourceKeys)
@@ -11368,7 +11205,7 @@ spec = describe "TDF.Server helpers" $ do
             result <- try $
                 runResourceSqlite $
                     resolveResourcesForBooking
-                        (Just "mixing")
+                        Nothing
                         ["room-control", " room-control "]
                         startsAt
                         endsAt
@@ -11388,7 +11225,7 @@ spec = describe "TDF.Server helpers" $ do
                     result <- try $
                         runResourceSqlite $
                             resolveResourcesForBooking
-                                (Just "mixing")
+                                Nothing
                                 [rawResourceId]
                                 startsAt
                                 endsAt
@@ -11417,6 +11254,7 @@ spec = describe "TDF.Server helpers" $ do
                         startsAt
                         endsAt
                         "Tentative"
+                        Nothing
                         Nothing
                         Nothing
                         Nothing
@@ -11453,7 +11291,7 @@ spec = describe "TDF.Server helpers" $ do
     describe "CreateBookingReq / UpdateBookingReq FromJSON" $ do
         it "accepts canonical HQ booking create and update payloads" $ do
             case decodeCreateBookingRequest
-                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"cbNotes\":\"Bring synth rack\",\"cbPartyId\":12,\"cbEngineerPartyId\":7,\"cbEngineerName\":\"Alex\",\"cbServiceType\":\"recording\",\"cbResourceIds\":[\"room-a\",\"booth-b\"]}" of
+                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"cbNotes\":\"Bring synth rack\",\"cbPartyId\":12,\"cbEngineerPartyId\":7,\"cbEngineerName\":\"Alex\",\"cbServiceOfferingId\":\"11111111-1111-4111-8111-111111111111\",\"cbResourceIds\":[\"room-a\",\"booth-b\"]}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical create-booking payload to decode, got: " <> decodeErr)
                 Right payload -> do
@@ -11465,16 +11303,16 @@ spec = describe "TDF.Server helpers" $ do
                     cbPartyId payload `shouldBe` Just 12
                     cbEngineerPartyId payload `shouldBe` Just 7
                     cbEngineerName payload `shouldBe` Just "Alex"
-                    cbServiceType payload `shouldBe` Just "recording"
+                    show (cbServiceOfferingId payload) `shouldBe` "11111111-1111-4111-8111-111111111111"
                     cbResourceIds payload `shouldBe` Just ["room-a", "booth-b"]
 
             case decodeUpdateBookingRequest
-                "{\"ubTitle\":\"Updated title\",\"ubServiceType\":\"mixing\",\"ubStatus\":\"Planned\",\"ubNotes\":\"Move to later slot\",\"ubStartsAt\":\"2026-04-21T16:00:00Z\",\"ubEndsAt\":\"2026-04-21T18:00:00Z\",\"ubEngineerPartyId\":9,\"ubEngineerName\":\"Sam\"}" of
+                "{\"ubTitle\":\"Updated title\",\"ubServiceOfferingId\":\"22222222-2222-4222-8222-222222222222\",\"ubStatus\":\"Planned\",\"ubNotes\":\"Move to later slot\",\"ubStartsAt\":\"2026-04-21T16:00:00Z\",\"ubEndsAt\":\"2026-04-21T18:00:00Z\",\"ubEngineerPartyId\":9,\"ubEngineerName\":\"Sam\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical update-booking payload to decode, got: " <> decodeErr)
                 Right payload -> do
                     ubTitle payload `shouldBe` Just "Updated title"
-                    ubServiceType payload `shouldBe` Just "mixing"
+                    fmap show (ubServiceOfferingId payload) `shouldBe` Just "22222222-2222-4222-8222-222222222222"
                     ubStatus payload `shouldBe` Just "Planned"
                     ubNotes payload `shouldBe` Just "Move to later slot"
                     ubStartsAt payload `shouldBe` Just (UTCTime (fromGregorian 2026 4 21) (secondsToDiffTime 57600))
@@ -11494,6 +11332,16 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
             decodeUpdateBookingRequest
                 "{\"ubTitle\":\"Updated title\",\"ubStatus\":\"Planned\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+        it "rejects legacy service strings after the coordinated UUID cutover" $ do
+            decodePublicBookingRequest
+                "{\"pbFullName\":\"Ana Perez\",\"pbEmail\":\"ana@example.com\",\"pbServiceType\":\"mixing\",\"pbStartsAt\":\"2026-04-20T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+            decodeCreateBookingRequest
+                "{\"cbTitle\":\"Studio booking\",\"cbStartsAt\":\"2026-04-20T15:00:00Z\",\"cbEndsAt\":\"2026-04-20T17:00:00Z\",\"cbStatus\":\"Confirmed\",\"cbServiceType\":\"recording\"}"
+                `shouldSatisfy` isLeft
+            decodeUpdateBookingRequest "{\"ubServiceType\":\"mixing\"}"
                 `shouldSatisfy` isLeft
 
         it "rejects empty or null-only booking updates instead of accepting silent no-op patches" $ do
@@ -11657,29 +11505,21 @@ spec = describe "TDF.Server helpers" $ do
 
     describe "validateEngineer" $ do
         it "keeps a named engineer fallback valid for services that require engineering" $
-            validateEngineer (Just " mezcla vocal ") Nothing (Just " Alex ") `shouldBe` Right ()
+            validateEngineer True Nothing (Just " Alex ") `shouldBe` Right ()
 
         it "rejects malformed engineer-name fallbacks before booking persistence" $ do
-            validateEngineer Nothing Nothing (Just "Alex\nOps")
+            validateEngineer False Nothing (Just "Alex\nOps")
                 `shouldBe` Left "engineerName no debe contener caracteres de control"
-            validateEngineer Nothing Nothing (Just ("Alex" <> T.singleton '\x202E' <> "Ops"))
+            validateEngineer False Nothing (Just ("Alex" <> T.singleton '\x202E' <> "Ops"))
                 `shouldBe` Left "engineerName no debe contener marcas Unicode invisibles"
-            validateEngineer (Just "mixing") Nothing (Just "   ---   ")
+            validateEngineer True Nothing (Just "   ---   ")
                 `shouldBe` Left "engineerName debe incluir letras o números"
-            validateEngineer (Just "mastering") Nothing (Just (T.replicate 161 "A"))
+            validateEngineer True Nothing (Just (T.replicate 161 "A"))
                 `shouldBe` Left "engineerName debe tener 160 caracteres o menos"
 
-        it "still rejects missing engineer fallback details for recording, mixing, and mastering bookings" $
-            forM_
-                [ "grabacion"
-                , "recording"
-                , "mezcla"
-                , "mixing"
-                , "mastering"
-                ]
-                $ \serviceLabel ->
-                    validateEngineer (Just serviceLabel) Nothing (Just "   ")
-                        `shouldBe` Left "Selecciona un ingeniero para grabación/mezcla/mastering"
+        it "rejects missing engineer details when the persisted service requires one" $
+            validateEngineer True Nothing (Just "   ")
+                `shouldBe` Left "Selecciona un ingeniero para grabación/mezcla/mastering"
 
     describe "validateCourseRegistrationContactChannels" $ do
         it "accepts registrations with at least one contact channel" $ do
@@ -12251,14 +12091,17 @@ spec = describe "TDF.Server helpers" $ do
             forM_ [minBound .. maxBound] $ \role ->
                 hasOperationsAccess (mkUser [role]) `shouldBe` (role `elem` [Admin, Manager, StudioManager, Webmaster, Maintenance])
 
-        it "rejects stale module grants and duplicated roles before operations shortcuts" $ do
-            let staleModuleUser =
+        it "uses persisted operation modules and rejects duplicate roles" $ do
+            let persistedAdminModuleUser =
                     (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                revokedManager =
+                    (mkUser [Manager]) { auModules = Set.empty }
                 duplicatedManager =
                     mkUser [Manager, Manager]
                 duplicatedAdmin =
                     mkUser [Admin, Admin]
-            hasOperationsAccess staleModuleUser `shouldBe` False
+            hasOperationsAccess persistedAdminModuleUser `shouldBe` True
+            hasOperationsAccess revokedManager `shouldBe` False
             hasOperationsAccess duplicatedManager `shouldBe` False
             hasOperationsAccess duplicatedAdmin `shouldBe` False
 
@@ -12284,25 +12127,27 @@ spec = describe "TDF.Server helpers" $ do
             forM_ [Admin, Manager, StudioManager, Webmaster, Maintenance, Artist, Artista] $ \role ->
                 validateDriveAccess (mkUser [role]) `shouldBe` Right ()
 
-        it "rejects stale or duplicated grants before honoring Drive module fallbacks" $ do
-            let staleModuleUser =
+        it "honors persisted Drive modules while rejecting revoked, duplicated, or invalid grants" $ do
+            let persistedAdminModuleUser =
                     (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                revokedArtist = (mkUser [Artist]) { auModules = Set.empty }
                 duplicatedArtist = mkUser [Artist, Artist]
                 invalidPartyArtist = (mkUser [Artist]) { auPartyId = toSqlKey 0 }
-                assertRejected user =
+                assertRejected expectedMessage user =
                     case validateDriveAccess user of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 403
                             BL8.unpack (errBody serverErr)
-                                `shouldContain` "Google Drive access requires coherent role grants"
+                                `shouldContain` expectedMessage
                         Right value ->
                             expectationFailure
                                 ( "Expected malformed Drive auth scope to be rejected, got: "
                                     <> show value
                                 )
-            assertRejected staleModuleUser
-            assertRejected duplicatedArtist
-            assertRejected invalidPartyArtist
+            validateDriveAccess persistedAdminModuleUser `shouldBe` Right ()
+            assertRejected "Google Drive access requires operations or artist role" revokedArtist
+            assertRejected "Google Drive access requires coherent role grants" duplicatedArtist
+            assertRejected "Google Drive access requires coherent role grants" invalidPartyArtist
 
     describe "hasStrictAdminAccess" $ do
         it "requires the literal Admin role instead of broad admin-module membership" $ do
@@ -12314,12 +12159,13 @@ spec = describe "TDF.Server helpers" $ do
             hasStrictAdminAccess (mkUser [Admin, Webmaster]) `shouldBe` False
             hasStrictAdminAccess (mkUser [Admin, Manager]) `shouldBe` False
 
-        it "rejects stale or duplicated grants before strict-admin fallbacks" $ do
-            let staleAdmin =
+        it "treats modules as independent persisted grants while rejecting duplicate roles" $ do
+            let independentlyGrantedAdmin =
                     (mkUser [Admin]) { auModules = modulesForRoles [Webmaster] }
                 duplicatedAdmin =
                     mkUser [Admin, Admin]
-            hasStrictAdminAccess staleAdmin `shouldBe` False
+            hasStrictAdminAccess independentlyGrantedAdmin `shouldBe` True
+            hasStrictAdminAccess ((mkUser [Admin]) { auModules = Set.empty }) `shouldBe` True
             hasStrictAdminAccess duplicatedAdmin `shouldBe` False
 
         it "matches the intended single-role strict-admin matrix" $
@@ -12350,9 +12196,9 @@ spec = describe "TDF.Server helpers" $ do
             assertRejected
                 "Strict Admin access cannot be combined with non-baseline roles"
                 (mkUser [Admin, Webmaster])
-            assertRejected
-                "Admin module grants must match roles"
-                ((mkUser [Admin]) { auModules = modulesForRoles [Webmaster] })
+            validateStrictAdminAccess
+                ((mkUser [Admin]) { auModules = Set.empty })
+                `shouldBe` Right ()
 
     describe "fan club post moderation invariants" $ do
         it "rejects non-positive moderation path ids before post fallback lookup" $
@@ -12429,19 +12275,10 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected malformed Admin access to be rejected, got: " <> show value)
 
-        it "rejects Admin sessions whose module grants do not match their roles" $ do
-            let staleAdmin =
+        it "honors a persisted Admin module grant independently of legacy role defaults" $ do
+            let independentlyGrantedAdmin =
                     futureAdminUser { auModules = modulesForRoles [Webmaster] }
-            case validateFutureAdminAccess staleAdmin of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 403
-                    BL8.unpack (errBody serverErr)
-                        `shouldContain` "Admin module grants must match roles"
-                    BL8.unpack (errBody serverErr)
-                        `shouldNotContain` "Admin module access required"
-                Right value ->
-                    expectationFailure
-                        ("Expected stale Admin module grants to be rejected, got: " <> show value)
+            validateFutureAdminAccess independentlyGrantedAdmin `shouldBe` Right ()
 
         it "rejects duplicated role grants before serving fallback discovery metadata" $ do
             let duplicatedAdmin = mkUser [Admin, Fan, Customer, Admin]
@@ -14230,12 +14067,14 @@ spec = describe "TDF.Server helpers" $ do
             hasSocialInboxAccess (mkUser [Fan, Customer]) `shouldBe` False
             hasSocialInboxAccess (mkUser [ReadOnly]) `shouldBe` False
 
-        it "rejects stale or duplicated role grants before social inbox access" $ do
-            let staleManager =
+        it "honors persisted CRM grants while rejecting revoked or duplicated access" $ do
+            let independentlyGrantedManager =
                     (mkUser [Manager]) { auModules = modulesForRoles [Webmaster] }
+                revokedManager = (mkUser [Manager]) { auModules = Set.empty }
                 duplicatedManager =
                     mkUser [Manager, Manager]
-            hasSocialInboxAccess staleManager `shouldBe` False
+            hasSocialInboxAccess independentlyGrantedManager `shouldBe` True
+            hasSocialInboxAccess revokedManager `shouldBe` False
             hasSocialInboxAccess duplicatedManager `shouldBe` False
 
         it "matches the intended single-role inbox matrix" $
@@ -14393,12 +14232,14 @@ spec = describe "TDF.Server helpers" $ do
             hasSocialSyncAccess (mkUser [Webmaster]) `shouldBe` False
             hasSocialSyncAccess (mkUser [StudioManager]) `shouldBe` False
 
-        it "rejects malformed Admin sessions before global sync data access" $ do
-            let staleAdmin =
+        it "honors persisted Admin modules while rejecting revoked or duplicated sync access" $ do
+            let independentlyGrantedAdmin =
                     (mkUser [Admin]) { auModules = modulesForRoles [Webmaster] }
+                revokedAdmin = (mkUser [Admin]) { auModules = Set.empty }
                 duplicatedAdmin =
                     mkUser [Admin, Admin]
-            hasSocialSyncAccess staleAdmin `shouldBe` False
+            hasSocialSyncAccess independentlyGrantedAdmin `shouldBe` True
+            hasSocialSyncAccess revokedAdmin `shouldBe` False
             hasSocialSyncAccess duplicatedAdmin `shouldBe` False
             hasSocialSyncAccess (mkUser [Fan, Customer, Admin]) `shouldBe` True
 
@@ -14596,6 +14437,8 @@ seedSessionUsernameFallbackRows = do
                     , partyEmergencyContact = Nothing
                     , partyNotes = Nothing
                     , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
                     , partyCreatedAt = now
                     }
         insertCredential partyId username =
@@ -14657,6 +14500,8 @@ initializeAuthSchema = do
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -14669,20 +14514,55 @@ initializeAuthSchema = do
         \\"currency\" VARCHAR NOT NULL,\
         \\"timezone\" VARCHAR NOT NULL,\
         \\"country_code\" VARCHAR NULL,\
+        \\"locale_id\" VARCHAR NULL,\
+        \\"currency_id\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 
     rawExecute
-        "CREATE TABLE IF NOT EXISTS \"party_role\" (\
-        \\"id\" INTEGER PRIMARY KEY,\
-        \\"party_id\" INTEGER NOT NULL,\
-        \\"role\" VARCHAR NOT NULL,\
-        \\"active\" BOOLEAN NOT NULL,\
-        \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\"),\
-        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
-        \)"
+        "CREATE TABLE IF NOT EXISTS \"security_role\" (\"id\" VARCHAR PRIMARY KEY, \"code\" VARCHAR NOT NULL UNIQUE, \"name_es\" VARCHAR NOT NULL, \"name_en\" VARCHAR NOT NULL, \"description_es\" VARCHAR NULL, \"description_en\" VARCHAR NULL, \"sort_order\" INTEGER NOT NULL, \"system_role\" BOOLEAN NOT NULL, \"emergency_administrator\" BOOLEAN NOT NULL, \"self_assignable\" BOOLEAN NOT NULL, \"automatic_assignable\" BOOLEAN NOT NULL, \"active\" BOOLEAN NOT NULL, \"workflow_state_id\" VARCHAR NOT NULL, \"created_by\" INTEGER NULL, \"updated_by\" INTEGER NULL, \"approved_by\" INTEGER NULL, \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL, \"published_revision\" INTEGER NOT NULL, \"version\" INTEGER NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"security_module\" (\"id\" VARCHAR PRIMARY KEY, \"code\" VARCHAR NOT NULL UNIQUE, \"name_es\" VARCHAR NOT NULL, \"name_en\" VARCHAR NOT NULL, \"description_es\" VARCHAR NULL, \"description_en\" VARCHAR NULL, \"sort_order\" INTEGER NOT NULL, \"active\" BOOLEAN NOT NULL, \"internal_only\" BOOLEAN NOT NULL, \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL, \"version\" INTEGER NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"security_action\" (\"id\" VARCHAR PRIMARY KEY, \"code\" VARCHAR NOT NULL UNIQUE, \"name_es\" VARCHAR NOT NULL, \"name_en\" VARCHAR NOT NULL, \"description_es\" VARCHAR NULL, \"description_en\" VARCHAR NULL, \"sensitive\" BOOLEAN NOT NULL, \"grantable\" BOOLEAN NOT NULL, \"active\" BOOLEAN NOT NULL, \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL, \"version\" INTEGER NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"security_permission\" (\"id\" VARCHAR PRIMARY KEY, \"code\" VARCHAR NOT NULL UNIQUE, \"module_id\" VARCHAR NOT NULL, \"action_id\" VARCHAR NOT NULL, \"resource_scope\" VARCHAR NOT NULL, \"name_es\" VARCHAR NOT NULL, \"name_en\" VARCHAR NOT NULL, \"description_es\" VARCHAR NULL, \"description_en\" VARCHAR NULL, \"sensitive\" BOOLEAN NOT NULL, \"public_metadata\" BOOLEAN NOT NULL, \"active\" BOOLEAN NOT NULL, \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL, \"version\" INTEGER NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"role_permission\" (\"id\" VARCHAR PRIMARY KEY, \"role_id\" VARCHAR NOT NULL, \"permission_id\" VARCHAR NOT NULL, \"granted_by\" INTEGER NULL, \"approved_by\" INTEGER NULL, \"active\" BOOLEAN NOT NULL, \"created_at\" TIMESTAMP NOT NULL, \"revoked_at\" TIMESTAMP NULL, \"version\" INTEGER NOT NULL, UNIQUE(\"role_id\",\"permission_id\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"security_role_assignment_policy\" (\"id\" VARCHAR PRIMARY KEY, \"code\" VARCHAR NOT NULL UNIQUE, \"trigger_code\" VARCHAR NOT NULL, \"role_id\" VARCHAR NOT NULL, \"name_es\" VARCHAR NOT NULL, \"name_en\" VARCHAR NOT NULL, \"description_es\" VARCHAR NULL, \"description_en\" VARCHAR NULL, \"requires_verified_email\" BOOLEAN NOT NULL, \"active\" BOOLEAN NOT NULL, \"effective_from\" TIMESTAMP NULL, \"effective_to\" TIMESTAMP NULL, \"created_by\" INTEGER NULL, \"updated_by\" INTEGER NULL, \"approved_by\" INTEGER NULL, \"created_at\" TIMESTAMP NOT NULL, \"updated_at\" TIMESTAMP NOT NULL, \"version\" INTEGER NOT NULL, UNIQUE(\"trigger_code\",\"role_id\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party_security_role\" (\"id\" VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), \"party_id\" INTEGER NOT NULL, \"role_id\" VARCHAR NOT NULL, \"granted_by\" INTEGER NULL, \"approved_by\" INTEGER NULL, \"approval_mode\" VARCHAR NOT NULL, \"emergency_reason\" VARCHAR NULL, \"source_revision_id\" VARCHAR NULL, \"source_policy_id\" VARCHAR NULL, \"active\" BOOLEAN NOT NULL, \"created_at\" TIMESTAMP NOT NULL, \"revoked_at\" TIMESTAMP NULL, \"version\" INTEGER NOT NULL, UNIQUE(\"party_id\",\"role_id\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"security_audit_event\" (\"id\" VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), \"revision_id\" VARCHAR NULL, \"source_policy_id\" VARCHAR NULL, \"entity_kind\" VARCHAR NOT NULL, \"party_id\" INTEGER NULL, \"role_id\" VARCHAR NOT NULL, \"permission_id\" VARCHAR NULL, \"operation\" VARCHAR NOT NULL, \"previous_active\" BOOLEAN NULL, \"new_active\" BOOLEAN NULL, \"actor_id\" INTEGER NULL, \"reviewer_id\" INTEGER NULL, \"approver_id\" INTEGER NULL, \"occurred_at\" TIMESTAMP NOT NULL, \"source_platform\" VARCHAR NOT NULL, \"reason\" VARCHAR NULL, \"correlation_id\" VARCHAR NOT NULL, \"approval_mode\" VARCHAR NOT NULL, \"result\" VARCHAR NOT NULL)"
+        []
+    rawExecute
+        "INSERT INTO security_role (id,code,name_es,name_en,sort_order,system_role,emergency_administrator,self_assignable,automatic_assignable,active,workflow_state_id,created_at,updated_at,published_revision,version) VALUES ('00000000-0000-4000-8000-000000000001','fan','Fan','Fan',1,1,0,0,0,1,'00000000-0000-4000-8000-000000000099',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1), ('00000000-0000-4000-8000-000000000002','customer','Cliente','Customer',2,1,0,0,1,1,'00000000-0000-4000-8000-000000000099',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1), ('00000000-0000-4000-8000-000000000007','student','Estudiante','Student',3,1,0,0,1,1,'00000000-0000-4000-8000-000000000099',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1)"
+        []
+    rawExecute
+        "INSERT INTO security_role_assignment_policy (id,code,trigger_code,role_id,name_es,name_en,requires_verified_email,active,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000305','course.registration.student','course-registration','00000000-0000-4000-8000-000000000007','Registro de curso','Course registration',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+        []
+    rawExecute
+        "INSERT INTO security_module (id,code,name_es,name_en,sort_order,active,internal_only,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000003','packages','Paquetes','Packages',1,1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+        []
+    rawExecute
+        "INSERT INTO security_action (id,code,name_es,name_en,sensitive,grantable,active,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000004','access','Acceder','Access',0,1,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+        []
+    rawExecute
+        "INSERT INTO security_permission (id,code,module_id,action_id,resource_scope,name_es,name_en,sensitive,public_metadata,active,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000005','packages.access','00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000004','module','Acceso a paquetes','Packages access',0,0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+        []
+    rawExecute
+        "INSERT INTO role_permission (id,role_id,permission_id,active,created_at,version) VALUES ('00000000-0000-4000-8000-000000000006','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000005',1,CURRENT_TIMESTAMP,1)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
@@ -14691,6 +14571,8 @@ initializeAuthSchema = do
         \\"slug\" VARCHAR NULL,\
         \\"bio\" VARCHAR NULL,\
         \\"city\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"hero_image_url\" VARCHAR NULL,\
         \\"spotify_artist_id\" VARCHAR NULL,\
         \\"spotify_url\" VARCHAR NULL,\
@@ -14756,14 +14638,99 @@ initializeAuthSchema = do
         "CREATE TABLE IF NOT EXISTS \"pipeline_card\" (\
         \\"id\" uuid PRIMARY KEY,\
         \\"service_kind\" VARCHAR NOT NULL,\
+        \\"service_offering_id\" VARCHAR NULL,\
         \\"title\" VARCHAR NOT NULL,\
         \\"artist\" VARCHAR NULL,\
         \\"stage\" VARCHAR NOT NULL,\
+        \\"workflow_state_id\" VARCHAR NULL,\
         \\"sort_order\" INTEGER NOT NULL,\
         \\"notes\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
+        []
+
+initializeLocalePreferenceReferenceSchema :: SqlPersistT IO ()
+initializeLocalePreferenceReferenceSchema = do
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"locale_reference\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"code\" VARCHAR NOT NULL UNIQUE,\
+        \\"language_id\" VARCHAR NOT NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"name_es\" VARCHAR NOT NULL,\
+        \\"name_en\" VARCHAR NOT NULL,\
+        \\"description_es\" VARCHAR NULL,\
+        \\"description_en\" VARCHAR NULL,\
+        \\"fallback_locale_id\" VARCHAR NULL,\
+        \\"default_for_platform\" BOOLEAN NOT NULL,\
+        \\"source_version\" VARCHAR NOT NULL,\
+        \\"last_synced_at\" TIMESTAMP NOT NULL,\
+        \\"deprecated_at\" TIMESTAMP NULL,\
+        \\"replacement_id\" VARCHAR NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"version\" INTEGER NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"currency_reference\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"code\" VARCHAR NOT NULL UNIQUE,\
+        \\"numeric_code\" VARCHAR NULL,\
+        \\"name_es\" VARCHAR NOT NULL,\
+        \\"name_en\" VARCHAR NOT NULL,\
+        \\"description_es\" VARCHAR NULL,\
+        \\"description_en\" VARCHAR NULL,\
+        \\"symbol\" VARCHAR NOT NULL,\
+        \\"minor_units\" INTEGER NOT NULL,\
+        \\"standard\" VARCHAR NOT NULL,\
+        \\"source_version\" VARCHAR NOT NULL,\
+        \\"effective_from\" DATE NULL,\
+        \\"effective_until\" DATE NULL,\
+        \\"deprecated_at\" TIMESTAMP NULL,\
+        \\"replacement_id\" VARCHAR NULL,\
+        \\"last_synced_at\" TIMESTAMP NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"version\" INTEGER NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"deployment_locale_enablement\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"deployment_code\" VARCHAR NOT NULL,\
+        \\"locale_id\" VARCHAR NOT NULL,\
+        \\"enabled\" BOOLEAN NOT NULL,\
+        \\"default_locale\" BOOLEAN NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \\"version\" INTEGER NOT NULL,\
+        \UNIQUE(\"deployment_code\", \"locale_id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"deployment_currency_enablement\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"deployment_code\" VARCHAR NOT NULL,\
+        \\"currency_id\" VARCHAR NOT NULL,\
+        \\"enabled\" BOOLEAN NOT NULL,\
+        \\"default_currency\" BOOLEAN NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \\"version\" INTEGER NOT NULL,\
+        \UNIQUE(\"deployment_code\", \"currency_id\")\
+        \)"
+        []
+    rawExecute
+        "INSERT INTO locale_reference (id,code,language_id,name_es,name_en,default_for_platform,source_version,last_synced_at,active,sort_order,version) VALUES ('00000000-0000-4000-8000-000000000401','en','00000000-0000-4000-8000-000000000402','Inglés','English',1,'test',CURRENT_TIMESTAMP,1,0,1)"
+        []
+    rawExecute
+        "INSERT INTO currency_reference (id,code,name_es,name_en,symbol,minor_units,standard,source_version,last_synced_at,active,sort_order,version) VALUES ('00000000-0000-4000-8000-000000000403','USD','Dólar estadounidense','US dollar','$',2,'ISO 4217','test',CURRENT_TIMESTAMP,1,0,1)"
+        []
+    rawExecute
+        "INSERT INTO deployment_locale_enablement (id,deployment_code,locale_id,enabled,default_locale,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000404','default','00000000-0000-4000-8000-000000000401',1,1,CURRENT_TIMESTAMP,1)"
+        []
+    rawExecute
+        "INSERT INTO deployment_currency_enablement (id,deployment_code,currency_id,enabled,default_currency,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000405','default','00000000-0000-4000-8000-000000000403',1,1,CURRENT_TIMESTAMP,1)"
         []
 
 initializeChatSchema :: SqlPersistT IO ()
@@ -14826,6 +14793,9 @@ initializeResourceSchema = do
         \\"service_order_id\" INTEGER NULL,\
         \\"party_id\" INTEGER NULL,\
         \\"service_type\" VARCHAR NULL,\
+        \\"service_offering_id\" VARCHAR NULL,\
+        \\"booking_type_id\" VARCHAR NULL,\
+        \\"workflow_state_id\" VARCHAR NULL,\
         \\"engineer_party_id\" INTEGER NULL,\
         \\"engineer_name\" VARCHAR NULL,\
         \\"starts_at\" TIMESTAMP NOT NULL,\
@@ -14846,6 +14816,26 @@ initializeResourceSchema = do
         \CONSTRAINT \"unique_booking_res\" UNIQUE (\"booking_id\", \"resource_id\", \"role\")\
         \)"
         []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_resource_selection_mode\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"code\" VARCHAR NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"service_offering_default_resource\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"service_offering_id\" VARCHAR NOT NULL,\
+        \\"resource_id\" INTEGER NOT NULL,\
+        \\"selection_mode_id\" VARCHAR NULL,\
+        \\"selection_mode\" VARCHAR NULL,\
+        \\"sort_order\" INTEGER NOT NULL,\
+        \\"active\" BOOLEAN NOT NULL,\
+        \\"version\" INTEGER NOT NULL,\
+        \CONSTRAINT \"unique_service_offering_default_resource\" UNIQUE (\"service_offering_id\", \"resource_id\")\
+        \)"
+        []
 
 insertBookingResourceFixture :: T.Text -> T.Text -> SqlPersistT IO (Key Resource)
 insertBookingResourceFixture name slug =
@@ -14856,6 +14846,81 @@ insertBookingResourceFixture name slug =
         , resourceCapacity = Nothing
         , resourceActive = True
         }
+
+bookingServiceOfferingFixture :: T.Text -> Bool -> Entity Catalog.ServiceOffering
+bookingServiceOfferingFixture code requiresEngineerFlag =
+    Entity fixtureOfferingKey Catalog.ServiceOffering
+        { Catalog.serviceOfferingCatalogId = fixtureUuidKey "30000000-0000-4000-8000-000000000001"
+        , Catalog.serviceOfferingCategoryId = fixtureUuidKey "30000000-0000-4000-8000-000000000002"
+        , Catalog.serviceOfferingLegacyServiceCatalogId = Nothing
+        , Catalog.serviceOfferingCode = code
+        , Catalog.serviceOfferingNameEs = code
+        , Catalog.serviceOfferingNameEn = code
+        , Catalog.serviceOfferingDescriptionEs = Nothing
+        , Catalog.serviceOfferingDescriptionEn = Nothing
+        , Catalog.serviceOfferingCurrentSlug = Just code
+        , Catalog.serviceOfferingPricingModelId = Just (fixtureUuidKey "30000000-0000-4000-8000-000000000006")
+        , Catalog.serviceOfferingLegacyPricingModelCode = Nothing
+        , Catalog.serviceOfferingDefaultRateCents = Nothing
+        , Catalog.serviceOfferingTaxRateId = Nothing
+        , Catalog.serviceOfferingLegacyTaxRateCode = Nothing
+        , Catalog.serviceOfferingCurrencyId = fixtureUuidKey "30000000-0000-4000-8000-000000000003"
+        , Catalog.serviceOfferingBillingUnitEs = Just "hora"
+        , Catalog.serviceOfferingBillingUnitEn = Just "hour"
+        , Catalog.serviceOfferingDefaultDurationMinutes = Just 60
+        , Catalog.serviceOfferingRequiresEngineer = requiresEngineerFlag
+        , Catalog.serviceOfferingSortOrder = 0
+        , Catalog.serviceOfferingActive = True
+        , Catalog.serviceOfferingWorkflowStateId = fixtureUuidKey "30000000-0000-4000-8000-000000000004"
+        , Catalog.serviceOfferingCreatedBy = Nothing
+        , Catalog.serviceOfferingUpdatedBy = Nothing
+        , Catalog.serviceOfferingApprovedBy = Nothing
+        , Catalog.serviceOfferingCreatedAt = fixtureBookingTime
+        , Catalog.serviceOfferingUpdatedAt = fixtureBookingTime
+        , Catalog.serviceOfferingEffectiveFrom = Nothing
+        , Catalog.serviceOfferingEffectiveUntil = Nothing
+        , Catalog.serviceOfferingDeprecatedAt = Nothing
+        , Catalog.serviceOfferingReplacementId = Nothing
+        , Catalog.serviceOfferingUsageCount = 0
+        , Catalog.serviceOfferingVersion = 1
+        }
+  where
+    fixtureOfferingKey = fixtureUuidKey "30000000-0000-4000-8000-000000000005"
+
+insertBookingDefaultResourceFixture
+    :: T.Text
+    -> Entity Catalog.ServiceOffering
+    -> Key Resource
+    -> T.Text
+    -> Int
+    -> SqlPersistT IO ()
+insertBookingDefaultResourceFixture relationshipId (Entity offeringKey _) resourceKey selectionMode sortOrder =
+    let selectionModeKey = fixtureUuidKey $
+            if selectionMode == "all"
+                then "30000000-0000-4000-8000-000000000007"
+                else "30000000-0000-4000-8000-000000000008"
+    in do
+        rawExecute
+            "INSERT OR IGNORE INTO service_resource_selection_mode (id, code, active) VALUES (?, ?, TRUE)"
+            [toPersistValue selectionModeKey, PersistText selectionMode]
+        insertKey (fixtureUuidKey relationshipId) Catalog.ServiceOfferingDefaultResource
+            { Catalog.serviceOfferingDefaultResourceServiceOfferingId = offeringKey
+            , Catalog.serviceOfferingDefaultResourceResourceId = resourceKey
+            , Catalog.serviceOfferingDefaultResourceSelectionModeId = Just selectionModeKey
+            , Catalog.serviceOfferingDefaultResourceLegacySelectionModeCode = Nothing
+            , Catalog.serviceOfferingDefaultResourceSortOrder = sortOrder
+            , Catalog.serviceOfferingDefaultResourceActive = True
+            , Catalog.serviceOfferingDefaultResourceVersion = 1
+            }
+
+fixtureBookingTime :: UTCTime
+fixtureBookingTime = UTCTime (fromGregorian 2026 4 1) (secondsToDiffTime 0)
+
+fixtureUuidKey :: PathPiece a => T.Text -> a
+fixtureUuidKey raw =
+    case fromPathPiece raw of
+        Just keyVal -> keyVal
+        Nothing -> error "Expected UUID fixture key to parse"
 
 insertBookingResourceHoldFixture
     :: T.Text -> Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO ()
@@ -14872,6 +14937,9 @@ insertBookingResourceHoldFixture bookingTitleVal resourceId startsAt endsAt = do
         , bookingStatus = Confirmed
         , bookingCreatedBy = Nothing
         , bookingNotes = Nothing
+        , bookingServiceOfferingId = Nothing
+        , bookingBookingTypeId = Nothing
+        , bookingWorkflowStateId = Nothing
         , bookingCreatedAt = startsAt
         }
     _ <- insert BookingResource

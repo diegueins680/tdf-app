@@ -18,7 +18,7 @@ import           Data.Char
   , isSpace
   , toLower
   )
-import           Data.Aeson   (FromJSON(..), Object, Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
+import           Data.Aeson   (FromJSON(..), Object, Options, ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
 import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
@@ -27,8 +27,8 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKM
-import           Data.List    (nub)
 import           Data.Time    (UTCTime, Day)
+import           Data.UUID    (UUID)
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
@@ -38,7 +38,7 @@ import           Crypto.Hash.Algorithms (SHA256)
 import           Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import           Data.ByteArray (constEq)
 
-import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
+import           TDF.Models   (RoleEnum)
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
@@ -250,15 +250,6 @@ instance FromJSON DropdownOptionUpdate where
               , douActive = activeValue
               }
 
-data RoleDetailDTO = RoleDetailDTO
-  { role    :: RoleEnum
-  , label   :: Text
-  , modules :: [Text]
-  } deriving (Show, Generic)
-
-instance ToJSON RoleDetailDTO
-instance FromJSON RoleDetailDTO
-
 data UserAccountDTO = UserAccountDTO
   { userId    :: Int64
   , partyId   :: Int64
@@ -280,7 +271,6 @@ data UserAccountCreate = UserAccountCreate
   , uacUsername :: Maybe Text
   , uacPassword :: Maybe Text
   , uacActive   :: Maybe Bool
-  , uacRoles    :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountCreate
@@ -288,17 +278,14 @@ instance FromJSON UserAccountCreate where
   parseJSON value = do
     rejectNullOptionalFields
       "UserAccountCreate"
-      ["uacUsername", "uacPassword", "uacActive", "uacRoles"]
+      ["uacUsername", "uacPassword", "uacActive"]
       value
-    payload@UserAccountCreate{uacRoles} <- genericParseJSON strictObjectOptions value
-    validateUniqueRolePayload "uacRoles" uacRoles
-    pure payload
+    genericParseJSON strictObjectOptions value
 
 data UserAccountUpdate = UserAccountUpdate
   { uauUsername :: Maybe Text
   , uauPassword :: Maybe Text
   , uauActive   :: Maybe Bool
-  , uauRoles    :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountUpdate
@@ -306,13 +293,12 @@ instance FromJSON UserAccountUpdate where
   parseJSON value = do
     rejectNullOptionalFields
       "UserAccountUpdate"
-      ["uauUsername", "uauPassword", "uauActive", "uauRoles"]
+      ["uauUsername", "uauPassword", "uauActive"]
       value
-    payload@UserAccountUpdate{uauUsername, uauPassword, uauActive, uauRoles} <-
+    payload@UserAccountUpdate{uauUsername, uauPassword, uauActive} <-
       genericParseJSON strictObjectOptions value
-    validateUniqueRolePayload "uauRoles" uauRoles
-    case (uauUsername, uauPassword, uauActive, uauRoles) of
-      (Nothing, Nothing, Nothing, Nothing) ->
+    case (uauUsername, uauPassword, uauActive) of
+      (Nothing, Nothing, Nothing) ->
         fail "UserAccountUpdate must include at least one field"
       _ ->
         pure payload
@@ -325,6 +311,7 @@ instance FromJSON AccountStatusDTO
 
 data UserRoleSummaryDTO = UserRoleSummaryDTO
   { id        :: Int64
+  , partyId   :: Int64
   , name      :: Text
   , email     :: Maybe Text
   , phone     :: Maybe Text
@@ -336,129 +323,52 @@ data UserRoleSummaryDTO = UserRoleSummaryDTO
 instance ToJSON UserRoleSummaryDTO
 instance FromJSON UserRoleSummaryDTO
 
-data UserRoleUpdatePayload = UserRoleUpdatePayload
-  { roles :: [RoleEnum]
-  } deriving (Show, Generic)
-
-instance ToJSON UserRoleUpdatePayload
-instance FromJSON UserRoleUpdatePayload where
-  parseJSON value = do
-    payload@(UserRoleUpdatePayload roleValues) <- genericParseJSON strictObjectOptions value
-    validateUniqueRoles "roles" roleValues
-    pure payload
-
-validateUniqueRolePayload :: String -> Maybe [RoleEnum] -> Parser ()
-validateUniqueRolePayload _ Nothing = pure ()
-validateUniqueRolePayload fieldName (Just roles) = validateUniqueRoles fieldName roles
-
-validateUniqueRoles :: String -> [RoleEnum] -> Parser ()
-validateUniqueRoles fieldName roles =
-  if length roles == length (nub roles)
-    then pure ()
-    else fail (fieldName <> " must not contain duplicates")
-
 data ServiceCatalogDTO = ServiceCatalogDTO
-  { scId            :: Int64
+  { scId            :: UUID
+  , scCode          :: Text
   , scName          :: Text
-  , scKind          :: ServiceKind
-  , scPricingModel  :: PricingModel
+  , scNameEs        :: Text
+  , scNameEn        :: Text
+  , scCategoryId    :: UUID
+  , scKind          :: Text
+  , scPricingModelId :: UUID
+  , scPricingModel  :: Text
   , scRateCents     :: Maybe Int
   , scCurrency      :: Text
+  , scCurrencyId    :: UUID
   , scBillingUnit   :: Maybe Text
-  , scTaxBps        :: Maybe Int
+  , scTaxRateCode   :: Maybe Text
+  , scTaxRateId     :: Maybe UUID
+  , scDefaultDurationMinutes :: Maybe Int
+  , scRequiresEngineer :: Bool
+  , scDefaultResources :: [ServiceDefaultResourceDTO]
+  , scSortOrder     :: Int
   , scActive        :: Bool
   } deriving (Show, Generic)
 
 instance ToJSON ServiceCatalogDTO
 instance FromJSON ServiceCatalogDTO
 
-data ServiceCatalogCreate = ServiceCatalogCreate
-  { sccName         :: Text
-  , sccKind         :: Maybe ServiceKind
-  , sccPricingModel :: Maybe PricingModel
-  , sccRateCents    :: Maybe Int
-  , sccCurrency     :: Maybe Text
-  , sccBillingUnit  :: Maybe Text
-  , sccTaxBps       :: Maybe Int
-  , sccActive       :: Maybe Bool
+data ServiceDefaultResourceDTO = ServiceDefaultResourceDTO
+  { sdrResourceId    :: Text
+  , sdrResourceName  :: Text
+  , sdrSelectionModeId :: UUID
+  , sdrSelectionMode :: Text
+  , sdrSortOrder     :: Int
   } deriving (Show, Generic)
 
-instance ToJSON ServiceCatalogCreate
-instance FromJSON ServiceCatalogCreate where
-  parseJSON value = do
-    rejectNullOptionalFields
-      "ServiceCatalogCreate"
-      [ "sccKind"
-      , "sccPricingModel"
-      , "sccRateCents"
-      , "sccCurrency"
-      , "sccBillingUnit"
-      , "sccTaxBps"
-      , "sccActive"
-      ]
-      value
-    genericParseJSON strictObjectOptions value
+instance ToJSON ServiceDefaultResourceDTO
+instance FromJSON ServiceDefaultResourceDTO
 
-data ServiceCatalogUpdate = ServiceCatalogUpdate
-  { scuName         :: Maybe Text
-  , scuKind         :: Maybe ServiceKind
-  , scuPricingModel :: Maybe PricingModel
-  , scuRateCents    :: Maybe (Maybe Int)
-  , scuCurrency     :: Maybe Text
-  , scuBillingUnit  :: Maybe (Maybe Text)
-  , scuTaxBps       :: Maybe (Maybe Int)
-  , scuActive       :: Maybe Bool
+data ServiceCatalogEnvelopeDTO = ServiceCatalogEnvelopeDTO
+  { sceSchemaVersion :: Int
+  , sceRevision      :: Int64
+  , sceLocale        :: Text
+  , sceItems         :: [ServiceCatalogDTO]
   } deriving (Show, Generic)
 
-instance ToJSON ServiceCatalogUpdate
-instance FromJSON ServiceCatalogUpdate where
-  parseJSON = withObject "ServiceCatalogUpdate" $ \o -> do
-    let allowedKeys =
-          [ "scuName"
-          , "scuKind"
-          , "scuPricingModel"
-          , "scuRateCents"
-          , "scuCurrency"
-          , "scuBillingUnit"
-          , "scuTaxBps"
-          , "scuActive"
-          ]
-        unknownKeys =
-          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
-    case unknownKeys of
-      key:_ -> fail ("Unknown field in ServiceCatalogUpdate: " <> T.unpack key)
-      [] -> do
-        nameValue <- o .:? "scuName"
-        kindValue <- o .:? "scuKind"
-        pricingModelValue <- o .:? "scuPricingModel"
-        rateCentsValue <- o .:! "scuRateCents"
-        currencyValue <- o .:? "scuCurrency"
-        billingUnitValue <- o .:! "scuBillingUnit"
-        taxBpsValue <- o .:! "scuTaxBps"
-        activeValue <- o .:? "scuActive"
-        case
-          ( nameValue
-          , kindValue
-          , pricingModelValue
-          , rateCentsValue
-          , currencyValue
-          , billingUnitValue
-          , taxBpsValue
-          , activeValue
-          ) of
-          (Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing) ->
-            fail "ServiceCatalogUpdate must include at least one field"
-          _ ->
-            pure ServiceCatalogUpdate
-              { scuName = nameValue
-              , scuKind = kindValue
-              , scuPricingModel = pricingModelValue
-              , scuRateCents = rateCentsValue
-              , scuCurrency = currencyValue
-              , scuBillingUnit = billingUnitValue
-              , scuTaxBps = taxBpsValue
-              , scuActive = activeValue
-              }
+instance ToJSON ServiceCatalogEnvelopeDTO
+instance FromJSON ServiceCatalogEnvelopeDTO
 
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]
@@ -952,6 +862,55 @@ instance FromJSON LabelTrackUpdate where
                 <*> o .:? "ltuNote"
                 <*> o .:? "ltuStatus"
 
+data LabelProjectNoteDTO = LabelProjectNoteDTO
+  { lpnId        :: Text
+  , lpnText      :: Text
+  , lpnCompleted :: Bool
+  , lpnCreatedAt :: UTCTime
+  , lpnUpdatedAt :: UTCTime
+  , lpnVersion   :: Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteDTO
+instance FromJSON LabelProjectNoteDTO
+
+data LabelProjectNoteCreate = LabelProjectNoteCreate
+  { lpncText :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteCreate
+instance FromJSON LabelProjectNoteCreate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data LabelProjectNoteUpdate = LabelProjectNoteUpdate
+  { lpnuText      :: Maybe Text
+  , lpnuCompleted :: Maybe Bool
+  , lpnuExpectedVersion :: Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteUpdate
+instance FromJSON LabelProjectNoteUpdate where
+  parseJSON = withObject "LabelProjectNoteUpdate" $ \o -> do
+    let allowedKeys = ["lpnuText", "lpnuCompleted", "lpnuExpectedVersion"]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in LabelProjectNoteUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if not ("lpnuText" `elem` providedKeys || "lpnuCompleted" `elem` providedKeys)
+            then fail "LabelProjectNoteUpdate must include text or completed"
+            else LabelProjectNoteUpdate
+              <$> o .:? "lpnuText"
+              <*> o .:? "lpnuCompleted"
+              <*> o .: "lpnuExpectedVersion"
+
 data AssetCreate = AssetCreate
   { cName     :: Text
   , cCategory :: Text
@@ -1275,22 +1234,32 @@ instance FromJSON RoomUpdate where
                 <*> o .:? "ruIsBookable"
 
 data PipelineCardDTO = PipelineCardDTO
-  { pcId        :: Text
-  , pcTitle     :: Text
-  , pcArtist    :: Maybe Text
-  , pcType      :: Text
-  , pcStage     :: Text
-  , pcSortOrder :: Int
-  , pcNotes     :: Maybe Text
-  } deriving (Show, Generic)
+  { pcId                  :: Text
+  , pcTitle               :: Text
+  , pcArtist              :: Maybe Text
+  , pcServiceOfferingId   :: Text
+  , pcServiceOfferingCode :: Text
+  , pcWorkflowId          :: Text
+  , pcWorkflowStateId     :: Text
+  , pcWorkflowStateCode   :: Text
+  , pcWorkflowStateNameEs :: Text
+  , pcWorkflowStateNameEn :: Text
+  , pcSortOrder           :: Int
+  , pcNotes               :: Maybe Text
+  } deriving (Eq, Show, Generic)
 
 instance ToJSON PipelineCardDTO where
   toJSON dto = object
     [ "id"        .= pcId dto
     , "title"     .= pcTitle dto
     , "artist"    .= pcArtist dto
-    , "type"      .= pcType dto
-    , "stage"     .= pcStage dto
+    , "serviceOfferingId" .= pcServiceOfferingId dto
+    , "serviceOfferingCode" .= pcServiceOfferingCode dto
+    , "workflowId" .= pcWorkflowId dto
+    , "workflowStateId" .= pcWorkflowStateId dto
+    , "workflowStateCode" .= pcWorkflowStateCode dto
+    , "workflowStateNameEs" .= pcWorkflowStateNameEs dto
+    , "workflowStateNameEn" .= pcWorkflowStateNameEn dto
     , "sortOrder" .= pcSortOrder dto
     , "notes"     .= pcNotes dto
     ]
@@ -1302,67 +1271,177 @@ instance FromJSON PipelineCardDTO where
       <$> o .:  "id"
       <*> o .:  "title"
       <*> o .:? "artist"
-      <*> o .:  "type"
-      <*> o .:  "stage"
+      <*> o .:  "serviceOfferingId"
+      <*> o .:  "serviceOfferingCode"
+      <*> o .:  "workflowId"
+      <*> o .:  "workflowStateId"
+      <*> o .:  "workflowStateCode"
+      <*> o .:  "workflowStateNameEs"
+      <*> o .:  "workflowStateNameEn"
       <*> pure (fromMaybe 0 sortOrder)
       <*> o .:? "notes"
 
+data PipelineStageDTO = PipelineStageDTO
+  { psId        :: Text
+  , psCode      :: Text
+  , psNameEs    :: Text
+  , psNameEn    :: Text
+  , psSortOrder :: Int
+  , psTerminal  :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineStageDTO where
+  toJSON dto = object
+    [ "id" .= psId dto
+    , "code" .= psCode dto
+    , "nameEs" .= psNameEs dto
+    , "nameEn" .= psNameEn dto
+    , "sortOrder" .= psSortOrder dto
+    , "terminal" .= psTerminal dto
+    ]
+
+instance FromJSON PipelineStageDTO where
+  parseJSON = withObject "PipelineStageDTO" $ \o ->
+    PipelineStageDTO
+      <$> o .: "id"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+      <*> o .: "sortOrder"
+      <*> o .: "terminal"
+
+data PipelineServiceOfferingDTO = PipelineServiceOfferingDTO
+  { psoId     :: Text
+  , psoCode   :: Text
+  , psoNameEs :: Text
+  , psoNameEn :: Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineServiceOfferingDTO where
+  toJSON dto = object
+    [ "id" .= psoId dto
+    , "code" .= psoCode dto
+    , "nameEs" .= psoNameEs dto
+    , "nameEn" .= psoNameEn dto
+    ]
+
+instance FromJSON PipelineServiceOfferingDTO where
+  parseJSON = withObject "PipelineServiceOfferingDTO" $ \o ->
+    PipelineServiceOfferingDTO
+      <$> o .: "id"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+
+data PipelineDefinitionDTO = PipelineDefinitionDTO
+  { pdWorkflowId      :: Text
+  , pdCode            :: Text
+  , pdNameEs          :: Text
+  , pdNameEn          :: Text
+  , pdRevision        :: Int64
+  , pdServiceOfferings :: [PipelineServiceOfferingDTO]
+  , pdStages          :: [PipelineStageDTO]
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineDefinitionDTO where
+  toJSON dto = object
+    [ "workflowId" .= pdWorkflowId dto
+    , "code" .= pdCode dto
+    , "nameEs" .= pdNameEs dto
+    , "nameEn" .= pdNameEn dto
+    , "revision" .= pdRevision dto
+    , "serviceOfferings" .= pdServiceOfferings dto
+    , "stages" .= pdStages dto
+    ]
+
+instance FromJSON PipelineDefinitionDTO where
+  parseJSON = withObject "PipelineDefinitionDTO" $ \o ->
+    PipelineDefinitionDTO
+      <$> o .: "workflowId"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+      <*> o .: "revision"
+      <*> o .: "serviceOfferings"
+      <*> o .: "stages"
+
+data PipelineSnapshotDTO = PipelineSnapshotDTO
+  { pspRevision    :: Int64
+  , pspDefinitions :: [PipelineDefinitionDTO]
+  , pspCards       :: [PipelineCardDTO]
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineSnapshotDTO where
+  toJSON dto = object
+    [ "revision" .= pspRevision dto
+    , "definitions" .= pspDefinitions dto
+    , "cards" .= pspCards dto
+    ]
+
+instance FromJSON PipelineSnapshotDTO where
+  parseJSON = withObject "PipelineSnapshotDTO" $ \o ->
+    PipelineSnapshotDTO
+      <$> o .: "revision"
+      <*> o .: "definitions"
+      <*> o .: "cards"
+
 data PipelineCardCreate = PipelineCardCreate
-  { pccTitle     :: Text
-  , pccArtist    :: Maybe Text
-  , pccStage     :: Maybe Text
-  , pccSortOrder :: Maybe Int
-  , pccNotes     :: Maybe Text
+  { pccTitle             :: Text
+  , pccArtist            :: Maybe Text
+  , pccServiceOfferingId :: Text
+  , pccWorkflowStateId   :: Maybe Text
+  , pccSortOrder         :: Maybe Int
+  , pccNotes             :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardCreate where
   parseJSON value = do
     rejectNullOptionalFields
       "PipelineCardCreate"
-      ["artist", "stage", "sortOrder", "notes"]
+      ["artist", "workflowStateId", "sortOrder", "notes"]
       value
     genericParseJSON (prefixedStrictObjectOptions 3) value
 
 data PipelineCardUpdate = PipelineCardUpdate
-  { pcuTitle     :: Maybe Text
-  , pcuArtist    :: Maybe (Maybe Text)
-  , pcuStage     :: Maybe Text
-  , pcuSortOrder :: Maybe Int
-  , pcuNotes     :: Maybe (Maybe Text)
+  { pcuTitle           :: Maybe Text
+  , pcuArtist          :: Maybe (Maybe Text)
+  , pcuWorkflowStateId :: Maybe Text
+  , pcuSortOrder       :: Maybe Int
+  , pcuNotes           :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardUpdate where
   parseJSON value@(Object o) = do
     rejectNullOptionalFields
       "PipelineCardUpdate"
-      ["title", "stage", "sortOrder"]
+      ["title", "workflowStateId", "sortOrder"]
       value
     PipelineCardUpdateParsed
       { pcupTitle = titleValue
-      , pcupStage = stageValue
+      , pcupWorkflowStateId = stateValue
       , pcupSortOrder = sortOrderValue
       } <- genericParseJSON (prefixedStrictObjectOptions 4) value
     artistValue <- o .:! "artist"
     notesValue <- o .:! "notes"
-    case (titleValue, artistValue, stageValue, sortOrderValue, notesValue) of
+    case (titleValue, artistValue, stateValue, sortOrderValue, notesValue) of
       (Nothing, Nothing, Nothing, Nothing, Nothing) ->
         fail "PipelineCardUpdate must include at least one field"
       _ ->
         pure PipelineCardUpdate
           { pcuTitle = titleValue
           , pcuArtist = artistValue
-          , pcuStage = stageValue
+          , pcuWorkflowStateId = stateValue
           , pcuSortOrder = sortOrderValue
           , pcuNotes = notesValue
           }
   parseJSON _ = fail "PipelineCardUpdate must be an object"
 
 data PipelineCardUpdateParsed = PipelineCardUpdateParsed
-  { pcupTitle     :: Maybe Text
-  , pcupArtist    :: Maybe Text
-  , pcupStage     :: Maybe Text
-  , pcupSortOrder :: Maybe Int
-  , pcupNotes     :: Maybe Text
+  { pcupTitle           :: Maybe Text
+  , pcupArtist          :: Maybe Text
+  , pcupWorkflowStateId :: Maybe Text
+  , pcupSortOrder       :: Maybe Int
+  , pcupNotes           :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardUpdateParsed where
@@ -1371,7 +1450,8 @@ instance FromJSON PipelineCardUpdateParsed where
 data SessionInputRow = SessionInputRow
   { channelNumber    :: Int
   , trackName        :: Maybe Text
-  , instrument       :: Maybe Text
+  , instrumentId     :: Maybe Text
+  , instrumentName   :: Maybe Text
   , micId            :: Maybe Text
   , standId          :: Maybe Text
   , cableId          :: Maybe Text
@@ -1575,81 +1655,10 @@ data PartyRelatedDTO = PartyRelatedDTO
 instance ToJSON PartyRelatedDTO
 instance FromJSON PartyRelatedDTO
 
-newtype RolePayload = RolePayload { rolePayloadValue :: Text }
-  deriving (Show, Eq, Generic)
-
-instance FromJSON RolePayload where
-  parseJSON v =
-    case v of
-      String t -> pure (RolePayload t)
-      Object o -> do
-        let allowedKeys = ["role", "value"]
-            unknownKeys =
-              filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
-        case unknownKeys of
-          key:_ -> fail ("Unknown field in RolePayload: " <> T.unpack key)
-          [] -> pure ()
-        rejectNullRolePayloadKey "role" o
-        rejectNullRolePayloadKey "value" o
-        mRole <- o .:? "role"
-        mValue <- o .:? "value"
-        case (mRole, mValue) of
-          (Just role, Nothing) -> pure (RolePayload role)
-          (Nothing, Just value) -> pure (RolePayload value)
-          (Nothing, Nothing) -> fail "Expected role object with either 'role' or 'value'"
-          (Just _, Just _) -> fail "Expected role object with exactly one of 'role' or 'value'"
-      _        -> fail "Expected role string or object with exactly one of 'role' or 'value'"
-
-rejectNullRolePayloadKey :: Text -> Object -> Parser ()
-rejectNullRolePayloadKey fieldName obj =
-  case AKM.lookup (AKey.fromText fieldName) obj of
-    Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
-    _ -> pure ()
-
-instance MimeUnrender PlainText RolePayload where
-  mimeUnrender _ = decodeUtf8RolePayload
-
-instance MimeUnrender OctetStream RolePayload where
-  mimeUnrender _ = decodeUtf8RolePayload
-
 data LooseJSON
 
 instance Accept LooseJSON where
   contentType _ = "application" // "json"
-
-instance MimeUnrender LooseJSON RolePayload where
-  mimeUnrender _ bs =
-    case eitherDecode bs of
-      Right rp -> Right rp
-      Left decodeErr ->
-        case decodeUtf8RolePayloadText bs of
-          Left utf8Err -> Left utf8Err
-          Right rawText ->
-            let trimmed = T.strip rawText
-            in if T.null trimmed
-                 then Left "Expected non-empty role payload"
-                 else if looksLikeStructuredJson trimmed
-                   then Left decodeErr
-                   else Right (RolePayload rawText)
-
-decodeUtf8RolePayload :: BL.ByteString -> Either String RolePayload
-decodeUtf8RolePayload = fmap RolePayload . decodeUtf8RolePayloadText
-
-decodeUtf8RolePayloadText :: BL.ByteString -> Either String Text
-decodeUtf8RolePayloadText raw =
-  case TE.decodeUtf8' (BL.toStrict raw) of
-    Left _ -> Left "Role payload must be valid UTF-8"
-    Right txt -> Right txt
-
-looksLikeStructuredJson :: Text -> Bool
-looksLikeStructuredJson raw =
-  case T.uncons raw of
-    Nothing -> False
-    Just (firstChar, _) ->
-      firstChar `elem` ['{', '[', '"'] ||
-      firstChar == '-' ||
-      isDigit firstChar ||
-      T.toLower raw `elem` ["true", "false", "null"]
 
 data BandMemberDTO = BandMemberDTO
   { bmId         :: Text
@@ -1775,7 +1784,9 @@ data RadioStreamDTO = RadioStreamDTO
   { rsId            :: Int64
   , rsName          :: Maybe Text
   , rsStreamUrl     :: Text
+  , rsCountryId     :: Maybe UUID
   , rsCountry       :: Maybe Text
+  , rsGenreId       :: Maybe UUID
   , rsGenre         :: Maybe Text
   , rsActive        :: Bool
   , rsLastCheckedAt :: Maybe UTCTime
@@ -1783,16 +1794,42 @@ data RadioStreamDTO = RadioStreamDTO
 instance ToJSON RadioStreamDTO
 instance FromJSON RadioStreamDTO
 
+data RadioAutoStopOptionDTO = RadioAutoStopOptionDTO
+  { rasoId :: UUID
+  , rasoCode :: Text
+  , rasoLabel :: Text
+  , rasoDescription :: Maybe Text
+  , rasoDurationMinutes :: Int
+  , rasoDefaultForBroadcast :: Bool
+  , rasoVersion :: Int
+  } deriving (Show, Generic)
+instance ToJSON RadioAutoStopOptionDTO where
+  toJSON = genericToJSON (prefixedStrictObjectOptions 4)
+instance FromJSON RadioAutoStopOptionDTO where
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 4)
+
+data RadioAutoStopOptionsDTO = RadioAutoStopOptionsDTO
+  { raocCatalogId :: UUID
+  , raocRevision :: Int64
+  , raocOptions :: [RadioAutoStopOptionDTO]
+  } deriving (Show, Generic)
+instance ToJSON RadioAutoStopOptionsDTO where
+  toJSON = genericToJSON (prefixedStrictObjectOptions 4)
+instance FromJSON RadioAutoStopOptionsDTO where
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 4)
+
 data RadioStreamUpsert = RadioStreamUpsert
   { rsuStreamUrl :: Text
   , rsuName      :: Maybe Text
-  , rsuCountry   :: Maybe Text
-  , rsuGenre     :: Maybe Text
+  , rsuCountryId :: Maybe UUID
+  , rsuClearCountry :: Maybe Bool
+  , rsuGenreId   :: Maybe UUID
+  , rsuClearGenre :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON RadioStreamUpsert
 instance FromJSON RadioStreamUpsert where
   parseJSON value = do
-    rejectNullOptionalFields "RadioStreamUpsert" ["rsuName", "rsuCountry", "rsuGenre"] value
+    rejectNullOptionalFields "RadioStreamUpsert" ["rsuName", "rsuCountryId", "rsuClearCountry", "rsuGenreId", "rsuClearGenre"] value
     genericParseJSON strictObjectOptions value
 
 data RadioImportRequest = RadioImportRequest
@@ -1851,13 +1888,13 @@ instance FromJSON RadioNowPlayingResult
 
 data RadioTransmissionRequest = RadioTransmissionRequest
   { rtrName    :: Maybe Text
-  , rtrGenre   :: Maybe Text
-  , rtrCountry :: Maybe Text
+  , rtrGenreId :: Maybe UUID
+  , rtrCountryId :: Maybe UUID
   } deriving (Show, Generic)
 instance ToJSON RadioTransmissionRequest
 instance FromJSON RadioTransmissionRequest where
   parseJSON value = do
-    rejectNullOptionalFields "RadioTransmissionRequest" ["rtrName", "rtrGenre", "rtrCountry"] value
+    rejectNullOptionalFields "RadioTransmissionRequest" ["rtrName", "rtrGenreId", "rtrCountryId"] value
     genericParseJSON strictObjectOptions value
 
 data RadioTransmissionInfo = RadioTransmissionInfo

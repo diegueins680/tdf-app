@@ -35,6 +35,13 @@ import type {
   NotificationCountDTO,
   LeaderboardEntryDTO,
 } from './types';
+import type { SecurityGrantRevision } from './generated/client';
+
+export interface SelfFanRoleRequest {
+  reason: string;
+  sourcePlatform: string;
+  correlationId: string;
+}
 
 const read: (path: string) => unknown = get;
 const send: (path: string, body: unknown) => unknown = post;
@@ -51,10 +58,10 @@ const isUnsupportedNotificationEndpoint = (error: unknown): boolean => (
 export const Fans = {
   listArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
   listPublicArtists: async () => (await read('/fans/artists')) as ArtistProfileDTO[],
-  searchArtists: async (query?: { q?: string; genre?: string }) => {
+  searchArtists: async (query?: { q?: string; genreId?: string }) => {
     const params = new URLSearchParams();
     if (query?.q) params.set('q', query.q);
-    if (query?.genre) params.set('genre', query.genre);
+    if (query?.genreId) params.set('genreId', query.genreId);
     const qs = params.toString();
     return (await read(`/artists/search${qs ? `?${qs}` : ''}`)) as ArtistProfileDTO[];
   },
@@ -65,6 +72,8 @@ export const Fans = {
   getArtistFans: async (artistId: number, page = 1, pageSize = 5) =>
     (await read(`/fans/artists/${artistId}/fans?page=${page}&pageSize=${pageSize}`)) as ArtistFansResponse,
   getProfile: async () => (await read('/fans/me/profile')) as FanProfileDTO,
+  requestMyFanRole: async (payload: SelfFanRoleRequest) =>
+    (await send('/fans/me/role-request', payload)) as SecurityGrantRevision,
   updateProfile: async (payload: FanProfileUpdate) => (await update('/fans/me/profile', payload)) as FanProfileDTO,
   listFollows: async () => (await read('/fans/me/follows')) as FanFollowDTO[],
   follow: async (artistId: number) => (await send(`/fans/me/follows/${artistId}`, {})) as FanFollowDTO,

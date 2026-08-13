@@ -35,6 +35,7 @@ import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { Parties } from '../api/parties';
+import { Catalogs } from '../api/catalogs';
 import {
   SocialEventsAPI,
   type SocialVenueDTO,
@@ -42,6 +43,7 @@ import {
 import type { PartyDTO } from '../api/types';
 import PageShell from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
   buildInitialCollaborativeEventDraft,
   createCollaborativeEvent,
@@ -52,17 +54,6 @@ import {
 
 const EVENT_CREATOR_DRAFT_KEY = 'tdf-event-creator:draft:v1';
 const LOCAL_DATE_TIME_FORMAT = "yyyy-LL-dd'T'HH:mm";
-const EVENT_TYPES: {
-  value: CollaborativeEventDraft['eventType'];
-  label: string;
-}[] = [
-  { value: 'party', label: 'Fiesta' },
-  { value: 'concert', label: 'Concierto' },
-  { value: 'festival', label: 'Festival' },
-  { value: 'showcase', label: 'Showcase' },
-  { value: 'meeting', label: 'Reunión' },
-  { value: 'other', label: 'Otro' },
-];
 const DURATION_OPTIONS = [
   { value: 60, label: '1 hora' },
   { value: 90, label: '1 h 30 min' },
@@ -121,6 +112,7 @@ const roleLabel = (role: EventCollaboratorDraft['role']) =>
 
 export default function CollaborativeEventCreatorPage() {
   const { session } = useSession();
+  const { locale } = useLocalePreferences();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<CollaborativeEventDraft>(loadDraft);
   const [creationResult, setCreationResult] =
@@ -130,6 +122,11 @@ export default function CollaborativeEventCreatorPage() {
   const venuesQuery = useQuery({
     queryKey: ['social-venues'],
     queryFn: () => SocialEventsAPI.listVenues(),
+  });
+  const eventTypesQuery = useQuery({
+    queryKey: ['catalogs', 'event-types', locale],
+    queryFn: () => Catalogs.listPublicBatch(['event-types'], { locale, page: 1, pageSize: 200 }),
+    staleTime: 5 * 60 * 1000,
   });
   const partiesQuery = useQuery({
     queryKey: ['parties'],
@@ -156,6 +153,21 @@ export default function CollaborativeEventCreatorPage() {
     ) ?? null,
     [draft.venueId, venuesQuery.data],
   );
+  const eventTypePage = eventTypesQuery.data?.catalogs.find(
+    (catalog) => catalog.catalog.code === 'event-types',
+  );
+  const eventTypeOptions = eventTypePage?.items ?? [];
+  const defaultEventTypeId = eventTypePage?.defaults.find(
+    (entry) => entry.scopeKind === 'social-event' && entry.scopeId === 'global',
+  )?.entityId;
+  const selectedEventTypeIsAvailable = eventTypeOptions.some(
+    (item) => item.id === draft.eventTypeId,
+  );
+
+  useEffect(() => {
+    if (draft.eventTypeId || !defaultEventTypeId) return;
+    setDraft((current) => current.eventTypeId ? current : { ...current, eventTypeId: defaultEventTypeId });
+  }, [defaultEventTypeId, draft.eventTypeId]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || creationResult) return;
@@ -408,22 +420,31 @@ export default function CollaborativeEventCreatorPage() {
                       Solo el nombre y la fecha son imprescindibles.
                     </Typography>
                   </Box>
+                  {eventTypesQuery.isError && (
+                    <Alert severity="error">No se pudieron cargar los tipos de evento publicados.</Alert>
+                  )}
+                  {draft.eventTypeId && !eventTypesQuery.isLoading && !selectedEventTypeIsAvailable && (
+                    <Alert severity="warning">
+                      El tipo guardado en este borrador ya no está disponible. Selecciona uno vigente antes de crear el evento.
+                    </Alert>
+                  )}
                   <ToggleButtonGroup
-                    value={draft.eventType}
+                    value={draft.eventTypeId}
                     exclusive
-                    onChange={(_, value: CollaborativeEventDraft['eventType'] | null) => {
-                      if (value) updateDraft('eventType', value);
+                    onChange={(_, value: string | null) => {
+                      if (value) updateDraft('eventTypeId', value);
                     }}
                     size="small"
                     sx={{ flexWrap: 'wrap', gap: 0.5 }}
+                    disabled={eventTypesQuery.isLoading || eventTypesQuery.isError}
                   >
-                    {EVENT_TYPES.map((type) => (
+                    {eventTypeOptions.map((type) => (
                       <ToggleButton
-                        key={type.value}
-                        value={type.value}
+                        key={type.id}
+                        value={type.id}
                         sx={{ border: '1px solid !important', borderRadius: '8px !important' }}
                       >
-                        {type.label}
+                        {type.name}
                       </ToggleButton>
                     ))}
                   </ToggleButtonGroup>

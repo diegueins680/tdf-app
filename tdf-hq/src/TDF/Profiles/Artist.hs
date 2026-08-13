@@ -13,8 +13,10 @@ module TDF.Profiles.Artist
   , fetchPartyNameMap
   , fetchFollowerCounts
   , fetchArtistProfileMap
+  , resolvePublishedGenreSelections
   ) where
 
+import           Control.Monad             (forM, forM_)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Data.Char                 ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                            , generalCategory
@@ -30,9 +32,12 @@ import           Data.Maybe                (listToMaybe)
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import           Data.Time                 (UTCTime, getCurrentTime)
+import           Data.UUID                 (UUID)
+import qualified Data.UUID                 as UUID
 import           Database.Persist
 import           Database.Persist.Sql      (SqlPersistT, fromSqlKey)
 
+import qualified TDF.Catalog.Models        as Catalog
 import           TDF.DTO                   ( ArtistProfileDTO(..)
                                            , ArtistProfileUpsert(..)
                                            )
@@ -130,67 +135,108 @@ upsertArtistProfileRecord
   => PartyId
   -> ArtistProfileUpsert
   -> UTCTime
-  -> SqlPersistT m ArtistProfileDTO
+  -> SqlPersistT m (Either Text ArtistProfileDTO)
 upsertArtistProfileRecord artistKey ArtistProfileUpsert{..} now = do
-  let trimmedDisplay = cleanOptionalText apuDisplayName
-      normalizedSlug = cleanOptionalText apuSlug
-      normalizedBio = cleanOptionalText apuBio
-      normalizedCity = cleanOptionalText apuCity
-      normalizedHeroImageUrl = cleanOptionalText apuHeroImageUrl
-      normalizedSpotifyArtistId = cleanOptionalText apuSpotifyArtistId
-      normalizedSpotifyUrl = cleanOptionalText apuSpotifyUrl
-      normalizedYoutubeChannelId = cleanOptionalText apuYoutubeChannelId
-      normalizedYoutubeUrl = cleanOptionalText apuYoutubeUrl
-      normalizedWebsiteUrl = cleanOptionalText apuWebsiteUrl
-      normalizedFeaturedVideoUrl = cleanOptionalText apuFeaturedVideoUrl
-      normalizedGenres = cleanOptionalText apuGenres
-      normalizedHighlights = cleanOptionalText apuHighlights
-      displayUpdate =
-        case trimmedDisplay of
-          Just name | not (T.null name) -> Just (M.PartyDisplayName =. name)
-          _                             -> Nothing
-  case displayUpdate of
-    Just upd -> update artistKey [upd]
-    Nothing  -> pure ()
-  _ <- upsert
-    ArtistProfile
-      { artistProfileArtistPartyId    = artistKey
-      , artistProfileSlug             = normalizedSlug
-      , artistProfileBio              = normalizedBio
-      , artistProfileCity             = normalizedCity
-      , artistProfileHeroImageUrl     = normalizedHeroImageUrl
-      , artistProfileSpotifyArtistId  = normalizedSpotifyArtistId
-      , artistProfileSpotifyUrl       = normalizedSpotifyUrl
-      , artistProfileYoutubeChannelId = normalizedYoutubeChannelId
-      , artistProfileYoutubeUrl       = normalizedYoutubeUrl
-      , artistProfileWebsiteUrl       = normalizedWebsiteUrl
-      , artistProfileFeaturedVideoUrl = normalizedFeaturedVideoUrl
-      , artistProfileGenres           = normalizedGenres
-      , artistProfileHighlights       = normalizedHighlights
-      , artistProfileStripeAccountId  = Nothing
-      , artistProfileCreatedAt        = now
-      , artistProfileUpdatedAt        = Just now
-      }
-    [ ArtistProfileSlug             =. normalizedSlug
-    , ArtistProfileBio              =. normalizedBio
-    , ArtistProfileCity             =. normalizedCity
-    , ArtistProfileHeroImageUrl     =. normalizedHeroImageUrl
-    , ArtistProfileSpotifyArtistId  =. normalizedSpotifyArtistId
-    , ArtistProfileSpotifyUrl       =. normalizedSpotifyUrl
-    , ArtistProfileYoutubeChannelId =. normalizedYoutubeChannelId
-    , ArtistProfileYoutubeUrl       =. normalizedYoutubeUrl
-    , ArtistProfileWebsiteUrl       =. normalizedWebsiteUrl
-    , ArtistProfileFeaturedVideoUrl =. normalizedFeaturedVideoUrl
-    , ArtistProfileGenres           =. normalizedGenres
-    , ArtistProfileHighlights       =. normalizedHighlights
-    , ArtistProfileUpdatedAt        =. Just now
-    ]
-  mDto <- loadArtistProfileDTO artistKey
-  case mDto of
-    Just dto -> pure dto
-    Nothing -> do
-      hasAccount <- artistHasUserAccount [artistKey]
-      pure (emptyDto artistKey hasAccount)
+  resolvedGenres <- resolvePublishedGenreSelections "apuGenreIds" apuGenreIds
+  case resolvedGenres of
+    Left err -> pure (Left err)
+    Right genres -> Right <$> persistProfile genres
+  where
+    persistProfile genres = do
+      let trimmedDisplay = cleanOptionalText apuDisplayName
+          normalizedSlug = cleanOptionalText apuSlug
+          normalizedBio = cleanOptionalText apuBio
+          normalizedCity = cleanOptionalText apuCity
+          normalizedHeroImageUrl = cleanOptionalText apuHeroImageUrl
+          normalizedSpotifyArtistId = cleanOptionalText apuSpotifyArtistId
+          normalizedSpotifyUrl = cleanOptionalText apuSpotifyUrl
+          normalizedYoutubeChannelId = cleanOptionalText apuYoutubeChannelId
+          normalizedYoutubeUrl = cleanOptionalText apuYoutubeUrl
+          normalizedWebsiteUrl = cleanOptionalText apuWebsiteUrl
+          normalizedFeaturedVideoUrl = cleanOptionalText apuFeaturedVideoUrl
+          normalizedHighlights = cleanOptionalText apuHighlights
+          displayUpdate =
+            case trimmedDisplay of
+              Just name | not (T.null name) -> Just (M.PartyDisplayName =. name)
+              _                             -> Nothing
+      case displayUpdate of
+        Just upd -> update artistKey [upd]
+        Nothing  -> pure ()
+      _ <- upsert
+        ArtistProfile
+          { artistProfileArtistPartyId    = artistKey
+          , artistProfileSlug             = normalizedSlug
+          , artistProfileBio              = normalizedBio
+          , artistProfileCity             = normalizedCity
+          , artistProfileHeroImageUrl     = normalizedHeroImageUrl
+          , artistProfileSpotifyArtistId  = normalizedSpotifyArtistId
+          , artistProfileSpotifyUrl       = normalizedSpotifyUrl
+          , artistProfileYoutubeChannelId = normalizedYoutubeChannelId
+          , artistProfileYoutubeUrl       = normalizedYoutubeUrl
+          , artistProfileWebsiteUrl       = normalizedWebsiteUrl
+          , artistProfileFeaturedVideoUrl = normalizedFeaturedVideoUrl
+          , artistProfileGenres           = Nothing
+          , artistProfileHighlights       = normalizedHighlights
+          , artistProfileStripeAccountId  = Nothing
+          , artistProfileCountryCode       = Nothing
+          , artistProfileCountryId         = Nothing
+          , artistProfileCreatedAt        = now
+          , artistProfileUpdatedAt        = Just now
+          }
+        [ ArtistProfileSlug             =. normalizedSlug
+        , ArtistProfileBio              =. normalizedBio
+        , ArtistProfileCity             =. normalizedCity
+        , ArtistProfileHeroImageUrl     =. normalizedHeroImageUrl
+        , ArtistProfileSpotifyArtistId  =. normalizedSpotifyArtistId
+        , ArtistProfileSpotifyUrl       =. normalizedSpotifyUrl
+        , ArtistProfileYoutubeChannelId =. normalizedYoutubeChannelId
+        , ArtistProfileYoutubeUrl       =. normalizedYoutubeUrl
+        , ArtistProfileWebsiteUrl       =. normalizedWebsiteUrl
+        , ArtistProfileFeaturedVideoUrl =. normalizedFeaturedVideoUrl
+        , ArtistProfileHighlights       =. normalizedHighlights
+        , ArtistProfileUpdatedAt        =. Just now
+        ]
+      deleteWhere [ArtistProfileGenreMembershipArtistPartyId ==. artistKey]
+      forM_ (zip [0 :: Int ..] genres) $ \(position, (genreId, _)) ->
+        insert_ ArtistProfileGenreMembership
+          { artistProfileGenreMembershipArtistPartyId = artistKey
+          , artistProfileGenreMembershipGenreId = genreId
+          , artistProfileGenreMembershipSortOrder = position
+          , artistProfileGenreMembershipCreatedAt = now
+          }
+      mDto <- loadArtistProfileDTO artistKey
+      case mDto of
+        Just dto -> pure dto
+        Nothing -> do
+          hasAccount <- artistHasUserAccount [artistKey]
+          pure (emptyDto artistKey hasAccount)
+
+resolvePublishedGenreSelections
+  :: MonadIO m
+  => Text
+  -> [UUID]
+  -> SqlPersistT m (Either Text [(UUID, Text)])
+resolvePublishedGenreSelections fieldName rawGenreIds
+  | Set.size uniqueGenreIds /= length rawGenreIds =
+      pure (Left (fieldName <> " must not contain duplicates"))
+  | otherwise = sequence <$> forM rawGenreIds resolveOne
+  where
+    uniqueGenreIds = Set.fromList rawGenreIds
+    resolveOne genreId = do
+      mGenre <- get (Catalog.GenreKey genreId)
+      case mGenre of
+        Nothing -> pure (Left (fieldName <> " contains an unknown genre id: " <> UUID.toText genreId))
+        Just genre -> do
+          mCatalog <- get (Catalog.genreCatalogId genre)
+          mState <- get (Catalog.genreWorkflowStateId genre)
+          pure $
+            if Catalog.genreActive genre
+                && maybe False ((== "genres") . Catalog.catalogDefinitionCode) mCatalog
+                && maybe False
+                  (\state -> Catalog.workflowStateActive state && Catalog.workflowStateCode state == "published")
+                  mState
+              then Right (genreId, Catalog.genreNameEs genre)
+              else Left (fieldName <> " contains a genre that is not active and published: " <> UUID.toText genreId)
 
 emptyDto :: PartyId -> Bool -> ArtistProfileDTO
 emptyDto artistKey hasAccount = ArtistProfileDTO
@@ -207,6 +253,7 @@ emptyDto artistKey hasAccount = ArtistProfileDTO
   , apWebsiteUrl       = Nothing
   , apFeaturedVideoUrl = Nothing
   , apGenres           = Nothing
+  , apGenreIds         = []
   , apHighlights       = Nothing
   , apOfficialName     = Nothing
   , apCountry          = Nothing
@@ -285,6 +332,8 @@ ensureArtistProfileEntity artistId = do
             , artistProfileGenres           = Nothing
             , artistProfileHighlights       = Nothing
             , artistProfileStripeAccountId  = Nothing
+            , artistProfileCountryCode       = Nothing
+            , artistProfileCountryId         = Nothing
             , artistProfileCreatedAt        = now
             , artistProfileUpdatedAt        = Nothing
             }
@@ -294,17 +343,16 @@ ensureArtistProfileEntity artistId = do
 searchArtistProfilesDTO
   :: MonadIO m
   => Maybe Text
-  -> Maybe Text
+  -> Maybe UUID
   -> SqlPersistT m [ArtistProfileDTO]
-searchArtistProfilesDTO rawQuery rawGenre = do
+searchArtistProfilesDTO rawQuery genreId = do
   dtos <- loadAllArtistProfilesDTO
   let mQuery = normalizeSearchTerm rawQuery
-      mGenre = normalizeSearchTerm rawGenre
   pure
     [ dto
     | dto <- dtos
     , profileMatchesQuery mQuery dto
-    , profileMatchesGenre mGenre dto
+    , profileMatchesGenre genreId dto
     ]
 
 normalizeSearchTerm :: Maybe Text -> Maybe Text
@@ -323,10 +371,10 @@ profileMatchesQuery (Just needle) ArtistProfileDTO{..} =
     , apHighlights
     ]
 
-profileMatchesGenre :: Maybe Text -> ArtistProfileDTO -> Bool
+profileMatchesGenre :: Maybe UUID -> ArtistProfileDTO -> Bool
 profileMatchesGenre Nothing _ = True
-profileMatchesGenre (Just needle) ArtistProfileDTO{..} =
-  matchesText needle apGenres
+profileMatchesGenre (Just genreId) ArtistProfileDTO{..} =
+  genreId `elem` apGenreIds
 
 matchesText :: Text -> Maybe Text -> Bool
 matchesText needle raw =
@@ -338,8 +386,38 @@ buildArtistProfileDTOs profiles = do
   nameMap <- fetchPartyNameMap artistIds
   followerCounts <- fetchFollowerCounts artistIds
   accountMap <- fetchArtistAccountMap artistIds
-  enrichmentMap <- fetchArtistEnrichmentMap artistIds
-  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap enrichmentMap) profiles)
+  genreSelectionMap <- fetchArtistGenreSelectionMap artistIds
+  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap genreSelectionMap) profiles)
+
+fetchArtistGenreSelectionMap
+  :: MonadIO m
+  => [PartyId]
+  -> SqlPersistT m (Map.Map PartyId [(UUID, Text)])
+fetchArtistGenreSelectionMap artistIds
+  | null artistIds = pure Map.empty
+  | otherwise = do
+      memberships <- selectList
+        [ArtistProfileGenreMembershipArtistPartyId <-. artistIds]
+        [ Asc ArtistProfileGenreMembershipArtistPartyId
+        , Asc ArtistProfileGenreMembershipSortOrder
+        ]
+      let genreIds = Set.toList . Set.fromList $
+            map (artistProfileGenreMembershipGenreId . entityVal) memberships
+      genres <- if null genreIds
+        then pure []
+        else selectList [Catalog.GenreId <-. map Catalog.GenreKey genreIds] []
+      let genreMap = Map.fromList
+            [ (genreId, Catalog.genreNameEs genre)
+            | Entity (Catalog.GenreKey genreId) genre <- genres
+            ]
+      pure $ foldl' (appendMembership genreMap) Map.empty memberships
+  where
+    appendMembership genreMap acc (Entity _ membership) =
+      let artistId = artistProfileGenreMembershipArtistPartyId membership
+          genreId = artistProfileGenreMembershipGenreId membership
+      in case Map.lookup genreId genreMap of
+          Nothing -> acc
+          Just label -> Map.insertWith (flip (++)) artistId [(genreId, label)] acc
 
 fetchArtistAccountMap :: MonadIO m => [PartyId] -> SqlPersistT m (Map.Map PartyId Bool)
 fetchArtistAccountMap ids
@@ -382,15 +460,20 @@ artistProfileEntityToDTO
   :: Map.Map PartyId Text
   -> Map.Map PartyId Int
   -> Map.Map PartyId Bool
-  -> Map.Map PartyId ArtistProfileEnrichment
+  -> Map.Map PartyId [(UUID, Text)]
   -> Entity ArtistProfile
   -> ArtistProfileDTO
-artistProfileEntityToDTO nameMap followMap accountMap enrichmentMap (Entity _ prof) =
+artistProfileEntityToDTO nameMap followMap accountMap genreSelectionMap (Entity _ prof) =
   let artistId = artistProfileArtistPartyId prof
       displayName = Map.findWithDefault "Artista" artistId nameMap
       followerCount = Map.findWithDefault 0 artistId followMap
       hasAccount = Map.findWithDefault False artistId accountMap
-      enrichment = Map.lookup artistId enrichmentMap
+      genreSelections = Map.findWithDefault [] artistId genreSelectionMap
+      genreLabels = map snd genreSelections
+      displayGenres =
+        if null genreLabels
+          then artistProfileGenres prof
+          else Just (T.intercalate ", " genreLabels)
   in ArtistProfileDTO
       { apArtistId         = fromSqlKey artistId
       , apDisplayName      = displayName
@@ -404,7 +487,8 @@ artistProfileEntityToDTO nameMap followMap accountMap enrichmentMap (Entity _ pr
       , apYoutubeUrl       = artistProfileYoutubeUrl prof
       , apWebsiteUrl       = artistProfileWebsiteUrl prof
       , apFeaturedVideoUrl = artistProfileFeaturedVideoUrl prof
-      , apGenres           = artistProfileGenres prof
+      , apGenres           = displayGenres
+      , apGenreIds         = map fst genreSelections
       , apHighlights       = artistProfileHighlights prof
       , apOfficialName     = enrichment >>= artistProfileEnrichmentOfficialName
       , apCountry          = enrichment >>= artistProfileEnrichmentCountry

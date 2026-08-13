@@ -13,3 +13,7 @@ type LabelAPI =
   :<|> "tracks" :> ReqBody '[JSON] LabelTrackCreate :> Post '[JSON] LabelTrackDTO
   :<|> "tracks" :> Capture "id" Text :> ReqBody '[JSON] LabelTrackUpdate :> Patch '[JSON] LabelTrackDTO
   :<|> "tracks" :> Capture "id" Text :> DeleteNoContent
+  :<|> "project-notes" :> Get '[JSON] [LabelProjectNoteDTO]
+  :<|> "project-notes" :> ReqBody '[JSON] LabelProjectNoteCreate :> Post '[JSON] LabelProjectNoteDTO
+  :<|> "project-notes" :> Capture "id" Text :> ReqBody '[JSON] LabelProjectNoteUpdate :> Patch '[JSON] LabelProjectNoteDTO
+  :<|> "project-notes" :> Capture "id" Text :> DeleteNoContent

@@ -12,17 +12,37 @@ export interface RadioStreamDTO {
   rsId: number;
   rsName?: string | null;
   rsStreamUrl: string;
+  rsCountryId?: string | null;
   rsCountry?: string | null;
+  rsGenreId?: string | null;
   rsGenre?: string | null;
   rsActive: boolean;
   rsLastCheckedAt?: string | null;
 }
 
+export interface RadioAutoStopOption {
+  id: string;
+  code: string;
+  label: string;
+  description?: string | null;
+  durationMinutes: number;
+  defaultForBroadcast: boolean;
+  version: number;
+}
+
+export interface RadioAutoStopOptions {
+  catalogId: string;
+  revision: number;
+  options: RadioAutoStopOption[];
+}
+
 export interface RadioStreamUpsert {
   rsuStreamUrl: string;
-  rsuName?: string | null;
-  rsuCountry?: string | null;
-  rsuGenre?: string | null;
+  rsuName?: string;
+  rsuCountryId?: string;
+  rsuClearCountry?: boolean;
+  rsuGenreId?: string;
+  rsuClearGenre?: boolean;
 }
 
 export interface RadioImportRequest {
@@ -40,9 +60,9 @@ export interface RadioImportResult {
 }
 
 export interface RadioTransmissionRequest {
-  name?: string | null;
-  genre?: string | null;
-  country?: string | null;
+  name?: string;
+  genreId?: string;
+  countryId?: string;
 }
 
 export interface RadioTransmissionInfo {
@@ -64,10 +84,16 @@ export interface RadioNowPlayingResult {
 }
 
 export const RadioAPI = {
-  search: (params?: { country?: string; genre?: string }) => {
+  listAutoStopOptions: (locale?: string) => {
+    const params = new URLSearchParams();
+    if (locale?.trim()) params.set('locale', locale.trim());
+    const qs = params.toString();
+    return get<RadioAutoStopOptions>(`/radio/auto-stop-options${qs ? `?${qs}` : ''}`);
+  },
+  search: (params?: { countryId?: string; genreId?: string }) => {
     const searchParams = new URLSearchParams();
-    if (params?.country?.trim()) searchParams.set('country', params.country.trim());
-    if (params?.genre?.trim()) searchParams.set('genre', params.genre.trim());
+    if (params?.countryId?.trim()) searchParams.set('countryId', params.countryId.trim());
+    if (params?.genreId?.trim()) searchParams.set('genreId', params.genreId.trim());
     const qs = searchParams.toString();
     return get<RadioStreamDTO[]>(`/radio/streams${qs ? `?${qs}` : ''}`);
   },
@@ -86,7 +112,7 @@ export const RadioAPI = {
   createTransmission: (payload: RadioTransmissionRequest) =>
     post<RadioTransmissionInfo>('/radio/transmissions', {
       rtrName: payload.name,
-      rtrGenre: payload.genre,
-      rtrCountry: payload.country,
+      rtrGenreId: payload.genreId,
+      rtrCountryId: payload.countryId,
     }),
 };

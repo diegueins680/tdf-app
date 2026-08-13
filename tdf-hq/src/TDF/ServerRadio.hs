@@ -12,6 +12,8 @@ module TDF.ServerRadio
   , validateRadioTransmissionWhipBase
   , resolveRadioTransmissionEnvBase
   , validateRadioOptionalMetadataField
+  , validateRadioCountryMutation
+  , validateRadioGenreMutation
   , validateRadioFetchedMetadata
   , validateRadioSearchFilter
   , validateRadioImportSources
@@ -23,7 +25,7 @@ module TDF.ServerRadio
 
 import           Control.Applicative    ((<|>))
 import           Control.Exception      (SomeException, try, displayException)
-import           Control.Monad          (forM, when)
+import           Control.Monad          (forM, forM_, when)
 import           Control.Monad.Except   (MonadError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, ask)
@@ -33,7 +35,7 @@ import           Data.Char              (GeneralCategory(Format, LineSeparator, 
 import           Data.Int               (Int64)
 import           Data.List              (find, findIndex)
 import qualified Data.Map.Strict        as Map
-import           Data.Maybe             (catMaybes, fromMaybe, isNothing)
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing)
 import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Char8  as BS8
 import qualified Data.CaseInsensitive   as CI
@@ -45,28 +47,54 @@ import           Data.Time              (UTCTime, getCurrentTime)
 import           System.Environment     (lookupEnv)
 import           Text.Read              (readMaybe)
 import qualified Data.ByteString.Lazy   as BL
-import           Database.Persist       (Entity(..), (=.), (==.), SelectOpt(Desc, LimitTo), deleteBy, getBy, insert,
-                                         selectList, selectFirst, update)
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, errBody, throwError, (:<|>)(..))
+import           Database.Persist       (Entity(..), PersistValue(PersistText), (=.), (==.), (+=.), (<-.),
+                                         SelectOpt(Asc, Desc, LimitTo), deleteBy, getBy, insert, repsert,
+                                         get, selectFirst, selectList, update, updateWhere)
+import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, err503, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
-import           Data.UUID              (toText)
+import           Data.UUID              (UUID, toText)
 import           Data.UUID.V4           (nextRandom)
 
 import           TDF.API.Radio          (RadioAPI)
-import           TDF.API.Types          (RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
+import           TDF.API.Types          (RadioAutoStopOptionDTO(..), RadioAutoStopOptionsDTO(..), RadioStreamDTO(..), RadioStreamUpsert(..), RadioPresenceDTO(..),
                                          RadioPresenceUpsert(..), RadioImportRequest(..), RadioImportResult(..),
                                          RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
                                          RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
 import           TDF.Auth               (AuthedUser(..))
+import qualified TDF.Catalog.Models     as Catalog
 import           TDF.DB                 (Env(..), sharedTlsManager)
 import           TDF.Models
+import           TDF.Profiles.Artist    (resolvePublishedGenreSelections)
 
 data StreamMetadata = StreamMetadata
   { smName  :: Maybe Text
   , smGenre :: Maybe Text
+  } deriving (Show, Eq)
+
+data RadioImportCandidate = RadioImportCandidate
+  { ricStreamUrl     :: Text
+  , ricName          :: Maybe Text
+  , ricObservedCountry :: Maybe Text
+  , ricObservedGenre :: Maybe Text
+  } deriving (Show, Eq)
+
+data ObservedCountryResolution = ObservedCountryResolution
+  { ocrOriginalValue   :: Text
+  , ocrNormalizedValue :: Text
+  , ocrCandidateIds    :: [UUID]
+  , ocrCountryId       :: Maybe UUID
+  , ocrStatus          :: Text
+  } deriving (Show, Eq)
+
+data ObservedGenreResolution = ObservedGenreResolution
+  { ogrOriginalValue   :: Text
+  , ogrNormalizedValue :: Text
+  , ogrCandidateIds    :: [UUID]
+  , ogrGenreId         :: Maybe UUID
+  , ogrStatus          :: Text
   } deriving (Show, Eq)
 
 lookupHeader :: BS.ByteString -> [(CI.CI BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString
@@ -216,6 +244,18 @@ validateRadioOptionalMetadataField fieldName maxLength (Just rawValue) =
            }
          else Right (Just value)
 
+validateRadioGenreMutation :: Maybe UUID -> Maybe Bool -> Either ServerError ()
+validateRadioGenreMutation genreId clearGenre
+  | fromMaybe False clearGenre && isJust genreId =
+      Left err400 { errBody = "rsuClearGenre cannot be combined with rsuGenreId" }
+  | otherwise = Right ()
+
+validateRadioCountryMutation :: Maybe UUID -> Maybe Bool -> Either ServerError ()
+validateRadioCountryMutation countryId clearCountry
+  | fromMaybe False clearCountry && isJust countryId =
+      Left err400 { errBody = "rsuClearCountry cannot be combined with rsuCountryId" }
+  | otherwise = Right ()
+
 validateRadioFetchedMetadata :: StreamMetadata -> Either Text StreamMetadata
 validateRadioFetchedMetadata StreamMetadata{..} = do
   name <- validateRadioFetchedMetadataField "icy-name" 160 smName
@@ -260,6 +300,10 @@ validateRadioSearchFilter fieldName maxLength (Just rawValue)
       Right (Just (T.toLower value))
   where
     value = T.strip rawValue
+
+radioCatalogValidationError :: Text -> ServerError
+radioCatalogValidationError message =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
 isUnsafeRadioTextChar :: Char -> Bool
 isUnsafeRadioTextChar ch =
@@ -808,7 +852,8 @@ radioServer
   => AuthedUser
   -> ServerT RadioAPI m
 radioServer user =
-       searchStreams
+       listAutoStopOptions
+  :<|> searchStreams
   :<|> upsertActive
   :<|> importStreams
   :<|> refreshMetadata
@@ -819,36 +864,114 @@ radioServer user =
   :<|> clearPresence
   :<|> getPresenceByParty
   where
-    searchStreams :: Maybe Text -> Maybe Text -> m [RadioStreamDTO]
-    searchStreams mCountry mGenre = do
+    listAutoStopOptions :: Maybe Text -> m RadioAutoStopOptionsDTO
+    listAutoStopOptions requestedLocale = do
       Env{..} <- ask
-      cQuery <- either throwError pure (validateRadioSearchFilter "country" 80 mCountry)
-      gQuery <- either throwError pure (validateRadioSearchFilter "genre" 120 mGenre)
-      rows <- liftIO $ flip runSqlPool envPool $
-        selectList [RadioStreamIsActive ==. True] [Desc RadioStreamUpdatedAt, LimitTo 400]
-      let matches (Entity _ RadioStream{..}) =
-            matchesField cQuery radioStreamCountry && matchesField gQuery radioStreamGenre
-      pure (map toDTO (filter matches rows))
+      now <- liftIO getCurrentTime
+      result <- liftIO $ flip runSqlPool envPool $ do
+        catalogResult <- getBy (Catalog.UniqueCatalogDefinitionCode "radio-auto-stop-options")
+        case catalogResult of
+          Nothing -> pure Nothing
+          Just (Entity catalogKey catalogValue) -> do
+            publishedResult <- getBy
+              (Catalog.UniqueWorkflowStateCode (Catalog.catalogDefinitionWorkflowId catalogValue) "published")
+            case publishedResult of
+              Nothing -> pure Nothing
+              Just (Entity publishedKey _) -> do
+                options <- selectList
+                  [ Catalog.RadioAutoStopOptionCatalogId ==. catalogKey
+                  , Catalog.RadioAutoStopOptionWorkflowStateId ==. publishedKey
+                  , Catalog.RadioAutoStopOptionActive ==. True
+                  , Catalog.RadioAutoStopOptionDeprecatedAt ==. Nothing
+                  ]
+                  [ Asc Catalog.RadioAutoStopOptionSortOrder
+                  , Asc Catalog.RadioAutoStopOptionDurationMinutes
+                  ]
+                defaults <- selectList
+                  [ Catalog.CatalogScopedDefaultCatalogId ==. catalogKey
+                  , Catalog.CatalogScopedDefaultScopeKind ==. "radio-broadcast"
+                  , Catalog.CatalogScopedDefaultScopeId ==. "global"
+                  , Catalog.CatalogScopedDefaultLocaleId ==. Nothing
+                  , Catalog.CatalogScopedDefaultActive ==. True
+                  ]
+                  []
+                let effective defaultValue =
+                      maybe True (<= now) (Catalog.catalogScopedDefaultEffectiveFrom defaultValue)
+                        && maybe True (> now) (Catalog.catalogScopedDefaultEffectiveUntil defaultValue)
+                    effectiveDefaults = filter (effective . entityVal) defaults
+                case effectiveDefaults of
+                  [Entity _ defaultValue]
+                    | any
+                        (\(Entity (Catalog.RadioAutoStopOptionKey optionId) _) -> optionId == Catalog.catalogScopedDefaultEntityId defaultValue)
+                        options ->
+                      pure (Just RadioAutoStopOptionsDTO
+                        { raocCatalogId = case catalogKey of Catalog.CatalogDefinitionKey catalogId -> catalogId
+                        , raocRevision = Catalog.catalogDefinitionCacheRevision catalogValue
+                        , raocOptions = map (toAutoStopDTO requestedLocale (Catalog.catalogScopedDefaultEntityId defaultValue)) options
+                        })
+                  _ -> pure Nothing
+      maybe
+        (throwError err503 { errBody = "The persisted Radio auto-stop catalog or its single active default is unavailable" })
+        pure
+        result
+
+    toAutoStopDTO :: Maybe Text -> UUID -> Entity Catalog.RadioAutoStopOption -> RadioAutoStopOptionDTO
+    toAutoStopDTO requestedLocale defaultId (Entity (Catalog.RadioAutoStopOptionKey optionId) option) =
+      let useEnglish = maybe False (T.isPrefixOf "en" . T.toLower . T.strip) requestedLocale
+      in RadioAutoStopOptionDTO
+          { rasoId = optionId
+          , rasoCode = Catalog.radioAutoStopOptionCode option
+          , rasoLabel = if useEnglish then Catalog.radioAutoStopOptionNameEn option else Catalog.radioAutoStopOptionNameEs option
+          , rasoDescription = if useEnglish then Catalog.radioAutoStopOptionDescriptionEn option else Catalog.radioAutoStopOptionDescriptionEs option
+          , rasoDurationMinutes = Catalog.radioAutoStopOptionDurationMinutes option
+          , rasoDefaultForBroadcast = optionId == defaultId
+          , rasoVersion = Catalog.radioAutoStopOptionVersion option
+          }
+
+    searchStreams :: Maybe UUID -> Maybe UUID -> m [RadioStreamDTO]
+    searchStreams mCountryId mGenreId = do
+      Env{..} <- ask
+      result <- liftIO $ flip runSqlPool envPool $ do
+        countryValidation <- validateActiveCountryReference "countryId" mCountryId
+        genreValidation <- validatePublishedGenreReference "genreId" mGenreId
+        case countryValidation >> genreValidation of
+          Left err -> pure (Left err)
+          Right _ -> do
+            rows <- selectList
+              ([RadioStreamIsActive ==. True]
+                <> maybe [] (\countryId -> [RadioStreamCountryId ==. Just countryId]) mCountryId
+                <> maybe [] (\genreId -> [RadioStreamGenreId ==. Just genreId]) mGenreId)
+              [Desc RadioStreamUpdatedAt, LimitTo 400]
+            Right <$> buildRadioStreamDTOs rows
+      either (throwError . radioCatalogValidationError) pure result
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
       streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
       name <- either throwError pure $
         validateRadioOptionalMetadataField "rsuName" 160 (rsuName payload)
-      country <- either throwError pure $
-        validateRadioOptionalMetadataField "rsuCountry" 80 (rsuCountry payload)
-      genre <- either throwError pure $
-        validateRadioOptionalMetadataField "rsuGenre" 120 (rsuGenre payload)
+      either throwError pure $
+        validateRadioCountryMutation (rsuCountryId payload) (rsuClearCountry payload)
+      either throwError pure $
+        validateRadioGenreMutation (rsuGenreId payload) (rsuClearGenre payload)
       now <- liftIO getCurrentTime
       Env{..} <- ask
       let normalizedPayload = payload
             { rsuStreamUrl = streamUrl
             , rsuName      = name
-            , rsuCountry   = country
-            , rsuGenre     = genre
             }
-      (entity, _) <- liftIO $ flip runSqlPool envPool (saveStream now normalizedPayload)
-      pure (toDTO entity)
+      result <- liftIO $ flip runSqlPool envPool $ do
+        countryValidation <- validateActiveCountryReference "rsuCountryId" (rsuCountryId normalizedPayload)
+        genreValidation <- validatePublishedGenreReference "rsuGenreId" (rsuGenreId normalizedPayload)
+        case countryValidation >> genreValidation of
+          Left err -> pure (Left err)
+          Right _ -> do
+            (entity, _) <- saveStream now normalizedPayload
+            dtos <- buildRadioStreamDTOs [entity]
+            pure $ case dtos of
+              [dto] -> Right dto
+              _     -> Left "radio stream DTO construction failed"
+      either (throwError . radioCatalogValidationError) pure result
 
     importStreams :: RadioImportRequest -> m RadioImportResult
     importStreams RadioImportRequest{..} = do
@@ -861,19 +984,33 @@ radioServer user =
           pure $ case res of
             Left (ex :: SomeException) -> Left (src, T.pack (displayException ex))
             Right items                -> Right (src, items)
-      let successes = [ items | Right (_, items) <- fetchedResults ]
+      let successes = [ (src, items) | Right (src, items) <- fetchedResults ]
           failedSources = [ src | Left (src, _) <- fetchedResults ]
-          fetched = concat successes
+          fetched = [ (src, item) | (src, items) <- successes, item <- items ]
       let deduped =
             take cap
               . Map.elems
-              . foldl' (\m item -> Map.insertWith (const id) (T.toLower (rsuStreamUrl item)) item m) Map.empty
+              . foldl' (\m pair@(_, item) -> Map.insertWith (const id) (T.toLower (ricStreamUrl item)) pair m) Map.empty
               . catMaybes
-              $ map normalizeImportUpsert fetched
+              $ map (\(src, item) -> fmap ((,) src) (normalizeImportCandidate item)) fetched
       now <- liftIO getCurrentTime
       Env{..} <- ask
       (inserted, updated) <- liftIO $ flip runSqlPool envPool $ do
-        results <- forM deduped (saveStream now)
+        results <- forM deduped $ \(source, candidate) -> do
+          countryResolution <- traverse resolveObservedCountry (ricObservedCountry candidate)
+          genreResolution <- traverse resolveObservedGenre (ricObservedGenre candidate)
+          let payload = RadioStreamUpsert
+                { rsuStreamUrl = ricStreamUrl candidate
+                , rsuName = ricName candidate
+                , rsuCountryId = countryResolution >>= ocrCountryId
+                , rsuClearCountry = Just False
+                , rsuGenreId = genreResolution >>= ogrGenreId
+                , rsuClearGenre = Just False
+                }
+          result@(Entity streamId _, _) <- saveStream now payload
+          forM_ countryResolution (recordCountryObservation now streamId source)
+          forM_ genreResolution (recordGenreObservation now streamId source)
+          pure result
         let insCount = length (filter snd results)
             updCount = length results - insCount
         pure (insCount, updCount)
@@ -897,7 +1034,7 @@ radioServer user =
       let candidates =
             take cap $
               if onlyMissing
-                then filter (\(Entity _ RadioStream{..}) -> isNothing radioStreamName || isNothing radioStreamGenre) rows
+                then filter (\(Entity _ RadioStream{..}) -> isNothing radioStreamName || isNothing radioStreamGenreId) rows
                 else rows
       manager <- pure sharedTlsManager
       results <- forM candidates $ \(Entity sid stream) -> do
@@ -909,12 +1046,15 @@ radioServer user =
             pure False
           Right StreamMetadata{..} -> do
             liftIO $ flip runSqlPool envPool $
-              update sid
-                [ RadioStreamName =. (smName <|> radioStreamName stream)
-                , RadioStreamGenre =. (smGenre <|> radioStreamGenre stream)
-                , RadioStreamLastCheckedAt =. Just now
-                , RadioStreamUpdatedAt =. now
-                ]
+              do
+                resolution <- traverse resolveObservedGenre smGenre
+                forM_ resolution (recordGenreObservation now sid "icy-metadata")
+                update sid
+                  [ RadioStreamName =. (smName <|> radioStreamName stream)
+                  , RadioStreamGenreId =. maybe (radioStreamGenreId stream) ogrGenreId resolution
+                  , RadioStreamLastCheckedAt =. Just now
+                  , RadioStreamUpdatedAt =. now
+                  ]
             pure True
       let processed = length candidates
           updated = length (filter id results)
@@ -936,16 +1076,16 @@ radioServer user =
     saveStream now RadioStreamUpsert{..} = do
       let streamUrl = T.strip rsuStreamUrl
           name      = normalizeMaybe rsuName
-          country   = normalizeMaybe rsuCountry
-          genre     = normalizeMaybe rsuGenre
       mExisting <- getBy (UniqueRadioStreamUrl streamUrl)
       case mExisting of
         Nothing -> do
           let record = RadioStream
                 { radioStreamStreamUrl = streamUrl
                 , radioStreamName = name
-                , radioStreamCountry = country
-                , radioStreamGenre = genre
+                , radioStreamCountry = Nothing
+                , radioStreamCountryId = rsuCountryId
+                , radioStreamGenre = Nothing
+                , radioStreamGenreId = rsuGenreId
                 , radioStreamIsActive = True
                 , radioStreamLastCheckedAt = Just now
                 , radioStreamCreatedAt = now
@@ -956,28 +1096,27 @@ radioServer user =
         Just (Entity sid old) -> do
           let merged = old
                 { radioStreamName = name <|> radioStreamName old
-                , radioStreamCountry = country <|> radioStreamCountry old
-                , radioStreamGenre = genre <|> radioStreamGenre old
+                , radioStreamCountryId =
+                    if fromMaybe False rsuClearCountry
+                      then Nothing
+                      else rsuCountryId <|> radioStreamCountryId old
+                , radioStreamGenreId =
+                    if fromMaybe False rsuClearGenre
+                      then Nothing
+                      else rsuGenreId <|> radioStreamGenreId old
                 , radioStreamIsActive = True
                 , radioStreamLastCheckedAt = Just now
                 , radioStreamUpdatedAt = now
                 }
           update sid
             [ RadioStreamName =. radioStreamName merged
-            , RadioStreamCountry =. radioStreamCountry merged
-            , RadioStreamGenre =. radioStreamGenre merged
+            , RadioStreamCountryId =. radioStreamCountryId merged
+            , RadioStreamGenreId =. radioStreamGenreId merged
             , RadioStreamIsActive =. True
             , RadioStreamLastCheckedAt =. Just now
             , RadioStreamUpdatedAt =. now
             ]
           pure (Entity sid merged, False)
-
-    matchesField :: Maybe Text -> Maybe Text -> Bool
-    matchesField Nothing _ = True
-    matchesField (Just query) mVal =
-      case mVal of
-        Nothing    -> False
-        Just value -> query `T.isInfixOf` T.toLower value
 
     normalizeMaybe :: Maybe Text -> Maybe Text
     normalizeMaybe mTxt =
@@ -985,24 +1124,176 @@ radioServer user =
         Just txt | not (T.null txt) -> Just txt
         _                           -> Nothing
 
-    normalizeUpsert :: RadioStreamUpsert -> RadioStreamUpsert
-    normalizeUpsert u =
-      u { rsuStreamUrl = T.strip (rsuStreamUrl u)
-        , rsuName      = normalizeMaybe (rsuName u)
-        , rsuCountry   = normalizeMaybe (rsuCountry u)
-        , rsuGenre     = normalizeMaybe (rsuGenre u)
-        }
-
-    normalizeImportUpsert :: RadioStreamUpsert -> Maybe RadioStreamUpsert
-    normalizeImportUpsert rawUpsert =
-      let normalized = normalizeUpsert rawUpsert
-      in case validateRadioStreamUrl (rsuStreamUrl normalized) of
+    normalizeImportCandidate :: RadioImportCandidate -> Maybe RadioImportCandidate
+    normalizeImportCandidate rawCandidate =
+      let normalized = rawCandidate
+            { ricStreamUrl = T.strip (ricStreamUrl rawCandidate)
+            , ricName = normalizeMaybe (ricName rawCandidate)
+            , ricObservedCountry = normalizeMaybe (ricObservedCountry rawCandidate)
+            , ricObservedGenre = normalizeMaybe (ricObservedGenre rawCandidate)
+            }
+      in case validateRadioStreamUrl (ricStreamUrl normalized) of
           Right validUrl | isStreamUrl validUrl ->
-            Just normalized { rsuStreamUrl = validUrl }
+            Just normalized { ricStreamUrl = validUrl }
           _ ->
             Nothing
 
-    fetchSource :: Manager -> Text -> IO [RadioStreamUpsert]
+    validateActiveCountryReference :: Text -> Maybe UUID -> SqlPersistT IO (Either Text ())
+    validateActiveCountryReference _ Nothing = pure (Right ())
+    validateActiveCountryReference fieldName (Just countryId) = do
+      mCountry <- get (Catalog.CountryReferenceKey countryId)
+      pure $ case mCountry of
+        Just country
+          | Catalog.countryReferenceActive country
+          , isNothing (Catalog.countryReferenceDeprecatedAt country) -> Right ()
+        _ -> Left (fieldName <> " must reference an active country")
+
+    validatePublishedGenreReference :: Text -> Maybe UUID -> SqlPersistT IO (Either Text ())
+    validatePublishedGenreReference _ Nothing = pure (Right ())
+    validatePublishedGenreReference fieldName (Just genreId) =
+      fmap (fmap (const ())) (resolvePublishedGenreSelections fieldName [genreId])
+
+    resolveObservedCountry :: Text -> SqlPersistT IO ObservedCountryResolution
+    resolveObservedCountry originalValue = do
+      let normalizedValue = T.toLower (T.strip originalValue)
+      rows <- rawSql
+        "SELECT DISTINCT id FROM country_reference WHERE active AND deprecated_at IS NULL AND ? IN (lower(btrim(alpha2)), lower(btrim(alpha3)), lower(btrim(name_es)), lower(btrim(name_en))) ORDER BY id"
+        [PersistText normalizedValue]
+      let candidateIds = [countryId | Single countryId <- rows]
+          resolvedCountryId = case candidateIds of
+            [countryId] -> Just countryId
+            _           -> Nothing
+          status = case candidateIds of
+            []  -> "unresolved"
+            [_] -> "mapped"
+            _   -> "ambiguous"
+      pure ObservedCountryResolution
+        { ocrOriginalValue = T.strip originalValue
+        , ocrNormalizedValue = normalizedValue
+        , ocrCandidateIds = candidateIds
+        , ocrCountryId = resolvedCountryId
+        , ocrStatus = status
+        }
+
+    recordCountryObservation
+      :: UTCTime
+      -> RadioStreamId
+      -> Text
+      -> ObservedCountryResolution
+      -> SqlPersistT IO ()
+    recordCountryObservation now streamId source ObservedCountryResolution{..} = do
+      mExisting <- getBy (UniqueRadioStreamCountryObservation streamId ocrNormalizedValue source)
+      observationId <- case mExisting of
+        Nothing -> insert RadioStreamCountryObservation
+          { radioStreamCountryObservationStreamId = streamId
+          , radioStreamCountryObservationOriginalValue = ocrOriginalValue
+          , radioStreamCountryObservationNormalizedValue = ocrNormalizedValue
+          , radioStreamCountryObservationCountryId = ocrCountryId
+          , radioStreamCountryObservationStatus = ocrStatus
+          , radioStreamCountryObservationSource = source
+          , radioStreamCountryObservationFirstObservedAt = now
+          , radioStreamCountryObservationLastObservedAt = now
+          , radioStreamCountryObservationObservationCount = 1
+          }
+        Just (Entity existingId _) -> do
+          update existingId
+            [ RadioStreamCountryObservationOriginalValue =. ocrOriginalValue
+            , RadioStreamCountryObservationCountryId =. ocrCountryId
+            , RadioStreamCountryObservationStatus =. ocrStatus
+            , RadioStreamCountryObservationLastObservedAt =. now
+            , RadioStreamCountryObservationObservationCount +=. 1
+            ]
+          pure existingId
+      updateWhere
+        [RadioStreamCountryObservationCandidateObservationId ==. observationId]
+        [RadioStreamCountryObservationCandidateActive =. False]
+      forM_ ocrCandidateIds $ \countryId -> do
+        let candidateKey = RadioStreamCountryObservationCandidateKey observationId countryId
+        mCandidate <- get candidateKey
+        case mCandidate of
+          Nothing -> repsert candidateKey RadioStreamCountryObservationCandidate
+            { radioStreamCountryObservationCandidateObservationId = observationId
+            , radioStreamCountryObservationCandidateCountryId = countryId
+            , radioStreamCountryObservationCandidateActive = True
+            , radioStreamCountryObservationCandidateFirstMatchedAt = now
+            , radioStreamCountryObservationCandidateLastMatchedAt = now
+            }
+          Just _ -> update candidateKey
+            [ RadioStreamCountryObservationCandidateActive =. True
+            , RadioStreamCountryObservationCandidateLastMatchedAt =. now
+            ]
+
+    resolveObservedGenre :: Text -> SqlPersistT IO ObservedGenreResolution
+    resolveObservedGenre originalValue = do
+      let normalizedValue = T.toLower (T.strip originalValue)
+      rows <- rawSql
+        "SELECT DISTINCT genre.id FROM genre JOIN catalog_definition catalog ON catalog.id=genre.catalog_id AND catalog.code='genres' AND catalog.active JOIN workflow_state state ON state.id=genre.workflow_state_id AND state.code='published' AND state.active WHERE genre.active AND ? IN (lower(btrim(genre.code)), lower(btrim(genre.name_es)), lower(btrim(genre.name_en))) ORDER BY genre.id"
+        [PersistText normalizedValue]
+      let candidateIds = [genreId | Single genreId <- rows]
+          resolvedGenreId = case candidateIds of
+            [genreId] -> Just genreId
+            _         -> Nothing
+          status = case candidateIds of
+            []  -> "unresolved"
+            [_] -> "mapped"
+            _   -> "ambiguous"
+      pure ObservedGenreResolution
+        { ogrOriginalValue = T.strip originalValue
+        , ogrNormalizedValue = normalizedValue
+        , ogrCandidateIds = candidateIds
+        , ogrGenreId = resolvedGenreId
+        , ogrStatus = status
+        }
+
+    recordGenreObservation
+      :: UTCTime
+      -> RadioStreamId
+      -> Text
+      -> ObservedGenreResolution
+      -> SqlPersistT IO ()
+    recordGenreObservation now streamId source ObservedGenreResolution{..} = do
+      mExisting <- getBy (UniqueRadioStreamGenreObservation streamId ogrNormalizedValue source)
+      observationId <- case mExisting of
+        Nothing -> insert RadioStreamGenreObservation
+          { radioStreamGenreObservationStreamId = streamId
+          , radioStreamGenreObservationOriginalValue = ogrOriginalValue
+          , radioStreamGenreObservationNormalizedValue = ogrNormalizedValue
+          , radioStreamGenreObservationGenreId = ogrGenreId
+          , radioStreamGenreObservationStatus = ogrStatus
+          , radioStreamGenreObservationSource = source
+          , radioStreamGenreObservationFirstObservedAt = now
+          , radioStreamGenreObservationLastObservedAt = now
+          , radioStreamGenreObservationObservationCount = 1
+          }
+        Just (Entity existingId _) -> do
+          update existingId
+            [ RadioStreamGenreObservationOriginalValue =. ogrOriginalValue
+            , RadioStreamGenreObservationGenreId =. ogrGenreId
+            , RadioStreamGenreObservationStatus =. ogrStatus
+            , RadioStreamGenreObservationLastObservedAt =. now
+            , RadioStreamGenreObservationObservationCount +=. 1
+            ]
+          pure existingId
+      updateWhere
+        [RadioStreamGenreObservationCandidateObservationId ==. observationId]
+        [RadioStreamGenreObservationCandidateActive =. False]
+      forM_ ogrCandidateIds $ \genreId -> do
+        let candidateKey = RadioStreamGenreObservationCandidateKey observationId genreId
+        mCandidate <- get candidateKey
+        case mCandidate of
+          Nothing -> repsert candidateKey RadioStreamGenreObservationCandidate
+            { radioStreamGenreObservationCandidateObservationId = observationId
+            , radioStreamGenreObservationCandidateGenreId = genreId
+            , radioStreamGenreObservationCandidateActive = True
+            , radioStreamGenreObservationCandidateFirstMatchedAt = now
+            , radioStreamGenreObservationCandidateLastMatchedAt = now
+            }
+          Just _ -> update candidateKey
+            [ RadioStreamGenreObservationCandidateActive =. True
+            , RadioStreamGenreObservationCandidateLastMatchedAt =. now
+            ]
+
+    fetchSource :: Manager -> Text -> IO [RadioImportCandidate]
     fetchSource manager src = do
       req <- parseRequest (T.unpack (canonicalRadioImportSource src))
       resp <- httpLbs req manager
@@ -1012,7 +1303,7 @@ radioServer user =
         then pure csvItems
         else pure (map toStreamUpsert (extractUrls bodyTxt))
 
-    parseCsvStreams :: Text -> [RadioStreamUpsert]
+    parseCsvStreams :: Text -> [RadioImportCandidate]
     parseCsvStreams body =
       let ls = filter (not . T.null) (T.lines body)
       in case ls of
@@ -1030,11 +1321,11 @@ radioServer user =
                   in case url of
                        Nothing -> Nothing
                        Just u  ->
-                         Just RadioStreamUpsert
-                           { rsuStreamUrl = u
-                           , rsuName      = pick mNameIdx cells
-                           , rsuCountry   = pick mCountryIdx cells
-                           , rsuGenre     = pick mGenreIdx cells
+                         Just RadioImportCandidate
+                           { ricStreamUrl = u
+                           , ricName      = pick mNameIdx cells
+                           , ricObservedCountry = pick mCountryIdx cells
+                           , ricObservedGenre = pick mGenreIdx cells
                            }
                  ) rows
 
@@ -1052,13 +1343,13 @@ radioServer user =
           hasExt = any (`T.isInfixOf` lower) [".m3u", ".pls", ".aac", ".mp3", ".stream", "/stream"]
       in hasProto && hasExt
 
-    toStreamUpsert :: Text -> RadioStreamUpsert
+    toStreamUpsert :: Text -> RadioImportCandidate
     toStreamUpsert url =
-      RadioStreamUpsert
-        { rsuStreamUrl = url
-        , rsuName = Just (deriveName url)
-        , rsuCountry = Nothing
-        , rsuGenre = Nothing
+      RadioImportCandidate
+        { ricStreamUrl = url
+        , ricName = Just (deriveName url)
+        , ricObservedCountry = Nothing
+        , ricObservedGenre = Nothing
         }
 
     deriveName :: Text -> Text
@@ -1165,17 +1456,45 @@ radioServer user =
                 in if T.null trimmed then Nothing else Just trimmed
       in extract singleMarker '\'' <|> extract doubleMarker '"'
 
-    toDTO :: Entity RadioStream -> RadioStreamDTO
-    toDTO (Entity sid RadioStream{..}) =
-      RadioStreamDTO
-        { rsId = fromIntegral (fromSqlKey sid) :: Int64
-        , rsName = radioStreamName
-        , rsStreamUrl = radioStreamStreamUrl
-        , rsCountry = radioStreamCountry
-        , rsGenre = radioStreamGenre
-        , rsActive = radioStreamIsActive
-        , rsLastCheckedAt = radioStreamLastCheckedAt
-        }
+    buildRadioStreamDTOs :: [Entity RadioStream] -> SqlPersistT IO [RadioStreamDTO]
+    buildRadioStreamDTOs streams = do
+      let countryIds = Map.keys . Map.fromList $
+            [ (countryId, ())
+            | Entity _ stream <- streams
+            , Just countryId <- [radioStreamCountryId stream]
+            ]
+          genreIds = Map.keys . Map.fromList $
+            [ (genreId, ())
+            | Entity _ stream <- streams
+            , Just genreId <- [radioStreamGenreId stream]
+            ]
+      countryRows <- if null countryIds
+        then pure []
+        else selectList [Catalog.CountryReferenceId <-. map Catalog.CountryReferenceKey countryIds] []
+      genreRows <- if null genreIds
+        then pure []
+        else selectList [Catalog.GenreId <-. map Catalog.GenreKey genreIds] []
+      let countryLabels = Map.fromList
+            [ (countryId, Catalog.countryReferenceNameEs country)
+            | Entity (Catalog.CountryReferenceKey countryId) country <- countryRows
+            ]
+          genreLabels = Map.fromList
+            [ (genreId, Catalog.genreNameEs genre)
+            | Entity (Catalog.GenreKey genreId) genre <- genreRows
+            ]
+          toDTO (Entity sid RadioStream{..}) =
+            RadioStreamDTO
+              { rsId = fromIntegral (fromSqlKey sid) :: Int64
+              , rsName = radioStreamName
+              , rsStreamUrl = radioStreamStreamUrl
+              , rsCountryId = radioStreamCountryId
+              , rsCountry = radioStreamCountryId >>= (`Map.lookup` countryLabels)
+              , rsGenreId = radioStreamGenreId
+              , rsGenre = radioStreamGenreId >>= (`Map.lookup` genreLabels)
+              , rsActive = radioStreamIsActive
+              , rsLastCheckedAt = radioStreamLastCheckedAt
+              }
+      pure (map toDTO streams)
 
     getSelfPresence :: m (Maybe RadioPresenceDTO)
     getSelfPresence = fetchPresence (auPartyId user)
@@ -1263,10 +1582,6 @@ radioServer user =
       Env{..} <- ask
       name <- either throwError pure $
         validateRadioOptionalMetadataField "rtrName" 160 rtrName
-      country <- either throwError pure $
-        validateRadioOptionalMetadataField "rtrCountry" 80 rtrCountry
-      genre <- either throwError pure $
-        validateRadioOptionalMetadataField "rtrGenre" 120 rtrGenre
       streamKey <- liftIO (toText <$> nextRandom)
       mListenBaseRaw <- liftIO (lookupEnv "RADIO_PUBLIC_BASE")
       listenBaseRaw <- either throwError pure $
@@ -1297,12 +1612,20 @@ radioServer user =
           upsertPayload = RadioStreamUpsert
             { rsuStreamUrl = publicUrl
             , rsuName      = name
-            , rsuCountry   = country
-            , rsuGenre     = genre
+            , rsuCountryId = rtrCountryId
+            , rsuClearCountry = Just False
+            , rsuGenreId   = rtrGenreId
+            , rsuClearGenre = Just False
             }
-      entity <- liftIO $ flip runSqlPool envPool $ do
-        (ent, _) <- saveStream now upsertPayload
-        pure ent
+      result <- liftIO $ flip runSqlPool envPool $ do
+        countryValidation <- validateActiveCountryReference "rtrCountryId" rtrCountryId
+        genreValidation <- validatePublishedGenreReference "rtrGenreId" rtrGenreId
+        case countryValidation >> genreValidation of
+          Left err -> pure (Left err)
+          Right _ -> do
+            (entity, _) <- saveStream now upsertPayload
+            pure (Right entity)
+      entity <- either (throwError . radioCatalogValidationError) pure result
       pure RadioTransmissionInfo
         { rtiStreamId  = fromIntegral (fromSqlKey (entityKey entity))
         , rtiStreamUrl = publicUrl

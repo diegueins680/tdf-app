@@ -38,6 +38,7 @@ import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPie
 import           TDF.API.Internships        (InternshipsAPI)
 import           TDF.API.Types
 import           TDF.Auth                   (AuthedUser(..))
+import           TDF.Catalog.Security       (loadCanonicalPartyRoleMap, selectCanonicalPartyIdsByRole)
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra            as ME
@@ -392,17 +393,16 @@ internshipsServer user =
     listInternsH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternSummaryDTO]
     listInternsH = do
       ensureAdmin
-      roles <- withPool $ selectList [M.PartyRoleRole ==. M.Intern, M.PartyRoleActive ==. True] []
-      let partyIds = map (M.partyRolePartyId . entityVal) roles
+      partyIds <- withPool $ selectCanonicalPartyIdsByRole M.Intern
       if null partyIds
         then pure []
         else do
           parties <- withPool $ selectList [M.PartyId <-. partyIds] [Asc M.PartyDisplayName]
-          allRoles <- withPool $ selectList [M.PartyRolePartyId <-. partyIds, M.PartyRoleActive ==. True] [Asc M.PartyRoleRole]
-          let rolesByParty = Map.fromListWith (++)
-                [ (M.partyRolePartyId (entityVal role), [M.partyRoleRole (entityVal role)])
-                | role <- allRoles
-                ]
+          rolesResult <- withPool $ loadCanonicalPartyRoleMap partyIds
+          rolesByParty <- either
+            (\message -> throwError err500 {errBody = BL.fromStrict (TE.encodeUtf8 message)})
+            pure
+            rolesResult
           pure
             [ InternSummaryDTO
                 { isPartyId = fromSqlKey pid

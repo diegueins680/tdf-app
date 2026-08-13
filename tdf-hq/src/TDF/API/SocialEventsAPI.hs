@@ -35,6 +35,7 @@ import Data.Char (
  )
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
 import Servant.Multipart (
@@ -363,8 +364,8 @@ type EventsRoutes =
         :> QueryParam "city" Text
         :> QueryParam "scope" Text
         :> QueryParam "start_after" Text
-        :> QueryParam "event_type" Text
-        :> QueryParam "event_status" Text
+        :> QueryParam "event_type_id" Text
+        :> QueryParam "workflow_state_id" Text
         :> QueryParam "artistId" Text
         :> QueryParam "venueId" Text
         :> QueryParam "limit" Int
@@ -404,7 +405,7 @@ type VenuesRoutes =
         :<|> "venues" :> IdParam :> ReqBody '[JSON] VenueUpdateDTO :> Put '[JSON] VenueDTO
 
 type ArtistsRoutes =
-    "artists" :> QueryParam "name" Text :> QueryParam "genre" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
+    "artists" :> QueryParam "name" Text :> QueryParam "genreId" UUID :> QueryParam "genre" Text :> QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [ArtistDTO]
         :<|> "artists" :> ReqBody '[JSON] ArtistDTO :> Post '[JSON] ArtistDTO
         :<|> "artists" :> IdParam :> Get '[JSON] ArtistDTO
         :<|> "artists" :> IdParam :> ReqBody '[JSON] ArtistDTO :> Put '[JSON] ArtistDTO

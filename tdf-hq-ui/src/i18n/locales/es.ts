@@ -8,8 +8,14 @@ const es = {
     saved: 'Preferencias guardadas.',
     error: 'Ocurrió un error.',
   },
-  internships: {
-    taskDetail: { instructions: 'Instrucciones' },
+  pipelines: {
+    title: 'Pipelines',
+    subtitle: 'Gestiona proyectos de {{workflow}}',
+    workflowTabs: 'Flujos de proyecto disponibles',
+    empty: 'No hay etapas definidas para este pipeline.',
+    keyboardHelp: 'Teclado: enfoca una tarjeta, presiona Espacio para levantarla, usa las flechas para moverla y presiona Espacio para soltarla.',
+    stageLabel: 'Etapa {{stage}}',
+    cardMoveLabel: 'Mover {{title}}, actualmente en {{stage}}',
   },
   pagination: {
     items: 'registros',
@@ -119,7 +125,7 @@ const es = {
     currency: 'Moneda',
     timezone: 'Zona horaria',
     country: 'Código de país',
-    countryHint: 'Código ISO opcional de dos letras, por ejemplo EC o ES.',
+    countryHint: 'Selecciona un país del catálogo oficial o deja el campo vacío.',
   },
   system: {
     title: 'Estado del sistema',
@@ -140,6 +146,15 @@ const es = {
   login: {
     resetDialog: { title: 'Recuperar acceso' },
     signupDialog: { title: 'Crear cuenta' },
+  },
+  fanClub: {
+    reactions: {
+      empty: 'Sin reacciones disponibles',
+      loading: 'Guardando reacción',
+    },
+  },
+  internships: {
+    taskDetail: { instructions: 'Instrucciones' },
   },
   operations: {
     title: 'Centro de control de operaciones',
@@ -259,6 +274,7 @@ const es = {
       invalidQuantity: 'La cantidad debe ser entre 1 y 10',
     },
   },
+
   tdfPlatform: {
     cta: {
       createAccount: 'Crear cuenta',

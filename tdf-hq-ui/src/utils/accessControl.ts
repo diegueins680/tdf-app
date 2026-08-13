@@ -141,6 +141,15 @@ export function canAccessLabelTracks(
     : hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
 }
 
+export function canAccessLabelProjects(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, CMS_EDITOR_ROLE_KEYS);
+}
+
 export function canAccessCmsAdmin(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -239,10 +248,69 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
-  const decision = evaluatePathAccess(path, {
-    authenticated: true,
-    roles,
-    modules,
-  });
-  return decision?.state === 'allowed';
+  if (path.startsWith('/configuracion/roles-permisos') || path.startsWith('/configuracion/usuarios-admin')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
+  if (path.startsWith('/admin/roles')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
+  if (path.startsWith('/social/inbox')) {
+    return hasSocialInboxAccess(roles, modules);
+  }
+  if (path.startsWith('/herramientas/token-admin')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
+  if (path.startsWith('/social')) {
+    return true;
+  }
+  if (path.startsWith('/herramientas/chatkit') || path.startsWith('/herramientas/tidal-agent')) {
+    return hasAiToolingAccess(roles, modules);
+  }
+  if (path.startsWith('/configuracion/cms')) {
+    return canAccessCmsAdmin(roles, modules);
+  }
+  if (path.startsWith('/configuracion/integraciones/calendario')) {
+    return canAccessAdminOnlyRoute(roles, modules);
+  }
+  if (path.startsWith('/configuracion/whatsapp-consentimiento')) {
+    return canAccessAdminOnlyRoute(roles, modules);
+  }
+  if (path.startsWith('/practicas')) {
+    return hasInternshipsAccess(roles, modules);
+  }
+  if (path.startsWith('/perfil/')) {
+    return true;
+  }
+  if (path.startsWith('/mi-profesor')) {
+    return hasSchoolPortalAccess(roles, modules);
+  }
+  if (path === '/escuela' || path.startsWith('/escuela/')) {
+    return isSchoolStaffRole(roles, modules);
+  }
+  if (path.startsWith('/label/tracks')) {
+    return canAccessLabelTracks(roles, modules);
+  }
+  if (path.startsWith('/label/proyectos')) {
+    return canAccessLabelProjects(roles, modules);
+  }
+  if (path.startsWith('/label/assets')) {
+    return hasOperationsAccess(roles, modules);
+  }
+  if (path.startsWith('/label')) {
+    return canAccessLabelCatalog(roles, modules);
+  }
+  if (path.startsWith('/operacion')) {
+    return hasOperationsAccess(roles, modules);
+  }
+  if (pathRequiresSchoolStaff(path) && !isSchoolStaffRole(roles, modules)) {
+    return false;
+  }
+
+  const requiredModule = pathRequiresModule(path);
+  if (!requiredModule) {
+    return true;
+  }
+
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has(requiredModule);
 }

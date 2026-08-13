@@ -1,16 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
   Box,
   Button,
   Card,
   CardContent,
+  Checkbox,
+  Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
-  IconButton,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -19,486 +26,422 @@ import {
   TableRow,
   TextField,
   Typography,
-  MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Chip,
-  CircularProgress,
-  Autocomplete,
 } from '@mui/material';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Catalogs, type CatalogDraft, type CatalogItem, type CatalogRevision } from '../api/catalogs';
+import { Rooms } from '../api/rooms';
 import { Services } from '../api/services';
-import { EmptyState } from '../components/PageShell';
-import RoomServiceIcon from '@mui/icons-material/RoomService';
-import type {
-  PricingModel,
-  ServiceCatalogCreate,
-  ServiceCatalogDTO,
-  ServiceCatalogUpdate,
-  ServiceKind,
-} from '../api/types';
+import type { RoomDTO, ServiceCatalogDTO } from '../api/types';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import LazyPaginatedList from '../components/LazyPaginatedList';
-import { resolveRuntimeCurrency } from '../utils/formatters';
 
-interface FormState {
-  id?: string;
-  name: string;
-  price: string;
-  currency: string;
-  billingUnit: string;
-  kind: ServiceKind;
-  pricingModel: PricingModel;
-  taxBps: string;
-  active: boolean;
+const SERVICE_QUERY_KEY = ['service-catalog', 'admin'] as const;
+const SERVICE_ITEMS_QUERY_KEY = ['catalog', 'services', 'admin-items'] as const;
+const SERVICE_REVISIONS_QUERY_KEY = ['catalog', 'services', 'revisions'] as const;
+
+type DefaultResourceDraft = NonNullable<CatalogDraft['serviceOffering']>['defaultResources'][number];
+
+export interface OfferingForm {
+  entityId?: string;
+  baseVersion?: number;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  descriptionEs: string;
+  descriptionEn: string;
+  sortOrder: number;
+  categoryId: string;
+  pricingModelId: string;
+  rateCents: string;
+  currencyId: string;
+  billingUnitEs: string;
+  billingUnitEn: string;
+  taxRateId: string;
+  defaultDurationMinutes: string;
+  requiresEngineer: boolean;
+  resources: DefaultResourceDraft[];
+  reason: string;
 }
 
-const SERVICE_KIND_OPTIONS: readonly ServiceKind[] = ['Recording', 'Mixing', 'Mastering', 'Rehearsal', 'Classes', 'EventProduction'];
-const PRICING_MODEL_OPTIONS: readonly PricingModel[] = ['Hourly', 'PerSong', 'Package', 'Quote', 'Retainer'];
-const SERVICE_QUERY_KEY = ['service-catalog', 'admin'];
+const emptyForm = (): OfferingForm => ({
+  code: '',
+  nameEs: '',
+  nameEn: '',
+  descriptionEs: '',
+  descriptionEn: '',
+  sortOrder: 0,
+  categoryId: '',
+  pricingModelId: '',
+  rateCents: '',
+  currencyId: '',
+  billingUnitEs: '',
+  billingUnitEn: '',
+  taxRateId: '',
+  defaultDurationMinutes: '',
+  requiresEngineer: false,
+  resources: [],
+  reason: '',
+});
 
-const isServiceKind = (value: string): value is ServiceKind =>
-  SERVICE_KIND_OPTIONS.some((kind) => kind === value);
-
-const isPricingModel = (value: string): value is PricingModel =>
-  PRICING_MODEL_OPTIONS.some((model) => model === value);
-
-const normalizeServiceKind = (value: string | null | undefined): ServiceKind => {
-  const trimmed = value?.trim() ?? '';
-  return isServiceKind(trimmed) ? trimmed : 'Recording';
+const optionalText = (value: string): string | undefined => value.trim() || undefined;
+const optionalInteger = (value: string): number | undefined => {
+  if (value.trim() === '') return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
 };
 
-const normalizePricingModel = (value: string | null | undefined): PricingModel => {
-  const trimmed = value?.trim() ?? '';
-  return isPricingModel(trimmed) ? trimmed : 'Hourly';
+const correlationId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `service-offering:${crypto.randomUUID()}`;
+  }
+  return `service-offering:${Date.now()}`;
 };
 
-const formatPrice = (svc: ServiceType) => {
-  if (svc.priceCents == null) return '—';
-  const amount = svc.priceCents / 100;
-  return `${svc.currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+const formatPrice = (service: ServiceType): string => {
+  if (service.priceCents == null) return 'A cotizar';
+  const amount = service.priceCents / 100;
+  const unit = service.billingUnit ? ` / ${service.billingUnit}` : '';
+  return `${service.currency} ${amount.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  })}${unit}`;
+};
+
+export const buildServiceOfferingDraft = (form: OfferingForm): CatalogDraft => ({
+  entityId: form.entityId,
+  baseVersion: form.baseVersion,
+  code: form.code.trim(),
+  nameEs: form.nameEs.trim(),
+  nameEn: form.nameEn.trim(),
+  descriptionEs: optionalText(form.descriptionEs),
+  descriptionEn: optionalText(form.descriptionEn),
+  searchAliasesEs: [],
+  searchAliasesEn: [],
+  sortOrder: form.sortOrder,
+  serviceOffering: {
+    categoryId: form.categoryId,
+    pricingModelId: form.pricingModelId,
+    rateCents: optionalInteger(form.rateCents),
+    currencyId: form.currencyId,
+    billingUnitEs: optionalText(form.billingUnitEs),
+    billingUnitEn: optionalText(form.billingUnitEn),
+    taxRateId: optionalText(form.taxRateId),
+    defaultDurationMinutes: optionalInteger(form.defaultDurationMinutes),
+    requiresEngineer: form.requiresEngineer,
+    defaultResources: form.resources,
+  },
+  reason: form.reason.trim(),
+  sourcePlatform: 'web-admin',
+  correlationId: correlationId(),
+});
+
+const revisionStateColor = (state: string): 'default' | 'info' | 'success' | 'error' | 'warning' => {
+  switch (state) {
+    case 'review': return 'info';
+    case 'published': return 'success';
+    case 'rejected': return 'error';
+    case 'approved': return 'success';
+    default: return 'warning';
+  }
 };
 
 export default function ServiceTypesPage() {
-  useDocumentTitle('Estudio / Servicios');
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<OfferingForm>(emptyForm);
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+
   const servicesQuery = useQuery<ServiceCatalogDTO[]>({
     queryKey: SERVICE_QUERY_KEY,
     queryFn: () => Services.list(true),
     staleTime: 5 * 60 * 1000,
   });
-  const items = useMemo<ServiceType[]>(
+  const serviceItemsQuery = useQuery({
+    queryKey: SERVICE_ITEMS_QUERY_KEY,
+    queryFn: () => Catalogs.listItems('services', { includeInactive: true, pageSize: 200 }),
+  });
+  const categoriesQuery = useQuery({
+    queryKey: ['catalog', 'service-categories', 'options'],
+    queryFn: () => Catalogs.listItems('service-categories', { pageSize: 200 }),
+  });
+  const pricingModelsQuery = useQuery({
+    queryKey: ['catalog', 'service-pricing-models', 'options'],
+    queryFn: () => Catalogs.listItems('service-pricing-models', { pageSize: 200 }),
+  });
+  const resourceSelectionModesQuery = useQuery({
+    queryKey: ['catalog', 'service-resource-selection-modes', 'options'],
+    queryFn: () => Catalogs.listItems('service-resource-selection-modes', { pageSize: 50 }),
+  });
+  const currenciesQuery = useQuery({
+    queryKey: ['catalog', 'currencies', 'options'],
+    queryFn: () => Catalogs.listItems('currencies', { pageSize: 200 }),
+  });
+  const taxRatesQuery = useQuery({
+    queryKey: ['catalog', 'tax-rates', 'options'],
+    queryFn: () => Catalogs.listItems('tax-rates', { pageSize: 200 }),
+  });
+  const roomsQuery = useQuery<RoomDTO[]>({ queryKey: ['rooms', 'service-defaults'], queryFn: Rooms.list });
+  const revisionsQuery = useQuery<CatalogRevision[]>({
+    queryKey: SERVICE_REVISIONS_QUERY_KEY,
+    queryFn: () => Catalogs.listRevisions('services', 1, 100),
+  });
+
+  const services = useMemo(
     () => mergeServiceTypes(servicesQuery.data, { includeInactive: true, sort: false }),
     [servicesQuery.data],
   );
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<FormState>({
-    name: '',
-    price: '',
-    currency: resolveRuntimeCurrency(),
-    billingUnit: '',
-    kind: 'Recording',
-    pricingModel: 'Hourly',
-    taxBps: '',
-    active: true,
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{ price?: string; tax?: string }>({});
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const nameInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (dialogOpen) {
-      setTimeout(() => nameInputRef.current?.focus(), 50);
-    }
-  }, [dialogOpen]);
-
-  const createMutation = useMutation({
-    mutationFn: (payload: ServiceCatalogCreate) => Services.create(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
-  });
-  const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: ServiceCatalogUpdate }) => Services.update(id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
-  });
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => Services.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
-  });
-
-  const sortedItems = useMemo(
-    () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
-    [items],
+  const itemById = useMemo(
+    () => new Map((serviceItemsQuery.data?.items ?? []).map((item) => [item.id, item])),
+    [serviceItemsQuery.data?.items],
   );
-  const currencyOptions = useMemo(
-    () => Array.from(new Set(items.map((item) => item.currency).filter(Boolean))),
-    [items],
-  );
-  const unitOptions = useMemo(
-      () =>
-        Array.from(
-          new Set(
-            items
-              .map((item) => item.billingUnit)
-              .filter((unit): unit is string => Boolean(unit?.trim())),
-        ),
-      ),
-    [items],
-  );
+  const optionsUnavailable = categoriesQuery.isError
+    || pricingModelsQuery.isError
+    || resourceSelectionModesQuery.isError
+    || currenciesQuery.isError
+    || roomsQuery.isError;
+  const defaultResourceSelectionModeId = resourceSelectionModesQuery.data?.items.find(
+    (item) => item.code === 'all',
+  )?.id ?? resourceSelectionModesQuery.data?.items[0]?.id ?? '';
 
-  const handleOpenNew = () => {
-    setForm({
-      name: '',
-      price: '',
-      currency: resolveRuntimeCurrency(),
-      billingUnit: '',
-      kind: 'Recording',
-      pricingModel: 'Hourly',
-      taxBps: '',
-      active: true,
-    });
-    setError(null);
-    setDialogOpen(true);
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: SERVICE_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: SERVICE_ITEMS_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: SERVICE_REVISIONS_QUERY_KEY }),
+    ]);
   };
-
-  const handleEdit = (item: ServiceType) => {
-    setForm({
-      id: item.id,
-      name: item.name,
-      price: item.priceCents != null ? String(item.priceCents / 100) : '',
-      currency: item.currency,
-      billingUnit: item.billingUnit ?? '',
-      kind: normalizeServiceKind(item.kind),
-      pricingModel: normalizePricingModel(item.pricingModel),
-      taxBps: item.taxBps != null ? String(item.taxBps) : '',
-      active: item.active,
-    });
-    setError(null);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    setPendingDeleteId(id);
-    setDeleteConfirmOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (!pendingDeleteId) return;
-    deleteMutation.mutate(pendingDeleteId, {
-      onError: (err) =>
-        setError(err instanceof Error ? err.message : 'No se pudo desactivar el servicio.'),
-    });
-    setDeleteConfirmOpen(false);
-    setPendingDeleteId(null);
-  };
-
-  const handleSubmit = async (evt: React.FormEvent) => {
-    evt.preventDefault();
-    setFieldErrors({});
-    setError(null);
-    const cleanName = form.name.trim();
-    if (!cleanName) {
-      setError('Agrega un nombre.');
-      return;
-    }
-    const priceRaw = form.price.trim();
-    const priceNumber = priceRaw === '' ? null : Number(priceRaw);
-    const priceInvalid = priceNumber !== null && (!Number.isFinite(priceNumber) || priceNumber < 0);
-    if (priceInvalid) {
-      setError('Corrige los campos resaltados.');
-      setFieldErrors((prev) => ({ ...prev, price: 'Usa un valor numérico mayor o igual a 0 o deja vacío.' }));
-      return;
-    }
-    const rateCents = priceNumber === null ? null : Math.round(priceNumber * 100);
-    const taxRaw = form.taxBps.trim();
-    const taxNumber = taxRaw === '' ? null : Number(taxRaw);
-    const taxInvalid = taxNumber !== null && (!Number.isFinite(taxNumber) || taxNumber < 0);
-    if (taxInvalid) {
-      setError('Corrige los campos resaltados.');
-      setFieldErrors((prev) => ({ ...prev, tax: 'Ingresa puntos base numéricos o deja vacío si no aplica.' }));
-      return;
-    }
-    const currency = form.currency.trim() || resolveRuntimeCurrency();
-    const billingUnit = form.billingUnit.trim() || null;
-    setError(null);
-    try {
-      if (form.id) {
-        await updateMutation.mutateAsync({
-          id: form.id,
-          payload: {
-            scuName: cleanName,
-            scuKind: form.kind,
-            scuPricingModel: form.pricingModel,
-            scuRateCents: rateCents,
-            scuCurrency: currency,
-            scuBillingUnit: billingUnit,
-            scuTaxBps: taxNumber,
-            scuActive: form.active,
-          },
-        });
-      } else {
-        await createMutation.mutateAsync({
-          sccName: cleanName,
-          sccKind: form.kind,
-          sccPricingModel: form.pricingModel,
-          sccRateCents: rateCents,
-          sccCurrency: currency,
-          sccBillingUnit: billingUnit,
-          sccTaxBps: taxNumber,
-          sccActive: form.active,
-        });
-      }
+  const createRevision = useMutation({
+    mutationFn: (draft: CatalogDraft) => Catalogs.createRevision('services', draft),
+    onSuccess: async () => {
       setDialogOpen(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el servicio.');
-    }
+      setForm(emptyForm());
+      await refresh();
+    },
+  });
+  const submitRevision = useMutation({
+    mutationFn: Catalogs.submitRevision,
+    onSuccess: refresh,
+  });
+  const approveRevision = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => Catalogs.approveRevision(id, {
+      notes,
+      emergencyOverride: false,
+    }),
+    onSuccess: refresh,
+  });
+  const rejectRevision = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => Catalogs.rejectRevision(id, {
+      notes,
+      emergencyOverride: false,
+    }),
+    onSuccess: refresh,
+  });
+
+  const openCreate = () => {
+    const next = emptyForm();
+    next.sortOrder = services.length * 10;
+    next.categoryId = categoriesQuery.data?.items[0]?.id ?? '';
+    next.pricingModelId = pricingModelsQuery.data?.items[0]?.id ?? '';
+    next.currencyId = currenciesQuery.data?.items.find((item) => item.code === 'USD')?.id
+      ?? currenciesQuery.data?.items[0]?.id
+      ?? '';
+    setForm(next);
+    setDialogOpen(true);
   };
 
-  const isLoading = servicesQuery.isLoading;
+  const openEdit = (service: ServiceType) => {
+    const item = itemById.get(service.id);
+    setForm({
+      entityId: service.id,
+      baseVersion: item?.version,
+      code: service.code,
+      nameEs: servicesQuery.data?.find((entry) => entry.scId === service.id)?.scNameEs ?? service.name,
+      nameEn: servicesQuery.data?.find((entry) => entry.scId === service.id)?.scNameEn ?? service.name,
+      descriptionEs: item?.descriptionEs ?? '',
+      descriptionEn: item?.descriptionEn ?? '',
+      sortOrder: item?.sortOrder ?? 0,
+      categoryId: service.categoryId,
+      pricingModelId: service.pricingModelId,
+      rateCents: service.priceCents == null ? '' : String(service.priceCents),
+      currencyId: service.currencyId,
+      billingUnitEs: service.billingUnit ?? '',
+      billingUnitEn: service.billingUnit ?? '',
+      taxRateId: service.taxRateId ?? '',
+      defaultDurationMinutes: service.defaultDurationMinutes == null ? '' : String(service.defaultDurationMinutes),
+      requiresEngineer: service.requiresEngineer,
+      resources: service.defaultResources.map((resource) => ({
+        resourceId: resource.sdrResourceId,
+        selectionModeId: resource.sdrSelectionModeId,
+        sortOrder: resource.sdrSortOrder,
+      })),
+      reason: '',
+    });
+    setDialogOpen(true);
+  };
+
+  const setResourceSelected = (roomId: string, selected: boolean) => {
+    setForm((current) => ({
+      ...current,
+      resources: selected
+        ? [...current.resources, {
+            resourceId: roomId,
+            selectionModeId: defaultResourceSelectionModeId,
+            sortOrder: current.resources.length * 10,
+          }]
+        : current.resources.filter((resource) => resource.resourceId !== roomId),
+    }));
+  };
+  const setResourceMode = (roomId: string, selectionModeId: DefaultResourceDraft['selectionModeId']) => {
+    setForm((current) => ({
+      ...current,
+      resources: current.resources.map((resource) => (
+        resource.resourceId === roomId ? { ...resource, selectionModeId } : resource
+      )),
+    }));
+  };
+
+  const submitForm = () => {
+    createRevision.mutate(buildServiceOfferingDraft(form));
+  };
+  const formValid = Boolean(
+    form.code.trim()
+      && form.nameEs.trim()
+      && form.nameEn.trim()
+      && form.categoryId
+      && form.pricingModelId
+      && form.currencyId
+      && form.resources.every((resource) => resource.selectionModeId)
+      && form.reason.trim(),
+  );
 
   return (
     <Box sx={{ color: '#e2e8f0' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Box>
-          <Typography variant="h5" fontWeight={800}>
-            Tipos de servicio
-          </Typography>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1.5} mb={2}>
+        <Stack spacing={0.75}>
+          <Typography variant="h5" fontWeight={800}>Catálogo de servicios</Typography>
           <Typography variant="body2" color="rgba(226,232,240,0.75)">
-            Mantén el catálogo de servicios del estudio con precios. Se usa al crear sesiones en el calendario.
+            Ofertas canónicas y borradores versionados. Publicar exige revisión; la agenda sólo escribe IDs aprobados.
           </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew} sx={{ textTransform: 'none' }}>
-          Nuevo servicio
-        </Button>
+        </Stack>
+        <Button variant="contained" onClick={openCreate} disabled={optionsUnavailable}>Crear borrador</Button>
       </Stack>
 
-      <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {(servicesQuery.isError || optionsUnavailable) && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          No se pudo cargar toda la configuración canónica. No se habilitarán valores locales ni escritura parcial.
+        </Alert>
+      )}
+
+      <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', mb: 2 }}>
         <CardContent>
-          {servicesQuery.isError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              No se pudo cargar el catálogo de servicios. Usando valores locales por ahora.
-            </Alert>
-          )}
-          {sortedItems.length === 0 ? (
-            <EmptyState
-              icon={<RoomServiceIcon />}
-              title="Sin servicios"
-              description="Aún no tienes servicios. Crea el primero."
-            />
+          {servicesQuery.isLoading ? (
+            <Stack direction="row" spacing={1} alignItems="center"><CircularProgress size={18} /><Typography variant="body2">Cargando servicios…</Typography></Stack>
+          ) : services.length === 0 ? (
+            <Alert severity="info">No hay ofertas de servicio publicadas.</Alert>
           ) : (
             <LazyPaginatedList
-              items={sortedItems}
+              items={services}
               pagination={{ itemLabel: 'servicios', initialRowsPerPage: 25 }}
-              renderItems={(visibleItems) => (
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Servicio</TableCell>
-                      <TableCell>Precio</TableCell>
-                      <TableCell>Unidad</TableCell>
-                      <TableCell>Tipo</TableCell>
-                      <TableCell>Modelo</TableCell>
-                      <TableCell>Estado</TableCell>
-                      <TableCell align="right">Acciones</TableCell>
+              renderItems={(visibleServices) => (
+                <Table size="small" aria-label="Servicios canónicos">
+                  <TableHead><TableRow>
+                    <TableCell>Servicio</TableCell><TableCell>Categoría</TableCell><TableCell>Precio</TableCell>
+                    <TableCell>Duración</TableCell><TableCell>Ingeniería</TableCell><TableCell>Recursos</TableCell>
+                    <TableCell>Estado</TableCell><TableCell align="right">Acciones</TableCell>
+                  </TableRow></TableHead>
+                  <TableBody>{visibleServices.map((service) => (
+                    <TableRow key={service.id} hover>
+                      <TableCell><Stack spacing={0.25}><Typography variant="body2">{service.name}</Typography><Typography variant="caption" color="text.secondary">{service.code} · {service.id}</Typography></Stack></TableCell>
+                      <TableCell>{service.kind ?? '—'}</TableCell>
+                      <TableCell>{formatPrice(service)}</TableCell>
+                      <TableCell>{service.defaultDurationMinutes ? `${service.defaultDurationMinutes} min` : '—'}</TableCell>
+                      <TableCell>{service.requiresEngineer ? 'Requerida' : 'Opcional'}</TableCell>
+                      <TableCell>{service.defaultResources.map((resource) => resource.sdrResourceName).join(' · ') || '—'}</TableCell>
+                      <TableCell><Chip size="small" label={service.active ? 'Activo' : 'Inactivo'} color={service.active ? 'success' : 'default'} /></TableCell>
+                      <TableCell align="right"><Button size="small" onClick={() => openEdit(service)}>Crear revisión</Button></TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {visibleItems.map((item) => (
-                      <TableRow key={item.id} hover>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{formatPrice(item)}</TableCell>
-                        <TableCell>{item.billingUnit ?? '—'}</TableCell>
-                        <TableCell>{item.kind ?? '—'}</TableCell>
-                        <TableCell>{item.pricingModel ?? '—'}</TableCell>
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            label={item.active ? 'Activo' : 'Inactivo'}
-                            color={item.active ? 'success' : 'default'}
-                            variant={item.active ? 'filled' : 'outlined'}
-                          />
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton size="small" onClick={() => handleEdit(item)} aria-label={`Editar servicio ${item.name}`}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton size="small" onClick={() => handleDelete(item.id)} aria-label={`Eliminar servicio ${item.name}`}>
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
+                  ))}</TableBody>
                 </Table>
               )}
             />
           )}
-          {isLoading && (
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
-              <CircularProgress size={18} />
-              <Typography variant="body2" color="text.secondary">
-                Cargando servicios...
-              </Typography>
-            </Stack>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <CardContent>
+          <Typography variant="h6" mb={1}>Revisiones recientes</Typography>
+          {revisionsQuery.isLoading ? <CircularProgress size={18} /> : (revisionsQuery.data?.length ?? 0) === 0 ? (
+            <Typography variant="body2" color="text.secondary">No hay borradores ni revisiones recientes.</Typography>
+          ) : (
+            <Table size="small" aria-label="Revisiones de servicios">
+              <TableHead><TableRow><TableCell>Oferta</TableCell><TableCell>Estado</TableCell><TableCell>Notas de revisión</TableCell><TableCell align="right">Acciones</TableCell></TableRow></TableHead>
+              <TableBody>{revisionsQuery.data?.map((revision) => {
+                const notes = reviewNotes[revision.id] ?? '';
+                return (
+                  <TableRow key={revision.id}>
+                    <TableCell><Typography variant="body2">{revision.draft.nameEs}</Typography><Typography variant="caption" color="text.secondary">{revision.id}</Typography></TableCell>
+                    <TableCell><Chip size="small" label={revision.workflowState} color={revisionStateColor(revision.workflowState)} /></TableCell>
+                    <TableCell><TextField size="small" value={notes} onChange={(event) => setReviewNotes((current) => ({ ...current, [revision.id]: event.target.value }))} label="Nota o motivo" inputProps={{ 'aria-label': `Nota para ${revision.draft.nameEs}` }} /></TableCell>
+                    <TableCell align="right"><Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                      {(revision.workflowState === 'draft' || revision.workflowState === 'rejected') && <Button size="small" onClick={() => submitRevision.mutate(revision.id)}>Enviar</Button>}
+                      {revision.workflowState === 'review' && <Button size="small" color="success" disabled={!notes.trim()} onClick={() => approveRevision.mutate({ id: revision.id, notes })}>Aprobar</Button>}
+                      {revision.workflowState === 'review' && <Button size="small" color="error" disabled={!notes.trim()} onClick={() => rejectRevision.mutate({ id: revision.id, notes })}>Rechazar</Button>}
+                    </Stack></TableCell>
+                  </TableRow>
+                );
+              })}</TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <form
-          onSubmit={(evt) => {
-            void handleSubmit(evt);
-          }}
-        >
-          <DialogTitle>{form.id ? 'Editar servicio' : 'Nuevo servicio'}</DialogTitle>
-          <DialogContent dividers>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nombre"
-                  value={form.name}
-                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  fullWidth
-                  required
-                  inputRef={nameInputRef}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Precio"
-                  type="number"
-                  value={form.price}
-                  inputProps={{ inputMode: 'decimal', min: 0 }}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setFieldErrors((prev) => ({ ...prev, price: undefined }));
-                    setForm((prev) => ({ ...prev, price: next }));
-                  }}
-                  fullWidth
-                  error={Boolean(fieldErrors.price)}
-                  helperText={fieldErrors.price ?? 'Monto base. Deja vacío si es a cotizar.'}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <Autocomplete
-                  freeSolo
-                  options={currencyOptions}
-                  value={form.currency}
-                  onChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value ?? prev.currency }))}
-                  onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, currency: value }))}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Moneda"
-                      required
-                      fullWidth
-                      helperText="Código ISO ej. USD, EUR, COP"
-                      inputProps={{ ...params.inputProps, inputMode: 'text' }}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Autocomplete
-                  freeSolo
-                  options={unitOptions}
-                  value={form.billingUnit}
-                  onChange={(_evt, value) => setForm((prev) => ({ ...prev, billingUnit: value ?? '' }))}
-                  onInputChange={(_evt, value) => setForm((prev) => ({ ...prev, billingUnit: value }))}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Unidad (hora, canción, episodio...)" fullWidth />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  select
-                  label="Tipo"
-                  value={form.kind}
-                  onChange={(e) => setForm((prev) => ({ ...prev, kind: normalizeServiceKind(e.target.value) }))}
-                  fullWidth
-                >
-                  {SERVICE_KIND_OPTIONS.map((kind) => (
-                    <MenuItem key={kind} value={kind}>
-                      {kind}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  select
-                  label="Modelo de cobro"
-                  value={form.pricingModel}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, pricingModel: normalizePricingModel(e.target.value) }))
-                  }
-                  fullWidth
-                >
-                  {PRICING_MODEL_OPTIONS.map((model) => (
-                    <MenuItem key={model} value={model}>
-                      {model}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Impuesto (bps)"
-                  type="number"
-                  value={form.taxBps}
-                  inputProps={{ inputMode: 'decimal', min: 0 }}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setFieldErrors((prev) => ({ ...prev, tax: undefined }));
-                    setForm((prev) => ({ ...prev, taxBps: next }));
-                  }}
-                  fullWidth
-                  error={Boolean(fieldErrors.tax)}
-                  helperText={fieldErrors.tax ?? 'Base points ej. 1200 = 12% (deja vacío si no aplica)'}
-                />
-              </Grid>
-              <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center' }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={form.active}
-                      onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))}
-                    />
-                  }
-                  label="Activo en cat&aacute;logo"
-                />
-              </Grid>
-              {error && (
-                <Grid item xs={12}>
-                  <Alert severity="error">{error}</Alert>
-                </Grid>
-              )}
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={createMutation.isPending || updateMutation.isPending}>
-              {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </DialogActions>
-        </form>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>{form.entityId ? 'Crear revisión de servicio' : 'Crear oferta en borrador'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField fullWidth required label="Código interno" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
+              <TextField fullWidth label="Precio en centavos" type="number" value={form.rateCents} onChange={(event) => setForm({ ...form, rateCents: event.target.value })} inputProps={{ min: 0 }} />
+              <TextField fullWidth label="Orden manual" type="number" value={form.sortOrder} onChange={(event) => setForm({ ...form, sortOrder: Number(event.target.value) })} inputProps={{ min: 0 }} />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField fullWidth required label="Nombre en español" value={form.nameEs} onChange={(event) => setForm({ ...form, nameEs: event.target.value })} />
+              <TextField fullWidth required label="Nombre en inglés" value={form.nameEn} onChange={(event) => setForm({ ...form, nameEn: event.target.value })} />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField fullWidth multiline minRows={2} label="Descripción en español" value={form.descriptionEs} onChange={(event) => setForm({ ...form, descriptionEs: event.target.value })} />
+              <TextField fullWidth multiline minRows={2} label="Descripción en inglés" value={form.descriptionEn} onChange={(event) => setForm({ ...form, descriptionEn: event.target.value })} />
+            </Stack>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+              <TextField select fullWidth required label="Categoría" value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>{categoriesQuery.data?.items.map((item: CatalogItem) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField>
+              <TextField select fullWidth required label="Modelo de precio" value={form.pricingModelId} onChange={(event) => setForm({ ...form, pricingModelId: event.target.value })}>{pricingModelsQuery.data?.items.map((item: CatalogItem) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField>
+              <TextField select fullWidth required label="Moneda" value={form.currencyId} onChange={(event) => setForm({ ...form, currencyId: event.target.value })}>{currenciesQuery.data?.items.map((item: CatalogItem) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.name}</MenuItem>)}</TextField>
+            </Stack>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+              <TextField fullWidth label="Unidad en español" value={form.billingUnitEs} onChange={(event) => setForm({ ...form, billingUnitEs: event.target.value })} inputProps={{ maxLength: 80 }} />
+              <TextField fullWidth label="Unidad en inglés" value={form.billingUnitEn} onChange={(event) => setForm({ ...form, billingUnitEn: event.target.value })} inputProps={{ maxLength: 80 }} />
+              <TextField fullWidth label="Duración predeterminada (min)" type="number" value={form.defaultDurationMinutes} onChange={(event) => setForm({ ...form, defaultDurationMinutes: event.target.value })} inputProps={{ min: 15, max: 840 }} />
+            </Stack>
+            <TextField select fullWidth label="Tasa tributaria gobernada (opcional)" value={form.taxRateId} onChange={(event) => setForm({ ...form, taxRateId: event.target.value })}><MenuItem value="">Sin tasa</MenuItem>{taxRatesQuery.data?.items.map((item: CatalogItem) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.name}</MenuItem>)}</TextField>
+            <FormControlLabel control={<Checkbox checked={form.requiresEngineer} onChange={(event) => setForm({ ...form, requiresEngineer: event.target.checked })} />} label="Requiere ingeniería" />
+            <FormControl fullWidth>
+              <InputLabel id="service-default-resources-label">Recursos predeterminados</InputLabel>
+              <Select labelId="service-default-resources-label" multiple value={form.resources.map((resource) => resource.resourceId)} label="Recursos predeterminados" renderValue={(selected) => selected.map((id) => roomsQuery.data?.find((room) => room.roomId === id)?.rName ?? id).join(', ')} onChange={(event) => {
+                const selected = event.target.value as string[];
+                const selectedSet = new Set(selected);
+                setForm((current) => ({ ...current, resources: selected.map((roomId, index) => current.resources.find((resource) => resource.resourceId === roomId) ?? { resourceId: roomId, selectionModeId: defaultResourceSelectionModeId, sortOrder: index * 10 }).filter((resource) => selectedSet.has(resource.resourceId)) }));
+              }}>{roomsQuery.data?.map((room) => <MenuItem key={room.roomId} value={room.roomId}><Checkbox checked={form.resources.some((resource) => resource.resourceId === room.roomId)} />{room.rName}</MenuItem>)}</Select>
+            </FormControl>
+            {form.resources.map((resource) => {
+              const room = roomsQuery.data?.find((candidate) => candidate.roomId === resource.resourceId);
+              return <Stack key={resource.resourceId} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}><FormControlLabel control={<Checkbox checked onChange={(event) => setResourceSelected(resource.resourceId, event.target.checked)} />} label={room?.rName ?? resource.resourceId} /><TextField select size="small" required label="Política" value={resource.selectionModeId} onChange={(event) => setResourceMode(resource.resourceId, event.target.value)}>{resourceSelectionModesQuery.data?.items.map((mode) => <MenuItem key={mode.id} value={mode.id}>{mode.name}</MenuItem>)}</TextField></Stack>;
+            })}
+            <TextField required multiline minRows={2} label="Motivo del cambio" value={form.reason} onChange={(event) => setForm({ ...form, reason: event.target.value })} />
+            {createRevision.isError && <Alert severity="error">No se pudo crear el borrador. Verifica permisos, relaciones y versiones.</Alert>}
+          </Stack>
+        </DialogContent>
+        <DialogActions><Button onClick={() => setDialogOpen(false)}>Cancelar</Button><Button variant="contained" disabled={!formValid || createRevision.isPending} onClick={submitForm}>Guardar borrador</Button></DialogActions>
       </Dialog>
-      <ConfirmDialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Desactivar servicio"
-        description="¿Desactivar este servicio del catálogo?"
-        severity="warning"
-        confirming={deleteMutation.isPending}
-      />
     </Box>
   );
 }

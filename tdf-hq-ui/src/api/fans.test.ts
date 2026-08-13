@@ -37,7 +37,7 @@ const EXPECTED_LIMITED_DISCOVERY_FEED_PATH =
 const EXPECTED_PUBLIC_ARTISTS_PATH = '/fans/artists';
 const EXPECTED_ARTIST_SEARCH_PATH = '/artists/search';
 const EXPECTED_FILTERED_ARTIST_SEARCH_PATH =
-  `${EXPECTED_ARTIST_SEARCH_PATH}?q=neo+soul&genre=latin`;
+  `${EXPECTED_ARTIST_SEARCH_PATH}?q=neo+soul&genreId=10000000-0000-4000-8000-000000000001`;
 const EXPECTED_PUBLIC_ARTIST_PATH =
   `/artists/${encodeURIComponent(FANS_API_PATH_FIXTURES.artistSlug)}/public`;
 const EXPECTED_FOLLOWED_ARTIST_PATH =
@@ -115,7 +115,7 @@ describe('Fans API optional query paths', () => {
     await Fans.searchArtists();
     expect(getMock).toHaveBeenCalledWith(EXPECTED_ARTIST_SEARCH_PATH);
 
-    await Fans.searchArtists({ q: 'neo soul', genre: 'latin' });
+    await Fans.searchArtists({ q: 'neo soul', genreId: '10000000-0000-4000-8000-000000000001' });
     expect(getMock).toHaveBeenCalledWith(EXPECTED_FILTERED_ARTIST_SEARCH_PATH);
   });
 
@@ -132,12 +132,20 @@ describe('Fans API optional query paths', () => {
   it('uses fan profile and artist follow routes for fan onboarding', async () => {
     const profilePayload = {
       fpuDisplayName: 'Maria Caridad',
-      fpuFavoriteGenres: 'DJ, house',
+      fpuFavoriteGenreIds: ['10000000-0000-4000-8000-000000000005'],
       fpuCity: 'Quito',
     };
 
     await Fans.getProfile();
     expect(getMock).toHaveBeenCalledWith('/fans/me/profile');
+
+    const roleRequest = {
+      reason: 'Quiero seguir a mis artistas favoritos',
+      sourcePlatform: 'web',
+      correlationId: 'fan-api-test-001',
+    };
+    await Fans.requestMyFanRole(roleRequest);
+    expect(postMock).toHaveBeenCalledWith('/fans/me/role-request', roleRequest);
 
     await Fans.updateProfile(profilePayload);
     expect(putMock).toHaveBeenCalledWith('/fans/me/profile', profilePayload);

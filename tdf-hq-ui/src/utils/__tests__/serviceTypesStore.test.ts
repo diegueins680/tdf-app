@@ -1,113 +1,96 @@
-import { defaultServiceTypes, mapServiceCatalogDto, mergeServiceTypes } from '../serviceTypesStore';
+import { mapServiceCatalogDto, mergeServiceTypes } from '../serviceTypesStore';
 import type { ServiceCatalogDTO } from '../../api/types';
 
+const serviceDto = (
+  overrides: Partial<ServiceCatalogDTO> = {},
+): ServiceCatalogDTO => ({
+  scId: '11111111-1111-4111-8111-111111111111',
+  scCode: 'studio-recording',
+  scName: 'Grabación de estudio',
+  scNameEs: 'Grabación de estudio',
+  scNameEn: 'Studio recording',
+  scCategoryId: '22222222-2222-4222-8222-222222222222',
+  scKind: 'recording',
+  scPricingModelId: '33333333-3333-4333-8333-333333333333',
+  scPricingModel: 'hourly',
+  scRateCents: 12500,
+  scCurrency: 'USD',
+  scCurrencyId: '44444444-4444-4444-8444-444444444444',
+  scBillingUnit: 'hour',
+  scTaxRateCode: 'ec-iva-standard',
+  scDefaultDurationMinutes: 120,
+  scRequiresEngineer: true,
+  scDefaultResources: [
+    {
+      sdrResourceId: '12',
+      sdrResourceName: 'Control Room',
+      sdrSelectionModeId: '55555555-5555-4555-8555-555555555555',
+      sdrSelectionMode: 'all',
+      sdrSortOrder: 10,
+    },
+  ],
+  scSortOrder: 20,
+  scActive: true,
+  ...overrides,
+});
+
 describe('serviceTypesStore', () => {
-  it('returns defaults when there is no API data', () => {
-    expect(mergeServiceTypes()).toEqual(defaultServiceTypes);
-    expect(mergeServiceTypes([])).toEqual(defaultServiceTypes);
+  it('does not invent fallback services when the canonical API has no data', () => {
+    expect(mergeServiceTypes()).toEqual([]);
+    expect(mergeServiceTypes([])).toEqual([]);
   });
 
-  it('returns cloned defaults to avoid accidental global mutation', () => {
-    const first = mergeServiceTypes();
-    expect(first).not.toBe(defaultServiceTypes);
-    const firstItem = first[0];
-    const defaultFirstItem = defaultServiceTypes[0];
-    expect(firstItem).toBeDefined();
-    expect(defaultFirstItem).toBeDefined();
-    if (!firstItem || !defaultFirstItem) return;
-    firstItem.name = 'Mutado accidentalmente';
-    const second = mergeServiceTypes();
-    expect(second[0]?.name).toBe(defaultFirstItem.name);
-  });
-
-  it('maps service catalog DTOs to service types', () => {
-    const dto: ServiceCatalogDTO = {
-      scId: 1,
-      scName: 'Grabación Deluxe',
-      scKind: 'Recording',
-      scPricingModel: 'Hourly',
-      scRateCents: 12500,
-      scCurrency: 'USD',
-      scBillingUnit: 'hora',
-      scTaxBps: 1000,
-      scActive: true,
-    };
-    const mapped = mapServiceCatalogDto(dto);
+  it('maps canonical service metadata without inferring behavior from its name', () => {
+    const mapped = mapServiceCatalogDto(serviceDto());
     expect(mapped).toMatchObject({
-      id: '1',
-      name: 'Grabación Deluxe',
+      id: '11111111-1111-4111-8111-111111111111',
+      code: 'studio-recording',
+      name: 'Grabación de estudio',
       priceCents: 12500,
       currency: 'USD',
-      billingUnit: 'hora',
-      kind: 'Recording',
-      pricingModel: 'Hourly',
-      taxBps: 1000,
+      billingUnit: 'hour',
+      kind: 'recording',
+      pricingModel: 'hourly',
+      taxRateCode: 'ec-iva-standard',
+      defaultDurationMinutes: 120,
+      requiresEngineer: true,
+      sortOrder: 20,
       active: true,
     });
+    expect(mapped.defaultResources).toHaveLength(1);
   });
 
-  it('filters inactive services unless includeInactive is true', () => {
-    const items: ServiceCatalogDTO[] = [
-      {
-        scId: 1,
-        scName: 'Activo',
-        scKind: 'Recording',
-        scPricingModel: 'Hourly',
-        scRateCents: 1000,
-        scCurrency: 'USD',
-        scBillingUnit: 'hora',
-        scTaxBps: 1200,
-        scActive: true,
-      },
-      {
-        scId: 2,
+  it('filters inactive services unless historical administration explicitly includes them', () => {
+    const items = [
+      serviceDto({ scName: 'Activo', scSortOrder: 20 }),
+      serviceDto({
+        scId: '33333333-3333-4333-8333-333333333333',
+        scCode: 'retired-service',
         scName: 'Inactivo',
-        scKind: 'Mixing',
-        scPricingModel: 'PerSong',
-        scRateCents: 2000,
-        scCurrency: 'USD',
-        scBillingUnit: 'canción',
-        scTaxBps: 1200,
+        scSortOrder: 10,
         scActive: false,
-      },
+      }),
     ];
-    const activeOnly = mergeServiceTypes(items);
-    expect(activeOnly.some((svc) => svc.name === 'Inactivo')).toBe(false);
 
-    const withInactive = mergeServiceTypes(items, { includeInactive: true });
-    expect(withInactive.some((svc) => svc.name === 'Inactivo')).toBe(true);
+    expect(mergeServiceTypes(items).map((service) => service.name)).toEqual(['Activo']);
+    expect(mergeServiceTypes(items, { includeInactive: true }).map((service) => service.name)).toEqual([
+      'Inactivo',
+      'Activo',
+    ]);
   });
 
-  it('returns an empty list when API data exists but every service is inactive', () => {
-    const items: ServiceCatalogDTO[] = [
-      {
-        scId: 1,
-        scName: 'Inactivo A',
-        scKind: 'Recording',
-        scPricingModel: 'Hourly',
-        scRateCents: 1000,
-        scCurrency: 'USD',
-        scBillingUnit: 'hora',
-        scTaxBps: 1200,
-        scActive: false,
-      },
-      {
-        scId: 2,
-        scName: 'Inactivo B',
-        scKind: 'Mixing',
-        scPricingModel: 'PerSong',
-        scRateCents: 2000,
-        scCurrency: 'USD',
-        scBillingUnit: 'canción',
-        scTaxBps: 1200,
-        scActive: false,
-      },
+  it('uses persisted order with the localized name as the deterministic tie breaker', () => {
+    const items = [
+      serviceDto({ scName: 'Zeta', scSortOrder: 10 }),
+      serviceDto({
+        scId: '44444444-4444-4444-8444-444444444444',
+        scCode: 'alpha-service',
+        scName: 'Alfa',
+        scSortOrder: 10,
+      }),
     ];
 
-    expect(mergeServiceTypes(items)).toEqual([]);
-    expect(mergeServiceTypes(items, { includeInactive: true }).map((svc) => svc.name)).toEqual([
-      'Inactivo A',
-      'Inactivo B',
-    ]);
+    expect(mergeServiceTypes(items).map((service) => service.name)).toEqual(['Alfa', 'Zeta']);
+    expect(mergeServiceTypes(items, { sort: false }).map((service) => service.name)).toEqual(['Zeta', 'Alfa']);
   });
 });

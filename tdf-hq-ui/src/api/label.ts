@@ -1,5 +1,5 @@
 import { get, post, patch, del } from './client';
-import type { LabelTrackDTO } from './types';
+import type { LabelProjectNoteDTO, LabelTrackDTO } from './types';
 
 const requirePositiveInteger = (value: number, field: string): number => {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -33,6 +33,12 @@ export interface LabelTrackUpdate {
   ltuStatus?: string;
 }
 
+export interface LabelProjectNoteUpdate {
+  lpnuText?: string;
+  lpnuCompleted?: boolean;
+  lpnuExpectedVersion: number;
+}
+
 export const Label = {
   listTracks: (ownerId?: number | null) => {
     const normalizedOwnerId = normalizeOptionalOwnerId(ownerId);
@@ -49,4 +55,11 @@ export const Label = {
   updateTrack: (id: string, payload: LabelTrackUpdate) =>
     patch<LabelTrackDTO>(`/label/tracks/${normalizeTrackId(id)}`, payload),
   deleteTrack: (id: string) => del<void>(`/label/tracks/${normalizeTrackId(id)}`),
+  listProjectNotes: () => get<LabelProjectNoteDTO[]>('/label/project-notes'),
+  createProjectNote: (text: string) =>
+    post<LabelProjectNoteDTO>('/label/project-notes', { lpncText: text }),
+  updateProjectNote: (id: string, payload: LabelProjectNoteUpdate) =>
+    patch<LabelProjectNoteDTO>(`/label/project-notes/${normalizeTrackId(id)}`, payload),
+  deactivateProjectNote: (id: string) =>
+    del<void>(`/label/project-notes/${normalizeTrackId(id)}`),
 };

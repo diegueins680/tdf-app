@@ -251,11 +251,11 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
   });
 
   const reactMut = useMutation({
-    mutationFn: ({ itemId, kind, reaction }: { itemId: number; kind: string; reaction: string }) => {
+    mutationFn: ({ itemId, kind, reactionTypeId }: { itemId: number; kind: string; reactionTypeId: string }) => {
       if (kind === 'post') {
-        return Fans.reactToPost(artistId, itemId, { crrReaction: reaction });
+        return Fans.reactToPost(artistId, itemId, { crrReactionTypeId: reactionTypeId });
       } else {
-        return Fans.reactToMemory(artistId, itemId, { crrReaction: reaction });
+        return Fans.reactToMemory(artistId, itemId, { crrReactionTypeId: reactionTypeId });
       }
     },
     onSuccess: () => {
@@ -328,7 +328,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                       )}
                       <ReactionBar
                         reactions={item.fcfReactions}
-                        onReact={(reaction) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reaction })}
+                        onReact={(reactionTypeId) => reactMut.mutate({ itemId: item.fcfId, kind: item.fcfKind, reactionTypeId })}
                         disabled={reactMut.isPending}
                         loading={reactMut.isPending}
                       />

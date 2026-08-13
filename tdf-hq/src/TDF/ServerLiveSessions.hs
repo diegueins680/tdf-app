@@ -20,7 +20,8 @@ module TDF.ServerLiveSessions
   , validateLiveSessionTermsAcceptance
   ) where
 
-import           Control.Monad              ((>=>), forM_, void, when)
+import           Control.Monad              ((>=>), forM_, unless, when, zipWithM)
+import           Control.Exception          (throwIO)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
@@ -53,11 +54,14 @@ import qualified Data.ByteString.Lazy       as BL
 
 import           TDF.API.LiveSessions
 import           TDF.Auth                   (AuthedUser, auPartyId)
+import qualified TDF.Catalog.Models        as Catalog
+import           TDF.Catalog.Security       (applySecurityRoleAssignmentPolicy)
 import           TDF.DB                     (Env(..))
 import           TDF.Models
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
 import           TDF.ServerAuth             (normalizeAuthEmailAddress)
+import           Web.PathPieces             (fromPathPiece)
 
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
@@ -107,11 +111,13 @@ liveSessionsServer user = intakeHandler
           validateLiveSessionOptionalEmail "contactEmail" (lsiContactEmail payload)
       either throwError pure $
         validateLiveSessionMusicianCount (lsiMusicians payload)
+      primaryGenreKey <- traverse resolvePublishedGenre (lsiPrimaryGenreId payload)
+      musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)
 
       now <- liftIO getCurrentTime
       riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
 
-      preparedMusicians <- mapM (ensureMusician now) (lsiMusicians payload)
+      preparedMusicians <- zipWithM (ensureMusician now) musicianInstruments (lsiMusicians payload)
       resolvedSongOrders <-
         either
           (\err ->
@@ -126,7 +132,8 @@ liveSessionsServer user = intakeHandler
       intakeId <- withPool $ insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
-        , ME.liveSessionIntakePrimaryGenre = lsiPrimaryGenre payload
+        , ME.liveSessionIntakePrimaryGenre = Nothing
+        , ME.liveSessionIntakePrimaryGenreId = primaryGenreKey
         , ME.liveSessionIntakeInputList    = lsiInputList payload
         , ME.liveSessionIntakeContactEmail = contactEmail
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
@@ -150,14 +157,15 @@ liveSessionsServer user = intakeHandler
       withPool $
         forM_
           (zip preparedMusicians (lsiMusicians payload))
-          $ \((partyKey, musicianEmail), m) ->
+          $ \((partyKey, musicianEmail, instrumentKey), m) ->
               insert_ ME.LiveSessionMusician
                 { ME.liveSessionMusicianIntakeId   = intakeId
                 , ME.liveSessionMusicianPartyId    = partyKey
                 , ME.liveSessionMusicianName       = lsmName m
                 , ME.liveSessionMusicianEmail      = musicianEmail
-                , ME.liveSessionMusicianInstrument = lsmInstrument m
-                , ME.liveSessionMusicianRole       = lsmRole m
+                , ME.liveSessionMusicianInstrument = Nothing
+                , ME.liveSessionMusicianInstrumentId = instrumentKey
+                , ME.liveSessionMusicianRole       = Nothing
                 , ME.liveSessionMusicianNotes      = lsmNotes m
                 , ME.liveSessionMusicianIsExisting = lsmIsExisting m
                 }
@@ -175,8 +183,12 @@ liveSessionsServer user = intakeHandler
 
       pure NoContent
 
-    ensureMusician :: UTCTime -> LiveSessionMusicianPayload -> m (Key Party, Maybe Text)
-    ensureMusician now LiveSessionMusicianPayload{..} = do
+    ensureMusician
+      :: UTCTime
+      -> Maybe (Catalog.InstrumentId, Text)
+      -> LiveSessionMusicianPayload
+      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)
+    ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do
       mEmail <-
         either throwError pure $
           validateLiveSessionOptionalEmail "musicians.email" lsmEmail
@@ -220,22 +232,84 @@ liveSessionsServer user = intakeHandler
                 , partyWhatsapp         = Nothing
                 , partyInstagram        = Nothing
                 , partyEmergencyContact = Nothing
-                , partyNotes            = liveSessionMusicianPartyNotes lsmInstrument
+                , partyNotes            = liveSessionMusicianPartyNotes (snd <$> instrumentRef)
                 , partyStripeCustomerId = Nothing
+                , partyCountryCode       = Nothing
+                , partyCountryId         = Nothing
                 , partyCreatedAt        = now
                 }
               pure (key, mEmail)
 
       when (partyKey == toSqlKey 0) $
         throwError err400 { errBody = "Invalid party reference" }
-      withPool $ ensureArtistRole partyKey
+      withPool $ ensureArtistRole now partyKey
       withPool $ ensureUserAccount partyKey accountEmail
-      pure (partyKey, mEmail)
+      pure (partyKey, mEmail, fst <$> instrumentRef)
 
-    ensureArtistRole :: PartyId -> SqlPersistT IO ()
-    ensureArtistRole pid = do
-      _ <- upsert (PartyRole pid Artist True) [PartyRoleActive =. True]
-      pure ()
+    resolvePublishedGenre :: Text -> m Catalog.GenreId
+    resolvePublishedGenre rawId = do
+      genreKey <-
+        maybe
+          (throwError err400 { errBody = "primaryGenreId must be a valid catalog UUID" })
+          pure
+          (fromPathPiece (T.strip rawId))
+      valid <- withPool $ do
+        item <- get genreKey
+        case item of
+          Nothing -> pure False
+          Just genre -> do
+            state <- get (Catalog.genreWorkflowStateId genre)
+            catalog <- get (Catalog.genreCatalogId genre)
+            pure $
+              Catalog.genreActive genre
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "genres") catalog
+      unless valid $
+        throwError err400 { errBody = "primaryGenreId must reference an active published genre" }
+      pure genreKey
+
+    resolvePublishedInstrument :: Text -> m (Catalog.InstrumentId, Text)
+    resolvePublishedInstrument rawId = do
+      instrumentKey <-
+        maybe
+          (throwError err400 { errBody = "instrumentId must be a valid catalog UUID" })
+          pure
+          (fromPathPiece (T.strip rawId))
+      result <- withPool $ do
+        item <- get instrumentKey
+        case item of
+          Nothing -> pure Nothing
+          Just instrument -> do
+            state <- get (Catalog.instrumentWorkflowStateId instrument)
+            catalog <- get (Catalog.instrumentCatalogId instrument)
+            pure $
+              if Catalog.instrumentActive instrument
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "instruments") catalog
+                then Just (Catalog.instrumentNameEs instrument)
+                else Nothing
+      label <- maybe
+        (throwError err400 { errBody = "instrumentId must reference an active published instrument" })
+        pure
+        result
+      pure (instrumentKey, label)
+
+    ensureArtistRole :: UTCTime -> PartyId -> SqlPersistT IO ()
+    ensureArtistRole now pid = do
+      result <- applySecurityRoleAssignmentPolicy
+        "live-session.artist-profile.artist"
+        pid
+        False
+        (Just (auPartyId user))
+        "live-session-intake"
+        ("live-session-artist:" <> T.pack (show (fromSqlKey pid)))
+        now
+      case result of
+        Right _ -> pure ()
+        Left message ->
+          liftIO $ throwIO err503
+            { errBody = BL.fromStrict (TE.encodeUtf8 message)
+            }
 
     ensureUserAccount :: PartyId -> Maybe Text -> SqlPersistT IO ()
     ensureUserAccount pid mEmail = do
@@ -255,12 +329,7 @@ liveSessionsServer user = intakeHandler
             , userCredentialPasswordHash = hashed
             , userCredentialActive       = True
             }
-          applyRoles pid [Artist]
-
-    applyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-    applyRoles pid rolesList =
-      forM_ rolesList $ \role ->
-        void $ upsert (PartyRole pid role True) [PartyRoleActive =. True]
+          pure ()
 
     generateUniqueUsername :: Text -> SqlPersistT IO Text
     generateUniqueUsername base = do

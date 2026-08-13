@@ -2,12 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module TDF.DDEX.Types
-  ( -- * Document States
-    DdexDocumentStatus(..)
-  , documentStatusToText
-  , textToDocumentStatus
-    -- * Document Family
-  , DdexFamily(..)
+  ( -- * Document Family
+    DdexFamily(..)
   , familyToText
   , textToFamily
     -- * Detection
@@ -18,70 +14,20 @@ module TDF.DDEX.Types
   , ValidationLayer(..)
   , ValidationIssue(..)
   , ValidationResult(..)
-    -- * Jobs
-  , DdexJobType(..)
-  , DdexJobStatus(..)
-    -- * Import
-  , ImportPlanStatus(..)
-  , ImportOperation(..)
-  , ConflictAction(..)
   ) where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 import GHC.Generics (Generic)
 
--- | State machine for DDEX document lifecycle
-data DdexDocumentStatus
-  = StatusReceived
-  | StatusQuarantined
-  | StatusQueued
-  | StatusValidating
-  | StatusInvalid
-  | StatusValid
-  | StatusMappingRequired
-  | StatusReadyToImport
-  | StatusImporting
-  | StatusImported
-  | StatusImportFailed
-  | StatusSuperseded
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-
-documentStatusToText :: DdexDocumentStatus -> Text
-documentStatusToText StatusReceived        = "received"
-documentStatusToText StatusQuarantined     = "quarantined"
-documentStatusToText StatusQueued          = "queued"
-documentStatusToText StatusValidating      = "validating"
-documentStatusToText StatusInvalid         = "invalid"
-documentStatusToText StatusValid           = "valid"
-documentStatusToText StatusMappingRequired = "mapping_required"
-documentStatusToText StatusReadyToImport   = "ready_to_import"
-documentStatusToText StatusImporting       = "importing"
-documentStatusToText StatusImported        = "imported"
-documentStatusToText StatusImportFailed    = "import_failed"
-documentStatusToText StatusSuperseded      = "superseded"
-
-textToDocumentStatus :: Text -> Maybe DdexDocumentStatus
-textToDocumentStatus "received"         = Just StatusReceived
-textToDocumentStatus "quarantined"      = Just StatusQuarantined
-textToDocumentStatus "queued"           = Just StatusQueued
-textToDocumentStatus "validating"       = Just StatusValidating
-textToDocumentStatus "invalid"          = Just StatusInvalid
-textToDocumentStatus "valid"            = Just StatusValid
-textToDocumentStatus "mapping_required" = Just StatusMappingRequired
-textToDocumentStatus "ready_to_import"  = Just StatusReadyToImport
-textToDocumentStatus "importing"        = Just StatusImporting
-textToDocumentStatus "imported"         = Just StatusImported
-textToDocumentStatus "import_failed"    = Just StatusImportFailed
-textToDocumentStatus "superseded"       = Just StatusSuperseded
-textToDocumentStatus _                  = Nothing
-
--- | DDEX message family
+-- | Parser discriminants needed for family detection. These are executable
+-- protocol constants, not the authoritative list shown to users; governed
+-- standards and their runtime support live in ddex_standard_version and
+-- ddex_standard_support.
 data DdexFamily
   = FamilyERN  -- Electronic Release Notification
-  | FamilyRIN  -- Release Information Notification
+  | FamilyRIN  -- Recording Information Notification
   | FamilyDSR  -- Digital Sales Report
-  | FamilyMEAD -- Metadata for Audio-Visual
+  | FamilyMEAD -- Media Enrichment and Description
   deriving (Show, Eq, Ord, Enum, Bounded, Generic)
 
 familyToText :: DdexFamily -> Text
@@ -146,45 +92,3 @@ data ValidationResult = ValidationResult
   , resultWarnings   :: ![ValidationIssue]
   , resultInfo       :: ![ValidationIssue]
   } deriving (Show, Eq, Generic)
-
--- | Type of background job
-data DdexJobType
-  = JobValidate
-  | JobImport
-  | JobExport
-  | JobCleanup
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-
--- | Status of a background job
-data DdexJobStatus
-  = JobPending
-  | JobProcessing
-  | JobCompleted
-  | JobFailed
-  | JobRetry
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-
--- | Status of an import plan
-data ImportPlanStatus
-  = PlanDraft
-  | PlanResolved
-  | PlanCommitted
-  | PlanAbandoned
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-
--- | Operation performed during import
-data ImportOperation
-  = OpCreate
-  | OpUpdate
-  | OpSkip
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)
-
--- | Action to resolve a conflict
-data ConflictAction
-  = ActionUseExisting
-  | ActionCreateNew
-  | ActionIgnore
-  | ActionKeepInternal
-  | ActionReplaceWithDdex
-  | ActionMarkForReview
-  deriving (Show, Eq, Ord, Enum, Bounded, Generic)

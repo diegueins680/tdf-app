@@ -1,5 +1,4 @@
 import type { components } from './generated/types';
-import type { SignupRole } from '../constants/roles';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
 
@@ -162,12 +161,6 @@ export interface SignupPayload {
   email: string;
   phone?: string;
   password: string;
-  internshipStartAt?: string;
-  internshipEndAt?: string;
-  internshipRequiredHours?: number;
-  internshipSkills?: string;
-  internshipAreas?: string;
-  roles?: SignupRole[];
   fanArtistIds?: number[];
   claimArtistId?: number;
 }

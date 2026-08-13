@@ -5,8 +5,19 @@ import { resolveApiBase } from '../../config/apiBase';
 
 export type Role = components['schemas']['Role'];
 export type UserSummary = components['schemas']['UserRoleSummary'];
-type RoleInput = Role | (string & Record<never, never>);
-export type UserRoleUpdate = { roles: RoleInput[] };
+export type SecurityRole = components['schemas']['SecurityRole'];
+export type SecurityPartyRoleAssignment = components['schemas']['SecurityPartyRoleAssignment'];
+export type SecurityGrantRevision = components['schemas']['SecurityGrantRevision'];
+
+export interface PartyRoleGrantDraft {
+  partyId: number;
+  roleId: string;
+  desiredActive: boolean;
+  expectedVersion: number;
+  reason: string;
+  sourcePlatform: string;
+  correlationId: string;
+}
 
 const API_BASE = resolveApiBase();
 const ABSOLUTE_URL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//;
@@ -148,17 +159,25 @@ export class ApiClient {
     return this.request<UserSummary[]>('/api/users');
   }
 
-  // Get roles for a specific user
-  async getUserRoles(userId: number): Promise<Role[]> {
-    return this.request<Role[]>(`/api/users/${userId}/roles`);
+  async getSecurityRoles(): Promise<SecurityRole[]> {
+    return this.request<SecurityRole[]>('/catalog/security/roles');
   }
 
-  // Update roles for a user
-  async updateUserRoles(userId: number, roles: RoleInput[]): Promise<void> {
-    const body: UserRoleUpdate = { roles };
-    await this.request<void>(`/api/users/${userId}/roles`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
+  async getPartyRoleAssignments(partyId: number): Promise<SecurityPartyRoleAssignment[]> {
+    const query = new URLSearchParams({ partyId: String(partyId) });
+    return this.request<SecurityPartyRoleAssignment[]>(`/catalog/security/party-role-assignments?${query}`);
+  }
+
+  async createPartyRoleRevision(payload: PartyRoleGrantDraft): Promise<SecurityGrantRevision> {
+    return this.request<SecurityGrantRevision>('/catalog/security/party-role-revisions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async submitSecurityRevision(revisionId: string): Promise<SecurityGrantRevision> {
+    return this.request<SecurityGrantRevision>(`/catalog/security/revisions/${encodeURIComponent(revisionId)}/submit`, {
+      method: 'POST',
     });
   }
 }

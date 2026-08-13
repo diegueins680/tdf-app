@@ -8,8 +8,14 @@ const en = {
     saved: 'Preferences saved.',
     error: 'Something went wrong.',
   },
-  internships: {
-    taskDetail: { instructions: 'Instructions' },
+  pipelines: {
+    title: 'Pipelines',
+    subtitle: 'Manage {{workflow}} projects',
+    workflowTabs: 'Available project workflows',
+    empty: 'No stages are defined for this pipeline.',
+    keyboardHelp: 'Keyboard: focus a card, press Space to lift it, use the arrow keys to move it, then press Space to drop it.',
+    stageLabel: '{{stage}} stage',
+    cardMoveLabel: 'Move {{title}}, currently in {{stage}}',
   },
   pagination: {
     items: 'items',
@@ -119,7 +125,7 @@ const en = {
     currency: 'Currency',
     timezone: 'Time zone',
     country: 'Country code',
-    countryHint: 'Optional two-letter ISO code, for example US or DE.',
+    countryHint: 'Select a country from the official catalog or leave this empty.',
   },
   system: {
     title: 'System status',
@@ -140,6 +146,15 @@ const en = {
   login: {
     resetDialog: { title: 'Recover access' },
     signupDialog: { title: 'Create account' },
+  },
+  fanClub: {
+    reactions: {
+      empty: 'No reactions available',
+      loading: 'Saving reaction',
+    },
+  },
+  internships: {
+    taskDetail: { instructions: 'Instructions' },
   },
   operations: {
     title: 'Operations control center',
@@ -259,6 +274,7 @@ const en = {
       invalidQuantity: 'Quantity must be between 1 and 10',
     },
   },
+
   tdfPlatform: {
     cta: {
       createAccount: 'Create account',

@@ -5,14 +5,14 @@ module TDF.APITypesSpec (spec) where
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import Data.Proxy (Proxy (..))
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Data.Time (fromGregorian)
-import Servant.API (MimeUnrender (mimeUnrender), OctetStream, PlainText)
 import Test.Hspec
 
 import qualified TDF.API as API
 import qualified TDF.API.Calendar as Calendar
+import qualified TDF.API.Catalog as Catalog
 import qualified TDF.API.Facebook as Facebook
 import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
@@ -39,76 +39,28 @@ import TDF.API.Types (
     InternTodoUpdate (..),
     LabelTrackCreate (..),
     LabelTrackUpdate (..),
-    LooseJSON,
+    LabelProjectNoteCreate (..),
+    LabelProjectNoteUpdate (..),
     MarketplaceCartItemUpdate (..),
     MarketplaceCheckoutReq (..),
     MarketplaceOrderUpdate (..),
     PaypalCaptureReq (..),
     PipelineCardCreate (..),
     PipelineCardUpdate (..),
-    RolePayload (..),
-    ServiceCatalogCreate (..),
-    ServiceCatalogUpdate (..),
     SessionCreate (..),
     SessionUpdate (..),
-    UserRoleUpdatePayload (..),
     maxMarketplaceCartItemQuantity,
     verifyMetaWebhookSignature,
  )
 import qualified TDF.DTO as DTO
 import qualified TDF.DTO.SocialEventsDTO as SocialEvents
 import qualified TDF.DTO.SocialSyncDTO as SocialSync
-import TDF.Models (RoleEnum (Admin, Teacher))
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
 import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
-    describe "RolePayload FromJSON" $ do
-        it "parses raw string payloads" $
-            decodeRole "\"Engineer\"" `shouldBe` Right (RolePayload "Engineer")
-
-        it "parses object payloads that provide the role field" $
-            decodeRole "{\"role\":\"Teacher\"}" `shouldBe` Right (RolePayload "Teacher")
-
-        it "parses object payloads that provide a value field" $
-            decodeRole "{\"value\":\"Artist\"}" `shouldBe` Right (RolePayload "Artist")
-
-        it "fails when neither role nor value is present" $
-            decodeRole "{}" `shouldSatisfy` isLeft
-
-        it "fails when both role and value are present to avoid ambiguous role assignment bodies" $
-            decodeRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
-
-        it "rejects unexpected object keys so role assignment cannot silently ignore over-posted fields" $
-            decodeRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
-
-        it "rejects explicit null role fields instead of treating them as fallback omissions" $ do
-            decodeRole "{\"role\":null,\"value\":\"Teacher\"}" `shouldSatisfy` isLeft
-            decodeRole "{\"role\":\"Teacher\",\"value\":null}" `shouldSatisfy` isLeft
-
-    describe "RolePayload LooseJSON MimeUnrender" $ do
-        it "still accepts plain text role bodies sent as application/json" $
-            decodeLooseRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
-
-        it "rejects malformed or ambiguous JSON-like bodies instead of treating them as raw role text" $ do
-            decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
-            decodeLooseRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
-            decodeLooseRole "{}" `shouldSatisfy` isLeft
-
-        it "rejects invalid UTF-8 bytes instead of throwing while applying raw-role fallback parsing" $
-            decodeLooseRole invalidUtf8 `shouldSatisfy` isLeft
-
-    describe "RolePayload text MimeUnrender" $ do
-        it "accepts valid plain-text role bodies across supported content types" $ do
-            decodePlainRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
-            decodeOctetRole "Engineer" `shouldBe` Right (RolePayload "Engineer")
-
-        it "rejects invalid UTF-8 bytes before role assignment validation" $ do
-            decodePlainRole invalidUtf8 `shouldSatisfy` isLeft
-            decodeOctetRole invalidUtf8 `shouldSatisfy` isLeft
-
     describe "verifyMetaWebhookSignature" $ do
         it "requires Meta's sha256-prefixed HMAC header before trusting webhook bodies" $ do
             let body = BL8.pack "{}"
@@ -181,24 +133,6 @@ spec = do
                 Right refund -> do
                     SocialEvents.refundAmountCents refund `shouldBe` 2500
                     SocialEvents.refundCurrency refund `shouldBe` "EUR"
-
-    describe "UserRoleUpdatePayload FromJSON" $ do
-        it "accepts canonical admin role update payloads" $
-            case decodeUserRoleUpdate "{\"roles\":[\"Admin\",\"Teacher\"]}" of
-                Left err ->
-                    expectationFailure ("Expected canonical user role update payload to decode, got: " <> err)
-                Right (UserRoleUpdatePayload rolesVal) ->
-                    rolesVal `shouldBe` [Admin, Teacher]
-
-        it "rejects unexpected keys so role updates cannot silently ignore over-posted fields" $
-            decodeUserRoleUpdate
-                "{\"roles\":[\"Admin\"],\"active\":false}"
-                `shouldSatisfy` isLeft
-
-        it "rejects duplicate roles so admin updates cannot rely on silent set-collapsing" $
-            decodeUserRoleUpdate
-                "{\"roles\":[\"Admin\",\"Teacher\",\"Admin\"]}"
-                `shouldSatisfy` isLeft
 
     describe "Dropdown option write payload FromJSON" $ do
         it "accepts canonical admin dropdown create and update payloads" $ do
@@ -670,11 +604,11 @@ spec = do
     describe "CmsContentIn FromJSON" $ do
         it "accepts canonical CMS content payloads" $
             case decodeCmsContent
-                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}" of
+                "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}" of
                 Left err ->
                     expectationFailure ("Expected canonical CMS content payload to decode, got: " <> err)
-                Right (API.CmsContentIn slugVal localeVal titleVal statusVal payloadVal) -> do
-                    slugVal `shouldBe` "homepage-hero"
+                Right (API.CmsContentIn contentIdVal localeVal titleVal statusVal payloadVal) -> do
+                    contentIdVal `shouldBe` "20000000-0000-4000-8000-000000000001"
                     localeVal `shouldBe` "en"
                     titleVal `shouldBe` Just "Hero"
                     statusVal `shouldBe` Just "draft"
@@ -682,11 +616,11 @@ spec = do
 
         it "rejects unexpected fields so typoed CMS writes fail explicitly instead of becoming partial updates" $ do
             decodeCmsContent
-                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
+                "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
         it "rejects explicit null payloads so omitted payloads and fallback misses stay distinguishable" $
-            case decodeCmsContent "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":null}" of
+            case decodeCmsContent "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"payload\":null}" of
                 Left err ->
                     err `shouldContain` "payload must be omitted instead of null"
                 Right value ->
@@ -1048,13 +982,14 @@ spec = do
     describe "PipelineCard payload FromJSON" $ do
         it "accepts canonical pipeline create and patch payloads" $ do
             case decodePipelineCardCreate
-                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"stage\":\"Inquiry\",\"sortOrder\":2,\"notes\":\"Needs quote\"}" of
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"workflowStateId\":\"00000000-0000-0000-0000-000000000601\",\"sortOrder\":2,\"notes\":\"Needs quote\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card create payload to decode, got: " <> err)
-                Right (PipelineCardCreate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                Right (PipelineCardCreate titleVal artistVal offeringIdVal stateIdVal sortOrderVal notesVal) -> do
                     titleVal `shouldBe` "Demo Lead"
                     artistVal `shouldBe` Just "Ada"
-                    stageVal `shouldBe` Just "Inquiry"
+                    offeringIdVal `shouldBe` "00000000-0000-0000-0000-000000000501"
+                    stateIdVal `shouldBe` Just "00000000-0000-0000-0000-000000000601"
                     sortOrderVal `shouldBe` Just 2
                     notesVal `shouldBe` Just "Needs quote"
 
@@ -1062,16 +997,16 @@ spec = do
                 "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card patch payload to decode, got: " <> err)
-                Right (PipelineCardUpdate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                Right (PipelineCardUpdate titleVal artistVal stateIdVal sortOrderVal notesVal) -> do
                     titleVal `shouldBe` Just "Final Quote"
                     artistVal `shouldBe` Just Nothing
-                    stageVal `shouldBe` Nothing
+                    stateIdVal `shouldBe` Nothing
                     sortOrderVal `shouldBe` Nothing
                     notesVal `shouldBe` Just Nothing
 
         it "rejects unexpected keys so typoed pipeline writes cannot turn into partial creates or silent no-op patches" $ do
             decodePipelineCardCreate
-                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"unexpected\":true}"
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
             decodePipelineCardUpdate "{}" `shouldSatisfy` isLeft
             decodePipelineCardUpdate
@@ -1082,7 +1017,7 @@ spec = do
                 `shouldSatisfy` isLeft
 
         it "rejects null pipeline create fallbacks so omitted defaults stay intentional" $
-            case decodePipelineCardCreate "{\"title\":\"Demo Lead\",\"artist\":null}" of
+            case decodePipelineCardCreate "{\"title\":\"Demo Lead\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"artist\":null}" of
                 Left err ->
                     err `shouldContain` "artist must be omitted instead of null"
                 Right value ->
@@ -1094,7 +1029,7 @@ spec = do
                 "{\"title\":null,\"notes\":\"Keep note\"}"
                 `shouldSatisfy` isLeft
             decodePipelineCardUpdate
-                "{\"stage\":null,\"notes\":\"Keep note\"}"
+                "{\"workflowStateId\":null,\"notes\":\"Keep note\"}"
                 `shouldSatisfy` isLeft
             decodePipelineCardUpdate
                 "{\"sortOrder\":null,\"notes\":\"Keep note\"}"
@@ -1521,73 +1456,79 @@ spec = do
                 "{\"adId\":42,\"slotId\":84,\"paymentMethod\":null}"
                 `shouldSatisfy` isLeft
 
-    describe "Service catalog write payload FromJSON" $ do
-        it "accepts canonical service catalog create and update payloads, including explicit clear updates" $ do
-            case decodeServiceCatalogCreate
-                "{\"sccName\":\"Podcast\",\"sccRateCents\":4500,\"sccCurrency\":\"usd\",\"sccBillingUnit\":\"session\",\"sccActive\":true}" of
-                Left err ->
-                    expectationFailure ("Expected canonical service catalog create payload to decode, got: " <> err)
-                Right (ServiceCatalogCreate nameVal _ _ rateCentsVal currencyVal billingUnitVal taxBpsVal activeVal) -> do
-                    nameVal `shouldBe` "Podcast"
-                    rateCentsVal `shouldBe` Just 4500
-                    currencyVal `shouldBe` Just "usd"
-                    billingUnitVal `shouldBe` Just "session"
-                    taxBpsVal `shouldBe` Nothing
-                    activeVal `shouldBe` Just True
+    describe "Typed service offering catalog drafts" $ do
+        it "decodes canonical foreign-key and resource metadata without copied business labels" $ do
+            case decodeCatalogDraft canonicalServiceOfferingDraft of
+                Left err -> expectationFailure ("Expected typed service offering draft to decode, got: " <> err)
+                Right draft -> do
+                    Catalog.cdrCode draft `shouldBe` "studio-recording"
+                    case Catalog.cdrServiceOffering draft of
+                        Nothing -> expectationFailure "Expected serviceOffering metadata"
+                        Just serviceDraft -> do
+                            Catalog.sodCategoryId serviceDraft `shouldBe` "11111111-1111-4111-8111-111111111111"
+                            Catalog.sodPricingModelId serviceDraft `shouldBe` "22222222-2222-4222-8222-222222222222"
+                            map Catalog.sordResourceId (Catalog.sodDefaultResources serviceDraft) `shouldBe` ["12"]
+                            map Catalog.sordSelectionModeId (Catalog.sodDefaultResources serviceDraft)
+                                `shouldBe` ["44444444-4444-4444-8444-444444444444"]
 
-            case decodeServiceCatalogUpdate
-                "{\"scuName\":\"Podcast Pro\",\"scuRateCents\":null,\"scuBillingUnit\":null,\"scuTaxBps\":1200,\"scuActive\":false}" of
-                Left err ->
-                    expectationFailure ("Expected canonical service catalog update payload to decode, got: " <> err)
-                Right (ServiceCatalogUpdate nameVal _ _ rateCentsVal _ billingUnitVal taxBpsVal activeVal) -> do
-                    nameVal `shouldBe` Just "Podcast Pro"
-                    rateCentsVal `shouldBe` Just Nothing
-                    billingUnitVal `shouldBe` Just Nothing
-                    taxBpsVal `shouldBe` Just (Just 1200)
-                    activeVal `shouldBe` Just False
+        it "rejects obsolete string selectors and unknown nested fields" $ do
+            let canonicalText = TE.decodeUtf8 (BL.toStrict canonicalServiceOfferingDraft)
+            decodeCatalogDraft
+                (BL.fromStrict (TE.encodeUtf8 (T.dropEnd 1 canonicalText <> ",\"serviceType\":\"Recording\"}")))
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                (BL.fromStrict (TE.encodeUtf8 (T.replace "\"requiresEngineer\":true" "\"requiresEngineer\":true,\"pricingModelCode\":\"hourly\"" canonicalText)))
+                `shouldSatisfy` isLeft
 
-        it "rejects unexpected service catalog write keys instead of silently ignoring caller intent" $ do
-            decodeServiceCatalogCreate
-                "{\"sccName\":\"Podcast\",\"scActive\":false}"
-                `shouldSatisfy` isLeft
-            decodeServiceCatalogUpdate
-                "{\"scuName\":\"Podcast Pro\",\"scActive\":false}"
-                `shouldSatisfy` isLeft
-            decodeServiceCatalogUpdate
-                "{\"scuRateCents\":null,\"unexpected\":true}"
-                `shouldSatisfy` isLeft
-            decodeServiceCatalogUpdate "{}" `shouldSatisfy` isLeft
+    describe "Typed Radio auto-stop catalog drafts" $ do
+        it "decodes an explicit duration and persisted-default decision" $
+            case decodeCatalogDraft canonicalRadioAutoStopDraft of
+                Left err -> expectationFailure ("Expected typed Radio auto-stop draft to decode, got: " <> err)
+                Right draft ->
+                    case Catalog.cdrRadioAutoStop draft of
+                        Nothing -> expectationFailure "Expected radioAutoStop metadata"
+                        Just radioDraft -> do
+                            Catalog.rasdDurationMinutes radioDraft `shouldBe` 120
+                            Catalog.rasdDefaultForBroadcast radioDraft `shouldBe` True
 
-        it "rejects explicit null service catalog create defaults so fallback intent is unambiguous" $ do
-            let assertNullRejected fieldName payload =
-                    case decodeServiceCatalogCreate payload of
-                        Left err ->
-                            err
-                                `shouldContain` (fieldName <> " must be omitted instead of null")
-                        Right value ->
-                            expectationFailure
-                                ("Expected null service catalog default to be rejected, got: " <> show value)
-            assertNullRejected
-                "sccKind"
-                "{\"sccName\":\"Podcast\",\"sccKind\":null}"
-            assertNullRejected
-                "sccPricingModel"
-                "{\"sccName\":\"Podcast\",\"sccPricingModel\":null}"
-            assertNullRejected
-                "sccRateCents"
-                "{\"sccName\":\"Podcast\",\"sccRateCents\":null}"
-            assertNullRejected
-                "sccCurrency"
-                "{\"sccName\":\"Podcast\",\"sccCurrency\":null}"
-            assertNullRejected
-                "sccBillingUnit"
-                "{\"sccName\":\"Podcast\",\"sccBillingUnit\":null}"
-            assertNullRejected
-                "sccTaxBps"
-                "{\"sccName\":\"Podcast\",\"sccTaxBps\":null}"
-            assertNullRejected
-                "sccActive"
-                "{\"sccName\":\"Podcast\",\"sccActive\":null}"
+        it "rejects copied minute fields and unknown typed keys" $ do
+            decodeCatalogDraft
+                "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"durationMinutes\":120,\"reason\":\"policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-001\"}"
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"radioAutoStop\":{\"durationMinutes\":120,\"defaultForBroadcast\":true,\"minutes\":120},\"reason\":\"policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-002\"}"
+                `shouldSatisfy` isLeft
+
+    describe "Typed appearance-mode catalog drafts" $ do
+        it "decodes the persisted application-default decision" $
+            case decodeCatalogDraft canonicalAppearanceModeDraft of
+                Left err -> expectationFailure ("Expected typed appearance-mode draft to decode, got: " <> err)
+                Right draft ->
+                    case Catalog.cdrAppearanceMode draft of
+                        Nothing -> expectationFailure "Expected appearanceMode metadata"
+                        Just appearanceDraft ->
+                            Catalog.amdDefaultForApplication appearanceDraft `shouldBe` True
+
+        it "rejects copied renderer fields and unknown typed keys" $ do
+            decodeCatalogDraft
+                "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"theme\":\"system\",\"reason\":\"appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-001\"}"
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"appearanceMode\":{\"defaultForApplication\":true,\"renderer\":\"system\"},\"reason\":\"appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-002\"}"
+                `shouldSatisfy` isLeft
+
+    describe "Typed feedback catalog defaults" $ do
+        it "decodes an explicit global-default decision without copied selector metadata" $
+            case decodeCatalogDraft canonicalFeedbackCatalogDraft of
+                Left err -> expectationFailure ("Expected typed feedback catalog draft to decode, got: " <> err)
+                Right draft -> do
+                    Catalog.cdrCode draft `shouldBe` "idea"
+                    Catalog.cdrGlobalDefault draft `shouldBe` Just True
+
+        it "rejects an unknown feedback-default field" $
+            decodeCatalogDraft
+                "{\"code\":\"idea\",\"nameEs\":\"Idea\",\"nameEn\":\"Idea\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":1,\"globalDefault\":true,\"defaultCategory\":true,\"reason\":\"Feedback policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"feedback-002\"}"
+                `shouldSatisfy` isLeft
 
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do
@@ -2054,6 +1995,27 @@ spec = do
                     expectationFailure
                         ("Expected null label track owner to fail, got: " <> show value)
 
+    describe "LabelProjectNote write payload FromJSON" $ do
+        it "accepts strict typed creates and optimistic updates" $ do
+            decodeLabelProjectNoteCreate "{\"lpncText\":\"Distribuir master\"}"
+                `shouldBe` Right (LabelProjectNoteCreate "Distribuir master")
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":true,\"lpnuExpectedVersion\":3}"
+                `shouldBe` Right (LabelProjectNoteUpdate Nothing (Just True) 3)
+
+        it "rejects legacy list payloads, empty patches, nulls, and missing versions" $ do
+            decodeLabelProjectNoteCreate
+                "{\"items\":[{\"text\":\"Distribuir master\"}]}"
+                `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate "{}" `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate "{\"lpnuCompleted\":true}" `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":null,\"lpnuExpectedVersion\":1}"
+                `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":true,\"lpnuExpectedVersion\":1,\"slug\":\"label-projects\"}"
+                `shouldSatisfy` isLeft
+
     describe "internship time-entry request FromJSON" $ do
         it "accepts canonical clock-in and clock-out payloads while trimming blank notes to omission" $ do
             case decodeClockIn "{}" of
@@ -2488,7 +2450,7 @@ spec = do
     describe "social event create request FromJSON" $ do
         it "accepts canonical event create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
             case ( eitherDecode
-                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\"}" ::
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventWorkflowStateId\":\"00000000-0000-4000-8000-000000000231\"}" ::
                     Either String SocialEvents.EventDTO
                  ) of
                 Left err ->
@@ -2496,18 +2458,24 @@ spec = do
                         ("Expected canonical event create payload to decode, got: " <> err)
                 Right payload -> do
                     SocialEvents.eventTitle payload `shouldBe` "Test"
-                    SocialEvents.eventStatus payload `shouldBe` Just "draft"
+                    SocialEvents.eventWorkflowStateId payload `shouldBe` Just "00000000-0000-4000-8000-000000000231"
                     SocialEvents.eventArtists payload `shouldBe` []
 
             ( eitherDecode
-                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"draft\",\"unexpected\":true}" ::
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventWorkflowStateId\":\"00000000-0000-4000-8000-000000000231\",\"unexpected\":true}" ::
+                    Either String SocialEvents.EventDTO
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"planning\"}" ::
                     Either String SocialEvents.EventDTO
                 )
                 `shouldSatisfy` isLeft
 
         it "rejects unexpected nested artist and social-link keys before event handlers silently drop artist intent" $ do
             case ( eitherDecode
-                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenres\":[\"electronic\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}" ::
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}" ::
                     Either String SocialEvents.EventDTO
                  ) of
                 Left err ->
@@ -3084,13 +3052,6 @@ spec = do
                 "phone"
                 "{\"subjectId\":7,\"preferred\":[],\"phone\":null}"
   where
-    decodeRole = eitherDecode
-    decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
-    decodePlainRole = mimeUnrender (Proxy :: Proxy PlainText)
-    decodeOctetRole = mimeUnrender (Proxy :: Proxy OctetStream)
-    invalidUtf8 = BL.pack [0xff]
-    decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
-    decodeUserRoleUpdate = eitherDecode
     decodeArtistTipRequest :: BL8.ByteString -> Either String ArtistTipRequest
     decodeArtistTipRequest = eitherDecode
     decodeDropdownOptionCreate :: BL8.ByteString -> Either String DropdownOptionCreate
@@ -3168,6 +3129,21 @@ spec = do
     decodeDriveTokenExchange = eitherDecode
     decodeDriveTokenRefresh :: BL8.ByteString -> Either String DriveTokenRefreshRequest
     decodeDriveTokenRefresh = eitherDecode
+    decodeCatalogDraft :: BL8.ByteString -> Either String Catalog.CatalogDraftRequest
+    decodeCatalogDraft = eitherDecode
+    canonicalServiceOfferingDraft :: BL8.ByteString
+    canonicalServiceOfferingDraft =
+        BL.fromStrict . TE.encodeUtf8 $
+            "{\"code\":\"studio-recording\",\"nameEs\":\"Grabación de estudio\",\"nameEn\":\"Studio recording\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":10,\"serviceOffering\":{\"categoryId\":\"11111111-1111-4111-8111-111111111111\",\"pricingModelId\":\"22222222-2222-4222-8222-222222222222\",\"rateCents\":10000,\"currencyId\":\"33333333-3333-4333-8333-333333333333\",\"billingUnitEs\":\"hora\",\"billingUnitEn\":\"hour\",\"defaultDurationMinutes\":120,\"requiresEngineer\":true,\"defaultResources\":[{\"resourceId\":\"12\",\"selectionModeId\":\"44444444-4444-4444-8444-444444444444\",\"sortOrder\":10}]},\"reason\":\"Nueva oferta aprobable\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"service-draft-20260807-001\"}"
+    canonicalRadioAutoStopDraft :: BL8.ByteString
+    canonicalRadioAutoStopDraft =
+        "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"radioAutoStop\":{\"durationMinutes\":120,\"defaultForBroadcast\":true},\"reason\":\"Radio policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-20260811-001\"}"
+    canonicalAppearanceModeDraft :: BL8.ByteString
+    canonicalAppearanceModeDraft =
+        "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"appearanceMode\":{\"defaultForApplication\":true},\"reason\":\"Appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-20260811-001\"}"
+    canonicalFeedbackCatalogDraft :: BL8.ByteString
+    canonicalFeedbackCatalogDraft =
+        "{\"code\":\"idea\",\"nameEs\":\"Idea\",\"nameEn\":\"Idea\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":1,\"globalDefault\":true,\"reason\":\"Feedback policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"feedback-20260811-001\"}"
     driveTokenExchangeJson :: BL8.ByteString -> BL8.ByteString -> BL8.ByteString
     driveTokenExchangeJson rawCode rawVerifier =
         BL8.concat
@@ -3177,10 +3153,6 @@ spec = do
             , rawVerifier
             , "\"}"
             ]
-    decodeServiceCatalogCreate :: BL8.ByteString -> Either String ServiceCatalogCreate
-    decodeServiceCatalogCreate = eitherDecode
-    decodeServiceCatalogUpdate :: BL8.ByteString -> Either String ServiceCatalogUpdate
-    decodeServiceCatalogUpdate = eitherDecode
     decodeServiceAdCreate :: BL8.ByteString -> Either String API.ServiceAdCreateReq
     decodeServiceAdCreate = eitherDecode
     decodeServiceAdSlotCreate :: BL8.ByteString -> Either String API.ServiceAdSlotCreateReq
@@ -3206,6 +3178,10 @@ spec = do
     decodeLabelTrackCreate = eitherDecode
     decodeLabelTrackUpdate :: BL8.ByteString -> Either String LabelTrackUpdate
     decodeLabelTrackUpdate = eitherDecode
+    decodeLabelProjectNoteCreate :: BL8.ByteString -> Either String LabelProjectNoteCreate
+    decodeLabelProjectNoteCreate = eitherDecode
+    decodeLabelProjectNoteUpdate :: BL8.ByteString -> Either String LabelProjectNoteUpdate
+    decodeLabelProjectNoteUpdate = eitherDecode
     decodeClockIn :: BL8.ByteString -> Either String ClockInRequest
     decodeClockIn = eitherDecode
     decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest

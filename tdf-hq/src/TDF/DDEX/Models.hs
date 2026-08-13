@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -16,64 +17,15 @@ module TDF.DDEX.Models where
 
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Data.UUID (UUID)
 import Database.Persist.TH
 import GHC.Generics (Generic)
+import qualified TDF.Catalog.Models as Catalog
+import TDF.UUIDInstances ()
 
--- Document status enum
-data DdexDocumentStatusEnum
-  = StatusReceived
-  | StatusQuarantined
-  | StatusQueued
-  | StatusValidating
-  | StatusInvalid
-  | StatusValid
-  | StatusMappingRequired
-  | StatusReadyToImport
-  | StatusImporting
-  | StatusImported
-  | StatusImportFailed
-  | StatusSuperseded
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "DdexDocumentStatusEnum"
-
--- DDEX family enum
-data DdexFamilyEnum
-  = FamilyERN
-  | FamilyRIN
-  | FamilyDSR
-  | FamilyMEAD
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "DdexFamilyEnum"
-
--- Job type enum
-data DdexJobTypeEnum
-  = JobValidate
-  | JobImport
-  | JobExport
-  | JobCleanup
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "DdexJobTypeEnum"
-
--- Job status enum
-data DdexJobStatusEnum
-  = JobPending
-  | JobProcessing
-  | JobCompleted
-  | JobFailed
-  | JobRetry
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "DdexJobStatusEnum"
-
--- Import plan status enum
-data ImportPlanStatusEnum
-  = PlanDraft
-  | PlanResolved
-  | PlanCommitted
-  | PlanAbandoned
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "ImportPlanStatusEnum"
-
--- Validation result enum
+-- Legacy persisted constructors retained only as reversible migration evidence.
+-- Runtime parsing remains exhaustive in TDF.DDEX.Types, while database rows
+-- below own identity, labels, ordering, and availability.
 data ValidationResultEnum
   = ResultSuccess
   | ResultFailure
@@ -98,25 +50,75 @@ data ValidationLayerEnum
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "ValidationLayerEnum"
 
--- Import operation enum
-data ImportOperationEnum
-  = OpCreate
-  | OpUpdate
-  | OpSkip
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "ImportOperationEnum"
-
--- Import run status enum
-data ImportRunStatusEnum
-  = RunPending
-  | RunRunning
-  | RunSuccess
-  | RunFailed
-  | RunRolledBack
-  deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
-derivePersistField "ImportRunStatusEnum"
-
 share [mkPersist sqlSettings, mkMigrate "migrateDdex"] [persistLowerCase|
+
+-- Persisted mirrors for executable DDEX dispatch discriminants. Runtime code
+-- may recognize the immutable codes, while labels, ordering and availability
+-- remain database-authoritative.
+DdexJobOperation
+  Id UUID default=gen_random_uuid()
+  code Text
+  nameEs Text
+  nameEn Text
+  descriptionEs Text Maybe
+  descriptionEn Text Maybe
+  active Bool default=True
+  sortOrder Int default=0
+  version Int default=1
+  UniqueDdexJobOperationCode code
+  deriving Show Generic
+
+DdexImportOperation
+  Id UUID default=gen_random_uuid()
+  code Text
+  nameEs Text
+  nameEn Text
+  descriptionEs Text Maybe
+  descriptionEn Text Maybe
+  active Bool default=True
+  sortOrder Int default=0
+  version Int default=1
+  UniqueDdexImportOperationCode code
+  deriving Show Generic
+
+DdexValidationResult
+  Id UUID default=gen_random_uuid()
+  code Text
+  nameEs Text
+  nameEn Text
+  descriptionEs Text Maybe
+  descriptionEn Text Maybe
+  active Bool default=True
+  sortOrder Int default=0
+  version Int default=1
+  UniqueDdexValidationResultCode code
+  deriving Show Generic
+
+DdexValidationSeverity
+  Id UUID default=gen_random_uuid()
+  code Text
+  nameEs Text
+  nameEn Text
+  descriptionEs Text Maybe
+  descriptionEn Text Maybe
+  active Bool default=True
+  sortOrder Int default=0
+  version Int default=1
+  UniqueDdexValidationSeverityCode code
+  deriving Show Generic
+
+DdexValidationLayer
+  Id UUID default=gen_random_uuid()
+  code Text
+  nameEs Text
+  nameEn Text
+  descriptionEs Text Maybe
+  descriptionEn Text Maybe
+  active Bool default=True
+  sortOrder Int default=0
+  version Int default=1
+  UniqueDdexValidationLayerCode code
+  deriving Show Generic
 
 -- DDEX Documents
 DdexDocument
@@ -124,11 +126,14 @@ DdexDocument
   privateUri Text
   sha256 Text
   sizeBytes Int
-  family DdexFamilyEnum
-  version Text
+  standardVersionId Catalog.DdexStandardVersionId Maybe
+  messageTypeId Catalog.DdexMessageTypeId Maybe
+  workflowStateId Catalog.WorkflowStateId Maybe
+  family Text Maybe
+  version Text Maybe
   namespace Text Maybe
   messageType Text Maybe
-  status DdexDocumentStatusEnum
+  status Text Maybe
   uploadedBy Int  -- FK to app_user
   messageId Text Maybe
   senderId Text Maybe
@@ -151,6 +156,8 @@ DdexMessageHeader
 -- Validation Runs
 DdexValidationRun
   documentId DdexDocumentId
+  workflowStateId Catalog.WorkflowStateId Maybe
+  validationResultId DdexValidationResultId Maybe sql=result_id
   validatorVersion Text Maybe
   schemaVersion Text Maybe
   startedAt UTCTime
@@ -163,8 +170,10 @@ DdexValidationRun
 -- Validation Issues
 DdexValidationIssue
   validationRunId DdexValidationRunId
-  severity ValidationSeverityEnum
-  layer ValidationLayerEnum
+  severityId DdexValidationSeverityId Maybe
+  layerId DdexValidationLayerId Maybe
+  severity ValidationSeverityEnum Maybe
+  layer ValidationLayerEnum Maybe
   code Text Maybe
   lineNumber Int Maybe
   columnNumber Int Maybe
@@ -176,7 +185,8 @@ DdexValidationIssue
 -- Import Plans
 DdexImportPlan
   documentId DdexDocumentId
-  status ImportPlanStatusEnum
+  workflowStateId Catalog.WorkflowStateId Maybe
+  status Text Maybe
   snapshotJson Text  -- JSONB stored as Text
   version Int
   createdAt UTCTime
@@ -186,7 +196,8 @@ DdexImportPlan
 DdexImportRun
   planId DdexImportPlanId
   actorId Int
-  status ImportRunStatusEnum
+  workflowStateId Catalog.WorkflowStateId Maybe
+  status Text Maybe
   startedAt UTCTime
   finishedAt UTCTime Maybe
   errorMessage Text Maybe
@@ -197,7 +208,8 @@ DdexImportChange
   importRunId DdexImportRunId
   entityType Text
   entityId Int Maybe
-  operation ImportOperationEnum
+  operationId DdexImportOperationId Maybe
+  operation Text Maybe
   previousState Text Maybe  -- JSONB
   newState Text  -- JSONB
   deriving Show
@@ -206,10 +218,13 @@ DdexImportChange
 DdexExport
   releaseId Int  -- FK to catalog_release
   partnerId Int Maybe  -- FK to ddex_partner
-  ernVersion Text
+  standardVersionId Catalog.DdexStandardVersionId Maybe
+  workflowStateId Catalog.WorkflowStateId Maybe
+  ernVersion Text Maybe
   profileName Text Maybe
   xmlChecksum Text
   privateUri Text
+  validationResultId DdexValidationResultId Maybe sql=validation_result_id
   validationResult Text Maybe
   createdAt UTCTime
   deriving Show
@@ -218,18 +233,29 @@ DdexExport
 DdexPartner
   name Text
   dpid Text Maybe
-  allowedVersions [Text]  -- Array
   rulesJson Text Maybe  -- JSONB
   namingConvention Text Maybe
   isActive Bool
   UniqueDdexPartnerName name
   deriving Show
 
--- Background Jobs
+DdexPartnerStandardVersion
+  partnerId DdexPartnerId
+  standardVersionId Catalog.DdexStandardVersionId
+  sortOrder Int default=0
+  active Bool default=True
+  createdAt UTCTime
+  UniqueDdexPartnerStandardVersion partnerId standardVersionId
+  deriving Show
+
+-- Durable work queue. jobType/status are nullable migration-evidence columns;
+-- current writers use operationId/workflowStateId exclusively.
 DdexJob
-  jobType DdexJobTypeEnum
-  entityId Int  -- Document ID, Plan ID, etc.
-  status DdexJobStatusEnum
+  jobOperationId DdexJobOperationId Maybe sql=operation_id
+  jobType Text Maybe
+  entityId Int
+  workflowStateId Catalog.WorkflowStateId Maybe
+  status Text Maybe
   attempts Int
   leasedUntil UTCTime Maybe
   lastError Text Maybe

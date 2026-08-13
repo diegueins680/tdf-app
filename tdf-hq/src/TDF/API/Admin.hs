@@ -14,7 +14,6 @@ import           Servant
 import           TDF.API.Types ( DropdownOptionCreate
                                 , DropdownOptionDTO
                                 , DropdownOptionUpdate
-                                , RoleDetailDTO
                                 , UserAccountCreate
                                 , UserAccountDTO
                                 , UserAccountUpdate
@@ -67,8 +66,6 @@ type UserCommunicationsAPI =
   :<|> "communications" :> "email" :> "registered-users"
          :> ReqBody '[JSON] AdminEmailBroadcastRequest
          :> Post '[JSON] AdminEmailBroadcastResponse
-
-type RolesAPI = Get '[JSON] [RoleDetailDTO]
 
 type ArtistPromotionAdminAPI =
        ( QueryParam' '[Required] "day" Day :> Get '[JSON] [ArtistPromoSlotDTO] )
@@ -165,7 +162,6 @@ type AdminAPI =
   :<|> "dropdowns" :> Capture "category" Text :> DropdownCategoryAPI
   :<|> "users" :> UsersAPI
   :<|> UserCommunicationsAPI
-  :<|> "roles" :> RolesAPI
   :<|> "artists" :> ArtistAdminAPI
   :<|> "logs" :> LogsAPI
   :<|> "activity" :> ActivityAPI

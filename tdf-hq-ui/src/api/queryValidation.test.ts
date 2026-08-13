@@ -69,25 +69,10 @@ describe('API query/id validation', () => {
     await Parties.update(8, { uDisplayName: 'Nombre actualizado' });
     expect(putMock).toHaveBeenCalledWith('/parties/8', { uDisplayName: 'Nombre actualizado' });
 
-    await Parties.update(10, {
-      uDisplayName: 'Blue Records',
-      uPrimaryEmail: null,
-      uPrimaryPhone: null,
-      uInstagram: 'blue_records333',
-    });
-    expect(putMock).toHaveBeenCalledWith('/parties/10', {
-      uDisplayName: 'Blue Records',
-      uInstagram: 'blue_records333',
-    });
-
-    await Parties.addRole(9, 'teacher');
-    expect(postMock).toHaveBeenCalledWith('/parties/9/roles', 'teacher');
-
     expect(() => Payments.getOne(0)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.getOne(0)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.related(-3)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.update(0, {})).toThrow('id debe ser un entero positivo.');
-    expect(() => Parties.addRole(0, 'teacher')).toThrow('id debe ser un entero positivo.');
   });
 
   it('validates social profile ids before requesting profile lookups', async () => {
@@ -196,11 +181,13 @@ describe('API query/id validation', () => {
   });
 
   it('validates optional booking payload party references', async () => {
+    const serviceOfferingId = '11111111-1111-4111-8111-111111111111';
     await Bookings.create({
       cbTitle: 'Grabacion de demo',
       cbStartsAt: '2026-03-01T10:00:00Z',
       cbEndsAt: '2026-03-01T12:00:00Z',
       cbStatus: 'Confirmed',
+      cbServiceOfferingId: serviceOfferingId,
       cbPartyId: 7,
       cbEngineerPartyId: 9,
     });
@@ -209,6 +196,7 @@ describe('API query/id validation', () => {
       cbStartsAt: '2026-03-01T10:00:00Z',
       cbEndsAt: '2026-03-01T12:00:00Z',
       cbStatus: 'Confirmed',
+      cbServiceOfferingId: serviceOfferingId,
       cbPartyId: 7,
       cbEngineerPartyId: 9,
     });
@@ -216,14 +204,14 @@ describe('API query/id validation', () => {
     await Bookings.createPublic({
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
-      pbServiceType: 'Mixing',
+      pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
     });
     expect(postMock).toHaveBeenCalledWith('/bookings/public', {
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
-      pbServiceType: 'Mixing',
+      pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
     });
@@ -234,6 +222,7 @@ describe('API query/id validation', () => {
         cbStartsAt: '2026-03-01T10:00:00Z',
         cbEndsAt: '2026-03-01T12:00:00Z',
         cbStatus: 'Confirmed',
+        cbServiceOfferingId: serviceOfferingId,
         cbPartyId: 0,
       }),
     ).toThrow('cbPartyId debe ser un entero positivo.');
@@ -242,7 +231,7 @@ describe('API query/id validation', () => {
       Bookings.createPublic({
         pbFullName: 'Ana Perez',
         pbEmail: 'ana@example.com',
-        pbServiceType: 'Mixing',
+        pbServiceOfferingId: serviceOfferingId,
         pbStartsAt: '2026-03-01T10:00:00Z',
         pbEngineerPartyId: -3,
       }),
@@ -294,10 +283,32 @@ describe('API query/id validation', () => {
     await Label.deleteTrack(' track alpha ');
     expect(delMock).toHaveBeenCalledWith('/label/tracks/track%20alpha');
 
+    await Label.listProjectNotes();
+    expect(getMock).toHaveBeenCalledWith('/label/project-notes');
+
+    await Label.createProjectNote('Distribuir master');
+    expect(postMock).toHaveBeenCalledWith('/label/project-notes', { lpncText: 'Distribuir master' });
+
+    await Label.updateProjectNote(' note/alpha ', {
+      lpnuCompleted: true,
+      lpnuExpectedVersion: 3,
+    });
+    expect(patchMock).toHaveBeenCalledWith('/label/project-notes/note%2Falpha', {
+      lpnuCompleted: true,
+      lpnuExpectedVersion: 3,
+    });
+
+    await Label.deactivateProjectNote(' note alpha ');
+    expect(delMock).toHaveBeenCalledWith('/label/project-notes/note%20alpha');
+
     expect(() => Label.listTracks(0)).toThrow('ownerId debe ser un entero positivo.');
     expect(() => Label.createTrack({ ltcTitle: 'Pendiente' }, -2)).toThrow('ownerId debe ser un entero positivo.');
     expect(() => Label.updateTrack('   ', { ltuStatus: 'open' })).toThrow('id no puede estar vacío.');
     expect(() => Label.deleteTrack('')).toThrow('id no puede estar vacío.');
+    expect(() => Label.updateProjectNote(' ', { lpnuCompleted: true, lpnuExpectedVersion: 1 })).toThrow(
+      'id no puede estar vacío.',
+    );
+    expect(() => Label.deactivateProjectNote('')).toThrow('id no puede estar vacío.');
   });
 
   it('normalizes course registration params and validates registration ids', async () => {
