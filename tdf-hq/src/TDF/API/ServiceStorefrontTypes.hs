@@ -4,8 +4,7 @@
 
 module TDF.API.ServiceStorefrontTypes where
 
-import           Data.Aeson   (FromJSON(..), ToJSON(..), defaultOptions, genericParseJSON)
-import           Data.Int     (Int64)
+import           Data.Aeson   (FromJSON(..), ToJSON(..), genericParseJSON)
 import           Data.Text    (Text)
 import           Data.Time    (UTCTime, Day)
 import           GHC.Generics (Generic)
@@ -21,6 +20,8 @@ data ServiceStorefrontPackageDTO = ServiceStorefrontPackageDTO
   , sspDescription     :: Maybe Text
   , sspPriceUsdCents   :: Int
   , sspCurrency        :: Text
+  , sspMinSongCount    :: Int
+  , sspMaxSongCount    :: Int
   , sspTurnaroundDays  :: Int
   , sspRevisionCount   :: Int
   , sspDeliverables    :: Maybe [Text]
@@ -40,6 +41,8 @@ data ServiceStorefrontPackageCreate = ServiceStorefrontPackageCreate
   , sspcDescription     :: Maybe Text
   , sspcPriceUsdCents   :: Int
   , sspcCurrency        :: Maybe Text
+  , sspcMinSongCount    :: Maybe Int
+  , sspcMaxSongCount    :: Maybe Int
   , sspcTurnaroundDays  :: Maybe Int
   , sspcRevisionCount   :: Maybe Int
   , sspcDeliverables    :: Maybe [Text]
@@ -56,6 +59,8 @@ data ServiceStorefrontPackageUpdate = ServiceStorefrontPackageUpdate
   { sspuName            :: Maybe Text
   , sspuDescription     :: Maybe Text
   , sspuPriceUsdCents   :: Maybe Int
+  , sspuMinSongCount    :: Maybe Int
+  , sspuMaxSongCount    :: Maybe Int
   , sspuTurnaroundDays  :: Maybe Int
   , sspuRevisionCount   :: Maybe Int
   , sspuDeliverables    :: Maybe [Text]
@@ -101,6 +106,7 @@ data ServiceStorefrontOrderDTO = ServiceStorefrontOrderDTO
   , ssoCurrency            :: Text
   , ssoStatus              :: Text
   , ssoPaymentProvider     :: Maybe Text
+  , ssoLookupToken         :: Maybe Text
   , ssoPaidAt              :: Maybe UTCTime
   , ssoGenre               :: Maybe Text
   , ssoSongCount           :: Int
@@ -133,6 +139,24 @@ data ServiceStorefrontRevisionCreate = ServiceStorefrontRevisionCreate
 
 instance ToJSON ServiceStorefrontRevisionCreate
 instance FromJSON ServiceStorefrontRevisionCreate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+-- | Select an offline payment rail. Selection is not payment confirmation.
+data ServiceStorefrontManualPaymentCreate = ServiceStorefrontManualPaymentCreate
+  { ssmPaymentMethod :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontManualPaymentCreate
+instance FromJSON ServiceStorefrontManualPaymentCreate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data ServiceStorefrontPaypalCaptureReq = ServiceStorefrontPaypalCaptureReq
+  { pcCaptureOrderId  :: Text
+  , pcCapturePaypalId :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontPaypalCaptureReq
+instance FromJSON ServiceStorefrontPaypalCaptureReq where
   parseJSON = genericParseJSON strictObjectOptions
 
 -- | A revision request (public view).

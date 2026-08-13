@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
@@ -28,6 +28,11 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from '@mui/material';
 import {
   MusicNote,
@@ -44,7 +49,13 @@ import {
   Speed,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { ServiceStorefront, type ServiceStorefrontPackageDTO } from '../api/serviceStorefront';
+import {
+  ServiceStorefront,
+  type ServiceStorefrontOrderDTO,
+  type ServiceStorefrontPackageDTO,
+} from '../api/serviceStorefront';
+
+const IMPORT_META_ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 // Service package interface (matches API DTO shape)
 interface ServicePackage {
@@ -55,6 +66,8 @@ interface ServicePackage {
   description: string;
   priceUsdCents: number;
   currency: string;
+  minSongCount: number;
+  maxSongCount: number;
   turnaroundDays: number;
   revisionCount: number;
   deliverables: string[];
@@ -70,131 +83,13 @@ const mapPackageDTO = (dto: ServiceStorefrontPackageDTO): ServicePackage => ({
   description: dto.sspDescription ?? '',
   priceUsdCents: dto.sspPriceUsdCents,
   currency: dto.sspCurrency,
+  minSongCount: dto.sspMinSongCount,
+  maxSongCount: dto.sspMaxSongCount,
   turnaroundDays: dto.sspTurnaroundDays,
   revisionCount: dto.sspRevisionCount,
   deliverables: dto.sspDeliverables ?? [],
   features: dto.sspFeatures ?? [],
 });
-
-const PACKAGES: ServicePackage[] = [
-  {
-    id: 'mix-basic',
-    serviceKind: 'Mixing',
-    tier: 'Basic',
-    name: 'Mezcla Básica',
-    description: 'Mezcla profesional de hasta 8 pistas. Ideal para demos y proyectos independientes.',
-    priceUsdCents: 8000,
-    currency: 'USD',
-    turnaroundDays: 5,
-    revisionCount: 1,
-    deliverables: ['Archivo WAV mezclado (44.1kHz/16-bit)', '1 revisión incluida'],
-    features: ['Hasta 8 pistas', 'EQ, compresión, efectos básicos', 'Entrega en 5 días', '1 revisión'],
-  },
-  {
-    id: 'mix-pro',
-    serviceKind: 'Mixing',
-    tier: 'Pro',
-    name: 'Mezcla Profesional',
-    description: 'Mezcla profesional de hasta 24 pistas con efectos avanzados. Para artistas serios.',
-    priceUsdCents: 15000,
-    currency: 'USD',
-    turnaroundDays: 7,
-    revisionCount: 2,
-    deliverables: ['Archivo WAV mezclado (48kHz/24-bit)', 'Stems por sección', '2 revisiones incluidas'],
-    features: ['Hasta 24 pistas', 'EQ, compresión, reverb, delay avanzados', 'Automatización detallada', 'Entrega en 7 días', '2 revisiones'],
-  },
-  {
-    id: 'mix-premium',
-    serviceKind: 'Mixing',
-    tier: 'Premium',
-    name: 'Mezcla Premium',
-    description: 'Mezcla de alta gama de hasta 48 pistas con procesamiento analógico emulado.',
-    priceUsdCents: 25000,
-    currency: 'USD',
-    turnaroundDays: 10,
-    revisionCount: 3,
-    deliverables: ['Archivo WAV mezclado (96kHz/24-bit)', 'Stems completos', 'Instrumental y a cappella', '3 revisiones incluidas'],
-    features: ['Hasta 48 pistas', 'Procesamiento analógico emulado', 'Automatización avanzada', 'Entrega en 10 días', '3 revisiones', 'Soporte prioritario'],
-  },
-  {
-    id: 'master-basic',
-    serviceKind: 'Mastering',
-    tier: 'Basic',
-    name: 'Mastering Básico',
-    description: 'Mastering profesional para lanzamiento digital. Ideal para singles.',
-    priceUsdCents: 4000,
-    currency: 'USD',
-    turnaroundDays: 3,
-    revisionCount: 1,
-    deliverables: ['Archivo WAV masterizado (44.1kHz/16-bit)', 'Versión para streaming', '1 revisión incluida'],
-    features: ['1 canción', 'Loudness optimization', 'Formato para Spotify/Apple Music', 'Entrega en 3 días', '1 revisión'],
-  },
-  {
-    id: 'master-pro',
-    serviceKind: 'Mastering',
-    tier: 'Pro',
-    name: 'Mastering Profesional',
-    description: 'Mastering profesional con múltiples formatos de entrega. Para EPs y álbumes.',
-    priceUsdCents: 7000,
-    currency: 'USD',
-    turnaroundDays: 5,
-    revisionCount: 2,
-    deliverables: ['Archivo WAV masterizado (48kHz/24-bit)', 'Versión para streaming', 'Versión para CD', '2 revisiones incluidas'],
-    features: ['Hasta 3 canciones', 'Loudness optimization avanzado', 'Múltiples formatos de entrega', 'Entrega en 5 días', '2 revisiones'],
-  },
-  {
-    id: 'master-premium',
-    serviceKind: 'Mastering',
-    tier: 'Premium',
-    name: 'Mastering Premium',
-    description: 'Mastering de alta gama con procesamiento analógico emulado.',
-    priceUsdCents: 12000,
-    currency: 'USD',
-    turnaroundDays: 7,
-    revisionCount: 3,
-    deliverables: ['Archivo WAV masterizado (96kHz/24-bit)', 'Todos los formatos digitales', 'Versión para vinilo', '3 revisiones incluidas'],
-    features: ['Hasta 5 canciones', 'Procesamiento analógico emulado', 'Todos los formatos digitales + vinilo', 'Entrega en 7 días', '3 revisiones', 'Soporte prioritario'],
-  },
-  {
-    id: 'bundle-basic',
-    serviceKind: 'Bundle',
-    tier: 'Basic',
-    name: 'Paquete Básico',
-    description: 'Mezcla + Mastering básico. Ideal para singles independientes.',
-    priceUsdCents: 11000,
-    currency: 'USD',
-    turnaroundDays: 7,
-    revisionCount: 1,
-    deliverables: ['Archivo WAV mezclado y masterizado', 'Versión para streaming', '1 revisión incluida'],
-    features: ['Mezcla de hasta 8 pistas', 'Mastering de 1 canción', 'Entrega en 7 días', '1 revisión'],
-  },
-  {
-    id: 'bundle-pro',
-    serviceKind: 'Bundle',
-    tier: 'Pro',
-    name: 'Paquete Profesional',
-    description: 'Mezcla + Mastering profesional. Para artistas serios.',
-    priceUsdCents: 20000,
-    currency: 'USD',
-    turnaroundDays: 10,
-    revisionCount: 2,
-    deliverables: ['Archivos WAV mezclados y masterizados (48kHz/24-bit)', 'Stems', 'Versión para streaming y CD', '2 revisiones incluidas'],
-    features: ['Mezcla de hasta 24 pistas', 'Mastering de hasta 3 canciones', 'Stems incluidos', 'Entrega en 10 días', '2 revisiones'],
-  },
-  {
-    id: 'bundle-premium',
-    serviceKind: 'Bundle',
-    tier: 'Premium',
-    name: 'Paquete Premium',
-    description: 'Mezcla + Mastering de alta gama. Para lanzamientos profesionales.',
-    priceUsdCents: 35000,
-    currency: 'USD',
-    turnaroundDays: 14,
-    revisionCount: 3,
-    deliverables: ['Archivos WAV mezclados y masterizados (96kHz/24-bit)', 'Stems completos', 'Instrumental y a cappella', 'Todos los formatos', '3 revisiones incluidas'],
-    features: ['Mezcla de hasta 48 pistas', 'Mastering de hasta 5 canciones', 'Procesamiento analógico emulado', 'Todos los formatos + vinilo', 'Entrega en 14 días', '3 revisiones', 'Soporte prioritario'],
-  },
-];
 
 const formatPrice = (cents: number): string => {
   return `$${(cents / 100).toFixed(0)}`;
@@ -262,25 +157,34 @@ export default function MixingMasteringPage() {
   const [currentStep, setCurrentStep] = useState<OrderStep>('select');
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [lookupToken, setLookupToken] = useState<string | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
+  const [datafastCheckout, setDatafastCheckout] = useState<Awaited<ReturnType<typeof ServiceStorefront.createDatafastCheckout>> | null>(null);
+  const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
+  const [datafastError, setDatafastError] = useState<string | null>(null);
+  const datafastFormRef = useRef<HTMLDivElement>(null);
+  const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalOrder, setPaypalOrder] = useState<{ orderNumber: string; lookupToken: string; providerOrderId: string } | null>(null);
+  const [paypalError, setPaypalError] = useState<string | null>(null);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const paypalClientId = IMPORT_META_ENV['VITE_PAYPAL_CLIENT_ID']?.trim() ?? '';
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
     open: false,
     message: '',
     severity: 'info',
   });
 
-  // Fetch packages from API, fall back to hardcoded data
-  const { data: apiPackages } = useQuery({
+  // Prices and quantity bounds are authoritative server configuration.
+  const { data: apiPackages, isLoading: packagesLoading, isError: packagesError } = useQuery({
     queryKey: ['serviceStorefrontPackages'],
     queryFn: () => ServiceStorefront.listPackages(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const packages = useMemo(() => {
-    if (apiPackages && apiPackages.length > 0) {
-      return apiPackages.map(mapPackageDTO);
-    }
-    return PACKAGES; // Fallback to hardcoded data
-  }, [apiPackages]);
+  const packages = useMemo(() => (apiPackages ?? []).map(mapPackageDTO), [apiPackages]);
 
   const filteredPackages = useMemo(() => {
     if (serviceFilter === 'all') return packages;
@@ -293,63 +197,196 @@ export default function MixingMasteringPage() {
 
   const handleSelectPackage = useCallback((pkg: ServicePackage) => {
     setSelectedPackage(pkg);
+    setFormData((current) => ({ ...current, songCount: pkg.minSongCount }));
     setCurrentStep('details');
   }, []);
 
   const handleFormChange = useCallback((field: keyof OrderFormData) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const value = field === 'songCount' ? Math.max(1, parseInt(event.target.value) || 1) : event.target.value;
+    const minSongs = selectedPackage?.minSongCount ?? 1;
+    const maxSongs = selectedPackage?.maxSongCount ?? minSongs;
+    const value = field === 'songCount'
+      ? Math.min(maxSongs, Math.max(minSongs, parseInt(event.target.value) || minSongs))
+      : event.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  }, [selectedPackage]);
 
-  const handleSubmitOrder = useCallback(async () => {
-    if (!selectedPackage) return;
-
-    // Validate form
+  const createServiceOrder = useCallback(async (): Promise<{ order: ServiceStorefrontOrderDTO; token: string }> => {
+    if (!selectedPackage) throw new Error('Selecciona un paquete para continuar.');
     if (!formData.buyerName.trim() || !formData.buyerEmail.trim()) {
-      setSnackbar({ open: true, message: 'Por favor completa tu nombre y email', severity: 'error' });
-      return;
+      throw new Error('Por favor completa tu nombre y email.');
     }
-
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.buyerEmail)) {
-      setSnackbar({ open: true, message: 'Por favor ingresa un email válido', severity: 'error' });
+      throw new Error('Por favor ingresa un email válido.');
+    }
+    if (formData.songCount < selectedPackage.minSongCount || formData.songCount > selectedPackage.maxSongCount) {
+      throw new Error(`Este paquete admite entre ${selectedPackage.minSongCount} y ${selectedPackage.maxSongCount} canciones.`);
+    }
+    const idempotencyStorageKey = `tdf-service-checkout:${selectedPackage.id}:${formData.buyerEmail.trim().toLowerCase()}`;
+    const idempotencyKey = sessionStorage.getItem(idempotencyStorageKey) ?? crypto.randomUUID();
+    sessionStorage.setItem(idempotencyStorageKey, idempotencyKey);
+    const order = await ServiceStorefront.createOrder(idempotencyKey, {
+      ssocPackageId: selectedPackage.id,
+      ssocBuyerName: formData.buyerName.trim(),
+      ssocBuyerEmail: formData.buyerEmail.trim(),
+      ssocBuyerPhone: formData.buyerPhone.trim() || null,
+      ssocArtistName: formData.artistName.trim() || null,
+      ssocGenre: formData.genre.trim() || null,
+      ssocSongCount: formData.songCount,
+      ssocNotes: formData.notes.trim() || null,
+      ssocReferenceTrackUrl: formData.referenceTrackUrl.trim() || null,
+    });
+    const token = order.ssoLookupToken?.trim();
+    if (!token) throw new Error('El servidor no entregó acceso seguro al pedido. Contacta a soporte antes de pagar.');
+    sessionStorage.setItem(`tdf-service-order:${order.ssoOrderNumber}`, token);
+    sessionStorage.removeItem(idempotencyStorageKey);
+    setOrderNumber(order.ssoOrderNumber);
+    setLookupToken(token);
+    return { order, token };
+  }, [selectedPackage, formData]);
+
+  const paymentError = useCallback((error: unknown) => {
+    const message = error instanceof Error ? error.message : 'No se pudo iniciar el pago. No se confirmó ningún cobro.';
+    setSnackbar({ open: true, message, severity: 'error' });
+  }, []);
+
+  const handleDatafastPayment = useCallback(async () => {
+    setPaymentBusy(true);
+    setDatafastError(null);
+    try {
+      const { order, token } = await createServiceOrder();
+      const checkout = await ServiceStorefront.createDatafastCheckout(order.ssoOrderNumber, token);
+      setDatafastCheckout(checkout);
+      setDatafastDialogOpen(true);
+    } catch (error) {
+      paymentError(error);
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [createServiceOrder, paymentError]);
+
+  const handlePaypalPayment = useCallback(async () => {
+    if (!paypalClientId) {
+      paymentError(new Error('PayPal no está habilitado para este comercio.'));
       return;
     }
-
+    setPaymentBusy(true);
+    setPaypalError(null);
     try {
-      // Create order via API client
-      const order = await ServiceStorefront.createOrder({
-        ssocPackageId: selectedPackage.id,
-        ssocBuyerName: formData.buyerName.trim(),
-        ssocBuyerEmail: formData.buyerEmail.trim(),
-        ssocBuyerPhone: formData.buyerPhone.trim() || null,
-        ssocArtistName: formData.artistName.trim() || null,
-        ssocGenre: formData.genre.trim() || null,
-        ssocSongCount: formData.songCount,
-        ssocNotes: formData.notes.trim() || null,
-        ssocReferenceTrackUrl: formData.referenceTrackUrl.trim() || null,
+      const { order, token } = await createServiceOrder();
+      const providerOrder = await ServiceStorefront.createPaypalOrder(order.ssoOrderNumber, token);
+      setPaypalOrder({
+        orderNumber: order.ssoOrderNumber,
+        lookupToken: token,
+        providerOrderId: providerOrder.pcPaypalOrderId,
       });
-
-      setOrderNumber(order.ssoOrderNumber);
-      setCurrentStep('confirmation');
-      setSnackbar({ open: true, message: '¡Pedido creado exitosamente!', severity: 'success' });
-    } catch {
-      // Fallback: generate a demo order number if API is unreachable
-      const fakeOrderNumber = `TDF-${Date.now().toString(36).toUpperCase()}`;
-      setOrderNumber(fakeOrderNumber);
-      setCurrentStep('confirmation');
-      setSnackbar({ open: true, message: '¡Pedido creado exitosamente! (Demo)', severity: 'success' });
+      setPaypalDialogOpen(true);
+    } catch (error) {
+      paymentError(error);
+    } finally {
+      setPaymentBusy(false);
     }
-  }, [selectedPackage, formData]);
+  }, [createServiceOrder, paymentError, paypalClientId]);
+
+  const handleManualPayment = useCallback(async () => {
+    setPaymentBusy(true);
+    try {
+      const { order, token } = await createServiceOrder();
+      const updated = await ServiceStorefront.selectManualPayment(order.ssoOrderNumber, token);
+      setConfirmedOrder(updated);
+      setCurrentStep('confirmation');
+      setSnackbar({
+        open: true,
+        message: 'Pedido creado. La transferencia sigue pendiente de verificación manual.',
+        severity: 'info',
+      });
+    } catch (error) {
+      paymentError(error);
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [createServiceOrder, paymentError]);
+
+  const datafastReturnUrl = useMemo(() => {
+    if (!orderNumber || typeof window === 'undefined') return '';
+    const url = new URL('/mezcla-mastering/pago-datafast', window.location.origin);
+    url.searchParams.set('orderId', orderNumber);
+    return url.toString();
+  }, [orderNumber]);
+
+  useEffect(() => {
+    if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
+    window.wpwlOptions = { locale: 'es', style: 'card' };
+    const script = document.createElement('script');
+    script.src = datafastCheckout.dcWidgetUrl;
+    script.async = true;
+    script.onerror = () => setDatafastError('No se pudo cargar el formulario de Datafast. No se confirmó ningún pago.');
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
+
+  useEffect(() => {
+    if (!paypalClientId || typeof window === 'undefined') return;
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=USD`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    script.onerror = () => setPaypalError('No se pudo cargar PayPal. No se confirmó ningún pago.');
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [paypalClientId]);
+
+  useEffect(() => {
+    if (!paypalDialogOpen || !paypalReady || !paypalOrder || !paypalButtonRef.current || !window.paypal) return;
+    paypalButtonRef.current.innerHTML = '';
+    const buttons = window.paypal.Buttons({
+      createOrder: () => paypalOrder.providerOrderId,
+      onApprove: async (data) => {
+        if (data.orderID !== paypalOrder.providerOrderId) {
+          setPaypalError('PayPal devolvió una referencia distinta. No se capturó el pago.');
+          return;
+        }
+        try {
+          const updated = await ServiceStorefront.capturePaypalOrder(
+            data.orderID,
+            paypalOrder.orderNumber,
+            paypalOrder.lookupToken,
+          );
+          setConfirmedOrder(updated);
+          setPaypalDialogOpen(false);
+          setCurrentStep('confirmation');
+          setSnackbar({
+            open: true,
+            message: updated.ssoStatus === 'paid'
+              ? 'PayPal confirmó el pago en el servidor.'
+              : 'PayPal respondió, pero el pago todavía no está confirmado.',
+            severity: updated.ssoStatus === 'paid' ? 'success' : 'info',
+          });
+        } catch (error) {
+          setPaypalError(error instanceof Error ? error.message : 'No se pudo verificar el pago con PayPal.');
+        }
+      },
+      onCancel: () => setPaypalError('Cancelaste PayPal. El pedido continúa sin pago.'),
+      onError: () => setPaypalError('PayPal no pudo procesar la operación. El pedido continúa sin pago.'),
+    });
+    void buttons.render(paypalButtonRef.current);
+    return () => { buttons.close?.(); };
+  }, [paypalDialogOpen, paypalOrder, paypalReady]);
 
   const handleReset = useCallback(() => {
     setSelectedPackage(null);
     setCurrentStep('select');
     setFormData(initialFormData);
     setOrderNumber(null);
+    setLookupToken(null);
+    setConfirmedOrder(null);
   }, []);
 
   const steps = ['Seleccionar Servicio', 'Detalles del Proyecto', 'Pago', 'Confirmación'];
@@ -404,6 +441,22 @@ export default function MixingMasteringPage() {
           </Box>
 
           {/* Package Grid */}
+          {packagesLoading && (
+            <Stack alignItems="center" sx={{ py: 6 }} spacing={1}>
+              <CircularProgress size={28} />
+              <Typography color="text.secondary">Cargando tarifas vigentes…</Typography>
+            </Stack>
+          )}
+          {packagesError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              No pudimos cargar la tarifa autorizada. La compra está deshabilitada para evitar mostrar precios incorrectos.
+            </Alert>
+          )}
+          {!packagesLoading && !packagesError && filteredPackages.length === 0 && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              No hay paquetes activos para este servicio.
+            </Alert>
+          )}
           <Grid container spacing={3}>
             {filteredPackages.map((pkg) => (
               <Grid item xs={12} sm={6} md={4} key={pkg.id}>
@@ -594,7 +647,12 @@ export default function MixingMasteringPage() {
               value={formData.songCount}
               onChange={handleFormChange('songCount')}
               fullWidth
-              inputProps={{ min: 1, max: 50 }}
+              inputProps={{ min: selectedPackage.minSongCount, max: selectedPackage.maxSongCount }}
+              helperText={
+                selectedPackage.minSongCount === selectedPackage.maxSongCount
+                  ? `Este paquete incluye ${selectedPackage.maxSongCount} canción(es).`
+                  : `Este paquete incluye de ${selectedPackage.minSongCount} a ${selectedPackage.maxSongCount} canciones por el total mostrado.`
+              }
             />
             <TextField
               label="Notas adicionales"
@@ -668,7 +726,8 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handleSubmitOrder(); }}
+              onClick={() => { void handleDatafastPayment(); }}
+              disabled={paymentBusy}
             >
               💳 Tarjeta de crédito/débito (Datafast)
             </Button>
@@ -677,7 +736,8 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handleSubmitOrder(); }}
+              onClick={() => { void handlePaypalPayment(); }}
+              disabled={paymentBusy || !paypalClientId || !paypalReady}
             >
               🅿️ PayPal
             </Button>
@@ -686,11 +746,18 @@ export default function MixingMasteringPage() {
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
-              onClick={() => { void handleSubmitOrder(); }}
+              onClick={() => { void handleManualPayment(); }}
+              disabled={paymentBusy}
             >
               🏦 Transferencia bancaria
             </Button>
           </Stack>
+
+          {!paypalClientId && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              PayPal no está habilitado para este comercio. Datafast y transferencia permanecen disponibles.
+            </Alert>
+          )}
 
           <Alert severity="info" sx={{ mb: 2 }}>
             Al confirmar, aceptas nuestros términos de servicio y política de revisiones.
@@ -706,11 +773,17 @@ export default function MixingMasteringPage() {
       )}
 
       {/* Step 4: Confirmation */}
-      {currentStep === 'confirmation' && orderNumber && (
+      {currentStep === 'confirmation' && orderNumber && confirmedOrder && (
         <Paper sx={{ p: 4, maxWidth: 600, mx: 'auto', textAlign: 'center' }}>
-          <CheckCircle sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+          <CheckCircle
+            sx={{
+              fontSize: 64,
+              color: confirmedOrder.ssoStatus === 'paid' ? 'success.main' : 'info.main',
+              mb: 2,
+            }}
+          />
           <Typography variant="h5" gutterBottom fontWeight={600}>
-            ¡Pedido Confirmado!
+            {confirmedOrder.ssoStatus === 'paid' ? 'Pago confirmado' : 'Pedido creado'}
           </Typography>
           <Typography variant="body1" gutterBottom>
             Tu número de pedido es:
@@ -718,19 +791,21 @@ export default function MixingMasteringPage() {
           <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
             {orderNumber}
           </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Te hemos enviado un email con los detalles del pedido y las instrucciones
-            para enviar tus pistas.
-          </Typography>
+          <Alert severity={confirmedOrder.ssoStatus === 'paid' ? 'success' : 'info'} sx={{ my: 2, textAlign: 'left' }}>
+            {confirmedOrder.ssoStatus === 'paid'
+              ? 'El proveedor confirmó el pago ante el servidor. El servicio todavía requiere la recepción y validación de tus archivos.'
+              : confirmedOrder.ssoStatus === 'awaiting_manual_confirmation'
+                ? 'La transferencia fue seleccionada, pero todavía no es un pago. TDF debe verificar el comprobante antes de marcarla como pagada.'
+                : 'El pedido existe, pero el pago todavía está procesándose o pendiente. Consulta el seguimiento antes de intentar pagar otra vez.'}
+          </Alert>
           <Divider sx={{ my: 3 }} />
           <Typography variant="body2" gutterBottom>
             <strong>Próximos pasos:</strong>
           </Typography>
           <Stack spacing={1} sx={{ textAlign: 'left', maxWidth: 400, mx: 'auto', mb: 3 }}>
-            <Typography variant="body2">1. Revisa tu email para las instrucciones de envío</Typography>
-            <Typography variant="body2">2. Sube tus pistas en el formato indicado</Typography>
-            <Typography variant="body2">3. Nuestro ingeniero comenzará a trabajar en tu proyecto</Typography>
-            <Typography variant="body2">4. Recibirás la primera versión en {selectedPackage?.turnaroundDays} días</Typography>
+            <Typography variant="body2">1. Conserva el enlace privado de seguimiento</Typography>
+            <Typography variant="body2">2. Espera la verificación del pago y las instrucciones de ingreso</Typography>
+            <Typography variant="body2">3. El plazo operativo no comienza hasta completar pago e ingreso de archivos</Typography>
           </Stack>
           <Stack direction="row" spacing={2} justifyContent="center">
             <Button variant="outlined" onClick={handleReset}>
@@ -739,13 +814,64 @@ export default function MixingMasteringPage() {
             <Button
               variant="contained"
               component={Link}
-              href={`/marketplace/orden/${orderNumber}`}
+              href={lookupToken
+                ? `/mezcla-mastering/pedido/${encodeURIComponent(orderNumber)}#access=${encodeURIComponent(lookupToken)}`
+                : undefined}
+              disabled={!lookupToken}
             >
               Ver estado del pedido
             </Button>
           </Stack>
         </Paper>
       )}
+
+      <Dialog
+        open={datafastDialogOpen}
+        onClose={() => setDatafastDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Pagar con Datafast</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              El pedido está creado, pero solo la verificación del servidor después del retorno puede marcarlo pagado.
+            </Typography>
+            {datafastError && <Alert severity="error">{datafastError}</Alert>}
+            {datafastCheckout && datafastReturnUrl ? (
+              <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
+                <form
+                  action={datafastReturnUrl}
+                  className="paymentWidgets"
+                  data-brands="VISA MASTER DINERS AMEX DISCOVER"
+                />
+              </Box>
+            ) : (
+              <CircularProgress size={24} />
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDatafastWidgetKey((value) => value + 1)}>Reintentar</Button>
+          <Button onClick={() => setDatafastDialogOpen(false)} color="inherit">Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={paypalDialogOpen} onClose={() => setPaypalDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Pagar con PayPal</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Typography variant="body2" color="text.secondary">
+              PayPal autoriza en su componente; TDF captura y verifica importe, moneda y referencia en el servidor.
+            </Typography>
+            {paypalError && <Alert severity="error">{paypalError}</Alert>}
+            <Box ref={paypalButtonRef} minHeight={48} />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPaypalDialogOpen(false)} color="inherit">Cerrar</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar

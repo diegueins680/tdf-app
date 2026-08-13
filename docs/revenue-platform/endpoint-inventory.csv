@@ -1,0 +1,85 @@
+domain,surface,method_path,provider,auth_boundary,price_authority,tax,idempotency,verification,payment_state,fulfillment,refund,reconciliation,public_access,baseline_finding
+marketplace,API,GET /marketplace,none,public,database listing,none shown,n/a,n/a,n/a,asset status only,none,none,yes,sale and rental listings share one model
+marketplace,API,GET /marketplace/:id,none,public,database listing,none shown,n/a,n/a,n/a,asset status only,none,none,yes,no rental dates or availability
+marketplace,API,POST /marketplace/cart,none,public,n/a,n/a,none,n/a,draft cart,none,none,none,yes,unguarded anonymous cart
+marketplace,API,GET /marketplace/cart/:cartId,none,public,database listing at read,n/a,none,n/a,draft cart,none,none,none,yes,UUID capability only
+marketplace,API,POST /marketplace/cart/:cartId/items,none,public,database listing,n/a,upsert by cart/listing,n/a,draft cart,none,none,none,yes,quantity permits unique assets above one
+marketplace,API,POST /marketplace/cart/:cartId/checkout,manual/contact,public,server snapshot,none shown,none,none,pending or contact,none,none,none,yes,duplicates orders and emails on retry
+marketplace,API,POST /marketplace/cart/:cartId/stripe/payment-intent,Stripe,public,server snapshot,none shown,cart active Stripe unique key,verified Stripe webhook,pending to paid,none,no marketplace refund route,no shared reconciliation,yes,optional Ecuador rail
+marketplace,API,POST /marketplace/cart/:cartId/datafast/checkout,Datafast,public,server snapshot,none shown,none,remote checkout response,datafast_init to pending,none,none,no shared reconciliation,yes,new order on retry
+marketplace,API,GET /marketplace/datafast/status,Datafast,public,stored order snapshot,none shown,replay changes same row,server status plus checkout path amount currency,pending paid or failed,none,none,no shared reconciliation,yes,merchant/entity/reference not fully bound
+marketplace,API,POST /marketplace/cart/:cartId/paypal/create,PayPal,public,server snapshot,none shown,none,remote create response,paypal_pending,none,none,no shared reconciliation,yes,new provider and internal orders on retry
+marketplace,API,POST /marketplace/paypal/capture,PayPal,public,stored order total,none shown,stored order id only,remote status only,pending paid or failed,none,none,no shared reconciliation,yes,capture amount currency and request id missing
+marketplace,API,GET /marketplace/orders/:orderId,none,public,stored snapshot,stored,n/a,n/a,exposes payment state,no fulfillment lifecycle,none,none,yes,UUID lookup returns customer data without separate token
+marketplace,API,GET /marketplace/orders,none,authenticated admin,n/a,n/a,n/a,n/a,admin state,manual status,none,none,no,no settlement controls
+marketplace,API,PUT /marketplace/orders/:orderId,manual,authenticated admin,stored order,n/a,none,staff input,admin can set paid,manual status,none,none,no,paid timestamp is editable without provider event
+marketplace,UI,/marketplace,Datafast PayPal Stripe public contact,public,database with client rendering,client display,client cart only,return pages call server,mixed,none,none,none,yes,no sale/rental lifecycle split
+marketplace,UI,/marketplace/pago-datafast,Datafast,public,stored order,n/a,n/a,server status lookup,provider status,none,none,none,yes,browser return is not itself success
+marketplace,UI,/marketplace/orden/:orderId,none,public,stored snapshot,stored,n/a,n/a,shown,none,none,none,yes,wrongly reused by mixing
+mixing,API,GET /services/storefront,none,public,database package,n/a,n/a,n/a,n/a,n/a,n/a,n/a,yes,UI silently falls back to hard-coded packages
+mixing,API,GET /services/storefront/:packageId,none,public,database package,n/a,n/a,n/a,n/a,n/a,n/a,n/a,yes,no package version
+mixing,API,POST /services/storefront/order,none,public,database package snapshot,none shown,none,n/a,pending_payment,none,none,none,yes,arbitrary songCount and duplicate order allowed
+mixing,API,GET /services/storefront/order/:orderNumber,none,public,stored snapshot,stored,n/a,n/a,shown,deliverable URL exposed,none,none,yes,eight-hex order number exposes buyer PII
+mixing,API,POST /services/storefront/order/:orderNumber/stripe/payment-intent,Stripe,public,stored snapshot,none shown,none,n/a,none,none,none,none,yes,reachable 501
+mixing,API,POST /services/storefront/order/:orderNumber/datafast/checkout,Datafast,public,stored snapshot,none shown,none,remote create,datafast_pending,none,none,none,yes,duplicated weaker adapter
+mixing,API,GET /services/storefront/datafast/status,Datafast,public,stored snapshot,none shown,none,remote status string,pending paid or failed,none,none,none,yes,no checkout amount currency merchant binding
+mixing,API,POST /services/storefront/order/:orderNumber/paypal/create,PayPal,public,stored snapshot,none shown,none,remote create,paypal_pending,none,none,none,yes,no request id or merchant reference
+mixing,API,POST /services/storefront/paypal/capture,PayPal,public,stored snapshot,none shown,stored PayPal id,remote top-level status,pending paid or failed,none,none,none,yes,no amount currency or webhook verification
+mixing,API,POST /services/storefront/order/:orderNumber/revision,none,public,stored package,n/a,unique order/revision in schema,n/a,n/a,revision,n/a,n/a,yes,reachable 501 and no secure lookup
+mixing,API,GET /admin/services/storefront/orders,none,authenticated admin,n/a,n/a,n/a,n/a,state list,manual fulfillment,none,none,no,no assignment or intake
+mixing,API,PUT /admin/services/storefront/orders/:orderNumber,manual,authenticated admin,stored snapshot,n/a,none,staff input,arbitrary status,manual deliverable URL,none,none,no,no transition validation
+mixing,API,GET POST PUT /admin/services/storefront/packages...,none,authenticated admin,database package,none shown,none,n/a,n/a,n/a,n/a,n/a,no,deliverables/features serialization incomplete
+mixing,UI,/mezcla-mastering,Datafast PayPal bank label,public,server or hard-coded fallback,none shown,none,none,fabricated success on error,none,promised 100 percent refund absent,none,yes,all buttons call create order and wrong tracker
+bookings,API,GET /rooms/public,none,public,database rooms,n/a,n/a,n/a,n/a,resource listing,n/a,n/a,yes,no public availability contract
+bookings,API,POST /bookings/public,manual lead,public,none,n/a,none,server conflict check during insert,tentative only,booking tentative,none,none,yes,no order quote invoice deposit or hold expiry
+bookings,API,GET POST PUT /bookings...,manual,authenticated,service catalog/manual,n/a,none,staff edits,n/a,booking state,manual,none,no,admin scheduling only
+bookings,UI,/reservar,manual lead,public,client service selection,none,none,nonexistent availability probe,tentative,booking,n/a,n/a,yes,unknown availability can proceed
+bookings,UI,/dj-booth,manual lead,public,client service selection,none,none,nonexistent availability probe,tentative,booking,n/a,n/a,yes,no deposit or balance
+records,UI,/records booking dialog,legacy bearer,public browser plus injected token,n/a,n/a,n/a,privileged API auth,tentative,booking,n/a,n/a,yes,VITE token fallback must be removed
+domo,UI,/domo-del-pululahua,manual lead,public,hard-coded browser rate card,hard-coded client tax,none,none,tentative booking note,none,none,none,yes,no authoritative quote availability hold or deposit
+courses,API,GET /public/courses/:slug,none,public,database cents rendered as Double,n/a,n/a,n/a,n/a,capacity display,n/a,n/a,yes,no versioned product or seat hold
+courses,API,POST /public/courses/:slug/registrations,manual follow-up,public,database course,n/a,none,n/a,pending_payment,registration only,staff receipts,no reconciliation,yes,seat not atomically held
+courses,API,POST /public/courses/:slug/registrations/:id/payment-intent,Stripe,public,database course cents,n/a,unique Stripe PI,verified shared Stripe webhook,pending to paid,enrollment not separate,no course public refund,no shared reconciliation,yes,enumerable registration id and Stripe-only
+courses,API,POST /public/courses/:slug/registrations/:id/checkout-session,Stripe,public,database course cents,n/a,stored subscription or PI constraints,verified shared Stripe webhook,pending to paid,enrollment not separate,no public refund,no shared reconciliation,yes,return URL validation is shape-only
+courses,API,GET POST PATCH DELETE /admin/courses...,manual or Stripe,authenticated admin,database course,n/a,provider ids partly unique,staff receipts or webhook,pending paid cancelled,manual enrollment,receipt evidence deletion constrained,none,no,no waitlist or payment reconciliation
+courses,UI,/curso/:slug and /inscripcion/:slug,Stripe or follow-up,public,database course plus client config,display only,registration id,webhook for Stripe,pending/redirect,enrollment implied,none,none,yes,Datafast PayPal absent
+tickets,API,GET POST PUT /social-events/events/:eventId/ticket-tiers,none,authenticated,database tier,n/a,unique tier code,n/a,n/a,tier inventory,n/a,n/a,no,no public browse route
+tickets,API,GET POST PUT /social-events/events/:eventId/ticket-orders...,Stripe/manual,authenticated,database tier promo fee,n/a,optional checkout id key,Stripe webhook or staff status,paid cancelled refunded,tickets issued in handler,refund routes,finance entries only,no,status route permits manual changes
+tickets,API,GET POST PUT /social-events/events/:eventId/promo-codes...,none,authenticated,database promo,n/a,redemption uniqueness,server validation,n/a,capacity discount,n/a,n/a,no,promo concurrency partly modeled
+tickets,API,POST /social-events/stripe/create-payment-intent,Stripe,authenticated,database tier and promo,fee hard-coded in handler,checkout id key,verified Stripe webhook,pending to paid,tickets after webhook,Stripe refund path,finance entries only,no,Datafast PayPal and guest checkout absent
+tickets,API,POST GET /social-events/events/:eventId/refunds...,Stripe,authenticated,stored order,n/a,provider refund id field,staff approve then provider call,pending approved processed,tickets cancelled,full or partial,none,no,no double-entry compensating ledger
+tickets,API,POST GET /social-events/events/:eventId/tickets...transfer...,none,authenticated,n/a,n/a,transfer code uniqueness,server state,n/a,ticket holder transfer,n/a,n/a,no,guest acceptance unavailable
+tickets,API,POST GET DELETE /social-events/events/:eventId/waitlist...,none,authenticated,tier capacity,n/a,db rows,staff workflow,n/a,waitlist,n/a,n/a,no,no public waitlist
+tickets,API,GET POST /social-events/events/:eventId/tickets...qr check-in,none,authenticated,n/a,n/a,unique QR and ticket code,server lookup,n/a,check-in,n/a,n/a,no,customer access login-gated
+tickets,API,GET POST PUT /social-events/events/:eventId/finance-entries...,manual,authenticated,staff amounts,n/a,none,staff input,nominal,accounting notes,n/a,no provider reconciliation,no,mutable entries are not organizer settlement ledger
+tickets,API,POST /social-events/stripe/webhook,Stripe,public webhook,stored order,n/a,event-id table,Stripe signature,paid or failed,ticket issuance,idempotent event table,partial,no,only commercial signed webhook
+tickets,UI,/social/eventos and /social/eventos/:eventId,Stripe,authenticated,database event/tier,client display,client key plus server,webhook,paid,tickets and QR,admin flow,none,no,no purpose-built public storefront
+tips,API,POST /fans/artists/:artistId/tips,Stripe Connect,public,client amount validated only,hard-coded 10 percent fee,Stripe PI unique,Stripe webhook,pending paid failed,artist destination charge,Stripe only,none,yes,no rate product or payable ledger
+tips,UI,/artista/:slugOrId,none,public,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,yes,no tip CTA
+memberships,API,/fans/clubs/... engagement endpoints,none,mixed public/authenticated,no paid products,n/a,n/a,n/a,n/a,engagement only,n/a,n/a,mixed,no tier entitlement renewal or grace state
+service_marketplace,API,GET POST /service-marketplace/ads,none,authenticated,provider-entered fee,n/a,unique provider/headline,n/a,n/a,ad listing,n/a,n/a,no,not public
+service_marketplace,API,GET POST /service-marketplace/ads/:adId/slots,none,authenticated,provider fee,n/a,unique exact interval,n/a,n/a,slot state,n/a,n/a,no,no overlap exclusion constraint
+service_marketplace,API,POST /service-marketplace/bookings,nominal Payment row,authenticated,ad fee,n/a,none,no external charge,escrow_held,booking,nominal refund state,none,no,misrepresents ledger assertion as held funds
+service_marketplace,API,POST /service-marketplace/bookings/:id/complete,none,authenticated,stored,n/a,row lock,n/a,n/a,performed,n/a,n/a,no,no evidence or dispute window
+service_marketplace,API,POST /service-marketplace/bookings/:id/escrow/release,nominal Payment row,authenticated,stored,n/a,row lock,no payout verification,paid_out,completed,no refund adapter,none,no,misrepresents ledger release as payout
+donations,UI,/donar,Cardano,public,donor-entered wallet amount,n/a,chain tx hash external,none,no internal state,none,none,none,yes,address only and external QR service
+payments,API,GET POST GET /payments...,manual,authenticated,client/staff supplied amount,n/a,none,staff assertion,recorded as received,n/a,none,none,no,can create paid-like row without approval evidence
+invoices,API,GET POST GET /invoices... and session generation,manual,authenticated,server lines but staff initiated,line tax bps,invoice number unique,n/a,invoice state,service linkage,n/a,none,no,SRI adapter separate and partial
+receipts,API,GET POST GET /receipts...,manual,authenticated,invoice snapshot,line tax bps,receipt number unique,n/a,issued,none,n/a,none,no,receipt not tied to verified provider event
+distribution,API,POST GET /ddex/documents,none,authenticated feature action,n/a,n/a,SHA unique intended,n/a,received states,n/a,n/a,n/a,no,upload returns 501
+distribution,API,GET /ddex/documents/:id and /raw,none,authenticated feature action,n/a,n/a,n/a,n/a,n/a,protected asset,n/a,n/a,no,raw download returns 501
+distribution,API,POST GET /ddex/documents/:id/validation-runs...,none,authenticated feature action,n/a,n/a,run rows only,validator job not completed,pending,n/a,n/a,n/a,no,validation POST only queues row
+distribution,API,GET /ddex/documents/:id/preview,none,authenticated feature action,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,no,returns 501
+distribution,API,POST /ddex/documents/:id/import-plans,none,authenticated feature action,n/a,n/a,n/a,n/a,n/a,catalog plan,n/a,n/a,no,returns 501
+distribution,API,PATCH /ddex/import-plans/:id,none,authenticated feature action,n/a,n/a,n/a,n/a,n/a,conflict resolution,n/a,n/a,no,returns 501
+distribution,API,POST /ddex/import-plans/:id/commit,none,authenticated approve,n/a,n/a,intended plan version,n/a,n/a,catalog commit,n/a,n/a,no,returns 501
+distribution,API,POST /ddex/exports,none,authenticated export,n/a,n/a,n/a,n/a,generated intended,package generation,n/a,n/a,no,returns 501
+distribution,API,GET /ddex/exports/:id/download,none,authenticated export,n/a,n/a,n/a,n/a,generated intended,protected package,n/a,n/a,no,returns 501
+distribution,API,GET POST /ddex/partners,none,authenticated feature action,n/a,n/a,unique partner name,n/a,n/a,partner config,n/a,n/a,no,version list allows stale ERN versions and no transport/credentials ref
+distribution,API,GET /ddex/catalog/releases,none,authenticated feature action,n/a,n/a,n/a,n/a,n/a,catalog read-through,n/a,n/a,no,returns 501
+distribution,API,GET PATCH /catalog/releases...,none,authenticated catalog,n/a,n/a,n/a,n/a,draft active takedown,catalog edits,n/a,n/a,no,limited model and no release versions/rights splits
+distribution,API,POST /catalog/releases/:id/ddex-exports,none,authenticated catalog,n/a,n/a,n/a,n/a,generated claim,export call,n/a,n/a,no,separate export API and no delivery evidence
+distribution,UI,/label/ddex and document/import/partners,none,authenticated feature access,n/a,n/a,n/a,n/a,warning states,admin scaffolding,n/a,n/a,no,correctly warns private storage and rollback incomplete
+distribution,UI,/distribucion and /distribution,none,missing,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,no,no public pricing onboarding wizard checkout tracking statements or support
+royalties,API,none,none,missing,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,no,no DSR usage royalty statement beneficiary recoupment reserve dispute or payout models
+payouts,API,none,none,missing,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,no,no artist organizer provider distribution payout adapter or dual approval
