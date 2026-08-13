@@ -387,7 +387,8 @@ buildArtistProfileDTOs profiles = do
   followerCounts <- fetchFollowerCounts artistIds
   accountMap <- fetchArtistAccountMap artistIds
   genreSelectionMap <- fetchArtistGenreSelectionMap artistIds
-  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap genreSelectionMap) profiles)
+  enrichmentMap <- fetchArtistEnrichmentMap artistIds
+  pure (map (artistProfileEntityToDTO nameMap followerCounts accountMap genreSelectionMap enrichmentMap) profiles)
 
 fetchArtistGenreSelectionMap
   :: MonadIO m
@@ -461,15 +462,17 @@ artistProfileEntityToDTO
   -> Map.Map PartyId Int
   -> Map.Map PartyId Bool
   -> Map.Map PartyId [(UUID, Text)]
+  -> Map.Map PartyId ArtistProfileEnrichment
   -> Entity ArtistProfile
   -> ArtistProfileDTO
-artistProfileEntityToDTO nameMap followMap accountMap genreSelectionMap (Entity _ prof) =
+artistProfileEntityToDTO nameMap followMap accountMap genreSelectionMap enrichmentMap (Entity _ prof) =
   let artistId = artistProfileArtistPartyId prof
       displayName = Map.findWithDefault "Artista" artistId nameMap
       followerCount = Map.findWithDefault 0 artistId followMap
       hasAccount = Map.findWithDefault False artistId accountMap
       genreSelections = Map.findWithDefault [] artistId genreSelectionMap
       genreLabels = map snd genreSelections
+      enrichment = Map.lookup artistId enrichmentMap
       displayGenres =
         if null genreLabels
           then artistProfileGenres prof

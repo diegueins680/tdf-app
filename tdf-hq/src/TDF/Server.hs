@@ -141,6 +141,8 @@ import           TDF.Auth
   , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
+  , moduleName
+  , modulesForRoles
   , validateModuleAccess
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
@@ -4186,18 +4188,12 @@ notifyEligibleFeatureReviewers
   -> UTCTime
   -> SqlPersistT IO ()
 notifyEligibleFeatureReviewers requester feature actionName requestId now = do
-  reviewerRoles <- selectList
-    [ PartyRoleActive ==. True
-    , PartyRoleRole <-. [Admin, Manager, StudioManager]
-    ] []
-  let reviewerPartyIds = Set.toList (Set.fromList (map (partyRolePartyId . entityVal) reviewerRoles))
+  reviewerPartyIds <- Set.toList . Set.fromList . concat <$>
+    traverse selectCanonicalPartyIdsByRole [Admin, Manager, StudioManager]
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
-    roleRows <- selectList
-      [ PartyRolePartyId ==. reviewerPartyId
-      , PartyRoleActive ==. True
-      ] []
-    let roles = nub (map (partyRoleRole . entityVal) roleRows)
-        reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
+    rolesResult <- loadCanonicalPartyRoles reviewerPartyId
+    roles <- either (liftIO . ioError . userError . T.unpack) pure rolesResult
+    let reviewer = AuthedUser reviewerPartyId roles (modulesForRoles roles)
     when (registryReviewerCanDecide reviewer feature actionName) $
       insert_ Notification
         { notificationRecipientPartyId = reviewerPartyId

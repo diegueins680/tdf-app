@@ -230,7 +230,7 @@ seedAll = do
                 putStrLn
                     "Skipping demo credentials: hosted/production runtime or TDF_SEED_DEMO_PASSWORD/TDF_SEED_TOKEN_PREFIX is missing or too short."
 
-    seedCoreStaffRoles allowSeededCredentials now
+    seedCoreStaffRoles (fst <$> seededSecrets) now
 
     -- Ensure tdf-owner test account has Manager, Fan and Customer roles
     when allowSeededCredentials $ do
@@ -1137,10 +1137,9 @@ seedStaff mPassword now StaffSeed{ssName = nameVal, ssEmail = emailVal, ssRoles 
         cleanName = T.strip nameVal
     (pid, partyChange) <- ensureStaffParty now cleanName normalizedEmail
     newRoles <- ensureStaffRoles now pid rolesVal
-    credStatus <-
-        if allowCredentials
-            then ensureStaffCredential pid normalizedEmail
-            else pure CredentialSkipped
+    credStatus <- case mPassword of
+        Just password -> ensureStaffCredential pid normalizedEmail password
+        Nothing -> pure CredentialSkipped
     logStaffSeed cleanName rolesVal partyChange newRoles credStatus
 
 ensureStaffParty :: UTCTime -> Text -> Text -> SqlPersistT IO (Key Party, PartyChange)

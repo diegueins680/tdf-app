@@ -156,7 +156,7 @@ import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
 import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
-import TDF.Auth (AuthedUser (..), hasStrictAdminAccess)
+import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
@@ -2735,6 +2735,11 @@ socialEventsServer user =
         Env{..} <- ask
         now <- liftIO getCurrentTime
         artistNameVal <- either throwError pure (validateArtistName (artistName dto))
+        let requestedPartyId = cleanMaybeText (artistPartyId dto)
+        targetPartyId <- either throwError pure (validateArtistProfileCreateParty user requestedPartyId)
+        duplicate <- liftIO $ runSqlPool (selectFirst [ArtistProfilePartyId ==. Just targetPartyId] []) envPool
+        when (isJust duplicate) $
+            throwError err409{errBody = "An artist profile already exists for this party"}
         resolvedGenres <-
             liftIO (runSqlPool (resolvePublishedArtistGenres (artistGenreIds dto)) envPool)
                 >>= either (throwError . invalidArtistGenreIdsError) pure

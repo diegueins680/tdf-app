@@ -10998,7 +10998,7 @@ spec = describe "TDF.Server helpers" $ do
                             , ME.roomPatchbayNotes = Nothing
                             }
                         resolved <- resolveResourcesForBooking
-                            (Just "Rehearsal")
+                            Nothing
                             [studioRoomId]
                             startsAt
                             endsAt

@@ -2155,7 +2155,6 @@ enrichmentOverviewHandlerFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> artistsRouter
             :<|> _logs
             :<|> _activity

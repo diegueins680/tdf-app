@@ -82,6 +82,7 @@ import TDF.Models (
   )
 import TDF.Models.SocialEventsModels (migrateSocialEvents)
 import TDF.ModelsExtra (migrateExtra)
+import TDF.Operations.Worker (startOperationsWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.Trials.Models (migrateTrials)
