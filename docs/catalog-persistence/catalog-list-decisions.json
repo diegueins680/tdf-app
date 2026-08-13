@@ -4,6 +4,16 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
+      "id": "c3d1e41b543e7cbdaf00",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
       "id": "bc064d24fdfbb4dc2845",
       "classification": "dynamic-business-catalog",
       "disposition": "consumer-update",
@@ -44,6 +54,26 @@
       "reviewed": true
     },
     {
+      "id": "7f66d027aee26b754bf5",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "currency_reference, deployment_currency_enablement",
+      "priority": "P1-cross-platform",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
+      "id": "31d2efe7dc50372aa805",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
       "id": "466aa6b7847efbc61fda",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -54,6 +84,66 @@
       "reviewed": true
     },
     {
+      "id": "796eeba6a807eafdeab6",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "The list is a security/parser allowlist for MIME types, file extensions, reserved language properties, or secret-bearing fields.",
+      "reviewed": true
+    },
+    {
+      "id": "09dbd238a7c292239fe1",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "41549540ae67595b528d",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "082557328a211adfb285",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "70210c05c52406aeecea",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
+      "id": "a67bc569e1094e871860",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P2-domain",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
       "id": "c8eb2cd455c6586eb633",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -61,6 +151,146 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+      "reviewed": true
+    },
+    {
+      "id": "7775ae4776f01f4e333c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "acfef0444a2027697eee",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "5057145d415bb9db44cf",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "ea435f4b8fed9b6edcef",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "c62ad0035039293adf89",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "69cae673c9113d80956c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "a82ce95ead52fc7b32d8",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "604bb21ef591d8fd3bc9",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "5a4556b8fc52f976805f",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "d59f9ae9a0661a40b363",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "fafe56510b291061c94c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "09a1784dd580f3fe25c5",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "fa86876731764867ac6b",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "e63a2b6b6fc32aae838c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
     },
     {
@@ -124,10 +354,10 @@
       "reviewed": true
     },
     {
-      "id": "01c84c67d9e6f9c81fde",
+      "id": "f2f1802a6dc8abf422a9",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "country_reference, subdivision_reference, city_reference",
+      "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
@@ -214,6 +444,16 @@
       "reviewed": true
     },
     {
+      "id": "ed73c7e281ee224c7abe",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
       "id": "77983ac9623dca9e186a",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -291,6 +531,16 @@
       "priority": "P3-consumer",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "186c2badee7c8595f590",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -814,6 +1064,16 @@
       "reviewed": true
     },
     {
+      "id": "821e2aff3dd420dee884",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
       "id": "eacccc20e8a61cb9caec",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
@@ -1134,6 +1394,106 @@
       "reviewed": true
     },
     {
+      "id": "284e28589dca279063bb",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "67763a8368c933f80914",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "c41ef070dcc4765137ff",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "44897a684b882440a71e",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "b76290fef77574f3b3da",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "1ec69106d372c098c29a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "a400318cc270ac1edd91",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "c0525989deca2a62a658",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
+      "id": "42fde9a24a14c375da51",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "314cae2dc6b59c27a200",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
       "id": "1b3bb4385c2aae33ae0b",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -1361,6 +1721,46 @@
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "627ce364d77a2f8a118a",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_module, security_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "e12ffb72f1bd7e38de78",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_module, security_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
+      "id": "e70099215a7d07c764e5",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "security_action, security_permission, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "581c6e0e17ede172b11a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -1611,6 +2011,36 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "This switch maps persisted workflow identifiers to visual theme tones only; persisted workflow rows own labels, ordering, transitions, and availability.",
+      "reviewed": true
+    },
+    {
+      "id": "fa430d57b080dec5d244",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "efdc3292264719dfe21d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "1cf1c994e8be5028904f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -2154,6 +2584,16 @@
       "reviewed": true
     },
     {
+      "id": "6b0f9200bf15b9d594aa",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P3-consumer",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
       "id": "16fbc3b51e1061c4779a",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -2178,7 +2618,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -2201,6 +2641,16 @@
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "c8d165d8fab345f44035",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -2258,7 +2708,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -2518,7 +2968,7 @@
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
       "reviewed": true
@@ -2529,6 +2979,36 @@
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "f895e7279aad7370651b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "8b5b69b7e402da743170",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "9e7ce916de420e03fc19",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -3254,6 +3734,16 @@
       "reviewed": true
     },
     {
+      "id": "867698177646ede78595",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P3-consumer",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Test data is retained only as a consumer/negative fixture and must follow the canonical persisted contract.",
+      "reviewed": true
+    },
+    {
       "id": "da075a4f94e757a95f4d",
       "classification": "security-system-registry",
       "disposition": "consumer-update",
@@ -3684,6 +4174,36 @@
       "reviewed": true
     },
     {
+      "id": "286a35582fa538dae748",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "d6141f3ae7d3afea66cb",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "6be6e461e17099f89ec3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
       "id": "8c189e436dd03f256f18",
       "classification": "governed-reference-data",
       "disposition": "persisted-reference-with-parser-adapter-mirror",
@@ -3691,6 +4211,56 @@
       "priority": "P1-cross-platform",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "Code retains only stable exhaustive identifiers needed for deny-by-default enforcement or protocol parsing; persisted rows own labels, ordering, assignment, validation metadata, and administration.",
+      "reviewed": true
+    },
+    {
+      "id": "5a740a9ec7e22d8eb0c9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "80111fca37441a34f367",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "ee1e28e93df2772068f7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "44dc5f58f5c0bc047a35",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "d691bcfd5afa2cf47f18",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
     },
     {
@@ -3788,7 +4358,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -3798,7 +4368,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-schema-history",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
@@ -4174,6 +4744,246 @@
       "reviewed": true
     },
     {
+      "id": "1da474ac97f519288a8a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "69842a5960bc590f958b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "a75300371ac4f644c89e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "8c3fab76e789e73d0316",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "76645902bce3902042f9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "ce1ee3e70c38da374de8",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "3f3108b90ffcc9a28257",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "cca8b884f3ccea97b117",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "2ecb38d42d704fd70aeb",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "92ae8329b554f6bc6622",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "b4887f804b3e2e293422",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "dd86e984c745e71db5d4",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "3c1a8d960092ffbd0873",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "232f85583b21a7540cc7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "cfa75bea46fa3df5248f",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "5f0b2acbe7374cab1f01",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "f2d9f9c22c4dc2a35721",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "5885e4747a4a6077935e",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "4b4ee1e6c2a6d2ef6f1c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "4b51d95aad2c06cfbd0d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "d34f1c69b8bc2d9bc8c0",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "f3fda994ad8df5065294",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "da0d2ead2eb17b0fac0a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "4b66c2789cfb824a33c7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
       "id": "7768993fc16cd58a25cc",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
@@ -4424,6 +5234,16 @@
       "reviewed": true
     },
     {
+      "id": "df1910c71500ff43911d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
       "id": "35cef2950e50f1697c37",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -4628,7 +5448,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -4638,6 +5458,26 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "b3643d1be89a07167c46",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "611d70ed95a92d572c9a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
@@ -4778,7 +5618,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -4788,7 +5628,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -4864,16 +5704,6 @@
       "reviewed": true
     },
     {
-      "id": "1ed8b50cb9a88503c355",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "eaadaf8438c6c2ae933c",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -4924,11 +5754,41 @@
       "reviewed": true
     },
     {
+      "id": "c3dec4c9887f1d8364c7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "62a2eb23e252f748857d",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "security_action, security_permission, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
       "id": "d558127ff0b86267a028",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "content_category, tag",
       "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "84fe28bce69192ea409d",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -4964,6 +5824,16 @@
       "reviewed": true
     },
     {
+      "id": "ec1a316784aa9992384a",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P0-cutover",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
       "id": "bd4fa0bfca067cad8aa5",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -4984,6 +5854,36 @@
       "reviewed": true
     },
     {
+      "id": "d437fedf14fcf3a9d2f3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "d85b118d66932e8a98f2",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "6656283da96a8520edae",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
       "id": "6258796cc2326db3d761",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -4991,6 +5891,26 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "327842d371cf166bc72f",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P0-cutover",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+      "reviewed": true
+    },
+    {
+      "id": "d2ce4ef26230f4edb07f",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+      "priority": "P0-cutover",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
       "reviewed": true
     },
     {
@@ -5011,16 +5931,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "c56d9b1cb8bf7717489e",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "The values are keys of an internal state/error object rather than selectable business data.",
       "reviewed": true
     },
     {
@@ -5051,6 +5961,476 @@
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "This closed union controls rendering, local view state, or serialization mechanics and is not a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "dffb7b67ef76a574ccc9",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "2441f489ae7e620b1b16",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "1c83b6d50f74f8b2035d",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "4e970315e52010295adf",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "8ce6dba076433f49c81c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "6b9652335998e2a8fc04",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "bc76ab356eb625beab02",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "d037afba41db8fb11181",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "5cddac55b32b2e5dedd2",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "fbffe52a398d3fdc9875",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "bd40838152dacd509fa7",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "bd12b240a3b8d1e6ca87",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "c57219207073a34aec03",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "ca24aa12b0188e2814c4",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "6e9dcc28b4e64ee61eef",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "ceb231befa3e3e7a9866",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "41705e7bd8a4775a2a99",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "ecfca1c3d4bd6fb4d75b",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "62029c444356e98102bf",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "11fe15b7c3d3efed90c5",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "4e03212810f37e49a72b",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "5275f574cc0e7678413c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "99b866312cca8c9e17e1",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "a91a768f996d484eb87e",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "46c823f4e7e5c39b1420",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "cc2cca393b35eab22150",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "7618c56d2de477e73dd6",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "598c0ce2531763c3625f",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "48edf8c6b5d3f4045fa6",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "b1f16e817e86426f3785",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "355936f8081825090d2c",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "c5eba830691250e19cce",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "a61846dc2f60f618c282",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "47177fdd7a3a1a1e606a",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "b992fe0dfb2c10aeb363",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "f790a6d49fbb718417ca",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "20ff6d3fd83cfae08f89",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "a43e327f7ac35a665dcb",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "abf08940d7d4ae4dc131",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "ca23e7b318cd0809dabd",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "d8796c955572a63befe0",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "6cca713d50b03a2289b9",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "5c41c22ed818bfb8e229",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "af19fec4ca85afab4acf",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "8587539d13f565c2c45e",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "4a45d4e4a4067bdc1484",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+      "reviewed": true
+    },
+    {
+      "id": "3e72ef0b63241c7ec5db",
+      "classification": "governed-reference-data",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "language_reference, locale_reference, deployment_locale_enablement",
+      "priority": "P1-cross-platform",
+      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
       "reviewed": true
     },
     {
@@ -5108,7 +6488,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
@@ -5134,7 +6514,7 @@
       "reviewed": true
     },
     {
-      "id": "2884e22836b2bf69bda1",
+      "id": "d93f59a611b6da200219",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -5144,7 +6524,7 @@
       "reviewed": true
     },
     {
-      "id": "711ae43d518e08f20e3b",
+      "id": "db643fc9e5c94775063b",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
