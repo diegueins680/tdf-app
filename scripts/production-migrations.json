@@ -100,6 +100,11 @@
       "id": "2026-08-13_versioned_revenue_products",
       "path": "tdf-hq/sql/2026-08-13_versioned_revenue_products.sql",
       "introducedBy": "62a9cfaed413a50fe80c88ee834325648da6324d"
+    },
+    {
+      "id": "2026-08-13_distribution_product_seeds",
+      "path": "tdf-hq/sql/2026-08-13_distribution_product_seeds.sql",
+      "introducedBy": "b43065808494a7ed9e94ce8e6a87dcb33d25c96f"
     }
   ]
 }
